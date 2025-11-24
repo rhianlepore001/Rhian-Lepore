@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Copy, Plus, X } from 'lucide-react';
 
 interface TimeBlock {
@@ -34,45 +34,62 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
 }) => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
+    // Helper to safely get day data, providing a default if it's missing.
+    const getDay = (dayKey: string): DayHours => {
+        return hours[dayKey] || { isOpen: false, blocks: [] };
+    };
+
     const toggleDay = (dayKey: string) => {
+        const currentDay = getDay(dayKey);
+        const newIsOpen = !currentDay.isOpen;
+
+        // If opening a day for the first time, add a default time block
+        const newBlocks = newIsOpen && currentDay.blocks.length === 0
+            ? [{ start: '09:00', end: '18:00' }]
+            : currentDay.blocks;
+
         onChange({
             ...hours,
             [dayKey]: {
-                ...hours[dayKey],
-                isOpen: !hours[dayKey].isOpen,
+                ...currentDay,
+                isOpen: newIsOpen,
+                blocks: newBlocks,
             }
         });
     };
 
     const updateBlock = (dayKey: string, blockIndex: number, field: 'start' | 'end', value: string) => {
-        const newBlocks = [...hours[dayKey].blocks];
+        const currentDay = getDay(dayKey);
+        const newBlocks = [...currentDay.blocks];
         newBlocks[blockIndex] = { ...newBlocks[blockIndex], [field]: value };
 
         onChange({
             ...hours,
             [dayKey]: {
-                ...hours[dayKey],
+                ...currentDay,
                 blocks: newBlocks,
             }
         });
     };
 
     const addBlock = (dayKey: string) => {
+        const currentDay = getDay(dayKey);
         onChange({
             ...hours,
             [dayKey]: {
-                ...hours[dayKey],
-                blocks: [...hours[dayKey].blocks, { start: '13:00', end: '18:00' }],
+                ...currentDay,
+                blocks: [...currentDay.blocks, { start: '13:00', end: '18:00' }],
             }
         });
     };
 
     const removeBlock = (dayKey: string, blockIndex: number) => {
-        const newBlocks = hours[dayKey].blocks.filter((_, i) => i !== blockIndex);
+        const currentDay = getDay(dayKey);
+        const newBlocks = currentDay.blocks.filter((_, i) => i !== blockIndex);
         onChange({
             ...hours,
             [dayKey]: {
-                ...hours[dayKey],
+                ...currentDay,
                 blocks: newBlocks,
             }
         });
@@ -82,10 +99,11 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
         const dayIndex = DAYS.findIndex(d => d.key === dayKey);
         if (dayIndex === 0) return;
 
-        const previousDay = DAYS[dayIndex - 1].key;
+        const previousDayKey = DAYS[dayIndex - 1].key;
+        const previousDay = getDay(previousDayKey);
         onChange({
             ...hours,
-            [dayKey]: { ...hours[previousDay] }
+            [dayKey]: { ...previousDay }
         });
     };
 
@@ -124,87 +142,90 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
 
             {/* Days */}
             <div className="space-y-3">
-                {DAYS.map((day, index) => (
-                    <div key={day.key} className="bg-neutral-800 rounded-lg p-3 md:p-4">
-                        {/* Day Header */}
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                                <span className="text-white font-medium text-sm md:text-base w-16 md:w-24">
-                                    {day.short}
-                                </span>
-
-                                {/* Open/Closed Toggle */}
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={hours[day.key]?.isOpen || false}
-                                        onChange={() => toggleDay(day.key)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
-                                    <span className="ml-2 text-xs md:text-sm text-neutral-400">
-                                        {hours[day.key]?.isOpen ? 'Aberto' : 'Fechado'}
+                {DAYS.map((day, index) => {
+                    const dayData = getDay(day.key);
+                    return (
+                        <div key={day.key} className="bg-neutral-800 rounded-lg p-3 md:p-4">
+                            {/* Day Header */}
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-white font-medium text-sm md:text-base w-16 md:w-24">
+                                        {day.short}
                                     </span>
-                                </label>
-                            </div>
 
-                            {/* Copy Button */}
-                            {index > 0 && (
-                                <button
-                                    onClick={() => copyFromPreviousDay(day.key)}
-                                    className="flex items-center gap-1 px-2 py-1 text-xs text-neutral-400 hover:text-white bg-neutral-700 hover:bg-neutral-600 rounded transition-colors"
-                                    title={`Copiar de ${DAYS[index - 1].short}`}
-                                >
-                                    <Copy className="w-3 h-3" />
-                                    <span className="hidden md:inline">Repetir</span>
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Time Blocks */}
-                        {hours[day.key]?.isOpen && (
-                            <div className="space-y-2">
-                                {hours[day.key].blocks.map((block, blockIndex) => (
-                                    <div key={blockIndex} className="flex items-center gap-2">
+                                    {/* Open/Closed Toggle */}
+                                    <label className="relative inline-flex items-center cursor-pointer">
                                         <input
-                                            type="time"
-                                            value={block.start}
-                                            onChange={(e) => updateBlock(day.key, blockIndex, 'start', e.target.value)}
-                                            className={`flex-1 p-2 text-sm bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                            type="checkbox"
+                                            checked={dayData.isOpen}
+                                            onChange={() => toggleDay(day.key)}
+                                            className="sr-only peer"
                                         />
-                                        <span className="text-neutral-400 text-xs md:text-sm">até</span>
-                                        <input
-                                            type="time"
-                                            value={block.end}
-                                            onChange={(e) => updateBlock(day.key, blockIndex, 'end', e.target.value)}
-                                            className={`flex-1 p-2 text-sm bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
-                                        />
+                                        <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                        <span className="ml-2 text-xs md:text-sm text-neutral-400">
+                                            {dayData.isOpen ? 'Aberto' : 'Fechado'}
+                                        </span>
+                                    </label>
+                                </div>
 
-                                        {hours[day.key].blocks.length > 1 && (
-                                            <button
-                                                onClick={() => removeBlock(day.key, blockIndex)}
-                                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-
-                                {/* Add Lunch Break */}
-                                {hours[day.key].blocks.length < 2 && (
+                                {/* Copy Button */}
+                                {index > 0 && (
                                     <button
-                                        onClick={() => addBlock(day.key)}
-                                        className="flex items-center gap-1 px-3 py-1.5 text-xs text-neutral-400 hover:text-white bg-neutral-700 hover:bg-neutral-600 rounded transition-colors w-full justify-center"
+                                        onClick={() => copyFromPreviousDay(day.key)}
+                                        className="flex items-center gap-1 px-2 py-1 text-xs text-neutral-400 hover:text-white bg-neutral-700 hover:bg-neutral-600 rounded transition-colors"
+                                        title={`Copiar de ${DAYS[index - 1].short}`}
                                     >
-                                        <Plus className="w-3 h-3" />
-                                        Adicionar Pausa (Almoço)
+                                        <Copy className="w-3 h-3" />
+                                        <span className="hidden md:inline">Repetir</span>
                                     </button>
                                 )}
                             </div>
-                        )}
-                    </div>
-                ))}
+
+                            {/* Time Blocks */}
+                            {dayData.isOpen && (
+                                <div className="space-y-2">
+                                    {dayData.blocks.map((block, blockIndex) => (
+                                        <div key={blockIndex} className="flex items-center gap-2">
+                                            <input
+                                                type="time"
+                                                value={block.start}
+                                                onChange={(e) => updateBlock(day.key, blockIndex, 'start', e.target.value)}
+                                                className={`flex-1 p-2 text-sm bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                            />
+                                            <span className="text-neutral-400 text-xs md:text-sm">até</span>
+                                            <input
+                                                type="time"
+                                                value={block.end}
+                                                onChange={(e) => updateBlock(day.key, blockIndex, 'end', e.target.value)}
+                                                className={`flex-1 p-2 text-sm bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                            />
+
+                                            {dayData.blocks.length > 1 && (
+                                                <button
+                                                    onClick={() => removeBlock(day.key, blockIndex)}
+                                                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+
+                                    {/* Add Lunch Break */}
+                                    {dayData.blocks.length < 2 && (
+                                        <button
+                                            onClick={() => addBlock(day.key)}
+                                            className="flex items-center gap-1 px-3 py-1.5 text-xs text-neutral-400 hover:text-white bg-neutral-700 hover:bg-neutral-600 rounded transition-colors w-full justify-center"
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                            Adicionar Pausa (Almoço)
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

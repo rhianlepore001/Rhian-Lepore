@@ -12,7 +12,6 @@ export const GeneralSettings: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [instagram, setInstagram] = useState('');
-    const [monthlyGoal, setMonthlyGoal] = useState<number | string>(15000);
 
     // Image State
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -55,14 +54,14 @@ export const GeneralSettings: React.FC = () => {
         if (!loading) {
             setHasChanges(true);
         }
-    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours, monthlyGoal]);
+    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours]);
 
     const fetchSettings = async () => {
         if (!user) return;
         try {
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, monthly_goal')
+                .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url')
                 .eq('id', user.id)
                 .single();
 
@@ -73,7 +72,6 @@ export const GeneralSettings: React.FC = () => {
                 setInstagram(profile.instagram_handle || '');
                 setLogoPreview(profile.logo_url || null);
                 setCoverPreview(profile.cover_photo_url || null);
-                setMonthlyGoal(profile.monthly_goal || 15000);
             }
 
             const { data: settings } = await supabase
@@ -140,7 +138,6 @@ export const GeneralSettings: React.FC = () => {
                 instagram_handle: instagram,
                 logo_url: logoUrl,
                 cover_photo_url: coverUrl,
-                monthly_goal: Number(monthlyGoal)
             }).eq('id', user.id);
 
             if (profileError) throw profileError;
@@ -273,19 +270,6 @@ export const GeneralSettings: React.FC = () => {
                             <p className="text-neutral-500 text-xs mt-1">
                                 Este endereço será usado para gerar o link do Google Maps para seus clientes.
                             </p>
-                        </div>
-
-                        <div className="col-span-1 md:col-span-2">
-                            <label className="text-white font-mono text-xs md:text-sm mb-2 block">
-                                Meta Mensal de Faturamento ({currencySymbol})
-                            </label>
-                            <input
-                                type="number"
-                                value={monthlyGoal}
-                                onChange={e => setMonthlyGoal(e.target.value)}
-                                placeholder="15000"
-                                className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
-                            />
                         </div>
                     </div>
                 </div>

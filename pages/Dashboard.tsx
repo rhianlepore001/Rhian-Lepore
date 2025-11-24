@@ -26,6 +26,8 @@ export const Dashboard: React.FC = () => {
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
   const [monthlyGoal, setMonthlyGoal] = useState(15000);
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [newGoal, setNewGoal] = useState('');
 
   const isBeauty = userType === 'beauty';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
@@ -55,6 +57,7 @@ export const Dashboard: React.FC = () => {
           }
           if (profileData?.monthly_goal) {
             setMonthlyGoal(profileData.monthly_goal);
+            setNewGoal(profileData.monthly_goal.toString());
           }
         }
 
@@ -87,7 +90,10 @@ export const Dashboard: React.FC = () => {
           setProfit(statsData.total_profit);
           setCurrentMonthRevenue(statsData.current_month_revenue);
           setWeeklyGrowth(statsData.weekly_growth);
-          setMonthlyGoal(statsData.monthly_goal);
+          if (statsData.monthly_goal) {
+            setMonthlyGoal(statsData.monthly_goal);
+            setNewGoal(statsData.monthly_goal.toString());
+          }
         }
 
         await generateSmartAlerts(userCreatedAt);
@@ -130,6 +136,25 @@ export const Dashboard: React.FC = () => {
     }
 
     setAlerts(generatedAlerts);
+  };
+
+  const handleSaveGoal = async () => {
+    if (!user || !newGoal) return;
+    const goalValue = parseFloat(newGoal);
+    if (isNaN(goalValue)) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ monthly_goal: goalValue })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error("Error updating goal:", error);
+      alert("Erro ao atualizar a meta.");
+    } else {
+      setMonthlyGoal(goalValue);
+      setIsEditingGoal(false);
+    }
   };
 
   const profitValue = profit.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
@@ -203,12 +228,27 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="flex justify-between text-xs md:text-sm font-mono text-text-muted items-center">
               <span>Atual: {currencySymbol} {currentMonthRevenueValue}</span>
-              <button className="flex items-center gap-2 group" onClick={() => navigate('/configuracoes/geral')}>
-                <span>Meta: {currencySymbol} {goalValue}</span>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-text-secondary">
-                  <Settings className="w-3 h-3" />
+              {isEditingGoal ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={newGoal}
+                    onChange={(e) => setNewGoal(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()}
+                    className="w-24 bg-black/50 border border-neutral-700 text-white p-1 text-right rounded-md"
+                    autoFocus
+                  />
+                  <button onClick={handleSaveGoal} className={`text-xs p-1 rounded ${accentText} hover:bg-white/10`}>Salvar</button>
+                  <button onClick={() => setIsEditingGoal(false)} className="text-xs p-1 rounded text-neutral-500 hover:bg-white/10">X</button>
                 </div>
-              </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span>Meta: {currencySymbol} {goalValue}</span>
+                  <button onClick={() => setIsEditingGoal(true)} className="text-text-secondary hover:text-white transition-colors">
+                    <Settings className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </BrutalCard>

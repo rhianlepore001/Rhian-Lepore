@@ -131,7 +131,8 @@ export const GeneralSettings: React.FC = () => {
             if (logoFile) logoUrl = await uploadFile(logoFile, 'logos', user.id);
             if (coverFile) coverUrl = await uploadFile(coverFile, 'covers', user.id);
 
-            await supabase.from('profiles').update({
+            // 1. Update public profiles table
+            const { error: profileError } = await supabase.from('profiles').update({
                 business_name: businessName,
                 phone,
                 address_street: address,
@@ -140,15 +141,35 @@ export const GeneralSettings: React.FC = () => {
                 cover_photo_url: coverUrl,
             }).eq('id', user.id);
 
-            await supabase.from('business_settings').upsert({
+            if (profileError) throw profileError;
+
+            // 2. Update business settings table
+            const { error: settingsError } = await supabase.from('business_settings').upsert({
                 user_id: user.id,
                 cancellation_policy: cancellationPolicy,
                 business_hours: businessHours,
             });
 
+            if (settingsError) throw settingsError;
+
+            // 3. Update auth user metadata to reflect changes immediately in the UI
+            const { error: authError } = await supabase.auth.updateUser({
+                data: {
+                    business_name: businessName,
+                    phone: phone,
+                }
+            });
+
+            if (authError) throw authError;
+
             setSaveStatus('saved');
             setHasChanges(false);
-            setTimeout(() => setSaveStatus('idle'), 2000);
+            
+            // Reload the page to ensure context is updated everywhere
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+
         } catch (error) {
             console.error('Error saving settings:', error);
             setSaveStatus('error');

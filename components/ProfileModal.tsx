@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { BrutalButton } from './BrutalButton';
+import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 
 interface ProfileModalProps {
     onClose: () => void;
@@ -9,6 +10,7 @@ interface ProfileModalProps {
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     const { user, businessName, fullName, userType, region } = useAuth();
+    const navigate = useNavigate();
     const [newBusinessName, setNewBusinessName] = useState(businessName);
     const [newFullName, setNewFullName] = useState(fullName);
     const [loading, setLoading] = useState(false);
@@ -16,7 +18,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     // Theme
     const isBeauty = userType === 'beauty';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const buttonClass = isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover text-black' : 'bg-accent-gold hover:bg-accent-goldHover text-black';
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,8 +33,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
             if (error) throw error;
 
-            // Also update the public profiles table if it exists, but for now auth metadata is what we use in context
-            // Ideally we should sync this with the 'profiles' table too.
             const { error: profileError } = await supabase
                 .from('profiles')
                 .update({
@@ -46,7 +45,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
             alert('Perfil atualizado com sucesso! Recarregue a página para ver as alterações.');
             onClose();
-            window.location.reload(); // Simple way to refresh context for now
+            window.location.reload();
         } catch (error) {
             console.error('Error updating profile:', error);
             alert('Erro ao atualizar perfil.');
@@ -128,6 +127,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                         {loading ? 'Salvando...' : 'Salvar Alterações'}
                     </button>
                 </form>
+
+                <div className="mt-4 pt-4 border-t border-neutral-800">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            navigate('/configuracoes/geral');
+                            onClose();
+                        }}
+                        className={`w-full flex items-center justify-center gap-2 text-center py-2 text-xs font-mono uppercase transition-colors
+                            ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon' : 'text-accent-gold/70 hover:text-accent-gold'}
+                        `}
+                    >
+                        <Settings className="w-3 h-3" />
+                        Configurações Avançadas
+                    </button>
+                </div>
             </div>
         </div>
     );

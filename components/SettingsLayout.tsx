@@ -25,7 +25,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
     const menuItems = SETTINGS_ITEMS;
 
     return (
-        <div className="flex h-full relative">
+        <div className="flex h-screen relative">
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
@@ -76,7 +76,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
 
                 <div className="mt-8 pt-8 border-t border-neutral-800">
                     <NavLink
-                        to="/dashboard"
+                        to="/"
                         className="flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all"
                     >
                         <span className="font-mono text-xs md:text-sm">← Voltar ao Dashboard</span>
@@ -85,7 +85,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             </aside>
 
             {/* Content */}
-            <main className={`flex-1 overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'} w-full`}>
+            <main className={`flex-1 overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'}`}>
                 {/* Mobile Header */}
                 <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3">
                     <button

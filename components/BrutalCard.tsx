@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Screw } from './Screw';
 
@@ -24,8 +23,8 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
 
   // Styles
   const containerClass = isBeauty
-    ? `relative bg-beauty-card/80 backdrop-blur-md border border-white/10 shadow-soft rounded-2xl overflow-hidden ${className}`
-    : `relative bg-brutal-card border-4 border-brutal-border shadow-heavy ${className}`;
+    ? `relative bg-beauty-card/80 backdrop-blur-md border border-white/10 shadow-soft rounded-2xl ${className}` // Removed overflow-hidden
+    : `relative bg-brutal-card border-4 border-brutal-border shadow-heavy ${className}`; // Removed overflow-hidden
 
   const headerClass = isBeauty
     ? "flex justify-between items-center px-6 py-4 border-b border-white/5"

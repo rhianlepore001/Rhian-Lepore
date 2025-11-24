@@ -148,7 +148,7 @@ export const GeneralSettings: React.FC = () => {
                 user_id: user.id,
                 cancellation_policy: cancellationPolicy,
                 business_hours: businessHours,
-            });
+            }, { onConflict: 'user_id' });
 
             if (settingsError) throw settingsError;
 

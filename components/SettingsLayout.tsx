@@ -17,15 +17,10 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
 
-    // Determine which menu items to show based on current path
-    // If we are in settings section, show settings items
-    // Otherwise show main navigation items (or mixed if needed)
-    // For now, since this is SettingsLayout, we prioritize SETTINGS_ITEMS
-    // but we might want to allow navigating back to main app
     const menuItems = SETTINGS_ITEMS;
 
     return (
-        <div className="flex h-screen relative">
+        <div className={`h-screen relative ${bgColor}`}>
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
@@ -37,8 +32,8 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             {/* Sidebar */}
             <aside className={`
                 ${bgColor} border-r ${isBeauty ? 'border-white/10' : 'border-neutral-800'} p-4 md:p-6
-                fixed md:static inset-y-0 left-0 z-50
-                w-64 md:w-64
+                fixed inset-y-0 left-0 z-50
+                w-64
                 transform transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
@@ -85,7 +80,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             </aside>
 
             {/* Content */}
-            <main className={`flex-1 overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'}`}>
+            <main className={`overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'} md:pl-64`}>
                 {/* Mobile Header */}
                 <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3">
                     <button

@@ -31,6 +31,7 @@ export const Agenda: React.FC = () => {
     const currencySymbol = region === 'PT' ? '€' : 'R$';
 
     const fetchAppointments = async () => {
+        if (!user) return;
         try {
             const { data, error } = await supabase
                 .from('appointments')
@@ -74,16 +75,19 @@ export const Agenda: React.FC = () => {
     };
 
     const fetchClients = async () => {
-        const { data } = await supabase.from('clients').select('id, name');
+        if (!user) return;
+        const { data } = await supabase.from('clients').select('id, name').eq('user_id', user.id);
         if (data) setClients(data);
     };
 
     const fetchServices = async () => {
-        const { data } = await supabase.from('services').select('id, name, price').eq('active', true);
+        if (!user) return;
+        const { data } = await supabase.from('services').select('id, name, price').eq('user_id', user.id).eq('active', true);
         if (data) setServices(data);
     };
 
     const fetchTeamMembers = async () => {
+        if (!user) return;
         const { data } = await supabase
             .from('team_members')
             .select('id, name')
@@ -134,6 +138,7 @@ export const Agenda: React.FC = () => {
 
     const handleCreateAppointment = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) return;
         try {
             if (!date) {
                 alert('Selecione uma data.');
@@ -192,6 +197,7 @@ export const Agenda: React.FC = () => {
     };
 
     const handleAcceptBooking = async (booking: any) => {
+        if (!user) return;
         try {
             // 1. Find or Create Client
             let clientId;
@@ -199,6 +205,7 @@ export const Agenda: React.FC = () => {
                 .from('clients')
                 .select('id')
                 .eq('phone', booking.customer_phone)
+                .eq('user_id', user.id)
                 .single();
 
             if (existingClient) {

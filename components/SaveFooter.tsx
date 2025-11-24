@@ -14,7 +14,18 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
     hasChanges,
     accentColor
 }) => {
-    const getButtonContent = () => {
+    const getDesktopIcon = () => {
+        switch (saveStatus) {
+            case 'saving':
+                return <Loader2 className="w-6 h-6 animate-spin" />;
+            case 'saved':
+                return <Check className="w-6 h-6" />;
+            default:
+                return <Save className="w-6 h-6" />;
+        }
+    };
+
+    const getMobileButtonContent = () => {
         switch (saveStatus) {
             case 'saving':
                 return (
@@ -49,20 +60,21 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
 
     return (
         <>
-            {/* Desktop Floating Button */}
-            <div className="hidden md:block fixed top-6 right-8 z-50">
+            {/* Desktop Floating Action Button */}
+            <div className="hidden md:block fixed bottom-8 right-8 z-50">
                 <button
                     onClick={onSave}
                     disabled={saveStatus === 'saving' || (!hasChanges && saveStatus !== 'saved')}
                     className={`
-            flex items-center gap-2 px-6 py-3 rounded-lg font-bold shadow-lg transition-all transform hover:scale-105
-            ${!hasChanges && saveStatus !== 'saved'
+                        w-16 h-16 flex items-center justify-center rounded-full font-bold shadow-lg transition-all transform hover:scale-105
+                        ${!hasChanges && saveStatus !== 'saved'
                             ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
                             : `bg-${accentColor} text-black hover:bg-${accentColor}/90`
                         }
-          `}
+                    `}
+                    aria-label="Salvar Alterações"
                 >
-                    {getButtonContent()}
+                    {getDesktopIcon()}
                 </button>
             </div>
 
@@ -72,14 +84,14 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
                     onClick={onSave}
                     disabled={saveStatus === 'saving' || (!hasChanges && saveStatus !== 'saved')}
                     className={`
-            w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold transition-all
-            ${!hasChanges && saveStatus !== 'saved'
+                        w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold transition-all
+                        ${!hasChanges && saveStatus !== 'saved'
                             ? 'bg-neutral-800 text-neutral-500'
                             : `bg-${accentColor} text-black`
                         }
-          `}
+                    `}
                 >
-                    {getButtonContent()}
+                    {getMobileButtonContent()}
                 </button>
             </div>
 

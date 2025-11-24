@@ -25,10 +25,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
-
   const [monthlyGoal, setMonthlyGoal] = useState(15000);
-  const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [tempGoal, setTempGoal] = useState('15000');
 
   const isBeauty = userType === 'beauty';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
@@ -39,11 +36,9 @@ export const Dashboard: React.FC = () => {
     const fetchData = async () => {
       if (!user) return;
       try {
-        // Fetch business slug for public link and account creation date
         let userCreatedAt: Date | null = null;
 
         if (user) {
-          // Use auth user's created_at for more accurate account age
           if (user.created_at) {
             userCreatedAt = new Date(user.created_at);
             setAccountCreatedAt(userCreatedAt);
@@ -60,11 +55,9 @@ export const Dashboard: React.FC = () => {
           }
           if (profileData?.monthly_goal) {
             setMonthlyGoal(profileData.monthly_goal);
-            setTempGoal(profileData.monthly_goal.toString());
           }
         }
 
-        // Fetch Appointments
         const { data: aptData, error: aptError } = await supabase
           .from('appointments')
           .select('*, clients(name)')
@@ -85,7 +78,6 @@ export const Dashboard: React.FC = () => {
           })));
         }
 
-        // Fetch Dashboard Stats (Server-side calculation)
         const { data: statsData, error: statsError } = await supabase
           .rpc('get_dashboard_stats', { p_user_id: user.id });
 
@@ -96,10 +88,8 @@ export const Dashboard: React.FC = () => {
           setCurrentMonthRevenue(statsData.current_month_revenue);
           setWeeklyGrowth(statsData.weekly_growth);
           setMonthlyGoal(statsData.monthly_goal);
-          setTempGoal(statsData.monthly_goal.toString());
         }
 
-        // Generate Smart Alerts
         await generateSmartAlerts(userCreatedAt);
 
       } catch (error) {
@@ -117,204 +107,29 @@ export const Dashboard: React.FC = () => {
     const generatedAlerts: Alert[] = [];
 
     try {
-      // Check if account is new (less than 7 days old)
       const isNewAccount = createdAt &&
         (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);
 
       if (isNewAccount) {
-        // ONBOARDING ALERTS for new accounts
-
-        // Check if services are configured
-        const { data: services } = await supabase
-          .from('services')
-          .select('id')
-          .eq('user_id', user.id);
-
+        const { data: services } = await supabase.from('services').select('id').eq('user_id', user.id);
         if (!services || services.length === 0) {
-          generatedAlerts.push({
-            id: 'setup-services',
-            text: '📋 Configure seus serviços e preços para começar',
-            type: 'warning',
-            actionPath: '/configuracoes/servicos'
-          });
-        } else if (services.length < 3) {
-          generatedAlerts.push({
-            id: 'add-more-services',
-            text: `✨ ${services.length} serviço${services.length > 1 ? 's' : ''} cadastrado${services.length > 1 ? 's' : ''}! Adicione mais para oferecer variedade`,
-            type: 'success',
-            actionPath: '/configuracoes/servicos'
-          });
+          generatedAlerts.push({ id: 'setup-services', text: '📋 Configure seus serviços e preços para começar', type: 'warning', actionPath: '/configuracoes/servicos' });
         }
 
-        // Check if team members are added
-        const { data: team } = await supabase
-          .from('team_members')
-          .select('id')
-          .eq('user_id', user.id);
-
+        const { data: team } = await supabase.from('team_members').select('id').eq('user_id', user.id);
         if (!team || team.length === 0) {
-          generatedAlerts.push({
-            id: 'setup-team',
-            text: '👥 Adicione membros da equipe para gerenciar agendamentos',
-            type: 'warning',
-            actionPath: '/configuracoes/equipe'
-          });
+          generatedAlerts.push({ id: 'setup-team', text: '👥 Adicione membros da equipe para gerenciar agendamentos', type: 'warning', actionPath: '/configuracoes/equipe' });
         }
 
-        // Check if business slug is set (for public booking)
         if (!businessSlug) {
-          generatedAlerts.push({
-            id: 'setup-slug',
-            text: '🔗 Configure seu link público de agendamento',
-            type: 'warning',
-            actionPath: '/configuracoes/agendamento'
-          });
-        } else {
-          generatedAlerts.push({
-            id: 'share-link',
-            text: '🎉 Link público pronto! Compartilhe com seus clientes',
-            type: 'success',
-            actionPath: '/configuracoes/agendamento'
-          });
-        }
-
-        // Check for first appointments
-        const { data: allAppointments } = await supabase
-          .from('appointments')
-          .select('id')
-          .eq('user_id', user.id);
-
-        if (!allAppointments || allAppointments.length === 0) {
-          generatedAlerts.push({
-            id: 'first-appointment',
-            text: '📅 Crie seu primeiro agendamento para testar o sistema',
-            type: 'warning',
-            actionPath: '/agenda'
-          });
-        } else if (allAppointments.length < 5) {
-          generatedAlerts.push({
-            id: 'growing-appointments',
-            text: `🚀 ${allAppointments.length} agendamento${allAppointments.length > 1 ? 's' : ''} criado${allAppointments.length > 1 ? 's' : ''}! Continue assim!`,
-            type: 'success',
-            actionPath: '/agenda'
-          });
-        }
-
-      } else {
-        // REGULAR ALERTS for established accounts
-
-        // Alert 1: Absent Clients (45+ days)
-        const { data: clients, error: clientsError } = await supabase
-          .from('clients')
-          .select('last_visit')
-          .eq('user_id', user.id);
-
-        if (!clientsError && clients) {
-          const now = new Date();
-          const fortyFiveDaysAgo = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000);
-
-          const absentClients = clients.filter((client: any) => {
-            if (!client.last_visit) return false;
-            return new Date(client.last_visit) < fortyFiveDaysAgo;
-          });
-
-          if (absentClients.length > 0) {
-            generatedAlerts.push({
-              id: 'absent-clients',
-              text: `${absentClients.length} Cliente${absentClients.length > 1 ? 's' : ''} ausente${absentClients.length > 1 ? 's' : ''} há 45 dias`,
-              type: 'warning',
-              actionPath: '/clientes'
-            });
-          }
-        }
-
-        // Alert 2: Weekly Goal Achievement
-        const { data: financeData } = await supabase
-          .from('finance_records')
-          .select('revenue, created_at')
-          .eq('user_id', user.id);
-
-        if (financeData && financeData.length > 0) {
-          const now = new Date();
-          const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-          const weeklyRevenue = financeData
-            .filter((r: any) => new Date(r.created_at) >= oneWeekAgo)
-            .reduce((acc: number, curr: any) => acc + Number(curr.revenue), 0);
-
-          const weeklyGoal = 3500; // R$ 3.500 weekly goal
-          if (weeklyRevenue >= weeklyGoal) {
-            generatedAlerts.push({
-              id: 'weekly-goal',
-              text: 'Meta semanal atingida! 🎉',
-              type: 'success',
-              actionPath: '/relatorios'
-            });
-          }
-        }
-
-        // Alert 3: Low Appointments (if less than 3 appointments today)
-        const { data: todayApts } = await supabase
-          .from('appointments')
-          .select('id')
-          .eq('user_id', user.id)
-          .gte('appointment_time', new Date().toISOString().split('T')[0]);
-
-        if (todayApts && todayApts.length < 3) {
-          generatedAlerts.push({
-            id: 'low-appointments',
-            text: `Apenas ${todayApts.length} agendamento${todayApts.length !== 1 ? 's' : ''} hoje`,
-            type: 'danger',
-            actionPath: '/marketing'
-          });
-        }
-
-        // Fallback: If no alerts and no data, show motivational message
-        if (generatedAlerts.length === 0) {
-          const { data: hasAnyData } = await supabase
-            .from('appointments')
-            .select('id')
-            .eq('user_id', user.id)
-            .limit(1);
-
-          if (!hasAnyData || hasAnyData.length === 0) {
-            generatedAlerts.push({
-              id: 'get-started',
-              text: '🎯 Comece criando agendamentos e registrando atendimentos',
-              type: 'warning',
-              actionPath: '/agenda'
-            });
-          }
+          generatedAlerts.push({ id: 'setup-slug', text: '🔗 Configure seu link público de agendamento', type: 'warning', actionPath: '/configuracoes/agendamento' });
         }
       }
-
     } catch (error) {
       console.error('Error generating alerts:', error);
     }
 
     setAlerts(generatedAlerts);
-  };
-
-  const handleSaveGoal = async () => {
-    try {
-      const newGoal = parseInt(tempGoal.replace(/\D/g, ''));
-      if (isNaN(newGoal) || newGoal <= 0) return;
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ monthly_goal: newGoal })
-          .eq('id', user.id);
-
-        if (!error) {
-          setMonthlyGoal(newGoal);
-          setIsEditingGoal(false);
-        }
-      }
-    } catch (error) {
-      console.error('Error saving goal:', error);
-    }
   };
 
   const profitValue = profit.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
@@ -323,7 +138,6 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-8">
-      {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-white/10 pb-4 gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -345,7 +159,6 @@ export const Dashboard: React.FC = () => {
         </BrutalButton>
       </div>
 
-      {/* Hero Cards - Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <BrutalCard className="h-full">
           <div className="flex items-start justify-between mb-4">
@@ -385,40 +198,23 @@ export const Dashboard: React.FC = () => {
                 className={`absolute top-0 left-0 h-full ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'} border-r-2 border-black transition-all duration-1000`}
                 style={{ width: `${Math.min((currentMonthRevenue / monthlyGoal) * 100, 100)}%` }}
               >
-                {/* Striped pattern for progress bar */}
                 <div className="w-full h-full opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#000_5px,#000_10px)]"></div>
               </div>
             </div>
             <div className="flex justify-between text-xs md:text-sm font-mono text-text-muted items-center">
               <span>Atual: {currencySymbol} {currentMonthRevenueValue}</span>
-
-              {isEditingGoal ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={tempGoal}
-                    onChange={(e) => setTempGoal(e.target.value)}
-                    className="w-24 bg-neutral-800 border border-neutral-600 text-white px-2 py-1 text-xs rounded"
-                    autoFocus
-                  />
-                  <button onClick={handleSaveGoal} className="text-green-500 hover:text-green-400"><Check className="w-4 h-4" /></button>
+              <button className="flex items-center gap-2 group" onClick={() => navigate('/configuracoes/geral')}>
+                <span>Meta: {currencySymbol} {goalValue}</span>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-text-secondary">
+                  <Settings className="w-3 h-3" />
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setIsEditingGoal(true)}>
-                  <span>Meta: {currencySymbol} {goalValue}</span>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity text-text-secondary">
-                    <Settings className="w-3 h-3" />
-                  </div>
-                </div>
-              )}
+              </button>
             </div>
           </div>
         </BrutalCard>
       </div>
 
-      {/* Bottom Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Schedule */}
         <BrutalCard
           title={
             <div className="flex items-center gap-2">
@@ -464,7 +260,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </BrutalCard>
 
-        {/* Alerts */}
         <BrutalCard
           title={
             <div className="flex items-center gap-2">

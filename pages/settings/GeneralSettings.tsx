@@ -7,11 +7,12 @@ import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { SaveFooter } from '../../components/SaveFooter';
 
 export const GeneralSettings: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user, userType, region } = useAuth();
     const [businessName, setBusinessName] = useState('');
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [instagram, setInstagram] = useState('');
+    const [monthlyGoal, setMonthlyGoal] = useState<number | string>(15000);
 
     // Image State
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -38,6 +39,7 @@ export const GeneralSettings: React.FC = () => {
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
+    const currencySymbol = region === 'PT' ? '€' : 'R$';
 
     const policyTemplates: Record<string, string> = {
         flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
@@ -49,19 +51,18 @@ export const GeneralSettings: React.FC = () => {
         fetchSettings();
     }, [user]);
 
-    // Track changes
     useEffect(() => {
         if (!loading) {
             setHasChanges(true);
         }
-    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours]);
+    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours, monthlyGoal]);
 
     const fetchSettings = async () => {
         if (!user) return;
         try {
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url')
+                .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, monthly_goal')
                 .eq('id', user.id)
                 .single();
 
@@ -72,6 +73,7 @@ export const GeneralSettings: React.FC = () => {
                 setInstagram(profile.instagram_handle || '');
                 setLogoPreview(profile.logo_url || null);
                 setCoverPreview(profile.cover_photo_url || null);
+                setMonthlyGoal(profile.monthly_goal || 15000);
             }
 
             const { data: settings } = await supabase
@@ -131,7 +133,6 @@ export const GeneralSettings: React.FC = () => {
             if (logoFile) logoUrl = await uploadFile(logoFile, 'logos', user.id);
             if (coverFile) coverUrl = await uploadFile(coverFile, 'covers', user.id);
 
-            // 1. Update public profiles table
             const { error: profileError } = await supabase.from('profiles').update({
                 business_name: businessName,
                 phone,
@@ -139,11 +140,11 @@ export const GeneralSettings: React.FC = () => {
                 instagram_handle: instagram,
                 logo_url: logoUrl,
                 cover_photo_url: coverUrl,
+                monthly_goal: Number(monthlyGoal)
             }).eq('id', user.id);
 
             if (profileError) throw profileError;
 
-            // 2. Update business settings table
             const { error: settingsError } = await supabase.from('business_settings').upsert({
                 user_id: user.id,
                 cancellation_policy: cancellationPolicy,
@@ -152,7 +153,6 @@ export const GeneralSettings: React.FC = () => {
 
             if (settingsError) throw settingsError;
 
-            // 3. Update auth user metadata to reflect changes immediately in the UI
             const { error: authError } = await supabase.auth.updateUser({
                 data: {
                     business_name: businessName,
@@ -165,7 +165,6 @@ export const GeneralSettings: React.FC = () => {
             setSaveStatus('saved');
             setHasChanges(false);
             
-            // Reload the page to ensure context is updated everywhere
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
@@ -203,7 +202,6 @@ export const GeneralSettings: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Brand Identity */}
                 <BrandIdentitySection
                     logoPreview={logoPreview}
                     coverPreview={coverPreview}
@@ -214,7 +212,6 @@ export const GeneralSettings: React.FC = () => {
                     accentColor={accentColor}
                 />
 
-                {/* Business Info */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
                     <h3 className="text-white font-bold text-base md:text-lg mb-4">
                         Informações do Negócio
@@ -277,10 +274,22 @@ export const GeneralSettings: React.FC = () => {
                                 Este endereço será usado para gerar o link do Google Maps para seus clientes.
                             </p>
                         </div>
+
+                        <div className="col-span-1 md:col-span-2">
+                            <label className="text-white font-mono text-xs md:text-sm mb-2 block">
+                                Meta Mensal de Faturamento ({currencySymbol})
+                            </label>
+                            <input
+                                type="number"
+                                value={monthlyGoal}
+                                onChange={e => setMonthlyGoal(e.target.value)}
+                                placeholder="15000"
+                                className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Business Hours */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
                     <h3 className="text-white font-bold text-base md:text-lg mb-4">
                         Horário de Funcionamento
@@ -292,7 +301,6 @@ export const GeneralSettings: React.FC = () => {
                     />
                 </div>
 
-                {/* Cancellation Policy */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-6 md:mb-8">
                     <h3 className="text-white font-bold text-base md:text-lg mb-4">
                         Política de Cancelamento
@@ -330,7 +338,6 @@ export const GeneralSettings: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Sticky Save Footer */}
                 <SaveFooter
                     onSave={handleSave}
                     saveStatus={saveStatus}

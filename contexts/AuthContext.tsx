@@ -12,6 +12,7 @@ interface AuthContextType {
   region: Region;
   businessName: string;
   fullName: string;
+  avatarUrl: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
@@ -25,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [region, setRegion] = useState<Region>('BR');
   const [businessName, setBusinessName] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setRegion(session.user.user_metadata.region as Region || 'BR');
           setBusinessName(session.user.user_metadata.business_name || '');
           setFullName(session.user.user_metadata.full_name || '');
+          setAvatarUrl(session.user.user_metadata.avatar_url || null);
         }
       } catch (error) {
         console.error('Error initializing session:', error);
@@ -56,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRegion(session.user.user_metadata.region as Region || 'BR');
         setBusinessName(session.user.user_metadata.business_name || '');
         setFullName(session.user.user_metadata.full_name || '');
+        setAvatarUrl(session.user.user_metadata.avatar_url || null);
       }
       setLoading(false);
     });
@@ -78,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRegion('BR');
     setBusinessName('');
     setFullName('');
+    setAvatarUrl(null);
   };
 
   return (
@@ -88,7 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       region,
       businessName,
       fullName,
-      loading, // Expose loading state
+      avatarUrl,
+      loading,
       login,
       logout
     }}>

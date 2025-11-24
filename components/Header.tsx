@@ -8,7 +8,7 @@ import { ProfileModal } from './ProfileModal';
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
-  const { businessName, fullName, userType, logout } = useAuth();
+  const { businessName, fullName, userType, logout, avatarUrl } = useAuth();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -173,7 +173,11 @@ export const Header: React.FC = () => {
                 <p className="text-[10px] md:text-xs text-text-secondary font-mono leading-tight capitalize">{userType === 'beauty' ? 'Beauty Professional' : 'Barber'}</p>
               </div>
               <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-neutral-800 border-2 border-text-secondary flex items-center justify-center overflow-hidden">
-                <img src={`https://ui-avatars.com/api/?name=${fullName || 'User'}&background=random`} alt="User" className="w-full h-full object-cover" />
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
+                ) : (
+                  <img src={`https://ui-avatars.com/api/?name=${fullName || 'User'}&background=random`} alt="User" className="w-full h-full object-cover" />
+                )}
               </div>
             </button>
 
@@ -190,7 +194,7 @@ export const Header: React.FC = () => {
                   <UserIcon className="w-4 h-4" /> Meu Perfil
                 </button>
                 <button
-                  onClick={() => { navigate('/ajustes'); setShowProfileMenu(false); }}
+                  onClick={() => { navigate('/configuracoes/geral'); setShowProfileMenu(false); }}
                   className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 flex items-center gap-2"
                 >
                   <Settings className="w-4 h-4" /> Configurações

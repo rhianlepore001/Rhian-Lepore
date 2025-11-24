@@ -1,33 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { Settings, Upload, User as UserIcon } from 'lucide-react';
 
 interface ProfileModalProps {
     onClose: () => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
-    const { user, businessName, fullName, userType, region } = useAuth();
+    const { user, businessName, fullName, userType, region, avatarUrl } = useAuth();
     const navigate = useNavigate();
     const [newBusinessName, setNewBusinessName] = useState(businessName);
     const [newFullName, setNewFullName] = useState(fullName);
     const [loading, setLoading] = useState(false);
 
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(avatarUrl);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     // Theme
     const isBeauty = userType === 'beauty';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setPhotoFile(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
+            let newPhotoUrl = photoPreview;
+
+            if (photoFile && user) {
+                const fileExt = photoFile.name.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(fileName, photoFile, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                newPhotoUrl = data.publicUrl;
+            }
+
             const { error } = await supabase.auth.updateUser({
                 data: {
                     business_name: newBusinessName,
                     full_name: newFullName,
+                    avatar_url: newPhotoUrl,
                 }
             });
 
@@ -37,7 +65,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 .from('profiles')
                 .update({
                     business_name: newBusinessName,
-                    full_name: newFullName
+                    full_name: newFullName,
+                    photo_url: newPhotoUrl
                 })
                 .eq('id', user?.id);
 
@@ -69,6 +98,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     X
                 </button>
                 <h3 className={`text-xl font-heading text-white mb-6 uppercase ${isBeauty ? 'tracking-normal' : 'tracking-wider'}`}>Meu Perfil</h3>
+
+                <div className="flex justify-center mb-6">
+                    <div
+                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-${accentText.replace('text-', '')} overflow-hidden group transition-colors`}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {photoPreview ? (
+                            <img src={photoPreview} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <UserIcon className="w-8 h-8 text-neutral-500" />
+                        )}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                    />
+                </div>
 
                 <form onSubmit={handleSave} className="space-y-4">
                     <div>

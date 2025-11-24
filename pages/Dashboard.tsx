@@ -15,10 +15,11 @@ interface Alert {
 }
 
 export const Dashboard: React.FC = () => {
-  const { userType, region } = useAuth();
+  const { userType, region, user } = useAuth();
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<any[]>([]);
-  const [revenue, setRevenue] = useState(0);
+  const [profit, setProfit] = useState(0);
+  const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
   const [weeklyGrowth, setWeeklyGrowth] = useState(0);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,9 +37,9 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return;
       try {
         // Fetch business slug for public link and account creation date
-        const { data: { user } } = await supabase.auth.getUser();
         let userCreatedAt: Date | null = null;
 
         if (user) {
@@ -91,7 +92,8 @@ export const Dashboard: React.FC = () => {
         if (statsError) throw statsError;
 
         if (statsData) {
-          setRevenue(statsData.total_revenue);
+          setProfit(statsData.total_profit);
+          setCurrentMonthRevenue(statsData.current_month_revenue);
           setWeeklyGrowth(statsData.weekly_growth);
           setMonthlyGoal(statsData.monthly_goal);
           setTempGoal(statsData.monthly_goal.toString());
@@ -108,7 +110,7 @@ export const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const generateSmartAlerts = async (createdAt: Date | null) => {
     const generatedAlerts: Alert[] = [];
@@ -123,8 +125,7 @@ export const Dashboard: React.FC = () => {
 
         // Check if services are configured
         const { data: services } = await supabase
-          .from('services')
-          .select('id');
+          .from('services');
 
         if (!services || services.length === 0) {
           generatedAlerts.push({
@@ -144,8 +145,7 @@ export const Dashboard: React.FC = () => {
 
         // Check if team members are added
         const { data: team } = await supabase
-          .from('team_members')
-          .select('id');
+          .from('team_members');
 
         if (!team || team.length === 0) {
           generatedAlerts.push({
@@ -175,8 +175,7 @@ export const Dashboard: React.FC = () => {
 
         // Check for first appointments
         const { data: allAppointments } = await supabase
-          .from('appointments')
-          .select('id');
+          .from('appointments');
 
         if (!allAppointments || allAppointments.length === 0) {
           generatedAlerts.push({
@@ -199,8 +198,7 @@ export const Dashboard: React.FC = () => {
 
         // Alert 1: Absent Clients (45+ days)
         const { data: clients, error: clientsError } = await supabase
-          .from('clients')
-          .select('id, name, last_visit');
+          .from('clients');
 
         if (!clientsError && clients) {
           const now = new Date();
@@ -223,8 +221,7 @@ export const Dashboard: React.FC = () => {
 
         // Alert 2: Weekly Goal Achievement
         const { data: financeData } = await supabase
-          .from('finance_records')
-          .select('revenue, created_at');
+          .from('finance_records');
 
         if (financeData && financeData.length > 0) {
           const now = new Date();
@@ -248,7 +245,6 @@ export const Dashboard: React.FC = () => {
         // Alert 3: Low Appointments (if less than 3 appointments today)
         const { data: todayApts } = await supabase
           .from('appointments')
-          .select('id')
           .gte('appointment_time', new Date().toISOString().split('T')[0]);
 
         if (todayApts && todayApts.length < 3) {
@@ -264,7 +260,6 @@ export const Dashboard: React.FC = () => {
         if (generatedAlerts.length === 0) {
           const { data: hasAnyData } = await supabase
             .from('appointments')
-            .select('id')
             .limit(1);
 
           if (!hasAnyData || hasAnyData.length === 0) {
@@ -307,8 +302,8 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Mock values adjustment for currency
-  const profitValue = revenue.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
+  const profitValue = profit.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
+  const currentMonthRevenueValue = currentMonthRevenue.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
   const goalValue = monthlyGoal.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
 
   return (
@@ -365,7 +360,7 @@ export const Dashboard: React.FC = () => {
               <InfoButton text="Sua meta de faturamento mensal. Você pode alterá-la clicando no ícone de engrenagem." />
             </div>
             <span className="font-bold text-white font-mono">
-              {Math.min(Math.round((revenue / monthlyGoal) * 100), 100)}%
+              {Math.min(Math.round((currentMonthRevenue / monthlyGoal) * 100), 100)}%
             </span>
           </div>
 
@@ -373,14 +368,14 @@ export const Dashboard: React.FC = () => {
             <div className="relative h-6 md:h-8 bg-neutral-900 border-2 border-neutral-700 w-full skew-x-[-10deg]">
               <div
                 className={`absolute top-0 left-0 h-full ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'} border-r-2 border-black transition-all duration-1000`}
-                style={{ width: `${Math.min((revenue / monthlyGoal) * 100, 100)}%` }}
+                style={{ width: `${Math.min((currentMonthRevenue / monthlyGoal) * 100, 100)}%` }}
               >
                 {/* Striped pattern for progress bar */}
                 <div className="w-full h-full opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#000_5px,#000_10px)]"></div>
               </div>
             </div>
             <div className="flex justify-between text-xs md:text-sm font-mono text-text-muted items-center">
-              <span>Atual: {currencySymbol} {profitValue}</span>
+              <span>Atual: {currencySymbol} {currentMonthRevenueValue}</span>
 
               {isEditingGoal ? (
                 <div className="flex items-center gap-2">

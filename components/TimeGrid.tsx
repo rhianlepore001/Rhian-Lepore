@@ -40,6 +40,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
         return (
             <button
                 key={time}
+                type="button" // FIX: Prevent accidental form submission
                 onClick={() => onTimeSelect(time)}
                 className={`
           px-4 py-3 rounded-lg font-mono text-sm transition-all

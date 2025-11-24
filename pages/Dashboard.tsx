@@ -113,6 +113,7 @@ export const Dashboard: React.FC = () => {
   }, [user]);
 
   const generateSmartAlerts = async (createdAt: Date | null) => {
+    if (!user) return;
     const generatedAlerts: Alert[] = [];
 
     try {
@@ -125,7 +126,9 @@ export const Dashboard: React.FC = () => {
 
         // Check if services are configured
         const { data: services } = await supabase
-          .from('services');
+          .from('services')
+          .select('id')
+          .eq('user_id', user.id);
 
         if (!services || services.length === 0) {
           generatedAlerts.push({
@@ -145,7 +148,9 @@ export const Dashboard: React.FC = () => {
 
         // Check if team members are added
         const { data: team } = await supabase
-          .from('team_members');
+          .from('team_members')
+          .select('id')
+          .eq('user_id', user.id);
 
         if (!team || team.length === 0) {
           generatedAlerts.push({
@@ -175,7 +180,9 @@ export const Dashboard: React.FC = () => {
 
         // Check for first appointments
         const { data: allAppointments } = await supabase
-          .from('appointments');
+          .from('appointments')
+          .select('id')
+          .eq('user_id', user.id);
 
         if (!allAppointments || allAppointments.length === 0) {
           generatedAlerts.push({
@@ -198,7 +205,9 @@ export const Dashboard: React.FC = () => {
 
         // Alert 1: Absent Clients (45+ days)
         const { data: clients, error: clientsError } = await supabase
-          .from('clients');
+          .from('clients')
+          .select('last_visit')
+          .eq('user_id', user.id);
 
         if (!clientsError && clients) {
           const now = new Date();
@@ -221,7 +230,9 @@ export const Dashboard: React.FC = () => {
 
         // Alert 2: Weekly Goal Achievement
         const { data: financeData } = await supabase
-          .from('finance_records');
+          .from('finance_records')
+          .select('revenue, created_at')
+          .eq('user_id', user.id);
 
         if (financeData && financeData.length > 0) {
           const now = new Date();
@@ -245,6 +256,8 @@ export const Dashboard: React.FC = () => {
         // Alert 3: Low Appointments (if less than 3 appointments today)
         const { data: todayApts } = await supabase
           .from('appointments')
+          .select('id')
+          .eq('user_id', user.id)
           .gte('appointment_time', new Date().toISOString().split('T')[0]);
 
         if (todayApts && todayApts.length < 3) {
@@ -260,6 +273,8 @@ export const Dashboard: React.FC = () => {
         if (generatedAlerts.length === 0) {
           const { data: hasAnyData } = await supabase
             .from('appointments')
+            .select('id')
+            .eq('user_id', user.id)
             .limit(1);
 
           if (!hasAnyData || hasAnyData.length === 0) {

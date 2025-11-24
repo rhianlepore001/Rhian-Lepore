@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Barber OS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brutal: {
+              main: '#121212',
+              card: '#1E1E1E',
+              border: '#000000',
+              surface: '#252525'
+            },
+            accent: {
+              gold: '#C29B40',
+              goldHover: '#D4AF50',
+              goldDim: '#8a6d2a',
+            },
+            beauty: {
+              neon: '#A78BFA',     /* Lavender 400 */
+              neonHover: '#C4B5FD', /* Lavender 300 */
+              acid: '#8B5CF6',     /* Violet 500 */
+              silver: '#E9D5FF',   /* Purple 200 */
+              dark: '#1F1B2E',     /* Deep Purple Black */
+              card: '#2E2B3B',     /* Soft Purple Card */
+            },
+            text: {
+              primary: '#EAEAEA',
+              secondary: '#A0A0A0',
+              muted: '#525252'
+            }
+          },
+          fontFamily: {
+            heading: ['"Chivo"', 'sans-serif'],
+            body: ['"Inter"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          boxShadow: {
+            'heavy': '4px 4px 0px 0px #000000',
+            'heavy-sm': '2px 2px 0px 0px #000000',
+            'inner-heavy': 'inset 0 0 20px rgba(0,0,0,0.8)',
+            'neon': '0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3)',
+            'soft': '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
+          },
+          backgroundImage: {
+            'noise': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+')",
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #121212;
+      color: #EAEAEA;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      /* Custom scroll handling in layout */
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #121212;
+      border-left: 2px solid #000;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border: 2px solid #000;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #C29B40;
+    }
+
+    /* Texture Overlay Class */
+    .texture-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+');
+      opacity: 0.4;
+    }
+
+    .grunge-border {
+      position: relative;
+    }
+
+    .grunge-border::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 3px solid #000;
+      pointer-events: none;
+      /* Simple visual trick for "roughness" without complex masks */
+      box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.05);
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1"
+  }
+}
+</script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <div class="texture-overlay"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

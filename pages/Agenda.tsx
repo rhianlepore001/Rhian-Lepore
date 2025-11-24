@@ -139,24 +139,29 @@ export const Agenda: React.FC = () => {
     const handleCreateAppointment = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
-        try {
-            if (!date) {
-                alert('Selecione uma data.');
-                return;
-            }
 
+        if (!selectedClient || !selectedServiceId || !date || !time || !price) {
+            alert('Por favor, preencha todos os campos obrigatórios (Cliente, Serviço, Data, Hora e Preço).');
+            return;
+        }
+
+        try {
             const serviceName = services.find(s => s.id === selectedServiceId)?.name || 'Serviço Personalizado';
 
-            // Format date as YYYY-MM-DD
-            const dateStr = date.toISOString().split('T')[0];
-            const appointmentTime = new Date(`${dateStr}T${time}`).toISOString();
+            // Combine date and time, ensuring we use the local context to avoid timezone shifts
+            const [hour, minute] = time.split(':').map(Number);
+            const appointmentTime = new Date(date);
+            appointmentTime.setHours(hour, minute, 0, 0);
+
+            // Convert to ISO string for Supabase, which handles the timezone correctly
+            const appointmentTimeISO = appointmentTime.toISOString();
 
             const { error } = await supabase.from('appointments').insert({
                 client_id: selectedClient,
                 service: serviceName,
-                appointment_time: appointmentTime,
+                appointment_time: appointmentTimeISO,
                 price: Number(price),
-                status: 'Pending',
+                status: 'Confirmed', // Changed from 'Pending' to 'Confirmed' for manual booking
                 user_id: user.id,
                 professional_id: selectedProfessionalId || null
             });
@@ -173,9 +178,9 @@ export const Agenda: React.FC = () => {
             setTime('');
             setPrice('');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating appointment:', error);
-            alert('Erro ao criar agendamento.');
+            alert(`Erro ao criar agendamento: ${error.message || JSON.stringify(error)}`);
         }
     };
 
@@ -451,6 +456,7 @@ export const Agenda: React.FC = () => {
                                             onTimeSelect={setTime}
                                             isBeauty={isBeauty}
                                         />
+                                        {/* Hidden input to enforce required validation on time selection */}
                                         <input type="hidden" value={time} required />
                                     </div>
                                 </div>

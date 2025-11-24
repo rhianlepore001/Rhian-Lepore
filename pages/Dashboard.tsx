@@ -23,7 +23,6 @@ export const Dashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
 
   const [monthlyGoal, setMonthlyGoal] = useState(15000);
@@ -335,57 +334,6 @@ export const Dashboard: React.FC = () => {
           Novo Agendamento
         </BrutalButton>
       </div>
-
-      {/* Public Booking Link Card */}
-      {businessSlug && (
-        <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className={`p-3 ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'} rounded-lg`}>
-                <LinkIcon className={`w-6 h-6 ${accentIcon}`} />
-              </div>
-              <div>
-                <h3 className="text-white font-heading text-lg uppercase mb-1">Link Público de Agendamento</h3>
-                <p className="text-neutral-400 text-sm mb-3">Compartilhe este link com seus clientes para agendamentos online</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <code className={`${isBeauty ? 'bg-white/5 border border-white/10 rounded-lg' : 'bg-black/40 border-2 border-neutral-800'} px-3 py-2 text-${accentText} text-sm font-mono`}>
-                    {window.location.origin}/#/book/{businessSlug}
-                  </code>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/#/book/${businessSlug}`);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-lg' : 'bg-accent-gold hover:bg-accent-goldHover'} text-white text-sm font-bold uppercase tracking-wider transition-all`}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copiado!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copiar
-                      </>
-                    )}
-                  </button>
-                  <a
-                    href={`/#/book/${businessSlug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-bold uppercase tracking-wider transition-all rounded-lg"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Visualizar
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </BrutalCard>
-      )}
 
       {/* Hero Cards - Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">

@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { useEffect } from 'react';
+import { PublicLinkCard } from '../../components/PublicLinkCard';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user, userType } = useAuth();
     const [loading, setLoading] = useState(true);
+    const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [enableUpsells, setEnableUpsells] = useState(false);
     const [enableProfessionalSelection, setEnableProfessionalSelection] = useState(false);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
@@ -21,20 +22,35 @@ export const PublicBookingSettings: React.FC = () => {
     const fetchSettings = async () => {
         if (!user) return;
         try {
-            const { data, error } = await supabase
+            const { data: settingsData, error: settingsError } = await supabase
                 .from('business_settings')
                 .select('*')
                 .eq('user_id', user.id)
                 .single();
 
-            if (error) throw error;
-            if (data) {
-                setEnableUpsells(data.enable_upsells ?? false);
-                setEnableProfessionalSelection(data.enable_professional_selection ?? true);
-                setPublicBookingEnabled(data.public_booking_enabled ?? true);
-                setLeadTimeHours(data.lead_time_hours ?? 2);
-                setMaxBookingsPerDay(data.max_bookings_per_day);
+            if (settingsError && settingsError.code !== 'PGRST116') { // Ignore no rows found error
+                throw settingsError;
             }
+
+            if (settingsData) {
+                setEnableUpsells(settingsData.enable_upsells ?? false);
+                setEnableProfessionalSelection(settingsData.enable_professional_selection ?? true);
+                setPublicBookingEnabled(settingsData.public_booking_enabled ?? true);
+                setLeadTimeHours(settingsData.lead_time_hours ?? 2);
+                setMaxBookingsPerDay(settingsData.max_bookings_per_day);
+            }
+
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('business_slug')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) throw profileError;
+            if (profileData) {
+                setBusinessSlug(profileData.business_slug);
+            }
+
         } catch (error) {
             console.error('Error fetching settings:', error);
         } finally {
@@ -47,14 +63,14 @@ export const PublicBookingSettings: React.FC = () => {
         try {
             const { error } = await supabase
                 .from('business_settings')
-                .update({
+                .upsert({
+                    user_id: user.id,
                     enable_upsells: enableUpsells,
                     enable_professional_selection: enableProfessionalSelection,
                     public_booking_enabled: publicBookingEnabled,
                     lead_time_hours: leadTimeHours,
                     max_bookings_per_day: maxBookingsPerDay
-                })
-                .eq('user_id', user.id);
+                });
 
             if (error) throw error;
             alert('Configurações salvas com sucesso!');
@@ -77,14 +93,16 @@ export const PublicBookingSettings: React.FC = () => {
                     Configure como clientes agendam online
                 </p>
 
+                <PublicLinkCard businessSlug={businessSlug} />
+
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                             <h3 className="text-white font-bold text-base md:text-lg mb-1 md:mb-2">
-                                Agendamento Público
+                                Ativar Agendamento Público
                             </h3>
                             <p className="text-neutral-400 text-xs md:text-sm">
-                                Link público de agendamento
+                                Permite que clientes agendem através do seu link público.
                             </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -112,7 +130,7 @@ export const PublicBookingSettings: React.FC = () => {
                                     </button>
                                 </div>
                                 <p className="text-neutral-400 text-xs md:text-sm mb-2 md:mb-3">
-                                    Sugere serviços complementares
+                                    Sugere serviços complementares para aumentar o ticket médio.
                                 </p>
                                 <div className={`inline-block px-2 md:px-3 py-1 rounded-full bg-${accentColor}/10 text-${accentColor} text-xs font-bold`}>
                                     💰 +R$ 1.200/mês
@@ -132,7 +150,7 @@ export const PublicBookingSettings: React.FC = () => {
                         {enableUpsells && (
                             <div className="mt-3 md:mt-4 p-3 md:p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                                 <p className="text-xs md:text-sm text-neutral-300">
-                                    ✅ <strong>Ativado!</strong> Configure em Serviços.
+                                    ✅ <strong>Ativado!</strong> Configure os upsells na página de Serviços.
                                 </p>
                             </div>
                         )}
@@ -150,7 +168,7 @@ export const PublicBookingSettings: React.FC = () => {
                                     </button>
                                 </div>
                                 <p className="text-neutral-400 text-xs md:text-sm mb-2 md:mb-3">
-                                    Clientes escolhem o profissional
+                                    Permite que clientes escolham com qual profissional desejam agendar.
                                 </p>
                                 <div className={`inline-block px-2 md:px-3 py-1 rounded-full bg-${accentColor}/10 text-${accentColor} text-xs font-bold`}>
                                     📈 +114% recorrentes
@@ -170,7 +188,7 @@ export const PublicBookingSettings: React.FC = () => {
                         {enableProfessionalSelection && (
                             <div className="mt-3 md:mt-4 p-3 md:p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                                 <p className="text-xs md:text-sm text-neutral-300">
-                                    ✅ <strong>Ativado!</strong> Adicione equipe.
+                                    ✅ <strong>Ativado!</strong> Adicione sua equipe na aba "Equipe".
                                 </p>
                             </div>
                         )}
@@ -182,7 +200,7 @@ export const PublicBookingSettings: React.FC = () => {
                     className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-${accentColor} hover:bg-${accentColor}/90 text-black font-bold rounded-lg transition-all`}
                 >
                     <Save className="w-5 h-5" />
-                    Salvar
+                    Salvar Alterações
                 </button>
             </div>
         </SettingsLayout>

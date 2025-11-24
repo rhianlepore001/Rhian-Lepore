@@ -19,7 +19,7 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                 <Info className="w-4 h-4" />
             </button>
             {showTooltip && (
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-48 p-2 bg-neutral-800 border border-neutral-700 text-xs text-white rounded shadow-lg z-50 text-center">
+                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-48 p-3 bg-neutral-800 border border-neutral-700 text-xs text-white rounded shadow-lg z-50 text-center pointer-events-none whitespace-normal">
                     {text}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-neutral-800"></div>
                 </div>

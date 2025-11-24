@@ -190,7 +190,7 @@ export const Dashboard: React.FC = () => {
             <div>
               <div className="flex items-center">
                 <p className="text-text-secondary font-mono text-xs md:text-sm uppercase tracking-widest mb-1">Lucro Total</p>
-                <InfoButton text="Soma de todas as receitas registradas no período selecionado." />
+                <InfoButton text="O lucro total (Receita - Despesas) acumulado desde o início do seu negócio." />
               </div>
               <h3 className={`text-3xl sm:text-4xl md:text-5xl font-heading ${accentText} tracking-tighter`}>
                 {currencySymbol} {profitValue}
@@ -210,7 +210,7 @@ export const Dashboard: React.FC = () => {
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center">
               <p className="text-text-secondary font-mono text-xs md:text-sm uppercase tracking-widest">Meta Mensal</p>
-              <InfoButton text="Sua meta de faturamento mensal. Você pode alterá-la clicando no ícone de engrenagem." />
+              <InfoButton text="Seu objetivo de faturamento para o mês atual. Clique no ícone de engrenagem para editar." />
             </div>
             <span className="font-bold text-white font-mono">
               {Math.min(Math.round((currentMonthRevenue / monthlyGoal) * 100), 100)}%

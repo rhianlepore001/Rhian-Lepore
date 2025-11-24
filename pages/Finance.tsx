@@ -94,7 +94,7 @@ export const Finance: React.FC = () => {
         <BrutalCard className="border-l-4 border-green-500">
           <div className="flex justify-between items-start mb-2">
             <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Receita (30d)</p>
-            <InfoButton text="Total faturado nos últimos 30 dias." />
+            <InfoButton text="Total de vendas e serviços faturados nos últimos 30 dias." />
           </div>
           <h3 className="text-2xl md:text-3xl font-heading text-white">
             {currencySymbol} {summary.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -108,7 +108,7 @@ export const Finance: React.FC = () => {
         <BrutalCard className="border-l-4 border-red-500">
           <div className="flex justify-between items-start mb-2">
             <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas (30d)</p>
-            <InfoButton text="Comissões e custos nos últimos 30 dias." />
+            <InfoButton text="Soma de todos os custos, como comissões de profissionais, nos últimos 30 dias." />
           </div>
           <h3 className="text-2xl md:text-3xl font-heading text-white">
             {currencySymbol} {summary.expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -122,7 +122,7 @@ export const Finance: React.FC = () => {
         <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
           <div className="flex justify-between items-start mb-2">
             <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
-            <InfoButton text="Receita menos despesas. O que sobra no caixa." />
+            <InfoButton text="O valor que sobra após subtrair as despesas da receita. Seu lucro real." />
           </div>
           <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
             {currencySymbol} {summary.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

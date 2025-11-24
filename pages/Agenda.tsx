@@ -2,20 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, X, User, Scissors, DollarSign } from 'lucide-react';
+import { Calendar, Clock, Plus, X, User, Scissors, DollarSign, History, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TimeGrid } from '../components/TimeGrid';
 import { CalendarPicker } from '../components/CalendarPicker';
 
+type AppointmentStatus = 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled';
+
+interface Appointment {
+    id: string;
+    clientName: string;
+    service: string;
+    time: string;
+    date: string;
+    status: AppointmentStatus;
+    price: number;
+    rawAppointmentTime: string;
+}
+
 export const Agenda: React.FC = () => {
     const { user, userType, region } = useAuth();
-    const [appointments, setAppointments] = useState<any[]>([]);
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [view, setView] = useState<'current' | 'history'>('current'); // New state for view
 
     // Form State
     const [selectedClient, setSelectedClient] = useState('');
@@ -33,6 +47,7 @@ export const Agenda: React.FC = () => {
     const fetchAppointments = async () => {
         if (!user) return;
         try {
+            // Fetch ALL appointments (Confirmed, Completed, Cancelled)
             const { data, error } = await supabase
                 .from('appointments')
                 .select('*, clients(name)')
@@ -47,13 +62,14 @@ export const Agenda: React.FC = () => {
                     clientName: apt.clients?.name || 'Cliente Desconhecido',
                     service: apt.service,
                     time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    date: new Date(apt.appointment_time).toLocaleDateString(),
-                    status: apt.status,
-                    price: apt.price
+                    date: new Date(apt.appointment_time).toLocaleDateString('pt-BR'),
+                    status: apt.status as AppointmentStatus,
+                    price: apt.price,
+                    rawAppointmentTime: apt.appointment_time,
                 })));
             }
 
-            // Fetch Public Bookings
+            // Fetch Pending Public Bookings
             const { data: pubData, error: pubError } = await supabase
                 .from('public_bookings')
                 .select('*')
@@ -283,15 +299,77 @@ export const Agenda: React.FC = () => {
         }
     };
 
+    // Filter appointments based on view state
+    const filteredAppointments = appointments
+        .filter(apt => {
+            const isFuture = new Date(apt.rawAppointmentTime) >= new Date();
+            const isCompleted = apt.status === 'Completed';
+            const isCancelled = apt.status === 'Cancelled';
+
+            if (view === 'current') {
+                // Show Confirmed appointments that are in the future
+                return apt.status === 'Confirmed' && isFuture;
+            } else { // view === 'history'
+                // Show Completed and Cancelled appointments, and past Confirmed ones
+                return isCompleted || isCancelled || (apt.status === 'Confirmed' && !isFuture);
+            }
+        })
+        .sort((a, b) => {
+            // Sort by time, descending for history, ascending for current
+            const timeA = new Date(a.rawAppointmentTime).getTime();
+            const timeB = new Date(b.rawAppointmentTime).getTime();
+            return view === 'current' ? timeA - timeB : timeB - timeA;
+        });
+
+    const getStatusStyles = (status: AppointmentStatus) => {
+        switch (status) {
+            case 'Confirmed':
+                return 'border-blue-500 text-blue-500';
+            case 'Completed':
+                return 'border-green-500 text-green-500';
+            case 'Cancelled':
+                return 'border-red-500 text-red-500';
+            case 'Pending':
+            default:
+                return 'border-yellow-500 text-yellow-500';
+        }
+    };
+
+    const getStatusLabel = (status: AppointmentStatus) => {
+        switch (status) {
+            case 'Confirmed':
+                return 'Confirmado';
+            case 'Completed':
+                return 'Concluído';
+            case 'Cancelled':
+                return 'Cancelado';
+            case 'Pending':
+            default:
+                return 'Pendente';
+        }
+    };
+
     return (
         <div className="space-y-6 relative pb-20">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-white/10 pb-4 gap-4">
                 <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Agenda</h2>
-                <BrutalButton variant="primary" icon={<Plus />} onClick={() => setShowModal(true)} className="w-full md:w-auto">Novo Agendamento</BrutalButton>
+                <div className="flex gap-2 w-full md:w-auto">
+                    <BrutalButton 
+                        variant={view === 'history' ? 'secondary' : 'ghost'} 
+                        icon={<History />} 
+                        onClick={() => setView(view === 'history' ? 'current' : 'history')}
+                        className="w-full md:w-auto"
+                    >
+                        {view === 'history' ? 'Ver Agenda Atual' : 'Ver Histórico'}
+                    </BrutalButton>
+                    <BrutalButton variant="primary" icon={<Plus />} onClick={() => setShowModal(true)} className="w-full md:w-auto">
+                        Novo Agendamento
+                    </BrutalButton>
+                </div>
             </div>
 
-            {/* Public Booking Requests */}
-            {publicBookings.length > 0 && (
+            {/* Public Booking Requests (Only visible in 'current' view) */}
+            {view === 'current' && publicBookings.length > 0 && (
                 <BrutalCard title="Solicitações Online" className="border-yellow-500/50">
                     <div className="space-y-4">
                         {publicBookings.map(booking => (
@@ -299,9 +377,9 @@ export const Agenda: React.FC = () => {
                                 <div>
                                     <h4 className="font-heading text-white text-lg">{booking.customer_name}</h4>
                                     <p className="text-sm text-neutral-400 font-mono">
-                                        {new Date(booking.appointment_time).toLocaleDateString()} às {new Date(booking.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(booking.appointment_time).toLocaleDateString('pt-BR')} às {new Date(booking.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
-                                    <p className="text-xs text-yellow-500 mt-1">R$ {booking.total_price}</p>
+                                    <p className="text-xs text-yellow-500 mt-1">{currencySymbol} {booking.total_price}</p>
                                 </div>
                                 <div className="flex gap-2 w-full md:w-auto">
                                     <BrutalButton size="sm" variant="primary" onClick={() => handleAcceptBooking(booking)}>Aceitar</BrutalButton>
@@ -313,34 +391,35 @@ export const Agenda: React.FC = () => {
                 </BrutalCard>
             )}
 
-            <BrutalCard className="min-h-[500px]">
+            <BrutalCard title={view === 'current' ? 'Próximos Agendamentos' : 'Histórico de Agendamentos'} className="min-h-[500px]">
                 {loading ? (
                     <div className="text-center text-text-secondary p-10">Carregando agenda...</div>
                 ) : (
                     <div className="space-y-4">
-                        {appointments.length === 0 ? (
-                            <div className="text-center text-text-secondary p-10">Nenhum agendamento encontrado.</div>
+                        {filteredAppointments.length === 0 ? (
+                            <div className="text-center text-text-secondary p-10">
+                                {view === 'current' ? 'Nenhum agendamento futuro confirmado.' : 'Nenhum registro no histórico.'}
+                            </div>
                         ) : (
-                            appointments.map((apt) => (
+                            filteredAppointments.map((apt) => (
                                 <div key={apt.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-neutral-900 border border-neutral-800 hover:border-neutral-600 transition-colors gap-4">
                                     <div className="flex items-center gap-4">
                                         <div className={`flex flex-col items-center justify-center w-16 h-16 border-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} bg-black`}>
                                             <span className={`text-lg font-bold ${accentText}`}>{apt.time}</span>
+                                            <span className="text-[10px] text-neutral-500">{apt.date}</span>
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-heading text-white">{apt.clientName}</h3>
-                                            <p className="text-sm text-text-secondary font-mono">{apt.service} • {apt.date}</p>
+                                            <p className="text-sm text-text-secondary font-mono">{apt.service}</p>
                                             <p className="text-xs text-neutral-500 font-mono mt-1">{currencySymbol} {apt.price}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                                        <div className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border ${apt.status === 'Confirmed' ? 'border-green-500 text-green-500' :
-                                            apt.status === 'Pending' ? 'border-yellow-500 text-yellow-500' : 'border-red-500 text-red-500'
-                                            }`}>
-                                            {apt.status === 'Confirmed' ? 'Confirmado' : apt.status === 'Pending' ? 'Pendente' : 'Cancelado'}
+                                        <div className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border ${getStatusStyles(apt.status)}`}>
+                                            {getStatusLabel(apt.status)}
                                         </div>
 
-                                        {apt.status === 'Pending' && (
+                                        {apt.status === 'Confirmed' && new Date(apt.rawAppointmentTime) < new Date() && (
                                             <BrutalButton
                                                 variant="secondary"
                                                 size="sm"
@@ -357,7 +436,7 @@ export const Agenda: React.FC = () => {
                 )}
             </BrutalCard>
 
-            {/* Modern Modal */}
+            {/* Modern Modal (New Appointment) */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6">
                     <div className={`bg-neutral-900 border-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} w-full max-w-lg rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}>
@@ -368,6 +447,7 @@ export const Agenda: React.FC = () => {
                                 Novo Agendamento
                             </h3>
                             <button
+                                type="button"
                                 onClick={() => setShowModal(false)}
                                 className="text-neutral-400 hover:text-white transition-colors p-2 hover:bg-neutral-800 rounded-full"
                             >

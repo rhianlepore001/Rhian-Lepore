@@ -61,8 +61,8 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
-// Wrapper for settings routes that provides auth check and an Outlet for nested routes
-const SettingsAuthWrapper = () => {
+// NEW: Wrapper for settings routes that provides auth check WITHOUT the main layout
+const SettingsWrapper = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -104,8 +104,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/relatorios" element={<Placeholder title="Relatórios" />} />
       </Route>
 
-      {/* Authenticated Routes for Settings */}
-      <Route path="/configuracoes" element={<SettingsAuthWrapper />}>
+      {/* Authenticated Routes for Settings (using the new wrapper) */}
+      <Route path="/configuracoes" element={<SettingsWrapper />}>
         <Route index element={<Navigate to="/configuracoes/geral" replace />} />
         <Route path="geral" element={<GeneralSettings />} />
         <Route path="agendamento" element={<PublicBookingSettings />} />

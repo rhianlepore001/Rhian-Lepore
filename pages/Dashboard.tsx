@@ -61,10 +61,12 @@ export const Dashboard: React.FC = () => {
           }
         }
 
+        // Buscar apenas os 5 primeiros agendamentos Confirmed (pendentes)
         const { data: aptData, error: aptError } = await supabase
           .from('appointments')
           .select('*, clients(name)')
           .eq('user_id', user.id)
+          .eq('status', 'Confirmed')
           .order('appointment_time', { ascending: true })
           .limit(5);
 
@@ -281,7 +283,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    <BrutalButton size="sm" variant="ghost">Ver</BrutalButton>
+                    <BrutalButton size="sm" variant="ghost" onClick={() => navigate('/agenda')}>Ver</BrutalButton>
                   </div>
                 </li>
               ))}

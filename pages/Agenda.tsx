@@ -292,6 +292,36 @@ export const Agenda: React.FC = () => {
         }
     };
 
+    const handleCancelAppointment = async (appointmentId: string) => {
+        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
+        try {
+            await supabase
+                .from('appointments')
+                .update({ status: 'Cancelled' })
+                .eq('id', appointmentId);
+            alert('Agendamento cancelado e movido para o histórico!');
+            fetchData();
+        } catch (error) {
+            console.error('Error cancelling appointment:', error);
+            alert('Erro ao cancelar agendamento.');
+        }
+    };
+
+    const handleDeleteAppointment = async (appointmentId: string) => {
+        if (!confirm('ATENÇÃO: Deletar permanentemente este agendamento? Esta ação não pode ser desfeita!')) return;
+        try {
+            await supabase
+                .from('appointments')
+                .delete()
+                .eq('id', appointmentId);
+            alert('Agendamento deletado permanentemente!');
+            fetchData();
+        } catch (error) {
+            console.error('Error deleting appointment:', error);
+            alert('Erro ao deletar agendamento.');
+        }
+    };
+
     const resetForm = () => {
         setSelectedClient('');
         setSelectedService('');
@@ -401,8 +431,8 @@ export const Agenda: React.FC = () => {
                         <button
                             onClick={() => setSelectedProfessionalFilter(null)}
                             className={`px-4 py-2 rounded-lg font-bold transition-all border-2 ${selectedProfessionalFilter === null
-                                    ? `${accentBg} text-black border-black`
-                                    : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600'
+                                ? `${accentBg} text-black border-black`
+                                : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600'
                                 }`}
                         >
                             Todos os Profissionais
@@ -412,8 +442,8 @@ export const Agenda: React.FC = () => {
                                 key={member.id}
                                 onClick={() => setSelectedProfessionalFilter(member.id)}
                                 className={`px-4 py-2 rounded-lg font-bold transition-all border-2 flex items-center gap-2 ${selectedProfessionalFilter === member.id
-                                        ? `${accentBg} text-black border-black`
-                                        : 'bg-neutral-800 text-white border-neutral-700 hover:border-neutral-600'
+                                    ? `${accentBg} text-black border-black`
+                                    : 'bg-neutral-800 text-white border-neutral-700 hover:border-neutral-600'
                                     }`}
                             >
                                 {member.photo_url && (
@@ -462,8 +492,8 @@ export const Agenda: React.FC = () => {
                 </BrutalCard>
             ) : (
                 <div className={`grid gap-4 ${selectedProfessionalFilter
-                        ? 'grid-cols-1 max-w-2xl mx-auto'
-                        : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                    ? 'grid-cols-1 max-w-2xl mx-auto'
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
                     }`}>
                     {displayedMembers.map(member => {
                         const memberAppointments = getAppointmentsForProfessional(member.id);
@@ -540,8 +570,8 @@ export const Agenda: React.FC = () => {
                                         <div
                                             key={apt.id}
                                             className={`border-2 rounded-lg p-3 ${apt.status === 'Completed'
-                                                    ? 'bg-green-500/10 border-green-500'
-                                                    : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+                                                ? 'bg-green-500/10 border-green-500'
+                                                : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
                                                 } transition-colors`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
@@ -550,13 +580,22 @@ export const Agenda: React.FC = () => {
                                                     {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                                 {apt.status === 'Confirmed' && (
-                                                    <button
-                                                        onClick={() => handleCompleteAppointment(apt.id)}
-                                                        className="text-green-500 hover:text-green-400 transition-colors"
-                                                        title="Marcar como concluído"
-                                                    >
-                                                        <Check className="w-4 h-4" />
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => handleCompleteAppointment(apt.id)}
+                                                            className="text-green-500 hover:text-green-400 transition-colors"
+                                                            title="Marcar como concluído"
+                                                        >
+                                                            <Check className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCancelAppointment(apt.id)}
+                                                            className="text-red-500 hover:text-red-400 transition-colors"
+                                                            title="Cancelar agendamento"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                             <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
@@ -635,16 +674,16 @@ export const Agenda: React.FC = () => {
                                         <div
                                             key={apt.id}
                                             className={`border-2 rounded-lg p-4 ${apt.status === 'Completed'
-                                                    ? 'bg-green-500/10 border-green-500'
-                                                    : 'bg-red-500/10 border-red-500'
+                                                ? 'bg-green-500/10 border-green-500'
+                                                : 'bg-red-500/10 border-red-500'
                                                 }`}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${apt.status === 'Completed'
-                                                                ? 'bg-green-500 text-black'
-                                                                : 'bg-red-500 text-white'
+                                                            ? 'bg-green-500 text-black'
+                                                            : 'bg-red-500 text-white'
                                                             }`}>
                                                             {apt.status === 'Completed' ? '✓ CONCLUÍDO' : '✗ CANCELADO'}
                                                         </span>

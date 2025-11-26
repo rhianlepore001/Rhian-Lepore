@@ -80,7 +80,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             </aside>
 
             {/* Content */}
-            <main className={`overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'} md:pl-64`}>
+            <main className={`h-screen overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'}`}>
                 {/* Mobile Header */}
                 <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3">
                     <button

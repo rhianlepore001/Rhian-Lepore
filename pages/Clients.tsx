@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Plus, Search, User } from 'lucide-react';
+import { Plus, Search, User, Star } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { calculateTier, getTierConfig } from '../utils/tierSystem';
 
 export const Clients: React.FC = () => {
     const { user, userType } = useAuth();
@@ -19,6 +20,8 @@ export const Clients: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+    const [photo, setPhoto] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     const isBeauty = userType === 'beauty';
     const buttonClass = isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover text-black' : 'bg-accent-gold hover:bg-accent-goldHover text-black';
@@ -53,17 +56,39 @@ export const Clients: React.FC = () => {
 
     const handleCreateClient = async (e: React.FormEvent) => {
         e.preventDefault();
+        setUploading(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Usuário não autenticado');
+
+            let photoUrl = null;
+
+            // Upload photo if provided
+            if (photo) {
+                const fileExt = photo.name.split('.').pop();
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError } = await supabase.storage
+                    .from('client_photos')
+                    .upload(fileName, photo);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('client_photos')
+                    .getPublicUrl(fileName);
+
+                photoUrl = publicUrl;
+            }
 
             const { error } = await supabase.from('clients').insert({
                 user_id: user.id,
                 name,
                 email,
                 phone,
+                photo_url: photoUrl,
                 loyalty_tier: 'Bronze',
-                total_visits: 0
+                total_visits: 0,
+                rating: 0
             });
 
             if (error) throw error;
@@ -73,9 +98,12 @@ export const Clients: React.FC = () => {
             setName('');
             setEmail('');
             setPhone('');
+            setPhoto(null);
         } catch (error: any) {
             console.error('Error creating client:', error);
             alert(`Erro ao criar cliente: ${error.message || JSON.stringify(error)}`);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -109,20 +137,44 @@ export const Clients: React.FC = () => {
                 ) : filteredClients.length === 0 ? (
                     <div className="col-span-full text-center text-text-secondary p-10">Nenhum cliente encontrado.</div>
                 ) : (
-                    filteredClients.map(client => (
-                        <Link key={client.id} to={`/clientes/${client.id}`}>
-                            <BrutalCard className="hover:border-white/40 transition-colors cursor-pointer group h-full">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className={`w-12 h-12 rounded-full border-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} flex items-center justify-center bg-black`}>
-                                        <User className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} />
+                    filteredClients.map(client => {
+                        const tier = calculateTier(client.total_visits || 0);
+                        const tierConfig = getTierConfig(tier);
+                        const rating = client.rating || 0;
+
+                        return (
+                            <Link key={client.id} to={`/clientes/${client.id}`}>
+                                <BrutalCard className="hover:border-white/40 transition-colors cursor-pointer group h-full">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className={`w-12 h-12 rounded-full border-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} flex items-center justify-center bg-black overflow-hidden`}>
+                                            {client.photo_url ? (
+                                                <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} />
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className={`text-xs font-mono uppercase px-2 py-1 ${tierConfig.bgColor} ${tierConfig.borderColor} ${tierConfig.color} border`}>
+                                                {tier}
+                                            </span>
+                                            {rating > 0 && (
+                                                <div className="flex gap-0.5">
+                                                    {[1, 2, 3, 4, 5].map(i => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`w-3 h-3 ${i <= rating ? 'fill-accent-gold text-accent-gold' : 'text-neutral-600'}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <span className="text-xs font-mono text-neutral-500 uppercase">{client.loyalty_tier}</span>
-                                </div>
-                                <h3 className="text-lg font-heading text-white mb-1 group-hover:text-accent-gold transition-colors">{client.name}</h3>
-                                <p className="text-sm text-text-secondary font-mono">{client.phone || 'Sem telefone'}</p>
-                            </BrutalCard>
-                        </Link>
-                    ))
+                                    <h3 className="text-lg font-heading text-white mb-1 group-hover:text-accent-gold transition-colors">{client.name}</h3>
+                                    <p className="text-sm text-text-secondary font-mono">{client.phone || 'Sem telefone'}</p>
+                                </BrutalCard>
+                            </Link>
+                        );
+                    })
                 )}
             </div>
 
@@ -171,11 +223,22 @@ export const Clients: React.FC = () => {
                                 />
                             </div>
 
+                            <div>
+                                <label className="block text-xs font-mono text-neutral-500 mb-1">Foto (Opcional)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                                    className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-accent-gold file:text-black hover:file:bg-accent-goldHover"
+                                />
+                            </div>
+
                             <button
                                 type="submit"
-                                className={`w-full py-3 font-bold uppercase tracking-wider ${buttonClass} mt-4`}
+                                disabled={uploading}
+                                className={`w-full py-3 font-bold uppercase tracking-wider ${buttonClass} mt-4 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
-                                Cadastrar
+                                {uploading ? 'Cadastrando...' : 'Cadastrar'}
                             </button>
                         </form>
                     </div>

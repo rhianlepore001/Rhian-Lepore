@@ -3,13 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { MOCK_CLIENT } from '../constants';
-import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors } from 'lucide-react';
-
-import { useParams } from 'react-router-dom';
+import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { calculateTier, getTierConfig, calculateNextVisitPrediction } from '../utils/tierSystem';
 
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
@@ -30,6 +30,24 @@ export const ClientCRM: React.FC = () => {
         if (clientData) {
           setNotes(clientData.notes || '');
 
+          // Fetch appointments for visit history
+          const { data: appointmentsData, error: appointmentsError } = await supabase
+            .from('appointments')
+            .select('*')
+            .eq('client_id', clientData.id)
+            .eq('status', 'Completed')
+            .order('appointment_time', { ascending: false });
+
+          if (appointmentsError) throw appointmentsError;
+
+          const totalVisits = appointmentsData?.length || 0;
+          const lastVisit = appointmentsData?.[0]?.appointment_time
+            ? new Date(appointmentsData[0].appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+            : 'Nunca';
+          const nextPrediction = calculateNextVisitPrediction(appointmentsData || []);
+          const calculatedTier = calculateTier(totalVisits);
+
+          // Fetch hair records
           const { data: historyData, error: historyError } = await supabase
             .from('hair_records')
             .select('*')
@@ -40,10 +58,10 @@ export const ClientCRM: React.FC = () => {
 
           setClient({
             ...clientData,
-            loyaltyTier: clientData.loyalty_tier || 'Bronze',
-            lastVisit: clientData.last_visit || 'N/A',
-            totalVisits: clientData.total_visits || 0,
-            nextPrediction: clientData.next_prediction || 'Calculando...',
+            loyaltyTier: calculatedTier,
+            lastVisit,
+            totalVisits,
+            nextPrediction,
             hairHistory: historyData?.map((h: any) => ({
               ...h,
               imageUrl: h.image_url,
@@ -89,20 +107,38 @@ export const ClientCRM: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/clientes')}
+        className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-4"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span className="font-mono text-sm uppercase">Voltar para Clientes</span>
+      </button>
+
       {/* Top Header Profile */}
       <BrutalCard className="overflow-hidden">
         <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
           {/* Avatar & Tier */}
           <div className="flex flex-row md:flex-col items-center gap-4 w-full md:w-auto">
-            <div className="w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 border-accent-gold shadow-heavy relative">
-              <img src="https://picsum.photos/id/1005/300/300" alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
+            <div className="w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 border-accent-gold shadow-heavy relative overflow-hidden">
+              {client.photo_url ? (
+                <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
+              ) : (
+                <img src="https://picsum.photos/id/1005/300/300" alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
+              )}
               <div className="absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 bg-black text-accent-gold text-[10px] md:text-xs font-bold px-2 py-1 border border-accent-gold uppercase tracking-widest">
                 {client.loyaltyTier}
               </div>
             </div>
             <div className="flex flex-col justify-center md:items-center md:w-full">
               <div className="flex gap-1 text-accent-gold mb-1">
-                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 md:w-4 md:h-4 fill-current" />)}
+                {[1, 2, 3, 4, 5].map(i => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 md:w-4 md:h-4 ${i <= (client.rating || 0) ? 'fill-current' : 'fill-none'}`}
+                  />
+                ))}
               </div>
               <p className="text-xs text-text-secondary md:hidden font-mono uppercase">Membro desde 2021</p>
             </div>
@@ -130,9 +166,10 @@ export const ClientCRM: React.FC = () => {
                 <p className="text-[10px] md:text-xs text-text-secondary uppercase">Total Visitas</p>
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
               </div>
-              <div className="col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 border-l-accent-gold">
-                <p className="text-[10px] md:text-xs text-accent-gold uppercase flex items-center gap-1">
+              <div className="col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 border-l-yellow-500">
+                <p className="text-[10px] md:text-xs text-yellow-500 uppercase flex items-center gap-1">
                   <Sparkles className="w-3 h-3" /> Previsão Retorno
+                  <span className="ml-auto bg-yellow-500/20 text-yellow-500 px-2 py-0.5 text-[8px] font-bold border border-yellow-500">EM DESENVOLVIMENTO</span>
                 </p>
                 <p className="text-base md:text-lg font-bold text-white">{client.nextPrediction}</p>
               </div>
@@ -143,31 +180,37 @@ export const ClientCRM: React.FC = () => {
 
       {/* Visual Hair History */}
       <BrutalCard title="Histórico Visual de Cortes">
-        <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-          <div className="flex gap-4 md:gap-6 min-w-max">
-            {client.hairHistory.map((record: any, index: number) => (
-              <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                <div className="relative border-2 border-neutral-700 hover:border-accent-gold transition-colors">
-                  <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
-                    <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
-                    <p className="text-[10px] md:text-xs text-text-secondary font-mono">{record.date} • {record.barber}</p>
+        {client.hairHistory.length === 0 ? (
+          <div className="text-center py-12 text-neutral-500">
+            <p className="text-sm">Nenhum registro de corte ainda</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+            <div className="flex gap-4 md:gap-6 min-w-max">
+              {client.hairHistory.map((record: any, index: number) => (
+                <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
+                  <div className="relative border-2 border-neutral-700 hover:border-accent-gold transition-colors">
+                    <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
+                      <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
+                      <p className="text-[10px] md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
+                    </div>
+                    {index === 0 && (
+                      <div className="absolute top-2 right-2">
+                        <span className="bg-accent-gold text-black text-[10px] font-bold px-2 py-1 uppercase">Atual</span>
+                      </div>
+                    )}
                   </div>
                   {index === 0 && (
-                    <div className="absolute top-2 right-2">
-                      <span className="bg-accent-gold text-black text-[10px] font-bold px-2 py-1 uppercase">Atual</span>
-                    </div>
+                    <button className="w-full mt-3 bg-neutral-800 hover:bg-accent-gold hover:text-black text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2">
+                      <RefreshCcw className="w-3 h-3" /> Repetir Estilo
+                    </button>
                   )}
                 </div>
-                {index === 0 && (
-                  <button className="w-full mt-3 bg-neutral-800 hover:bg-accent-gold hover:text-black text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2">
-                    <RefreshCcw className="w-3 h-3" /> Repetir Estilo
-                  </button>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </BrutalCard>
 
       {/* Notes & Preferences */}
@@ -195,9 +238,12 @@ export const ClientCRM: React.FC = () => {
 
         {/* AI Insight Mini Card */}
         <BrutalCard className="bg-gradient-to-br from-brutal-card to-neutral-900 border-accent-gold/30">
-          <div className="flex items-center gap-2 mb-4 text-accent-gold">
-            <Sparkles className="w-5 h-5" />
-            <h3 className="font-heading text-lg uppercase">Barber AI</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 text-accent-gold flex-1">
+              <Sparkles className="w-5 h-5" />
+              <h3 className="font-heading text-lg uppercase">Barber AI</h3>
+            </div>
+            <span className="bg-yellow-500/20 text-yellow-500 px-2 py-1 text-[8px] font-bold border border-yellow-500 uppercase">EM DESENVOLVIMENTO</span>
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">
             O cliente {client.name.split(' ')[0]} costuma agendar às sextas-feiras antes das 18h.

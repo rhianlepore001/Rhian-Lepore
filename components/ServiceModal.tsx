@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Loader2, Plus, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -50,6 +50,12 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Category creation states
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [savingCategory, setSavingCategory] = useState(false);
+    const [localCategories, setLocalCategories] = useState<Category[]>(categories);
 
     const currencySymbol = region === 'BR' ? 'R$' : '€';
 
@@ -160,6 +166,37 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         );
     };
 
+    const handleCreateCategory = async () => {
+        if (!user || !newCategoryName.trim()) return;
+        setSavingCategory(true);
+
+        try {
+            const { data, error } = await supabase
+                .from('service_categories')
+                .insert({
+                    user_id: user.id,
+                    name: newCategoryName.trim(),
+                    display_order: localCategories.length
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Update local categories and select the new one
+            setLocalCategories([...localCategories, data]);
+            setCategoryId(data.id);
+            setNewCategoryName('');
+            setIsCreatingCategory(false);
+        } catch (error) {
+            console.error('Error creating category:', error);
+            alert('Erro ao criar categoria');
+        } finally {
+            setSavingCategory(false);
+        }
+    };
+
+
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -214,17 +251,73 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                             </div>
 
                             <div>
-                                <label className="text-white font-mono text-xs mb-1 block">Categoria</label>
-                                <select
-                                    value={categoryId}
-                                    onChange={e => setCategoryId(e.target.value)}
-                                    className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
-                                >
-                                    <option value="" disabled>Selecione uma categoria</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                    ))}
-                                </select>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="text-white font-mono text-xs block">Categoria</label>
+                                    {!isCreatingCategory && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCreatingCategory(true)}
+                                            className={`text-${accentColor} hover:text-${accentColor}/80 text-xs font-bold flex items-center gap-1 transition-colors`}
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                            Nova Categoria
+                                        </button>
+                                    )}
+                                </div>
+
+                                {isCreatingCategory ? (
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newCategoryName}
+                                                onChange={e => setNewCategoryName(e.target.value)}
+                                                placeholder="Nome da categoria..."
+                                                className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleCreateCategory();
+                                                    } else if (e.key === 'Escape') {
+                                                        setIsCreatingCategory(false);
+                                                        setNewCategoryName('');
+                                                    }
+                                                }}
+                                                autoFocus
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleCreateCategory}
+                                                disabled={!newCategoryName.trim() || savingCategory}
+                                                className={`px-3 py-2 bg-${accentColor} text-black rounded-lg hover:bg-${accentColor}/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                {savingCategory ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsCreatingCategory(false);
+                                                    setNewCategoryName('');
+                                                }}
+                                                className="px-3 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600 transition-colors"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-neutral-500">Pressione Enter para salvar ou Esc para cancelar</p>
+                                    </div>
+                                ) : (
+                                    <select
+                                        value={categoryId}
+                                        onChange={e => setCategoryId(e.target.value)}
+                                        className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                    >
+                                        <option value="" disabled>Selecione uma categoria</option>
+                                        {localCategories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                )}
                             </div>
                         </div>
 

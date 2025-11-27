@@ -129,8 +129,14 @@ export const Dashboard: React.FC = () => {
           generatedAlerts.push({ id: 'setup-team', text: '👥 Adicione membros da equipe para gerenciar agendamentos', type: 'warning', actionPath: '/configuracoes/equipe' });
         }
 
-        if (!businessSlug) {
-          generatedAlerts.push({ id: 'setup-slug', text: '🔗 Configure seu link público de agendamento', type: 'warning', actionPath: '/configuracoes/agendamento' });
+        const { data: profile } = await supabase.from('profiles').select('business_name, logo_url').eq('id', user.id).single();
+        if (!profile?.business_name) {
+          generatedAlerts.push({ id: 'setup-profile', text: '👤 Configure seu perfil', type: 'warning', actionPath: '/configuracoes/geral' });
+        }
+
+        // Check if business photo/cover is configured
+        if (!profile?.logo_url) {
+          generatedAlerts.push({ id: 'setup-business', text: '🏪 Adicione foto e capa do seu estabelecimento', type: 'warning', actionPath: '/configuracoes/geral' });
         }
       }
     } catch (error) {

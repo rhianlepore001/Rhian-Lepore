@@ -28,19 +28,35 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
         setLoading(true);
 
         try {
-            await supabase.from('business_settings').upsert({
+            console.log('Saving business hours:', businessHours);
+
+            const { error: settingsError } = await supabase.from('business_settings').upsert({
                 user_id: user.id,
                 business_hours: businessHours
-            });
+            }, { onConflict: 'user_id' });
 
-            await supabase.rpc('update_onboarding_step', {
+            if (settingsError) {
+                console.error('Error saving business hours:', settingsError);
+                alert('Erro ao salvar horários. Por favor, tente novamente.');
+                setLoading(false);
+                return;
+            }
+
+            console.log('Business hours saved successfully');
+
+            const { error: stepError } = await supabase.rpc('update_onboarding_step', {
                 p_user_id: user.id,
                 p_step: 3
             });
 
+            if (stepError) {
+                console.error('Error updating onboarding step:', stepError);
+            }
+
             onNext();
         } catch (error) {
             console.error('Error saving hours:', error);
+            alert('Erro ao salvar horários. Por favor, tente novamente.');
         } finally {
             setLoading(false);
         }

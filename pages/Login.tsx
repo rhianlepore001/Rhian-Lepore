@@ -217,7 +217,7 @@ export const Login: React.FC = () => {
                     </button>
 
                     <div className="text-center mt-6">
-                        <Link to="/register" className={`text-xs font-bold uppercase border-b border-transparent transition-all
+                        <Link to={`/register?type=${loginTheme}`} className={`text-xs font-bold uppercase border-b border-transparent transition-all
                 ${isBeauty
                                 ? 'text-beauty-neon hover:text-white hover:border-white font-sans'
                                 : 'text-accent-gold hover:border-accent-gold font-mono'}

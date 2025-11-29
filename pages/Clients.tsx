@@ -63,23 +63,36 @@ export const Clients: React.FC = () => {
 
             let photoUrl = null;
 
-            // Upload photo if provided
+            // Upload photo if provided - make this optional and non-blocking
             if (photo) {
-                const fileExt = photo.name.split('.').pop();
-                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage
-                    .from('client_photos')
-                    .upload(fileName, photo);
+                try {
+                    const fileExt = photo.name.split('.').pop();
+                    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-                if (uploadError) throw uploadError;
+                    console.log('Attempting to upload photo to client_photos bucket...');
 
-                const { data: { publicUrl } } = supabase.storage
-                    .from('client_photos')
-                    .getPublicUrl(fileName);
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('client_photos')
+                        .upload(fileName, photo);
 
-                photoUrl = publicUrl;
+                    if (uploadError) {
+                        console.error('Photo upload error:', uploadError);
+                        // Don't throw - just warn the user and continue without photo
+                        alert('Aviso: Não foi possível fazer upload da foto. O cliente será criado sem foto.');
+                    } else {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('client_photos')
+                            .getPublicUrl(fileName);
+                        photoUrl = publicUrl;
+                        console.log('Photo uploaded successfully:', publicUrl);
+                    }
+                } catch (photoError) {
+                    console.error('Photo upload exception:', photoError);
+                    alert('Aviso: Erro ao fazer upload da foto. O cliente será criado sem foto.');
+                }
             }
 
+            // Create client regardless of photo upload success
             const { error } = await supabase.from('clients').insert({
                 user_id: user.id,
                 name,
@@ -93,6 +106,7 @@ export const Clients: React.FC = () => {
 
             if (error) throw error;
 
+            alert('Cliente criado com sucesso!');
             setShowModal(false);
             fetchClients();
             setName('');
@@ -224,13 +238,14 @@ export const Clients: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-mono text-neutral-500 mb-1">Foto (Opcional)</label>
+                                <label className="block text-xs font-mono text-neutral-500 mb-1">Foto (Opcional - Temporariamente desabilitado)</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setPhoto(e.target.files?.[0] || null)}
                                     className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-accent-gold file:text-black hover:file:bg-accent-goldHover"
                                 />
+                                <p className="text-xs text-neutral-500 mt-1">⚠️ Upload de fotos será configurado em breve</p>
                             </div>
 
                             <button

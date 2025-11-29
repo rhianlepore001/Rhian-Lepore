@@ -6,9 +6,18 @@ import { BrutalButton } from '../components/BrutalButton';
 import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { calculateTier, getTierConfig, calculateNextVisitPrediction } from '../utils/tierSystem';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { userType } = useAuth();
+  const isBeauty = userType === 'beauty';
+
+  // Theme helpers
+  const themeColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+  const themeBorder = isBeauty ? 'border-beauty-neon' : 'border-accent-gold';
+  const themeBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+  const themeButtonHover = isBeauty ? 'hover:bg-beauty-neon hover:text-white' : 'hover:bg-accent-gold hover:text-black';
   const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -121,18 +130,18 @@ export const ClientCRM: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
           {/* Avatar & Tier */}
           <div className="flex flex-row md:flex-col items-center gap-4 w-full md:w-auto">
-            <div className="w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 border-accent-gold shadow-heavy relative overflow-hidden">
+            <div className={`w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 ${themeBorder} shadow-heavy relative overflow-hidden`}>
               {client.photo_url ? (
                 <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
               ) : (
                 <img src="https://picsum.photos/id/1005/300/300" alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
               )}
-              <div className="absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 bg-black text-accent-gold text-[10px] md:text-xs font-bold px-2 py-1 border border-accent-gold uppercase tracking-widest">
+              <div className={`absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 bg-black ${themeColor} text-[10px] md:text-xs font-bold px-2 py-1 border ${themeBorder} uppercase tracking-widest`}>
                 {client.loyaltyTier}
               </div>
             </div>
             <div className="flex flex-col justify-center md:items-center md:w-full">
-              <div className="flex gap-1 text-accent-gold mb-1">
+              <div className={`flex gap-1 ${themeColor} mb-1`}>
                 {[1, 2, 3, 4, 5].map(i => (
                   <Star
                     key={i}
@@ -154,7 +163,9 @@ export const ClientCRM: React.FC = () => {
                   <span className="flex items-center gap-2"><Phone className="w-3 h-3" /> {client.phone}</span>
                 </div>
               </div>
-              <BrutalButton variant="primary" icon={<Scissors />} size="sm" className="w-full md:w-auto">Novo Corte</BrutalButton>
+              <BrutalButton variant="primary" icon={<Scissors />} size="sm" className="w-full md:w-auto">
+                {isBeauty ? 'Novo Serviço' : 'Novo Corte'}
+              </BrutalButton>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
@@ -166,10 +177,10 @@ export const ClientCRM: React.FC = () => {
                 <p className="text-[10px] md:text-xs text-text-secondary uppercase">Total Visitas</p>
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
               </div>
-              <div className="col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 border-l-yellow-500">
-                <p className="text-[10px] md:text-xs text-yellow-500 uppercase flex items-center gap-1">
+              <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 ${isBeauty ? 'border-l-beauty-neon' : 'border-l-yellow-500'}`}>
+                <p className={`text-[10px] md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
                   <Sparkles className="w-3 h-3" /> Previsão Retorno
-                  <span className="ml-auto bg-yellow-500/20 text-yellow-500 px-2 py-0.5 text-[8px] font-bold border border-yellow-500">EM DESENVOLVIMENTO</span>
+                  <span className={`ml-auto ${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-0.5 text-[8px] font-bold border`}>EM DESENVOLVIMENTO</span>
                 </p>
                 <p className="text-base md:text-lg font-bold text-white">{client.nextPrediction}</p>
               </div>
@@ -179,17 +190,17 @@ export const ClientCRM: React.FC = () => {
       </BrutalCard>
 
       {/* Visual Hair History */}
-      <BrutalCard title="Histórico Visual de Cortes">
+      <BrutalCard title={isBeauty ? "Histórico Visual" : "Histórico Visual de Cortes"}>
         {client.hairHistory.length === 0 ? (
           <div className="text-center py-12 text-neutral-500">
-            <p className="text-sm">Nenhum registro de corte ainda</p>
+            <p className="text-sm">{isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}</p>
           </div>
         ) : (
           <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             <div className="flex gap-4 md:gap-6 min-w-max">
               {client.hairHistory.map((record: any, index: number) => (
                 <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className="relative border-2 border-neutral-700 hover:border-accent-gold transition-colors">
+                  <div className={`relative border-2 border-neutral-700 hover:${themeBorder} transition-colors`}>
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
                       <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
@@ -197,13 +208,13 @@ export const ClientCRM: React.FC = () => {
                     </div>
                     {index === 0 && (
                       <div className="absolute top-2 right-2">
-                        <span className="bg-accent-gold text-black text-[10px] font-bold px-2 py-1 uppercase">Atual</span>
+                        <span className={`${themeBg} ${isBeauty ? 'text-white' : 'text-black'} text-[10px] font-bold px-2 py-1 uppercase`}>Atual</span>
                       </div>
                     )}
                   </div>
                   {index === 0 && (
-                    <button className="w-full mt-3 bg-neutral-800 hover:bg-accent-gold hover:text-black text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2">
-                      <RefreshCcw className="w-3 h-3" /> Repetir Estilo
+                    <button className={`w-full mt-3 bg-neutral-800 ${themeButtonHover} text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}>
+                      <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>
                   )}
                 </div>
@@ -216,9 +227,9 @@ export const ClientCRM: React.FC = () => {
       {/* Notes & Preferences */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <div className="md:col-span-2 h-full">
-          <BrutalCard title="Notas do Barbeiro" className="h-full">
+          <BrutalCard title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
             <textarea
-              className="w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold resize-none"
+              className={`w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:${themeBorder} resize-none`}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Digite observações sobre o cliente..."
@@ -237,13 +248,13 @@ export const ClientCRM: React.FC = () => {
         </div>
 
         {/* AI Insight Mini Card */}
-        <BrutalCard className="bg-gradient-to-br from-brutal-card to-neutral-900 border-accent-gold/30">
+        <BrutalCard className={`bg-gradient-to-br from-brutal-card to-neutral-900 ${isBeauty ? 'border-beauty-neon/30' : 'border-accent-gold/30'}`}>
           <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-2 text-accent-gold flex-1">
+            <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
               <Sparkles className="w-5 h-5" />
-              <h3 className="font-heading text-lg uppercase">Barber AI</h3>
+              <h3 className="font-heading text-lg uppercase">{isBeauty ? 'Beauty AI' : 'Barber AI'}</h3>
             </div>
-            <span className="bg-yellow-500/20 text-yellow-500 px-2 py-1 text-[8px] font-bold border border-yellow-500 uppercase">EM DESENVOLVIMENTO</span>
+            <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase`}>EM DESENVOLVIMENTO</span>
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">
             O cliente {client.name.split(' ')[0]} costuma agendar às sextas-feiras antes das 18h.

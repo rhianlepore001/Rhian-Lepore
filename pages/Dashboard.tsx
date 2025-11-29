@@ -61,12 +61,14 @@ export const Dashboard: React.FC = () => {
           }
         }
 
-        // Buscar apenas os 5 primeiros agendamentos Confirmed (pendentes)
+        // --- AJUSTE CRÍTICO: Filtrar apenas agendamentos FUTUROS ---
+        const now = new Date().toISOString();
         const { data: aptData, error: aptError } = await supabase
           .from('appointments')
           .select('*, clients(name)')
           .eq('user_id', user.id)
           .eq('status', 'Confirmed')
+          .gte('appointment_time', now) // Apenas agendamentos a partir de agora
           .order('appointment_time', { ascending: true })
           .limit(5);
 
@@ -115,6 +117,25 @@ export const Dashboard: React.FC = () => {
     const generatedAlerts: Alert[] = [];
 
     try {
+      // --- NOVO ALERTA: Agendamentos Atrasados ---
+      const now = new Date().toISOString();
+      const { data: overdueApts } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('user_id', user.id)
+        .in('status', ['Confirmed', 'Pending'])
+        .lt('appointment_time', now); // Agendamentos no passado
+
+      if (overdueApts && overdueApts.length > 0) {
+        generatedAlerts.push({
+          id: 'overdue-appointments',
+          text: `⚠️ ${overdueApts.length} agendamento(s) pendente(s) de conclusão/cancelamento.`,
+          type: 'danger',
+          actionPath: '/agenda?filter=overdue' // Novo filtro para a Agenda
+        });
+      }
+
+      // --- ALERTA DE SETUP (Lógica existente) ---
       const isNewAccount = createdAt &&
         (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);
 

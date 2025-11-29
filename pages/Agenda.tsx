@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 interface Appointment {
     id: string;
@@ -24,6 +25,7 @@ interface TeamMember {
 
 export const Agenda: React.FC = () => {
     const { user, userType, region } = useAuth();
+    const [searchParams] = useSearchParams();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -36,6 +38,8 @@ export const Agenda: React.FC = () => {
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
     const [historyMonth, setHistoryMonth] = useState(new Date());
     const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState<string | null>(null);
+    const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
+    const [isOverdueLoading, setIsOverdueLoading] = useState(false);
 
     // Form state
     const [selectedClient, setSelectedClient] = useState('');
@@ -47,13 +51,21 @@ export const Agenda: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const currencySymbol = region === 'PT' ? '€' : 'R$';
+    const currencySymbol = region === 'PT' ? '€' : 'R$' ;
+
+    const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
     useEffect(() => {
         if (user) {
             fetchData();
         }
     }, [user, selectedDate]);
+
+    useEffect(() => {
+        if (isOverdueFilter) {
+            fetchOverdueAppointments();
+        }
+    }, [user, isOverdueFilter]);
 
     const fetchData = async () => {
         await Promise.all([
@@ -85,18 +97,14 @@ export const Agenda: React.FC = () => {
         endOfDay.setHours(23, 59, 59, 999);
         const now = new Date();
 
-        const isToday = selectedDate.toDateString() === now.toDateString();
-        const isFuture = selectedDate > now;
-
-        const statusFilter = isToday || isFuture ? ['Confirmed', 'Completed'] : ['Confirmed'];
-
+        // Only fetch appointments for the selected day (Confirmed status)
         const { data } = await supabase
             .from('appointments')
             .select('*, clients(name)')
             .eq('user_id', user.id)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
-            .in('status', statusFilter)
+            .eq('status', 'Confirmed') // Only confirmed appointments for the day view
             .order('appointment_time');
 
         if (data) {
@@ -111,6 +119,34 @@ export const Agenda: React.FC = () => {
                 professional_id: apt.professional_id
             })));
         }
+    };
+
+    const fetchOverdueAppointments = async () => {
+        if (!user) return;
+        setIsOverdueLoading(true);
+        const now = new Date().toISOString();
+
+        const { data } = await supabase
+            .from('appointments')
+            .select('*, clients(name)')
+            .eq('user_id', user.id)
+            .in('status', ['Confirmed', 'Pending'])
+            .lt('appointment_time', now) // Agendamentos no passado
+            .order('appointment_time', { ascending: false });
+
+        if (data) {
+            setOverdueAppointments(data.map((apt: any) => ({
+                id: apt.id,
+                client_id: apt.client_id,
+                clientName: apt.clients?.name || 'Cliente Desconhecido',
+                service: apt.service,
+                appointment_time: apt.appointment_time,
+                price: apt.price,
+                status: apt.status,
+                professional_id: apt.professional_id
+            })));
+        }
+        setIsOverdueLoading(false);
     };
 
     const fetchPublicBookings = async () => {
@@ -182,7 +218,7 @@ export const Agenda: React.FC = () => {
                 .from('clients')
                 .select('id')
                 .eq('user_id', user.id)
-                .eq('phone', booking.client_phone)
+                .eq('phone', booking.customer_phone)
                 .single();
 
             if (existingClient) {
@@ -192,9 +228,9 @@ export const Agenda: React.FC = () => {
                     .from('clients')
                     .insert({
                         user_id: user.id,
-                        name: booking.client_name,
-                        phone: booking.client_phone,
-                        email: booking.client_email
+                        name: booking.customer_name,
+                        phone: booking.customer_phone,
+                        email: booking.customer_email
                     })
                     .select()
                     .single();
@@ -203,7 +239,14 @@ export const Agenda: React.FC = () => {
                 clientId = newClient.id;
             }
 
-            const serviceNames = booking.services.map((s: any) => s.name).join(', ');
+            // Fetch service names based on IDs
+            const { data: serviceDetails } = await supabase
+                .from('services')
+                .select('name')
+                .in('id', booking.service_ids);
+            
+            const serviceNames = (serviceDetails || []).map(s => s.name).join(', ');
+
             const { error: aptError } = await supabase
                 .from('appointments')
                 .insert({
@@ -244,6 +287,50 @@ export const Agenda: React.FC = () => {
         }
     };
 
+    const handleCompleteAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
+        try {
+            // Use RPC to handle finance record creation
+            const { error } = await supabase.rpc('complete_appointment', { p_appointment_id: appointmentId });
+
+            if (error) throw error;
+
+            if (isOverdue) {
+                fetchOverdueAppointments();
+            } else {
+                fetchData();
+            }
+        } catch (error) {
+            console.error('Error completing appointment:', error);
+            alert('Erro ao concluir agendamento. Verifique se o profissional tem taxa de comissão configurada.');
+        }
+    };
+
+    const handleCancelAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
+        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
+        try {
+            await supabase
+                .from('appointments')
+                .update({ status: 'Cancelled' })
+                .eq('id', appointmentId);
+            alert('Agendamento cancelado e movido para o histórico!');
+            if (isOverdue) {
+                fetchOverdueAppointments();
+            } else {
+                fetchData();
+            }
+        } catch (error) {
+            console.error('Error cancelling appointment:', error);
+            alert('Erro ao cancelar agendamento.');
+        }
+    };
+
+    const resetForm = () => {
+        setSelectedClient('');
+        setSelectedService('');
+        setSelectedProfessional('');
+        setSelectedTime('');
+    };
+
     const handleCreateAppointment = async () => {
         if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedTime) {
             alert('Preencha todos os campos!');
@@ -278,55 +365,6 @@ export const Agenda: React.FC = () => {
             console.error('Error creating appointment:', error);
             alert('Erro ao criar agendamento.');
         }
-    };
-
-    const handleCompleteAppointment = async (appointmentId: string) => {
-        try {
-            await supabase
-                .from('appointments')
-                .update({ status: 'Completed' })
-                .eq('id', appointmentId);
-            fetchData();
-        } catch (error) {
-            console.error('Error completing appointment:', error);
-        }
-    };
-
-    const handleCancelAppointment = async (appointmentId: string) => {
-        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
-        try {
-            await supabase
-                .from('appointments')
-                .update({ status: 'Cancelled' })
-                .eq('id', appointmentId);
-            alert('Agendamento cancelado e movido para o histórico!');
-            fetchData();
-        } catch (error) {
-            console.error('Error cancelling appointment:', error);
-            alert('Erro ao cancelar agendamento.');
-        }
-    };
-
-    const handleDeleteAppointment = async (appointmentId: string) => {
-        if (!confirm('ATENÇÃO: Deletar permanentemente este agendamento? Esta ação não pode ser desfeita!')) return;
-        try {
-            await supabase
-                .from('appointments')
-                .delete()
-                .eq('id', appointmentId);
-            alert('Agendamento deletado permanentemente!');
-            fetchData();
-        } catch (error) {
-            console.error('Error deleting appointment:', error);
-            alert('Erro ao deletar agendamento.');
-        }
-    };
-
-    const resetForm = () => {
-        setSelectedClient('');
-        setSelectedService('');
-        setSelectedProfessional('');
-        setSelectedTime('');
     };
 
     const changeDate = (days: number) => {
@@ -397,6 +435,67 @@ export const Agenda: React.FC = () => {
                     </BrutalButton>
                 </div>
             </div>
+
+            {/* --- NOVO: Agendamentos Atrasados (Overdue) --- */}
+            {isOverdueFilter && (
+                <BrutalCard className="border-l-4 border-red-600 bg-red-900/20">
+                    <div className="flex items-start gap-4">
+                        <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
+                        <div className="flex-1">
+                            <h3 className="text-white font-heading text-lg uppercase mb-2">
+                                🚨 Agendamentos Atrasados ({overdueAppointments.length})
+                            </h3>
+                            <p className="text-neutral-300 text-sm mb-4">
+                                Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
+                            </p>
+                            
+                            {isOverdueLoading ? (
+                                <div className="flex items-center gap-2 text-neutral-400">
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
+                                </div>
+                            ) : overdueAppointments.length === 0 ? (
+                                <p className="text-green-400 text-sm">Nenhum agendamento atrasado encontrado. ✅</p>
+                            ) : (
+                                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                                    {overdueAppointments.map(apt => {
+                                        const professional = teamMembers.find(m => m.id === apt.professional_id);
+                                        return (
+                                            <div key={apt.id} className="bg-neutral-900 p-3 rounded-lg border border-red-800 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-white font-bold text-sm">{apt.clientName}</p>
+                                                    <p className="text-neutral-400 text-xs">{apt.service}</p>
+                                                    <p className="text-neutral-500 text-xs">
+                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        {professional && ` | Profissional: ${professional.name}`}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={() => handleCompleteAppointment(apt.id, true)}
+                                                        className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                                                        title="Concluir e Faturar"
+                                                    >
+                                                        <Check className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCancelAppointment(apt.id, true)}
+                                                        className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                                                        title="Cancelar"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </BrutalCard>
+            )}
+            {/* --- FIM: Agendamentos Atrasados --- */}
+
 
             {/* Date Navigator */}
             <BrutalCard>
@@ -539,9 +638,10 @@ export const Agenda: React.FC = () => {
                                                     🔔 SOLICITAÇÃO ONLINE
                                                 </span>
                                             </div>
-                                            <p className="text-white font-bold text-sm mb-1">{booking.client_name}</p>
+                                            <p className="text-white font-bold text-sm mb-1">{booking.customer_name}</p>
                                             <p className="text-neutral-400 text-xs mb-1">
-                                                {booking.services?.map((s: any) => s.name).join(', ')}
+                                                {/* Note: booking.services is an array of IDs here, not objects. We need to map them if possible, but for now, we'll show the service IDs array length */}
+                                                {booking.service_ids?.length} serviço(s)
                                             </p>
                                             <p className="text-neutral-500 text-xs mb-3">
                                                 {new Date(booking.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}

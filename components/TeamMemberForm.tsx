@@ -21,6 +21,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [role, setRole] = useState(member?.role || '');
     const [bio, setBio] = useState(member?.bio || '');
     const [active, setActive] = useState(member?.active ?? true);
+    const [commissionRate, setCommissionRate] = useState(member?.commission_rate ? (member.commission_rate * 100).toString() : '50'); // Convert to percentage for input
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(member?.photo_url || null);
     const [loading, setLoading] = useState(false);
@@ -67,7 +68,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 role,
                 bio,
                 active,
-                photo_url: photoUrl
+                photo_url: photoUrl,
+                commission_rate: parseFloat(commissionRate) / 100 // Convert back to decimal
             };
 
             if (member?.id) {
@@ -159,6 +161,24 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         />
                     </div>
 
+                    <div>
+                        <label className="text-white font-mono text-xs mb-1 block">Taxa de Comissão (%)</label>
+                        <input
+                            type="number"
+                            required
+                            value={commissionRate}
+                            onChange={e => setCommissionRate(e.target.value)}
+                            min="0"
+                            max="100"
+                            step="1"
+                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                            placeholder="50"
+                        />
+                        <p className="text-neutral-500 text-xs mt-1">
+                            Porcentagem da receita do serviço que o profissional recebe.
+                        </p>
+                    </div>
+
                     <div className="flex items-center gap-2">
                         <input
                             type="checkbox"
@@ -183,4 +203,3 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             </div>
         </div>
     );
-};

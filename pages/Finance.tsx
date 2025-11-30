@@ -28,6 +28,7 @@ export const Finance: React.FC = () => {
   const [activeTab, setActiveTab] = useState<FinanceTabType>('overview'); // New state for active tab
 
   const isBeauty = userType === 'beauty';
+  const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold'; // Adicionado: Definição de accentColor
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
   const currencySymbol = region === 'PT' ? '€' : 'R$';

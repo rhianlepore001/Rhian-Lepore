@@ -64,11 +64,11 @@ export const Finance: React.FC = () => {
         const formattedTransactions = (data.transactions || []).map((item: any) => ({
           id: item.id,
           description: item.barber_name ? `Comissão - ${item.barber_name}` : 'Serviço',
-          amount: item.revenue, // Use revenue for positive transactions
-          expense: item.commission_value || 0, // Use commission_value for expenses
+          amount: item.amount || 0, // Use item.amount from RPC, default to 0
+          expense: item.expense || 0, // Use item.expense from RPC, default to 0
           date: new Date(item.created_at).toLocaleDateString('pt-BR'),
           rawDate: new Date(item.created_at),
-          type: item.commission_value > 0 && !item.commission_paid ? 'pending_expense' : (item.commission_value > 0 ? 'expense' : 'revenue') // Differentiate paid/unpaid commissions
+          type: item.expense > 0 && !item.commission_paid ? 'pending_expense' : (item.expense > 0 ? 'expense' : 'revenue') // Use item.expense for type determination
         }));
 
         // Apply filter type

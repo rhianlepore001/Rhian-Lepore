@@ -17,4 +17,5 @@ export const SETTINGS_ITEMS = [
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar },
   { label: 'Equipe', path: '/configuracoes/equipe', icon: Users },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
+  { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
 ];

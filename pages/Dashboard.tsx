@@ -135,6 +135,32 @@ export const Dashboard: React.FC = () => {
         });
       }
 
+      // --- ALERTA: Acerto de Comissões ---
+      const { data: settings } = await supabase
+        .from('business_settings')
+        .select('commission_settlement_day_of_month')
+        .eq('user_id', user.id)
+        .single();
+
+      if (settings?.commission_settlement_day_of_month) {
+        const today = new Date();
+        const currentDay = today.getDate();
+        const settlementDay = settings.commission_settlement_day_of_month;
+
+        // Calculate days remaining (handling month wrap if needed, but simple check for now)
+        let daysRemaining = settlementDay - currentDay;
+
+        // If settlement day is tomorrow (e.g. today is 4th, settlement is 5th)
+        if (daysRemaining === 1) {
+          generatedAlerts.push({
+            id: 'commission-settlement',
+            text: `⚠️ Falta 1 dia para o acerto mensal dos funcionários.`,
+            type: 'warning',
+            actionPath: '/financeiro'
+          });
+        }
+      }
+
       // --- ALERTA DE SETUP (Lógica existente) ---
       const isNewAccount = createdAt &&
         (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);

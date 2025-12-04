@@ -76,10 +76,10 @@ export const Finance: React.FC = () => {
         const filtered = filterType === 'all'
           ? formattedTransactions
           : formattedTransactions.filter(t => {
-              if (filterType === 'revenue') return t.type === 'revenue';
-              if (filterType === 'expense') return t.type === 'expense' || t.type === 'pending_expense';
-              return true;
-            });
+            if (filterType === 'revenue') return t.type === 'revenue';
+            if (filterType === 'expense') return t.type === 'expense' || t.type === 'pending_expense';
+            return true;
+          });
 
         setTransactions(filtered);
       }
@@ -149,8 +149,8 @@ export const Finance: React.FC = () => {
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'overview'
-              ? `${accentBg} text-black`
-              : 'bg-neutral-800 text-white hover:bg-neutral-700'
+            ? `${accentBg} text-black`
+            : 'bg-neutral-800 text-white hover:bg-neutral-700'
             }`}
         >
           <Calendar className="w-4 h-4" />
@@ -159,8 +159,8 @@ export const Finance: React.FC = () => {
         <button
           onClick={() => setActiveTab('commissions')}
           className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'commissions'
-              ? `${accentBg} text-black`
-              : 'bg-neutral-800 text-white hover:bg-neutral-700'
+            ? `${accentBg} text-black`
+            : 'bg-neutral-800 text-white hover:bg-neutral-700'
             }`}
         >
           <Users className="w-4 h-4" />
@@ -217,47 +217,51 @@ export const Finance: React.FC = () => {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BrutalCard title="Fluxo de Caixa (Últimos 30 dias)" className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="#666" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
-                    labelStyle={{ color: '#fff' }}
-                  />
-                  <Area type="monotone" dataKey="receita" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" name="Receita" />
-                  <Area type="monotone" dataKey="despesas" stroke="#EF4444" fillOpacity={1} fill="url(#colorExpense)" name="Despesas" />
-                </AreaChart>
-              </ResponsiveContainer>
+            <BrutalCard title="Fluxo de Caixa (Últimos 30 dias)">
+              <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
+                    <YAxis stroke="#666" style={{ fontSize: '12px' }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
+                      labelStyle={{ color: '#fff' }}
+                    />
+                    <Area type="monotone" dataKey="receita" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" name="Receita" />
+                    <Area type="monotone" dataKey="despesas" stroke="#EF4444" fillOpacity={1} fill="url(#colorExpense)" name="Despesas" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </BrutalCard>
 
-            <BrutalCard title="Receita vs Despesas" className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="#666" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="receita" fill="#10B981" name="Receita" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="despesas" fill="#EF4444" name="Despesas" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <BrutalCard title="Receita vs Despesas">
+              <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
+                    <YAxis stroke="#666" style={{ fontSize: '12px' }} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
+                      cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    />
+                    <Legend />
+                    <Bar dataKey="receita" fill="#10B981" name="Receita" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="despesas" fill="#EF4444" name="Despesas" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </BrutalCard>
           </div>
 

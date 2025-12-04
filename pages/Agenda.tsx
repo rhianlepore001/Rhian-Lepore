@@ -51,7 +51,7 @@ export const Agenda: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const currencySymbol = region === 'PT' ? '€' : 'R$' ;
+    const currencySymbol = region === 'PT' ? '€' : 'R$';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
@@ -244,7 +244,7 @@ export const Agenda: React.FC = () => {
                 .from('services')
                 .select('name')
                 .in('id', booking.service_ids);
-            
+
             const serviceNames = (serviceDetails || []).map(s => s.name).join(', ');
 
             const { error: aptError } = await supabase
@@ -299,9 +299,82 @@ export const Agenda: React.FC = () => {
             } else {
                 fetchData();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error completing appointment:', error);
-            alert('Erro ao concluir agendamento. Verifique se o profissional tem taxa de comissão configurada.');
+
+            // Fallback for missing updated_at column or other RPC errors
+            if (error.message?.includes('updated_at') || error.message?.includes('does not exist')) {
+                try {
+                    console.log('Attempting client-side fallback for completion...');
+
+                    // 1. Get appointment details
+                    const { data: appointment, error: fetchError } = await supabase
+                        .from('appointments')
+                        .select('*')
+                        .eq('id', appointmentId)
+                        .single();
+
+                    if (fetchError) throw fetchError;
+
+                    // 2. Update appointment status (without updated_at)
+                    const { error: updateError } = await supabase
+                        .from('appointments')
+                        .update({ status: 'Completed' })
+                        .eq('id', appointmentId);
+
+                    if (updateError) throw updateError;
+
+                    // 3. Get professional details
+                    let commissionRate = 0;
+                    let professionalName = 'Profissional';
+
+                    if (appointment.professional_id) {
+                        const { data: professional } = await supabase
+                            .from('team_members')
+                            .select('name, commission_rate')
+                            .eq('id', appointment.professional_id)
+                            .single();
+
+                        if (professional) {
+                            professionalName = professional.name;
+                            commissionRate = professional.commission_rate || 0;
+                        }
+                    }
+
+                    // 4. Calculate commission
+                    const commissionValue = (appointment.price * commissionRate) / 100;
+
+                    // 5. Create finance record
+                    const { error: financeError } = await supabase
+                        .from('finance_records')
+                        .insert({
+                            user_id: appointment.user_id,
+                            barber_name: professionalName,
+                            professional_id: appointment.professional_id,
+                            appointment_id: appointmentId,
+                            revenue: appointment.price,
+                            commission_rate: commissionRate,
+                            commission_value: commissionValue,
+                            created_at: new Date().toISOString()
+                        });
+
+                    if (financeError) throw financeError;
+
+                    // Success! Refresh data
+                    if (isOverdue) {
+                        fetchOverdueAppointments();
+                    } else {
+                        fetchData();
+                    }
+                    return; // Exit successfully
+
+                } catch (fallbackError: any) {
+                    console.error('Fallback failed:', fallbackError);
+                    alert(`Erro ao concluir agendamento (Fallback falhou): ${fallbackError.message || fallbackError}`);
+                }
+            } else {
+                alert(`Erro ao concluir agendamento: ${error.message || error}`);
+            }
         }
     };
 
@@ -448,7 +521,7 @@ export const Agenda: React.FC = () => {
                             <p className="text-neutral-300 text-sm mb-4">
                                 Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
                             </p>
-                            
+
                             {isOverdueLoading ? (
                                 <div className="flex items-center gap-2 text-neutral-400">
                                     <Loader2 className="w-4 h-4 animate-spin" /> Carregando...

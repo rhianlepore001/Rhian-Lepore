@@ -3,13 +3,16 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalCard } from './BrutalCard';
 import { BrutalButton } from './BrutalButton';
-import { User, DollarSign, Check, Loader2, Calendar } from 'lucide-react';
+import { User, DollarSign, Check, Loader2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface CommissionDue {
     professional_id: string;
     professional_name: string;
+    photo_url: string | null;
     total_due: number;
-    total_records: number;
+    total_earnings_month: number;
+    total_pending_records: number;
 }
 
 interface CommissionsManagementProps {
@@ -19,6 +22,7 @@ interface CommissionsManagementProps {
 
 export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ accentColor, currencySymbol }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [commissionsDue, setCommissionsDue] = useState<CommissionDue[]>([]);
     const [loading, setLoading] = useState(true);
     const [payingProfessionalId, setPayingProfessionalId] = useState<string | null>(null);
@@ -36,9 +40,39 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         if (!user) return;
         setLoading(true);
         try {
-            const { data, error } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
-            if (error) throw error;
-            setCommissionsDue(data || []);
+            // 1. Fetch all active team members
+            const { data: teamMembers, error: teamError } = await supabase
+                .from('team_members')
+                .select('id, name, photo_url')
+                .eq('user_id', user.id)
+                .eq('active', true);
+
+            if (teamError) throw teamError;
+
+            // 2. Fetch commissions data (RPC)
+            const { data: rpcData, error: rpcError } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
+
+            if (rpcError) {
+                console.error('Error fetching RPC data:', rpcError);
+                // Don't throw, just proceed with team members and 0 values
+            }
+
+            // 3. Merge data
+            const mergedData: CommissionDue[] = (teamMembers || []).map(member => {
+                // Try to find matching record in RPC data
+                const commissionRecord = (rpcData || []).find((r: any) => r.professional_id === member.id);
+
+                return {
+                    professional_id: member.id,
+                    professional_name: member.name,
+                    photo_url: member.photo_url,
+                    total_due: commissionRecord?.total_due || 0,
+                    total_earnings_month: commissionRecord?.total_earnings_month || 0,
+                    total_pending_records: commissionRecord?.total_pending_records || commissionRecord?.total_records || 0
+                };
+            });
+
+            setCommissionsDue(mergedData);
         } catch (error) {
             console.error('Error fetching commissions due:', error);
         } finally {
@@ -91,44 +125,79 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     return (
         <div className="space-y-6">
             <BrutalCard title="Comissões a Pagar">
-                <p className="text-neutral-400 text-sm mb-4">
+                <p className="text-neutral-400 text-sm mb-6">
                     Gerencie as comissões devidas aos seus profissionais. Registre os pagamentos para manter seu fluxo de caixa atualizado.
                 </p>
 
                 {loading ? (
-                    <div className="text-center py-8 text-neutral-500">
+                    <div className="text-center py-12 text-neutral-500">
                         <Loader2 className="w-8 h-8 mx-auto animate-spin mb-2" />
                         Carregando comissões...
                     </div>
                 ) : commissionsDue.length === 0 ? (
-                    <div className="text-center py-8 text-neutral-500">
-                        <Check className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                        Nenhuma comissão pendente no momento.
+                    <div className="text-center py-12 text-neutral-500 bg-neutral-900/50 rounded-lg border border-neutral-800">
+                        <Check className="w-10 h-10 mx-auto mb-3 text-green-500" />
+                        <p className="text-lg font-medium text-white">Tudo em dia!</p>
+                        <p className="text-sm">Nenhum profissional ativo encontrado.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {commissionsDue.map(professional => (
-                            <div key={professional.professional_id} className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <User className={`w-6 h-6 ${accentColor}`} />
+                            <div
+                                key={professional.professional_id}
+                                className="bg-[#111] border border-neutral-800 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-neutral-700 transition-colors"
+                            >
+                                {/* Professional Info */}
+                                <div className="flex items-center gap-4 w-full md:w-auto">
+                                    {professional.photo_url ? (
+                                        <img
+                                            src={professional.photo_url}
+                                            alt={professional.professional_name}
+                                            className="w-12 h-12 rounded-full object-cover border-2 border-neutral-700"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center">
+                                            <User className="w-6 h-6 text-neutral-500" />
+                                        </div>
+                                    )}
+
                                     <div>
-                                        <h4 className="text-white font-bold">{professional.professional_name}</h4>
-                                        <p className="text-neutral-400 text-xs">{professional.total_records} serviços pendentes</p>
+                                        <h4 className="text-white font-bold text-lg leading-tight">{professional.professional_name}</h4>
+                                        <p className="text-neutral-400 text-xs font-mono mt-1">
+                                            Total Ganhos (Mês): <span className="text-white">{currencySymbol} {professional.total_earnings_month.toFixed(2)}</span>
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className={`text-lg font-bold ${accentColor}`}>
-                                        {currencySymbol} {professional.total_due.toFixed(2)}
-                                    </span>
-                                    <BrutalButton
-                                        variant="primary"
-                                        size="sm"
-                                        icon={payingProfessionalId === professional.professional_id ? <Loader2 className="animate-spin" /> : <DollarSign />}
-                                        onClick={() => handleOpenPayModal(professional)}
-                                        disabled={payingProfessionalId === professional.professional_id}
-                                    >
-                                        {payingProfessionalId === professional.professional_id ? 'Pagando...' : 'Pagar'}
-                                    </BrutalButton>
+
+                                {/* Actions & Due Amount */}
+                                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                                    <div className="text-right mr-2">
+                                        <p className="text-neutral-500 text-[10px] uppercase font-bold tracking-wider mb-0.5">A Pagar:</p>
+                                        <span className={`text-xl font-bold font-mono ${professional.total_due > 0 ? 'text-green-500' : 'text-neutral-500'}`}>
+                                            {currencySymbol} {professional.total_due.toFixed(2)}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <BrutalButton
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => navigate('/configuracoes/comissoes')}
+                                        >
+                                            Editar
+                                        </BrutalButton>
+
+                                        <BrutalButton
+                                            variant="primary"
+                                            size="sm"
+                                            icon={payingProfessionalId === professional.professional_id ? <Loader2 className="animate-spin" /> : <DollarSign />}
+                                            onClick={() => handleOpenPayModal(professional)}
+                                            disabled={payingProfessionalId === professional.professional_id || professional.total_due <= 0}
+                                            className={professional.total_due <= 0 ? 'opacity-50 cursor-not-allowed' : ''}
+                                        >
+                                            {payingProfessionalId === professional.professional_id ? '...' : 'Pagar'}
+                                        </BrutalButton>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -138,57 +207,76 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             {/* Pay Commission Modal */}
             {showPayModal && selectedProfessional && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-neutral-900 border-2 border-neutral-800 rounded-xl w-full max-w-md p-6">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className="bg-neutral-900 border-2 border-neutral-800 rounded-xl w-full max-w-md p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-white font-heading text-xl uppercase">
-                                Pagar Comissão: {selectedProfessional.professional_name}
+                            <h3 className="text-white font-heading text-xl uppercase flex items-center gap-2">
+                                <DollarSign className={`w-6 h-6 ${accentColor}`} />
+                                Pagar Comissão
                             </h3>
                             <button
                                 onClick={() => setShowPayModal(false)}
-                                className="text-neutral-400 hover:text-white transition-colors"
+                                className="text-neutral-400 hover:text-white transition-colors p-1 hover:bg-neutral-800 rounded-full"
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
+                        <div className="flex items-center gap-3 mb-6 p-3 bg-black/30 rounded-lg border border-neutral-800">
+                            {selectedProfessional.photo_url ? (
+                                <img
+                                    src={selectedProfessional.photo_url}
+                                    alt={selectedProfessional.professional_name}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                                    <User className="w-5 h-5 text-neutral-500" />
+                                </div>
+                            )}
+                            <div>
+                                <p className="text-white font-bold">{selectedProfessional.professional_name}</p>
+                                <p className="text-xs text-neutral-400">Total pendente: {currencySymbol} {selectedProfessional.total_due.toFixed(2)}</p>
+                            </div>
+                        </div>
+
                         <div className="space-y-4">
                             <div>
-                                <label className="text-white font-mono text-sm mb-2 block">Valor a Pagar ({currencySymbol})</label>
+                                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Valor a Pagar ({currencySymbol})</label>
                                 <input
                                     type="number"
                                     value={paymentAmount}
                                     onChange={(e) => setPaymentAmount(e.target.value)}
                                     step="0.01"
-                                    className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                    className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white font-mono text-lg focus:outline-none focus:border-${accentColor} transition-colors`}
                                     placeholder="0.00"
                                     required
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-white font-mono text-sm mb-2 block">Período Início</label>
+                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Período Início</label>
                                     <input
                                         type="date"
                                         value={paymentStartDate}
                                         onChange={(e) => setPaymentStartDate(e.target.value)}
-                                        className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                        className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-${accentColor} transition-colors`}
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-white font-mono text-sm mb-2 block">Período Fim</label>
+                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Período Fim</label>
                                     <input
                                         type="date"
                                         value={paymentEndDate}
                                         onChange={(e) => setPaymentEndDate(e.target.value)}
-                                        className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                        className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white text-sm focus:outline-none focus:border-${accentColor} transition-colors`}
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 pt-4">
+                            <div className="flex gap-3 pt-6">
                                 <BrutalButton
                                     variant="secondary"
                                     className="flex-1"
@@ -202,7 +290,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     onClick={handlePayCommissions}
                                     disabled={payingProfessionalId === selectedProfessional.professional_id}
                                 >
-                                    {payingProfessionalId === selectedProfessional.professional_id ? 'Registrando...' : 'Registrar Pagamento'}
+                                    {payingProfessionalId === selectedProfessional.professional_id ? 'Registrando...' : 'Confirmar Pagamento'}
                                 </BrutalButton>
                             </div>
                         </div>

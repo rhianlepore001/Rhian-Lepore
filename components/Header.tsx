@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Search, Menu, LogOut, User as UserIcon, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { ProfileModal } from './ProfileModal';
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
   const { businessName, fullName, userType, logout, avatarUrl } = useAuth();
+  const { alerts } = useAlerts();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -21,33 +21,6 @@ export const Header: React.FC = () => {
   const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const bgColor = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
 
-  // Fetch Notifications
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (data) setNotifications(data);
-    };
-
-    fetchNotifications();
-
-    // Subscribe to new notifications
-    const subscription = supabase
-      .channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
-        setNotifications(prev => [payload.new, ...prev]);
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -55,7 +28,7 @@ export const Header: React.FC = () => {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const alertCount = alerts.length;
 
   return (
     <>
@@ -111,7 +84,7 @@ export const Header: React.FC = () => {
               className="relative p-2 hover:bg-neutral-800 rounded border border-transparent hover:border-neutral-700 transition-colors"
             >
               <Bell className="w-5 h-5 md:w-6 md:h-6 text-text-primary" />
-              {unreadCount > 0 && (
+              {alertCount > 0 && (
                 <span className={`absolute top-1 right-1 w-2 h-2 md:w-3 md:h-3 ${bgColor} rounded-full border-2 border-brutal-main`}></span>
               )}
             </button>
@@ -122,40 +95,40 @@ export const Header: React.FC = () => {
                   ? 'bg-beauty-card border border-white/10 rounded-xl shadow-soft'
                   : 'bg-neutral-900 border-2 border-neutral-700 shadow-heavy'}
               `}>
-                <div className="p-3 border-b border-neutral-800 font-bold text-white uppercase text-xs tracking-wider">Notificações</div>
+                <div className="p-3 border-b border-neutral-800 font-bold text-white uppercase text-xs tracking-wider">Avisos Importantes</div>
                 <div className="max-h-64 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-text-secondary text-xs">Nenhuma notificação.</div>
+                  {alerts.length === 0 ? (
+                    <div className="p-4 text-center text-text-secondary text-xs">
+                      <p className="text-sm">✅ Tudo certo!</p>
+                      <p className="mt-1">Nenhum aviso no momento.</p>
+                    </div>
                   ) : (
-                    notifications.map(n => {
-                      // Determine link based on content keywords
-                      let link = '/dashboard';
-                      const text = (n.title + n.message).toLowerCase();
-
-                      if (text.includes('bem-vindo') || text.includes('perfil')) link = '/ajustes';
-                      else if (text.includes('cliente') || text.includes('dica')) link = '/clientes';
-                      else if (text.includes('agendamento') || text.includes('agenda')) link = '/agenda';
-                      else if (text.includes('serviço')) link = '/servicos';
-                      else if (text.includes('equipe')) link = '/equipe';
-                      else if (text.includes('financeiro') || text.includes('meta')) link = '/financeiro';
-
-                      return (
-                        <div
-                          key={n.id}
-                          onClick={() => {
-                            navigate(link);
+                    alerts.map(alert => (
+                      <div
+                        key={alert.id}
+                        onClick={() => {
+                          if (alert.actionPath) {
+                            navigate(alert.actionPath);
                             setShowNotifications(false);
-                          }}
-                          className="p-3 hover:bg-white/5 border-b border-neutral-800 last:border-0 cursor-pointer transition-colors group"
-                        >
-                          <div className="flex justify-between items-start">
-                            <p className="text-sm font-bold text-white mb-1 group-hover:text-accent-gold transition-colors">{n.title}</p>
-                            {/* Optional: Add an arrow icon here if desired */}
+                          }
+                        }}
+                        className={`p-3 hover:bg-white/5 border-b border-neutral-800 last:border-0 cursor-pointer transition-colors group ${alert.actionPath ? '' : 'cursor-default'}`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${alert.type === 'danger' ? 'text-red-600' :
+                            alert.type === 'warning' ? 'text-yellow-500' : 'text-green-500'
+                            }`} />
+                          <div className="flex-1">
+                            <p className={`text-sm text-white ${alert.actionPath ? 'group-hover:text-accent-gold' : ''} transition-colors`}>
+                              {alert.text}
+                            </p>
+                            <p className="text-[10px] text-text-secondary mt-1 uppercase tracking-wide">
+                              {alert.type === 'danger' ? 'Urgente' : alert.type === 'warning' ? 'Atenção' : 'Info'}
+                            </p>
                           </div>
-                          <p className="text-xs text-text-secondary">{n.message}</p>
                         </div>
-                      );
-                    })
+                      </div>
+                    ))
                   )}
                 </div>
               </div>

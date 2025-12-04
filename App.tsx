@@ -17,6 +17,7 @@ import { ServiceSettings } from './pages/settings/ServiceSettings';
 import { CommissionsSettings } from './pages/settings/CommissionsSettings';
 import { OnboardingWizard } from './pages/OnboardingWizard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AlertsProvider } from './contexts/AlertsContext';
 
 import { Placeholder } from './pages/Placeholder';
 
@@ -105,7 +106,9 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <AuthProvider>
-        <AppRoutes />
+        <AlertsProvider>
+          <AppRoutes />
+        </AlertsProvider>
       </AuthProvider>
     </HashRouter>
   );

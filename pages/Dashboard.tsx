@@ -2,32 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Wallet, TrendingUp, Clock, AlertTriangle, Link as LinkIcon, Copy, ExternalLink, Check, Settings } from 'lucide-react';
+import { Wallet, TrendingUp, Clock, AlertTriangle, ExternalLink, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
-
-interface Alert {
-  id: string;
-  text: string;
-  type: 'warning' | 'danger' | 'success';
-  actionPath?: string;
-}
+import { GoalHistory } from '../components/GoalHistory';
 
 export const Dashboard: React.FC = () => {
   const { userType, region, user } = useAuth();
+  const { alerts } = useAlerts();
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [profit, setProfit] = useState(0);
   const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
   const [weeklyGrowth, setWeeklyGrowth] = useState(0);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessSlug, setBusinessSlug] = useState<string | null>(null);
   const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
   const [monthlyGoal, setMonthlyGoal] = useState(15000);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState('');
+  const [goalHistory, setGoalHistory] = useState<any[]>([]);
 
   const isBeauty = userType === 'beauty';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
@@ -61,14 +57,13 @@ export const Dashboard: React.FC = () => {
           }
         }
 
-        // --- AJUSTE CRÍTICO: Filtrar apenas agendamentos FUTUROS ---
         const now = new Date().toISOString();
         const { data: aptData, error: aptError } = await supabase
           .from('appointments')
           .select('*, clients(name)')
           .eq('user_id', user.id)
           .eq('status', 'Confirmed')
-          .gte('appointment_time', now) // Apenas agendamentos a partir de agora
+          .gte('appointment_time', now)
           .order('appointment_time', { ascending: true })
           .limit(5);
 
@@ -100,8 +95,6 @@ export const Dashboard: React.FC = () => {
           }
         }
 
-        await generateSmartAlerts(userCreatedAt);
-
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -109,89 +102,52 @@ export const Dashboard: React.FC = () => {
       }
     };
 
-    fetchData();
-  }, [user]);
+    const fetchGoalHistory = async () => {
+      if (!user) return;
+      try {
+        const history = [];
+        const months = [
+          'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
 
-  const generateSmartAlerts = async (createdAt: Date | null) => {
-    if (!user) return;
-    const generatedAlerts: Alert[] = [];
+        for (let i = 0; i < 6; i++) {
+          const date = new Date();
+          date.setMonth(date.getMonth() - i);
+          const month = date.getMonth();
+          const year = date.getFullYear();
 
-    try {
-      // --- NOVO ALERTA: Agendamentos Atrasados ---
-      const now = new Date().toISOString();
-      const { data: overdueApts } = await supabase
-        .from('appointments')
-        .select('id')
-        .eq('user_id', user.id)
-        .in('status', ['Confirmed', 'Pending'])
-        .lt('appointment_time', now); // Agendamentos no passado
+          const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
+          const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
-      if (overdueApts && overdueApts.length > 0) {
-        generatedAlerts.push({
-          id: 'overdue-appointments',
-          text: `⚠️ ${overdueApts.length} agendamento(s) pendente(s) de conclusão/cancelamento.`,
-          type: 'danger',
-          actionPath: '/agenda?filter=overdue' // Novo filtro para a Agenda
-        });
-      }
-
-      // --- ALERTA: Acerto de Comissões ---
-      const { data: settings } = await supabase
-        .from('business_settings')
-        .select('commission_settlement_day_of_month')
-        .eq('user_id', user.id)
-        .single();
-
-      if (settings?.commission_settlement_day_of_month) {
-        const today = new Date();
-        const currentDay = today.getDate();
-        const settlementDay = settings.commission_settlement_day_of_month;
-
-        // Calculate days remaining (handling month wrap if needed, but simple check for now)
-        let daysRemaining = settlementDay - currentDay;
-
-        // If settlement day is tomorrow (e.g. today is 4th, settlement is 5th)
-        if (daysRemaining === 1) {
-          generatedAlerts.push({
-            id: 'commission-settlement',
-            text: `⚠️ Falta 1 dia para o acerto mensal dos funcionários.`,
-            type: 'warning',
-            actionPath: '/financeiro'
+          const { data } = await supabase.rpc('get_finance_stats', {
+            p_user_id: user.id,
+            p_start_date: startOfMonth,
+            p_end_date: endOfMonth
           });
+
+          if (data) {
+            const percentage = monthlyGoal > 0 ? Math.round((data.revenue / monthlyGoal) * 100) : 0;
+            history.push({
+              month: months[month],
+              year: year,
+              goal: monthlyGoal,
+              achieved: data.revenue,
+              percentage: percentage,
+              success: percentage >= 100
+            });
+          }
         }
+
+        setGoalHistory(history);
+      } catch (error) {
+        console.error('Error fetching goal history:', error);
       }
+    };
 
-      // --- ALERTA DE SETUP (Lógica existente) ---
-      const isNewAccount = createdAt &&
-        (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);
-
-      if (isNewAccount) {
-        const { data: services } = await supabase.from('services').select('id').eq('user_id', user.id);
-        if (!services || services.length === 0) {
-          generatedAlerts.push({ id: 'setup-services', text: '📋 Configure seus serviços e preços para começar', type: 'warning', actionPath: '/configuracoes/servicos' });
-        }
-
-        const { data: team } = await supabase.from('team_members').select('id').eq('user_id', user.id);
-        if (!team || team.length === 0) {
-          generatedAlerts.push({ id: 'setup-team', text: '👥 Adicione membros da equipe para gerenciar agendamentos', type: 'warning', actionPath: '/configuracoes/equipe' });
-        }
-
-        const { data: profile } = await supabase.from('profiles').select('business_name, logo_url').eq('id', user.id).single();
-        if (!profile?.business_name) {
-          generatedAlerts.push({ id: 'setup-profile', text: '👤 Configure seu perfil', type: 'warning', actionPath: '/configuracoes/geral' });
-        }
-
-        // Check if business photo/cover is configured
-        if (!profile?.logo_url) {
-          generatedAlerts.push({ id: 'setup-business', text: '🏪 Adicione foto e capa do seu estabelecimento', type: 'warning', actionPath: '/configuracoes/geral' });
-        }
-      }
-    } catch (error) {
-      console.error('Error generating alerts:', error);
-    }
-
-    setAlerts(generatedAlerts);
-  };
+    fetchData();
+    fetchGoalHistory();
+  }, [user, monthlyGoal]);
 
   const handleSaveGoal = async () => {
     if (!user || !newGoal) return;
@@ -308,6 +264,17 @@ export const Dashboard: React.FC = () => {
           </div>
         </BrutalCard>
       </div>
+
+      {/* Goal History */}
+      {goalHistory.length > 0 && (
+        <BrutalCard title="Performance de Metas">
+          <GoalHistory
+            history={goalHistory}
+            currencySymbol={currencySymbol}
+            isBeauty={isBeauty}
+          />
+        </BrutalCard>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <BrutalCard

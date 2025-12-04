@@ -46,6 +46,8 @@ export const Agenda: React.FC = () => {
     const [selectedService, setSelectedService] = useState('');
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
+    const [customTime, setCustomTime] = useState('');
+    const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(new Date().toISOString().split('T')[0]);
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -66,6 +68,13 @@ export const Agenda: React.FC = () => {
             fetchOverdueAppointments();
         }
     }, [user, isOverdueFilter]);
+
+    // Update selectedAppointmentDate when modal opens or selectedDate changes
+    useEffect(() => {
+        if (showNewAppointmentModal) {
+            setSelectedAppointmentDate(selectedDate.toISOString().split('T')[0]);
+        }
+    }, [showNewAppointmentModal, selectedDate]);
 
     const fetchData = async () => {
         await Promise.all([
@@ -402,18 +411,21 @@ export const Agenda: React.FC = () => {
         setSelectedService('');
         setSelectedProfessional('');
         setSelectedTime('');
+        setCustomTime('');
+        setSelectedAppointmentDate(selectedDate.toISOString().split('T')[0]);
     };
 
     const handleCreateAppointment = async () => {
-        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedTime) {
+        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedTime || !selectedAppointmentDate) {
             alert('Preencha todos os campos!');
             return;
         }
 
         try {
             const service = services.find(s => s.id === selectedService);
-            const dateTime = new Date(selectedDate);
-            const [hours, minutes] = selectedTime.split(':');
+            const dateTime = new Date(selectedAppointmentDate);
+            const timeToUse = selectedTime === 'custom' ? customTime : selectedTime;
+            const [hours, minutes] = timeToUse.split(':');
             dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
             const { error } = await supabase
@@ -460,10 +472,14 @@ export const Agenda: React.FC = () => {
         return publicBookings.filter(booking => booking.professional_id === professionalId);
     };
 
-    const timeSlots = Array.from({ length: 13 }, (_, i) => {
-        const hour = i + 8;
-        return `${hour.toString().padStart(2, '0')}:00`;
-    });
+    // Generate time slots with half-hour intervals
+    const timeSlots = [];
+    for (let hour = 8; hour <= 20; hour++) {
+        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+        if (hour < 20) {
+            timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+        }
+    }
 
     // Filtrar profissionais exibidos
     const displayedMembers = selectedProfessionalFilter
@@ -915,6 +931,16 @@ export const Agenda: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
+                            <div>
+                                <label className="text-white font-mono text-sm mb-2 block">Data</label>
+                                <input
+                                    type="date"
+                                    value={selectedAppointmentDate}
+                                    onChange={(e) => setSelectedAppointmentDate(e.target.value)}
+                                    className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
+                                />
+                            </div>
+
                             <div>
                                 <label className="text-white font-mono text-sm mb-2 block">Cliente</label>
                                 <select

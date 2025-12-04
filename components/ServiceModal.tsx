@@ -41,6 +41,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [description, setDescription] = useState(service?.description || '');
     const [price, setPrice] = useState(service?.price?.toString() || '');
     const [duration, setDuration] = useState(service?.duration_minutes?.toString() || '30');
+    const [customHours, setCustomHours] = useState('0');
+    const [customMinutes, setCustomMinutes] = useState('0');
     const [categoryId, setCategoryId] = useState(service?.category_id || categories[0]?.id || '');
     const [active, setActive] = useState(service?.active ?? true);
 
@@ -117,7 +119,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 name,
                 description,
                 price: parseFloat(price),
-                duration_minutes: parseInt(duration),
+                duration_minutes: duration === 'custom'
+                    ? (parseInt(customHours) * 60) + parseInt(customMinutes)
+                    : parseInt(duration),
                 category_id: categoryId,
                 active,
                 image_url: imageUrl
@@ -337,16 +341,58 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-white font-mono text-xs mb-1 block">Duração (min)</label>
+                                    <label className="text-white font-mono text-xs mb-1 block">Duração</label>
                                     <select
                                         value={duration}
                                         onChange={e => setDuration(e.target.value)}
                                         className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
                                     >
-                                        {[15, 30, 45, 60, 90, 120].map(m => (
-                                            <option key={m} value={m}>{m} min</option>
-                                        ))}
+                                        <option value="15">15 min</option>
+                                        <option value="30">30 min</option>
+                                        <option value="45">45 min</option>
+                                        <option value="60">1 hora</option>
+                                        <option value="90">1h 30min</option>
+                                        <option value="120">2 horas</option>
+                                        <option value="180">3 horas</option>
+                                        <option value="240">4 horas</option>
+                                        <option value="custom">⏱️ Personalizado</option>
                                     </select>
+
+                                    {duration === 'custom' && (
+                                        <div className="mt-3 p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg space-y-2">
+                                            <p className="text-xs text-neutral-400 mb-2">Duração Personalizada:</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="text-xs text-neutral-500 block mb-1">Horas</label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max="12"
+                                                        value={customHours}
+                                                        onChange={e => setCustomHours(e.target.value)}
+                                                        className={`w-full p-2 bg-neutral-900 border border-neutral-700 rounded text-white focus:outline-none focus:border-${accentColor}`}
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-neutral-500 block mb-1">Minutos</label>
+                                                    <select
+                                                        value={customMinutes}
+                                                        onChange={e => setCustomMinutes(e.target.value)}
+                                                        className={`w-full p-2 bg-neutral-900 border border-neutral-700 rounded text-white focus:outline-none focus:border-${accentColor}`}
+                                                    >
+                                                        <option value="0">0</option>
+                                                        <option value="15">15</option>
+                                                        <option value="30">30</option>
+                                                        <option value="45">45</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <p className={`text-xs text-${accentColor} font-mono mt-2`}>
+                                                Total: {customHours}h {customMinutes}min = {(parseInt(customHours) * 60) + parseInt(customMinutes)} minutos
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

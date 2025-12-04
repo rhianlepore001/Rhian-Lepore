@@ -3,12 +3,14 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
-import { CommissionsManagement } from '../components/CommissionsManagement'; // Import the new component
+import { CommissionsManagement } from '../components/CommissionsManagement';
+import { MonthYearSelector } from '../components/MonthYearSelector';
+import { MonthlyHistory } from '../components/MonthlyHistory';
 
-type FinanceTabType = 'overview' | 'commissions'; // New type for tabs
+type FinanceTabType = 'overview' | 'commissions' | 'history';
 
 export const Finance: React.FC = () => {
   const { user, userType, region } = useAuth();
@@ -18,31 +20,49 @@ export const Finance: React.FC = () => {
     revenue: 0,
     expenses: 0,
     profit: 0,
-    growth: 0
+    growth: 0,
+    previousMonthRevenue: 0
   });
   const [chartData, setChartData] = useState<any[]>([]);
+  const [monthlyHistory, setMonthlyHistory] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
-  const [activeTab, setActiveTab] = useState<FinanceTabType>('overview'); // New state for active tab
+  const [activeTab, setActiveTab] = useState<FinanceTabType>('overview');
+
+  // Month/Year selection
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
   const isBeauty = userType === 'beauty';
-  const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold'; // Adicionado: Definição de accentColor
+  const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
 
+  const months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
   useEffect(() => {
     if (activeTab === 'overview') {
       fetchFinanceData();
+    } else if (activeTab === 'history') {
+      fetchMonthlyHistory();
     }
-  }, [activeTab, user]); // Refetch data when tab changes or user changes
+  }, [activeTab, selectedMonth, selectedYear, user]);
 
-  const fetchFinanceData = async (customStartDate?: string, customEndDate?: string) => {
+  const fetchFinanceData = async () => {
     try {
-      const startDateParam = customStartDate || null;
-      const endDateParam = customEndDate || null;
+      // Calculate start and end dates for the selected month
+      const startOfMonth = new Date(selectedYear, selectedMonth, 1);
+      const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
+
+      const startDateParam = startOfMonth.toISOString().split('T')[0];
+      const endDateParam = endOfMonth.toISOString().split('T')[0];
 
       const { data, error } = await supabase.rpc('get_finance_stats', {
         p_user_id: user.id,
@@ -53,11 +73,28 @@ export const Finance: React.FC = () => {
       if (error) throw error;
 
       if (data) {
+        // Calculate growth vs previous month
+        const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+        const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+        const prevStartDate = new Date(prevYear, prevMonth, 1).toISOString().split('T')[0];
+        const prevEndDate = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0];
+
+        const { data: prevData } = await supabase.rpc('get_finance_stats', {
+          p_user_id: user.id,
+          p_start_date: prevStartDate,
+          p_end_date: prevEndDate
+        });
+
+        const growth = prevData && prevData.revenue > 0
+          ? ((data.revenue - prevData.revenue) / prevData.revenue) * 100
+          : 0;
+
         setSummary({
           revenue: data.revenue,
           expenses: data.expenses,
           profit: data.profit,
-          growth: 12.5 // Still mock for now, or could calculate in RPC
+          growth: growth,
+          previousMonthRevenue: prevData?.revenue || 0
         });
 
         setChartData(data.chart_data || []);
@@ -65,14 +102,13 @@ export const Finance: React.FC = () => {
         const formattedTransactions = (data.transactions || []).map((item: any) => ({
           id: item.id,
           description: item.barber_name ? `Comissão - ${item.barber_name}` : 'Serviço',
-          amount: item.amount || 0, // Use item.amount from RPC, default to 0
-          expense: item.expense || 0, // Use item.expense from RPC, default to 0
+          amount: item.amount || 0,
+          expense: item.expense || 0,
           date: new Date(item.created_at).toLocaleDateString('pt-BR'),
           rawDate: new Date(item.created_at),
-          type: item.expense > 0 && !item.commission_paid ? 'pending_expense' : (item.expense > 0 ? 'expense' : 'revenue') // Use item.expense for type determination
+          type: item.expense > 0 && !item.commission_paid ? 'pending_expense' : (item.expense > 0 ? 'expense' : 'revenue')
         }));
 
-        // Apply filter type
         const filtered = filterType === 'all'
           ? formattedTransactions
           : formattedTransactions.filter(t => {
@@ -90,6 +126,56 @@ export const Finance: React.FC = () => {
     }
   };
 
+  const fetchMonthlyHistory = async () => {
+    try {
+      const history = [];
+
+      // Get last 12 months
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const month = date.getMonth();
+        const year = date.getFullYear();
+
+        const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
+        const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
+        const { data } = await supabase.rpc('get_finance_stats', {
+          p_user_id: user.id,
+          p_start_date: startOfMonth,
+          p_end_date: endOfMonth
+        });
+
+        if (data) {
+          // Calculate growth vs previous month
+          let growth = 0;
+          if (i < 11 && history.length > 0) {
+            const prevRevenue = history[history.length - 1].revenue;
+            growth = prevRevenue > 0 ? ((data.revenue - prevRevenue) / prevRevenue) * 100 : 0;
+          }
+
+          history.push({
+            month: months[month],
+            year: year,
+            revenue: data.revenue,
+            expenses: data.expenses,
+            profit: data.profit,
+            growth: growth
+          });
+        }
+      }
+
+      setMonthlyHistory(history.reverse()); // Most recent first
+    } catch (error) {
+      console.error('Error fetching monthly history:', error);
+    }
+  };
+
+  const handleMonthChange = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
+
   const handleExport = () => {
     const csvContent = [
       ['Data', 'Descrição', 'Tipo', 'Valor'],
@@ -104,12 +190,12 @@ export const Finance: React.FC = () => {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `financeiro_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `financeiro_${months[selectedMonth]}_${selectedYear}.csv`;
     link.click();
   };
 
   const handleApplyFilter = () => {
-    fetchFinanceData(startDate || undefined, endDate || undefined);
+    fetchFinanceData();
     setShowFilterModal(false);
   };
 
@@ -138,11 +224,18 @@ export const Finance: React.FC = () => {
           <BrutalButton variant="secondary" size="sm" icon={<Download />} onClick={handleExport}>
             Exportar
           </BrutalButton>
-          <BrutalButton variant="primary" size="sm" icon={<Filter />} onClick={() => setShowFilterModal(true)}>
-            Filtrar
-          </BrutalButton>
         </div>
       </div>
+
+      {/* Month/Year Selector */}
+      {activeTab === 'overview' && (
+        <MonthYearSelector
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          onChange={handleMonthChange}
+          accentColor={accentColor}
+        />
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2">
@@ -155,6 +248,16 @@ export const Finance: React.FC = () => {
         >
           <Calendar className="w-4 h-4" />
           Visão Geral
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'history'
+            ? `${accentBg} text-black`
+            : 'bg-neutral-800 text-white hover:bg-neutral-700'
+            }`}
+        >
+          <History className="w-4 h-4" />
+          Histórico
         </button>
         <button
           onClick={() => setActiveTab('commissions')}
@@ -174,35 +277,44 @@ export const Finance: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <BrutalCard className="border-l-4 border-green-500">
               <div className="flex justify-between items-start mb-2">
-                <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Receita (30d)</p>
-                <InfoButton text="Total de vendas e serviços faturados nos últimos 30 dias." />
+                <div>
+                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Receita</p>
+                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                </div>
+                <InfoButton text={`Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
                 {currencySymbol} {summary.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
-              <div className="flex items-center gap-1 text-green-500 text-xs font-mono mt-2">
-                <TrendingUp className="w-3 h-3" />
-                <span>+15% este mês</span>
+              <div className={`flex items-center gap-1 ${summary.growth >= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-mono mt-2`}>
+                {summary.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span>{summary.growth > 0 ? '+' : ''}{summary.growth.toFixed(1)}% vs mês anterior</span>
               </div>
             </BrutalCard>
 
             <BrutalCard className="border-l-4 border-red-500">
               <div className="flex justify-between items-start mb-2">
-                <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas (30d)</p>
-                <InfoButton text="Soma de todos os custos, como comissões de profissionais, nos últimos 30 dias." />
+                <div>
+                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas</p>
+                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                </div>
+                <InfoButton text={`Soma de todos os custos, como comissões de profissionais, em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
                 {currencySymbol} {summary.expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
-              <div className="flex items-center gap-1 text-red-500 text-xs font-mono mt-2">
-                <TrendingDown className="w-3 h-3" />
-                <span>-5% este mês</span>
+              <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
+                <DollarSign className="w-3 h-3" />
+                <span>Comissões e custos</span>
               </div>
             </BrutalCard>
 
             <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
               <div className="flex justify-between items-start mb-2">
-                <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
+                <div>
+                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
+                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                </div>
                 <InfoButton text="O valor que sobra após subtrair as despesas da receita. Seu lucro real." />
               </div>
               <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
@@ -217,7 +329,7 @@ export const Finance: React.FC = () => {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BrutalCard title="Fluxo de Caixa (Últimos 30 dias)">
+            <BrutalCard title={`Fluxo de Caixa - ${months[selectedMonth]} ${selectedYear}`}>
               <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
@@ -297,7 +409,7 @@ export const Finance: React.FC = () => {
                   {transactions.length === 0 && (
                     <tr>
                       <td colSpan={4} className="p-8 text-center text-text-secondary">
-                        Nenhuma transação registrada.
+                        Nenhuma transação registrada em {months[selectedMonth]} {selectedYear}.
                       </td>
                     </tr>
                   )}
@@ -308,77 +420,19 @@ export const Finance: React.FC = () => {
         </>
       )}
 
-      {activeTab === 'commissions' && (
-        <CommissionsManagement accentColor={accentColor} currencySymbol={currencySymbol} />
+      {activeTab === 'history' && (
+        <BrutalCard title="Histórico Mensal - Últimos 12 Meses">
+          <MonthlyHistory
+            data={monthlyHistory}
+            currencySymbol={currencySymbol}
+            accentColor={accentColor}
+            isBeauty={isBeauty}
+          />
+        </BrutalCard>
       )}
 
-      {/* Filter Modal */}
-      {showFilterModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <BrutalCard className="w-full max-w-md">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-heading text-white uppercase">Filtrar Transações</h3>
-              <button
-                onClick={() => setShowFilterModal(false)}
-                className="text-neutral-400 hover:text-white transition-colors"
-              >
-                <span className="text-2xl">×</span>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-2 uppercase">Data Início</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-accent-gold outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-2 uppercase">Data Fim</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-accent-gold outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-2 uppercase">Tipo</label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as 'all' | 'revenue' | 'expense')}
-                  className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-accent-gold outline-none"
-                >
-                  <option value="all">Todos</option>
-                  <option value="revenue">Receitas</option>
-                  <option value="expense">Despesas</option>
-                </select>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <BrutalButton
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={handleClearFilter}
-                >
-                  Limpar
-                </BrutalButton>
-                <BrutalButton
-                  variant="primary"
-                  className="flex-1"
-                  onClick={handleApplyFilter}
-                >
-                  Aplicar
-                </BrutalButton>
-              </div>
-            </div>
-          </BrutalCard>
-        </div>
+      {activeTab === 'commissions' && (
+        <CommissionsManagement accentColor={accentColor} currencySymbol={currencySymbol} />
       )}
     </div>
   );

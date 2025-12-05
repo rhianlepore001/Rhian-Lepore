@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 
@@ -215,6 +215,25 @@ export const Agenda: React.FC = () => {
                 status: apt.status,
                 professional_id: apt.professional_id
             })));
+        }
+    };
+
+    const handleDeleteHistoryAppointment = async (appointmentId: string) => {
+        if (!confirm('Tem certeza que deseja excluir este agendamento do histórico? Esta ação é irreversível e removerá também o registro financeiro associado.')) return;
+
+        try {
+            // Delete associated finance records first (if any)
+            await supabase.from('finance_records').delete().eq('appointment_id', appointmentId);
+
+            // Then delete the appointment
+            await supabase.from('appointments').delete().eq('id', appointmentId);
+
+            alert('Agendamento e registro financeiro excluídos com sucesso!');
+            fetchHistoryAppointments(); // Refresh history
+            fetchData(); // Also refresh main agenda data in case it affects counts/stats
+        } catch (error) {
+            console.error('Error deleting history appointment:', error);
+            alert('Erro ao excluir agendamento do histórico.');
         }
     };
 
@@ -888,10 +907,17 @@ export const Agenda: React.FC = () => {
                                                         </p>
                                                     )}
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="text-right flex flex-col items-end gap-2">
                                                     <p className={`text-lg font-mono font-bold ${accentText}`}>
                                                         {currencySymbol} {apt.price.toFixed(2)}
                                                     </p>
+                                                    <button
+                                                        onClick={() => handleDeleteHistoryAppointment(apt.id)}
+                                                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        title="Excluir agendamento"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

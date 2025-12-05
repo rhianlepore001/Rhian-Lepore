@@ -3,7 +3,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -168,6 +168,19 @@ export const Finance: React.FC = () => {
       setMonthlyHistory(history.reverse()); // Most recent first
     } catch (error) {
       console.error('Error fetching monthly history:', error);
+    }
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta transação? Esta ação é irreversível.')) return;
+
+    try {
+        await supabase.from('finance_records').delete().eq('id', transactionId);
+        alert('Transação excluída com sucesso!');
+        fetchFinanceData(); // Refresh finance data
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        alert('Erro ao excluir transação.');
     }
   };
 
@@ -387,6 +400,7 @@ export const Finance: React.FC = () => {
                     <th className="p-3">Descrição</th>
                     <th className="p-3 text-right">Valor</th>
                     <th className="p-3 text-right">Tipo</th>
+                    <th className="p-3 text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-800">
@@ -404,11 +418,20 @@ export const Finance: React.FC = () => {
                           {t.type === 'expense' ? 'Despesa Paga' : (t.type === 'pending_expense' ? 'Comissão Pendente' : 'Receita')}
                         </span>
                       </td>
+                      <td className="p-3 text-right">
+                          <button
+                              onClick={() => handleDeleteTransaction(t.id)}
+                              className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                              title="Excluir transação"
+                          >
+                              <Trash2 className="w-4 h-4" />
+                          </button>
+                      </td>
                     </tr>
                   ))}
                   {transactions.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-text-secondary">
+                      <td colSpan={5} className="p-8 text-center text-text-secondary">
                         Nenhuma transação registrada em {months[selectedMonth]} {selectedYear}.
                       </td>
                     </tr>

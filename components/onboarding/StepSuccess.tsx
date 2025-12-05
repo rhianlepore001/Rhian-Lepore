@@ -11,8 +11,8 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor }) => {
 
     return (
         <div className="text-center py-8">
-            <div className={`w-20 h-20 rounded-full bg-${accentColor}/20 flex items-center justify-center mx-auto mb-6 animate-bounce-slow`}>
-                <CheckCircle className={`w-10 h-10 text-${accentColor}`} />
+            <div className={accentColor === 'beauty-neon' ? 'w-20 h-20 rounded-full bg-beauty-neon/20 flex items-center justify-center mx-auto mb-6 animate-bounce-slow' : 'w-20 h-20 rounded-full bg-accent-gold/20 flex items-center justify-center mx-auto mb-6 animate-bounce-slow'}>
+                <CheckCircle className={accentColor === 'beauty-neon' ? 'w-10 h-10 text-beauty-neon' : 'w-10 h-10 text-accent-gold'} />
             </div>
 
             <h2 className="text-2xl md:text-3xl font-heading text-white uppercase mb-4">
@@ -27,7 +27,7 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor }) => {
 
             <button
                 onClick={() => navigate('/')}
-                className={`w-full py-4 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors flex items-center justify-center gap-2 text-lg`}
+                className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 text-lg' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-lg'}
             >
                 Ir para o Dashboard
                 <ArrowRight className="w-5 h-5" />

@@ -80,7 +80,7 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
                 <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className={`flex-1 py-4 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors flex items-center justify-center gap-2`}
+                    className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2'}
                 >
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
                 </button>

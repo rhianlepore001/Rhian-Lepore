@@ -49,7 +49,7 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
                     value={name}
                     onChange={e => setName(e.target.value)}
                     placeholder={accentColor === 'beauty-neon' ? "Ex: Studio Beauty" : "Ex: Barbearia do Silva"}
-                    className={`w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} text-lg`}
+                    className={accentColor === 'beauty-neon' ? 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-beauty-neon text-lg' : 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg'}
                     autoFocus
                 />
             </div>
@@ -62,14 +62,14 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
                     placeholder="(11) 99999-9999"
-                    className={`w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} text-lg`}
+                    className={accentColor === 'beauty-neon' ? 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-beauty-neon text-lg' : 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg'}
                 />
             </div>
 
             <button
                 type="submit"
                 disabled={loading || !name || !phone}
-                className={`w-full py-4 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8`}
+                className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8'}
             >
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
             </button>

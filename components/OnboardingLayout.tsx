@@ -19,16 +19,14 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 }) => {
     const { userType } = useAuth();
     const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
 
     return (
-        <div className={`h-screen ${bgColor} flex flex-col overflow-hidden`}>
+        <div className={isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col overflow-hidden' : 'min-h-screen bg-brutal-main flex flex-col overflow-hidden'}>
             {/* Header */}
             <header className="border-b border-neutral-800 bg-neutral-900/50 backdrop-blur-sm z-50 flex-shrink-0">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded bg-${accentColor} flex items-center justify-center font-bold text-black`}>
+                        <div className={isBeauty ? 'w-8 h-8 rounded bg-beauty-neon flex items-center justify-center font-bold text-black' : 'w-8 h-8 rounded bg-accent-gold flex items-center justify-center font-bold text-black'}>
                             B
                         </div>
                         <span className="text-white font-heading uppercase tracking-wider">
@@ -44,7 +42,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             {/* Progress Bar */}
             <div className="h-1 bg-neutral-800 w-full flex-shrink-0">
                 <div
-                    className={`h-full bg-${accentColor} transition-all duration-500 ease-out`}
+                    className={isBeauty ? 'h-full bg-beauty-neon transition-all duration-500 ease-out' : 'h-full bg-accent-gold transition-all duration-500 ease-out'}
                     style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                 />
             </div>

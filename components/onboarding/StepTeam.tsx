@@ -60,7 +60,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                         <p className="text-neutral-500 mb-4">Nenhum profissional adicionado</p>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className={`px-4 py-2 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90`}
+                            className={accentColor === 'beauty-neon' ? 'px-4 py-2 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90' : 'px-4 py-2 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90'}
                         >
                             Adicionar Profissional
                         </button>
@@ -81,7 +81,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                         ))}
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className={`w-full py-3 border border-${accentColor} text-${accentColor} font-bold rounded-lg hover:bg-${accentColor}/10 transition-colors flex items-center justify-center gap-2`}
+                            className={accentColor === 'beauty-neon' ? 'w-full py-3 border border-beauty-neon text-beauty-neon font-bold rounded-lg hover:bg-beauty-neon/10 transition-colors flex items-center justify-center gap-2' : 'w-full py-3 border border-accent-gold text-accent-gold font-bold rounded-lg hover:bg-accent-gold/10 transition-colors flex items-center justify-center gap-2'}
                         >
                             <Plus className="w-4 h-4" />
                             Adicionar Outro
@@ -100,7 +100,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                 <button
                     onClick={handleContinue}
                     disabled={submitting || members.length === 0}
-                    className={`flex-1 py-4 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
                 >
                     {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
                 </button>

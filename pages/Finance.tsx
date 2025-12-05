@@ -101,19 +101,20 @@ export const Finance: React.FC = () => {
 
         const formattedTransactions = (data.transactions || []).map((item: any) => ({
           id: item.id,
-          description: item.barber_name ? `Comissão - ${item.barber_name}` : 'Serviço',
-          amount: item.amount || 0,
-          expense: item.expense || 0,
+          description: item.type === 'expense' ? `Pagamento de Comissão - ${item.barber_name}` : `Serviço - ${item.barber_name || 'Desconhecido'}`, // More descriptive
+          amount: item.amount || 0, // This is revenue for 'revenue' type
+          expense: item.expense || 0, // This is commission_value for 'expense' type
           date: new Date(item.created_at).toLocaleDateString('pt-BR'),
           rawDate: new Date(item.created_at),
-          type: item.expense > 0 && !item.commission_paid ? 'pending_expense' : (item.expense > 0 ? 'expense' : 'revenue')
+          type: item.type, // Use the actual type from DB
+          commission_paid: item.commission_paid // Pass this through
         }));
 
         const filtered = filterType === 'all'
           ? formattedTransactions
           : formattedTransactions.filter(t => {
             if (filterType === 'revenue') return t.type === 'revenue';
-            if (filterType === 'expense') return t.type === 'expense' || t.type === 'pending_expense';
+            if (filterType === 'expense') return t.type === 'expense'; // Only show actual expense payments
             return true;
           });
 
@@ -195,8 +196,8 @@ export const Finance: React.FC = () => {
       ...transactions.map(t => [
         t.date,
         t.description,
-        t.type === 'expense' ? 'Despesa Paga' : (t.type === 'pending_expense' ? 'Comissão Pendente' : 'Receita'),
-        t.type === 'expense' ? -t.expense : (t.type === 'pending_expense' ? -t.expense : t.amount)
+        t.type === 'expense' ? 'Despesa Paga' : 'Receita',
+        t.type === 'expense' ? -t.expense : t.amount
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -409,13 +410,13 @@ export const Finance: React.FC = () => {
                       <td className="p-3 font-mono text-sm text-text-secondary">{t.date}</td>
                       <td className="p-3 text-white font-medium">{t.description}</td>
                       <td className="p-3 text-right font-mono">
-                        <span className={t.type === 'expense' ? 'text-red-500' : (t.type === 'pending_expense' ? 'text-yellow-500' : 'text-green-500')}>
-                          {t.type === 'expense' || t.type === 'pending_expense' ? '-' : '+'}{currencySymbol} {(t.type === 'expense' || t.type === 'pending_expense' ? t.expense : t.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
+                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.type === 'expense' ? t.expense : t.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-3 text-right">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.type === 'expense' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : (t.type === 'pending_expense' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20')}`}>
-                          {t.type === 'expense' ? 'Despesa Paga' : (t.type === 'pending_expense' ? 'Comissão Pendente' : 'Receita')}
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.type === 'expense' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
+                          {t.type === 'expense' ? 'Despesa Paga' : 'Receita'}
                         </span>
                       </td>
                       <td className="p-3 text-right">

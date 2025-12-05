@@ -69,6 +69,13 @@ export const Agenda: React.FC = () => {
         }
     }, [user, isOverdueFilter]);
 
+    // Effect to fetch history appointments when historyMonth changes and modal is open
+    useEffect(() => {
+        if (showHistoryModal && user) {
+            fetchHistoryAppointments();
+        }
+    }, [historyMonth, showHistoryModal, user]); // Added user to dependencies
+
     // Update selectedAppointmentDate when modal opens or selectedDate changes
     useEffect(() => {
         if (showNewAppointmentModal) {
@@ -527,7 +534,7 @@ export const Agenda: React.FC = () => {
                         icon={<History />}
                         onClick={() => {
                             setShowHistoryModal(true);
-                            fetchHistoryAppointments();
+                            // No need to call fetchHistoryAppointments here, useEffect will handle it
                         }}
                         className="flex-1 md:flex-none"
                     >
@@ -846,7 +853,6 @@ export const Agenda: React.FC = () => {
                             <button
                                 onClick={() => {
                                     changeHistoryMonth(-1);
-                                    setTimeout(fetchHistoryAppointments, 100);
                                 }}
                                 className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                             >
@@ -860,7 +866,6 @@ export const Agenda: React.FC = () => {
                             <button
                                 onClick={() => {
                                     changeHistoryMonth(1);
-                                    setTimeout(fetchHistoryAppointments, 100);
                                 }}
                                 className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                             >

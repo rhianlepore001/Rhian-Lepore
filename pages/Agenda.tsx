@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { AppointmentEditModal } from '../components/AppointmentEditModal';
 
 interface Appointment {
     id: string;
@@ -21,6 +22,17 @@ interface TeamMember {
     id: string;
     name: string;
     photo_url?: string;
+}
+
+interface Service {
+    id: string;
+    name: string;
+    price: number;
+}
+
+interface Client {
+    id: string;
+    name: string;
 }
 
 // Helper para obter a data inicial (da URL ou hoje)
@@ -45,8 +57,8 @@ export const Agenda: React.FC = () => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-    const [clients, setClients] = useState<any[]>([]);
-    const [services, setServices] = useState<any[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
@@ -56,8 +68,11 @@ export const Agenda: React.FC = () => {
     const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState<string | null>(null);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
+    
+    // State for editing
+    const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
-    // Form state
+    // Form state (for new appointment modal)
     const [selectedClient, setSelectedClient] = useState('');
     const [selectedService, setSelectedService] = useState('');
     const [selectedProfessional, setSelectedProfessional] = useState('');
@@ -137,7 +152,7 @@ export const Agenda: React.FC = () => {
         // Only fetch appointments for the selected day (Confirmed status)
         const { data } = await supabase
             .from('appointments')
-            .select('*, clients(name)')
+            .select('*, clients(name, id)')
             .eq('user_id', user.id)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
@@ -204,7 +219,7 @@ export const Agenda: React.FC = () => {
             .select('id, name')
             .eq('user_id', user.id)
             .order('name');
-        if (data) setClients(data);
+        if (data) setClients(data as Client[]);
     };
 
     const fetchServices = async () => {
@@ -215,7 +230,7 @@ export const Agenda: React.FC = () => {
             .eq('user_id', user.id)
             .eq('active', true)
             .order('name');
-        if (data) setServices(data);
+        if (data) setServices(data as Service[]);
     };
 
     const fetchHistoryAppointments = async () => {
@@ -826,24 +841,33 @@ export const Agenda: React.FC = () => {
                                                         {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                     </span>
                                                 </div>
-                                                {apt.status === 'Confirmed' && (
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => handleCompleteAppointment(apt.id)}
-                                                            className="text-green-500 hover:text-green-400 transition-colors"
-                                                            title="Marcar como concluído"
-                                                        >
-                                                            <Check className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleCancelAppointment(apt.id)}
-                                                            className="text-red-500 hover:text-red-400 transition-colors"
-                                                            title="Cancelar agendamento"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {apt.status === 'Confirmed' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => setEditingAppointment(apt)}
+                                                                className="text-neutral-400 hover:text-white transition-colors"
+                                                                title="Editar agendamento"
+                                                            >
+                                                                <Edit2 className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCompleteAppointment(apt.id)}
+                                                                className="text-green-500 hover:text-green-400 transition-colors"
+                                                                title="Marcar como concluído"
+                                                            >
+                                                                <Check className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCancelAppointment(apt.id)}
+                                                                className="text-red-500 hover:text-red-400 transition-colors"
+                                                                title="Cancelar agendamento"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                             <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
                                             <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
@@ -1084,6 +1108,20 @@ export const Agenda: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Edit Appointment Modal */}
+            {editingAppointment && (
+                <AppointmentEditModal
+                    appointment={editingAppointment}
+                    teamMembers={teamMembers}
+                    services={services}
+                    clients={clients}
+                    onClose={() => setEditingAppointment(null)}
+                    onSave={fetchData}
+                    accentColor={accentColor}
+                    currencySymbol={currencySymbol}
+                />
             )}
         </div>
     );

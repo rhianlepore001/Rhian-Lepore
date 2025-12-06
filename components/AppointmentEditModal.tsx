@@ -68,42 +68,64 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const initialDate = new Date(appointment.appointment_time).toISOString().split('T')[0];
     const initialTime = new Date(appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     
-    // Find the service ID based on the name stored in the appointment
     const initialService = services.find(s => s.name === appointment.service)?.id || '';
     const initialBasePrice = services.find(s => s.name === appointment.service)?.price || appointment.price;
     
-    // Calculate initial discount percentage based on stored price vs base price
-    const initialDiscountRate = initialBasePrice > 0 ? ((initialBasePrice - appointment.price) / initialBasePrice) * 100 : 0;
-    const initialDiscountPercentage = Math.max(0, Math.round(initialDiscountRate)).toString();
-
+    // State for form fields
     const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
     const [selectedService, setSelectedService] = useState(initialService);
     const [selectedProfessional, setSelectedProfessional] = useState(appointment.professional_id || '');
     const [selectedDate, setSelectedDate] = useState(initialDate);
     const [selectedTime, setSelectedTime] = useState(initialTime);
-    const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
     
-    // Calculated price state
+    // Price states
     const [basePrice, setBasePrice] = useState(initialBasePrice);
-    const [finalPrice, setFinalPrice] = useState(appointment.price);
+    const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
+    const [discountPercentage, setDiscountPercentage] = useState('0');
 
+    // Flag to track if the user is actively editing the final price
+    const [isEditingFinalPrice, setIsEditingFinalPrice] = useState(false);
+
+    // Effect to update base price when service changes
     useEffect(() => {
-        // 1. Determine the base price based on the selected service
         const service = services.find(s => s.id === selectedService);
         const currentBasePrice = service?.price || 0;
         setBasePrice(currentBasePrice);
+        
+        // If the user hasn't manually set the final price, reset it to the base price when service changes
+        if (!isEditingFinalPrice) {
+            setFinalPriceInput(currentBasePrice.toFixed(2));
+        }
+    }, [selectedService, services]);
 
-        // 2. Calculate final price based on discount
-        const discountRate = parseFloat(discountPercentage) / 100;
-        const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
-        setFinalPrice(calculatedFinalPrice);
+    // Effect to calculate discount when final price or base price changes
+    useEffect(() => {
+        const currentFinalPrice = parseFloat(finalPriceInput) || 0;
+        
+        if (basePrice > 0) {
+            const discountAmount = basePrice - currentFinalPrice;
+            if (discountAmount > 0) {
+                const calculatedDiscount = (discountAmount / basePrice) * 100;
+                setDiscountPercentage(Math.max(0, Math.round(calculatedDiscount)).toString());
+            } else {
+                // If final price is higher or equal, discount is 0
+                setDiscountPercentage('0');
+            }
+        } else {
+            setDiscountPercentage('0');
+        }
+    }, [finalPriceInput, basePrice]);
 
-    }, [selectedService, discountPercentage, services]);
-
+    const handleFinalPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setIsEditingFinalPrice(true);
+        setFinalPriceInput(e.target.value);
+    };
 
     const handleSave = async () => {
-        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPrice)) {
-            alert('Por favor, preencha todos os campos obrigatórios.');
+        const finalPriceValue = parseFloat(finalPriceInput);
+
+        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPriceValue)) {
+            alert('Por favor, preencha todos os campos obrigatórios e verifique o preço final.');
             return;
         }
 
@@ -124,7 +146,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     professional_id: selectedProfessional,
                     service: serviceDetails.name,
                     appointment_time: dateTime.toISOString(),
-                    price: finalPrice, // Save the calculated final price
+                    price: finalPriceValue, // Save the calculated final price
                 })
                 .eq('id', appointment.id);
 
@@ -192,7 +214,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         <label className="text-white font-mono text-sm mb-2 block">Serviço</label>
                         <select
                             value={selectedService}
-                            onChange={(e) => setSelectedService(e.target.value)}
+                            onChange={(e) => {
+                                setSelectedService(e.target.value);
+                                setIsEditingFinalPrice(false); // Reset flag when service changes
+                            }}
                             className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
                             disabled={loading}
                         >
@@ -236,29 +261,35 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     {/* Price and Discount */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="text-white font-mono text-sm mb-2 block">Desconto (%)</label>
+                            <label className="text-white font-mono text-sm mb-2 block">Preço Final ({currencySymbol})</label>
                             <div className="relative">
                                 <input
                                     type="number"
                                     min="0"
-                                    max="100"
-                                    step="1"
-                                    value={discountPercentage}
-                                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                                    step="0.01"
+                                    value={finalPriceInput}
+                                    onChange={handleFinalPriceChange}
+                                    onBlur={() => setIsEditingFinalPrice(false)}
                                     className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg pr-8"
-                                    placeholder="0"
+                                    placeholder="0.00"
                                     disabled={loading}
                                 />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">%</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-white font-mono text-sm mb-2 block">Preço Final ({currencySymbol})</label>
-                            <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentColor}`}>
-                                {currencySymbol} {finalPrice.toFixed(2)}
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">{currencySymbol}</span>
                             </div>
                             <p className="text-xs text-neutral-500 mt-1">
-                                Preço base: {currencySymbol} {basePrice.toFixed(2)}
+                                Preço base do serviço: {currencySymbol} {basePrice.toFixed(2)}
+                            </p>
+                        </div>
+                        <div>
+                            <label className="text-white font-mono text-sm mb-2 block">Desconto Aplicado</label>
+                            <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentColor} flex items-center justify-between`}>
+                                <span>{discountPercentage}%</span>
+                                {parseFloat(discountPercentage) > 0 && (
+                                    <Tag className="w-4 h-4 text-red-400" />
+                                )}
+                            </div>
+                            <p className="text-xs text-neutral-500 mt-1">
+                                {parseFloat(discountPercentage) > 0 ? 'Ajustado automaticamente' : 'Nenhum desconto'}
                             </p>
                         </div>
                     </div>

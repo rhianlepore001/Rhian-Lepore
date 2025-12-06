@@ -16,7 +16,7 @@ interface Appointment {
     price: number;
     status: string;
     professional_id: string | null;
-    basePrice?: number; // NEW: Base price for discount calculation
+    basePrice?: number; // Base price for discount calculation
 }
 
 interface TeamMember {
@@ -165,12 +165,13 @@ export const Agenda: React.FC = () => {
             .eq('user_id', user.id)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
-            .eq('status', 'Confirmed') // Only confirmed appointments for the day view
+            .in('status', ['Confirmed', 'Pending']) // Include pending for the day view
             .order('appointment_time');
 
         if (data) {
             setAppointments(data.map((apt: any) => {
-                const basePrice = servicePriceMap.get(apt.service) || apt.price; // Use price if base not found
+                // Use the price from the service table as the base price
+                const basePrice = servicePriceMap.get(apt.service) || apt.price; 
                 return {
                     id: apt.id,
                     client_id: apt.client_id,
@@ -602,9 +603,39 @@ export const Agenda: React.FC = () => {
 
     // Calculate price preview for the modal
     const selectedServiceDetails = services.find(s => s.id === selectedService);
-    const basePrice = selectedServiceDetails?.price || 0;
-    const discountRate = parseFloat(discountPercentage) / 100;
-    const finalPrice = basePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+    const basePriceNew = selectedServiceDetails?.price || 0;
+    const discountRateNew = parseFloat(discountPercentage) / 100;
+    const finalPriceNew = basePriceNew * (1 - (isNaN(discountRateNew) ? 0 : discountRateNew));
+
+    // Helper to calculate discount info for display
+    const getDiscountInfo = (apt: Appointment) => {
+        // Check if the saved price is lower than the base price of the service
+        const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
+        
+        // Check if the saved price is higher than the base price (custom price)
+        const isCustomPriceHigher = apt.basePrice && apt.price > apt.basePrice;
+
+        if (hasDiscount) {
+            const discountAmount = apt.basePrice! - apt.price;
+            const discountPercentage = Math.round((discountAmount / apt.basePrice!) * 100);
+            return {
+                hasDiscount: true,
+                discountAmount: discountAmount,
+                discountPercentage: discountPercentage,
+                isCustomPriceHigher: false
+            };
+        } else if (isCustomPriceHigher) {
+             // If price is higher, treat it as a custom price without discount
+             return {
+                hasDiscount: false,
+                discountAmount: 0,
+                discountPercentage: 0,
+                isCustomPriceHigher: true
+            };
+        }
+        
+        return { hasDiscount: false, discountAmount: 0, discountPercentage: 0, isCustomPriceHigher: false };
+    };
 
     if (loading) {
         return (
@@ -876,9 +907,7 @@ export const Agenda: React.FC = () => {
 
                                     {/* Confirmed Appointments */}
                                     {memberAppointments.map(apt => {
-                                        const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
-                                        const discountAmount = hasDiscount ? apt.basePrice! - apt.price : 0;
-                                        const discountPercentage = hasDiscount ? Math.round((discountAmount / apt.basePrice!) * 100) : 0;
+                                        const { hasDiscount, discountPercentage, isCustomPriceHigher } = getDiscountInfo(apt);
 
                                         return (
                                             <div
@@ -928,24 +957,31 @@ export const Agenda: React.FC = () => {
                                                 <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
                                                 <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
                                                 
-                                                {/* Discount Display */}
-                                                {hasDiscount ? (
-                                                    <div className="flex items-center gap-2">
+                                                {/* Price Display */}
+                                                <div className="flex items-center gap-2">
+                                                    {hasDiscount && apt.basePrice && (
                                                         <span className="text-xs font-mono text-red-500 line-through">
-                                                            {currencySymbol} {apt.basePrice!.toFixed(2)}
+                                                            {currencySymbol} {apt.basePrice.toFixed(2)}
                                                         </span>
-                                                        <span className={`text-xs font-mono font-bold ${accentText}`}>
-                                                            {currencySymbol} {apt.price.toFixed(2)}
-                                                        </span>
+                                                    )}
+                                                    <span className={`text-xs font-mono font-bold ${accentText}`}>
+                                                        {currencySymbol} {apt.price.toFixed(2)}
+                                                    </span>
+                                                    
+                                                    {/* Discount Badge */}
+                                                    {hasDiscount && (
                                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
                                                             <Tag className="w-3 h-3" /> {discountPercentage}% OFF
                                                         </span>
-                                                    </div>
-                                                ) : (
-                                                    <p className={`text-xs font-mono font-bold ${accentText}`}>
-                                                        {currencySymbol} {apt.price.toFixed(2)}
-                                                    </p>
-                                                )}
+                                                    )}
+
+                                                    {/* Custom Price Badge (Higher) */}
+                                                    {isCustomPriceHigher && (
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1">
+                                                            <Tag className="w-3 h-3" /> Preço Customizado
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -1012,8 +1048,7 @@ export const Agenda: React.FC = () => {
                             ) : (
                                 historyAppointments.map(apt => {
                                     const professional = teamMembers.find(m => m.id === apt.professional_id);
-                                    const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
-                                    const discountPercentage = hasDiscount ? Math.round(((apt.basePrice! - apt.price) / apt.basePrice!) * 100) : 0;
+                                    const { hasDiscount, discountPercentage, isCustomPriceHigher } = getDiscountInfo(apt);
 
                                     return (
                                         <div
@@ -1045,9 +1080,9 @@ export const Agenda: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <div className="text-right flex flex-col items-end gap-2">
-                                                    {hasDiscount && (
+                                                    {hasDiscount && apt.basePrice && (
                                                         <span className="text-xs font-mono text-red-500 line-through">
-                                                            {currencySymbol} {apt.basePrice!.toFixed(2)}
+                                                            {currencySymbol} {apt.basePrice.toFixed(2)}
                                                         </span>
                                                     )}
                                                     <p className={`text-lg font-mono font-bold ${accentText}`}>
@@ -1056,6 +1091,11 @@ export const Agenda: React.FC = () => {
                                                     {hasDiscount && (
                                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
                                                             {discountPercentage}% OFF
+                                                        </span>
+                                                    )}
+                                                    {isCustomPriceHigher && (
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1">
+                                                            Preço Customizado
                                                         </span>
                                                     )}
                                                     <button
@@ -1193,10 +1233,10 @@ export const Agenda: React.FC = () => {
                                 <div>
                                     <label className="text-white font-mono text-sm mb-2 block">Preço Final</label>
                                     <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentText}`}>
-                                        {currencySymbol} {finalPrice.toFixed(2)}
+                                        {currencySymbol} {finalPriceNew.toFixed(2)}
                                     </div>
                                     <p className="text-xs text-neutral-500 mt-1">
-                                        Preço base: {currencySymbol} {basePrice.toFixed(2)}
+                                        Preço base: {currencySymbol} {basePriceNew.toFixed(2)}
                                     </p>
                                 </div>
                             </div>

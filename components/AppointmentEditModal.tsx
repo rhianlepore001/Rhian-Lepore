@@ -71,6 +71,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const initialService = services.find(s => s.name === appointment.service)?.id || '';
     const initialBasePrice = services.find(s => s.name === appointment.service)?.price || appointment.price;
     
+    // Calculate initial discount percentage based on stored price vs base price
+    const initialDiscountRate = initialBasePrice > 0 ? ((initialBasePrice - appointment.price) / initialBasePrice) * 100 : 0;
+    const initialDiscountPercentage = Math.max(0, Math.round(initialDiscountRate)).toString();
+
     // State for form fields
     const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
     const [selectedService, setSelectedService] = useState(initialService);
@@ -81,44 +85,60 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     // Price states
     const [basePrice, setBasePrice] = useState(initialBasePrice);
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
-    const [discountPercentage, setDiscountPercentage] = useState('0');
+    const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
 
-    // Flag to track if the user is actively editing the final price
-    const [isEditingFinalPrice, setIsEditingFinalPrice] = useState(false);
+    // State to track which field was last edited
+    const [lastEditedField, setLastEditedField] = useState<'price' | 'discount'>('price');
 
-    // Effect to update base price when service changes
+    // 1. Update Base Price when service changes
     useEffect(() => {
         const service = services.find(s => s.id === selectedService);
         const currentBasePrice = service?.price || 0;
         setBasePrice(currentBasePrice);
-        
-        // If the user hasn't manually set the final price, reset it to the base price when service changes
-        if (!isEditingFinalPrice) {
-            setFinalPriceInput(currentBasePrice.toFixed(2));
+
+        // When service changes, recalculate based on the last edited field (default to discount 0)
+        if (lastEditedField === 'discount') {
+            const discountRate = parseFloat(discountPercentage) / 100;
+            const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+            setFinalPriceInput(calculatedFinalPrice.toFixed(2));
+        } else {
+            // If last edited was price, keep the price and recalculate discount
+            const currentFinalPrice = parseFloat(finalPriceInput) || 0;
+            if (currentBasePrice > 0) {
+                const discountAmount = currentBasePrice - currentFinalPrice;
+                const calculatedDiscount = (discountAmount / currentBasePrice) * 100;
+                setDiscountPercentage(Math.max(0, Math.round(calculatedDiscount)).toString());
+            } else {
+                setDiscountPercentage('0');
+            }
         }
     }, [selectedService, services]);
 
-    // Effect to calculate discount when final price or base price changes
-    useEffect(() => {
-        const currentFinalPrice = parseFloat(finalPriceInput) || 0;
-        
+    // 2. Recalculate Price when Discount changes
+    const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newDiscount = e.target.value;
+        setDiscountPercentage(newDiscount);
+        setLastEditedField('discount');
+
+        const discountRate = parseFloat(newDiscount) / 100;
+        const calculatedFinalPrice = basePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+        setFinalPriceInput(calculatedFinalPrice.toFixed(2));
+    };
+
+    // 3. Recalculate Discount when Price changes
+    const handleFinalPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newPrice = e.target.value;
+        setFinalPriceInput(newPrice);
+        setLastEditedField('price');
+
+        const currentFinalPrice = parseFloat(newPrice) || 0;
         if (basePrice > 0) {
             const discountAmount = basePrice - currentFinalPrice;
-            if (discountAmount > 0) {
-                const calculatedDiscount = (discountAmount / basePrice) * 100;
-                setDiscountPercentage(Math.max(0, Math.round(calculatedDiscount)).toString());
-            } else {
-                // If final price is higher or equal, discount is 0
-                setDiscountPercentage('0');
-            }
+            const calculatedDiscount = (discountAmount / basePrice) * 100;
+            setDiscountPercentage(Math.max(0, Math.round(calculatedDiscount)).toString());
         } else {
             setDiscountPercentage('0');
         }
-    }, [finalPriceInput, basePrice]);
-
-    const handleFinalPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setIsEditingFinalPrice(true);
-        setFinalPriceInput(e.target.value);
     };
 
     const handleSave = async () => {
@@ -162,6 +182,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
             setLoading(false);
         }
     };
+
+    const currentDiscount = parseFloat(discountPercentage) || 0;
+    const isDiscountApplied = currentDiscount > 0;
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
@@ -216,7 +239,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             value={selectedService}
                             onChange={(e) => {
                                 setSelectedService(e.target.value);
-                                setIsEditingFinalPrice(false); // Reset flag when service changes
+                                setLastEditedField('discount'); // Assume default behavior when service changes
                             }}
                             className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
                             disabled={loading}
@@ -269,7 +292,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                     step="0.01"
                                     value={finalPriceInput}
                                     onChange={handleFinalPriceChange}
-                                    onBlur={() => setIsEditingFinalPrice(false)}
                                     className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg pr-8"
                                     placeholder="0.00"
                                     disabled={loading}
@@ -281,15 +303,23 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             </p>
                         </div>
                         <div>
-                            <label className="text-white font-mono text-sm mb-2 block">Desconto Aplicado</label>
-                            <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentColor} flex items-center justify-between`}>
-                                <span>{discountPercentage}%</span>
-                                {parseFloat(discountPercentage) > 0 && (
-                                    <Tag className="w-4 h-4 text-red-400" />
-                                )}
+                            <label className="text-white font-mono text-sm mb-2 block">Desconto (%)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    value={discountPercentage}
+                                    onChange={handleDiscountChange}
+                                    className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg pr-8"
+                                    placeholder="0"
+                                    disabled={loading}
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">%</span>
                             </div>
                             <p className="text-xs text-neutral-500 mt-1">
-                                {parseFloat(discountPercentage) > 0 ? 'Ajustado automaticamente' : 'Nenhum desconto'}
+                                {isDiscountApplied ? `Desconto de ${currencySymbol} ${(basePrice - parseFloat(finalPriceInput)).toFixed(2)}` : 'Nenhum desconto aplicado'}
                             </p>
                         </div>
                     </div>

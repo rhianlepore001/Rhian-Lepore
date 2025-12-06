@@ -79,6 +79,7 @@ export const Agenda: React.FC = () => {
     const [selectedTime, setSelectedTime] = useState('');
     const [customTime, setCustomTime] = useState('');
     const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(selectedDate.toISOString().split('T')[0]);
+    const [discountPercentage, setDiscountPercentage] = useState('0'); // NEW STATE FOR DISCOUNT
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -475,6 +476,7 @@ export const Agenda: React.FC = () => {
         setSelectedTime('');
         setCustomTime('');
         setSelectedAppointmentDate(selectedDate.toISOString().split('T')[0]);
+        setDiscountPercentage('0'); // Reset discount
     };
 
     const handleCreateAppointment = async () => {
@@ -485,6 +487,15 @@ export const Agenda: React.FC = () => {
 
         try {
             const service = services.find(s => s.id === selectedService);
+            if (!service) {
+                alert('Serviço inválido.');
+                return;
+            }
+
+            const basePrice = service.price;
+            const discountRate = parseFloat(discountPercentage) / 100;
+            const finalPrice = basePrice * (1 - discountRate);
+
             const dateTime = new Date(selectedAppointmentDate);
             const timeToUse = selectedTime === 'custom' ? customTime : selectedTime;
             const [hours, minutes] = timeToUse.split(':');
@@ -498,7 +509,7 @@ export const Agenda: React.FC = () => {
                     professional_id: selectedProfessional,
                     service: service.name,
                     appointment_time: dateTime.toISOString(),
-                    price: service.price,
+                    price: finalPrice, // Use final price after discount
                     status: 'Confirmed'
                 });
 
@@ -554,6 +565,12 @@ export const Agenda: React.FC = () => {
     const displayedMembers = selectedProfessionalFilter
         ? teamMembers.filter(m => m.id === selectedProfessionalFilter)
         : teamMembers;
+
+    // Calculate price preview for the modal
+    const selectedServiceDetails = services.find(s => s.id === selectedService);
+    const basePrice = selectedServiceDetails?.price || 0;
+    const discountRate = parseFloat(discountPercentage) / 100;
+    const finalPrice = basePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
 
     if (loading) {
         return (
@@ -1084,6 +1101,35 @@ export const Agenda: React.FC = () => {
                                         <option key={time} value={time}>{time}</option>
                                     ))}
                                 </select>
+                            </div>
+
+                            {/* Discount Field */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-white font-mono text-sm mb-2 block">Desconto (%)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="1"
+                                            value={discountPercentage}
+                                            onChange={(e) => setDiscountPercentage(e.target.value)}
+                                            className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg pr-8"
+                                            placeholder="0"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-white font-mono text-sm mb-2 block">Preço Final</label>
+                                    <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentText}`}>
+                                        {currencySymbol} {finalPrice.toFixed(2)}
+                                    </div>
+                                    <p className="text-xs text-neutral-500 mt-1">
+                                        Preço base: {currencySymbol} {basePrice.toFixed(2)}
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-4">

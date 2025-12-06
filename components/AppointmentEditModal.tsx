@@ -71,6 +71,13 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const initialService = services.find(s => s.name === appointment.service)?.id || '';
     const initialBasePrice = services.find(s => s.name === appointment.service)?.price || appointment.price;
     
+    // Calculate initial discount percentage based on stored price vs base price
+    const initialDiscountRate = initialBasePrice > 0 ? ((initialBasePrice - appointment.price) / initialBasePrice) * 100 : 0;
+    const initialDiscountPercentage = Math.max(0, Math.round(initialDiscountRate)).toString();
+
+    // Determine initial priceBeforeDiscount: if the saved price is higher than the base price, use the saved price as the reference. Otherwise, use the base price.
+    const initialPriceBeforeDiscount = appointment.price > initialBasePrice ? appointment.price : initialBasePrice;
+
     // State for form fields
     const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
     const [selectedService, setSelectedService] = useState(initialService);
@@ -79,19 +86,23 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [selectedTime, setSelectedTime] = useState(initialTime);
     
     // Price states
-    const [basePrice, setBasePrice] = useState(initialBasePrice);
+    const [basePrice, setBasePrice] = useState(initialBasePrice); // Price from the service table
+    const [priceBeforeDiscount, setPriceBeforeDiscount] = useState(initialPriceBeforeDiscount); // Dynamic reference price for discount calculation
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
-    const [discountPercentage, setDiscountPercentage] = useState('0');
+    const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
 
-    // 1. Update Base Price when service changes
+    // 1. Update Base Price and Reference Price when service changes
     useEffect(() => {
         const service = services.find(s => s.id === selectedService);
-        const currentBasePrice = service?.price || 0;
-        setBasePrice(currentBasePrice);
+        const currentServiceBasePrice = service?.price || 0;
+        setBasePrice(currentServiceBasePrice);
 
-        // When service changes, recalculate final price based on the current discount percentage
+        // When service changes, the reference price resets to the new base price
+        setPriceBeforeDiscount(currentServiceBasePrice);
+
+        // Recalculate final price based on the new base price and current discount percentage
         const discountRate = parseFloat(discountPercentage) / 100;
-        const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+        const calculatedFinalPrice = currentServiceBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
         setFinalPriceInput(calculatedFinalPrice.toFixed(2));
         
     }, [selectedService, services]);
@@ -102,22 +113,32 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         setDiscountPercentage(newDiscount);
 
         const discountRate = parseFloat(newDiscount) / 100;
-        const calculatedFinalPrice = basePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+        // Calculate final price based on the current reference price (priceBeforeDiscount)
+        const calculatedFinalPrice = priceBeforeDiscount * (1 - (isNaN(discountRate) ? 0 : discountRate));
         setFinalPriceInput(calculatedFinalPrice.toFixed(2));
     };
 
-    // 3. Recalculate Discount when Price changes
+    // 3. Recalculate Discount and update Reference Price when Final Price changes
     const handleFinalPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newPrice = e.target.value;
-        setFinalPriceInput(newPrice);
+        const newPriceStr = e.target.value;
+        setFinalPriceInput(newPriceStr);
+        const newPrice = parseFloat(newPriceStr) || 0;
 
-        const currentFinalPrice = parseFloat(newPrice) || 0;
-        if (basePrice > 0) {
-            const discountAmount = basePrice - currentFinalPrice;
-            const calculatedDiscount = (discountAmount / basePrice) * 100;
-            setDiscountPercentage(Math.max(0, Math.round(calculatedDiscount)).toString());
-        } else {
+        // If the new price is higher than the service base price, the new price becomes the reference price, and discount resets to 0.
+        if (newPrice > basePrice) {
+            setPriceBeforeDiscount(newPrice);
             setDiscountPercentage('0');
+        } else {
+            // If the new price is equal or lower than the service base price, the reference price remains the service base price.
+            setPriceBeforeDiscount(basePrice);
+            
+            if (basePrice > 0) {
+                const discountAmount = basePrice - newPrice;
+                const calculatedDiscount = (discountAmount / basePrice) * 100;
+                setDiscountPercentage(Math.max(0, Math.round(calculatedDiscount)).toString());
+            } else {
+                setDiscountPercentage('0');
+            }
         }
     };
 
@@ -165,7 +186,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     const currentDiscount = parseFloat(discountPercentage) || 0;
     const isDiscountApplied = currentDiscount > 0;
-    const discountAmount = basePrice - (parseFloat(finalPriceInput) || 0);
+    const discountAmount = priceBeforeDiscount - (parseFloat(finalPriceInput) || 0);
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">

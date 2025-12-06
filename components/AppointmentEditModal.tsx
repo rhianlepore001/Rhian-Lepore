@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
@@ -67,27 +67,42 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     // Initial state setup
     const initialDate = new Date(appointment.appointment_time).toISOString().split('T')[0];
     const initialTime = new Date(appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    
+    // Find the service ID based on the name stored in the appointment
     const initialService = services.find(s => s.name === appointment.service)?.id || '';
-    const initialClient = appointment.client_id || '';
-    const initialProfessional = appointment.professional_id || '';
+    const initialBasePrice = services.find(s => s.name === appointment.service)?.price || appointment.price;
+    
+    // Calculate initial discount percentage based on stored price vs base price
+    const initialDiscountRate = initialBasePrice > 0 ? ((initialBasePrice - appointment.price) / initialBasePrice) * 100 : 0;
+    const initialDiscountPercentage = Math.max(0, Math.round(initialDiscountRate)).toString();
 
-    const [selectedClient, setSelectedClient] = useState(initialClient);
+    const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
     const [selectedService, setSelectedService] = useState(initialService);
-    const [selectedProfessional, setSelectedProfessional] = useState(initialProfessional);
+    const [selectedProfessional, setSelectedProfessional] = useState(appointment.professional_id || '');
     const [selectedDate, setSelectedDate] = useState(initialDate);
     const [selectedTime, setSelectedTime] = useState(initialTime);
-    const [price, setPrice] = useState(appointment.price.toFixed(2));
+    const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
+    
+    // Calculated price state
+    const [basePrice, setBasePrice] = useState(initialBasePrice);
+    const [finalPrice, setFinalPrice] = useState(appointment.price);
 
     useEffect(() => {
-        // Update price when service changes
+        // 1. Determine the base price based on the selected service
         const service = services.find(s => s.id === selectedService);
-        if (service) {
-            setPrice(service.price.toFixed(2));
-        }
-    }, [selectedService, services]);
+        const currentBasePrice = service?.price || 0;
+        setBasePrice(currentBasePrice);
+
+        // 2. Calculate final price based on discount
+        const discountRate = parseFloat(discountPercentage) / 100;
+        const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+        setFinalPrice(calculatedFinalPrice);
+
+    }, [selectedService, discountPercentage, services]);
+
 
     const handleSave = async () => {
-        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedDate || !selectedTime || isNaN(parseFloat(price))) {
+        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPrice)) {
             alert('Por favor, preencha todos os campos obrigatórios.');
             return;
         }
@@ -109,7 +124,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     professional_id: selectedProfessional,
                     service: serviceDetails.name,
                     appointment_time: dateTime.toISOString(),
-                    price: parseFloat(price),
+                    price: finalPrice, // Save the calculated final price
                 })
                 .eq('id', appointment.id);
 
@@ -190,19 +205,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         </select>
                     </div>
 
-                    {/* Price */}
-                    <div>
-                        <label className="text-white font-mono text-sm mb-2 block">Preço ({currencySymbol})</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
-                            disabled={loading}
-                        />
-                    </div>
-
                     {/* Date & Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -228,6 +230,36 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                     <option key={time} value={time}>{time}</option>
                                 ))}
                             </select>
+                        </div>
+                    </div>
+                    
+                    {/* Price and Discount */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-white font-mono text-sm mb-2 block">Desconto (%)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    value={discountPercentage}
+                                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                                    className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg pr-8"
+                                    placeholder="0"
+                                    disabled={loading}
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-white font-mono text-sm mb-2 block">Preço Final ({currencySymbol})</label>
+                            <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentColor}`}>
+                                {currencySymbol} {finalPrice.toFixed(2)}
+                            </div>
+                            <p className="text-xs text-neutral-500 mt-1">
+                                Preço base: {currencySymbol} {basePrice.toFixed(2)}
+                            </p>
                         </div>
                     </div>
 

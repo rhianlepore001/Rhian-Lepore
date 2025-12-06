@@ -75,6 +75,8 @@ export const Dashboard: React.FC = () => {
             clientName: apt.clients?.name || 'Cliente Desconhecido',
             service: apt.service,
             time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            rawDate: new Date(apt.appointment_time).toISOString().split('T')[0], // Para navegação
             status: apt.status,
             price: apt.price
           })));
@@ -292,7 +294,11 @@ export const Dashboard: React.FC = () => {
           ) : (
             <ul className="divide-y-2 divide-neutral-800">
               {appointments.map((apt) => (
-                <li key={apt.id} className="p-3 md:p-4 hover:bg-white/5 transition-colors flex items-center justify-between group">
+                <li 
+                  key={apt.id} 
+                  className="p-3 md:p-4 hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
+                  onClick={() => navigate(`/agenda?date=${apt.rawDate}`)} // Redireciona para a data específica
+                >
                   <div className="flex items-center gap-3 md:gap-4">
                     <div className={`font-mono text-base md:text-xl font-bold ${accentText} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700`}>
                       {apt.time}
@@ -302,8 +308,11 @@ export const Dashboard: React.FC = () => {
                       <p className="text-[10px] md:text-sm text-text-secondary font-mono">{apt.service}</p>
                     </div>
                   </div>
-                  <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    <BrutalButton size="sm" variant="ghost" onClick={() => navigate('/agenda')}>Ver</BrutalButton>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-neutral-400">{apt.date}</span> {/* Data ao lado do horário */}
+                    <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                      <BrutalButton size="sm" variant="ghost">Ver</BrutalButton>
+                    </div>
                   </div>
                 </li>
               ))}

@@ -4,7 +4,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 interface Appointment {
     id: string;
@@ -23,16 +23,32 @@ interface TeamMember {
     photo_url?: string;
 }
 
+// Helper para obter a data inicial (da URL ou hoje)
+const getInitialDate = (searchParams: URLSearchParams): Date => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+        const date = new Date(dateParam);
+        // Verifica se a data é válida e não é NaN
+        if (!isNaN(date.getTime())) {
+            // Ajusta para o fuso horário local para evitar problemas de dia
+            const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+            return localDate;
+        }
+    }
+    return new Date();
+};
+
 export const Agenda: React.FC = () => {
     const { user, userType, region } = useAuth();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
@@ -47,7 +63,7 @@ export const Agenda: React.FC = () => {
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
     const [customTime, setCustomTime] = useState('');
-    const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(selectedDate.toISOString().split('T')[0]);
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -56,6 +72,11 @@ export const Agenda: React.FC = () => {
     const currencySymbol = region === 'PT' ? '€' : 'R$';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
+
+    // Atualiza selectedDate se o parâmetro de URL mudar
+    useEffect(() => {
+        setSelectedDate(getInitialDate(searchParams));
+    }, [searchParams]);
 
     useEffect(() => {
         if (user) {
@@ -471,7 +492,11 @@ export const Agenda: React.FC = () => {
             alert('Agendamento criado com sucesso!');
             setShowNewAppointmentModal(false);
             resetForm();
-            fetchData();
+            
+            // 1. Redirecionar para a data do novo agendamento
+            const newDateStr = selectedAppointmentDate;
+            navigate(`/agenda?date=${newDateStr}`);
+
         } catch (error) {
             console.error('Error creating appointment:', error);
             alert('Erro ao criar agendamento.');
@@ -481,7 +506,10 @@ export const Agenda: React.FC = () => {
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
         newDate.setDate(newDate.getDate() + days);
-        setSelectedDate(newDate);
+        
+        // Atualiza a URL para refletir a nova data
+        const newDateStr = newDate.toISOString().split('T')[0];
+        navigate(`/agenda?date=${newDateStr}`);
     };
 
     const changeHistoryMonth = (months: number) => {
@@ -699,7 +727,7 @@ export const Agenda: React.FC = () => {
                         <p className="text-neutral-400 mb-6">
                             Adicione profissionais à sua equipe para começar a organizar agendamentos
                         </p>
-                        <BrutalButton variant="secondary" onClick={() => window.location.href = '/configuracoes/equipe'}>
+                        <BrutalButton variant="secondary" onClick={() => navigate('/configuracoes/equipe')}>
                             Adicionar Profissionais
                         </BrutalButton>
                     </div>
@@ -790,10 +818,14 @@ export const Agenda: React.FC = () => {
                                                 } transition-colors`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
-                                                <span className={`text-xs font-mono font-bold ${apt.status === 'Completed' ? 'text-green-500' : accentText
-                                                    }`}>
-                                                    {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-xs font-mono font-bold ${apt.status === 'Completed' ? 'text-green-500' : accentText}`}>
+                                                        {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                    <span className="text-xs font-mono text-neutral-500">
+                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                    </span>
+                                                </div>
                                                 {apt.status === 'Confirmed' && (
                                                     <div className="flex items-center gap-2">
                                                         <button

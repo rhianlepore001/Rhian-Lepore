@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2 } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
@@ -16,6 +16,7 @@ interface Appointment {
     price: number;
     status: string;
     professional_id: string | null;
+    basePrice?: number; // NEW: Base price for discount calculation
 }
 
 interface TeamMember {
@@ -85,7 +86,7 @@ export const Agenda: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const currencySymbol = region === 'PT' ? '€' : 'R$';
+    const currencySymbol = region === 'PT' ? '€' : 'R$' ;
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
@@ -150,7 +151,14 @@ export const Agenda: React.FC = () => {
         endOfDay.setHours(23, 59, 59, 999);
         const now = new Date();
 
-        // Only fetch appointments for the selected day (Confirmed status)
+        // 1. Fetch all services to map names to prices later
+        const { data: allServices } = await supabase
+            .from('services')
+            .select('name, price');
+        
+        const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
+
+        // 2. Fetch appointments for the selected day (Confirmed status)
         const { data } = await supabase
             .from('appointments')
             .select('*, clients(name, id)')
@@ -161,16 +169,20 @@ export const Agenda: React.FC = () => {
             .order('appointment_time');
 
         if (data) {
-            setAppointments(data.map((apt: any) => ({
-                id: apt.id,
-                client_id: apt.client_id,
-                clientName: apt.clients?.name || 'Cliente Desconhecido',
-                service: apt.service,
-                appointment_time: apt.appointment_time,
-                price: apt.price,
-                status: apt.status,
-                professional_id: apt.professional_id
-            })));
+            setAppointments(data.map((apt: any) => {
+                const basePrice = servicePriceMap.get(apt.service) || apt.price; // Use price if base not found
+                return {
+                    id: apt.id,
+                    client_id: apt.client_id,
+                    clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    service: apt.service,
+                    appointment_time: apt.appointment_time,
+                    price: apt.price,
+                    status: apt.status,
+                    professional_id: apt.professional_id,
+                    basePrice: basePrice
+                };
+            }));
         }
     };
 
@@ -178,6 +190,13 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         setIsOverdueLoading(true);
         const now = new Date().toISOString();
+
+        // 1. Fetch all services to map names to prices later
+        const { data: allServices } = await supabase
+            .from('services')
+            .select('name, price');
+        
+        const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
         const { data } = await supabase
             .from('appointments')
@@ -188,16 +207,20 @@ export const Agenda: React.FC = () => {
             .order('appointment_time', { ascending: false });
 
         if (data) {
-            setOverdueAppointments(data.map((apt: any) => ({
-                id: apt.id,
-                client_id: apt.client_id,
-                clientName: apt.clients?.name || 'Cliente Desconhecido',
-                service: apt.service,
-                appointment_time: apt.appointment_time,
-                price: apt.price,
-                status: apt.status,
-                professional_id: apt.professional_id
-            })));
+            setOverdueAppointments(data.map((apt: any) => {
+                const basePrice = servicePriceMap.get(apt.service) || apt.price;
+                return {
+                    id: apt.id,
+                    client_id: apt.client_id,
+                    clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    service: apt.service,
+                    appointment_time: apt.appointment_time,
+                    price: apt.price,
+                    status: apt.status,
+                    professional_id: apt.professional_id,
+                    basePrice: basePrice
+                };
+            }));
         }
         setIsOverdueLoading(false);
     };
@@ -239,6 +262,13 @@ export const Agenda: React.FC = () => {
         const startOfMonth = new Date(historyMonth.getFullYear(), historyMonth.getMonth(), 1);
         const endOfMonth = new Date(historyMonth.getFullYear(), historyMonth.getMonth() + 1, 0, 23, 59, 59);
 
+        // 1. Fetch all services to map names to prices later
+        const { data: allServices } = await supabase
+            .from('services')
+            .select('name, price');
+        
+        const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
+
         const { data } = await supabase
             .from('appointments')
             .select('*, clients(name)')
@@ -249,16 +279,20 @@ export const Agenda: React.FC = () => {
             .order('appointment_time', { ascending: false });
 
         if (data) {
-            setHistoryAppointments(data.map((apt: any) => ({
-                id: apt.id,
-                client_id: apt.client_id,
-                clientName: apt.clients?.name || 'Cliente Desconhecido',
-                service: apt.service,
-                appointment_time: apt.appointment_time,
-                price: apt.price,
-                status: apt.status,
-                professional_id: apt.professional_id
-            })));
+            setHistoryAppointments(data.map((apt: any) => {
+                const basePrice = servicePriceMap.get(apt.service) || apt.price;
+                return {
+                    id: apt.id,
+                    client_id: apt.client_id,
+                    clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    service: apt.service,
+                    appointment_time: apt.appointment_time,
+                    price: apt.price,
+                    status: apt.status,
+                    professional_id: apt.professional_id,
+                    basePrice: basePrice
+                };
+            }));
         }
     };
 
@@ -494,7 +528,7 @@ export const Agenda: React.FC = () => {
 
             const basePrice = service.price;
             const discountRate = parseFloat(discountPercentage) / 100;
-            const finalPrice = basePrice * (1 - discountRate);
+            const finalPrice = basePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
 
             const dateTime = new Date(selectedAppointmentDate);
             const timeToUse = selectedTime === 'custom' ? customTime : selectedTime;
@@ -841,58 +875,80 @@ export const Agenda: React.FC = () => {
                                     ))}
 
                                     {/* Confirmed Appointments */}
-                                    {memberAppointments.map(apt => (
-                                        <div
-                                            key={apt.id}
-                                            className={`border-2 rounded-lg p-3 ${apt.status === 'Completed'
-                                                ? 'bg-green-500/10 border-green-500'
-                                                : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
-                                                } transition-colors`}
-                                        >
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-xs font-mono font-bold ${apt.status === 'Completed' ? 'text-green-500' : accentText}`}>
-                                                        {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                    <span className="text-xs font-mono text-neutral-500">
-                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                                                    </span>
+                                    {memberAppointments.map(apt => {
+                                        const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
+                                        const discountAmount = hasDiscount ? apt.basePrice! - apt.price : 0;
+                                        const discountPercentage = hasDiscount ? Math.round((discountAmount / apt.basePrice!) * 100) : 0;
+
+                                        return (
+                                            <div
+                                                key={apt.id}
+                                                className={`border-2 rounded-lg p-3 ${apt.status === 'Completed'
+                                                    ? 'bg-green-500/10 border-green-500'
+                                                    : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
+                                                    } transition-colors`}
+                                            >
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-xs font-mono font-bold ${apt.status === 'Completed' ? 'text-green-500' : accentText}`}>
+                                                            {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                        <span className="text-xs font-mono text-neutral-500">
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {apt.status === 'Confirmed' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => setEditingAppointment(apt)}
+                                                                    className="text-neutral-400 hover:text-white transition-colors"
+                                                                    title="Editar agendamento"
+                                                                >
+                                                                    <Edit2 className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleCompleteAppointment(apt.id)}
+                                                                    className="text-green-500 hover:text-green-400 transition-colors"
+                                                                    title="Marcar como concluído"
+                                                                >
+                                                                    <Check className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleCancelAppointment(apt.id)}
+                                                                    className="text-red-500 hover:text-red-400 transition-colors"
+                                                                    title="Cancelar agendamento"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    {apt.status === 'Confirmed' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => setEditingAppointment(apt)}
-                                                                className="text-neutral-400 hover:text-white transition-colors"
-                                                                title="Editar agendamento"
-                                                            >
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleCompleteAppointment(apt.id)}
-                                                                className="text-green-500 hover:text-green-400 transition-colors"
-                                                                title="Marcar como concluído"
-                                                            >
-                                                                <Check className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleCancelAppointment(apt.id)}
-                                                                className="text-red-500 hover:text-red-400 transition-colors"
-                                                                title="Cancelar agendamento"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </div>
+                                                <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
+                                                <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
+                                                
+                                                {/* Discount Display */}
+                                                {hasDiscount ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-mono text-red-500 line-through">
+                                                            {currencySymbol} {apt.basePrice!.toFixed(2)}
+                                                        </span>
+                                                        <span className={`text-xs font-mono font-bold ${accentText}`}>
+                                                            {currencySymbol} {apt.price.toFixed(2)}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
+                                                            <Tag className="w-3 h-3" /> {discountPercentage}% OFF
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <p className={`text-xs font-mono font-bold ${accentText}`}>
+                                                        {currencySymbol} {apt.price.toFixed(2)}
+                                                    </p>
+                                                )}
                                             </div>
-                                            <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
-                                            <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
-                                            <p className={`text-xs font-mono font-bold ${accentText}`}>
-                                                {currencySymbol} {apt.price.toFixed(2)}
-                                            </p>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
 
                                     {memberAppointments.length === 0 && memberPendingBookings.length === 0 && (
                                         <div className="text-center py-8 text-neutral-600">
@@ -956,6 +1012,9 @@ export const Agenda: React.FC = () => {
                             ) : (
                                 historyAppointments.map(apt => {
                                     const professional = teamMembers.find(m => m.id === apt.professional_id);
+                                    const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
+                                    const discountPercentage = hasDiscount ? Math.round(((apt.basePrice! - apt.price) / apt.basePrice!) * 100) : 0;
+
                                     return (
                                         <div
                                             key={apt.id}
@@ -986,9 +1045,19 @@ export const Agenda: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <div className="text-right flex flex-col items-end gap-2">
+                                                    {hasDiscount && (
+                                                        <span className="text-xs font-mono text-red-500 line-through">
+                                                            {currencySymbol} {apt.basePrice!.toFixed(2)}
+                                                        </span>
+                                                    )}
                                                     <p className={`text-lg font-mono font-bold ${accentText}`}>
                                                         {currencySymbol} {apt.price.toFixed(2)}
                                                     </p>
+                                                    {hasDiscount && (
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
+                                                            {discountPercentage}% OFF
+                                                        </span>
+                                                    )}
                                                     <button
                                                         onClick={() => handleDeleteHistoryAppointment(apt.id)}
                                                         className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"

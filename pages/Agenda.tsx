@@ -6,6 +6,7 @@ import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, Histo
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
+import { SearchableSelect } from '../components/SearchableSelect'; // Importando o novo componente
 
 interface Appointment {
     id: string;
@@ -241,7 +242,7 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         const { data } = await supabase
             .from('clients')
-            .select('id, name')
+            .select('id, name, phone') // Adicionando phone para subtext
             .eq('user_id', user.id)
             .order('name');
         if (data) setClients(data as Client[]);
@@ -251,7 +252,7 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         const { data } = await supabase
             .from('services')
-            .select('id, name, price')
+            .select('id, name, price, duration_minutes') // Adicionando duration_minutes para subtext
             .eq('user_id', user.id)
             .eq('active', true)
             .order('name');
@@ -600,6 +601,19 @@ export const Agenda: React.FC = () => {
     const displayedMembers = selectedProfessionalFilter
         ? teamMembers.filter(m => m.id === selectedProfessionalFilter)
         : teamMembers;
+
+    // Prepare options for SearchableSelect
+    const clientOptions = clients.map(c => ({
+        id: c.id,
+        name: c.name,
+        subtext: (c as any).phone // Assuming phone is available on client object
+    }));
+
+    const serviceOptions = services.map(s => ({
+        id: s.id,
+        name: s.name,
+        subtext: `${currencySymbol} ${s.price.toFixed(2)} | ${s.duration_minutes} min` // Assuming duration_minutes is available
+    }));
 
     // Calculate price preview for the modal
     const selectedServiceDetails = services.find(s => s.id === selectedService);
@@ -1154,19 +1168,15 @@ export const Agenda: React.FC = () => {
                                 />
                             </div>
 
-                            <div>
-                                <label className="text-white font-mono text-sm mb-2 block">Cliente</label>
-                                <select
-                                    value={selectedClient}
-                                    onChange={(e) => setSelectedClient(e.target.value)}
-                                    className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
-                                >
-                                    <option value="">Selecione um cliente</option>
-                                    {clients.map(client => (
-                                        <option key={client.id} value={client.id}>{client.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {/* Searchable Client Select */}
+                            <SearchableSelect
+                                label="Cliente"
+                                placeholder="Buscar cliente por nome ou telefone"
+                                options={clientOptions}
+                                value={selectedClient}
+                                onChange={setSelectedClient}
+                                accentColor={accentColor}
+                            />
 
                             <div>
                                 <label className="text-white font-mono text-sm mb-2 block">Profissional</label>
@@ -1182,21 +1192,15 @@ export const Agenda: React.FC = () => {
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="text-white font-mono text-sm mb-2 block">Serviço</label>
-                                <select
-                                    value={selectedService}
-                                    onChange={(e) => setSelectedService(e.target.value)}
-                                    className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
-                                >
-                                    <option value="">Selecione um serviço</option>
-                                    {services.map(service => (
-                                        <option key={service.id} value={service.id}>
-                                            {service.name} - {currencySymbol} {service.price.toFixed(2)}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            {/* Searchable Service Select */}
+                            <SearchableSelect
+                                label="Serviço"
+                                placeholder="Buscar serviço por nome"
+                                options={serviceOptions}
+                                value={selectedService}
+                                onChange={setSelectedService}
+                                accentColor={accentColor}
+                            />
 
                             <div>
                                 <label className="text-white font-mono text-sm mb-2 block">Horário</label>

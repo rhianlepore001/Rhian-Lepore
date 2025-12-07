@@ -1,18 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalCard } from './BrutalCard';
 import { BrutalButton } from './BrutalButton';
-import { User, DollarSign, Check, Loader2, X } from 'lucide-react';
+import { User, DollarSign, Check, Loader2, X, Calendar, ChevronLeft, ChevronRight, Percent, History, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MonthYearSelector } from './MonthYearSelector';
 
 interface CommissionDue {
     professional_id: string;
     professional_name: string;
     photo_url: string | null;
+    commission_rate: number;
     total_due: number;
-    total_earnings_month: number;
     total_pending_records: number;
+}
+
+interface CommissionRecord {
+    id: string;
+    appointment_id: string;
+    revenue: number;
+    commission_rate: number;
+    commission_value: number;
+    commission_paid: boolean;
+    created_at: string;
+    service_name: string;
+    client_name: string;
+}
+
+interface ProfessionalDetails {
+    summary: {
+        total_revenue: number;
+        total_commission_earned: number;
+        total_commission_paid: number;
+        total_commission_due: number;
+    };
+    records: CommissionRecord[];
 }
 
 interface CommissionsManagementProps {
@@ -20,10 +43,15 @@ interface CommissionsManagementProps {
     currencySymbol: string;
 }
 
+const MONTH_NAMES = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
 export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ accentColor, currencySymbol }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [commissionsDue, setCommissionsDue] = useState<CommissionDue[]>([]);
+    const [teamMembers, setTeamMembers] = useState<CommissionDue[]>([]);
     const [loading, setLoading] = useState(true);
     const [payingProfessionalId, setPayingProfessionalId] = useState<string | null>(null);
     const [showPayModal, setShowPayModal] = useState(false);
@@ -32,47 +60,64 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const [paymentStartDate, setPaymentStartDate] = useState('');
     const [paymentEndDate, setPaymentEndDate] = useState('');
 
+    // State for detailed view
+    const [activeProfessionalId, setActiveProfessionalId] = useState<string | null>(null);
+    const [professionalDetails, setProfessionalDetails] = useState<ProfessionalDetails | null>(null);
+    const [detailsLoading, setDetailsLoading] = useState(false);
+
+    // Month/Year selection for details view
+    const currentDate = new Date();
+    const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+    const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+
+    const isBeauty = accentColor === 'beauty-neon';
+
+    // --- Fetching Data ---
+
     useEffect(() => {
         fetchCommissionsDue();
     }, [user]);
+
+    useEffect(() => {
+        if (activeProfessionalId) {
+            fetchProfessionalDetails(activeProfessionalId, selectedMonth, selectedYear);
+        }
+    }, [activeProfessionalId, selectedMonth, selectedYear]);
 
     const fetchCommissionsDue = async () => {
         if (!user) return;
         setLoading(true);
         try {
-            // 1. Fetch all active team members
-            const { data: teamMembers, error: teamError } = await supabase
+            // 1. Fetch all active team members with their commission rate
+            const { data: teamMembersData, error: teamError } = await supabase
                 .from('team_members')
-                .select('id, name, photo_url')
+                .select('id, name, photo_url, commission_rate')
                 .eq('user_id', user.id)
-                .eq('active', true);
+                .eq('active', true)
+                .order('name');
 
             if (teamError) throw teamError;
 
-            // 2. Fetch commissions data (RPC)
+            // 2. Fetch commissions due (RPC)
             const { data: rpcData, error: rpcError } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
 
-            if (rpcError) {
-                console.error('Error fetching RPC data:', rpcError);
-                // Don't throw, just proceed with team members and 0 values
-            }
+            if (rpcError) console.error('Error fetching RPC data:', rpcError);
 
             // 3. Merge data
-            const mergedData: CommissionDue[] = (teamMembers || []).map(member => {
-                // Try to find matching record in RPC data
+            const mergedData: CommissionDue[] = (teamMembersData || []).map(member => {
                 const commissionRecord = (rpcData || []).find((r: any) => r.professional_id === member.id);
 
                 return {
                     professional_id: member.id,
                     professional_name: member.name,
                     photo_url: member.photo_url,
+                    commission_rate: (member.commission_rate * 100) || 0, // Convert to percentage
                     total_due: commissionRecord?.total_due || 0,
-                    total_earnings_month: commissionRecord?.total_earnings_month || 0,
-                    total_pending_records: commissionRecord?.total_pending_records || commissionRecord?.total_records || 0
+                    total_pending_records: commissionRecord?.total_records || 0
                 };
             });
 
-            setCommissionsDue(mergedData);
+            setTeamMembers(mergedData);
         } catch (error) {
             console.error('Error fetching commissions due:', error);
         } finally {
@@ -80,15 +125,48 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         }
     };
 
+    const fetchProfessionalDetails = async (professionalId: string, month: number, year: number) => {
+        if (!user) return;
+        setDetailsLoading(true);
+
+        try {
+            const startOfMonth = new Date(year, month, 1);
+            const endOfMonth = new Date(year, month + 1, 0);
+
+            const startDateParam = startOfMonth.toISOString().split('T')[0];
+            const endDateParam = endOfMonth.toISOString().split('T')[0];
+
+            const { data, error } = await supabase.rpc('get_professional_commission_details', {
+                p_user_id: user.id,
+                p_professional_id: professionalId,
+                p_start_date: startDateParam,
+                p_end_date: endDateParam
+            });
+
+            if (error) throw error;
+            setProfessionalDetails(data);
+
+        } catch (error) {
+            console.error('Error fetching professional details:', error);
+            setProfessionalDetails(null);
+        } finally {
+            setDetailsLoading(false);
+        }
+    };
+
+    // --- Handlers ---
+
     const handleOpenPayModal = (professional: CommissionDue) => {
         setSelectedProfessional(professional);
         setPaymentAmount(professional.total_due.toFixed(2));
+        
         // Set default dates for the current month
         const today = new Date();
         const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         setPaymentStartDate(firstDayOfMonth.toISOString().split('T')[0]);
         setPaymentEndDate(lastDayOfMonth.toISOString().split('T')[0]);
+        
         setShowPayModal(true);
     };
 
@@ -100,7 +178,6 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
         setPayingProfessionalId(selectedProfessional.professional_id);
         try {
-            // Note: The RPC 'mark_commissions_as_paid' expects date strings in 'YYYY-MM-DD' format, which is what input type="date" provides.
             const { error } = await supabase.rpc('mark_commissions_as_paid', {
                 p_user_id: user.id,
                 p_professional_id: selectedProfessional.professional_id,
@@ -114,7 +191,10 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             alert(`Comissão de ${selectedProfessional.professional_name} paga com sucesso!`);
             setShowPayModal(false);
             setSelectedProfessional(null);
-            fetchCommissionsDue(); // Refresh the list
+            fetchCommissionsDue(); // Refresh the main list
+            if (activeProfessionalId) {
+                fetchProfessionalDetails(activeProfessionalId, selectedMonth, selectedYear); // Refresh details if open
+            }
         } catch (error: any) {
             console.error('Error paying commissions:', error);
             alert(`Erro ao registrar pagamento de comissão: ${error.message || JSON.stringify(error)}`);
@@ -123,88 +203,202 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         }
     };
 
+    const handleMonthChange = (month: number, year: number) => {
+        setSelectedMonth(month);
+        setSelectedYear(year);
+    };
+
+    // --- Render Functions ---
+
+    const renderProfessionalCard = (professional: CommissionDue) => {
+        const isActive = activeProfessionalId === professional.professional_id;
+        const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+        const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+
+        return (
+            <div
+                key={professional.professional_id}
+                className={`bg-[#111] border-2 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 transition-all cursor-pointer
+                    ${isActive ? `border-${accentColor}` : 'border-neutral-800 hover:border-neutral-700'}
+                `}
+                onClick={() => setActiveProfessionalId(isActive ? null : professional.professional_id)}
+            >
+                {/* Professional Info */}
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    {professional.photo_url ? (
+                        <img
+                            src={professional.photo_url}
+                            alt={professional.professional_name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-neutral-700"
+                        />
+                    ) : (
+                        <div className="w-12 h-12 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center">
+                            <User className="w-6 h-6 text-neutral-500" />
+                        </div>
+                    )}
+
+                    <div>
+                        <h4 className="text-white font-bold text-lg leading-tight">{professional.professional_name}</h4>
+                        <p className="text-neutral-400 text-xs font-mono mt-1 flex items-center gap-1">
+                            <Percent className="w-3 h-3" />
+                            <span className={accentText}>{professional.commission_rate.toFixed(1)}%</span> de Comissão
+                        </p>
+                    </div>
+                </div>
+
+                {/* Due Amount & Actions */}
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                    <div className="text-right mr-2">
+                        <p className="text-neutral-500 text-[10px] uppercase font-bold tracking-wider mb-0.5">A Pagar:</p>
+                        <span className={`text-xl font-bold font-mono ${professional.total_due > 0 ? 'text-red-500' : 'text-neutral-500'}`}>
+                            {currencySymbol} {professional.total_due.toFixed(2)}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <BrutalButton
+                            variant="secondary"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); navigate('/configuracoes/comissoes'); }}
+                        >
+                            Config
+                        </BrutalButton>
+
+                        <BrutalButton
+                            variant="primary"
+                            size="sm"
+                            icon={payingProfessionalId === professional.professional_id ? <Loader2 className="animate-spin" /> : <DollarSign />}
+                            onClick={(e) => { e.stopPropagation(); handleOpenPayModal(professional); }}
+                            disabled={payingProfessionalId === professional.professional_id || professional.total_due <= 0}
+                            className={professional.total_due <= 0 ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
+                            {payingProfessionalId === professional.professional_id ? '...' : 'Pagar'}
+                        </BrutalButton>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderDetailsView = () => {
+        if (!activeProfessionalId) return null;
+
+        const professional = teamMembers.find(m => m.professional_id === activeProfessionalId);
+        if (!professional) return null;
+
+        const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+
+        return (
+            <BrutalCard title={`Detalhes de Ganhos - ${professional.professional_name}`} className="mt-6">
+                <div className="space-y-6">
+                    <MonthYearSelector
+                        selectedMonth={selectedMonth}
+                        selectedYear={selectedYear}
+                        onChange={handleMonthChange}
+                        accentColor={accentColor}
+                    />
+
+                    {detailsLoading ? (
+                        <div className="text-center py-12 text-neutral-500">
+                            <Loader2 className="w-8 h-8 mx-auto animate-spin mb-2" />
+                            Carregando detalhes de {MONTH_NAMES[selectedMonth]}...
+                        </div>
+                    ) : professionalDetails ? (
+                        <>
+                            {/* Summary Stats */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="p-3 bg-neutral-800 border border-neutral-700 rounded-lg">
+                                    <p className="text-xs font-mono text-neutral-500 uppercase">Receita Total</p>
+                                    <p className="text-lg font-bold text-white">{currencySymbol} {professionalDetails.summary.total_revenue.toFixed(2)}</p>
+                                </div>
+                                <div className="p-3 bg-neutral-800 border border-neutral-700 rounded-lg">
+                                    <p className="text-xs font-mono text-neutral-500 uppercase">Comissão Ganhada</p>
+                                    <p className={`text-lg font-bold ${accentText}`}>{currencySymbol} {professionalDetails.summary.total_commission_earned.toFixed(2)}</p>
+                                </div>
+                                <div className="p-3 bg-neutral-800 border border-neutral-700 rounded-lg">
+                                    <p className="text-xs font-mono text-neutral-500 uppercase">Comissão Paga</p>
+                                    <p className="text-lg font-bold text-green-500">{currencySymbol} {professionalDetails.summary.total_commission_paid.toFixed(2)}</p>
+                                </div>
+                                <div className="p-3 bg-neutral-800 border border-neutral-700 rounded-lg">
+                                    <p className="text-xs font-mono text-neutral-500 uppercase">A Receber</p>
+                                    <p className="text-lg font-bold text-red-500">{currencySymbol} {professionalDetails.summary.total_commission_due.toFixed(2)}</p>
+                                </div>
+                            </div>
+
+                            {/* Detailed Records */}
+                            <h4 className="text-white font-heading text-lg uppercase border-b border-neutral-800 pb-2">
+                                Serviços Detalhados
+                            </h4>
+                            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                                {professionalDetails.records.length === 0 ? (
+                                    <div className="text-center py-8 text-neutral-500">
+                                        <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                        Nenhum serviço registrado neste período.
+                                    </div>
+                                ) : (
+                                    professionalDetails.records.map(record => (
+                                        <div key={record.id} className="bg-neutral-900 p-3 rounded-lg border border-neutral-800 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-white font-bold text-sm">{record.service_name}</p>
+                                                <p className="text-neutral-400 text-xs">Cliente: {record.client_name}</p>
+                                                <p className="text-neutral-500 text-xs font-mono">
+                                                    {new Date(record.created_at).toLocaleDateString('pt-BR')}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-mono text-neutral-500">Comissão ({record.commission_rate.toFixed(1)}%)</p>
+                                                <p className={`text-lg font-bold ${accentText}`}>
+                                                    {currencySymbol} {record.commission_value.toFixed(2)}
+                                                </p>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${record.commission_paid ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                                    {record.commission_paid ? 'PAGO' : 'PENDENTE'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-12 text-neutral-500">
+                            <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            Selecione um período para ver os detalhes.
+                        </div>
+                    )}
+                </div>
+            </BrutalCard>
+        );
+    };
+
+    // --- Main Component Render ---
+
     return (
         <div className="space-y-6">
             <BrutalCard title="Comissões a Pagar">
                 <p className="text-neutral-400 text-sm mb-6">
-                    Gerencie as comissões devidas aos seus profissionais. Registre os pagamentos para manter seu fluxo de caixa atualizado.
+                    Clique em um profissional para ver o histórico detalhado de ganhos por mês.
                 </p>
 
                 {loading ? (
                     <div className="text-center py-12 text-neutral-500">
                         <Loader2 className="w-8 h-8 mx-auto animate-spin mb-2" />
-                        Carregando comissões...
+                        Carregando profissionais...
                     </div>
-                ) : commissionsDue.length === 0 ? (
+                ) : teamMembers.length === 0 ? (
                     <div className="text-center py-12 text-neutral-500 bg-neutral-900/50 rounded-lg border border-neutral-800">
-                        <Check className="w-10 h-10 mx-auto mb-3 text-green-500" />
-                        <p className="text-lg font-medium text-white">Tudo em dia!</p>
-                        <p className="text-sm">Nenhum profissional ativo encontrado.</p>
+                        <User className="w-10 h-10 mx-auto mb-3 text-neutral-600" />
+                        <p className="text-lg font-medium text-white">Nenhum profissional ativo</p>
+                        <p className="text-sm">Adicione membros da equipe em Configurações > Equipe.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {commissionsDue.map(professional => (
-                            <div
-                                key={professional.professional_id}
-                                className="bg-[#111] border border-neutral-800 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-neutral-700 transition-colors"
-                            >
-                                {/* Professional Info */}
-                                <div className="flex items-center gap-4 w-full md:w-auto">
-                                    {professional.photo_url ? (
-                                        <img
-                                            src={professional.photo_url}
-                                            alt={professional.professional_name}
-                                            className="w-12 h-12 rounded-full object-cover border-2 border-neutral-700"
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center">
-                                            <User className="w-6 h-6 text-neutral-500" />
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <h4 className="text-white font-bold text-lg leading-tight">{professional.professional_name}</h4>
-                                        <p className="text-neutral-400 text-xs font-mono mt-1">
-                                            Total Ganhos (Mês): <span className="text-white">{currencySymbol} {professional.total_earnings_month.toFixed(2)}</span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Actions & Due Amount */}
-                                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                                    <div className="text-right mr-2">
-                                        <p className="text-neutral-500 text-[10px] uppercase font-bold tracking-wider mb-0.5">A Pagar:</p>
-                                        <span className={`text-xl font-bold font-mono ${professional.total_due > 0 ? 'text-green-500' : 'text-neutral-500'}`}>
-                                            {currencySymbol} {professional.total_due.toFixed(2)}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <BrutalButton
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={() => navigate('/configuracoes/comissoes')}
-                                        >
-                                            Editar
-                                        </BrutalButton>
-
-                                        <BrutalButton
-                                            variant="primary"
-                                            size="sm"
-                                            icon={payingProfessionalId === professional.professional_id ? <Loader2 className="animate-spin" /> : <DollarSign />}
-                                            onClick={() => handleOpenPayModal(professional)}
-                                            disabled={payingProfessionalId === professional.professional_id || professional.total_due <= 0}
-                                            className={professional.total_due <= 0 ? 'opacity-50 cursor-not-allowed' : ''}
-                                        >
-                                            {payingProfessionalId === professional.professional_id ? '...' : 'Pagar'}
-                                        </BrutalButton>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                        {teamMembers.map(renderProfessionalCard)}
                     </div>
                 )}
             </BrutalCard>
+
+            {/* Detailed View */}
+            {renderDetailsView()}
 
             {/* Pay Commission Modal */}
             {showPayModal && selectedProfessional && (
@@ -277,7 +471,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 </div>
                             </div>
                             <p className="text-neutral-500 text-xs pt-1">
-                                *Este pagamento marcará todas as comissões pendentes entre as datas selecionadas como pagas.
+                                *Este pagamento marcará todas as comissões pendentes entre as datas selecionadas como pagas e registrará uma despesa.
                             </p>
 
                             <div className="flex gap-3 pt-6">

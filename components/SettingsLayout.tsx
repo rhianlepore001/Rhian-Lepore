@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { NAVIGATION_ITEMS, SETTINGS_ITEMS } from '../../constants';
+import { useAuth } from '../contexts/AuthContext';
+import { NAVIGATION_ITEMS, SETTINGS_ITEMS } from '../constants';
 
 interface SettingsLayoutProps {
     children: React.ReactNode;

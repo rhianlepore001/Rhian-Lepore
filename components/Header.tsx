@@ -60,21 +60,10 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Center: Search (Hidden on Mobile) */}
-        <form onSubmit={handleSearch} className={`hidden lg:flex items-center px-4 py-2 w-96 transition-colors
-            ${isBeauty
-            ? 'bg-white/5 border border-white/10 rounded-full focus-within:bg-white/10 focus-within:border-beauty-neon/50'
-            : 'bg-brutal-card border-2 border-neutral-800 focus-within:border-white'}
-        `}>
-          <Search className="w-4 h-4 text-text-secondary mr-2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar cliente..."
-            className="bg-transparent border-none outline-none text-text-primary text-sm font-mono w-full placeholder-neutral-600"
-          />
-        </form>
+        {/* Center: Search (REMOVED) */}
+        <div className="flex-1 hidden lg:block">
+            {/* Espaço vazio para centralizar os elementos laterais, se necessário */}
+        </div>
 
         {/* Right: Profile & Actions */}
         <div className="flex items-center gap-3 md:gap-6">

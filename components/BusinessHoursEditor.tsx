@@ -27,6 +27,8 @@ const DAYS = [
     { key: 'sun', label: 'Domingo', short: 'Dom' },
 ];
 
+type PresetType = 'weekday_9_18' | 'weekday_9_21_lunch' | 'saturday_9_14' | 'saturday_9_18_lunch';
+
 export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
     hours,
     onChange,
@@ -107,16 +109,34 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
         });
     };
 
-    const applyPreset = (preset: 'weekday' | 'weekend') => {
-        const presetHours = preset === 'weekday'
-            ? { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] }
-            : { isOpen: true, blocks: [{ start: '09:00', end: '14:00' }] };
-
-        const days = preset === 'weekday' ? ['mon', 'tue', 'wed', 'thu', 'fri'] : ['sat'];
-
+    const applyPreset = (presetType: PresetType) => {
         const newHours = { ...hours };
-        days.forEach(day => {
-            newHours[day] = { ...presetHours };
+        const daysToApply = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+        daysToApply.forEach(day => {
+            newHours[day] = { isOpen: false, blocks: [] }; // Reset all first
+
+            if (presetType === 'weekday_9_18' && day !== 'sat' && day !== 'sun') {
+                newHours[day] = { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] };
+            } else if (presetType === 'weekday_9_21_lunch' && day !== 'sat' && day !== 'sun') {
+                newHours[day] = {
+                    isOpen: true,
+                    blocks: [
+                        { start: '09:00', end: '12:30' },
+                        { start: '13:30', end: '21:00' }
+                    ]
+                };
+            } else if (presetType === 'saturday_9_14' && day === 'sat') {
+                newHours[day] = { isOpen: true, blocks: [{ start: '09:00', end: '14:00' }] };
+            } else if (presetType === 'saturday_9_18_lunch' && day === 'sat') {
+                newHours[day] = {
+                    isOpen: true,
+                    blocks: [
+                        { start: '09:00', end: '12:30' },
+                        { start: '13:30', end: '18:00' }
+                    ]
+                };
+            }
         });
 
         onChange(newHours);
@@ -127,16 +147,28 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
             {/* Quick Presets */}
             <div className="flex flex-wrap gap-2">
                 <button
-                    onClick={() => applyPreset('weekday')}
+                    onClick={() => applyPreset('weekday_9_21_lunch')}
                     className="px-3 py-1.5 text-xs md:text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg border border-neutral-700 transition-colors"
                 >
-                    ⚡ Seg-Sex 9-18h
+                    ⚡ Seg-Sex 9-21h c/ Almoço
                 </button>
                 <button
-                    onClick={() => applyPreset('weekend')}
+                    onClick={() => applyPreset('weekday_9_18')}
+                    className="px-3 py-1.5 text-xs md:text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg border border-neutral-700 transition-colors"
+                >
+                    ⚡ Seg-Sex 9-18h (Direto)
+                </button>
+                <button
+                    onClick={() => applyPreset('saturday_9_14')}
                     className="px-3 py-1.5 text-xs md:text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg border border-neutral-700 transition-colors"
                 >
                     ⚡ Sáb 9-14h
+                </button>
+                <button
+                    onClick={() => applyPreset('saturday_9_18_lunch')}
+                    className="px-3 py-1.5 text-xs md:text-sm bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg border border-neutral-700 transition-colors"
+                >
+                    ⚡ Sáb 9-18h c/ Almoço
                 </button>
             </div>
 

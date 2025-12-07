@@ -53,25 +53,39 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 .single();
 
             if (settings?.commission_settlement_day_of_month) {
+                const settlementDay = settings.commission_settlement_day_of_month;
                 const today = new Date();
                 const currentDay = today.getDate();
-                const settlementDay = settings.commission_settlement_day_of_month;
+                
+                // Calculate days remaining until the settlement day
                 let daysRemaining = settlementDay - currentDay;
 
-                if (daysRemaining === 1) {
-                    generatedAlerts.push({
-                        id: 'commission-settlement',
-                        text: `⚠️ Falta 1 dia para o acerto mensal dos funcionários.`,
-                        type: 'warning',
-                        actionPath: '/financeiro'
-                    });
-                } else if (daysRemaining === 0) {
-                    generatedAlerts.push({
-                        id: 'commission-settlement-today',
-                        text: `💰 Hoje é dia de acerto de comissões!`,
-                        type: 'warning',
-                        actionPath: '/financeiro'
-                    });
+                // If the settlement day has passed this month, calculate for next month
+                if (daysRemaining < 0) {
+                    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, settlementDay);
+                    daysRemaining = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                }
+                
+                // Check if there are commissions due
+                const { data: commissionsDue } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
+                const totalDue = (commissionsDue || []).reduce((sum: number, r: any) => sum + (r.total_due || 0), 0);
+
+                if (totalDue > 0) {
+                    if (daysRemaining <= 2 && daysRemaining > 0) {
+                        generatedAlerts.push({
+                            id: 'commission-settlement-warning',
+                            text: `⚠️ Acerto de comissões pendente! Faltam ${daysRemaining} dia(s) para o dia ${settlementDay}.`,
+                            type: 'warning',
+                            actionPath: '/financeiro?tab=commissions'
+                        });
+                    } else if (daysRemaining === 0) {
+                        generatedAlerts.push({
+                            id: 'commission-settlement-today',
+                            text: `💰 Hoje é dia de acerto de comissões! Total pendente: R$ ${totalDue.toFixed(2)}`,
+                            type: 'danger',
+                            actionPath: '/financeiro?tab=commissions'
+                        });
+                    }
                 }
             }
 

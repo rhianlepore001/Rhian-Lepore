@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { NAVIGATION_ITEMS, SETTINGS_ITEMS } from '../constants';
+import { useAuth } from '../../contexts/AuthContext';
+import { NAVIGATION_ITEMS, SETTINGS_ITEMS } from '../../constants';
 
 interface SettingsLayoutProps {
     children: React.ReactNode;
@@ -15,12 +15,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
+    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'; // Alterado para neutral-950 para ser mais escuro que o main
 
     const menuItems = SETTINGS_ITEMS;
 
     return (
-        <div className={`h-screen relative ${bgColor}`}>
+        <div className={`min-h-screen flex relative ${bgColor}`}>
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
@@ -36,6 +36,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 w-64
                 transform transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                flex-shrink-0
             `}>
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-white font-heading text-lg md:text-xl uppercase">
@@ -80,9 +81,9 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             </aside>
 
             {/* Content */}
-            <main className={`h-screen overflow-y-auto ${isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'}`}>
+            <main className="flex-1 md:ml-64 overflow-y-auto p-4 md:p-8">
                 {/* Mobile Header */}
-                <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3">
+                <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3 -mx-4 -mt-4 mb-4">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="text-white hover:text-accent-gold"
@@ -95,7 +96,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 </div>
 
                 {/* Content Area */}
-                <div className="p-4 md:p-8">
+                <div className="pb-20">
                     {children}
                 </div>
             </main>

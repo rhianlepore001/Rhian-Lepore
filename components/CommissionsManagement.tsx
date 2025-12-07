@@ -100,6 +100,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
         setPayingProfessionalId(selectedProfessional.professional_id);
         try {
+            // Note: The RPC 'mark_commissions_as_paid' expects date strings in 'YYYY-MM-DD' format, which is what input type="date" provides.
             const { error } = await supabase.rpc('mark_commissions_as_paid', {
                 p_user_id: user.id,
                 p_professional_id: selectedProfessional.professional_id,
@@ -114,9 +115,9 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             setShowPayModal(false);
             setSelectedProfessional(null);
             fetchCommissionsDue(); // Refresh the list
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error paying commissions:', error);
-            alert('Erro ao registrar pagamento de comissão.');
+            alert(`Erro ao registrar pagamento de comissão: ${error.message || JSON.stringify(error)}`);
         } finally {
             setPayingProfessionalId(null);
         }
@@ -212,7 +213,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-heading text-xl uppercase flex items-center gap-2">
                                 <DollarSign className={`w-6 h-6 ${accentColor}`} />
-                                Pagar Comissão
+                                Registrar Pagamento
                             </h3>
                             <button
                                 onClick={() => setShowPayModal(false)}
@@ -242,7 +243,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Valor a Pagar ({currencySymbol})</label>
+                                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Valor Pago ({currencySymbol})</label>
                                 <input
                                     type="number"
                                     value={paymentAmount}
@@ -255,7 +256,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Período Início</label>
+                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Período de Referência (Início)</label>
                                     <input
                                         type="date"
                                         value={paymentStartDate}
@@ -265,7 +266,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Período Fim</label>
+                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Período de Referência (Fim)</label>
                                     <input
                                         type="date"
                                         value={paymentEndDate}
@@ -275,6 +276,9 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     />
                                 </div>
                             </div>
+                            <p className="text-neutral-500 text-xs pt-1">
+                                *Este pagamento marcará todas as comissões pendentes entre as datas selecionadas como pagas.
+                            </p>
 
                             <div className="flex gap-3 pt-6">
                                 <BrutalButton

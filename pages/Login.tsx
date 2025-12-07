@@ -139,7 +139,7 @@ export const Login: React.FC = () => {
                             {isBeauty ? 'Beauty OS' : 'Barber OS'}
                         </span>
                     </div>
-                    <div className="font-mono text-xs text-neutral-500">SECURE_LOGIN</div>
+                    {/* REMOVIDO: <div className="font-mono text-xs text-neutral-500">SECURE_LOGIN</div> */}
                 </div>
 
                 <div className={`space-y-6 relative transition-all duration-500 ${isBeauty ? 'p-8' : 'p-8'}`}>
@@ -152,8 +152,8 @@ export const Login: React.FC = () => {
                     )}
 
                     <div className="text-center mb-8">
-                        <h2 className={`font-heading text-2xl text-white uppercase mb-2 ${isBeauty ? 'tracking-normal' : ''}`}>Bem-vindo de volta</h2>
-                        <p className={`text-sm ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Insira suas credenciais de acesso.</p>
+                        <h2 className={`font-heading text-2xl text-white uppercase mb-2 ${isBeauty ? 'tracking-normal' : ''}`}>Acesso ao Painel</h2>
+                        <p className={`text-sm ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Insira suas credenciais para continuar.</p>
                     </div>
 
                     {error && (
@@ -174,7 +174,7 @@ export const Login: React.FC = () => {
                                         ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50 focus:bg-white/10 font-sans'
                                         : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
                 `}
-                                placeholder="admin@barber.os"
+                                placeholder="seu.email@exemplo.com"
                             />
                         </div>
 
@@ -190,7 +190,7 @@ export const Login: React.FC = () => {
                                             ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50 focus:bg-white/10 font-sans'
                                             : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
                   `}
-                                    placeholder="••••••••"
+                                    placeholder="Sua senha secreta"
                                 />
                                 <Lock className="absolute right-4 top-4 w-4 h-4 text-neutral-600" />
                             </div>

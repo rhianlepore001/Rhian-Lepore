@@ -1,4 +1,3 @@
-' dentro de um elemento de texto.">
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';

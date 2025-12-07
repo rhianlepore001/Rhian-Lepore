@@ -10,15 +10,24 @@ interface StepBusinessHoursProps {
     accentColor: string;
 }
 
+// Novo padrão de horário: 09:00-21:00 com almoço 12:30-13:30
+const defaultHours = {
+    isOpen: true,
+    blocks: [
+        { start: '09:00', end: '12:30' },
+        { start: '13:30', end: '21:00' }
+    ]
+};
+
 export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, onBack, accentColor }) => {
     const { user, userType } = useAuth();
     const [loading, setLoading] = useState(false);
     const [businessHours, setBusinessHours] = useState<any>({
-        mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
-        tue: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
-        wed: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
-        thu: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
-        fri: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
+        mon: defaultHours,
+        tue: defaultHours,
+        wed: defaultHours,
+        thu: defaultHours,
+        fri: defaultHours,
         sat: { isOpen: true, blocks: [{ start: '09:00', end: '14:00' }] },
         sun: { isOpen: false, blocks: [] },
     });

@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
 
           {/* Left: Shop Info */}
           <div className="flex flex-col justify-center h-full">
-            <h2 className={`font-heading text-lg md:text-xl ${accentColor} uppercase tracking-wide truncate max-w-[180px] md:max-w-none leading-tight`}>
+            <h2 className={`font-heading text-lg md:text-xl ${accentColor} uppercase tracking-wide truncate max-w-[120px] sm:max-w-[180px] md:max-w-none leading-tight`}>
               {businessName || 'Seu Negócio'}
             </h2>
             <p className="text-xs text-text-secondary font-mono hidden md:block leading-none mt-1">
@@ -86,7 +86,7 @@ export const Header: React.FC = () => {
                 `}
             >
                 <BookOpen className="w-4 h-4" />
-                Tutorial
+                <span className="hidden sm:inline">Tutorial</span>
             </button>
 
           {/* Notifications */}

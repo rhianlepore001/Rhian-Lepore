@@ -1,3 +1,4 @@
+' dentro de um elemento de texto.">
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -388,7 +389,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     <div className="text-center py-12 text-neutral-500 bg-neutral-900/50 rounded-lg border border-neutral-800">
                         <User className="w-10 h-10 mx-auto mb-3 text-neutral-600" />
                         <p className="text-lg font-medium text-white">Nenhum profissional ativo</p>
-                        <p className="text-sm">Adicione membros da equipe em Configurações > Equipe.</p>
+                        <p className="text-sm">{'Adicione membros da equipe em Configurações > Equipe.'}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">

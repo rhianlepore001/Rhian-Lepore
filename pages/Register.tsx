@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Screw } from '../components/Screw';
-import { Scissors, Sparkles, Zap, Check } from 'lucide-react';
+import { Scissors, Sparkles, Zap, Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
 
 export const Register: React.FC = () => {
@@ -28,6 +27,7 @@ export const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false); // NEW STATE
 
   // Dynamic Styles based on Type
   const isBarber = type === 'barber';
@@ -97,13 +97,13 @@ export const Register: React.FC = () => {
 
       <div className="flex items-center justify-center p-4 py-8">
         <div className={`w-full max-w-lg relative z-10 ${styles.cardBg} border-4 border-black shadow-heavy transition-colors duration-500 my-8`}>
-          {/* Top Heavy Industrial Bar */}
+          {/* Top Heavy Industrial Bar - REMOVED DEBUG TEXTS */}
           <div className="bg-black p-4 flex justify-between items-center border-b-4 border-white/10">
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${isBarber ? 'bg-accent-gold animate-pulse' : 'bg-beauty-neon animate-pulse'}`}></div>
-              <span className="font-mono text-xs text-neutral-400 tracking-widest">SYSTEM_CONFIG // V.3.0</span>
+              <span className="font-mono text-xs text-neutral-400 tracking-widest">CONFIGURAÇÃO INICIAL</span>
             </div>
-            <div className="font-mono text-xs text-neutral-500">ID: #8X-99</div>
+            <div className="font-mono text-xs text-neutral-500"></div> {/* Removed ID */}
           </div>
 
           {/* THE SWITCHES - CONTROL PANEL */}
@@ -235,13 +235,22 @@ export const Register: React.FC = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-mono uppercase text-neutral-500 ml-1">Senha</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                    <input
+                        type={showPassword ? 'text' : 'password'} // Dynamic type
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                        placeholder="••••••••"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
+                    >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                </div>
               </div>
 
             </div>
@@ -264,7 +273,7 @@ export const Register: React.FC = () => {
 
             <div className="text-center space-y-2">
               <p className="text-neutral-500 text-xs font-mono">
-                {type === 'barber' ? 'Heavy duty management for professionals.' : 'Next-gen management for beauty artists.'}
+                {/* Removed debug message */}
               </p>
               <Link to="/login" className={`text-xs font-bold font-mono uppercase ${styles.accent} border-b border-transparent hover:border-current transition-all`}>
                 Já tenho conta // Login
@@ -274,10 +283,10 @@ export const Register: React.FC = () => {
           </div>
         </div>
 
-        {/* Visual Footer Text */}
+        {/* Visual Footer Text - REMOVED DEBUG TEXTS */}
         <div className="absolute bottom-4 left-0 right-0 text-center">
           <p className="text-[10px] text-neutral-700 font-mono uppercase tracking-[0.3em]">
-            POWERED BY {type === 'barber' ? 'BARBER OS' : 'BEAUTY OS'} // BRUTALIST ARCHITECTURE
+            POWERED BY {type === 'barber' ? 'BARBER OS' : 'BEAUTY OS'}
           </p>
         </div>
       </div>

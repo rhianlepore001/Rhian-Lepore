@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Screw } from '../components/Screw';
-import { Zap, Scissors, Lock, Sparkles, ArrowLeft } from 'lucide-react';
+import { Zap, Scissors, Lock, Sparkles, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -12,6 +12,7 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false); // NEW STATE
 
     // Adaptive Theme State
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
@@ -139,7 +140,6 @@ export const Login: React.FC = () => {
                             {isBeauty ? 'Beauty OS' : 'Barber OS'}
                         </span>
                     </div>
-                    {/* REMOVIDO: <div className="font-mono text-xs text-neutral-500">SECURE_LOGIN</div> */}
                 </div>
 
                 <div className={`space-y-6 relative transition-all duration-500 ${isBeauty ? 'p-8' : 'p-8'}`}>
@@ -182,7 +182,7 @@ export const Login: React.FC = () => {
                             <label className={`text-xs uppercase ml-1 ${isBeauty ? 'text-neutral-400 font-sans font-bold' : 'text-neutral-500 font-mono'}`}>Senha</label>
                             <div className="relative">
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'} // Dynamic type
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className={`w-full p-4 text-white text-sm focus:outline-none transition-all
@@ -192,7 +192,13 @@ export const Login: React.FC = () => {
                   `}
                                     placeholder="Sua senha secreta"
                                 />
-                                <Lock className="absolute right-4 top-4 w-4 h-4 text-neutral-600" />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(prev => !prev)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,18 +12,53 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
     const { user } = useAuth();
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            if (!user) return;
+            
+            // Tenta carregar dados do perfil público (que são populados pelo trigger de signup)
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('full_name, business_name, phone')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                setName(profile.business_name || '');
+                setPhone(profile.phone || '');
+                // O nome completo do responsável não é estritamente necessário aqui, mas podemos usá-lo se o campo for para o nome do responsável.
+                // Se o campo 'name' for o nome do negócio, o código atual está correto.
+            } else if (error && error.code !== 'PGRST116') {
+                console.error('Error loading profile data:', error);
+            }
+
+            setLoading(false);
+        };
+        loadInitialData();
+    }, [user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
-        setLoading(true);
+        setSubmitting(true);
 
         try {
+            // Atualiza o nome do negócio e telefone no perfil público
             await supabase.from('profiles').update({
                 business_name: name,
                 phone: phone
             }).eq('id', user.id);
+
+            // Atualiza o user_metadata do auth para refletir as mudanças imediatamente no AuthContext
+            await supabase.auth.updateUser({
+                data: {
+                    business_name: name,
+                    phone: phone,
+                }
+            });
 
             // Update step
             await supabase.rpc('update_onboarding_step', {
@@ -35,9 +70,13 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
         } catch (error) {
             console.error('Error saving info:', error);
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
+
+    if (loading) {
+        return <div className="text-center py-8 text-neutral-500">Carregando dados iniciais...</div>;
+    }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -68,10 +107,10 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
 
             <button
                 type="submit"
-                disabled={loading || !name || !phone}
+                disabled={submitting || !name || !phone}
                 className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8'}
             >
-                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
+                {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
             </button>
         </form>
     );

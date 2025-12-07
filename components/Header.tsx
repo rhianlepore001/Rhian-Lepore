@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, BookOpen } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
+import { TutorialOverlay } from './TutorialOverlay'; // Importando o TutorialOverlay
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
-  const { businessName, fullName, userType, logout, avatarUrl } = useAuth();
+  const { businessName, fullName, userType, logout, avatarUrl, markTutorialCompleted } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
 
@@ -16,6 +17,7 @@ export const Header: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showTutorialModal, setShowTutorialModal] = useState(false); // NEW STATE
 
   const isBeauty = userType === 'beauty';
   const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
@@ -76,6 +78,16 @@ export const Header: React.FC = () => {
 
         {/* Right: Profile & Actions */}
         <div className="flex items-center gap-3 md:gap-6">
+            {/* Tutorial Button */}
+            <button
+                onClick={() => setShowTutorialModal(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-colors
+                    ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon hover:bg-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20'}
+                `}
+            >
+                <BookOpen className="w-4 h-4" />
+                Tutorial
+            </button>
 
           {/* Notifications */}
           <div className="relative">
@@ -186,6 +198,7 @@ export const Header: React.FC = () => {
       </header>
 
       {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
+      {showTutorialModal && <TutorialOverlay onComplete={() => { setShowTutorialModal(false); markTutorialCompleted(); }} />}
     </>
   );
 };

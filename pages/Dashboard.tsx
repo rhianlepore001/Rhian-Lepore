@@ -8,9 +8,10 @@ import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { GoalHistory } from '../components/GoalHistory';
+import { TutorialOverlay } from '../components/TutorialOverlay'; // Importando o Tutorial
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, user } = useAuth();
+  const { userType, region, user, tutorialCompleted } = useAuth(); // Usando tutorialCompleted
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -24,11 +25,19 @@ export const Dashboard: React.FC = () => {
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState('');
   const [goalHistory, setGoalHistory] = useState<any[]>([]);
+  const [showTutorial, setShowTutorial] = useState(false); // Estado para controlar a exibição
 
   const isBeauty = userType === 'beauty';
-  const currencySymbol = region === 'PT' ? '€' : 'R$';
+  const currencySymbol = region === 'PT' ? '€' : 'R$' ;
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+
+  // Efeito para exibir o tutorial automaticamente na primeira visita
+  useEffect(() => {
+    if (!loading && user && !tutorialCompleted) {
+      setShowTutorial(true);
+    }
+  }, [loading, user, tutorialCompleted]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -176,6 +185,8 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-8">
+      {showTutorial && <TutorialOverlay onComplete={() => setShowTutorial(false)} />} {/* Exibe o tutorial */}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-white/10 pb-4 gap-4">
         <div>
           <div className="flex items-center gap-2">

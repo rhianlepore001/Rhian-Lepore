@@ -13,9 +13,11 @@ interface AuthContextType {
   businessName: string;
   fullName: string;
   avatarUrl: string | null;
+  tutorialCompleted: boolean; // NEW
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
+  markTutorialCompleted: () => Promise<void>; // NEW
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,19 +29,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [businessName, setBusinessName] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [tutorialCompleted, setTutorialCompleted] = useState(true); // Assume true until proven otherwise
   const [loading, setLoading] = useState(true);
+
+  const fetchProfileData = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('user_type, region, business_name, full_name, photo_url, tutorial_completed')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (profile) {
+        setUserType(profile.user_type as UserType || 'barber');
+        setRegion(profile.region as Region || 'BR');
+        setBusinessName(profile.business_name || '');
+        setFullName(profile.full_name || '');
+        setAvatarUrl(profile.photo_url || null);
+        setTutorialCompleted(profile.tutorial_completed ?? true); // Default to true if null
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    }
+  };
 
   useEffect(() => {
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
-        if (session?.user?.user_metadata) {
-          setUserType(session.user.user_metadata.type as UserType || 'barber');
-          setRegion(session.user.user_metadata.region as Region || 'BR');
-          setBusinessName(session.user.user_metadata.business_name || '');
-          setFullName(session.user.user_metadata.full_name || '');
-          setAvatarUrl(session.user.user_metadata.avatar_url || null);
+        if (session?.user?.id) {
+          await fetchProfileData(session.user.id);
         }
       } catch (error) {
         console.error('Error initializing session:', error);
@@ -54,12 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user?.user_metadata) {
-        setUserType(session.user.user_metadata.type as UserType || 'barber');
-        setRegion(session.user.user_metadata.region as Region || 'BR');
-        setBusinessName(session.user.user_metadata.business_name || '');
-        setFullName(session.user.user_metadata.full_name || '');
-        setAvatarUrl(session.user.user_metadata.avatar_url || null);
+      if (session?.user?.id) {
+        // Re-fetch profile data on sign in/change
+        fetchProfileData(session.user.id);
+      } else {
+        // Reset state on sign out
+        setTutorialCompleted(true);
       }
       setLoading(false);
     });
@@ -83,6 +105,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBusinessName('');
     setFullName('');
     setAvatarUrl(null);
+    setTutorialCompleted(true); // Reset on logout
+  };
+
+  const markTutorialCompleted = async () => {
+    if (!session?.user) return;
+    try {
+      await supabase
+        .from('profiles')
+        .update({ tutorial_completed: true })
+        .eq('id', session.user.id);
+      setTutorialCompleted(true);
+    } catch (error) {
+      console.error('Error marking tutorial as complete:', error);
+    }
   };
 
   return (
@@ -94,9 +130,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       businessName,
       fullName,
       avatarUrl,
+      tutorialCompleted,
       loading,
       login,
-      logout
+      logout,
+      markTutorialCompleted
     }}>
       {children}
     </AuthContext.Provider>

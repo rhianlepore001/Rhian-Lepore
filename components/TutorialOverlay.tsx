@@ -12,7 +12,7 @@ interface TutorialStep {
 }
 
 export const TutorialOverlay: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
-    const { userType } = useAuth();
+    const { userType, markTutorialCompleted } = useAuth();
     const [isOpen, setIsOpen] = useState(true);
     const [currentStep, setCurrentStep] = useState(0);
     const [showWelcome, setShowWelcome] = useState(true);
@@ -30,7 +30,7 @@ export const TutorialOverlay: React.FC<{ onComplete: () => void }> = ({ onComple
         },
         {
             title: "Agendamento Público",
-            description: "Você tem um link exclusivo para seus clientes agendarem horários sozinhos! Configure seu link em 'Configurações > Link Público' e compartilhe no Instagram/WhatsApp.",
+            description: "Você tem um link exclusivo para seus clientes agendarem horários sozinhos! Configure seu link em 'Configurações > Agendamento' e compartilhe no Instagram/WhatsApp.",
             icon: <Globe className={`w-12 h-12 ${accentColor}`} />
         },
         {
@@ -50,6 +50,7 @@ export const TutorialOverlay: React.FC<{ onComplete: () => void }> = ({ onComple
     };
 
     const handleSkip = async () => {
+        await markTutorialCompleted();
         setIsOpen(false);
         onComplete();
     };
@@ -58,7 +59,7 @@ export const TutorialOverlay: React.FC<{ onComplete: () => void }> = ({ onComple
         if (currentStep < steps.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
-            handleSkip(); // Finish
+            handleSkip(); // Finish and mark as complete
         }
     };
 

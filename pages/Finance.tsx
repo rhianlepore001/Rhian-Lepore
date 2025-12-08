@@ -221,7 +221,7 @@ export const Finance: React.FC = () => {
         t.date,
         t.description,
         t.type === 'expense' ? 'Despesa Paga' : 'Receita',
-        t.type === 'expense' ? -t.amount : t.amount
+        t.type === 'expense' ? -(t.amount || 0) : (t.amount || 0) // Safety check added here too
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -435,7 +435,7 @@ export const Finance: React.FC = () => {
                       <td className="p-3 text-white font-medium">{t.description}</td>
                       <td className="p-3 text-right font-mono">
                         <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
-                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-3 text-right">

@@ -28,7 +28,7 @@ export const Dashboard: React.FC = () => {
   const [showTutorial, setShowTutorial] = useState(false); // Estado para controlar a exibição
 
   const isBeauty = userType === 'beauty';
-  const currencySymbol = region === 'PT' ? '€' : 'R$';
+  const currencySymbol = region === 'PT' ? '€' : 'R$' ;
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
@@ -330,7 +330,7 @@ export const Dashboard: React.FC = () => {
               onClick={() => navigate('/agenda')}
               className={`w-full py-2 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-widest transition-colors`}
             >
-              Ver Agenda Completa â†’
+              Ver Agenda Completa →
             </button>
           </div>
         </BrutalCard>
@@ -348,7 +348,7 @@ export const Dashboard: React.FC = () => {
             <div className="p-4 text-center text-text-secondary">Carregando avisos...</div>
           ) : alerts.length === 0 ? (
             <div className="p-4 text-center text-text-secondary">
-              <p className="text-sm">Tudo certo! Nenhum aviso no momento. âœ…</p>
+              <p className="text-sm">Tudo certo! Nenhum aviso no momento. ✅</p>
             </div>
           ) : (
             <div className="space-y-3 md:space-y-4">

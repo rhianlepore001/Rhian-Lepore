@@ -89,7 +89,7 @@ export const Agenda: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const currencySymbol = region === 'PT' ? 'â‚¬' : 'R$';
+    const currencySymbol = region === 'PT' ? '€' : 'R$';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
@@ -716,7 +716,7 @@ export const Agenda: React.FC = () => {
                         <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
                         <div className="flex-1">
                             <h3 className="text-white font-heading text-lg uppercase mb-2">
-                                ðŸš¨ Agendamentos Atrasados ({overdueAppointments.length})
+                                🚨 Agendamentos Atrasados ({overdueAppointments.length})
                             </h3>
                             <p className="text-neutral-300 text-sm mb-4">
                                 Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
@@ -727,7 +727,7 @@ export const Agenda: React.FC = () => {
                                     <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
                                 </div>
                             ) : overdueAppointments.length === 0 ? (
-                                <p className="text-green-400 text-sm">Nenhum agendamento atrasado encontrado. âœ…</p>
+                                <p className="text-green-400 text-sm">Nenhum agendamento atrasado encontrado. ✅</p>
                             ) : (
                                 <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                                     {overdueAppointments.map(apt => {
@@ -738,7 +738,7 @@ export const Agenda: React.FC = () => {
                                                     <p className="text-white font-bold text-sm">{apt.clientName}</p>
                                                     <p className="text-neutral-400 text-xs">{apt.service}</p>
                                                     <p className="text-neutral-500 text-xs">
-                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         {professional && ` | Profissional: ${professional.name}`}
                                                     </p>
                                                 </div>
@@ -838,7 +838,7 @@ export const Agenda: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-white font-bold text-lg mb-1">
-                                ðŸ”” {publicBookings.length} SolicitaÃ§Ã£o(Ãµes) Pendente(s)
+                                📌 {publicBookings.length} Solicitação(ões) Pendente(s)
                             </h3>
                             <p className="text-neutral-400 text-sm">
                                 Você tem solicitações de agendamento online aguardando aprovação
@@ -855,7 +855,7 @@ export const Agenda: React.FC = () => {
                         <User className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
                         <h3 className="text-white font-bold text-xl mb-2">Nenhum profissional cadastrado</h3>
                         <p className="text-neutral-400 mb-6">
-                            Adicione profissionais Ã  sua equipe para comeÃ§ar a organizar agendamentos
+                            Adicione profissionais à sua equipe para começar a organizar agendamentos
                         </p>
                         <BrutalButton variant="secondary" onClick={() => navigate('/configuracoes/equipe')}>
                             Adicionar Profissionais
@@ -908,7 +908,7 @@ export const Agenda: React.FC = () => {
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <span className="text-xs font-mono text-yellow-500 font-bold">
-                                                    ðŸ”” SOLICITAÃ‡ÃƒO ONLINE
+                                                    📌 SOLICITAÇÃO ONLINE
                                                 </span>
                                             </div>
                                             <p className="text-white font-bold text-sm mb-1">{booking.customer_name}</p>
@@ -1100,10 +1100,10 @@ export const Agenda: React.FC = () => {
                                                             ? 'bg-green-500 text-black'
                                                             : 'bg-red-500 text-white'
                                                             }`}>
-                                                            {apt.status === 'Completed' ? 'âœ“ CONCLUÃDO' : 'âœ— CANCELADO'}
+                                                            {apt.status === 'Completed' ? '✓ CONCLUÍDO' : '✗ CANCELADO'}
                                                         </span>
                                                         <span className="text-neutral-400 text-xs">
-                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
                                                     <p className="text-white font-bold text-base mb-1">{apt.clientName}</p>

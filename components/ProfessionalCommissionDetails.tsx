@@ -57,7 +57,10 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
     const fetchServiceDetails = async () => {
         setLoading(true);
         try {
-            // Fetch commission records directly, joining appointments and clients
+            // Convert local date strings to UTC start/end of day for accurate Supabase filtering
+            const startISO = new Date(startDate + 'T00:00:00Z').toISOString();
+            const endISO = new Date(endDate + 'T23:59:59Z').toISOString();
+
             let query = supabase
                 .from('commission_records')
                 .select(`
@@ -74,8 +77,8 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                     )
                 `)
                 .eq('professional_id', professionalId)
-                .gte('created_at', new Date(startDate).toISOString())
-                .lte('created_at', new Date(endDate + 'T23:59:59').toISOString())
+                .gte('created_at', startISO) // created_at is when the service was completed
+                .lte('created_at', endISO)
                 .order('created_at', { ascending: false });
 
             if (statusFilter === 'paid') {

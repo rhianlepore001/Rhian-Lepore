@@ -14,7 +14,7 @@ interface CommissionDue {
     photo_url: string | null;
     total_due: number;
     total_earnings_month: number;
-    total_pending_records: number;
+    total_pending_records: number; // Number of services pending commission payment
     commission_rate: number;
     total_paid: number;
 }
@@ -57,6 +57,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             if (teamError) throw teamError;
 
             // 2. Fetch commissions data (RPC)
+            // RPC get_commissions_due returns: professional_id, total_due, total_earnings_month, total_pending_records, total_paid
             const { data: rpcData, error: rpcError } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
 
             if (rpcError) {
@@ -75,7 +76,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     photo_url: member.photo_url,
                     total_due: commissionRecord?.total_due || 0,
                     total_earnings_month: commissionRecord?.total_earnings_month || 0,
-                    total_pending_records: commissionRecord?.total_pending_records || commissionRecord?.total_records || 0,
+                    total_pending_records: commissionRecord?.total_pending_records || 0, // Use the correct field from RPC
                     commission_rate: member.commission_rate || 0,
                     total_paid: commissionRecord?.total_paid || 0
                 };
@@ -220,7 +221,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     <div className="bg-black/30 border border-neutral-800 rounded-lg p-4">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Clock className="w-4 h-4 text-yellow-400" />
-                                            <p className="text-neutral-500 text-xs uppercase font-mono">Pendente</p>
+                                            <p className="text-neutral-500 text-xs uppercase font-mono">A Pagar</p>
                                         </div>
                                         <p className={`font-bold text-lg font-mono ${professional.total_due > 0 ? 'text-yellow-400' : 'text-neutral-600'}`}>
                                             {currencySymbol} {professional.total_due.toFixed(2)}
@@ -238,11 +239,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         </p>
                                     </div>
 
-                                    {/* Serviços */}
+                                    {/* Serviços Pendentes */}
                                     <div className="bg-black/30 border border-neutral-800 rounded-lg p-4">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Scissors className="w-4 h-4 text-purple-400" />
-                                            <p className="text-neutral-500 text-xs uppercase font-mono">Serviços</p>
+                                            <p className="text-neutral-500 text-xs uppercase font-mono">Serviços Pendentes</p>
                                         </div>
                                         <p className="text-white font-bold text-lg font-mono">
                                             {professional.total_pending_records}

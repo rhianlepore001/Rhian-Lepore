@@ -30,11 +30,13 @@ interface Service {
     id: string;
     name: string;
     price: number;
+    duration_minutes?: number;
 }
 
 interface Client {
     id: string;
     name: string;
+    phone?: string;
 }
 
 // Helper para obter a data inicial (da URL ou hoje)
@@ -70,7 +72,7 @@ export const Agenda: React.FC = () => {
     const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState<string | null>(null);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
-    
+
     // State for editing
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
@@ -87,13 +89,23 @@ export const Agenda: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const currencySymbol = region === 'PT' ? '€' : 'R$' ;
+    const currencySymbol = region === 'PT' ? 'â‚¬' : 'R$';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
     // Atualiza selectedDate se o parâmetro de URL mudar
     useEffect(() => {
         setSelectedDate(getInitialDate(searchParams));
+    }, [searchParams]);
+
+    useEffect(() => {
+        const dateParam = searchParams.get('date');
+        if (dateParam) {
+            const newDate = new Date(dateParam);
+            const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(newDate.getTime() + userTimezoneOffset);
+            setSelectedDate(adjustedDate);
+        }
     }, [searchParams]);
 
     useEffect(() => {
@@ -156,7 +168,7 @@ export const Agenda: React.FC = () => {
         const { data: allServices } = await supabase
             .from('services')
             .select('name, price');
-        
+
         const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
         // 2. Fetch appointments for the selected day (Confirmed status)
@@ -172,7 +184,7 @@ export const Agenda: React.FC = () => {
         if (data) {
             setAppointments(data.map((apt: any) => {
                 // Use the price from the service table as the base price
-                const basePrice = servicePriceMap.get(apt.service) || apt.price; 
+                const basePrice = servicePriceMap.get(apt.service) || apt.price;
                 return {
                     id: apt.id,
                     client_id: apt.client_id,
@@ -197,7 +209,7 @@ export const Agenda: React.FC = () => {
         const { data: allServices } = await supabase
             .from('services')
             .select('name, price');
-        
+
         const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
         const { data } = await supabase
@@ -268,7 +280,7 @@ export const Agenda: React.FC = () => {
         const { data: allServices } = await supabase
             .from('services')
             .select('name, price');
-        
+
         const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
         const { data } = await supabase
@@ -553,11 +565,18 @@ export const Agenda: React.FC = () => {
 
             alert('Agendamento criado com sucesso!');
             setShowNewAppointmentModal(false);
+            const newDate = new Date(selectedAppointmentDate);
+            const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(newDate.getTime() + userTimezoneOffset);
+            setSelectedDate(adjustedDate);
+
             resetForm();
-            
+
+
             // 1. Redirecionar para a data do novo agendamento
             const newDateStr = selectedAppointmentDate;
             navigate(`/agenda?date=${newDateStr}`);
+
 
         } catch (error) {
             console.error('Error creating appointment:', error);
@@ -568,7 +587,7 @@ export const Agenda: React.FC = () => {
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
         newDate.setDate(newDate.getDate() + days);
-        
+
         // Atualiza a URL para refletir a nova data
         const newDateStr = newDate.toISOString().split('T')[0];
         navigate(`/agenda?date=${newDateStr}`);
@@ -625,7 +644,7 @@ export const Agenda: React.FC = () => {
     const getDiscountInfo = (apt: Appointment) => {
         // Check if the saved price is lower than the base price of the service
         const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
-        
+
         // Check if the saved price is higher than the base price (custom price)
         const isCustomPriceHigher = apt.basePrice && apt.price > apt.basePrice;
 
@@ -639,15 +658,15 @@ export const Agenda: React.FC = () => {
                 isCustomPriceHigher: false
             };
         } else if (isCustomPriceHigher) {
-             // If price is higher, treat it as a custom price without discount
-             return {
+            // If price is higher, treat it as a custom price without discount
+            return {
                 hasDiscount: false,
                 discountAmount: 0,
                 discountPercentage: 0,
                 isCustomPriceHigher: true
             };
         }
-        
+
         return { hasDiscount: false, discountAmount: 0, discountPercentage: 0, isCustomPriceHigher: false };
     };
 
@@ -697,7 +716,7 @@ export const Agenda: React.FC = () => {
                         <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
                         <div className="flex-1">
                             <h3 className="text-white font-heading text-lg uppercase mb-2">
-                                🚨 Agendamentos Atrasados ({overdueAppointments.length})
+                                ðŸš¨ Agendamentos Atrasados ({overdueAppointments.length})
                             </h3>
                             <p className="text-neutral-300 text-sm mb-4">
                                 Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
@@ -708,7 +727,7 @@ export const Agenda: React.FC = () => {
                                     <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
                                 </div>
                             ) : overdueAppointments.length === 0 ? (
-                                <p className="text-green-400 text-sm">Nenhum agendamento atrasado encontrado. ✅</p>
+                                <p className="text-green-400 text-sm">Nenhum agendamento atrasado encontrado. âœ…</p>
                             ) : (
                                 <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                                     {overdueAppointments.map(apt => {
@@ -719,7 +738,7 @@ export const Agenda: React.FC = () => {
                                                     <p className="text-white font-bold text-sm">{apt.clientName}</p>
                                                     <p className="text-neutral-400 text-xs">{apt.service}</p>
                                                     <p className="text-neutral-500 text-xs">
-                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         {professional && ` | Profissional: ${professional.name}`}
                                                     </p>
                                                 </div>
@@ -819,7 +838,7 @@ export const Agenda: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-white font-bold text-lg mb-1">
-                                🔔 {publicBookings.length} Solicitação(ões) Pendente(s)
+                                ðŸ”” {publicBookings.length} SolicitaÃ§Ã£o(Ãµes) Pendente(s)
                             </h3>
                             <p className="text-neutral-400 text-sm">
                                 Você tem solicitações de agendamento online aguardando aprovação
@@ -836,7 +855,7 @@ export const Agenda: React.FC = () => {
                         <User className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
                         <h3 className="text-white font-bold text-xl mb-2">Nenhum profissional cadastrado</h3>
                         <p className="text-neutral-400 mb-6">
-                            Adicione profissionais à sua equipe para começar a organizar agendamentos
+                            Adicione profissionais Ã  sua equipe para comeÃ§ar a organizar agendamentos
                         </p>
                         <BrutalButton variant="secondary" onClick={() => navigate('/configuracoes/equipe')}>
                             Adicionar Profissionais
@@ -889,7 +908,7 @@ export const Agenda: React.FC = () => {
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <span className="text-xs font-mono text-yellow-500 font-bold">
-                                                    🔔 SOLICITAÇÃO ONLINE
+                                                    ðŸ”” SOLICITAÃ‡ÃƒO ONLINE
                                                 </span>
                                             </div>
                                             <p className="text-white font-bold text-sm mb-1">{booking.customer_name}</p>
@@ -920,6 +939,7 @@ export const Agenda: React.FC = () => {
                                     ))}
 
                                     {/* Confirmed Appointments */}
+
                                     {memberAppointments.map(apt => {
                                         const { hasDiscount, discountPercentage, isCustomPriceHigher } = getDiscountInfo(apt);
 
@@ -932,6 +952,7 @@ export const Agenda: React.FC = () => {
                                                     } transition-colors`}
                                             >
                                                 <div className="flex items-start justify-between mb-2">
+
                                                     <div className="flex items-center gap-2">
                                                         <span className={`text-xs font-mono font-bold ${apt.status === 'Completed' ? 'text-green-500' : accentText}`}>
                                                             {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -970,7 +991,7 @@ export const Agenda: React.FC = () => {
                                                 </div>
                                                 <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
                                                 <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
-                                                
+
                                                 {/* Price Display */}
                                                 <div className="flex items-center gap-2">
                                                     {hasDiscount && apt.basePrice && (
@@ -981,7 +1002,7 @@ export const Agenda: React.FC = () => {
                                                     <span className={`text-xs font-mono font-bold ${accentText}`}>
                                                         {currencySymbol} {apt.price.toFixed(2)}
                                                     </span>
-                                                    
+
                                                     {/* Discount Badge */}
                                                     {hasDiscount && (
                                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
@@ -1079,10 +1100,10 @@ export const Agenda: React.FC = () => {
                                                             ? 'bg-green-500 text-black'
                                                             : 'bg-red-500 text-white'
                                                             }`}>
-                                                            {apt.status === 'Completed' ? '✓ CONCLUÍDO' : '✗ CANCELADO'}
+                                                            {apt.status === 'Completed' ? 'âœ“ CONCLUÃDO' : 'âœ— CANCELADO'}
                                                         </span>
                                                         <span className="text-neutral-400 text-xs">
-                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
                                                     <p className="text-white font-bold text-base mb-1">{apt.clientName}</p>

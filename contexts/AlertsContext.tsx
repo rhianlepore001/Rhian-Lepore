@@ -56,7 +56,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 const settlementDay = settings.commission_settlement_day_of_month;
                 const today = new Date();
                 const currentDay = today.getDate();
-                
+
                 // Calculate days remaining until the settlement day
                 let daysRemaining = settlementDay - currentDay;
 
@@ -65,7 +65,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, settlementDay);
                     daysRemaining = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                 }
-                
+
                 // Check if there are commissions due
                 const { data: commissionsDue } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
                 const totalDue = (commissionsDue || []).reduce((sum: number, r: any) => sum + (r.total_due || 0), 0);
@@ -74,7 +74,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     if (daysRemaining <= 2 && daysRemaining > 0) {
                         generatedAlerts.push({
                             id: 'commission-settlement-warning',
-                            text: `⚠️ Acerto de comissões pendente! Faltam ${daysRemaining} dia(s) para o dia ${settlementDay}.`,
+                            text: `⚠️ Acerto de comissões se aproxima! Dia ${settlementDay} será o dia do acerto de comissões.`,
                             type: 'warning',
                             actionPath: '/financeiro?tab=commissions'
                         });

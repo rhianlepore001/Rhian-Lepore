@@ -28,7 +28,7 @@ export const Dashboard: React.FC = () => {
   const [showTutorial, setShowTutorial] = useState(false); // Estado para controlar a exibição
 
   const isBeauty = userType === 'beauty';
-  const currencySymbol = region === 'PT' ? '€' : 'R$' ;
+  const currencySymbol = region === 'PT' ? '€' : 'R$';
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
@@ -87,7 +87,8 @@ export const Dashboard: React.FC = () => {
             date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             rawDate: new Date(apt.appointment_time).toISOString().split('T')[0], // Para navegação
             status: apt.status,
-            price: apt.price
+            price: apt.price,
+            appointment_time: apt.appointment_time
           })));
         }
 
@@ -296,26 +297,27 @@ export const Dashboard: React.FC = () => {
           ) : (
             <ul className="divide-y-2 divide-neutral-800">
               {appointments.map((apt) => (
-                <li 
-                  key={apt.id} 
+                <li
+                  key={apt.id}
                   className="p-3 md:p-4 hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
                   onClick={() => navigate(`/agenda?date=${apt.rawDate}`)} // Redireciona para a data específica
                 >
                   <div className="flex items-center gap-3 md:gap-4">
-                    <div className={`font-mono text-base md:text-xl font-bold ${accentText} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700`}>
-                      {apt.time}
+                    <div className={`font-mono text-base md:text-xl font-bold ${accentText} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700 flex flex-col items-center min-w-[70px]`}>
+                      <span>{apt.time}</span>
+                      <span className="text-[10px] md:text-xs opacity-70 mt-1">
+                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                      </span>
                     </div>
                     <div>
                       <p className="font-heading text-sm md:text-lg text-white">{apt.clientName}</p>
                       <p className="text-[10px] md:text-sm text-text-secondary font-mono">{apt.service}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-neutral-400">{apt.date}</span> {/* Data ao lado do horário */}
-                    <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                      <BrutalButton size="sm" variant="ghost">Ver</BrutalButton>
-                    </div>
+                  <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <BrutalButton size="sm" variant="ghost">Ver</BrutalButton>
                   </div>
+
                 </li>
               ))}
               {appointments.length === 0 && (
@@ -328,7 +330,7 @@ export const Dashboard: React.FC = () => {
               onClick={() => navigate('/agenda')}
               className={`w-full py-2 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-widest transition-colors`}
             >
-              Ver Agenda Completa →
+              Ver Agenda Completa â†’
             </button>
           </div>
         </BrutalCard>
@@ -346,7 +348,7 @@ export const Dashboard: React.FC = () => {
             <div className="p-4 text-center text-text-secondary">Carregando avisos...</div>
           ) : alerts.length === 0 ? (
             <div className="p-4 text-center text-text-secondary">
-              <p className="text-sm">Tudo certo! Nenhum aviso no momento. ✅</p>
+              <p className="text-sm">Tudo certo! Nenhum aviso no momento. âœ…</p>
             </div>
           ) : (
             <div className="space-y-3 md:space-y-4">

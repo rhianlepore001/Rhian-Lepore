@@ -177,7 +177,7 @@ export const CommissionsSettings: React.FC = () => {
                 <div className="space-y-4">
                     <p className="text-neutral-400 text-sm">
                         Escolha o dia do mês em que você faz o acerto de comissões com sua equipe.
-                        Você receberá um alerta no dashboard 1 dia antes.
+                        Você receberá um alerta no dashboard 2 dias antes.
                     </p>
 
                     <div className="flex items-center gap-4">

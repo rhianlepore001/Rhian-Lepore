@@ -4,7 +4,7 @@ import { X, Calendar, Download, Loader2, Check } from 'lucide-react';
 import { BrutalButton } from './BrutalButton';
 
 interface ServiceDetail {
-    id: string; // commission_record id
+    id: string; // finance_record id
     appointment_time: string;
     client_name: string;
     service_name: string;
@@ -58,18 +58,21 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
         setLoading(true);
         try {
             // Convert local date strings to UTC start/end of day for accurate Supabase filtering
+            // We filter by created_at (when the revenue/commission record was created)
             const startISO = new Date(startDate + 'T00:00:00Z').toISOString();
             const endISO = new Date(endDate + 'T23:59:59Z').toISOString();
 
             let query = supabase
-                .from('commission_records')
+                .from('finance_records') // Using finance_records instead of commission_records
                 .select(`
                     id,
-                    commission_amount,
+                    revenue,
+                    commission_value,
                     commission_rate,
-                    paid,
-                    paid_at,
-                    appointments (
+                    commission_paid,
+                    commission_paid_at,
+                    created_at,
+                    appointment:appointment_id (
                         appointment_time,
                         service,
                         price,
@@ -77,14 +80,15 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                     )
                 `)
                 .eq('professional_id', professionalId)
-                .gte('created_at', startISO) // created_at is when the service was completed
+                .eq('type', 'revenue') // Only revenue records generate commission
+                .gte('created_at', startISO)
                 .lte('created_at', endISO)
                 .order('created_at', { ascending: false });
 
             if (statusFilter === 'paid') {
-                query = query.eq('paid', true);
+                query = query.eq('commission_paid', true);
             } else if (statusFilter === 'pending') {
-                query = query.eq('paid', false);
+                query = query.eq('commission_paid', false);
             }
 
             const { data, error } = await query;
@@ -92,19 +96,19 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
             if (error) throw error;
 
             const formattedData: ServiceDetail[] = (data || []).map((record: any) => {
-                const appointment = record.appointments;
+                const appointment = record.appointment;
                 const clientName = appointment?.clients?.name || 'Cliente Desconhecido';
 
                 return {
                     id: record.id,
-                    appointment_time: appointment?.appointment_time || 'N/A',
+                    appointment_time: appointment?.appointment_time || record.created_at,
                     client_name: clientName,
                     service_name: appointment?.service || 'Serviço Desconhecido',
-                    service_price: appointment?.price || 0,
-                    commission_amount: record.commission_amount || 0,
+                    service_price: record.revenue || 0, // Revenue field holds the service price
+                    commission_amount: record.commission_value || 0,
                     commission_rate: record.commission_rate || commissionRate,
-                    paid: record.paid,
-                    paid_at: record.paid_at
+                    paid: record.commission_paid,
+                    paid_at: record.commission_paid_at
                 };
             });
 

@@ -56,7 +56,6 @@ export const Finance: React.FC = () => {
   }, [activeTab, selectedMonth, selectedYear, user]);
 
   const fetchFinanceData = async () => {
-    if (!user) return;
     try {
       // Calculate start and end dates for the selected month
       const startOfMonth = new Date(selectedYear, selectedMonth, 1);
@@ -100,34 +99,16 @@ export const Finance: React.FC = () => {
 
         setChartData(data.chart_data || []);
 
-        const formattedTransactions = (data.transactions || []).map((item: any) => {
-            let description = '';
-            let amount = 0;
-            let type = item.type;
-
-            if (item.type === 'commission_payment') {
-                description = `Pagamento de Comissão - ${item.barber_name}`;
-                amount = item.commission_value; // Use commission_value for expense amount
-                type = 'expense';
-            } else if (item.type === 'revenue') {
-                description = `Serviço - ${item.barber_name || 'Desconhecido'}`;
-                amount = item.revenue; // Use revenue for revenue amount
-            } else {
-                // Fallback for other types if needed
-                description = item.description || 'Transação Desconhecida';
-                amount = item.revenue || item.commission_value || 0;
-            }
-
-            return {
-                id: item.id,
-                description: description,
-                amount: amount,
-                date: new Date(item.created_at).toLocaleDateString('pt-BR'),
-                rawDate: new Date(item.created_at),
-                type: type,
-                commission_paid: item.commission_paid // Only relevant for commission records
-            };
-        });
+        const formattedTransactions = (data.transactions || []).map((item: any) => ({
+          id: item.id,
+          description: item.type === 'expense' ? `Pagamento de Comissão - ${item.barber_name}` : `Serviço - ${item.barber_name || 'Desconhecido'}`, // More descriptive
+          amount: item.amount || 0, // This is revenue for 'revenue' type
+          expense: item.expense || 0, // This is commission_value for 'expense' type
+          date: new Date(item.created_at).toLocaleDateString('pt-BR'),
+          rawDate: new Date(item.created_at),
+          type: item.type, // Use the actual type from DB
+          commission_paid: item.commission_paid // Pass this through
+        }));
 
         const filtered = filterType === 'all'
           ? formattedTransactions
@@ -147,7 +128,6 @@ export const Finance: React.FC = () => {
   };
 
   const fetchMonthlyHistory = async () => {
-    if (!user) return;
     try {
       const history = [];
 
@@ -196,11 +176,7 @@ export const Finance: React.FC = () => {
     if (!confirm('Tem certeza que deseja excluir esta transação? Esta ação é irreversível.')) return;
 
     try {
-        // Note: finance_records is the table name used in the database schema for transactions
-        const { error } = await supabase.from('finance_records').delete().eq('id', transactionId);
-        
-        if (error) throw error;
-
+        await supabase.from('finance_records').delete().eq('id', transactionId);
         alert('Transação excluída com sucesso!');
         fetchFinanceData(); // Refresh finance data
     } catch (error) {
@@ -221,7 +197,7 @@ export const Finance: React.FC = () => {
         t.date,
         t.description,
         t.type === 'expense' ? 'Despesa Paga' : 'Receita',
-        t.type === 'expense' ? -(t.amount || 0) : (t.amount || 0) // Safety check added here too
+        t.type === 'expense' ? -t.expense : t.amount
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -435,7 +411,7 @@ export const Finance: React.FC = () => {
                       <td className="p-3 text-white font-medium">{t.description}</td>
                       <td className="p-3 text-right font-mono">
                         <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
-                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.type === 'expense' ? t.expense : t.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-3 text-right">

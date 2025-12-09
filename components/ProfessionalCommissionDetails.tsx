@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Calendar, Download, Loader2, Check } from 'lucide-react';
+import { X, Calendar, Download, Loader2 } from 'lucide-react';
 import { BrutalButton } from './BrutalButton';
 
 interface ServiceDetail {
-    id: string; // finance_record id
+    id: string;
     appointment_time: string;
     client_name: string;
-    service_name: string;
-    service_price: number;
+    service: string;
+    price: number;
     commission_amount: number;
     commission_rate: number;
     paid: boolean;
@@ -36,7 +36,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
     const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('pending');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
 
     useEffect(() => {
         // Set default dates (current month)
@@ -52,63 +52,45 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
         if (startDate && endDate) {
             fetchServiceDetails();
         }
-    }, [professionalId, startDate, endDate, statusFilter]);
+    }, [professionalId, startDate, endDate]);
 
     const fetchServiceDetails = async () => {
         setLoading(true);
         try {
-            // Convert local date strings to UTC start/end of day for accurate Supabase filtering
-            // We filter by created_at (when the revenue/commission record was created)
-            const startISO = new Date(startDate + 'T00:00:00Z').toISOString();
-            const endISO = new Date(endDate + 'T23:59:59Z').toISOString();
-
-            let query = supabase
-                .from('finance_records') // Using finance_records instead of commission_records
+            // Fetch appointments with commission records
+            const { data, error } = await supabase
+                .from('appointments')
                 .select(`
                     id,
-                    revenue,
-                    commission_value,
-                    commission_rate,
-                    commission_paid,
-                    commission_paid_at,
-                    created_at,
-                    appointment:appointment_id (
-                        appointment_time,
-                        service,
-                        price,
-                        clients (name)
+                    appointment_time,
+                    service,
+                    price,
+                    clients (name),
+                    finance_records (
+                        commission_value,
+                        commission_rate
                     )
                 `)
                 .eq('professional_id', professionalId)
-                .eq('type', 'revenue') // Only revenue records generate commission
-                .gte('created_at', startISO)
-                .lte('created_at', endISO)
-                .order('created_at', { ascending: false });
-
-            if (statusFilter === 'paid') {
-                query = query.eq('commission_paid', true);
-            } else if (statusFilter === 'pending') {
-                query = query.eq('commission_paid', false);
-            }
-
-            const { data, error } = await query;
+                .eq('status', 'Completed')
+                .gte('appointment_time', new Date(startDate).toISOString())
+                .lte('appointment_time', new Date(endDate + 'T23:59:59').toISOString())
+                .order('appointment_time', { ascending: false });
 
             if (error) throw error;
 
-            const formattedData: ServiceDetail[] = (data || []).map((record: any) => {
-                const appointment = record.appointment;
-                const clientName = appointment?.clients?.name || 'Cliente Desconhecido';
-
+            const formattedData: ServiceDetail[] = (data || []).map((apt: any) => {
+                const financeRecord = apt.finance_records?.[0];
                 return {
-                    id: record.id,
-                    appointment_time: appointment?.appointment_time || record.created_at,
-                    client_name: clientName,
-                    service_name: appointment?.service || 'Serviço Desconhecido',
-                    service_price: record.revenue || 0, // Revenue field holds the service price
-                    commission_amount: record.commission_value || 0,
-                    commission_rate: record.commission_rate || commissionRate,
-                    paid: record.commission_paid,
-                    paid_at: record.commission_paid_at
+                    id: apt.id,
+                    appointment_time: apt.appointment_time,
+                    client_name: apt.clients?.name || 'Cliente Desconhecido',
+                    service: apt.service,
+                    price: apt.price,
+                    commission_amount: financeRecord?.commission_value || 0,
+                    commission_rate: financeRecord?.commission_rate || commissionRate,
+                    paid: false, // TODO: Check commission_records table for paid status
+                    paid_at: null
                 };
             });
 
@@ -120,19 +102,24 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
         }
     };
 
-    const totalCommission = services.reduce((sum, s) => sum + s.commission_amount, 0);
-    const totalRevenue = services.reduce((sum, s) => sum + s.service_price, 0);
+    const filteredServices = services.filter(service => {
+        if (statusFilter === 'paid') return service.paid;
+        if (statusFilter === 'pending') return !service.paid;
+        return true;
+    });
+
+    const totalCommission = filteredServices.reduce((sum, s) => sum + s.commission_amount, 0);
+    const totalRevenue = filteredServices.reduce((sum, s) => sum + s.price, 0);
 
     const handleExport = () => {
         // Create CSV content
-        const headers = ['Data', 'Cliente', 'Serviço', 'Valor Serviço', 'Comissão', 'Taxa (%)', 'Status'];
-        const rows = services.map(s => [
+        const headers = ['Data', 'Cliente', 'Serviço', 'Valor', 'Comissão', 'Status'];
+        const rows = filteredServices.map(s => [
             new Date(s.appointment_time).toLocaleDateString('pt-BR'),
             s.client_name,
-            s.service_name,
-            `${currencySymbol} ${s.service_price.toFixed(2)}`,
+            s.service,
+            `${currencySymbol} ${s.price.toFixed(2)}`,
             `${currencySymbol} ${s.commission_amount.toFixed(2)}`,
-            `${s.commission_rate}%`,
             s.paid ? 'Pago' : 'Pendente'
         ]);
 
@@ -174,7 +161,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                         <div>
                             <label className="text-neutral-400 text-xs uppercase font-mono mb-2 block">
                                 <Calendar className="w-3 h-3 inline mr-1" />
-                                Data Inicial (Serviço Realizado)
+                                Data Inicial
                             </label>
                             <input
                                 type="date"
@@ -186,7 +173,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                         <div>
                             <label className="text-neutral-400 text-xs uppercase font-mono mb-2 block">
                                 <Calendar className="w-3 h-3 inline mr-1" />
-                                Data Final (Serviço Realizado)
+                                Data Final
                             </label>
                             <input
                                 type="date"
@@ -196,15 +183,15 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                             />
                         </div>
                         <div>
-                            <label className="text-neutral-400 text-xs uppercase font-mono mb-2 block">Status de Pagamento</label>
+                            <label className="text-neutral-400 text-xs uppercase font-mono mb-2 block">Status</label>
                             <select
                                 value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'paid' | 'pending')}
+                                onChange={(e) => setStatusFilter(e.target.value as any)}
                                 className="w-full p-2 bg-black border border-neutral-700 rounded-lg text-white text-sm"
                             >
-                                <option value="pending">Pendente (A Pagar)</option>
-                                <option value="paid">Pago (Histórico)</option>
                                 <option value="all">Todos</option>
+                                <option value="pending">Pendente</option>
+                                <option value="paid">Pago</option>
                             </select>
                         </div>
                     </div>
@@ -216,19 +203,16 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
                         </div>
-                    ) : services.length === 0 ? (
+                    ) : filteredServices.length === 0 ? (
                         <div className="text-center py-12 text-neutral-500">
-                            <p>Nenhum serviço encontrado no período selecionado com status "{statusFilter === 'pending' ? 'Pendente' : statusFilter === 'paid' ? 'Pago' : 'Todos'}".</p>
+                            <p>Nenhum serviço encontrado no período selecionado</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {services.map((service) => (
+                            {filteredServices.map((service) => (
                                 <div
                                     key={service.id}
-                                    className={`border-2 rounded-lg p-4 transition-colors ${service.paid
-                                        ? 'bg-green-500/10 border-green-500/30'
-                                        : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600'
-                                    }`}
+                                    className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 hover:border-neutral-600 transition-colors"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
@@ -236,17 +220,19 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                 <span className="text-xs font-mono text-neutral-500">
                                                     {new Date(service.appointment_time).toLocaleDateString('pt-BR')}
                                                 </span>
-                                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${service.paid ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
-                                                    {service.paid ? 'PAGO' : 'PENDENTE'}
-                                                </span>
+                                                {service.paid && (
+                                                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-green-500/20 text-green-400">
+                                                        PAGO
+                                                    </span>
+                                                )}
                                             </div>
                                             <p className="text-white font-bold mb-1">{service.client_name}</p>
-                                            <p className="text-neutral-400 text-sm">{service.service_name}</p>
+                                            <p className="text-neutral-400 text-sm">{service.service}</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-neutral-500 text-xs mb-1">Valor do Serviço</p>
                                             <p className="text-white font-mono font-bold mb-2">
-                                                {currencySymbol} {service.service_price.toFixed(2)}
+                                                {currencySymbol} {service.price.toFixed(2)}
                                             </p>
                                             <p className="text-neutral-500 text-xs mb-1">Comissão ({service.commission_rate}%)</p>
                                             <p className={`font-mono font-bold text-lg ${accentColor}`}>
@@ -266,7 +252,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                         <div className="grid grid-cols-3 gap-6">
                             <div>
                                 <p className="text-neutral-500 text-xs uppercase font-mono mb-1">Total de Serviços</p>
-                                <p className="text-white font-bold text-xl">{services.length}</p>
+                                <p className="text-white font-bold text-xl">{filteredServices.length}</p>
                             </div>
                             <div>
                                 <p className="text-neutral-500 text-xs uppercase font-mono mb-1">Receita Total</p>
@@ -288,7 +274,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                             icon={<Download />}
                             onClick={handleExport}
                             className="flex-1"
-                            disabled={services.length === 0}
+                            disabled={filteredServices.length === 0}
                         >
                             Exportar CSV
                         </BrutalButton>

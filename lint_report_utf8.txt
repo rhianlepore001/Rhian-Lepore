@@ -1,0 +1,201 @@
+
+> barber-os@0.0.0 lint
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\AppointmentEditModal.tsx
+    2:22  warning  'Tag' is defined but never used                         @typescript-eslint/no-unused-vars
+   61:5   warning  'accentColor' is defined but never used                 @typescript-eslint/no-unused-vars
+  179:25  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  188:11  warning  'isDiscountApplied' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\BrutalButton.tsx
+  59:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\CommissionPaymentHistory.tsx
+  69:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\CommissionsManagement.tsx
+   70:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  135:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\Header.tsx
+   2:16  warning  'Search' is defined but never used                  @typescript-eslint/no-unused-vars
+  16:22  warning  'setSearchTerm' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  26:9   warning  'handleSearch' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\MonthlyHistory.tsx
+  23:5   warning  'accentColor' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  99:43  warning  'index' is defined but never used                 @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\OnboardingLayout.tsx
+  2:10  warning  'Check' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\ProfessionalCommissionDetails.tsx
+   82:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\ProfileModal.tsx
+  1:27  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\SettingsLayout.tsx
+   5:10  warning  'NAVIGATION_ITEMS' is defined but never used   @typescript-eslint/no-unused-vars
+  13:11  warning  'location' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\Sidebar.tsx
+  17:9  warning  'hoverText' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\TeamMemberForm.tsx
+  7:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\TutorialOverlay.tsx
+  1:27  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  5:10  warning  'supabase' is defined but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\UpsellSection.tsx
+  22:5  warning  'mainService' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\onboarding\StepBusinessHours.tsx
+  25:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\onboarding\StepServices.tsx
+  15:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\onboarding\StepTeam.tsx
+  16:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\constants.ts
+  2:10  warning  'Appointment' is defined but never used    @typescript-eslint/no-unused-vars
+  2:23  warning  'Client' is defined but never used         @typescript-eslint/no-unused-vars
+  2:31  warning  'FinanceRecord' is defined but never used  @typescript-eslint/no-unused-vars
+  3:88  warning  'LogOut' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\contexts\AlertsContext.tsx
+  71:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\contexts\AuthContext.tsx
+  18:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\lib\gemini.ts
+  161:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:70  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Agenda.tsx
+    5:20  warning  'Clock' is defined but never used         @typescript-eslint/no-unused-vars
+   62:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  183:15  warning  'now' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  203:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  314:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  350:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  440:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  509:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  646:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\ClientCRM.tsx
+    6:97  warning  'Save' is defined but never used           @typescript-eslint/no-unused-vars
+    8:25  warning  'getTierConfig' is defined but never used  @typescript-eslint/no-unused-vars
+   22:40  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   82:62  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   86:47  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  145:21  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  170:21  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  246:37  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  339:83  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  370:48  warning  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Clients.tsx
+   14:44  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   75:35  warning  'uploadData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  117:25  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  145:60  warning  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Dashboard.tsx
+  17:52  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  22:10  warning  'businessSlug' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  23:10  warning  'accountCreatedAt' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  27:50  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  82:45  warning  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Finance.tsx
+    6:76  warning  'Filter' is defined but never used                      @typescript-eslint/no-unused-vars
+   17:10  warning  'loading' is assigned a value but never used            @typescript-eslint/no-unused-vars
+   18:52  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   26:46  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   27:56  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   28:10  warning  'showFilterModal' is assigned a value but never used    @typescript-eslint/no-unused-vars
+   29:10  warning  'startDate' is assigned a value but never used          @typescript-eslint/no-unused-vars
+   30:10  warning  'endDate' is assigned a value but never used            @typescript-eslint/no-unused-vars
+  102:76  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  211:9   warning  'handleApplyFilter' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  216:9   warning  'handleClearFilter' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Login.tsx
+  4:25  warning  'Lock' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Marketing.tsx
+   26:48  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   27:12  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   38:62  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   42:62  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   46:60  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   48:52  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   51:68  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   53:44  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   54:54  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  142:25  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  162:25  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  186:25  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  204:25  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  211:49  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  660:90  warning  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\PublicBooking.tsx
+    4:60  warning  'Phone' is defined but never used                                @typescript-eslint/no-unused-vars
+    7:10  warning  'UpsellSection' is defined but never used                        @typescript-eslint/no-unused-vars
+    8:10  warning  'ProfessionalSelector' is defined but never used                 @typescript-eslint/no-unused-vars
+   45:62  warning  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  128:74  warning  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  255:29  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  255:85  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\Register.tsx
+  10:11  warning  'login' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  75:19  warning  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\settings\CommissionsSettings.tsx
+    6:39  warning  'TrendingUp' is defined but never used                           @typescript-eslint/no-unused-vars
+  336:71  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  336:81  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  337:74  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  337:84  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\settings\GeneralSettings.tsx
+  25:56  warning  Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  41:11  warning  'currencySymbol' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\settings\PublicBookingSettings.tsx
+   10:12  warning  'loading' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+  191:92  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  191:99  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\settings\ServiceSettings.tsx
+  10:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\settings\TeamSettings.tsx
+  11:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\User\Downloads\Rhian-Lepore-main\utils\tierSystem.ts
+  58:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 122 problems (8 errors, 114 warnings)
+

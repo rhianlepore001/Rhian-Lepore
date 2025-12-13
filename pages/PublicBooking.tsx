@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Star, Clock, Check, Sparkles, Scissors, Calendar, Phone, Users } from 'lucide-react';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
 import { UpsellSection } from '../components/UpsellSection';
 import { ProfessionalSelector } from '../components/ProfessionalSelector';
+import { ClientAuthModal } from '../components/ClientAuthModal';
+import { usePublicClient } from '../contexts/PublicClientContext';
 
 interface Service {
     id: string;
@@ -40,6 +42,9 @@ interface BusinessProfile {
 
 export const PublicBooking: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const [searchParams] = useSearchParams();
+    const proIdParam = searchParams.get('pro');
+
     const [business, setBusiness] = useState<BusinessProfile | null>(null);
     const [businessId, setBusinessId] = useState<string | null>(null);
     const [businessSettings, setBusinessSettings] = useState<any>(null);
@@ -52,11 +57,21 @@ export const PublicBooking: React.FC = () => {
     // Contact form
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
-    const [selectedProfessional, setSelectedProfessional] = useState<string | null>(null);
+    const [selectedProfessional, setSelectedProfessional] = useState<string | null>(proIdParam || null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [availableSlots, setAvailableSlots] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+
+    const { client } = usePublicClient();
+
+    // Sync client data from context to form state
+    useEffect(() => {
+        if (client) {
+            setCustomerName(client.name);
+            setCustomerPhone(client.phone);
+        }
+    }, [client]);
 
     const isBeauty = business?.user_type === 'beauty';
 
@@ -252,7 +267,7 @@ export const PublicBooking: React.FC = () => {
                             <span className="text-neutral-400">({business.total_reviews} avaliações)</span>
                         </div>
                         <p className="text-neutral-400 text-sm mt-2 italic">
-                            "O melhor atendimento da região! Sempre saio satisfeito." - Cliente Verificado
+                            &quot;O melhor atendimento da região! Sempre saio satisfeito.&quot; - Cliente Verificado
                         </p>
                     </div>
 
@@ -534,55 +549,42 @@ export const PublicBooking: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Contact Form */}
+                        {/* Contact Form / Auth */}
                         <div className={`${cardClass} p-6 mb-6`}>
-                            <h3 className="text-white font-heading uppercase mb-4">Seus Dados</h3>
+                            <ClientAuthModal
+                                businessId={businessId!}
+                                onSuccess={() => {
+                                    // Auto-fill form state when auth succeeds
+                                    // This is handled by the useEffect below observing 'client'
+                                }}
+                                accentColor={accentColor}
+                            />
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-white font-mono text-sm mb-2 block">Nome Completo</label>
-                                    <input
-                                        type="text"
-                                        value={customerName}
-                                        onChange={(e) => setCustomerName(e.target.value)}
-                                        placeholder="João Silva"
-                                        className={`w-full p-4 ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl' : 'bg-black/40 border-2 border-neutral-800'} text-white focus:outline-none`}
-                                    />
+                            {client && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="flex items-start gap-3 mt-6">
+                                        <input
+                                            type="checkbox"
+                                            id="policy"
+                                            checked={acceptedPolicy}
+                                            onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                                            className="mt-1"
+                                        />
+                                        <label htmlFor="policy" className="text-sm text-neutral-400">
+                                            Li e aceito a política de cancelamento. Cancelamentos devem ser feitos com até 24h de antecedência.
+                                        </label>
+                                    </div>
+
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={!acceptedPolicy}
+                                        className={`w-full py-4 mt-6 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-xl shadow-soft' : 'bg-accent-gold hover:bg-accent-goldHover shadow-heavy'} text-white font-heading text-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3`}
+                                    >
+                                        {isBeauty ? <Sparkles className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                                        Confirmar Agendamento
+                                    </button>
                                 </div>
-
-                                <div>
-                                    <label className="text-white font-mono text-sm mb-2 block">WhatsApp</label>
-                                    <input
-                                        type="tel"
-                                        value={customerPhone}
-                                        onChange={(e) => setCustomerPhone(e.target.value)}
-                                        placeholder="(11) 98765-4321"
-                                        className={`w-full p-4 ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl' : 'bg-black/40 border-2 border-neutral-800'} text-white focus:outline-none`}
-                                    />
-                                </div>
-
-                                <div className="flex items-start gap-3 mt-6">
-                                    <input
-                                        type="checkbox"
-                                        id="policy"
-                                        checked={acceptedPolicy}
-                                        onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                        className="mt-1"
-                                    />
-                                    <label htmlFor="policy" className="text-sm text-neutral-400">
-                                        Li e aceito a política de cancelamento. Cancelamentos devem ser feitos com até 24h de antecedência.
-                                    </label>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleSubmit}
-                                disabled={!customerName || !customerPhone || !acceptedPolicy}
-                                className={`w-full py-4 mt-6 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-xl shadow-soft' : 'bg-accent-gold hover:bg-accent-goldHover shadow-heavy'} text-white font-heading text-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3`}
-                            >
-                                {isBeauty ? <Sparkles className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                                Reservar Minha Experiência
-                            </button>
+                            )}
                         </div>
                     </div>
                 )}

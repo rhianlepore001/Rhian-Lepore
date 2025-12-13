@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NAVIGATION_ITEMS, SETTINGS_ITEMS } from '../constants';
 
@@ -11,13 +11,20 @@ interface SettingsLayoutProps {
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
     const { userType } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950'; // Alterado para neutral-950 para ser mais escuro que o main
+    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950';
 
     const menuItems = SETTINGS_ITEMS;
+
+    // Check if we're on a sub-page (not the main /configuracoes page)
+    const isSubPage = location.pathname !== '/configuracoes' && location.pathname.startsWith('/configuracoes/');
+
+    // Get current page title for mobile header
+    const currentPageTitle = menuItems.find(item => item.path === location.pathname)?.label || 'Configurações';
 
     return (
         <div className={`min-h-screen flex relative ${bgColor}`}>
@@ -29,7 +36,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar - Hidden on mobile when on sub-page */}
             <aside className={`
                 ${bgColor} border-r ${isBeauty ? 'border-white/10' : 'border-neutral-800'} p-4 md:p-6
                 fixed inset-y-0 left-0 z-50
@@ -82,16 +89,27 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
 
             {/* Content */}
             <main className="flex-1 md:ml-64 overflow-y-auto p-4 md:p-8">
-                {/* Mobile Header */}
+                {/* Mobile Header - Different behavior based on sub-page */}
                 <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3 -mx-4 -mt-4 mb-4">
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="text-white hover:text-accent-gold"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
+                    {isSubPage ? (
+                        // On sub-page: show back arrow
+                        <button
+                            onClick={() => navigate('/configuracoes')}
+                            className={`text-white hover:text-${accentColor} transition-colors`}
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                    ) : (
+                        // On main page: show menu icon
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className={`text-white hover:text-${accentColor}`}
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                    )}
                     <h1 className="text-white font-heading text-lg uppercase">
-                        Configurações
+                        {isSubPage ? currentPageTitle : 'Configurações'}
                     </h1>
                 </div>
 

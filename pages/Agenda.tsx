@@ -131,8 +131,26 @@ export const Agenda: React.FC = () => {
     useEffect(() => {
         if (showNewAppointmentModal) {
             setSelectedAppointmentDate(selectedDate.toISOString().split('T')[0]);
+
+            // Auto-select professional if filter is active or only one exists
+            if (selectedProfessionalFilter) {
+                setSelectedProfessional(selectedProfessionalFilter);
+            } else if (teamMembers.length === 1) {
+                setSelectedProfessional(teamMembers[0].id);
+            }
         }
-    }, [showNewAppointmentModal, selectedDate]);
+    }, [showNewAppointmentModal, selectedDate, selectedProfessionalFilter, teamMembers]);
+
+    // Handle clientId from URL (coming from ClientCRM "Novo Serviço" button)
+    useEffect(() => {
+        const clientIdParam = searchParams.get('clientId');
+        if (clientIdParam && clients.length > 0) {
+            // Pre-select the client
+            setSelectedClient(clientIdParam);
+            // Open the new appointment modal
+            setShowNewAppointmentModal(true);
+        }
+    }, [searchParams, clients]);
 
     const fetchData = async () => {
         await Promise.all([
@@ -1164,7 +1182,7 @@ export const Agenda: React.FC = () => {
             {/* New Appointment Modal */}
             {showNewAppointmentModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-neutral-900 border-2 border-neutral-800 rounded-xl w-full max-w-md p-6">
+                    <div className="bg-neutral-900 border-2 border-neutral-800 rounded-xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-heading text-xl uppercase">Novo Agendamento</h3>
                             <button

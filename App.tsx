@@ -16,8 +16,11 @@ import { TeamSettings } from './pages/settings/TeamSettings';
 import { ServiceSettings } from './pages/settings/ServiceSettings';
 import { CommissionsSettings } from './pages/settings/CommissionsSettings';
 import { OnboardingWizard } from './pages/OnboardingWizard';
+import { Reports } from './pages/Reports';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
+import { PublicClientProvider } from './contexts/PublicClientContext';
+import { ProfessionalPortfolio } from './pages/ProfessionalPortfolio';
 
 import { Placeholder } from './pages/Placeholder';
 
@@ -70,6 +73,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/book/:slug" element={<PublicBooking />} />
+      <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
       <Route path="/onboarding" element={
         <RequireAuth>
           <OnboardingWizard />
@@ -84,7 +88,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/clientes/:id" element={<ClientCRM />} />
         <Route path="/financeiro" element={<Finance />} />
         <Route path="/marketing" element={<Marketing />} />
-        <Route path="/relatorios" element={<Placeholder title="Relatórios" />} />
+        <Route path="/relatorios" element={<Reports />} />
 
         {/* Settings Routes */}
         <Route path="/configuracoes" element={<Navigate to="/configuracoes/geral" replace />} />
@@ -106,9 +110,11 @@ const App: React.FC = () => {
   return (
     <HashRouter>
       <AuthProvider>
-        <AlertsProvider>
-          <AppRoutes />
-        </AlertsProvider>
+        <PublicClientProvider>
+          <AlertsProvider>
+            <AppRoutes />
+          </AlertsProvider>
+        </PublicClientProvider>
       </AuthProvider>
     </HashRouter>
   );

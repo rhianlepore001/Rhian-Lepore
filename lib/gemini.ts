@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
  */
 export async function analyzePhoto(imageBase64: string) {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
 
         const prompt = `Analyze this haircut/beauty salon photo and suggest professional edits for social media.
 
@@ -56,7 +56,7 @@ export async function generateSocialContent(
     customRequest?: string
 ) {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
         const prompt = `Generate Instagram post content for ${businessName}, a ${businessType === 'barber' ? 'barbearia' : 'salão de beleza'}.
 
@@ -132,7 +132,7 @@ Return ONLY valid JSON array with 7 objects in this exact format:
 
         // Direct API call with proper headers
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
@@ -174,7 +174,7 @@ export async function analyzeCampaignOpportunities(
     businessName: string
 ) {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
         // Analyze data
         const now = new Date();

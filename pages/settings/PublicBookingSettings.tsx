@@ -93,7 +93,7 @@ export const PublicBookingSettings: React.FC = () => {
                     Configure como clientes agendam online
                 </p>
 
-                <PublicLinkCard businessSlug={businessSlug} />
+                <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
 
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
                     <div className="flex items-start justify-between gap-4">
@@ -188,7 +188,7 @@ export const PublicBookingSettings: React.FC = () => {
                         {enableProfessionalSelection && (
                             <div className="mt-3 md:mt-4 p-3 md:p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                                 <p className="text-xs md:text-sm text-neutral-300">
-                                    ✅ <strong>Ativado!</strong> Adicione sua equipe na aba "Equipe".
+                                    ✅ <strong>Ativado!</strong> Adicione sua equipe na aba &quot;Equipe&quot;.
                                 </p>
                             </div>
                         )}

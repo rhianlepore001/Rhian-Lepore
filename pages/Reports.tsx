@@ -1,0 +1,104 @@
+import React from 'react';
+import { BrutalCard } from '../components/BrutalCard';
+import { useAuth } from '../contexts/AuthContext';
+import { FileText, BarChart3, TrendingUp, PieChart, Clock, Bell } from 'lucide-react';
+import { BrutalButton } from '../components/BrutalButton';
+
+export const Reports: React.FC = () => {
+    const { userType } = useAuth();
+
+    const isBeauty = userType === 'beauty';
+    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
+    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+
+    const upcomingFeatures = [
+        {
+            icon: BarChart3,
+            title: 'Relatório de Vendas',
+            description: 'Análise detalhada de vendas por período, serviço e profissional'
+        },
+        {
+            icon: TrendingUp,
+            title: 'Métricas de Crescimento',
+            description: 'Acompanhe o crescimento do seu negócio mês a mês'
+        },
+        {
+            icon: PieChart,
+            title: 'Análise de Serviços',
+            description: 'Descubra quais serviços são mais populares e lucrativos'
+        },
+        {
+            icon: FileText,
+            title: 'Exportação Completa',
+            description: 'Exporte relatórios em PDF e Excel para sua contabilidade'
+        }
+    ];
+
+    return (
+        <div className="space-y-6 md:space-y-8 pb-20">
+            {/* Header */}
+            <div className="border-b-4 border-white/10 pb-4">
+                <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Relatórios</h2>
+                <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
+                    Análises detalhadas do seu negócio
+                </p>
+            </div>
+
+            {/* Coming Soon Banner */}
+            <BrutalCard className={`border-l-4 border-${accentColor} bg-gradient-to-r from-neutral-900 to-neutral-800`}>
+                <div className="flex flex-col md:flex-row items-center gap-6 py-8">
+                    <div className={`p-6 rounded-full ${accentBg}/10`}>
+                        <Clock className={`w-16 h-16 ${accentText}`} />
+                    </div>
+                    <div className="text-center md:text-left flex-1">
+                        <h3 className={`text-3xl font-heading ${accentText} uppercase mb-2`}>
+                            Em Breve!
+                        </h3>
+                        <p className="text-white text-lg mb-4">
+                            Estamos desenvolvendo relatórios poderosos para você tomar decisões melhores.
+                        </p>
+                        <p className="text-neutral-400 text-sm">
+                            Esta funcionalidade estará disponível em breve. Enquanto isso, você pode acompanhar
+                            seus dados financeiros na seção <strong className="text-white">Financeiro</strong>.
+                        </p>
+                    </div>
+                </div>
+            </BrutalCard>
+
+            {/* Upcoming Features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {upcomingFeatures.map((feature, index) => (
+                    <BrutalCard key={index} className="opacity-60 hover:opacity-80 transition-opacity">
+                        <div className="flex items-start gap-4">
+                            <div className="p-3 bg-neutral-800 rounded-lg">
+                                <feature.icon className="w-6 h-6 text-neutral-400" />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-bold text-lg mb-1">{feature.title}</h4>
+                                <p className="text-neutral-500 text-sm">{feature.description}</p>
+                            </div>
+                        </div>
+                    </BrutalCard>
+                ))}
+            </div>
+
+            {/* Notify Me */}
+            <BrutalCard className="text-center">
+                <Bell className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
+                <h4 className="text-white font-heading text-xl uppercase mb-2">
+                    Quer ser notificado?
+                </h4>
+                <p className="text-neutral-400 text-sm mb-6 max-w-md mx-auto">
+                    Você será avisado automaticamente quando os relatórios estiverem disponíveis.
+                </p>
+                <BrutalButton variant="secondary" disabled>
+                    <span className="flex items-center gap-2">
+                        <Bell className="w-4 h-4" />
+                        Notificação Ativada
+                    </span>
+                </BrutalButton>
+            </BrutalCard>
+        </div>
+    );
+};

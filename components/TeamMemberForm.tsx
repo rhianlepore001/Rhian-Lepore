@@ -19,9 +19,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const { user } = useAuth();
     const [name, setName] = useState(member?.name || '');
     const [role, setRole] = useState(member?.role || '');
+    const [slug, setSlug] = useState(member?.slug || '');
     const [bio, setBio] = useState(member?.bio || '');
     const [active, setActive] = useState(member?.active ?? true);
-    const [commissionRate, setCommissionRate] = useState(member?.commission_rate ? (member.commission_rate * 100).toString() : '50'); // Convert to percentage for input
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(member?.photo_url || null);
     const [loading, setLoading] = useState(false);
@@ -66,10 +66,10 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 user_id: user.id,
                 name,
                 role,
+                slug: slug || name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
                 bio,
                 active,
-                photo_url: photoUrl,
-                commission_rate: parseFloat(commissionRate) / 100 // Convert back to decimal
+                photo_url: photoUrl
             };
 
             if (member?.id) {
@@ -151,6 +151,21 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     </div>
 
                     <div>
+                        <label className="text-white font-mono text-xs mb-1 block">Link Personalizado (Slug)</label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-neutral-500 text-xs">.../pro/</span>
+                            <input
+                                type="text"
+                                value={slug}
+                                onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                                className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                placeholder="joao-silva"
+                            />
+                        </div>
+                        <p className="text-neutral-500 text-[10px] mt-1">Deixe em branco para gerar automaticamente.</p>
+                    </div>
+
+                    <div>
                         <label className="text-white font-mono text-xs mb-1 block">Bio (Opcional)</label>
                         <textarea
                             value={bio}
@@ -159,24 +174,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} resize-none`}
                             placeholder="Breve descrição..."
                         />
-                    </div>
-
-                    <div>
-                        <label className="text-white font-mono text-xs mb-1 block">Taxa de Comissão (%)</label>
-                        <input
-                            type="number"
-                            required
-                            value={commissionRate}
-                            onChange={e => setCommissionRate(e.target.value)}
-                            min="0"
-                            max="100"
-                            step="1"
-                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
-                            placeholder="50"
-                        />
-                        <p className="text-neutral-500 text-xs mt-1">
-                            Porcentagem da receita do serviço que o profissional recebe.
-                        </p>
                     </div>
 
                     <div className="flex items-center gap-2">

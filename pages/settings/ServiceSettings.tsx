@@ -257,14 +257,7 @@ export const ServiceSettings: React.FC = () => {
                     />
                 )}
 
-                {/* Debug Info (Temporary) */}
-                <div className="mt-8 p-4 bg-black/50 rounded text-xs font-mono text-neutral-600">
-                    <p>Debug Info:</p>
-                    <p>User ID: {user?.id}</p>
-                    <p>Categories: {categories.length}</p>
-                    <p>Services: {services.length}</p>
-                    <button onClick={fetchData} className="mt-2 underline hover:text-white">Forçar Recarregamento</button>
-                </div>
+
             </div>
         </SettingsLayout>
     );

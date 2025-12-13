@@ -3,7 +3,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -30,6 +30,21 @@ export const Finance: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
   const [activeTab, setActiveTab] = useState<FinanceTabType>('overview');
+
+  // New Transaction Modal State
+  const [showNewTransactionModal, setShowNewTransactionModal] = useState(false);
+  const [newTransactionType, setNewTransactionType] = useState<'income' | 'expense'>('income');
+  const [newTransactionDescription, setNewTransactionDescription] = useState('');
+  const [newTransactionAmount, setNewTransactionAmount] = useState('');
+  const [newTransactionDate, setNewTransactionDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newTransactionTime, setNewTransactionTime] = useState('');
+  const [newTransactionService, setNewTransactionService] = useState('');
+  const [newTransactionClient, setNewTransactionClient] = useState('');
+  const [newTransactionProfessional, setNewTransactionProfessional] = useState('');
+  const [savingTransaction, setSavingTransaction] = useState(false);
+  const [services, setServices] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [professionals, setProfessionals] = useState<any[]>([]);
 
   // Month/Year selection
   const currentDate = new Date();
@@ -176,12 +191,12 @@ export const Finance: React.FC = () => {
     if (!confirm('Tem certeza que deseja excluir esta transação? Esta ação é irreversível.')) return;
 
     try {
-        await supabase.from('finance_records').delete().eq('id', transactionId);
-        alert('Transação excluída com sucesso!');
-        fetchFinanceData(); // Refresh finance data
+      await supabase.from('finance_records').delete().eq('id', transactionId);
+      alert('Transação excluída com sucesso!');
+      fetchFinanceData(); // Refresh finance data
     } catch (error) {
-        console.error('Error deleting transaction:', error);
-        alert('Erro ao excluir transação.');
+      console.error('Error deleting transaction:', error);
+      alert('Erro ao excluir transação.');
     }
   };
 
@@ -221,6 +236,99 @@ export const Finance: React.FC = () => {
     setShowFilterModal(false);
   };
 
+  // Fetch dropdown data for new transaction modal
+  const fetchDropdownData = async () => {
+    if (!user) return;
+    try {
+      const [servicesRes, clientsRes, professionalsRes] = await Promise.all([
+        supabase.from('services').select('id, name').eq('user_id', user.id),
+        supabase.from('clients').select('id, name').eq('user_id', user.id).order('name'),
+        supabase.from('team_members').select('id, name').eq('user_id', user.id).eq('active', true).order('name')
+      ]);
+
+      setServices(servicesRes.data || []);
+      setClients(clientsRes.data || []);
+      setProfessionals(professionalsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+    }
+  };
+
+  const handleOpenNewTransaction = () => {
+    fetchDropdownData();
+    setNewTransactionType('income');
+    setNewTransactionDescription('');
+    setNewTransactionAmount('');
+    setNewTransactionDate(new Date().toISOString().split('T')[0]);
+    setNewTransactionTime('');
+    setNewTransactionService('');
+    setNewTransactionClient('');
+    setNewTransactionProfessional('');
+    setShowNewTransactionModal(true);
+  };
+
+  const handleCreateTransaction = async () => {
+    if (!user || !newTransactionAmount || !newTransactionDescription) {
+      alert('Por favor, preencha pelo menos a descrição e o valor.');
+      return;
+    }
+
+    setSavingTransaction(true);
+    try {
+      const amount = parseFloat(newTransactionAmount);
+      if (isNaN(amount) || amount <= 0) {
+        alert('Por favor, insira um valor válido.');
+        setSavingTransaction(false);
+        return;
+      }
+
+      // Find selected names for display
+      const serviceName = services.find(s => s.id === newTransactionService)?.name || '';
+      const clientName = clients.find(c => c.id === newTransactionClient)?.name || '';
+      const professionalName = professionals.find(p => p.id === newTransactionProfessional)?.name || 'Manual';
+
+      // Create date with time if provided
+      let transactionDateTime = new Date(newTransactionDate);
+      if (newTransactionTime) {
+        const [hours, minutes] = newTransactionTime.split(':');
+        transactionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      }
+
+      const transactionData: any = {
+        user_id: user.id,
+        barber_name: professionalName,
+        professional_id: newTransactionProfessional || null,
+        revenue: newTransactionType === 'income' ? amount : 0,
+        commission_value: newTransactionType === 'expense' ? amount : 0,
+        commission_rate: 0,
+        created_at: transactionDateTime.toISOString()
+      };
+
+      // Add optional fields if they have values
+      if (newTransactionService) {
+        transactionData.service_name = serviceName;
+      }
+      if (newTransactionClient) {
+        transactionData.client_name = clientName;
+      }
+
+      const { error } = await supabase
+        .from('finance_records')
+        .insert(transactionData);
+
+      if (error) throw error;
+
+      alert(`✅ ${newTransactionType === 'income' ? 'Receita' : 'Despesa'} registrada com sucesso!`);
+      setShowNewTransactionModal(false);
+      fetchFinanceData();
+    } catch (error: any) {
+      console.error('Error creating transaction:', error);
+      alert(`❌ Erro ao registrar transação: ${error.message || JSON.stringify(error)}`);
+    } finally {
+      setSavingTransaction(false);
+    }
+  };
+
   return (
     <div className="space-y-6 md:space-y-8 pb-20">
       {/* Header */}
@@ -235,6 +343,9 @@ export const Finance: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
+          <BrutalButton variant="primary" size="sm" icon={<Plus />} onClick={handleOpenNewTransaction}>
+            Nova Transação
+          </BrutalButton>
           <BrutalButton variant="secondary" size="sm" icon={<Download />} onClick={handleExport}>
             Exportar
           </BrutalButton>
@@ -420,13 +531,13 @@ export const Finance: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-3 text-right">
-                          <button
-                              onClick={() => handleDeleteTransaction(t.id)}
-                              className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Excluir transação"
-                          >
-                              <Trash2 className="w-4 h-4" />
-                          </button>
+                        <button
+                          onClick={() => handleDeleteTransaction(t.id)}
+                          className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Excluir transação"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -457,6 +568,168 @@ export const Finance: React.FC = () => {
 
       {activeTab === 'commissions' && (
         <CommissionsManagement accentColor={accentColor} currencySymbol={currencySymbol} />
+      )}
+
+      {/* New Transaction Modal */}
+      {showNewTransactionModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-neutral-900 border-2 border-neutral-800 rounded-xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-heading text-xl uppercase flex items-center gap-2">
+                <DollarSign className={`w-6 h-6 ${accentText}`} />
+                Nova Transação
+              </h3>
+              <button
+                onClick={() => setShowNewTransactionModal(false)}
+                className="text-neutral-400 hover:text-white transition-colors p-1 hover:bg-neutral-800 rounded-full"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Type Selector */}
+              <div>
+                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Tipo</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setNewTransactionType('income')}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'income'
+                      ? 'bg-green-500/20 border-green-500 text-green-500'
+                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                      }`}
+                  >
+                    + Receita
+                  </button>
+                  <button
+                    onClick={() => setNewTransactionType('expense')}
+                    className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'expense'
+                      ? 'bg-red-500/20 border-red-500 text-red-500'
+                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                      }`}
+                  >
+                    - Despesa
+                  </button>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Descrição *</label>
+                <input
+                  type="text"
+                  value={newTransactionDescription}
+                  onChange={(e) => setNewTransactionDescription(e.target.value)}
+                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  placeholder="Ex: Venda de produto, Pagamento de aluguel..."
+                  required
+                />
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Valor ({currencySymbol}) *</label>
+                <input
+                  type="number"
+                  value={newTransactionAmount}
+                  onChange={(e) => setNewTransactionAmount(e.target.value)}
+                  step="0.01"
+                  min="0"
+                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white font-mono text-lg focus:outline-none focus:border-${accentColor} transition-colors`}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              {/* Date and Time */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Data</label>
+                  <input
+                    type="date"
+                    value={newTransactionDate}
+                    onChange={(e) => setNewTransactionDate(e.target.value)}
+                    className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  />
+                </div>
+                <div>
+                  <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Horário (opcional)</label>
+                  <input
+                    type="time"
+                    value={newTransactionTime}
+                    onChange={(e) => setNewTransactionTime(e.target.value)}
+                    className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  />
+                </div>
+              </div>
+
+              {/* Service */}
+              <div>
+                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Serviço (opcional)</label>
+                <select
+                  value={newTransactionService}
+                  onChange={(e) => setNewTransactionService(e.target.value)}
+                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                >
+                  <option value="">Selecione um serviço</option>
+                  {services.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Client */}
+              <div>
+                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Cliente (opcional)</label>
+                <select
+                  value={newTransactionClient}
+                  onChange={(e) => setNewTransactionClient(e.target.value)}
+                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                >
+                  <option value="">Selecione um cliente</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Professional */}
+              <div>
+                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Profissional (opcional)</label>
+                <select
+                  value={newTransactionProfessional}
+                  onChange={(e) => setNewTransactionProfessional(e.target.value)}
+                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                >
+                  <option value="">Selecione um profissional</option>
+                  {professionals.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4">
+                <BrutalButton
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setShowNewTransactionModal(false)}
+                >
+                  Cancelar
+                </BrutalButton>
+                <BrutalButton
+                  variant="primary"
+                  className="flex-1"
+                  onClick={handleCreateTransaction}
+                  disabled={savingTransaction}
+                  icon={savingTransaction ? <Loader2 className="animate-spin" /> : undefined}
+                >
+                  {savingTransaction ? 'Salvando...' : 'Registrar'}
+                </BrutalButton>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

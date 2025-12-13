@@ -36,3 +36,12 @@ export interface FinanceRecord {
   commissionValue: number;
   autoSplit: boolean;
 }
+
+export interface PublicClient {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  photo_url?: string | null;
+  business_id: string;
+}

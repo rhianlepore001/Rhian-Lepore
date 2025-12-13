@@ -6,7 +6,6 @@ import { BrutalButton } from '../components/BrutalButton';
 import { Plus, Search, User, Star } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { calculateTier, getTierConfig } from '../utils/tierSystem';
 
 export const Clients: React.FC = () => {
     const { user, userType } = useAuth();
@@ -121,10 +120,11 @@ export const Clients: React.FC = () => {
         }
     };
 
-    const filteredClients = clients.filter(client =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.phone?.includes(searchTerm)
-    );
+    const filteredClients = clients.filter(client => {
+        const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            client.phone?.includes(searchTerm);
+        return matchesSearch;
+    });
 
     return (
         <div className="space-y-6 relative">
@@ -132,6 +132,8 @@ export const Clients: React.FC = () => {
                 <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Clientes</h2>
                 <BrutalButton variant="primary" icon={<Plus />} onClick={() => setShowModal(true)} className="w-full md:w-auto">Novo Cliente</BrutalButton>
             </div>
+
+
 
             {/* Search Bar */}
             <div className="relative">
@@ -152,9 +154,8 @@ export const Clients: React.FC = () => {
                     <div className="col-span-full text-center text-text-secondary p-10">Nenhum cliente encontrado.</div>
                 ) : (
                     filteredClients.map(client => {
-                        const tier = calculateTier(client.total_visits || 0);
-                        const tierConfig = getTierConfig(tier);
                         const rating = client.rating || 0;
+                        const totalVisits = client.total_visits || 0;
 
                         return (
                             <Link key={client.id} to={`/clientes/${client.id}`}>
@@ -168,8 +169,8 @@ export const Clients: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
-                                            <span className={`text-xs font-mono uppercase px-2 py-1 ${tierConfig.bgColor} ${tierConfig.borderColor} ${tierConfig.color} border`}>
-                                                {tier}
+                                            <span className="text-xs font-mono text-neutral-400">
+                                                {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
                                             </span>
                                             {rating > 0 && (
                                                 <div className="flex gap-0.5">
@@ -245,7 +246,7 @@ export const Clients: React.FC = () => {
                                     onChange={(e) => setPhoto(e.target.files?.[0] || null)}
                                     className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-accent-gold file:text-black hover:file:bg-accent-goldHover"
                                 />
-                                <p className="text-xs text-neutral-500 mt-1">⚠️ Upload de fotos será configurado em breve</p>
+                                <p className="text-xs text-neutral-500 mt-1">Formatos aceitos: JPG, PNG</p>
                             </div>
 
                             <button

@@ -249,8 +249,8 @@ export const Marketing: React.FC = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === tab.id
-                                ? `${accentBg} text-black`
-                                : 'bg-neutral-800 text-white hover:bg-neutral-700'
+                            ? `${accentBg} text-black`
+                            : 'bg-neutral-800 text-white hover:bg-neutral-700'
                             }`}
                     >
                         <tab.icon className="w-4 h-4" />
@@ -259,42 +259,44 @@ export const Marketing: React.FC = () => {
                 ))}
             </div>
 
-            {/* Stats Cards */}
-            {activeTab === 'campaigns' && (
+            {/* Stats Cards - Only show if there are campaigns */}
+            {activeTab === 'campaigns' && campaigns.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <BrutalCard>
                         <div className="flex justify-between items-start mb-2">
-                            <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Alcance Total</p>
-                            <InfoButton text="Número total de clientes impactados por suas campanhas." />
+                            <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Campanhas Ativas</p>
+                            <InfoButton text="Campanhas em rascunho ou agendadas." />
                         </div>
-                        <h3 className={`text-3xl font-heading ${accentText}`}>1,240</h3>
-                        <div className="flex items-center gap-1 text-green-500 text-xs font-mono mt-2">
-                            <Users className="w-3 h-3" />
-                            <span>+12% este mês</span>
-                        </div>
-                    </BrutalCard>
-
-                    <BrutalCard>
-                        <div className="flex justify-between items-start mb-2">
-                            <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Taxa de Abertura</p>
-                            <InfoButton text="Porcentagem de clientes que visualizaram suas mensagens." />
-                        </div>
-                        <h3 className="text-3xl font-heading text-white">68%</h3>
+                        <h3 className={`text-3xl font-heading ${accentText}`}>{campaigns.filter(c => c.status !== 'sent').length}</h3>
                         <div className="flex items-center gap-1 text-text-secondary text-xs font-mono mt-2">
-                            <BarChart2 className="w-3 h-3" />
-                            <span>Média do setor: 45%</span>
+                            <Megaphone className="w-3 h-3" />
+                            <span>Total: {campaigns.length} campanhas</span>
                         </div>
                     </BrutalCard>
 
                     <BrutalCard>
                         <div className="flex justify-between items-start mb-2">
-                            <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Retorno (ROI)</p>
-                            <InfoButton text="Receita gerada diretamente através das campanhas." />
+                            <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Campanhas Enviadas</p>
+                            <InfoButton text="Campanhas já enviadas aos clientes." />
                         </div>
-                        <h3 className="text-3xl font-heading text-white">R$ 4.5k</h3>
-                        <div className="flex items-center gap-1 text-green-500 text-xs font-mono mt-2">
+                        <h3 className="text-3xl font-heading text-white">{campaigns.filter(c => c.status === 'sent').length}</h3>
+                        <div className="flex items-center gap-1 text-text-secondary text-xs font-mono mt-2">
                             <CheckCircle className="w-3 h-3" />
-                            <span>15 agendamentos</span>
+                            <span>Histórico de envios</span>
+                        </div>
+                    </BrutalCard>
+
+                    <BrutalCard>
+                        <div className="flex justify-between items-start mb-2">
+                            <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Audiência Total</p>
+                            <InfoButton text="Total de destinatários alcançados." />
+                        </div>
+                        <h3 className="text-3xl font-heading text-white">
+                            {campaigns.reduce((sum, c) => sum + (c.audience_count || 0), 0)}
+                        </h3>
+                        <div className="flex items-center gap-1 text-text-secondary text-xs font-mono mt-2">
+                            <Users className="w-3 h-3" />
+                            <span>Clientes impactados</span>
                         </div>
                     </BrutalCard>
                 </div>
@@ -303,43 +305,54 @@ export const Marketing: React.FC = () => {
             {/* Tab Content */}
             {activeTab === 'campaigns' && (
                 <BrutalCard title="Minhas Campanhas">
-                    <div className="space-y-4">
-                        {campaigns.map((campaign) => (
-                            <div key={campaign.id} className="flex items-center justify-between p-4 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors group">
-                                <div className="flex items-center gap-4">
-                                    <div className={`p-3 rounded-full ${campaign.type === 'whatsapp' ? 'bg-green-500/10 text-green-500' :
-                                        campaign.type === 'sms' ? 'bg-blue-500/10 text-blue-500' :
-                                            'bg-yellow-500/10 text-yellow-500'
-                                        }`}>
-                                        {campaign.type === 'whatsapp' ? <MessageSquare className="w-5 h-5" /> :
-                                            campaign.type === 'sms' ? <Megaphone className="w-5 h-5" /> :
-                                                <Mail className="w-5 h-5" />}
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-bold text-lg">{campaign.name}</h4>
-                                        <div className="flex items-center gap-3 text-xs font-mono text-text-secondary mt-1">
-                                            <span className="uppercase">{campaign.type}</span>
-                                            <span>•</span>
-                                            <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
-                                            <span>•</span>
-                                            <span>{campaign.audience_count} destinatários</span>
+                    {campaigns.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Megaphone className="w-16 h-16 mx-auto text-neutral-700 mb-4" />
+                            <h4 className="text-white font-heading text-xl mb-2">Nenhuma campanha ainda</h4>
+                            <p className="text-text-secondary text-sm mb-6">Crie sua primeira campanha de marketing para engajar seus clientes!</p>
+                            <BrutalButton variant="primary" icon={<Plus />} onClick={() => setShowNewCampaign(true)}>
+                                Criar Campanha
+                            </BrutalButton>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {campaigns.map((campaign) => (
+                                <div key={campaign.id} className="flex items-center justify-between p-4 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors group">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-3 rounded-full ${campaign.type === 'whatsapp' ? 'bg-green-500/10 text-green-500' :
+                                            campaign.type === 'sms' ? 'bg-blue-500/10 text-blue-500' :
+                                                'bg-yellow-500/10 text-yellow-500'
+                                            }`}>
+                                            {campaign.type === 'whatsapp' ? <MessageSquare className="w-5 h-5" /> :
+                                                campaign.type === 'sms' ? <Megaphone className="w-5 h-5" /> :
+                                                    <Mail className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold text-lg">{campaign.name}</h4>
+                                            <div className="flex items-center gap-3 text-xs font-mono text-text-secondary mt-1">
+                                                <span className="uppercase">{campaign.type}</span>
+                                                <span>•</span>
+                                                <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
+                                                <span>•</span>
+                                                <span>{campaign.audience_count} destinatários</span>
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="flex items-center gap-4">
+                                        <span className={`px-3 py-1 rounded text-xs font-bold uppercase ${campaign.status === 'sent' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                                            campaign.status === 'scheduled' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
+                                                'bg-neutral-800 text-neutral-400 border border-neutral-700'
+                                            }`}>
+                                            {campaign.status === 'sent' ? 'Enviada' :
+                                                campaign.status === 'scheduled' ? 'Agendada' :
+                                                    'Rascunho'}
+                                        </span>
+                                        <BrutalButton size="sm" variant="ghost">Editar</BrutalButton>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <span className={`px-3 py-1 rounded text-xs font-bold uppercase ${campaign.status === 'sent' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                                        campaign.status === 'scheduled' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                                            'bg-neutral-800 text-neutral-400 border border-neutral-700'
-                                        }`}>
-                                        {campaign.status === 'sent' ? 'Enviada' :
-                                            campaign.status === 'scheduled' ? 'Agendada' :
-                                                'Rascunho'}
-                                    </span>
-                                    <BrutalButton size="sm" variant="ghost">Editar</BrutalButton>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </BrutalCard>
             )}
 
@@ -580,9 +593,9 @@ export const Marketing: React.FC = () => {
                                                 <div>
                                                     <h4 className="text-white font-heading text-xl mb-2">{suggestion.name}</h4>
                                                     <span className={`inline-block px-3 py-1 rounded text-xs font-bold uppercase ${suggestion.type === 'birthday' ? 'bg-purple-500/10 text-purple-500' :
-                                                            suggestion.type === 'reactivation' ? 'bg-blue-500/10 text-blue-500' :
-                                                                suggestion.type === 'promotion' ? 'bg-green-500/10 text-green-500' :
-                                                                    'bg-yellow-500/10 text-yellow-500'
+                                                        suggestion.type === 'reactivation' ? 'bg-blue-500/10 text-blue-500' :
+                                                            suggestion.type === 'promotion' ? 'bg-green-500/10 text-green-500' :
+                                                                'bg-yellow-500/10 text-yellow-500'
                                                         }`}>
                                                         {suggestion.type}
                                                     </span>

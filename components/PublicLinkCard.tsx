@@ -6,10 +6,11 @@ import { supabase } from '../lib/supabase';
 
 interface PublicLinkCardProps {
     businessSlug: string | null;
+    publicBookingEnabled?: boolean;
     onSlugCreated?: () => void;
 }
 
-export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, onSlugCreated }) => {
+export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, publicBookingEnabled = true, onSlugCreated }) => {
     const { userType, user } = useAuth();
     const [copied, setCopied] = useState(false);
 
@@ -207,6 +208,25 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, on
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
+
+    // Show disabled state when public booking is off
+    if (!publicBookingEnabled) {
+        return (
+            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-yellow-500">
+                <div className="flex items-start gap-4">
+                    <div className="p-3 bg-yellow-500/10 rounded-lg">
+                        <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-white font-heading text-lg uppercase mb-1">Agendamento Público Desativado</h3>
+                        <p className="text-neutral-400 text-sm">
+                            Ative o agendamento público acima para permitir que clientes agendem através do seu link.
+                        </p>
+                    </div>
+                </div>
+            </BrutalCard>
+        );
+    }
 
     return (
         <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6">

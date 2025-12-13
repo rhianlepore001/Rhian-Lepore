@@ -338,7 +338,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">📅 Data Inicial do Período</label>
+                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Início do Período</label>
                                     <input
                                         type="date"
                                         value={paymentStartDate}
@@ -348,7 +348,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">📅 Data Final do Período</label>
+                                    <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Fim do Período</label>
                                     <input
                                         type="date"
                                         value={paymentEndDate}

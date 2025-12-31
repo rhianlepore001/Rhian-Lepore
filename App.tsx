@@ -72,6 +72,16 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
 };
 
 const AppRoutes: React.FC = () => {
+  // Detect if user arrived with recovery tokens and redirect to update-password
+  React.useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('access_token') && hash.includes('type=recovery')) {
+      // Extract the tokens and redirect to update-password while preserving them
+      const tokenPart = hash.substring(hash.indexOf('access_token'));
+      window.location.hash = '/update-password?' + tokenPart;
+    }
+  }, []);
+
   return (
     <Routes>
       {/* Public / Standalone Routes */}

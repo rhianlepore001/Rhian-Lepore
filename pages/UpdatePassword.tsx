@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff, Save } from 'lucide-react';
+import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
 import { Screw } from '../components/Screw';
 
 export const UpdatePassword: React.FC = () => {
@@ -10,21 +10,73 @@ export const UpdatePassword: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [initializing, setInitializing] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        const checkSession = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (!session || error) {
-                setError('Sessão expirada ou link inválido. Por favor, solicite a recuperação novamente.');
+        const initializeSession = async () => {
+            try {
+                // Step 1: Try to get existing session first
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session) {
+                    // Session already exists, we're good
+                    setInitializing(false);
+                    return;
+                }
+
+                // Step 2: If no session, try to extract tokens from URL
+                // Tokens can be in format: #access_token=xxx OR #/update-password?access_token=xxx
+                const fullHash = window.location.hash;
+                let accessToken = null;
+                let refreshToken = null;
+                let type = null;
+
+                // Try parsing as query string after the path
+                if (fullHash.includes('?')) {
+                    const queryPart = fullHash.substring(fullHash.indexOf('?') + 1);
+                    const queryParams = new URLSearchParams(queryPart);
+                    accessToken = queryParams.get('access_token');
+                    refreshToken = queryParams.get('refresh_token');
+                    type = queryParams.get('type');
+                }
+
+                // Fallback: try parsing as raw hash params (old format)
+                if (!accessToken && fullHash.includes('access_token')) {
+                    const hashParams = new URLSearchParams(fullHash.substring(1));
+                    accessToken = hashParams.get('access_token');
+                    refreshToken = hashParams.get('refresh_token');
+                    type = hashParams.get('type');
+                }
+
+                if (accessToken && refreshToken && type === 'recovery') {
+                    // Set the session manually using the tokens from URL
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken,
+                    });
+
+                    if (sessionError) {
+                        console.error('Error setting session:', sessionError);
+                        setError('Link de recuperação inválido ou expirado. Por favor, solicite novamente.');
+                    } else {
+                        // Clean the URL hash after extracting tokens
+                        window.history.replaceState(null, '', window.location.pathname + '#/update-password');
+                    }
+                } else {
+                    // No tokens found and no existing session
+                    setError('Sessão expirada ou link inválido. Por favor, solicite a recuperação novamente.');
+                }
+            } catch (err) {
+                console.error('Error initializing session:', err);
+                setError('Erro ao processar o link de recuperação.');
+            } finally {
+                setInitializing(false);
             }
         };
-        // Give it a tiny moment for Supabase to sync the session from the URL
-        const timer = setTimeout(() => {
-            checkSession();
-        }, 500);
-        return () => clearTimeout(timer);
+
+        initializeSession();
     }, []);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -62,6 +114,17 @@ export const UpdatePassword: React.FC = () => {
         }
     };
 
+    if (initializing) {
+        return (
+            <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-green-500 animate-spin mx-auto mb-4" />
+                    <p className="text-neutral-400 font-mono text-sm">Verificando link de recuperação...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4 relative overflow-hidden">
             {/* Background Accents */}
@@ -88,7 +151,7 @@ export const UpdatePassword: React.FC = () => {
 
                             {error && (
                                 <div className="p-4 bg-red-500/10 border-2 border-red-500 text-red-500 text-xs font-mono mb-6 flex items-start gap-3">
-                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                     <span>{error}</span>
                                 </div>
                             )}

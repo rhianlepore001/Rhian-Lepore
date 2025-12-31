@@ -14,16 +14,17 @@ export const UpdatePassword: React.FC = () => {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        // We can check if the user is actually authorized via recovery link
-        // But the simplest is just trying to update. If session exists, it works.
         const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                // If no session, it might be an invalid or expired link
-                // But we let the update call handle the error for better UX
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (!session || error) {
+                setError('Sessão expirada ou link inválido. Por favor, solicite a recuperação novamente.');
             }
         };
-        checkSession();
+        // Give it a tiny moment for Supabase to sync the session from the URL
+        const timer = setTimeout(() => {
+            checkSession();
+        }, 500);
+        return () => clearTimeout(timer);
     }, []);
 
     const handleUpdatePassword = async (e: React.FormEvent) => {

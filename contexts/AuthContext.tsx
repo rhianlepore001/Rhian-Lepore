@@ -74,8 +74,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+
+      if (event === 'PASSWORD_RECOVERY') {
+        console.log('Password recovery event detected, redirecting...');
+        setLoading(true);
+        // Force a small delay to ensure cookie/localStorage sync
+        setTimeout(() => {
+          window.location.hash = '/update-password';
+          setLoading(false);
+        }, 500);
+        return; // Don't proceed to loading false yet
+      }
+
       if (session?.user?.id) {
         // Re-fetch profile data on sign in/change
         fetchProfileData(session.user.id);

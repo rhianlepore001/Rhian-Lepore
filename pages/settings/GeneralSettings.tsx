@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
 import { BrandIdentitySection } from '../../components/BrandIdentitySection';
+import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
 import { SaveFooter } from '../../components/SaveFooter';
 
 export const GeneralSettings: React.FC = () => {
@@ -161,7 +162,7 @@ export const GeneralSettings: React.FC = () => {
 
             setSaveStatus('saved');
             setHasChanges(false);
-            
+
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
@@ -208,6 +209,8 @@ export const GeneralSettings: React.FC = () => {
                     onCoverRemove={() => { setCoverFile(null); setCoverPreview(null); }}
                     accentColor={accentColor}
                 />
+
+                <BusinessGalleryManager accentColor={accentColor} />
 
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
                     <h3 className="text-white font-bold text-base md:text-lg mb-4">

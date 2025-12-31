@@ -23,6 +23,8 @@ import { PublicClientProvider } from './contexts/PublicClientContext';
 import { ProfessionalPortfolio } from './pages/ProfessionalPortfolio';
 
 import { Placeholder } from './pages/Placeholder';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { UpdatePassword } from './pages/UpdatePassword';
 
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
@@ -72,6 +74,8 @@ const AppRoutes: React.FC = () => {
       {/* Public / Standalone Routes */}
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/update-password" element={<UpdatePassword />} />
       <Route path="/book/:slug" element={<PublicBooking />} />
       <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
       <Route path="/onboarding" element={

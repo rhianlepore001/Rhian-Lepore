@@ -12,6 +12,7 @@ interface CommissionDue {
     professional_id: string;
     professional_name: string;
     photo_url: string | null;
+    is_owner: boolean;
     total_due: number;
     total_earnings_month: number;
     total_pending_records: number;
@@ -253,11 +254,21 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                 </div>
                                             </div>
                                             <div>
-                                                <h3 className="text-base md:text-xl font-bold text-white leading-tight">
-                                                    {professional.professional_name}
-                                                </h3>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-base md:text-xl font-bold text-white leading-tight">
+                                                        {professional.professional_name}
+                                                    </h3>
+                                                    {professional.is_owner && (
+                                                        <span className={`px-2 py-0.5 rounded-full text-[8px] md:text-[10px] font-bold uppercase tracking-wider bg-white/10 text-white border border-white/20`}>
+                                                            Dono
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-neutral-500 text-[9px] md:text-[10px] font-mono mt-1 uppercase tracking-tight flex items-center gap-1 group-hover:text-neutral-400 transition-colors">
-                                                    Escala de Comissionamento <TrendingUp className="w-2.5 h-2.5" />
+                                                    {professional.is_owner
+                                                        ? 'Pro-labore Configurado'
+                                                        : 'Escala de Comissionamento'}
+                                                    <TrendingUp className="w-2.5 h-2.5" />
                                                 </p>
                                             </div>
                                         </div>

@@ -51,6 +51,7 @@ export const PublicBooking: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
+    const [gallery, setGallery] = useState<any[]>([]); // New state for gallery
     const [loading, setLoading] = useState(true);
     const [step, setStep] = useState<'services' | 'datetime' | 'contact'>('services');
 
@@ -97,10 +98,10 @@ export const PublicBooking: React.FC = () => {
     useEffect(() => {
         const fetchBusinessData = async () => {
             try {
-                // Fetch business profile by slug
+                // Fetch business profile by slug - expanded columns
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
-                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection')
+                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection, logo_url, cover_photo_url, address_street, instagram_handle')
                     .eq('business_slug', slug)
                     .single();
 
@@ -130,7 +131,7 @@ export const PublicBooking: React.FC = () => {
                     if (servicesError) throw servicesError;
                     setServices(servicesData || []);
 
-                    // Fetch professionals if feature is enabled (or check settings later)
+                    // Fetch professionals
                     const { data: professionalsData, error: professionalsError } = await supabase
                         .from('team_members')
                         .select('*')
@@ -139,12 +140,20 @@ export const PublicBooking: React.FC = () => {
                         .order('display_order');
 
                     if (professionalsError) throw professionalsError;
-                    // Map to ensure name property exists if needed
                     const mappedPros = (professionalsData || []).map((p: any) => ({
                         ...p,
-                        name: p.full_name || p.name // Ensure name exists
+                        name: p.full_name || p.name
                     }));
                     setProfessionals(mappedPros);
+
+                    // Fetch gallery
+                    const { data: galleryData } = await supabase
+                        .from('business_galleries')
+                        .select('*')
+                        .eq('user_id', profileData.id)
+                        .eq('is_active', true)
+                        .order('display_order');
+                    setGallery(galleryData || []);
                 }
             } catch (error) {
                 console.error('Error fetching business data:', error);
@@ -241,355 +250,425 @@ export const PublicBooking: React.FC = () => {
     const cardClass = isBeauty
         ? 'bg-beauty-card/80 backdrop-blur-xl border border-white/10 rounded-2xl'
         : 'bg-brutal-card border-4 border-neutral-800';
+    const currencySymbol = businessSettings?.currency_symbol || 'R$';
+
+    const accentColorValue = isBeauty ? '#A78BFA' : '#C29B40';
 
     return (
-        <div className={`h-screen overflow-y-auto ${bgClass} py-8 px-4`}>
-            <div className="max-w-4xl mx-auto">
-
-                {/* STEP 1: HERO BRANDING */}
-                <div className={`${cardClass} p-8 mb-8`}>
-                    <div className="text-center mb-6">
-                        {isBeauty ? (
-                            <Sparkles className="w-16 h-16 text-beauty-neon mx-auto mb-4" />
-                        ) : (
-                            <Scissors className="w-16 h-16 text-accent-gold mx-auto mb-4" />
-                        )}
-                        <h1 className="text-4xl md:text-5xl font-heading text-white uppercase mb-2">
-                            {business.business_name}
-                        </h1>
-
-                        {/* Social Proof */}
-                        <div className="flex items-center justify-center gap-2 text-sm">
-                            <div className="flex items-center gap-1">
-                                <Star className={`w-5 h-5 text-${accentColor} fill-current`} />
-                                <span className="text-white font-bold">{business.google_rating}</span>
-                            </div>
-                            <span className="text-neutral-400">({business.total_reviews} avaliações)</span>
-                        </div>
-                        <p className="text-neutral-400 text-sm mt-2 italic">
-                            &quot;O melhor atendimento da região! Sempre saio satisfeito.&quot; - Cliente Verificado
-                        </p>
-                    </div>
-
-                    {/* Progress Indicator */}
-                    <div className="flex items-center justify-center gap-4 mt-8">
-                        <div className={`flex items-center gap-2 ${step === 'services' ? `text-${accentColor}` : 'text-neutral-500'}`}>
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${step === 'services' ? `border-${accentColor}` : 'border-neutral-500'}`}>
-                                1
-                            </div>
-                            <span className="text-sm font-mono hidden md:block">Serviços</span>
-                        </div>
-                        <div className="w-12 h-0.5 bg-neutral-700"></div>
-                        <div className={`flex items-center gap-2 ${step === 'datetime' ? `text-${accentColor}` : 'text-neutral-500'}`}>
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${step === 'datetime' ? `border-${accentColor}` : 'border-neutral-500'}`}>
-                                2
-                            </div>
-                            <span className="text-sm font-mono hidden md:block">Data/Hora</span>
-                        </div>
-                        <div className="w-12 h-0.5 bg-neutral-700"></div>
-                        <div className={`flex items-center gap-2 ${step === 'contact' ? `text-${accentColor}` : 'text-neutral-500'}`}>
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${step === 'contact' ? `border-${accentColor}` : 'border-neutral-500'}`}>
-                                3
-                            </div>
-                            <span className="text-sm font-mono hidden md:block">Confirmar</span>
-                        </div>
-                    </div>
+        <div className={`min-h-screen ${bgClass} font-sans selection:bg-${accentColor}/30`}>
+            {/* 1. CINEMATIC HERO SECTION */}
+            <div className="relative h-[60vh] md:h-[70vh] overflow-hidden">
+                {/* Background Cover */}
+                <div className="absolute inset-0">
+                    {business.cover_photo_url ? (
+                        <img
+                            src={business.cover_photo_url}
+                            alt="Cover"
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className={`w-full h-full ${isBeauty ? 'bg-gradient-to-br from-beauty-dark via-beauty-card to-beauty-neon/20' : 'bg-neutral-900 border-b-4 border-neutral-800'}`}></div>
+                    )}
+                    {/* Immersive Overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
                 </div>
 
-                {/* STEP 2: VISUAL SERVICE MENU */}
-                {step === 'services' && (
-                    <div>
-                        <h2 className="text-2xl font-heading text-white uppercase mb-6 text-center">
-                            Escolha seus Serviços
-                        </h2>
+                {/* Hero Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 px-4 text-center">
+                    {/* Logo/Avatar */}
+                    <div className={`relative w-24 h-24 md:w-32 md:h-32 mb-6 rounded-full p-1 bg-white/10 backdrop-blur-xl border-2 border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-700`}>
+                        {business.logo_url ? (
+                            <img src={business.logo_url} alt="Logo" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-neutral-800 rounded-full">
+                                <Scissors className={`w-10 h-10 md:w-14 md:h-14 text-${accentColor}`} />
+                            </div>
+                        )}
+                        {/* Status Pulse */}
+                        <div className="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                    </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            {services.map(service => {
-                                const isSelected = selectedServices.includes(service.id);
+                    <h1 className="text-4xl md:text-7xl font-heading text-white uppercase tracking-tighter mb-4 drop-shadow-2xl">
+                        {business.business_name}
+                    </h1>
 
-                                return (
-                                    <button
-                                        key={service.id}
-                                        onClick={() => toggleService(service.id)}
-                                        className={`
-                                            ${cardClass} overflow-hidden text-left transition-all
-                                            ${isSelected
-                                                ? `ring-4 ring-${accentColor} scale-[1.02] shadow-2xl`
-                                                : 'hover:scale-[1.01] hover:shadow-xl'
-                                            }
-                                            relative group
-                                        `}
-                                    >
-                                        {/* Service Image with Overlay */}
-                                        {service.image_url && (
-                                            <div className="relative w-full h-48 overflow-hidden">
-                                                <img
-                                                    src={service.image_url}
-                                                    alt={service.name}
-                                                    className={`w-full h-full object-cover transition-transform duration-300 ${isSelected ? 'scale-110' : 'group-hover:scale-105'}`}
-                                                />
-                                                {/* Gradient Overlay */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-
-                                                {/* Category Badge */}
-                                                {service.category && (
-                                                    <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${isBeauty ? 'bg-beauty-neon/90 text-black' : 'bg-accent-gold/90 text-black'}`}>
-                                                        {service.category}
-                                                    </div>
-                                                )}
-
-                                                {/* Selected Checkmark */}
-                                                {isSelected && (
-                                                    <div className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-${accentColor} flex items-center justify-center animate-bounce`}>
-                                                        <Check className="w-5 h-5 text-black font-bold" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Content */}
-                                        <div className="p-6">
-                                            {/* Title */}
-                                            <h3 className="text-2xl font-heading text-white mb-2 leading-tight">
-                                                {service.name}
-                                            </h3>
-
-                                            {/* Description */}
-                                            {service.description && (
-                                                <p className="text-sm text-neutral-400 mb-4 leading-relaxed line-clamp-2">
-                                                    {service.description}
-                                                </p>
-                                            )}
-
-                                            {/* Price & Duration - Prominent */}
-                                            <div className="flex items-end justify-between mt-4 pt-4 border-t border-neutral-700">
-                                                <div>
-                                                    <div className="text-neutral-400 text-xs uppercase tracking-wider mb-1">
-                                                        Preço
-                                                    </div>
-                                                    <div className={`text-4xl font-bold text-${accentColor} leading-none`}>
-                                                        R$ {service.price.toFixed(0)}
-                                                        <span className="text-lg">,{(service.price % 1).toFixed(2).substring(2)}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="flex items-center gap-1 text-neutral-400">
-                                                        <Clock className="w-4 h-4" />
-                                                        <span className="text-sm font-mono">{service.duration_minutes} min</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </button>
-                                );
-                            })}
+                    <div className="flex flex-wrap items-center justify-center gap-4 text-sm md:text-base">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                            <Star className={`w-4 h-4 text-${accentColor} fill-current`} />
+                            <span className="text-white font-bold">{business.google_rating || '5.0'}</span>
+                            <span className="text-neutral-400">({business.total_reviews || '0'})</span>
                         </div>
-
-                        {selectedServices.length > 0 && (
-                            <div className={`${cardClass} p-6`}>
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-white font-mono">Total:</span>
-                                    <span className={`text-3xl font-bold text-${accentColor}`}>
-                                        R$ {calculateTotal().toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center mb-6">
-                                    <span className="text-neutral-400 text-sm">Duração estimada:</span>
-                                    <span className="text-white">{calculateDuration()} minutos</span>
-                                </div>
-                                <button
-                                    onClick={() => setStep('datetime')}
-                                    className={`w-full py-4 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-xl' : 'bg-accent-gold hover:bg-accent-goldHover'} text-white font-heading text-lg uppercase tracking-wider transition-all`}
-                                >
-                                    Continuar para Data/Hora
-                                </button>
+                        {business.address_street && (
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-neutral-300">
+                                <Calendar className="w-4 h-4" />
+                                <span>{business.address_street.split(',')[0]}</span>
                             </div>
                         )}
                     </div>
-                )}
 
-                {/* STEP 3: DATE/TIME SELECTION */}
-                {step === 'datetime' && (
-                    <div>
-                        <button
-                            onClick={() => setStep('services')}
-                            className="text-neutral-400 hover:text-white mb-6 flex items-center gap-2"
-                        >
-                            ← Voltar aos Serviços
-                        </button>
+                    {/* Quick CTA */}
+                    <button
+                        onClick={() => document.getElementById('booking-start')?.scrollIntoView({ behavior: 'smooth' })}
+                        className={`mt-8 px-8 py-3 rounded-full font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl
+                            ${isBeauty ? 'bg-beauty-neon text-white shadow-beauty-neon/20' : 'bg-accent-gold text-black shadow-accent-gold/20'}
+                        `}
+                    >
+                        Agendar Agora
+                    </button>
+                </div>
+            </div>
 
-                        <h2 className="text-2xl font-heading text-white uppercase mb-6 text-center">
-                            Escolha Data e Horário
-                        </h2>
+            <div className="max-w-6xl mx-auto px-4 -mt-10 relative z-10 pb-32">
+                {/* 2. ABOUT & GALLERY GRID */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12" id="booking-start">
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-2 space-y-8">
 
-                        {/* Professional Selection (Conditional) */}
-                        {businessSettings?.enable_professional_selection !== false && (
-                            <div className="mb-8">
-                                <h3 className={`text-lg font-heading uppercase mb-4 ${isBeauty ? 'text-neutral-600' : 'text-white'}`}>
-                                    2. Escolha o Profissional
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <button
-                                        onClick={() => setSelectedProfessional('any')}
-                                        className={`
-                                            p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3
-                                            ${selectedProfessional === 'any'
-                                                ? `border-${accentColor} bg-${accentColor}/10`
-                                                : isBeauty ? 'border-neutral-200 hover:border-neutral-300' : 'border-neutral-800 hover:border-neutral-700'
-                                            }
-                                        `}
-                                    >
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isBeauty ? 'bg-neutral-100' : 'bg-neutral-800'}`}>
-                                            <Users className="w-6 h-6 text-neutral-500" />
-                                        </div>
-                                        <span className={`font-bold text-sm ${isBeauty ? 'text-neutral-800' : 'text-white'}`}>Qualquer um</span>
-                                    </button>
-
-                                    {professionals.map(pro => (
-                                        <button
-                                            key={pro.id}
-                                            onClick={() => setSelectedProfessional(pro.id)}
-                                            className={`
-                                                p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3
-                                                ${selectedProfessional === pro.id
-                                                    ? `border-${accentColor} bg-${accentColor}/10`
-                                                    : isBeauty ? 'border-neutral-200 hover:border-neutral-300' : 'border-neutral-800 hover:border-neutral-700'
-                                                }
-                                            `}
-                                        >
-                                            <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden">
-                                                {pro.photo_url ? (
-                                                    <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-neutral-700 text-white font-bold">
-                                                        {pro.name.charAt(0)}
-                                                    </div>
-                                                )}
+                        {/* Business Gallery (The Portfolio Part) */}
+                        {gallery.length > 0 && (
+                            <section className={`${cardClass} p-6 md:p-8 animate-in slide-in-from-bottom duration-500`}>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl md:text-2xl font-heading text-white uppercase tracking-tight flex items-center gap-2">
+                                        <Sparkles className={`w-5 h-5 text-${accentColor}`} />
+                                        Galeria de Trabalhos
+                                    </h2>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+                                    {gallery.map((item, idx) => (
+                                        <div key={item.id} className={`aspect-square rounded-lg overflow-hidden group cursor-pointer relative ${idx === 0 ? 'col-span-2 row-span-2' : ''}`}>
+                                            <img
+                                                src={item.image_url}
+                                                alt={item.title || "Trabalho"}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <div className="p-2 bg-white/20 backdrop-blur-md rounded-full">
+                                                    <Check className="w-5 h-5 text-white" />
+                                                </div>
                                             </div>
-                                            <span className={`font-bold text-sm ${isBeauty ? 'text-neutral-800' : 'text-white'}`}>{pro.name}</span>
-                                        </button>
+                                        </div>
                                     ))}
                                 </div>
-                            </div>
+                            </section>
                         )}
 
-                        {/* Visual Calendar */}
-                        <div className="mb-6">
-                            <CalendarPicker
-                                selectedDate={selectedDate}
-                                onDateSelect={setSelectedDate}
-                                isBeauty={isBeauty}
-                            />
-                        </div>
-
-                        {/* Time Grid (only show after date selected) */}
-                        {selectedDate && (
-                            <div className="mb-6">
-                                <TimeGrid
-                                    selectedTime={selectedTime}
-                                    onTimeSelect={setSelectedTime}
-                                    availableSlots={availableSlots}
-                                    isBeauty={isBeauty}
-                                />
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => setStep('contact')}
-                            disabled={!selectedDate || !selectedTime}
-                            className={`w-full py-4 mt-6 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-xl' : 'bg-accent-gold hover:bg-accent-goldHover'} text-white font-heading text-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                            Continuar para Confirmação
-                        </button>
-                    </div>
-                )}
-
-                {/* STEP 4: CONTACT & CHECKOUT */}
-                {step === 'contact' && (
-                    <div>
-                        <button
-                            onClick={() => setStep('datetime')}
-                            className="text-neutral-400 hover:text-white mb-6 flex items-center gap-2"
-                        >
-                            ← Voltar para Data/Hora
-                        </button>
-
-                        <h2 className="text-2xl font-heading text-white uppercase mb-6 text-center">
-                            Confirme seu Agendamento
-                        </h2>
-
-                        {/* Summary */}
-                        <div className={`${cardClass} p-6 mb-6`}>
-                            <h3 className="text-white font-heading uppercase mb-4">Resumo do Agendamento</h3>
-
-                            {services.filter(s => selectedServices.includes(s.id)).map(service => (
-                                <div key={service.id} className="flex justify-between items-center py-2 border-b border-neutral-700">
-                                    <span className="text-neutral-300">{service.name}</span>
-                                    <span className="text-white">R$ {service.price.toFixed(2)}</span>
+                        {/* STEPPER NAV */}
+                        <div className={`${cardClass} p-4 flex items-center justify-center gap-4 md:gap-12 sticky top-4 z-40 backdrop-blur-2xl bg-black/60 shadow-2xl`}>
+                            {[
+                                { id: 'services', label: 'Serviços', num: 1 },
+                                { id: 'datetime', label: 'Data & Hora', num: 2 },
+                                { id: 'contact', label: 'Finalizar', num: 3 }
+                            ].map((s) => (
+                                <div
+                                    key={s.id}
+                                    className={`flex items-center gap-2 transition-all ${step === s.id ? `text-${accentColor} scale-110` : 'text-neutral-500 opacity-60'}`}
+                                >
+                                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${step === s.id ? `border-${accentColor}` : 'border-neutral-700'}`}>
+                                        {s.num}
+                                    </span>
+                                    <span className="text-xs font-mono uppercase font-bold hidden md:block">{s.label}</span>
                                 </div>
                             ))}
-
-                            <div className="flex justify-between items-center py-4 mt-4 border-t-2 border-neutral-600">
-                                <div>
-                                    <div className="flex items-center gap-2 text-neutral-400 text-sm mb-1">
-                                        <Calendar className="w-4 h-4" />
-                                        <span>{selectedDate?.toLocaleDateString('pt-BR')}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-neutral-400 text-sm">
-                                        <Clock className="w-4 h-4" />
-                                        <span>{selectedTime} ({calculateDuration()} min)</span>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-neutral-400 text-sm">TOTAL</div>
-                                    <div className={`text-3xl font-bold text-${accentColor}`}>
-                                        R$ {calculateTotal().toFixed(2)}
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
-                        {/* Contact Form / Auth */}
-                        <div className={`${cardClass} p-6 mb-6`}>
-                            <ClientAuthModal
-                                businessId={businessId!}
-                                onSuccess={() => {
-                                    // Auto-fill form state when auth succeeds
-                                    // This is handled by the useEffect below observing 'client'
-                                }}
-                                accentColor={accentColor}
-                            />
-
-                            {client && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                    <div className="flex items-start gap-3 mt-6">
-                                        <input
-                                            type="checkbox"
-                                            id="policy"
-                                            checked={acceptedPolicy}
-                                            onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                            className="mt-1"
-                                        />
-                                        <label htmlFor="policy" className="text-sm text-neutral-400">
-                                            Li e aceito a política de cancelamento. Cancelamentos devem ser feitos com até 24h de antecedência.
-                                        </label>
+                        {/* Booking Steps Content */}
+                        <div className="animate-in fade-in duration-700">
+                            {step === 'services' && (
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-2xl md:text-3xl font-heading text-white uppercase tracking-tight">Menu de Serviços</h2>
+                                        <p className="text-neutral-500 text-xs font-mono">{services.length} Opções</p>
                                     </div>
 
-                                    <button
-                                        onClick={handleSubmit}
-                                        disabled={!acceptedPolicy}
-                                        className={`w-full py-4 mt-6 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-xl shadow-soft' : 'bg-accent-gold hover:bg-accent-goldHover shadow-heavy'} text-white font-heading text-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3`}
-                                    >
-                                        {isBeauty ? <Sparkles className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                                        Confirmar Agendamento
-                                    </button>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {services.map(service => {
+                                            const isSelected = selectedServices.includes(service.id);
+                                            return (
+                                                <div
+                                                    key={service.id}
+                                                    onClick={() => toggleService(service.id)}
+                                                    className={`
+                                                        relative cursor-pointer transition-all duration-300 group
+                                                        ${cardClass} p-0 overflow-hidden flex flex-col h-full
+                                                        ${isSelected
+                                                            ? `ring-2 ring-${accentColor} bg-${accentColor}/5 shadow-[0_0_50px_rgba(0,0,0,0.5)]`
+                                                            : 'hover:border-white/20 bg-neutral-900/40'}
+                                                    `}
+                                                >
+                                                    {service.image_url && (
+                                                        <div className="h-40 overflow-hidden relative">
+                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                                            {isSelected && (
+                                                                <div className={`absolute inset-0 bg-${accentColor}/20 backdrop-blur-[1px] flex items-center justify-center`}>
+                                                                    <div className={`bg-${accentColor} p-2 rounded-full text-black shadow-2xl scale-125`}>
+                                                                        <Check className="w-6 h-6" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    <div className="p-5 flex flex-col flex-1">
+                                                        <div className="flex justify-between items-start gap-2 mb-2">
+                                                            <h3 className="text-lg md:text-xl font-bold text-white leading-tight">{service.name}</h3>
+                                                            {service.category && (
+                                                                <span className="text-[10px] font-mono uppercase bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded border border-neutral-700">
+                                                                    {service.category}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-neutral-500 text-xs leading-relaxed mb-4 flex-1 line-clamp-2">
+                                                            {service.description || "Atendimento especializado com produtos premium."}
+                                                        </p>
+                                                        <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
+                                                            <div className={`text-xl font-mono font-bold text-${accentColor}`}>
+                                                                {currencySymbol} {service.price.toFixed(2)}
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 text-neutral-400 text-[10px] font-mono">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                {service.duration_minutes} MIN
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 'datetime' && (
+                                <div className="space-y-8 animate-in slide-in-from-right duration-500">
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <button onClick={() => setStep('services')} className="p-2 bg-neutral-800 rounded-lg text-white hover:bg-neutral-700 transition-colors">
+                                            ←
+                                        </button>
+                                        <h2 className="text-2xl font-heading text-white uppercase tracking-tight">Agendamento</h2>
+                                    </div>
+
+                                    {/* Profissional */}
+                                    {business?.enable_professional_selection !== false && professionals.length > 0 && (
+                                        <section>
+                                            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4">Selecione quem irá te atender:</h3>
+                                            <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                                                <button
+                                                    onClick={() => setSelectedProfessional('any')}
+                                                    className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedProfessional === 'any' ? `border-${accentColor} bg-${accentColor}/10` : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'}`}
+                                                >
+                                                    <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700">
+                                                        <Users className="w-6 h-6 text-neutral-500" />
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-white uppercase">Qualquer um</span>
+                                                </button>
+                                                {professionals.map(pro => (
+                                                    <button
+                                                        key={pro.id}
+                                                        onClick={() => setSelectedProfessional(pro.id)}
+                                                        className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedProfessional === pro.id ? `border-${accentColor} bg-${accentColor}/10` : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'}`}
+                                                    >
+                                                        <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-700 shadow-lg">
+                                                            {pro.photo_url ? (
+                                                                <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold">{pro.name.charAt(0)}</div>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-white uppercase truncate max-w-[80px]">{pro.name.split(' ')[0]}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className={`${cardClass} p-4`}>
+                                            <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} isBeauty={isBeauty} />
+                                        </div>
+                                        {selectedDate ? (
+                                            <div className="animate-in fade-in duration-500">
+                                                <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} isBeauty={isBeauty} />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-center bg-neutral-900/30 rounded-2xl border-2 border-dashed border-neutral-800 text-neutral-600 italic text-sm p-12 text-center">
+                                                Selecione uma data para ver os horários disponíveis.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 'contact' && (
+                                <div className="space-y-8 animate-in slide-in-from-right duration-500">
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <button onClick={() => setStep('datetime')} className="p-2 bg-neutral-800 rounded-lg text-white hover:bg-neutral-700 transition-colors">
+                                            ←
+                                        </button>
+                                        <h2 className="text-2xl font-heading text-white uppercase tracking-tight">Confirmar</h2>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                                        <div className="md:col-span-3">
+                                            <ClientAuthModal
+                                                businessId={businessId!}
+                                                onSuccess={() => { }}
+                                                accentColor={accentColor}
+                                            />
+
+                                            {client && (
+                                                <div className={`mt-8 ${cardClass} p-6 border-l-4 border-green-500`}>
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                                                            <Check className="w-5 h-5 text-green-500" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-white font-bold">Identificado como {client.name}</p>
+                                                            <p className="text-neutral-500 text-xs">{client.phone}</p>
+                                                        </div>
+                                                    </div>
+                                                    <label className="flex items-start gap-3 cursor-pointer group">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={acceptedPolicy}
+                                                            onChange={e => setAcceptedPolicy(e.target.checked)}
+                                                            className={`mt-1 h-5 w-5 rounded border-neutral-700 bg-black text-${accentColor} focus:ring-0`}
+                                                        />
+                                                        <span className="text-xs text-neutral-400 leading-relaxed group-hover:text-neutral-300">
+                                                            Declaro estar ciente da política de agendamento e cancelamento do estabelecimento.
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="md:col-span-2 space-y-6">
+                                            <div className={`${cardClass} p-6 bg-black shadow-inner`}>
+                                                <h4 className="text-white font-bold uppercase text-xs tracking-widest mb-4 opacity-50 font-mono">Resumo do Pedido</h4>
+                                                <div className="space-y-3 mb-6">
+                                                    {services.filter(s => selectedServices.includes(s.id)).map(s => (
+                                                        <div key={s.id} className="flex justify-between items-center text-sm">
+                                                            <span className="text-neutral-400">{s.name}</span>
+                                                            <span className="text-white font-mono">{currencySymbol} {s.price.toFixed(2)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="border-t border-neutral-800 pt-4 space-y-2">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-neutral-500">Data</span>
+                                                        <span className="text-white font-bold">{selectedDate?.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })} • {selectedTime}</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="text-neutral-500">Duração</span>
+                                                        <span className="text-white font-bold">{calculateDuration()} min</span>
+                                                    </div>
+                                                    <div className="flex justify-between pt-4">
+                                                        <span className="text-white font-bold">Total</span>
+                                                        <span className={`text-2xl font-bold text-${accentColor}`}>
+                                                            {currencySymbol} {calculateTotal().toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={handleSubmit}
+                                                disabled={!client || !acceptedPolicy}
+                                                className={`w-full py-4 rounded-2xl font-heading text-lg uppercase tracking-tighter transition-all flex items-center justify-center gap-3 shadow-2xl disabled:opacity-30 disabled:grayscale
+                                                    ${isBeauty ? 'bg-beauty-neon text-white' : 'bg-accent-gold text-black'}
+                                                `}
+                                            >
+                                                <Sparkles className="w-5 h-5 animate-pulse" />
+                                                Confirmar Agendamento
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
-                )}
 
+                    {/* Sidebar / Info */}
+                    <div className="space-y-6">
+                        <div className={`${cardClass} p-6`}>
+                            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4">Informações</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-start gap-3">
+                                    <Phone className={`w-4 h-4 text-${accentColor} mt-1`} />
+                                    <div>
+                                        <p className="text-white text-sm font-bold">{business.phone || 'N/A'}</p>
+                                        <p className="text-neutral-500 text-[10px] uppercase">Contato WhatsApp</p>
+                                    </div>
+                                </div>
+                                {business.address_street && (
+                                    <div className="flex items-start gap-3">
+                                        <Calendar className={`w-4 h-4 text-${accentColor} mt-1`} />
+                                        <div>
+                                            <p className="text-white text-sm font-bold truncate max-w-[180px]">{business.address_street || 'Confirme o local'}</p>
+                                            <p className="text-neutral-500 text-[10px] uppercase">Localização</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {business.instagram_handle && (
+                                    <a
+                                        href={`https://instagram.com/${business.instagram_handle.replace('@', '')}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-start gap-3 group"
+                                    >
+                                        <div className={`p-1 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors`}>
+                                            <Scissors className={`w-4 h-4 text-${accentColor}`} />
+                                        </div>
+                                        <div>
+                                            <p className={`text-sm font-bold group-hover:text-${accentColor} transition-colors text-white`}>@{business.instagram_handle.replace('@', '')}</p>
+                                            <p className="text-neutral-500 text-[10px] uppercase">Portfólio Instagram</p>
+                                        </div>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Professional Preview (Small) */}
+                        <div className={`${cardClass} p-6 bg-gradient-to-br from-neutral-900 to-black`}>
+                            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4">Profissionais</h3>
+                            <div className="flex -space-x-3 overflow-hidden">
+                                {professionals.slice(0, 5).map(pro => (
+                                    <img
+                                        key={pro.id}
+                                        className="inline-block h-10 w-10 md:h-12 md:w-12 rounded-full ring-2 ring-black"
+                                        src={pro.photo_url || `https://ui-avatars.com/api/?name=${pro.name}&background=111&color=fff`}
+                                        alt={pro.name}
+                                    />
+                                ))}
+                                {professionals.length > 5 && (
+                                    <div className="inline-flex h-10 w-10 md:h-12 md:w-12 rounded-full ring-2 ring-black bg-neutral-800 items-center justify-center text-[10px] font-bold text-neutral-400">
+                                        +{professionals.length - 5}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {/* STICKY BOTTOM SUMMARY (Mobile only) */}
+            {selectedServices.length > 0 && step === 'services' && (
+                <div className="fixed bottom-0 left-0 right-0 p-4 z-50 md:hidden animate-in slide-in-from-bottom duration-300">
+                    <div className="bg-black/95 backdrop-blur-xl border-t border-white/10 p-4 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex items-center justify-between">
+                        <div>
+                            <p className="text-neutral-500 text-[10px] uppercase font-mono tracking-widest">{selectedServices.length} {selectedServices.length === 1 ? 'Serviço' : 'Serviços'}</p>
+                            <p className={`text-2xl font-bold text-${accentColor}`}>{currencySymbol} {calculateTotal().toFixed(2)}</p>
+                        </div>
+                        <button
+                            onClick={() => setStep('datetime')}
+                            className={`px-6 py-3 rounded-xl font-bold uppercase transition-all shadow-lg active:scale-95
+                                ${isBeauty ? 'bg-beauty-neon text-white' : 'bg-accent-gold text-black'}
+                            `}
+                        >
+                            Próximo
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

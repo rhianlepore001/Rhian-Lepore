@@ -222,12 +222,20 @@ export const Login: React.FC = () => {
                         )}
                     </button>
 
-                    <div className="text-center mt-6">
+                    <div className="flex flex-col gap-4 text-center mt-6">
+                        <Link to="/forgot-password" className={`text-xs font-bold uppercase transition-all
+                            ${isBeauty
+                                ? 'text-neutral-500 hover:text-white font-sans'
+                                : 'text-neutral-500 hover:text-white font-mono'}
+                        `}>
+                            Esqueci minha senha
+                        </Link>
+
                         <Link to={`/register?type=${loginTheme}`} className={`text-xs font-bold uppercase border-b border-transparent transition-all
-                ${isBeauty
+                            ${isBeauty
                                 ? 'text-beauty-neon hover:text-white hover:border-white font-sans'
                                 : 'text-accent-gold hover:border-accent-gold font-mono'}
-            `}>
+                        `}>
                             Não tem conta? Criar agora
                         </Link>
                     </div>

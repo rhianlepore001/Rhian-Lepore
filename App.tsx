@@ -39,6 +39,9 @@ const ProtectedLayout = () => {
   }
 
   if (!isAuthenticated) {
+    if (window.location.hash.includes('update-password')) {
+      return <Outlet />;
+    }
     return <Navigate to="/login" replace />;
   }
 

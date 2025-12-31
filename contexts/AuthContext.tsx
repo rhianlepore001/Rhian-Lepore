@@ -78,14 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
 
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('Password recovery event detected, redirecting...');
-        setLoading(true);
-        // Force a small delay to ensure cookie/localStorage sync
-        setTimeout(() => {
-          window.location.hash = '/update-password';
-          setLoading(false);
-        }, 500);
-        return; // Don't proceed to loading false yet
+        setLoading(false);
+        return;
       }
 
       if (session?.user?.id) {

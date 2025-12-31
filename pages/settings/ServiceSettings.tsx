@@ -256,8 +256,6 @@ export const ServiceSettings: React.FC = () => {
                         accentColor={accentColor}
                     />
                 )}
-
-
             </div>
         </SettingsLayout>
     );

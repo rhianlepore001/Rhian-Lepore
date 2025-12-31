@@ -141,16 +141,27 @@ export const Agenda: React.FC = () => {
         }
     }, [showNewAppointmentModal, selectedDate, selectedProfessionalFilter, teamMembers]);
 
-    // Handle clientId from URL (coming from ClientCRM "Novo Serviço" button)
+    // Handle clientId and service from URL (coming from CRM history)
     useEffect(() => {
         const clientIdParam = searchParams.get('clientId');
+        const serviceNameParam = searchParams.get('service');
+
         if (clientIdParam && clients.length > 0) {
             // Pre-select the client
             setSelectedClient(clientIdParam);
+
+            // Pre-select service if provided
+            if (serviceNameParam && services.length > 0) {
+                const matchedService = services.find(s => s.name === serviceNameParam);
+                if (matchedService) {
+                    setSelectedService(matchedService.id);
+                }
+            }
+
             // Open the new appointment modal
             setShowNewAppointmentModal(true);
         }
-    }, [searchParams, clients]);
+    }, [searchParams, clients, services]);
 
     const fetchData = async () => {
         await Promise.all([

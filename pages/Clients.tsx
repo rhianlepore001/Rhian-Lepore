@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Plus, Search, User, Star } from 'lucide-react';
+import { Plus, Search, User, Star, ChevronRight } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -27,14 +27,44 @@ export const Clients: React.FC = () => {
 
     const fetchClients = async () => {
         try {
+            // Fetch clients, filtering out inactive ones
             const { data, error } = await supabase
                 .from('clients')
                 .select('*')
                 .eq('user_id', user.id)
+                .neq('is_active', false) // Filter out inactive clients (soft deleted)
                 .order('name', { ascending: true });
 
             if (error) throw error;
-            if (data) setClients(data);
+
+            if (data) {
+                // Fetch actual visit counts from completed appointments for all clients
+                const clientIds = data.map(c => c.id);
+
+                const { data: appointmentCounts, error: countError } = await supabase
+                    .from('appointments')
+                    .select('client_id')
+                    .in('client_id', clientIds)
+                    .eq('status', 'Completed');
+
+                if (!countError && appointmentCounts) {
+                    // Count visits per client
+                    const visitCounts: Record<string, number> = {};
+                    appointmentCounts.forEach(apt => {
+                        visitCounts[apt.client_id] = (visitCounts[apt.client_id] || 0) + 1;
+                    });
+
+                    // Merge visit counts into client data
+                    const clientsWithVisits = data.map(client => ({
+                        ...client,
+                        actual_visits: visitCounts[client.id] || 0
+                    }));
+
+                    setClients(clientsWithVisits);
+                } else {
+                    setClients(data);
+                }
+            }
         } catch (error) {
             console.error('Error fetching clients:', error);
         } finally {
@@ -155,11 +185,12 @@ export const Clients: React.FC = () => {
                 ) : (
                     filteredClients.map(client => {
                         const rating = client.rating || 0;
-                        const totalVisits = client.total_visits || 0;
+                        // Use actual_visits from our query, fallback to total_visits column
+                        const totalVisits = client.actual_visits ?? client.total_visits ?? 0;
 
                         return (
                             <Link key={client.id} to={`/clientes/${client.id}`}>
-                                <BrutalCard className="hover:border-white/40 transition-colors cursor-pointer group h-full">
+                                <BrutalCard className="hover:border-white/40 transition-colors cursor-pointer group h-full relative">
                                     <div className="flex items-start justify-between mb-4">
                                         <div className={`w-12 h-12 rounded-full border-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} flex items-center justify-center bg-black overflow-hidden`}>
                                             {client.photo_url ? (
@@ -184,8 +215,14 @@ export const Clients: React.FC = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <h3 className="text-lg font-heading text-white mb-1 group-hover:text-accent-gold transition-colors">{client.name}</h3>
-                                    <p className="text-sm text-text-secondary font-mono">{client.phone || 'Sem telefone'}</p>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className={`text-lg font-heading text-white mb-1 group-hover:${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} transition-colors`}>{client.name}</h3>
+                                            <p className="text-sm text-text-secondary font-mono">{client.phone || 'Sem telefone'}</p>
+                                        </div>
+                                        {/* Clickable Indicator */}
+                                        <ChevronRight className={`w-5 h-5 text-neutral-600 group-hover:${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} group-hover:translate-x-1 transition-all`} />
+                                    </div>
                                 </BrutalCard>
                             </Link>
                         );

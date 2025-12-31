@@ -119,6 +119,17 @@ export const CommissionsSettings: React.FC = () => {
 
             if (error) throw error;
 
+            // Recalculate pending commissions in finance_records
+            const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
+                p_professional_id: memberId,
+                p_new_rate: rate
+            });
+
+            if (recalculateError) {
+                console.error('Error recalculating commissions:', recalculateError);
+                // We don't block the user as the rate was updated, but log it
+            }
+
             // Update local state
             setTeamMembers(prev => prev.map(m =>
                 m.id === memberId ? { ...m, commission_rate: rate } : m
@@ -299,8 +310,9 @@ export const CommissionsSettings: React.FC = () => {
                                                         size="sm"
                                                         onClick={() => handleSaveCommissionRate(member.id)}
                                                         disabled={saving}
+                                                        icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                                     >
-                                                        Salvar
+                                                        {saving ? 'Salvando' : 'Salvar'}
                                                     </BrutalButton>
 
                                                     <BrutalButton

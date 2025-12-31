@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, Image as ImageIcon, Loader2, Plus, Check } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { PREDEFINED_SERVICES } from '../constants';
 
 interface Category {
     id: string;
@@ -36,7 +37,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     onSave,
     accentColor
 }) => {
-    const { user, region } = useAuth();
+    const { user, userType, region } = useAuth();
+    const suggestions = userType === 'beauty' ? PREDEFINED_SERVICES.beauty : PREDEFINED_SERVICES.barber;
     const [name, setName] = useState(service?.name || '');
     const [description, setDescription] = useState(service?.description || '');
     const [price, setPrice] = useState(service?.price?.toString() || '');
@@ -199,6 +201,17 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             setSavingCategory(false);
         }
     };
+    const handleApplySuggestion = (suggestion: any) => {
+        setName(suggestion.name);
+        setPrice(suggestion.price.toString());
+        setDuration(suggestion.duration_minutes.toString());
+
+        // Try to find matching category by name
+        const match = localCategories.find(c => c.name.toLowerCase() === suggestion.category.toLowerCase());
+        if (match) {
+            setCategoryId(match.id);
+        }
+    };
 
 
     return (
@@ -212,6 +225,29 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+
+                {/* Suggestions Bar */}
+                {!service && (
+                    <div className="p-4 border-b border-neutral-800 bg-neutral-800/20">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Sparkles className={`w-4 h-4 text-${accentColor}`} />
+                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Sugestões Rápidas:</span>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                            {suggestions.map((s, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => handleApplySuggestion(s)}
+                                    className="whitespace-nowrap px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-full text-xs text-white hover:bg-neutral-700 hover:border-neutral-600 transition-all flex items-center gap-2"
+                                >
+                                    {s.name}
+                                    <span className={`text-${accentColor} font-bold`}>R${s.price}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

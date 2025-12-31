@@ -3,14 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft, Trash2, Edit2, Save, X } from 'lucide-react';
+import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft, Trash2, Edit2, Save, X, Tag } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { calculateNextVisitPrediction } from '../utils/tierSystem';
 import { useAuth } from '../contexts/AuthContext';
 
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { userType } = useAuth();
+  const { userType, user, region } = useAuth();
   const isBeauty = userType === 'beauty';
 
   // Theme helpers
@@ -23,6 +23,7 @@ export const ClientCRM: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
+  const [currencySymbol, setCurrencySymbol] = useState('R$');
 
   // Edit State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -33,8 +34,16 @@ export const ClientCRM: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    if (region === 'PT') {
+      setCurrencySymbol('€');
+    } else {
+      setCurrencySymbol('R$');
+    }
+  }, [region]);
+
+  useEffect(() => {
     const fetchClient = async () => {
-      if (!id) return;
+      if (!id || !user) return;
       try {
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
@@ -48,6 +57,7 @@ export const ClientCRM: React.FC = () => {
           setNotes(clientData.notes || '');
 
           // Fetch appointments for visit history
+          // Note: price is stored directly in appointments table, no need to join with services
           const { data: appointmentsData, error: appointmentsError } = await supabase
             .from('appointments')
             .select('*, team_members(name)')
@@ -79,7 +89,8 @@ export const ClientCRM: React.FC = () => {
             nextPrediction,
             appointmentsHistory: appointmentsData?.map((apt: any) => ({
               ...apt,
-              professional_name: apt.team_members?.name
+              professional_name: apt.team_members?.name,
+              basePrice: apt.services?.price || apt.price
             })) || [],
             hairHistory: historyData?.map((h: any) => ({
               ...h,
@@ -100,7 +111,7 @@ export const ClientCRM: React.FC = () => {
     };
 
     fetchClient();
-  }, [id]);
+  }, [id, user]);
 
   const handleSaveNotes = async () => {
     if (!client?.id) return;
@@ -108,14 +119,18 @@ export const ClientCRM: React.FC = () => {
     try {
       const { error } = await supabase
         .from('clients')
-        .update({ notes })
-        .eq('id', client.id);
+        .update({ notes: notes })
+        .eq('id', client.id)
+        .select();
 
       if (error) throw error;
+
+      // Update local client state with new notes
+      setClient({ ...client, notes: notes });
       alert('Notas salvas com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving notes:', error);
-      alert('Erro ao salvar notas.');
+      alert('Erro ao salvar notas: ' + (error.message || 'Erro desconhecido'));
     } finally {
       setSavingNotes(false);
     }
@@ -150,24 +165,24 @@ export const ClientCRM: React.FC = () => {
 
   const handleDeleteClient = async () => {
     if (!client?.id) return;
-    if (!confirm('Tem certeza que deseja excluir este cliente? Esta ação é irreversível e removerá todo o histórico.')) return;
+    if (!confirm('Tem certeza que deseja desativar este cliente? O cliente não aparecerá mais na lista, mas o histórico financeiro será mantido.')) return;
 
     setDeleting(true);
     try {
-      // Delete client (cascade should handle related records if configured, otherwise we might need manual deletion)
-      // Assuming cascade is ON for appointments/hair_records in DB schema, or we just delete client
+      // Soft delete - mark client as inactive instead of deleting
+      // This preserves financial records and appointment history
       const { error } = await supabase
         .from('clients')
-        .delete()
+        .update({ is_active: false })
         .eq('id', client.id);
 
       if (error) throw error;
 
-      alert('Cliente excluído com sucesso!');
+      alert('Cliente desativado com sucesso!');
       navigate('/clientes');
     } catch (error: any) {
-      console.error('Error deleting client:', error);
-      alert('Erro ao excluir cliente: ' + error.message);
+      console.error('Error deactivating client:', error);
+      alert('Erro ao desativar cliente: ' + error.message);
       setDeleting(false);
     }
   };
@@ -249,10 +264,6 @@ export const ClientCRM: React.FC = () => {
                 />
                 <span className="text-white text-[10px] font-bold uppercase border border-white px-2 py-1">Alterar</span>
               </label>
-
-              <div className={`absolute -bottom-2 -right-2 md:-bottom-3 md:-right-3 bg-black text-white text-[10px] md:text-xs font-bold px-2 py-1 border border-neutral-600 uppercase tracking-widest pointer-events-none`}>
-                {client.totalVisits} VISITAS
-              </div>
             </div>
             <div className="flex flex-col justify-center md:items-center md:w-full">
               <div className={`flex gap-1 ${themeColor} mb-1`}>
@@ -334,35 +345,52 @@ export const ClientCRM: React.FC = () => {
           <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             <div className="flex gap-4 md:gap-6 min-w-max">
               {/* Show appointments history first (more relevant) */}
-              {client.appointmentsHistory && client.appointmentsHistory.map((apt: any, index: number) => (
-                <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className={`relative border-2 border-neutral-700 hover:${themeBorder} transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
-                    <Calendar className={`w-12 h-12 ${themeColor} mb-2 opacity-50`} />
-                    <p className="text-white font-bold font-heading text-lg text-center leading-tight mb-1">{apt.service}</p>
-                    <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
+              {client.appointmentsHistory && client.appointmentsHistory.map((apt: any, index: number) => {
+                // Calculate discount info
+                const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
+                const discountPercentage = hasDiscount ? Math.round(((apt.basePrice - apt.price) / apt.basePrice) * 100) : 0;
 
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
-                      <p className="text-[10px] md:text-xs text-text-secondary font-mono flex justify-between">
-                        <span>{apt.professional_name || 'Profissional'}</span>
-                        <span className="text-white font-bold">R$ {apt.price}</span>
-                      </p>
-                    </div>
-                    {index === 0 && (
-                      <div className="absolute top-2 right-2">
-                        <span className={`${themeBg} ${isBeauty ? 'text-white' : 'text-black'} text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
+                return (
+                  <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
+                    <div className={`relative border-2 border-neutral-700 hover:${themeBorder} transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
+                      <Calendar className={`w-12 h-12 ${themeColor} mb-2 opacity-50`} />
+                      <p className="text-white font-bold font-heading text-lg text-center leading-tight mb-1">{apt.service}</p>
+                      <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
+
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
+                        <p className="text-[10px] md:text-xs text-text-secondary font-mono flex justify-between items-center">
+                          <span>{apt.professional_name || 'Profissional'}</span>
+                          <span className="flex items-center gap-2">
+                            {hasDiscount && (
+                              <span className="text-red-400 line-through text-[10px]">{currencySymbol} {apt.basePrice.toFixed(2)}</span>
+                            )}
+                            <span className="text-white font-bold">{currencySymbol} {apt.price.toFixed(2)}</span>
+                          </span>
+                        </p>
                       </div>
-                    )}
-                  </div>
-                  {index === 0 && (
+
+                      {/* Badges */}
+                      <div className="absolute top-2 right-2 flex flex-col gap-1">
+                        {index === 0 && (
+                          <span className={`${themeBg} ${isBeauty ? 'text-white' : 'text-black'} text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
+                        )}
+                        {hasDiscount && (
+                          <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-1 flex items-center gap-1">
+                            <Tag className="w-3 h-3" /> {discountPercentage}% OFF
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Repeat Service Button for each card */}
                     <button
-                      onClick={() => navigate(`/agenda?clientId=${client.id}`)}
+                      onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
                       className={`w-full mt-3 bg-neutral-800 ${themeButtonHover} text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
 
               {/* Keep existing hair records for backward compatibility */}
               {client.hairHistory.map((record: any) => (

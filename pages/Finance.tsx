@@ -3,7 +3,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -19,6 +19,7 @@ export const Finance: React.FC = () => {
   const [summary, setSummary] = useState({
     revenue: 0,
     expenses: 0,
+    commissionsPending: 0,
     profit: 0,
     growth: 0,
     previousMonthRevenue: 0
@@ -105,25 +106,32 @@ export const Finance: React.FC = () => {
           : 0;
 
         setSummary({
-          revenue: data.revenue,
-          expenses: data.expenses,
-          profit: data.profit,
-          growth: growth,
+          revenue: data.revenue || 0,
+          expenses: data.expenses || 0,
+          commissionsPending: data.commissions_pending || 0,
+          profit: data.profit || 0,
+          growth: growth || 0,
           previousMonthRevenue: prevData?.revenue || 0
         });
 
         setChartData(data.chart_data || []);
 
-        const formattedTransactions = (data.transactions || []).map((item: any) => ({
-          id: item.id,
-          description: item.type === 'expense' ? `Pagamento de Comissão - ${item.barber_name}` : `Serviço - ${item.barber_name || 'Desconhecido'}`, // More descriptive
-          amount: item.amount || 0, // This is revenue for 'revenue' type
-          expense: item.expense || 0, // This is commission_value for 'expense' type
-          date: new Date(item.created_at).toLocaleDateString('pt-BR'),
-          rawDate: new Date(item.created_at),
-          type: item.type, // Use the actual type from DB
-          commission_paid: item.commission_paid // Pass this through
-        }));
+        const formattedTransactions = (data.transactions || []).map((item: any) => {
+          const createdAt = new Date(item.created_at);
+          return {
+            id: item.id,
+            serviceName: item.service_name || 'Serviço',
+            professionalName: item.barber_name || 'Manual',
+            clientName: item.client_name || '',
+            amount: item.amount || 0,
+            expense: item.expense || 0,
+            date: createdAt.toLocaleDateString('pt-BR'),
+            time: createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            rawDate: createdAt,
+            type: item.type,
+            commission_paid: item.commission_paid
+          };
+        });
 
         const filtered = filterType === 'all'
           ? formattedTransactions
@@ -191,7 +199,22 @@ export const Finance: React.FC = () => {
     if (!confirm('Tem certeza que deseja excluir esta transação? Esta ação é irreversível.')) return;
 
     try {
-      await supabase.from('finance_records').delete().eq('id', transactionId);
+      // Check if this transaction is linked to an appointment
+      const { data: record } = await supabase
+        .from('finance_records')
+        .select('appointment_id')
+        .eq('id', transactionId)
+        .single();
+
+      if (record?.appointment_id) {
+        if (confirm('Esta transação está vinculada a um agendamento. Deseja excluir o agendamento também?')) {
+          await supabase.from('appointments').delete().eq('id', record.appointment_id);
+        }
+      }
+
+      const { error } = await supabase.from('finance_records').delete().eq('id', transactionId);
+      if (error) throw error;
+
       alert('Transação excluída com sucesso!');
       fetchFinanceData(); // Refresh finance data
     } catch (error) {
@@ -301,6 +324,7 @@ export const Finance: React.FC = () => {
         revenue: newTransactionType === 'income' ? amount : 0,
         commission_value: newTransactionType === 'expense' ? amount : 0,
         commission_rate: 0,
+        type: newTransactionType === 'income' ? 'revenue' : 'expense',
         created_at: transactionDateTime.toISOString()
       };
 
@@ -409,7 +433,7 @@ export const Finance: React.FC = () => {
                 <InfoButton text={`Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {currencySymbol} {summary.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {currencySymbol} {(summary.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
               <div className={`flex items-center gap-1 ${summary.growth >= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-mono mt-2`}>
                 {summary.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -417,20 +441,37 @@ export const Finance: React.FC = () => {
               </div>
             </BrutalCard>
 
+            <BrutalCard className="border-l-4 border-yellow-500">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Comissões Pendentes</p>
+                  <p className="text-[10px] text-neutral-500 font-mono mt-1">Estimativa de repasse futuro</p>
+                </div>
+                <InfoButton text={`Total de comissões calculadas em serviços concluídos que ainda não foram pagas.`} />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-heading text-white">
+                {currencySymbol} {(summary.commissionsPending || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </h3>
+              <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
+                <Clock className="w-3 h-3" />
+                <span>A pagar aos profissionais</span>
+              </div>
+            </BrutalCard>
+
             <BrutalCard className="border-l-4 border-red-500">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas</p>
+                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas Pagas</p>
                   <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
                 </div>
-                <InfoButton text={`Soma de todos os custos, como comissões de profissionais, em ${months[selectedMonth]} ${selectedYear}.`} />
+                <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {currencySymbol} {summary.expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {currencySymbol} {(summary.expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
               <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
                 <DollarSign className="w-3 h-3" />
-                <span>Comissões e custos</span>
+                <span>Comissões e custos liquidados</span>
               </div>
             </BrutalCard>
 
@@ -443,11 +484,11 @@ export const Finance: React.FC = () => {
                 <InfoButton text="O valor que sobra após subtrair as despesas da receita. Seu lucro real." />
               </div>
               <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
-                {currencySymbol} {summary.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {currencySymbol} {(summary.profit || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </h3>
               <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
                 <Wallet className="w-3 h-3" />
-                <span>Margem: {summary.revenue > 0 ? Math.round((summary.profit / summary.revenue) * 100) : 0}%</span>
+                <span>Margem: {summary.revenue > 0 ? Math.round(((summary.profit || 0) / summary.revenue) * 100) : 0}%</span>
               </div>
             </BrutalCard>
           </div>
@@ -508,26 +549,47 @@ export const Finance: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b-2 border-neutral-800 text-text-secondary font-mono text-xs uppercase">
-                    <th className="p-3">Data</th>
-                    <th className="p-3">Descrição</th>
+                    <th className="p-3">Data/Hora</th>
+                    <th className="p-3">Serviço</th>
+                    <th className="p-3">Profissional</th>
+                    <th className="p-3">Cliente</th>
                     <th className="p-3 text-right">Valor</th>
-                    <th className="p-3 text-right">Tipo</th>
+                    <th className="p-3 text-center">Tipo</th>
                     <th className="p-3 text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-800">
                   {transactions.map((t) => (
                     <tr key={t.id} className="hover:bg-white/5 transition-colors">
-                      <td className="p-3 font-mono text-sm text-text-secondary">{t.date}</td>
-                      <td className="p-3 text-white font-medium">{t.description}</td>
-                      <td className="p-3 text-right font-mono">
-                        <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
-                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.type === 'expense' ? t.expense : t.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <td className="p-3">
+                        <div className="flex flex-col">
+                          <span className="text-white font-medium text-sm">{t.date}</span>
+                          <span className="text-neutral-500 text-xs font-mono">{t.time}</span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <span className="text-white font-medium">
+                          {t.type === 'expense' ? 'Pagamento de Comissão' : t.serviceName}
                         </span>
                       </td>
-                      <td className="p-3 text-right">
+                      <td className="p-3">
+                        <span className={`font-medium ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
+                          {t.professionalName}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className="text-neutral-300">
+                          {t.clientName || <span className="text-neutral-600 italic">—</span>}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right font-mono">
+                        <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
+                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
                         <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.type === 'expense' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
-                          {t.type === 'expense' ? 'Despesa Paga' : 'Receita'}
+                          {t.type === 'expense' ? 'Despesa' : 'Receita'}
                         </span>
                       </td>
                       <td className="p-3 text-right">
@@ -543,7 +605,7 @@ export const Finance: React.FC = () => {
                   ))}
                   {transactions.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-text-secondary">
+                      <td colSpan={7} className="p-8 text-center text-text-secondary">
                         Nenhuma transação registrada em {months[selectedMonth]} {selectedYear}.
                       </td>
                     </tr>
@@ -567,7 +629,11 @@ export const Finance: React.FC = () => {
       )}
 
       {activeTab === 'commissions' && (
-        <CommissionsManagement accentColor={accentColor} currencySymbol={currencySymbol} />
+        <CommissionsManagement
+          accentColor={accentColor}
+          currencySymbol={currencySymbol}
+          onPaymentSuccess={fetchFinanceData}
+        />
       )}
 
       {/* New Transaction Modal */}

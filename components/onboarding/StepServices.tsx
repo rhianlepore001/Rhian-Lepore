@@ -78,7 +78,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                         <p className="text-neutral-500 mb-4">Nenhum serviço cadastrado</p>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className={accentColor === 'beauty-neon' ? 'px-4 py-2 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90' : 'px-4 py-2 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90'}
+                            className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors'}
                         >
                             Adicionar Serviço
                         </button>

@@ -19,7 +19,7 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   const isBeauty = userType === 'beauty';
 
   const primaryStyle = isBeauty
-    ? "bg-beauty-neon text-white hover:bg-beauty-neonHover shadow-soft border-transparent"
+    ? "bg-beauty-neon text-neutral-900 font-bold hover:bg-beauty-neonHover shadow-soft border-beauty-neon/20"
     : "bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy border-black";
 
   const ghostStyle = isBeauty
@@ -27,8 +27,8 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
     : "bg-transparent border-transparent text-accent-gold hover:bg-neutral-900 hover:border-neutral-800 shadow-none";
 
   const baseStyles = isBeauty
-    ? "font-sans font-semibold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 rounded-xl border"
-    : "font-mono font-bold uppercase tracking-tight border-2 border-black transition-all active:translate-y-1 active:translate-x-1 active:shadow-none flex items-center justify-center gap-2";
+    ? "font-sans font-semibold tracking-wide transition-all active:scale-95 flex items-center justify-center gap-2 rounded-xl border disabled:opacity-50 disabled:grayscale-[0.2] disabled:cursor-not-allowed"
+    : "font-mono font-bold uppercase tracking-tight border-2 border-black transition-all active:translate-y-1 active:translate-x-1 active:shadow-none flex items-center justify-center gap-2 disabled:opacity-70 disabled:grayscale disabled:cursor-not-allowed";
 
   const variants = {
     primary: primaryStyle,

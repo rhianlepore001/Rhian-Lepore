@@ -19,3 +19,21 @@ export const SETTINGS_ITEMS = [
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
   { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
 ];
+export const PREDEFINED_SERVICES = {
+  barber: [
+    { name: 'Corte Masculino', price: 40, duration_minutes: 30, category: 'Geral' },
+    { name: 'Barba', price: 30, duration_minutes: 20, category: 'Geral' },
+    { name: 'Combo Corte + Barba', price: 60, duration_minutes: 50, category: 'Geral' },
+    { name: 'Acabamento/Pezinho', price: 15, duration_minutes: 15, category: 'Geral' },
+    { name: 'Sobrancelha', price: 15, duration_minutes: 15, category: 'Geral' },
+    { name: 'Pigmentação', price: 35, duration_minutes: 30, category: 'Geral' }
+  ],
+  beauty: [
+    { name: 'Corte Feminino', price: 80, duration_minutes: 60, category: 'Cabelo' },
+    { name: 'Escova', price: 60, duration_minutes: 40, category: 'Cabelo' },
+    { name: 'Manicure', price: 35, duration_minutes: 45, category: 'Unhas' },
+    { name: 'Pedicure', price: 40, duration_minutes: 45, category: 'Unhas' },
+    { name: 'Coloração', price: 120, duration_minutes: 90, category: 'Cabelo' },
+    { name: 'Design de Sobrancelha', price: 40, duration_minutes: 30, category: 'Estética' }
+  ]
+};

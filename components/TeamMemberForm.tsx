@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, User, Loader2 } from 'lucide-react';
+import { X, Upload, User, Loader2, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { BrutalButton } from './BrutalButton';
 
 interface TeamMemberFormProps {
     member?: any;
@@ -47,40 +48,56 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         setLoading(true);
 
         try {
-            let photoUrl = member?.photo_url;
+            let photoUrl = member?.photo_url || null;
 
             if (photoFile) {
                 const fileExt = photoFile.name.split('.').pop();
                 const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
                 const { error: uploadError } = await supabase.storage
                     .from('team_photos')
-                    .upload(fileName, photoFile);
+                    .upload(fileName, photoFile, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
 
-                if (uploadError) throw uploadError;
+                if (uploadError) {
+                    console.error('Upload error:', uploadError);
+                    throw new Error('Erro ao fazer upload da foto: ' + uploadError.message);
+                }
 
                 const { data } = supabase.storage.from('team_photos').getPublicUrl(fileName);
-                photoUrl = data.publicUrl;
+                if (data) {
+                    photoUrl = data.publicUrl;
+                }
             }
 
-            const data = {
+            const teamMemberData = {
                 user_id: user.id,
-                name,
-                role,
-                slug: slug || name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-                bio,
+                name: name.trim(),
+                role: role.trim(),
+                slug: slug.trim() || name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-'),
+                bio: bio.trim(),
                 active,
                 photo_url: photoUrl
             };
 
             if (member?.id) {
-                await supabase.from('team_members').update(data).eq('id', member.id);
+                const { error: updateError } = await supabase
+                    .from('team_members')
+                    .update(teamMemberData)
+                    .eq('id', member.id);
+                if (updateError) throw updateError;
             } else {
-                await supabase.from('team_members').insert(data);
+                const { error: insertError } = await supabase
+                    .from('team_members')
+                    .insert(teamMemberData);
+                if (insertError) throw insertError;
             }
 
             onSave();
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving team member:', error);
             alert(`Erro ao salvar membro da equipe: ${error.message || JSON.stringify(error)}`);
         } finally {
@@ -189,13 +206,15 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         </label>
                     </div>
 
-                    <button
+                    <BrutalButton
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-3 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors flex items-center justify-center gap-2 mt-4`}
+                        variant="primary"
+                        className="w-full mt-4"
+                        icon={loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Profissional'}
-                    </button>
+                        {loading ? 'Salvando...' : 'Salvar Profissional'}
+                    </BrutalButton>
                 </form>
             </div>
         </div>

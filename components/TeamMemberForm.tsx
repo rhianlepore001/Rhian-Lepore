@@ -17,11 +17,13 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     onSave,
     accentColor
 }) => {
-    const { user } = useAuth();
+    const { user, fullName, avatarUrl } = useAuth();
     const [name, setName] = useState(member?.name || '');
     const [role, setRole] = useState(member?.role || '');
     const [slug, setSlug] = useState(member?.slug || '');
     const [bio, setBio] = useState(member?.bio || '');
+    const [commissionRate, setCommissionRate] = useState(member?.commission_rate || 0);
+    const [isOwner, setIsOwner] = useState(member?.is_owner || false);
     const [active, setActive] = useState(member?.active ?? true);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(member?.photo_url || null);
@@ -42,13 +44,20 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         }
     };
 
+    const handleFillWithOwner = () => {
+        setName(fullName || '');
+        setRole('Dono / Profissional');
+        setPhotoPreview(avatarUrl || null);
+        setIsOwner(true);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
         setLoading(true);
 
         try {
-            let photoUrl = member?.photo_url || null;
+            let photoUrl = photoPreview;
 
             if (photoFile) {
                 const fileExt = photoFile.name.split('.').pop();
@@ -79,7 +88,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 slug: slug.trim() || name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-'),
                 bio: bio.trim(),
                 active,
-                photo_url: photoUrl
+                photo_url: photoUrl,
+                commission_rate: commissionRate,
+                is_owner: isOwner
             };
 
             if (member?.id) {
@@ -117,11 +128,25 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                    {!member && (
+                        <button
+                            type="button"
+                            onClick={handleFillWithOwner}
+                            className={`w-full py-2 px-4 mb-4 border border-dashed rounded-lg transition-all text-xs font-mono uppercase
+                                ${accentColor === 'beauty-neon'
+                                    ? 'border-beauty-neon/50 text-beauty-neon hover:bg-beauty-neon/10'
+                                    : 'border-accent-gold/50 text-accent-gold hover:bg-accent-gold/10'}
+                            `}
+                        >
+                            ✨ Sou eu quem atendo (Usar meu perfil)
+                        </button>
+                    )}
+
                     {/* Photo Upload */}
                     <div className="flex justify-center mb-6">
                         <div
-                            className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-${accentColor} overflow-hidden group transition-colors`}
+                            className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-current overflow-hidden group transition-colors ${accentColor === 'beauty-neon' ? 'hover:text-beauty-neon' : 'hover:text-accent-gold'}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
                             {photoPreview ? (
@@ -143,6 +168,34 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         />
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4 items-center mb-2">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="isOwner"
+                                checked={isOwner}
+                                onChange={e => setIsOwner(e.target.checked)}
+                                className={`rounded bg-neutral-800 border-neutral-700 text-current focus:ring-0 ${accentColor === 'beauty-neon' ? 'text-beauty-neon' : 'text-accent-gold'}`}
+                            />
+                            <label htmlFor="isOwner" className="text-white text-xs cursor-pointer font-mono uppercase">
+                                É o Dono
+                            </label>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="active"
+                                checked={active}
+                                onChange={e => setActive(e.target.checked)}
+                                className={`rounded bg-neutral-800 border-neutral-700 text-current focus:ring-0 ${accentColor === 'beauty-neon' ? 'text-beauty-neon' : 'text-accent-gold'}`}
+                            />
+                            <label htmlFor="active" className="text-white text-xs cursor-pointer font-mono uppercase">
+                                Ativo
+                            </label>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="text-white font-mono text-xs mb-1 block">Nome</label>
                         <input
@@ -150,21 +203,35 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             required
                             value={name}
                             onChange={e => setName(e.target.value)}
-                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-current ${accentColor === 'beauty-neon' ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
                             placeholder={accentColor === 'beauty-neon' ? "Ex: Maria Souza" : "Ex: João Silva"}
                         />
                     </div>
 
-                    <div>
-                        <label className="text-white font-mono text-xs mb-1 block">Cargo</label>
-                        <input
-                            type="text"
-                            required
-                            value={role}
-                            onChange={e => setRole(e.target.value)}
-                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
-                            placeholder={accentColor === 'beauty-neon' ? "Ex: Nail Designer" : "Ex: Barbeiro Master"}
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-white font-mono text-xs mb-1 block">Cargo</label>
+                            <input
+                                type="text"
+                                required
+                                value={role}
+                                onChange={e => setRole(e.target.value)}
+                                className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-current ${accentColor === 'beauty-neon' ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
+                                placeholder="Ex: Barbeiro"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-white font-mono text-xs mb-1 block">Comissão (%)</label>
+                            <input
+                                type="number"
+                                required
+                                min="0"
+                                max="100"
+                                value={commissionRate}
+                                onChange={e => setCommissionRate(Number(e.target.value))}
+                                className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-current ${accentColor === 'beauty-neon' ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
+                            />
+                        </div>
                     </div>
 
                     <div>
@@ -175,11 +242,10 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 type="text"
                                 value={slug}
                                 onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                                className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-current ${accentColor === 'beauty-neon' ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
                                 placeholder="joao-silva"
                             />
                         </div>
-                        <p className="text-neutral-500 text-[10px] mt-1">Deixe em branco para gerar automaticamente.</p>
                     </div>
 
                     <div>
@@ -188,22 +254,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             value={bio}
                             onChange={e => setBio(e.target.value)}
                             rows={3}
-                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} resize-none`}
+                            className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-current resize-none ${accentColor === 'beauty-neon' ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
                             placeholder="Breve descrição..."
                         />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="active"
-                            checked={active}
-                            onChange={e => setActive(e.target.checked)}
-                            className={`rounded bg-neutral-800 border-neutral-700 text-${accentColor} focus:ring-0`}
-                        />
-                        <label htmlFor="active" className="text-white text-sm cursor-pointer">
-                            Profissional Ativo
-                        </label>
                     </div>
 
                     <BrutalButton

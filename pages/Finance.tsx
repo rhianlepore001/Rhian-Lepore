@@ -9,6 +9,7 @@ import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
+import { formatCurrency } from '../utils/formatters';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
@@ -57,6 +58,7 @@ export const Finance: React.FC = () => {
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
+  const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -433,7 +435,7 @@ export const Finance: React.FC = () => {
                 <InfoButton text={`Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {currencySymbol} {(summary.revenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(summary.revenue || 0, currencyRegion)}
               </h3>
               <div className={`flex items-center gap-1 ${summary.growth >= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-mono mt-2`}>
                 {summary.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -450,7 +452,7 @@ export const Finance: React.FC = () => {
                 <InfoButton text={`Total de comissões calculadas em serviços concluídos que ainda não foram pagas.`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {currencySymbol} {(summary.commissionsPending || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(summary.commissionsPending || 0, currencyRegion)}
               </h3>
               <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
                 <Clock className="w-3 h-3" />
@@ -467,7 +469,7 @@ export const Finance: React.FC = () => {
                 <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {currencySymbol} {(summary.expenses || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(summary.expenses || 0, currencyRegion)}
               </h3>
               <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
                 <DollarSign className="w-3 h-3" />
@@ -484,7 +486,7 @@ export const Finance: React.FC = () => {
                 <InfoButton text="O valor que sobra após subtrair as despesas da receita. Seu lucro real." />
               </div>
               <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
-                {currencySymbol} {(summary.profit || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(summary.profit || 0, currencyRegion)}
               </h3>
               <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
                 <Wallet className="w-3 h-3" />
@@ -584,7 +586,7 @@ export const Finance: React.FC = () => {
                       </td>
                       <td className="p-3 text-right font-mono">
                         <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
-                          {t.type === 'expense' ? '-' : '+'}{currencySymbol} {(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          {t.type === 'expense' ? '-' : '+'}{formatCurrency((t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)), currencyRegion, false)}
                         </span>
                       </td>
                       <td className="p-3 text-center">

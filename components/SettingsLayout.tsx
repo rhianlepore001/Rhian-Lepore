@@ -91,23 +91,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <main className="flex-1 md:ml-64 overflow-y-auto p-4 md:p-8">
                 {/* Mobile Header - Different behavior based on sub-page */}
                 <div className="md:hidden sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center gap-3 -mx-4 -mt-4 mb-4">
-                    {isSubPage ? (
-                        // On sub-page: show back arrow
-                        <button
-                            onClick={() => navigate('/configuracoes')}
-                            className={`text-white hover:text-${accentColor} transition-colors`}
-                        >
-                            <ArrowLeft className="w-6 h-6" />
-                        </button>
-                    ) : (
-                        // On main page: show menu icon
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className={`text-white hover:text-${accentColor}`}
-                        >
-                            <Menu className="w-6 h-6" />
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className={`text-white hover:text-${accentColor}`}
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
                     <h1 className="text-white font-heading text-lg uppercase">
                         {isSubPage ? currentPageTitle : 'Configurações'}
                     </h1>

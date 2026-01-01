@@ -165,9 +165,14 @@ export const ServiceSettings: React.FC = () => {
                                         ) : (
                                             categoryServices.map(service => (
                                                 <div key={service.id} className="p-4 flex items-center gap-4 hover:bg-neutral-800/30 transition-colors group">
-                                                    <div className="w-12 h-12 rounded-lg bg-neutral-800 overflow-hidden flex-shrink-0">
+                                                    <div className="w-16 h-16 rounded-lg bg-black overflow-hidden flex-shrink-0 flex items-center justify-center relative border border-neutral-800">
                                                         {service.image_url ? (
-                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover" />
+                                                            <>
+                                                                <div className="absolute inset-0 scale-125 blur-md opacity-40">
+                                                                    <img src={service.image_url} alt="" className="w-full h-full object-cover" />
+                                                                </div>
+                                                                <img src={service.image_url} alt={service.name} className="relative z-10 max-w-full max-h-full object-contain p-0.5" />
+                                                            </>
                                                         ) : (
                                                             <div className="w-full h-full flex items-center justify-center text-neutral-600">
                                                                 <Package className="w-6 h-6" />
@@ -216,27 +221,42 @@ export const ServiceSettings: React.FC = () => {
 
                 {/* Category Modal */}
                 {isCategoryModalOpen && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-md p-6">
-                            <h3 className="text-white font-bold text-lg mb-4">Nova Categoria</h3>
+                    <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${isBeauty ? 'bg-beauty-dark/90 backdrop-blur-sm' : 'bg-black/85'}`}>
+                        <div className={`
+                            w-full max-w-md p-6 modal-enter
+                            ${isBeauty
+                                ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
+                                : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg'
+                            }
+                        `}>
+                            <h3 className={`text-white font-bold text-lg mb-4 ${isBeauty ? '' : 'uppercase font-heading'}`}>Nova Categoria</h3>
                             <input
                                 type="text"
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 placeholder="Ex: Cabelo, Barba, Tratamentos..."
-                                className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold mb-4"
+                                className={`
+                                    w-full p-3 text-white mb-4 outline-none transition-all duration-300
+                                    ${isBeauty
+                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                        : 'bg-neutral-800 border-2 border-neutral-700 focus:border-accent-gold'
+                                    }
+                                `}
                                 autoFocus
                             />
                             <div className="flex justify-end gap-3">
                                 <button
                                     onClick={() => setIsCategoryModalOpen(false)}
-                                    className="px-4 py-2 text-neutral-400 hover:text-white"
+                                    className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}`}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleAddCategory}
-                                    className={`px-4 py-2 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90`}
+                                    className={`px-5 py-2.5 font-bold transition-all ${isBeauty
+                                        ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white rounded-xl hover:shadow-neon'
+                                        : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
+                                        }`}
                                 >
                                     Salvar
                                 </button>

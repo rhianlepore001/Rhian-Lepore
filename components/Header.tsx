@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, BookOpen } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, BookOpen, ArrowLeft } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
 import { TutorialOverlay } from './TutorialOverlay'; // Importando o TutorialOverlay
 
@@ -12,6 +12,7 @@ export const Header: React.FC = () => {
   const { businessName, fullName, userType, logout, avatarUrl, markTutorialCompleted } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -19,6 +20,7 @@ export const Header: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTutorialModal, setShowTutorialModal] = useState(false); // NEW STATE
 
+  const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBeauty = userType === 'beauty';
   const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const bgColor = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
@@ -34,20 +36,29 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 md:left-64 right-0 h-16 md:h-20 z-30 flex items-center justify-between px-4 md:px-8 transition-all duration-300
+      <header className={`fixed top-0 left-0 ${!isSettingsRoute ? 'md:left-64' : ''} right-0 h-16 md:h-20 z-30 flex items-center justify-between px-4 md:px-8 transition-all duration-300
         ${isBeauty
           ? 'bg-beauty-dark/80 backdrop-blur-md border-b border-white/5 shadow-sm'
           : 'bg-brutal-main border-b-4 border-brutal-border shadow-lg'}
       `}>
 
         <div className="flex items-center gap-3 md:gap-4">
-          {/* Mobile Menu Button */}
-          <button
-            onClick={toggleSidebar}
-            className={`md:hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          {/* Mobile Menu Button / Back Arrow */}
+          {isSettingsRoute ? (
+            <button
+              onClick={() => navigate('/')}
+              className={`md:hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+          ) : (
+            <button
+              onClick={toggleSidebar}
+              className={`md:hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          )}
 
           {/* Left: Shop Info */}
           <div className="flex flex-col justify-center h-full">
@@ -62,21 +73,21 @@ export const Header: React.FC = () => {
 
         {/* Center: Search (REMOVED) */}
         <div className="flex-1 hidden lg:block">
-            {/* Espaço vazio para centralizar os elementos laterais, se necessário */}
+          {/* Espaço vazio para centralizar os elementos laterais, se necessário */}
         </div>
 
         {/* Right: Profile & Actions */}
         <div className="flex items-center gap-3 md:gap-6">
-            {/* Tutorial Button */}
-            <button
-                onClick={() => setShowTutorialModal(true)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-colors
+          {/* Tutorial Button */}
+          <button
+            onClick={() => setShowTutorialModal(true)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-colors
                     ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon hover:bg-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20'}
                 `}
-            >
-                <BookOpen className="w-4 h-4" />
-                <span className="hidden sm:inline">Tutorial</span>
-            </button>
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="hidden sm:inline">Tutorial</span>
+          </button>
 
           {/* Notifications */}
           <div className="relative">

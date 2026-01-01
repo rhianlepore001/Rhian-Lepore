@@ -258,7 +258,14 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {imagePreview ? (
-                                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                    <div className="w-full h-full bg-black flex items-center justify-center relative">
+                                        {/* Blurred Background */}
+                                        <div className="absolute inset-0 scale-125 blur-xl opacity-50">
+                                            <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                        {/* Clear Foreground */}
+                                        <img src={imagePreview} alt="Preview" className="relative z-10 max-w-full max-h-full object-contain p-2 shadow-2xl" />
+                                    </div>
                                 ) : (
                                     <div className="flex flex-col items-center text-neutral-500">
                                         <ImageIcon className="w-8 h-8 mb-2" />

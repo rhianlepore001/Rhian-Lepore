@@ -10,6 +10,8 @@ import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { GoalHistory } from '../components/GoalHistory';
 import { TutorialOverlay } from '../components/TutorialOverlay'; // Importando o Tutorial
 
+import { formatCurrency } from '../utils/formatters';
+
 export const Dashboard: React.FC = () => {
   const { userType, region, user, tutorialCompleted } = useAuth(); // Usando tutorialCompleted
   const { alerts } = useAlerts();
@@ -28,7 +30,8 @@ export const Dashboard: React.FC = () => {
   const [showTutorial, setShowTutorial] = useState(false); // Estado para controlar a exibição
 
   const isBeauty = userType === 'beauty';
-  const currencySymbol = region === 'PT' ? '€' : 'R$' ;
+  const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+  const currencySymbol = region === 'PT' ? '€' : 'R$';
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
@@ -180,9 +183,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const profitValue = profit.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
-  const currentMonthRevenueValue = currentMonthRevenue.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
-  const goalValue = monthlyGoal.toLocaleString(region === 'PT' ? 'pt-PT' : 'pt-BR', { minimumFractionDigits: 2 });
+  // Removed manual formatting variables in favor of direct formatCurrency usage
 
   return (
     <div className="space-y-4 md:space-y-8">
@@ -219,7 +220,7 @@ export const Dashboard: React.FC = () => {
                 <InfoButton text="O lucro total (Receita - Despesas) acumulado desde o início do seu negócio." />
               </div>
               <h3 className={`text-3xl sm:text-4xl md:text-5xl font-heading ${accentText} tracking-tighter`}>
-                {currencySymbol} {profitValue}
+                {formatCurrency(profit, currencyRegion)}
               </h3>
             </div>
             <div className="p-3 md:p-4 bg-neutral-900 border-2 border-neutral-800 rounded-full">
@@ -253,7 +254,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="flex justify-between text-xs md:text-sm font-mono text-text-muted items-center">
-              <span>Atual: {currencySymbol} {currentMonthRevenueValue}</span>
+              <span>Atual: {formatCurrency(currentMonthRevenue, currencyRegion)}</span>
               {isEditingGoal ? (
                 <div className="flex items-center gap-2">
                   <input
@@ -269,7 +270,7 @@ export const Dashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span>Meta: {currencySymbol} {goalValue}</span>
+                  <span>Meta: {formatCurrency(monthlyGoal, currencyRegion)}</span>
                   <button onClick={() => setIsEditingGoal(true)} className="text-text-secondary hover:text-white transition-colors">
                     <Settings className="w-3 h-3" />
                   </button>

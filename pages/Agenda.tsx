@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { SearchableSelect } from '../components/SearchableSelect'; // Importando o novo componente
+import { formatCurrency } from '../utils/formatters';
 
 interface Appointment {
     id: string;
@@ -90,6 +91,7 @@ export const Agenda: React.FC = () => {
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
     const currencySymbol = region === 'PT' ? '€' : 'R$';
+    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
@@ -660,7 +662,7 @@ export const Agenda: React.FC = () => {
     const serviceOptions = services.map(s => ({
         id: s.id,
         name: s.name,
-        subtext: `${currencySymbol} ${s.price.toFixed(2)} | ${s.duration_minutes} min` // Assuming duration_minutes is available
+        subtext: `${formatCurrency(s.price, currencyRegion)} | ${s.duration_minutes} min` // Using generic currency formatting
     }));
 
     // Calculate price preview for the modal
@@ -1025,11 +1027,11 @@ export const Agenda: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     {hasDiscount && apt.basePrice && (
                                                         <span className="text-xs font-mono text-red-500 line-through">
-                                                            {currencySymbol} {apt.basePrice.toFixed(2)}
+                                                            {formatCurrency(apt.basePrice, currencyRegion)}
                                                         </span>
                                                     )}
                                                     <span className={`text-xs font-mono font-bold ${accentText}`}>
-                                                        {currencySymbol} {apt.price.toFixed(2)}
+                                                        {formatCurrency(apt.price, currencyRegion)}
                                                     </span>
 
                                                     {/* Discount Badge */}
@@ -1146,11 +1148,11 @@ export const Agenda: React.FC = () => {
                                                 <div className="text-right flex flex-col items-end gap-2">
                                                     {hasDiscount && apt.basePrice && (
                                                         <span className="text-xs font-mono text-red-500 line-through">
-                                                            {currencySymbol} {apt.basePrice.toFixed(2)}
+                                                            {formatCurrency(apt.basePrice, currencyRegion)}
                                                         </span>
                                                     )}
                                                     <p className={`text-lg font-mono font-bold ${accentText}`}>
-                                                        {currencySymbol} {apt.price.toFixed(2)}
+                                                        {formatCurrency(apt.price, currencyRegion)}
                                                     </p>
                                                     {hasDiscount && (
                                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
@@ -1287,10 +1289,10 @@ export const Agenda: React.FC = () => {
                                 <div>
                                     <label className="text-white font-mono text-sm mb-2 block">Preço Final</label>
                                     <div className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-lg font-bold ${accentText}`}>
-                                        {currencySymbol} {finalPriceNew.toFixed(2)}
+                                        {formatCurrency(finalPriceNew, currencyRegion)}
                                     </div>
                                     <p className="text-xs text-neutral-500 mt-1">
-                                        Preço base: {currencySymbol} {basePriceNew.toFixed(2)}
+                                        Preço base: {formatCurrency(basePriceNew, currencyRegion)}
                                     </p>
                                 </div>
                             </div>

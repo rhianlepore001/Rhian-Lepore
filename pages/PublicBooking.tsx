@@ -8,6 +8,8 @@ import { UpsellSection } from '../components/UpsellSection';
 import { ProfessionalSelector } from '../components/ProfessionalSelector';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
+import { BrutalButton } from '../components/BrutalButton';
+import { formatCurrency } from '../utils/formatters';
 
 interface Service {
     id: string;
@@ -63,6 +65,7 @@ export const PublicBooking: React.FC = () => {
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [availableSlots, setAvailableSlots] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+    const galleryRef = React.useRef<HTMLDivElement>(null);
 
     const { client } = usePublicClient();
 
@@ -167,6 +170,21 @@ export const PublicBooking: React.FC = () => {
         }
     }, [slug]);
 
+    // Auto-scroll for gallery
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (galleryRef.current) {
+                const maxScroll = galleryRef.current.scrollWidth - galleryRef.current.clientWidth;
+                if (galleryRef.current.scrollLeft >= maxScroll - 1) {
+                    galleryRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    galleryRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                }
+            }
+        }, 4000);
+        return () => clearInterval(interval);
+    }, [gallery]);
+
     const toggleService = (serviceId: string) => {
         setSelectedServices(prev =>
             prev.includes(serviceId)
@@ -248,9 +266,9 @@ export const PublicBooking: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const bgClass = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
     const cardClass = isBeauty
-        ? 'bg-beauty-card/80 backdrop-blur-xl border border-white/10 rounded-2xl'
-        : 'bg-brutal-card border-4 border-neutral-800';
-    const currencySymbol = businessSettings?.currency_symbol || 'R$';
+        ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/20 rounded-2xl shadow-soft transition-all duration-300'
+        : 'bg-brutal-card border-4 border-brutal-border shadow-heavy transition-all duration-300';
+    const currencyRegion = businessSettings?.currency_symbol === '€' ? 'PT' : 'BR';
 
     const accentColorValue = isBeauty ? '#A78BFA' : '#C29B40';
 
@@ -308,14 +326,14 @@ export const PublicBooking: React.FC = () => {
                     </div>
 
                     {/* Quick CTA */}
-                    <button
+                    <BrutalButton
+                        variant="primary"
+                        size="lg"
+                        className="mt-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
                         onClick={() => document.getElementById('booking-start')?.scrollIntoView({ behavior: 'smooth' })}
-                        className={`mt-8 px-8 py-3 rounded-full font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-2xl
-                            ${isBeauty ? 'bg-beauty-neon text-white shadow-beauty-neon/20' : 'bg-accent-gold text-black shadow-accent-gold/20'}
-                        `}
                     >
                         Agendar Agora
-                    </button>
+                    </BrutalButton>
                 </div>
             </div>
 
@@ -327,25 +345,42 @@ export const PublicBooking: React.FC = () => {
 
                         {/* Business Gallery (The Portfolio Part) */}
                         {gallery.length > 0 && (
-                            <section className={`${cardClass} p-6 md:p-8 animate-in slide-in-from-bottom duration-500`}>
+                            <section className={`${cardClass} p-6 md:p-8 animate-in slide-in-from-bottom duration-500 overflow-hidden`}>
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-xl md:text-2xl font-heading text-white uppercase tracking-tight flex items-center gap-2">
                                         <Sparkles className={`w-5 h-5 text-${accentColor}`} />
                                         Galeria de Trabalhos
                                     </h2>
+                                    <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-widest hidden md:block">Arraste para ver mais →</p>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
-                                    {gallery.map((item, idx) => (
-                                        <div key={item.id} className={`aspect-square rounded-lg overflow-hidden group cursor-pointer relative ${idx === 0 ? 'col-span-2 row-span-2' : ''}`}>
-                                            <img
-                                                src={item.image_url}
-                                                alt={item.title || "Trabalho"}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <div className="p-2 bg-white/20 backdrop-blur-md rounded-full">
-                                                    <Check className="w-5 h-5 text-white" />
-                                                </div>
+                                <div
+                                    ref={galleryRef}
+                                    className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                >
+                                    {gallery.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="min-w-[280px] md:min-w-[400px] aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer relative snap-start shadow-2xl border border-white/10"
+                                        >
+                                            {/* Blurred Background */}
+                                            <div className="absolute inset-0 scale-110 blur-2xl opacity-50">
+                                                <img
+                                                    src={item.image_url}
+                                                    alt=""
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            {/* Clear Foreground Image */}
+                                            <div className="w-full h-full relative z-10 flex items-center justify-center p-2">
+                                                <img
+                                                    src={item.image_url}
+                                                    alt={item.title || "Trabalho"}
+                                                    className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                                                />
+                                            </div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 z-20">
+                                                {item.title && <p className="text-white font-bold text-sm uppercase tracking-wider font-mono">{item.title}</p>}
                                             </div>
                                         </div>
                                     ))}
@@ -354,7 +389,13 @@ export const PublicBooking: React.FC = () => {
                         )}
 
                         {/* STEPPER NAV */}
-                        <div className={`${cardClass} p-4 flex items-center justify-center gap-4 md:gap-12 sticky top-4 z-40 backdrop-blur-2xl bg-black/60 shadow-2xl`}>
+                        <div className={`
+                            ${isBeauty
+                                ? 'bg-beauty-card/90 border-b border-beauty-neon/20 backdrop-blur-xl'
+                                : 'bg-brutal-card border-4 border-brutal-border shadow-heavy'
+                            }
+                            p-4 rounded-xl flex items-center justify-center gap-4 md:gap-12 sticky top-4 z-40 transition-all duration-300
+                        `}>
                             {[
                                 { id: 'services', label: 'Serviços', num: 1 },
                                 { id: 'datetime', label: 'Data & Hora', num: 2 },
@@ -362,12 +403,18 @@ export const PublicBooking: React.FC = () => {
                             ].map((s) => (
                                 <div
                                     key={s.id}
-                                    className={`flex items-center gap-2 transition-all ${step === s.id ? `text-${accentColor} scale-110` : 'text-neutral-500 opacity-60'}`}
+                                    className={`flex items-center gap-2 transition-all duration-300 ${step === s.id ? `text-${accentColor} scale-105` : 'text-neutral-500 opacity-60'}`}
                                 >
-                                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${step === s.id ? `border-${accentColor}` : 'border-neutral-700'}`}>
-                                        {s.num}
+                                    <span className={`
+                                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
+                                        ${step === s.id
+                                            ? (isBeauty ? 'bg-beauty-neon text-black shadow-neon' : 'bg-accent-gold text-black border-2 border-black')
+                                            : 'bg-neutral-800 border border-neutral-700'
+                                        }
+                                    `}>
+                                        {step === s.id ? <Check className="w-4 h-4" /> : s.num}
                                     </span>
-                                    <span className="text-xs font-mono uppercase font-bold hidden md:block">{s.label}</span>
+                                    <span className="text-xs font-mono uppercase font-bold hidden md:block tracking-wider">{s.label}</span>
                                 </div>
                             ))}
                         </div>
@@ -389,43 +436,70 @@ export const PublicBooking: React.FC = () => {
                                                     key={service.id}
                                                     onClick={() => toggleService(service.id)}
                                                     className={`
-                                                        relative cursor-pointer transition-all duration-300 group
-                                                        ${cardClass} p-0 overflow-hidden flex flex-col h-full
+                                                        relative cursor-pointer transition-all duration-300 group overflow-hidden flex flex-col h-full
+                                                        ${isBeauty
+                                                            ? 'rounded-2xl border'
+                                                            : 'border-2 border-black'
+                                                        }
                                                         ${isSelected
-                                                            ? `ring-2 ring-${accentColor} bg-${accentColor}/5 shadow-[0_0_50px_rgba(0,0,0,0.5)]`
-                                                            : 'hover:border-white/20 bg-neutral-900/40'}
+                                                            ? (isBeauty
+                                                                ? 'bg-beauty-card border-beauty-neon shadow-neon scale-[1.02] z-10'
+                                                                : 'bg-neutral-900 border-accent-gold shadow-heavy-sm translate-x-[-2px] translate-y-[-2px]')
+                                                            : (isBeauty
+                                                                ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
+                                                                : 'bg-brutal-card border-transparent hover:border-neutral-700 hover:shadow-heavy-sm')
+                                                        }
                                                     `}
                                                 >
                                                     {service.image_url && (
-                                                        <div className="h-40 overflow-hidden relative">
-                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                                            {isSelected && (
-                                                                <div className={`absolute inset-0 bg-${accentColor}/20 backdrop-blur-[1px] flex items-center justify-center`}>
-                                                                    <div className={`bg-${accentColor} p-2 rounded-full text-black shadow-2xl scale-125`}>
-                                                                        <Check className="w-6 h-6" />
-                                                                    </div>
+                                                        <div className="h-56 overflow-hidden relative bg-neutral-900 flex items-center justify-center group-hover:shadow-2xl transition-all duration-500">
+                                                            {/* Blurred Background Continuation */}
+                                                            <div className="absolute inset-0 scale-125 blur-xl opacity-40">
+                                                                <img
+                                                                    src={service.image_url}
+                                                                    alt=""
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                            {/* Actual Full Image */}
+                                                            <img
+                                                                src={service.image_url}
+                                                                alt={service.name}
+                                                                className="relative z-10 max-w-full max-h-full object-contain transition-all duration-700 p-2 group-hover:scale-[1.03]"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none z-20"></div>
+
+                                                            {/* Selection Checkmark Overlay */}
+                                                            <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0'}`}>
+                                                                <div className={`
+                                                                    w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transform transition-transform duration-300
+                                                                    ${isSelected ? 'scale-100' : 'scale-50'}
+                                                                    ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black border-2 border-black'}
+                                                                `}>
+                                                                    <Check className="w-6 h-6" />
                                                                 </div>
-                                                            )}
+                                                            </div>
                                                         </div>
                                                     )}
                                                     <div className="p-5 flex flex-col flex-1">
                                                         <div className="flex justify-between items-start gap-2 mb-2">
-                                                            <h3 className="text-lg md:text-xl font-bold text-white leading-tight">{service.name}</h3>
+                                                            <h3 className={`text-lg md:text-xl font-bold leading-tight ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
+                                                                {service.name}
+                                                            </h3>
                                                             {service.category && (
-                                                                <span className="text-[10px] font-mono uppercase bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded border border-neutral-700">
+                                                                <span className="text-[10px] font-mono uppercase bg-black/30 text-neutral-400 px-2 py-0.5 rounded border border-white/5">
                                                                     {service.category}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-neutral-500 text-xs leading-relaxed mb-4 flex-1 line-clamp-2">
+                                                        <p className="text-neutral-400 text-xs leading-relaxed mb-4 flex-1 line-clamp-2">
                                                             {service.description || "Atendimento especializado com produtos premium."}
                                                         </p>
-                                                        <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
-                                                            <div className={`text-xl font-mono font-bold text-${accentColor}`}>
-                                                                {currencySymbol} {service.price.toFixed(2)}
+                                                        <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                                                            <div className={`text-xl font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
+                                                                {formatCurrency(service.price, currencyRegion)}
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-neutral-400 text-[10px] font-mono">
+                                                            <div className="flex items-center gap-1.5 text-neutral-400 text-[10px] font-mono bg-black/20 px-2 py-1 rounded">
                                                                 <Clock className="w-3.5 h-3.5" />
                                                                 {service.duration_minutes} MIN
                                                             </div>
@@ -548,7 +622,7 @@ export const PublicBooking: React.FC = () => {
                                                     {services.filter(s => selectedServices.includes(s.id)).map(s => (
                                                         <div key={s.id} className="flex justify-between items-center text-sm">
                                                             <span className="text-neutral-400">{s.name}</span>
-                                                            <span className="text-white font-mono">{currencySymbol} {s.price.toFixed(2)}</span>
+                                                            <span className="text-white font-mono">{formatCurrency(s.price, currencyRegion)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -564,22 +638,23 @@ export const PublicBooking: React.FC = () => {
                                                     <div className="flex justify-between pt-4">
                                                         <span className="text-white font-bold">Total</span>
                                                         <span className={`text-2xl font-bold text-${accentColor}`}>
-                                                            {currencySymbol} {calculateTotal().toFixed(2)}
+                                                            {formatCurrency(calculateTotal(), currencyRegion)}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <button
+                                            <BrutalButton
                                                 onClick={handleSubmit}
                                                 disabled={!client || !acceptedPolicy}
-                                                className={`w-full py-4 rounded-2xl font-heading text-lg uppercase tracking-tighter transition-all flex items-center justify-center gap-3 shadow-2xl disabled:opacity-30 disabled:grayscale
-                                                    ${isBeauty ? 'bg-beauty-neon text-white' : 'bg-accent-gold text-black'}
-                                                `}
+                                                variant="primary"
+                                                size="lg"
+                                                fullWidth
+                                                icon={<Sparkles className={isBeauty ? 'animate-pulse-neon' : ''} />}
+                                                className="mt-6"
                                             >
-                                                <Sparkles className="w-5 h-5 animate-pulse" />
                                                 Confirmar Agendamento
-                                            </button>
+                                            </BrutalButton>
                                         </div>
                                     </div>
                                 </div>
@@ -650,22 +725,29 @@ export const PublicBooking: React.FC = () => {
                 </div>
             </div>
 
-            {/* STICKY BOTTOM SUMMARY (Mobile only) */}
+            {/* STICKY BOTTOM SUMMARY */}
             {selectedServices.length > 0 && step === 'services' && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 z-50 md:hidden animate-in slide-in-from-bottom duration-300">
-                    <div className="bg-black/95 backdrop-blur-xl border-t border-white/10 p-4 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex items-center justify-between">
+                <div className="fixed bottom-0 left-0 right-0 p-4 z-50 animate-in slide-in-from-bottom duration-300">
+                    <div className={`
+                                        max-w-6xl mx-auto
+                                        ${isBeauty ? 'bg-beauty-card/90 border border-beauty-neon/20' : 'bg-neutral-900 border-4 border-brutal-border'} 
+                                        backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex items-center justify-between
+                                    `}>
                         <div>
-                            <p className="text-neutral-500 text-[10px] uppercase font-mono tracking-widest">{selectedServices.length} {selectedServices.length === 1 ? 'Serviço' : 'Serviços'}</p>
-                            <p className={`text-2xl font-bold text-${accentColor}`}>{currencySymbol} {calculateTotal().toFixed(2)}</p>
+                            <p className="text-neutral-500 text-[10px] md:text-xs uppercase font-mono tracking-widest">{selectedServices.length} {selectedServices.length === 1 ? 'Serviço' : 'Serviços'}</p>
+                            <p className={`text-2xl md:text-4xl font-bold text-${accentColor}`}>{formatCurrency(calculateTotal(), currencyRegion)}</p>
                         </div>
-                        <button
-                            onClick={() => setStep('datetime')}
-                            className={`px-6 py-3 rounded-xl font-bold uppercase transition-all shadow-lg active:scale-95
-                                ${isBeauty ? 'bg-beauty-neon text-white' : 'bg-accent-gold text-black'}
-                            `}
+                        <BrutalButton
+                            onClick={() => {
+                                setStep('datetime');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            variant="primary"
+                            size="lg"
+                            className="px-8 md:px-12"
                         >
-                            Próximo
-                        </button>
+                            Próximo Passo
+                        </BrutalButton>
                     </div>
                 </div>
             )}

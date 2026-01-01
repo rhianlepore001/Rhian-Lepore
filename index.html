@@ -51,12 +51,52 @@
           boxShadow: {
             'heavy': '4px 4px 0px 0px #000000',
             'heavy-sm': '2px 2px 0px 0px #000000',
+            'heavy-lg': '8px 8px 0px 0px #000000',
             'inner-heavy': 'inset 0 0 20px rgba(0,0,0,0.8)',
             'neon': '0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3)',
+            'neon-strong': '0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.4), 0 0 45px rgba(167, 139, 250, 0.2)',
             'soft': '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
+            'soft-lg': '0 20px 40px -15px rgba(0, 0, 0, 0.6)',
+            'gold': '0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2)',
           },
           backgroundImage: {
             'noise': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+')",
+            'gradient-beauty': 'linear-gradient(135deg, #1F1B2E 0%, #2E2B3B 50%, #1F1B2E 100%)',
+            'gradient-brutal': 'linear-gradient(135deg, #121212 0%, #1E1E1E 50%, #121212 100%)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'slide-down': 'slideDown 0.3s ease-out',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'pulse-neon': 'pulseNeon 2s ease-in-out infinite',
+            'shimmer': 'shimmer 2s linear infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            slideDown: {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            scaleIn: {
+              '0%': { opacity: '0', transform: 'scale(0.95)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            },
+            pulseNeon: {
+              '0%, 100%': { boxShadow: '0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3)' },
+              '50%': { boxShadow: '0 0 20px rgba(167, 139, 250, 0.7), 0 0 40px rgba(167, 139, 250, 0.5)' },
+            },
+            shimmer: {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' },
+            },
           }
         }
       }
@@ -67,11 +107,9 @@
       background-color: #121212;
       color: #EAEAEA;
       font-family: 'Inter', sans-serif;
-      /* overflow: hidden; REMOVIDO PARA PERMITIR ROLAGEM GLOBAL */
-      /* Custom scroll handling in layout */
     }
 
-    /* Custom Scrollbar */
+    /* Custom Scrollbar - Brutalismo */
     ::-webkit-scrollbar {
       width: 10px;
       height: 10px;
@@ -89,6 +127,18 @@
 
     ::-webkit-scrollbar-thumb:hover {
       background: #C29B40;
+    }
+
+    /* Scrollbar para Beauty Theme */
+    .beauty-scrollbar::-webkit-scrollbar-thumb {
+      background: #A78BFA;
+      border-radius: 10px;
+      border: 2px solid #1F1B2E;
+    }
+
+    .beauty-scrollbar::-webkit-scrollbar-track {
+      background: #1F1B2E;
+      border: none;
     }
 
     /* Texture Overlay Class */
@@ -117,8 +167,81 @@
       bottom: 0;
       border: 3px solid #000;
       pointer-events: none;
-      /* Simple visual trick for "roughness" without complex masks */
       box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Efeitos de Glow para Beauty */
+    .glow-beauty {
+      box-shadow: 0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3);
+    }
+
+    .glow-beauty-strong {
+      box-shadow: 0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.4), 0 0 45px rgba(167, 139, 250, 0.2);
+    }
+
+    /* Efeitos de Glow para Gold */
+    .glow-gold {
+      box-shadow: 0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2);
+    }
+
+    /* Glass Effect para Beauty */
+    .glass-beauty {
+      background: rgba(46, 43, 59, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+    }
+
+    /* Input Focus States */
+    .input-brutal:focus {
+      outline: none;
+      border-color: #C29B40;
+      box-shadow: 2px 2px 0px 0px #000000;
+    }
+
+    .input-beauty:focus {
+      outline: none;
+      border-color: #A78BFA;
+      box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+    }
+
+    /* Card Hover Effects */
+    .card-brutal-hover:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px 0px #000000;
+    }
+
+    .card-beauty-hover:hover {
+      border-color: rgba(167, 139, 250, 0.5);
+      box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+    }
+
+    /* Animação de entrada para modais */
+    @keyframes modalEnter {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .modal-enter {
+      animation: modalEnter 0.3s ease-out;
+    }
+
+    /* Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg, #252525 25%, #333 50%, #252525 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .skeleton-beauty {
+      background: linear-gradient(90deg, #2E2B3B 25%, #3D3A4D 50%, #2E2B3B 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
     }
   </style>
   <script type="importmap">

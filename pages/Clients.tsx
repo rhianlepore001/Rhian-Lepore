@@ -167,13 +167,19 @@ export const Clients: React.FC = () => {
 
             {/* Search Bar */}
             <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5" />
+                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`} />
                 <input
                     type="text"
                     placeholder="Buscar por nome ou telefone..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-black/40 border-2 border-neutral-800 p-4 pl-12 text-white font-mono text-sm focus:border-white outline-none transition-colors"
+                    className={`
+                        w-full p-4 pl-12 text-white font-mono text-sm outline-none transition-all duration-300
+                        ${isBeauty
+                            ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                            : 'bg-black/40 border-2 border-neutral-800 focus:border-accent-gold focus:shadow-heavy-sm'
+                        }
+                    `}
                 />
             </div>
 
@@ -232,67 +238,99 @@ export const Clients: React.FC = () => {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                    <div className="bg-neutral-900 border-2 border-white/20 w-full max-w-md p-6 shadow-heavy relative">
+                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/90 backdrop-blur-sm' : 'bg-black/85'}`}>
+                    <div className={`
+                        w-full max-w-md p-6 relative modal-enter
+                        ${isBeauty
+                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
+                            : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg'
+                        }
+                    `}>
                         <button
                             onClick={() => setShowModal(false)}
-                            className="absolute top-4 right-4 text-neutral-500 hover:text-white"
+                            className={`absolute top-4 right-4 p-1.5 rounded-full transition-all ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-500 hover:text-white hover:bg-neutral-800'}`}
                         >
-                            X
+                            <span className="text-xl font-bold">×</span>
                         </button>
-                        <h3 className="text-xl font-heading text-white mb-6 uppercase">Novo Cliente</h3>
+                        <h3 className={`text-xl font-heading text-white mb-6 ${isBeauty ? '' : 'uppercase'}`}>Novo Cliente</h3>
 
                         <form onSubmit={handleCreateClient} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-mono text-neutral-500 mb-1">Nome Completo</label>
+                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Nome Completo</label>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none"
+                                    className={`
+                                        w-full p-3 text-white outline-none transition-all duration-300
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                            : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
+                                        }
+                                    `}
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-mono text-neutral-500 mb-1">Telefone</label>
+                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Telefone</label>
                                 <input
                                     type="text"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
-                                    className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none"
+                                    className={`
+                                        w-full p-3 text-white outline-none transition-all duration-300
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                            : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
+                                        }
+                                    `}
                                     placeholder="(XX) 9XXXX-XXXX"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-mono text-neutral-500 mb-1">Email (Opcional)</label>
+                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Email (Opcional)</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none"
+                                    className={`
+                                        w-full p-3 text-white outline-none transition-all duration-300
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                            : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
+                                        }
+                                    `}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-mono text-neutral-500 mb-1">Foto (Opcional - Temporariamente desabilitado)</label>
+                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Foto (Opcional)</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setPhoto(e.target.files?.[0] || null)}
-                                    className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-accent-gold file:text-black hover:file:bg-accent-goldHover"
+                                    className={`
+                                        w-full p-3 text-white outline-none transition-all duration-300
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-lg file:text-sm file:font-semibold file:bg-beauty-neon file:text-black hover:file:bg-beauty-neonHover'
+                                            : 'bg-black border-2 border-neutral-700 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-accent-gold file:text-black hover:file:bg-accent-goldHover'
+                                        }
+                                    `}
                                 />
                                 <p className="text-xs text-neutral-500 mt-1">Formatos aceitos: JPG, PNG</p>
                             </div>
 
-                            <button
+                            <BrutalButton
                                 type="submit"
-                                disabled={uploading}
-                                className={`w-full py-3 font-bold uppercase tracking-wider ${buttonClass} mt-4 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                variant="primary"
+                                fullWidth
+                                loading={uploading}
+                                className="mt-4"
                             >
                                 {uploading ? 'Cadastrando...' : 'Cadastrar'}
-                            </button>
+                            </BrutalButton>
                         </form>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isOwnerMode, setIsOwnerMode] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -64,7 +65,10 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
 
                         <div className="flex flex-col gap-3">
                             <button
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={() => {
+                                    setIsOwnerMode(true);
+                                    setIsModalOpen(true);
+                                }}
                                 className={`w-full py-3 px-4 font-bold rounded-lg transition-all flex items-center justify-center gap-2
                                     ${accentColor === 'beauty-neon'
                                         ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90 shadow-[0_0_15px_rgba(167,139,250,0.3)]'
@@ -75,7 +79,10 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                             </button>
 
                             <button
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={() => {
+                                    setIsOwnerMode(false);
+                                    setIsModalOpen(true);
+                                }}
                                 className="w-full py-3 px-4 bg-transparent border border-neutral-700 text-neutral-400 font-bold rounded-lg hover:bg-neutral-800 transition-colors"
                             >
                                 👥 Tenho uma equipe
@@ -125,9 +132,13 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
 
             {isModalOpen && (
                 <TeamMemberForm
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setIsOwnerMode(false);
+                    }}
                     onSave={fetchMembers}
                     accentColor={accentColor}
+                    isOwnerForm={isOwnerMode}
                 />
             )}
         </div>

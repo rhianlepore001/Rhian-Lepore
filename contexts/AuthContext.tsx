@@ -13,11 +13,14 @@ interface AuthContextType {
   businessName: string;
   fullName: string;
   avatarUrl: string | null;
-  tutorialCompleted: boolean; // NEW
+  tutorialCompleted: boolean;
+  subscriptionStatus: 'trial' | 'active' | 'past_due' | 'canceled';
+  trialEndsAt: string | null;
+  isSubscriptionActive: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
-  markTutorialCompleted: () => Promise<void>; // NEW
+  markTutorialCompleted: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,14 +32,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [businessName, setBusinessName] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [tutorialCompleted, setTutorialCompleted] = useState(true); // Assume true until proven otherwise
+  const [tutorialCompleted, setTutorialCompleted] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled'>('trial');
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfileData = async (userId: string) => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('user_type, region, business_name, full_name, photo_url, tutorial_completed')
+        .select('user_type, region, business_name, full_name, photo_url, tutorial_completed, subscription_status, trial_ends_at')
         .eq('id', userId)
         .single();
 
@@ -48,7 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBusinessName(profile.business_name || '');
         setFullName(profile.full_name || '');
         setAvatarUrl(profile.photo_url || null);
-        setTutorialCompleted(profile.tutorial_completed ?? true); // Default to true if null
+        setTutorialCompleted(profile.tutorial_completed ?? true);
+        setSubscriptionStatus((profile.subscription_status as any) || 'trial');
+        setTrialEndsAt(profile.trial_ends_at || null);
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -111,7 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBusinessName('');
     setFullName('');
     setAvatarUrl(null);
-    setTutorialCompleted(true); // Reset on logout
+    setTutorialCompleted(true);
+    setSubscriptionStatus('trial');
+    setTrialEndsAt(null);
   };
 
   const markTutorialCompleted = async () => {
@@ -137,6 +146,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       fullName,
       avatarUrl,
       tutorialCompleted,
+      subscriptionStatus,
+      trialEndsAt,
+      isSubscriptionActive: subscriptionStatus === 'active' || (subscriptionStatus === 'trial' && !!trialEndsAt && new Date() < new Date(trialEndsAt)),
       loading,
       login,
       logout,

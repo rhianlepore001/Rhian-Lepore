@@ -12,6 +12,7 @@ interface StepBusinessInfoProps {
 export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, accentColor }) => {
     const { user } = useAuth();
     const [name, setName] = useState('');
+    const [fullName, setFullName] = useState(''); // NEW
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -29,9 +30,8 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
 
             if (profile) {
                 setName(profile.business_name || '');
+                setFullName(profile.full_name || ''); // NEW
                 setPhone(profile.phone || '');
-                // O nome completo do responsável não é estritamente necessário aqui, mas podemos usá-lo se o campo for para o nome do responsável.
-                // Se o campo 'name' for o nome do negócio, o código atual está correto.
             } else if (error && error.code !== 'PGRST116') {
                 console.error('Error loading profile data:', error);
             }
@@ -47,9 +47,10 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
         setSubmitting(true);
 
         try {
-            // Atualiza o nome do negócio e telefone no perfil público
+            // Atualiza o nome do negócio, nome completo e telefone no perfil público
             await supabase.from('profiles').update({
                 business_name: name,
+                full_name: fullName, // NEW
                 phone: phone
             }).eq('id', user.id);
 
@@ -57,6 +58,7 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
             await supabase.auth.updateUser({
                 data: {
                     business_name: name,
+                    full_name: fullName, // NEW
                     phone: phone,
                 }
             });
@@ -79,6 +81,8 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
         return <div className="text-center py-8 text-neutral-500">Carregando dados iniciais...</div>;
     }
 
+    const isBeauty = accentColor === 'beauty-neon';
+
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -88,9 +92,23 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
                     required
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder={accentColor === 'beauty-neon' ? "Ex: Studio Beauty" : "Ex: Barbearia do Silva"}
-                    className={accentColor === 'beauty-neon' ? 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-beauty-neon text-lg' : 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg'}
+                    placeholder={isBeauty ? "Ex: Studio Beauty" : "Ex: Barbearia do Silva"}
+                    className={`w-full p-4 bg-neutral-800 border border-neutral-700 text-white focus:outline-none text-lg transition-all
+                        ${isBeauty ? 'rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]' : 'rounded-lg focus:border-accent-gold'}`}
                     autoFocus
+                />
+            </div>
+
+            <div>
+                <label className="text-white font-mono text-sm mb-2 block">Seu Nome Completo (Dono)</label>
+                <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="Ex: João Silva"
+                    className={`w-full p-4 bg-neutral-800 border border-neutral-700 text-white focus:outline-none text-lg transition-all
+                        ${isBeauty ? 'rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]' : 'rounded-lg focus:border-accent-gold'}`}
                 />
             </div>
 
@@ -100,13 +118,17 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
                     value={phone}
                     onChange={setPhone}
                     placeholder="Telefone"
+                    forceTheme={isBeauty ? 'beauty' : 'barber'}
                 />
             </div>
 
             <button
                 type="submit"
                 disabled={submitting || !name || !phone}
-                className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-lg mt-8'}
+                className={`w-full py-4 text-black font-bold transition-all flex items-center justify-center gap-2 text-lg mt-8
+                    ${isBeauty
+                        ? 'bg-beauty-neon rounded-xl hover:bg-beauty-neon/90 shadow-neon hover:shadow-neonStrong'
+                        : 'bg-accent-gold rounded-lg hover:bg-accent-gold/90 shadow-heavy active:shadow-none active:translate-y-1'}`}
             >
                 {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
             </button>

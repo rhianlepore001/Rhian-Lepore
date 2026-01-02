@@ -7,6 +7,7 @@ interface BrutalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
   icon?: React.ReactNode;
   fullWidth?: boolean;
   loading?: boolean;
+  forceTheme?: 'beauty' | 'barber';
 }
 
 export const BrutalButton: React.FC<BrutalButtonProps> = ({
@@ -18,10 +19,11 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   loading = false,
   className = '',
   disabled,
+  forceTheme,
   ...props
 }) => {
   const { userType } = useAuth();
-  const isBeauty = userType === 'beauty';
+  const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
   // ===========================================
   // BRUTALISMO: Sombras pesadas, bordas retas, movimento industrial

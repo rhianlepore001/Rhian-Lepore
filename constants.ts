@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LayoutDashboard, Calendar, Users, TrendingUp, FileText, Settings, DollarSign, LogOut, Package } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, TrendingUp, FileText, Settings, DollarSign, LogOut, Package, CreditCard } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -18,6 +18,7 @@ export const SETTINGS_ITEMS = [
   { label: 'Equipe', path: '/configuracoes/equipe', icon: Users },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
   { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
+  { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
 ];
 export const PREDEFINED_SERVICES = {
   barber: [

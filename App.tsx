@@ -15,6 +15,7 @@ import { PublicBookingSettings } from './pages/settings/PublicBookingSettings';
 import { TeamSettings } from './pages/settings/TeamSettings';
 import { ServiceSettings } from './pages/settings/ServiceSettings';
 import { CommissionsSettings } from './pages/settings/CommissionsSettings';
+import { SubscriptionSettings } from './pages/settings/SubscriptionSettings';
 import { OnboardingWizard } from './pages/OnboardingWizard';
 import { Reports } from './pages/Reports';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -114,6 +115,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/configuracoes/equipe" element={<TeamSettings />} />
         <Route path="/configuracoes/servicos" element={<ServiceSettings />} />
         <Route path="/configuracoes/comissoes" element={<CommissionsSettings />} />
+        <Route path="/configuracoes/assinatura" element={<SubscriptionSettings />} />
         <Route path="/configuracoes/notificacoes" element={<Placeholder title="Notificações" />} />
       </Route>
 

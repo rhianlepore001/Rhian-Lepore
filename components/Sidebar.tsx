@@ -28,7 +28,7 @@ export const Sidebar: React.FC = () => {
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+          fixed left-0 z-50 w-64 flex flex-col
           transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           md:translate-x-0
@@ -36,6 +36,7 @@ export const Sidebar: React.FC = () => {
             ? 'bg-beauty-dark/95 backdrop-blur-xl border-r border-white/5'
             : 'bg-brutal-main border-r-4 border-brutal-border'}
         `}
+        style={{ top: 'var(--header-top, 0)', bottom: 0 }}
       >
         {/* Logo Area */}
         <div className={`h-20 flex items-center justify-between px-6 ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b-4 border-brutal-border bg-brutal-card'}`}>

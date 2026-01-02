@@ -8,6 +8,7 @@ interface PhoneInputProps {
     className?: string;
     placeholder?: string;
     defaultRegion?: 'BR' | 'PT';
+    forceTheme?: 'beauty' | 'barber';
 }
 
 const REGIONS = {
@@ -20,10 +21,11 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     onChange,
     className = '',
     placeholder = 'Telefone',
-    defaultRegion = 'BR'
+    defaultRegion = 'BR',
+    forceTheme
 }) => {
     const { userType } = useAuth();
-    const isBeauty = userType === 'beauty';
+    const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
     const [region, setRegion] = useState<'BR' | 'PT'>(defaultRegion || 'BR');
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);

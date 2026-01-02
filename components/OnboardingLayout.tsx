@@ -8,6 +8,7 @@ interface OnboardingLayoutProps {
     totalSteps: number;
     title: string;
     description: string;
+    forceTheme?: 'beauty' | 'barber';
 }
 
 export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
@@ -15,10 +16,11 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
     currentStep,
     totalSteps,
     title,
-    description
+    description,
+    forceTheme
 }) => {
     const { userType } = useAuth();
-    const isBeauty = userType === 'beauty';
+    const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
     return (
         <div className={isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col overflow-hidden' : 'min-h-screen bg-brutal-main flex flex-col overflow-hidden'}>
@@ -59,7 +61,12 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                         </p>
                     </div>
 
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 md:p-8 shadow-2xl">
+                    <div className={`
+                        ${isBeauty
+                            ? 'bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl shadow-[0_0_30px_rgba(167,139,250,0.15)]'
+                            : 'bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl'} 
+                        p-6 md:p-8 transition-all duration-300
+                    `}>
                         {children}
                     </div>
                 </div>

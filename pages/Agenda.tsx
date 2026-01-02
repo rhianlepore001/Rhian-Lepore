@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
@@ -19,6 +19,7 @@ interface Appointment {
     status: string;
     professional_id: string | null;
     basePrice?: number; // Base price for discount calculation
+    clientPhone?: string;
 }
 
 interface TeamMember {
@@ -79,7 +80,7 @@ export const Agenda: React.FC = () => {
 
     // Form state (for new appointment modal)
     const [selectedClient, setSelectedClient] = useState('');
-    const [selectedService, setSelectedService] = useState('');
+    const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
     const [customTime, setCustomTime] = useState('');
@@ -226,7 +227,7 @@ export const Agenda: React.FC = () => {
         // 2. Fetch appointments for the selected day (Confirmed status)
         const { data } = await supabase
             .from('appointments')
-            .select('*, clients(name, id)')
+            .select('*, clients(name, id, phone)')
             .eq('user_id', user.id)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
@@ -241,6 +242,7 @@ export const Agenda: React.FC = () => {
                     id: apt.id,
                     client_id: apt.client_id,
                     clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    clientPhone: apt.clients?.phone || '',
                     service: apt.service,
                     appointment_time: apt.appointment_time,
                     price: apt.price,
@@ -266,7 +268,7 @@ export const Agenda: React.FC = () => {
 
         const { data } = await supabase
             .from('appointments')
-            .select('*, clients(name)')
+            .select('*, clients(name, phone)')
             .eq('user_id', user.id)
             .in('status', ['Confirmed', 'Pending'])
             .lt('appointment_time', now) // Agendamentos no passado
@@ -279,6 +281,7 @@ export const Agenda: React.FC = () => {
                     id: apt.id,
                     client_id: apt.client_id,
                     clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    clientPhone: apt.clients?.phone || '',
                     service: apt.service,
                     appointment_time: apt.appointment_time,
                     price: apt.price,
@@ -419,16 +422,30 @@ export const Agenda: React.FC = () => {
 
             const serviceNames = (serviceDetails || []).map(s => s.name).join(', ');
 
+            // Auto-assign professional if not specified (e.g., "Anyone" booking)
+            let finalProfessionalId = booking.professional_id;
+            if (!finalProfessionalId) {
+                if (teamMembers.length === 1) {
+                    finalProfessionalId = teamMembers[0].id;
+                } else if (teamMembers.length > 1) {
+                    // Try to find the owner or just assign to first available as a fallback
+                    // for "Anyone" bookings in multi-pro shops, we could leave it
+                    // but for this user (1 pro), we definitely want to assignment.
+                    finalProfessionalId = teamMembers[0].id;
+                }
+            }
+
             const { error: aptError } = await supabase
                 .from('appointments')
                 .insert({
                     user_id: user.id,
                     client_id: clientId,
-                    professional_id: booking.professional_id,
+                    professional_id: finalProfessionalId,
                     service: serviceNames,
                     appointment_time: booking.appointment_time,
                     price: booking.total_price,
-                    status: 'Confirmed'
+                    status: 'Confirmed',
+                    duration_minutes: booking.duration_minutes || 30
                 });
 
             if (aptError) throw aptError;
@@ -438,7 +455,15 @@ export const Agenda: React.FC = () => {
                 .update({ status: 'confirmed' })
                 .eq('id', booking.id);
 
-            alert('Agendamento aceito com sucesso!');
+            // Fetch the client to ensure we have the correct phone number if it was just created
+            const phone = booking.customer_phone;
+            const waPhone = phone.replace(/\D/g, '');
+            const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+
+            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
+                window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
+            }
+
             fetchData();
         } catch (error) {
             console.error('Error accepting booking:', error);
@@ -569,9 +594,23 @@ export const Agenda: React.FC = () => {
         }
     };
 
+    const handleAssignToProfessional = async (appointmentId: string, professionalId: string) => {
+        try {
+            const { error } = await supabase
+                .from('appointments')
+                .update({ professional_id: professionalId })
+                .eq('id', appointmentId);
+            if (error) throw error;
+            fetchData();
+        } catch (error) {
+            console.error('Error assigning professional:', error);
+            alert('Erro ao atribuir profissional.');
+        }
+    };
+
     const resetForm = () => {
         setSelectedClient('');
-        setSelectedService('');
+        setSelectedServices([]);
         setSelectedProfessional('');
         setSelectedTime('');
         setCustomTime('');
@@ -580,21 +619,23 @@ export const Agenda: React.FC = () => {
     };
 
     const handleCreateAppointment = async () => {
-        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedTime || !selectedAppointmentDate) {
+        if (!user || !selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedTime || !selectedAppointmentDate) {
             alert('Preencha todos os campos!');
             return;
         }
 
         try {
-            const service = services.find(s => s.id === selectedService);
-            if (!service) {
+            const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
+            if (selectedServicesDetails.length === 0) {
                 alert('Serviço inválido.');
                 return;
             }
 
-            const basePrice = service.price;
+            const basePrice = selectedServicesDetails.reduce((sum, s) => sum + s.price, 0);
             const discountRate = parseFloat(discountPercentage) / 100;
             const finalPrice = basePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+
+            const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
             const dateTime = new Date(selectedAppointmentDate);
             const timeToUse = selectedTime === 'custom' ? customTime : selectedTime;
@@ -607,7 +648,7 @@ export const Agenda: React.FC = () => {
                     user_id: user.id,
                     client_id: selectedClient,
                     professional_id: selectedProfessional,
-                    service: service.name,
+                    service: serviceNames,
                     appointment_time: dateTime.toISOString(),
                     price: finalPrice, // Use final price after discount
                     status: 'Confirmed'
@@ -615,7 +656,19 @@ export const Agenda: React.FC = () => {
 
             if (error) throw error;
 
-            alert('Agendamento criado com sucesso!');
+            // Prompt for WhatsApp confirmation
+            const client = clients.find(c => c.id === selectedClient);
+            if (client?.phone) {
+                const waPhone = client.phone.replace(/\D/g, '');
+                const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+
+                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
+                    window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
+                }
+            } else {
+                alert('Agendamento criado com sucesso!');
+            }
+
             setShowNewAppointmentModal(false);
             const newDate = new Date(selectedAppointmentDate);
             const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
@@ -687,8 +740,8 @@ export const Agenda: React.FC = () => {
     }));
 
     // Calculate price preview for the modal
-    const selectedServiceDetails = services.find(s => s.id === selectedService);
-    const basePriceNew = selectedServiceDetails?.price || 0;
+    const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
+    const basePriceNew = selectedServicesDetails.reduce((sum, s) => sum + s.price, 0);
     const discountRateNew = parseFloat(discountPercentage) / 100;
     const finalPriceNew = basePriceNew * (1 - (isNaN(discountRateNew) ? 0 : discountRateNew));
 
@@ -1052,6 +1105,14 @@ export const Agenda: React.FC = () => {
                                             <div className="mt-2 text-[10px] text-red-400 flex items-center gap-1">
                                                 <AlertTriangle className="w-3 h-3" /> Necessário atribuir profissional
                                             </div>
+                                            {teamMembers.length === 1 && (
+                                                <button
+                                                    onClick={() => handleAssignToProfessional(apt.id, teamMembers[0].id)}
+                                                    className={`mt-2 w-full font-bold text-[10px] py-2 rounded-lg transition-all flex items-center justify-center gap-1 ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white' : 'bg-green-600 text-white hover:bg-green-500'}`}
+                                                >
+                                                    <Check className="w-3 h-3" /> ATRIBUIR A {teamMembers[0].name.toUpperCase()}
+                                                </button>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -1155,6 +1216,19 @@ export const Agenda: React.FC = () => {
                                                     <div className="flex items-center gap-2">
                                                         {apt.status === 'Confirmed' && (
                                                             <>
+                                                                {apt.clientPhone && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const waPhone = apt.clientPhone!.replace(/\D/g, '');
+                                                                            const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+                                                                            window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
+                                                                        }}
+                                                                        className="text-green-500 hover:text-green-400 transition-colors"
+                                                                        title="Enviar confirmação por WhatsApp"
+                                                                    >
+                                                                        <MessageCircle className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
                                                                 <button
                                                                     onClick={() => setEditingAppointment(apt)}
                                                                     className="text-neutral-400 hover:text-white transition-colors"
@@ -1422,12 +1496,13 @@ export const Agenda: React.FC = () => {
 
                             {/* Searchable Service Select */}
                             <SearchableSelect
-                                label="Serviço"
-                                placeholder="Buscar serviço por nome"
+                                label="Serviços"
+                                placeholder="Selecione um ou mais serviços"
                                 options={serviceOptions}
-                                value={selectedService}
-                                onChange={setSelectedService}
+                                value={selectedServices}
+                                onChange={setSelectedServices}
                                 accentColor={accentColor}
+                                multiple={true}
                             />
 
                             <div>

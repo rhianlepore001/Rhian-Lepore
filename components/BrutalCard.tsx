@@ -10,6 +10,7 @@ interface BrutalCardProps {
   noPadding?: boolean;
   accent?: boolean;
   glow?: boolean;
+  forceTheme?: 'beauty' | 'barber';
 }
 
 export const BrutalCard: React.FC<BrutalCardProps> = ({
@@ -19,10 +20,11 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   action,
   noPadding = false,
   accent = false,
-  glow = false
+  glow = false,
+  forceTheme
 }) => {
   const { userType } = useAuth();
-  const isBeauty = userType === 'beauty';
+  const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
   // ===========================================
   // BRUTALISMO (Barbearias): Bordas retas, sombras pesadas, visual industrial

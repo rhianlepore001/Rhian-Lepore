@@ -9,21 +9,23 @@ interface TeamMemberFormProps {
     onClose: () => void;
     onSave: () => void;
     accentColor: string;
+    isOwnerForm?: boolean; // NEW: Indica que o formulário deve ser preenchido com dados do dono
 }
 
 export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     member,
     onClose,
     onSave,
-    accentColor
+    accentColor,
+    isOwnerForm = false
 }) => {
-    const { user, fullName, avatarUrl } = useAuth();
-    const [name, setName] = useState(member?.name || '');
-    const [role, setRole] = useState(member?.role || '');
+    const { user, fullName, avatarUrl, businessName } = useAuth();
+    const [name, setName] = useState(member?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
+    const [role, setRole] = useState(member?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
     const [slug, setSlug] = useState(member?.slug || '');
     const [bio, setBio] = useState(member?.bio || '');
-    const [commissionRate, setCommissionRate] = useState(member?.commission_rate || 0);
-    const [isOwner, setIsOwner] = useState(member?.is_owner || false);
+    const [commissionRate, setCommissionRate] = useState(member?.commission_rate || (isOwnerForm ? 100 : 0));
+    const [isOwner, setIsOwner] = useState(member?.is_owner || (isOwnerForm ? true : false));
     const [active, setActive] = useState(member?.active ?? true);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(member?.photo_url || null);
@@ -45,9 +47,10 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     };
 
     const handleFillWithOwner = () => {
-        setName(fullName || '');
+        setName(fullName || businessName || '');
         setRole('Dono / Profissional');
         setPhotoPreview(avatarUrl || null);
+        setCommissionRate(100);
         setIsOwner(true);
     };
 

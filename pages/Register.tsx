@@ -40,7 +40,10 @@ export const Register: React.FC = () => {
     border: isBarber ? 'border-accent-gold' : 'border-beauty-neon',
     button: isBarber ? 'bg-accent-gold hover:bg-accent-goldHover text-black' : 'bg-beauty-neon hover:bg-beauty-neonHover text-black',
     screw: isBarber ? 'text-neutral-800' : 'text-beauty-silver',
-    inputFocus: isBarber ? 'focus:border-accent-gold' : 'focus:border-beauty-neon',
+    inputFocus: isBarber ? 'focus:border-accent-gold' : 'focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]',
+    inputBg: isBarber ? 'bg-black/40' : 'bg-beauty-dark/50',
+    inputBorder: isBarber ? 'border-neutral-800' : 'border-beauty-neon/20',
+    inputRadius: isBarber ? 'rounded-none' : 'rounded-xl',
   };
 
   const handleRegister = async () => {
@@ -97,9 +100,12 @@ export const Register: React.FC = () => {
       )}
 
       <div className="flex items-center justify-center p-4 py-8">
-        <div className={`w-full max-w-lg relative z-10 ${styles.cardBg} border-4 border-black shadow-heavy transition-colors duration-500 my-8`}>
-          {/* Top Heavy Industrial Bar - REMOVED DEBUG TEXTS */}
-          <div className="bg-black p-4 flex justify-between items-center border-b-4 border-white/10">
+        <div className={`w-full max-w-lg relative z-10 ${styles.cardBg} transition-all duration-500 my-8
+          ${isBarber
+            ? 'border-4 border-black shadow-heavy'
+            : 'border border-beauty-neon/30 rounded-2xl shadow-[0_0_30px_rgba(167,139,250,0.15)] bg-gradient-to-br from-beauty-card to-beauty-dark'}`}>
+          {/* Top Header Bar */}
+          <div className={`p-4 flex justify-between items-center transition-all ${isBarber ? 'bg-black border-b-4 border-white/10' : 'bg-beauty-dark/40 border-b border-white/5 rounded-t-2xl'}`}>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${isBarber ? 'bg-accent-gold animate-pulse' : 'bg-beauty-neon animate-pulse'}`}></div>
               <span className="font-mono text-xs text-neutral-400 tracking-widest">CONFIGURAÇÃO INICIAL</span>
@@ -181,7 +187,7 @@ export const Register: React.FC = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                   placeholder="SEU NOME COMPLETO"
                 />
               </div>
@@ -194,7 +200,7 @@ export const Register: React.FC = () => {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                   placeholder={type === 'barber' ? "EX: CAVALHEIROS & NAVALHAS" : "EX: STUDIO GLOW"}
                 />
               </div>
@@ -208,6 +214,7 @@ export const Register: React.FC = () => {
                     value={phone}
                     onChange={setPhone}
                     defaultRegion={region}
+                    forceTheme={type}
                     placeholder={region === 'BR' ? "(XX) 9XXXX-XXXX" : "+351 XXX XXX XXX"}
                   />
                 </div>
@@ -215,7 +222,7 @@ export const Register: React.FC = () => {
                   <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
                     Moeda Config
                   </label>
-                  <div className="w-full h-[54px] bg-black/20 border-2 border-neutral-800 flex items-center px-4 text-neutral-400 font-mono text-sm">
+                  <div className={`w-full h-[54px] ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} flex items-center px-4 text-neutral-400 font-mono text-sm`}>
                     {region === 'BR' ? 'R$ (Real)' : '€ (Euro)'}
                     <Check className="w-4 h-4 ml-auto opacity-50" />
                   </div>
@@ -228,7 +235,7 @@ export const Register: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                   placeholder="admin@seudominio.com"
                 />
               </div>
@@ -240,7 +247,7 @@ export const Register: React.FC = () => {
                     type={showPassword ? 'text' : 'password'} // Dynamic type
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                    className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                     placeholder="••••••••"
                   />
                   <button
@@ -259,7 +266,10 @@ export const Register: React.FC = () => {
             <button
               onClick={handleRegister}
               disabled={loading}
-              className={`w-full ${styles.button} h-14 font-heading text-lg uppercase tracking-wider border-2 border-black shadow-heavy active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`w-full ${styles.button} h-14 font-heading text-lg uppercase tracking-wider transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed
+                ${isBarber
+                  ? 'border-2 border-black shadow-heavy active:shadow-none active:translate-y-1'
+                  : 'rounded-xl shadow-neon hover:shadow-neonStrong active:scale-95'}`}
             >
               {loading ? (
                 <span className="animate-pulse">PROCESSANDO...</span>

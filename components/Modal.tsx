@@ -12,6 +12,7 @@ interface ModalProps {
     showCloseButton?: boolean;
     footer?: React.ReactNode;
     preventClose?: boolean;
+    forceTheme?: 'beauty' | 'barber';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -22,10 +23,11 @@ export const Modal: React.FC<ModalProps> = ({
     size = 'md',
     showCloseButton = true,
     footer,
-    preventClose = false
+    preventClose = false,
+    forceTheme
 }) => {
     const { userType } = useAuth();
-    const isBeauty = userType === 'beauty';
+    const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
     // Fecha ao pressionar ESC
     const handleEscape = useCallback((e: KeyboardEvent) => {

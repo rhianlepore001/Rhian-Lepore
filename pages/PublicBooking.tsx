@@ -140,6 +140,52 @@ export const PublicBooking: React.FC = () => {
         fetchExistingClient();
     }, [customerPhone, businessId]);
 
+    const fetchFreshActiveBooking = async (phone: string, bId: string) => {
+        try {
+            const { data: booking, error: bookingError } = await supabase.rpc('get_active_booking_by_phone', {
+                p_phone: phone,
+                p_business_id: bId
+            });
+
+            if (booking && booking[0]) {
+                setActiveBooking(booking[0]);
+            } else {
+                setActiveBooking(null);
+            }
+        } catch (error) {
+            console.error('Error fetching fresh active booking:', error);
+        }
+    };
+
+    // Real-time subscription for booking status changes
+    useEffect(() => {
+        if (!activeBooking?.id) return;
+
+        const channel = supabase
+            .channel(`booking_status_${activeBooking.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'public_bookings',
+                    filter: `id=eq.${activeBooking.id}`
+                },
+                (payload) => {
+                    console.log('Booking update received:', payload);
+                    // Refresh the booking data to get joined professional info etc.
+                    fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
+                }
+            )
+            .subscribe((status) => {
+                console.log(`Supabase Realtime status for booking ${activeBooking.id}:`, status);
+            });
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [activeBooking?.id]);
+
     const isBeauty = business?.user_type === 'beauty';
 
     useEffect(() => {
@@ -385,9 +431,18 @@ export const PublicBooking: React.FC = () => {
 
             // 3. Format appointment time and Calculate Total
             const dateStr = selectedDate.toISOString().split('T')[0];
-            const appointmentTime = new Date(`${dateStr}T${selectedTime}`);
             const totalPrice = calculateTotal();
             const duration = calculateDuration();
+
+            // Handle business timezone offset to ensure consistency regardless of client location
+            const getBusinessOffset = (region: string) => {
+                if (region === 'BR') return '-03:00';
+                if (region === 'PT') return '+00:00'; // Defaulting to winter, PT is Lisbon
+                return 'Z';
+            };
+            const offset = getBusinessOffset(business?.region || 'BR');
+            const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
+            const appointmentTime = new Date(appointmentTimeISO);
 
             // 3.5 Check if already has an active booking (Extra safety for concurrency)
             const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', {
@@ -427,9 +482,10 @@ export const PublicBooking: React.FC = () => {
                         customer_name: customerName,
                         service_ids: selectedServices,
                         professional_id: finalProfessionalId,
-                        appointment_time: appointmentTime.toISOString(),
+                        appointment_time: appointmentTimeISO,
                         total_price: totalPrice,
-                        status: 'pending' // Reset to pending if edited? Usually yes.
+                        status: 'pending', // Reset to pending if edited? Usually yes.
+                        duration_minutes: duration
                     })
                     .eq('id', editingBookingId);
 
@@ -443,9 +499,10 @@ export const PublicBooking: React.FC = () => {
                         customer_phone: customerPhone,
                         service_ids: selectedServices,
                         professional_id: finalProfessionalId,
-                        appointment_time: appointmentTime.toISOString(),
+                        appointment_time: appointmentTimeISO,
                         total_price: totalPrice,
-                        status: 'pending'
+                        status: 'pending',
+                        duration_minutes: duration
                     });
 
                 if (error) throw error;

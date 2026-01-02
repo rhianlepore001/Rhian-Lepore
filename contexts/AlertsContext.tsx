@@ -64,9 +64,11 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             // --- ALERTA: Acerto de Comissões ---
             const { data: settings } = await supabase
                 .from('business_settings')
-                .select('commission_settlement_day_of_month')
+                .select('commission_settlement_day_of_month, onboarding_completed')
                 .eq('user_id', user.id)
                 .single();
+
+            const onboardingCompleted = settings?.onboarding_completed ?? false;
 
             if (settings?.commission_settlement_day_of_month) {
                 const settlementDay = settings.commission_settlement_day_of_month;
@@ -105,13 +107,24 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             }
 
-            // --- ALERTA DE SETUP (Lógica existente) ---
+            // --- ALERTA DE SETUP (Lógica de conta nova) ---
             const isNewAccount = createdAt &&
                 (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);
 
             if (isNewAccount) {
-                const { data: services } = await supabase.from('services').select('id').eq('user_id', user.id);
-                if (!services || services.length === 0) {
+                // Fetch basic status in parallel
+                const [
+                    { count: servicesCount, error: servicesError },
+                    { count: teamCount, error: teamError },
+                    { data: profile, error: profileError }
+                ] = await Promise.all([
+                    supabase.from('services').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+                    supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+                    supabase.from('profiles').select('business_name, logo_url').eq('id', user.id).maybeSingle()
+                ]);
+
+                // 1. Services Check
+                if (!servicesError && (servicesCount === 0 || servicesCount === null) && !onboardingCompleted) {
                     generatedAlerts.push({
                         id: 'setup-services',
                         text: '📋 Configure seus serviços e preços para começar',
@@ -120,8 +133,8 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     });
                 }
 
-                const { data: team } = await supabase.from('team_members').select('id').eq('user_id', user.id);
-                if (!team || team.length === 0) {
+                // 2. Team Check
+                if (!teamError && (teamCount === 0 || teamCount === null) && !onboardingCompleted) {
                     generatedAlerts.push({
                         id: 'setup-team',
                         text: '👥 Adicione membros da equipe para gerenciar agendamentos',
@@ -130,23 +143,25 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     });
                 }
 
-                const { data: profile } = await supabase.from('profiles').select('business_name, logo_url').eq('id', user.id).single();
-                if (!profile?.business_name) {
-                    generatedAlerts.push({
-                        id: 'setup-profile',
-                        text: '👤 Configure seu perfil',
-                        type: 'warning',
-                        actionPath: '/configuracoes/geral'
-                    });
-                }
+                // 3. Profile/Business Check
+                if (!profileError && profile) {
+                    if (!profile.business_name && !onboardingCompleted) {
+                        generatedAlerts.push({
+                            id: 'setup-profile',
+                            text: '👤 Configure seu perfil',
+                            type: 'warning',
+                            actionPath: '/configuracoes/geral'
+                        });
+                    }
 
-                if (!profile?.logo_url) {
-                    generatedAlerts.push({
-                        id: 'setup-business',
-                        text: '🏪 Adicione foto e capa do seu estabelecimento',
-                        type: 'warning',
-                        actionPath: '/configuracoes/geral'
-                    });
+                    if (!profile.logo_url) {
+                        generatedAlerts.push({
+                            id: 'setup-business',
+                            text: '🏪 Adicione foto e capa do seu estabelecimento',
+                            type: 'warning',
+                            actionPath: '/configuracoes/geral'
+                        });
+                    }
                 }
             }
         } catch (error) {

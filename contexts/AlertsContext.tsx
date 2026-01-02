@@ -45,6 +45,22 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 });
             }
 
+            // --- ALERTA: Novos Agendamentos Online ---
+            const { data: pendingBookings } = await supabase
+                .from('public_bookings')
+                .select('id')
+                .eq('business_id', user.id)
+                .eq('status', 'pending');
+
+            if (pendingBookings && pendingBookings.length > 0) {
+                generatedAlerts.push({
+                    id: 'pending-public-bookings',
+                    text: `📌 Você tem ${pendingBookings.length} agendamento(s) online aguardando aprovação.`,
+                    type: 'warning',
+                    actionPath: '/agenda'
+                });
+            }
+
             // --- ALERTA: Acerto de Comissões ---
             const { data: settings } = await supabase
                 .from('business_settings')
@@ -166,10 +182,40 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     useEffect(() => {
         refreshAlerts();
 
-        // Refresh alerts every 5 minutes
+        // 1. Refresh alerts every 5 minutes
         const interval = setInterval(refreshAlerts, 5 * 60 * 1000);
 
-        return () => clearInterval(interval);
+        // 2. Real-time subscription for public_bookings to alert immediately
+        const subscription = supabase
+            .channel('public_bookings_alerts')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'public_bookings',
+                filter: `business_id=eq.${user?.id}`
+            }, () => {
+                refreshAlerts();
+            })
+            .subscribe();
+
+        // 3. Real-time subscription for status updates
+        const updateSubscription = supabase
+            .channel('public_bookings_updates')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'public_bookings',
+                filter: `business_id=eq.${user?.id}`
+            }, () => {
+                refreshAlerts();
+            })
+            .subscribe();
+
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(subscription);
+            supabase.removeChannel(updateSubscription);
+        };
     }, [user]);
 
     return (

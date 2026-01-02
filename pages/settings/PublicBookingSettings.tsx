@@ -95,10 +95,10 @@ export const PublicBookingSettings: React.FC = () => {
 
                 <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
 
-                <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
+                <div className={`p-4 md:p-6 mb-4 md:mb-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                            <h3 className="text-white font-bold text-base md:text-lg mb-1 md:mb-2">
+                            <h3 className={`font-bold text-base md:text-lg mb-1 md:mb-2 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
                                 Ativar Agendamento Público
                             </h3>
                             <p className="text-neutral-400 text-xs md:text-sm">
@@ -118,11 +118,11 @@ export const PublicBookingSettings: React.FC = () => {
                 </div>
 
                 <div className="space-y-4 md:space-y-6 mb-6 md:mb-8">
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6">
+                    <div className={`p-4 md:p-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
                         <div className="flex items-start justify-between gap-4 mb-3 md:mb-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1 md:mb-2">
-                                    <h3 className="text-white font-bold text-base md:text-lg">
+                                    <h3 className={`font-bold text-base md:text-lg ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
                                         Upsells Inteligentes
                                     </h3>
                                     <button className="text-neutral-400 hover:text-white">
@@ -148,19 +148,19 @@ export const PublicBookingSettings: React.FC = () => {
                         </div>
 
                         {enableUpsells && (
-                            <div className="mt-3 md:mt-4 p-3 md:p-4 bg-neutral-800 rounded-lg border border-neutral-700">
-                                <p className="text-xs md:text-sm text-neutral-300">
+                            <div className={`mt-3 md:mt-4 p-3 md:p-4 rounded-lg border transition-all ${isBeauty ? 'bg-beauty-dark/50 border-beauty-neon/20 text-beauty-neon/80' : 'bg-neutral-800 border-neutral-700 text-neutral-300'}`}>
+                                <p className="text-xs md:text-sm">
                                     ✅ <strong>Ativado!</strong> Configure os upsells na página de Serviços.
                                 </p>
                             </div>
                         )}
                     </div>
 
-                    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6">
+                    <div className={`p-4 md:p-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
                         <div className="flex items-start justify-between gap-4 mb-3 md:mb-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1 md:mb-2">
-                                    <h3 className="text-white font-bold text-base md:text-lg">
+                                    <h3 className={`font-bold text-base md:text-lg ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
                                         Seleção de Profissional
                                     </h3>
                                     <button className="text-neutral-400 hover:text-white">
@@ -186,8 +186,8 @@ export const PublicBookingSettings: React.FC = () => {
                         </div>
 
                         {enableProfessionalSelection && (
-                            <div className="mt-3 md:mt-4 p-3 md:p-4 bg-neutral-800 rounded-lg border border-neutral-700">
-                                <p className="text-xs md:text-sm text-neutral-300">
+                            <div className={`mt-3 md:mt-4 p-3 md:p-4 rounded-lg border transition-all ${isBeauty ? 'bg-beauty-dark/50 border-beauty-neon/20 text-beauty-neon/80' : 'bg-neutral-800 border-neutral-700 text-neutral-300'}`}>
+                                <p className="text-xs md:text-sm">
                                     ✅ <strong>Ativado!</strong> Adicione sua equipe na aba &quot;Equipe&quot;.
                                 </p>
                             </div>
@@ -197,12 +197,16 @@ export const PublicBookingSettings: React.FC = () => {
 
                 <button
                     onClick={handleSave}
-                    className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-${accentColor} hover:bg-${accentColor}/90 text-black font-bold rounded-lg transition-all`}
+                    className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 font-bold rounded-lg transition-all
+                        ${isBeauty
+                            ? 'bg-beauty-neon text-black hover:bg-white hover:shadow-neon'
+                            : `bg-${accentColor} hover:bg-${accentColor}/90 text-black`}
+                    `}
                 >
                     <Save className="w-5 h-5" />
                     Salvar Alterações
                 </button>
             </div>
-        </SettingsLayout>
+        </SettingsLayout >
     );
 };

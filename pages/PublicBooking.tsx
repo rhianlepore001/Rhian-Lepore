@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Star, Clock, Check, Sparkles, Scissors, Calendar, Phone, Users } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, ImageIcon, Upload, Loader2, X, AlertTriangle } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
 import { UpsellSection } from '../components/UpsellSection';
@@ -9,7 +11,7 @@ import { ProfessionalSelector } from '../components/ProfessionalSelector';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { BrutalButton } from '../components/BrutalButton';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatPhone } from '../utils/formatters';
 
 interface Service {
     id: string;
@@ -55,19 +57,25 @@ export const PublicBooking: React.FC = () => {
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [gallery, setGallery] = useState<any[]>([]); // New state for gallery
     const [loading, setLoading] = useState(true);
-    const [step, setStep] = useState<'services' | 'datetime' | 'contact'>('services');
+    const [step, setStep] = useState<'services' | 'datetime' | 'contact' | 'success'>('services');
+    const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-    // Contact form
+    // Contact form state
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
+    const [customerPhoto, setCustomerPhoto] = useState<File | null>(null);
+    const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
     const [selectedProfessional, setSelectedProfessional] = useState<string | null>(proIdParam || null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+    const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+    const [activeBooking, setActiveBooking] = useState<any>(null);
+    const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
 
-    const { client } = usePublicClient();
+    const { client, register } = usePublicClient();
 
     // Sync client data from context to form state
     useEffect(() => {
@@ -77,15 +85,76 @@ export const PublicBooking: React.FC = () => {
         }
     }, [client]);
 
+    // Auto-fill client data from database when phone number is entered
+    useEffect(() => {
+        const fetchExistingClient = async () => {
+            // Wait for a valid phone number length (e.g., +5511999999999 is 14 chars, +351912345678 is 13 chars)
+            if (customerPhone.length >= 12 && businessId) {
+                try {
+                    // Search in public_clients first as it's for public flow
+                    const { data: publicClient } = await supabase
+                        .from('public_clients')
+                        .select('name, photo_url')
+                        .eq('phone', customerPhone)
+                        .eq('business_id', businessId)
+                        .maybeSingle();
+
+                    if (publicClient) {
+                        if (publicClient.name && !customerName) setCustomerName(publicClient.name);
+                        if (publicClient.photo_url) setExistingPhotoUrl(publicClient.photo_url);
+                        return;
+                    }
+
+                    // Then search in main clients table
+                    const { data: mainClient } = await supabase
+                        .from('clients')
+                        .select('name, photo_url')
+                        .eq('phone', customerPhone)
+                        .eq('user_id', businessId)
+                        .maybeSingle();
+
+                    if (mainClient) {
+                        if (mainClient.name && !customerName) setCustomerName(mainClient.name);
+                        if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
+                    }
+
+                    // Check for active pending booking
+                    const { data: booking, error: bookingError } = await supabase.rpc('get_active_booking_by_phone', {
+                        p_phone: customerPhone,
+                        p_business_id: businessId
+                    });
+
+                    if (booking && booking[0]) {
+                        setActiveBooking(booking[0]);
+                        setStep('success');
+                    }
+                } catch (error) {
+                    console.error('Error fetching existing client:', error);
+                }
+            } else if (customerPhone.length < 9) {
+                // Reset if phone is cleared
+                setExistingPhotoUrl(null);
+            }
+        };
+
+        fetchExistingClient();
+    }, [customerPhone, businessId]);
+
     const isBeauty = business?.user_type === 'beauty';
 
     useEffect(() => {
         const fetchSlots = async () => {
             if (selectedDate && businessId) {
-                const dateStr = selectedDate.toISOString().split('T')[0];
+                const year = selectedDate.getFullYear();
+                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(selectedDate.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+
                 const { data, error } = await supabase.rpc('get_available_slots', {
                     p_business_id: businessId,
-                    p_date: dateStr
+                    p_date: dateStr,
+                    p_professional_id: selectedProfessional === 'any' ? null : selectedProfessional,
+                    p_duration_min: calculateDuration()
                 });
 
                 if (error) {
@@ -96,7 +165,33 @@ export const PublicBooking: React.FC = () => {
             }
         };
         fetchSlots();
-    }, [selectedDate, businessId]);
+    }, [selectedDate, businessId, selectedProfessional]);
+
+    // Fetch full dates for the calendar
+    useEffect(() => {
+        const fetchFullDates = async () => {
+            if (businessId) {
+                const now = new Date();
+                const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+                const end = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+                const endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+
+                const { data, error } = await supabase.rpc('get_full_dates', {
+                    p_business_id: businessId,
+                    p_start_date: startDate,
+                    p_end_date: endDate,
+                    p_professional_id: selectedProfessional === 'any' ? null : selectedProfessional,
+                    p_duration_min: calculateDuration()
+                });
+
+                if (!error && data) {
+                    setFullDates(data);
+                }
+            }
+        };
+        fetchFullDates();
+    }, [businessId, selectedProfessional]);
 
     useEffect(() => {
         const fetchBusinessData = async () => {
@@ -104,7 +199,7 @@ export const PublicBooking: React.FC = () => {
                 // Fetch business profile by slug - expanded columns
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
-                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection, logo_url, cover_photo_url, address_street, instagram_handle')
+                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection, logo_url, cover_photo_url, address_street, instagram_handle, region')
                     .eq('business_slug', slug)
                     .single();
 
@@ -205,45 +300,179 @@ export const PublicBooking: React.FC = () => {
             .reduce((sum, s) => sum + s.duration_minutes, 0);
     };
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleCancelBooking = async (bookingId: string) => {
+        if (!confirm('Tem certeza que deseja cancelar sua solicitação de agendamento?')) return;
+
+        try {
+            const { error } = await supabase
+                .from('public_bookings')
+                .delete()
+                .eq('id', bookingId);
+
+            if (error) throw error;
+
+            setActiveBooking(null);
+            setStep('services');
+            alert('Agendamento cancelado com sucesso.');
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            alert('Erro ao cancelar agendamento.');
+        }
+    };
+
+    const handleEditBooking = (booking: any) => {
+        setEditingBookingId(booking.id);
+
+        // Populate services
+        if (booking.service_ids) {
+            setSelectedServices(booking.service_ids);
+        }
+
+        // Populate professional
+        setSelectedProfessional(booking.professional_id || 'any');
+
+        // Populate date/time
+        const bDate = new Date(booking.appointment_time);
+        if (!isNaN(bDate.getTime())) {
+            setSelectedDate(bDate);
+            const timeStr = bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            setSelectedTime(timeStr);
+        }
+
+        setCustomerName(booking.customer_name);
+        setStep('services');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleSubmit = async () => {
         if (!businessId || !customerName || !customerPhone || !selectedDate || !selectedTime || !acceptedPolicy) {
             alert('Por favor, preencha todos os campos e aceite a política de cancelamento.');
             return;
         }
 
-        try {
-            // Format date and time
-            const dateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
-            const appointmentTime = new Date(`${dateStr}T${selectedTime}`);
+        setIsSubmitting(true);
 
-            const { error } = await supabase
-                .from('public_bookings')
-                .insert({
-                    business_id: businessId,
-                    customer_name: customerName,
-                    customer_phone: customerPhone,
-                    service_ids: selectedServices,
-                    professional_id: selectedProfessional === 'any' ? null : selectedProfessional,
-                    appointment_time: appointmentTime.toISOString(),
-                    total_price: calculateTotal(),
-                    status: 'pending'
+        try {
+            let photoUrl = client?.photo_url || null;
+
+            // 1. Upload photo if provided
+            if (customerPhoto) {
+                const fileExt = customerPhoto.name.split('.').pop();
+                const fileName = `public_${businessId}_${Date.now()}.${fileExt}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('client_photos')
+                    .upload(fileName, customerPhoto);
+
+                if (!uploadError) {
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('client_photos')
+                        .getPublicUrl(fileName);
+                    photoUrl = publicUrl;
+                }
+            }
+
+            // 2. Register/Update client
+            // This returns the FRESH client record
+            const registeredClient = await register({
+                name: customerName,
+                phone: customerPhone,
+                photo_url: photoUrl,
+                business_id: businessId
+            });
+
+            // 3. Format appointment time and Calculate Total
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            const appointmentTime = new Date(`${dateStr}T${selectedTime}`);
+            const totalPrice = calculateTotal();
+            const duration = calculateDuration();
+
+            // 3.5 Check if already has an active booking (Extra safety for concurrency)
+            const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', {
+                p_phone: customerPhone,
+                p_business_id: businessId
+            });
+
+            if (existingBooking && existingBooking[0]) {
+                setActiveBooking(existingBooking[0]);
+                setStep('success');
+                setIsSubmitting(false);
+                return;
+            }
+
+            // 4. Auto-assign professional if "any" is selected
+            let finalProfessionalId = selectedProfessional === 'any' ? null : selectedProfessional;
+
+            if (selectedProfessional === 'any') {
+                const { data: autoProId, error: autoProError } = await supabase.rpc('get_first_available_professional', {
+                    p_business_id: businessId,
+                    p_appointment_time: appointmentTime.toISOString(),
+                    p_duration_min: duration
                 });
 
-            if (error) throw error;
+                if (autoProId) {
+                    finalProfessionalId = autoProId;
+                } else {
+                    console.warn('Auto-assign failed, falling back to unassigned:', autoProError);
+                }
+            }
 
-            alert('Agendamento realizado com sucesso! Você receberá uma confirmação em breve.');
-            // Reset form
+            // 5. Create or Update Booking
+            if (editingBookingId) {
+                const { error } = await supabase
+                    .from('public_bookings')
+                    .update({
+                        customer_name: customerName,
+                        service_ids: selectedServices,
+                        professional_id: finalProfessionalId,
+                        appointment_time: appointmentTime.toISOString(),
+                        total_price: totalPrice,
+                        status: 'pending' // Reset to pending if edited? Usually yes.
+                    })
+                    .eq('id', editingBookingId);
+
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('public_bookings')
+                    .insert({
+                        business_id: businessId,
+                        customer_name: customerName,
+                        customer_phone: customerPhone,
+                        service_ids: selectedServices,
+                        professional_id: finalProfessionalId,
+                        appointment_time: appointmentTime.toISOString(),
+                        total_price: totalPrice,
+                        status: 'pending'
+                    });
+
+                if (error) throw error;
+            }
+
+            setEditingBookingId(null);
+            // Refresh active booking data to show up-to-date info on success screen
+            const { data: refreshedBooking } = await supabase.rpc('get_active_booking_by_phone', {
+                p_phone: customerPhone,
+                p_business_id: businessId
+            });
+            if (refreshedBooking && refreshedBooking[0]) {
+                setActiveBooking(refreshedBooking[0]);
+            }
+
+            setStep('success');
+            // Form cleaned up when navigating away or new booking
             setSelectedServices([]);
-            setCustomerName('');
-            setCustomerPhone('');
             setSelectedProfessional(null);
             setSelectedDate(null);
             setSelectedTime(null);
             setAcceptedPolicy(false);
-            setStep('services');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating booking:', error);
-            alert('Erro ao criar agendamento. Tente novamente.');
+            alert(`Erro ao criar agendamento: ${error.message || error}`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -268,44 +497,201 @@ export const PublicBooking: React.FC = () => {
     const cardClass = isBeauty
         ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/20 rounded-2xl shadow-soft transition-all duration-300'
         : 'bg-brutal-card border-4 border-brutal-border shadow-heavy transition-all duration-300';
-    const currencyRegion = businessSettings?.currency_symbol === '€' ? 'PT' : 'BR';
+    const currencyRegion = business?.region || businessSettings?.region || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
 
     const accentColorValue = isBeauty ? '#A78BFA' : '#C29B40';
 
+    // SUCCESS SCREEN
+    if (step === 'success') {
+        const displayBooking = activeBooking || {
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            appointment_time: selectedDate ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), parseInt(selectedTime?.split(':')[0] || '0'), parseInt(selectedTime?.split(':')[1] || '0')) : new Date(),
+            service_names: selectedServices.map(id => services.find(s => s.id === id)?.name).filter(Boolean),
+            status: 'pending',
+            professional_id: selectedProfessional === 'any' ? null : selectedProfessional
+        };
+
+        const bookingDate = new Date(displayBooking.appointment_time);
+        const isConfirmed = displayBooking.status === 'confirmed';
+
+        return (
+            <div className={`min-h-screen ${bgClass} flex items-center justify-center p-6`}>
+                <div className={`${cardClass} p-8 max-w-md w-full text-center relative overflow-hidden animate-in zoom-in-95 duration-300`}>
+                    <div className={`absolute top-0 left-0 w-full h-1 bg-${isConfirmed ? 'green-500' : accentColor}`}></div>
+
+                    <div className={`w-20 h-20 rounded-full bg-${isConfirmed ? 'green-500' : accentColor}/10 flex items-center justify-center mx-auto mb-6`}>
+                        <Check className={`w-10 h-10 text-${isConfirmed ? 'green-500' : accentColor}`} />
+                    </div>
+
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                        {isConfirmed ? 'Agendamento Confirmado!' : (activeBooking ? 'Você já tem uma solicitação!' : 'Solicitação Recebida!')}
+                    </h2>
+                    <p className="text-neutral-400 mb-8 max-w-[280px] mx-auto text-sm">
+                        {isConfirmed
+                            ? 'Seu horário foi confirmado. Estamos te esperando!'
+                            : (activeBooking
+                                ? 'Você já possui uma solicitação pendente. Aguarde a nossa confirmação via WhatsApp.'
+                                : 'Em breve iremos confirmar seu horário no seu WhatsApp. Fique atento às notificações.')
+                        }
+                    </p>
+
+                    <div className="bg-white/5 rounded-2xl p-5 mb-8 border border-white/10 text-left space-y-4">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Status</span>
+                                <span className={`inline-block px-2 py-0.5 ${isConfirmed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} text-[10px] font-bold rounded uppercase`}>
+                                    {isConfirmed ? 'Confirmado' : 'Pendente'}
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Data e Hora</span>
+                                <span className="text-white font-bold text-sm">
+                                    {!isNaN(bookingDate.getTime())
+                                        ? `${bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • ${bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
+                                        : 'A definir'
+                                    }
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-white/10"></div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Serviço(s)</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {(displayBooking.service_names && displayBooking.service_names.length > 0) ? (
+                                        displayBooking.service_names.map((name: string, i: number) => (
+                                            <span key={i} className="text-[11px] bg-white/10 px-2.5 py-1 rounded-full text-neutral-300 border border-white/5">{name}</span>
+                                        ))
+                                    ) : (
+                                        <span className="text-white text-sm font-bold opacity-60">
+                                            {selectedServices.length > 0 ? `${selectedServices.length} serviço(s)` : 'Nenhum serviço'}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center gap-4">
+                                <div className="flex-1">
+                                    <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Profissional</span>
+                                    <span className="text-white font-bold text-sm">
+                                        {displayBooking.professional_name || (professionals.find(p => p.id === displayBooking.professional_id)?.name) || 'A Distribuir'}
+                                    </span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">WhatsApp</span>
+                                    <span className="text-white font-bold text-sm">{formatPhone(displayBooking.customer_phone, currencyRegion)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {!isConfirmed && activeBooking && (
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            <button
+                                onClick={() => handleCancelBooking(activeBooking.id)}
+                                className="p-3 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-mono"
+                            >
+                                CANCELAR
+                            </button>
+                            <button
+                                onClick={() => handleEditBooking(activeBooking)}
+                                className="p-3 text-xs font-bold text-white bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-all font-mono"
+                            >
+                                ALTERAR
+                            </button>
+                        </div>
+                    )}
+
+                    <BrutalButton
+                        onClick={() => window.location.reload()}
+                        variant="primary"
+                        className="w-full"
+                    >
+                        Voltar ao Início
+                    </BrutalButton>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={`min-h-screen ${bgClass} font-sans selection:bg-${accentColor}/30`}>
+            {/* Policy Modal */}
+            {showPolicyModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className={`${cardClass} max-w-lg w-full p-6 relative animate-in zoom-in-95 duration-200`}>
+                        <button
+                            onClick={() => setShowPolicyModal(false)}
+                            className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <h3 className={`text-xl font-bold text-white mb-4 flex items-center gap-2`}>
+                            <AlertTriangle className={`w-5 h-5 text-${accentColor}`} />
+                            Política de Cancelamento
+                        </h3>
+
+                        <div className="text-neutral-300 space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                            {businessSettings?.cancellation_policy ? (
+                                <p className="whitespace-pre-wrap leading-relaxed">{businessSettings.cancellation_policy}</p>
+                            ) : (
+                                <p>Por favor, avise com antecedência caso não possa comparecer. O não comparecimento sem aviso prévio pode sujeitar a cobranças ou restrições em agendamentos futuros.</p>
+                            )}
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
+                            <BrutalButton
+                                onClick={() => setShowPolicyModal(false)}
+                                variant="outline"
+                                size="sm"
+                            >
+                                Entendi
+                            </BrutalButton>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 1. CINEMATIC HERO SECTION */}
             <div className="relative h-[60vh] md:h-[70vh] overflow-hidden">
                 {/* Background Cover */}
                 <div className="absolute inset-0">
-                    {business.cover_photo_url ? (
-                        <img
-                            src={business.cover_photo_url}
-                            alt="Cover"
-                            className="w-full h-full object-cover"
-                        />
-                    ) : (
-                        <div className={`w-full h-full ${isBeauty ? 'bg-gradient-to-br from-beauty-dark via-beauty-card to-beauty-neon/20' : 'bg-neutral-900 border-b-4 border-neutral-800'}`}></div>
-                    )}
+                    {
+                        business.cover_photo_url ? (
+                            <img
+                                src={business.cover_photo_url}
+                                alt="Cover"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className={`w-full h-full ${isBeauty ? 'bg-gradient-to-br from-beauty-dark via-beauty-card to-beauty-neon/20' : 'bg-neutral-900 border-b-4 border-neutral-800'}`}></div>
+                        )
+                    }
                     {/* Immersive Overlays */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
-                </div>
+                </div >
 
                 {/* Hero Content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 px-4 text-center">
+                < div className="absolute inset-0 flex flex-col items-center justify-end pb-12 px-4 text-center" >
                     {/* Logo/Avatar */}
-                    <div className={`relative w-24 h-24 md:w-32 md:h-32 mb-6 rounded-full p-1 bg-white/10 backdrop-blur-xl border-2 border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-700`}>
-                        {business.logo_url ? (
-                            <img src={business.logo_url} alt="Logo" className="w-full h-full object-cover rounded-full" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-neutral-800 rounded-full">
-                                <Scissors className={`w-10 h-10 md:w-14 md:h-14 text-${accentColor}`} />
-                            </div>
-                        )}
+                    < div className={`relative w-24 h-24 md:w-32 md:h-32 mb-6 rounded-full p-1 bg-white/10 backdrop-blur-xl border-2 border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-700`}>
+                        {
+                            business.logo_url ? (
+                                <img src={business.logo_url} alt="Logo" className="w-full h-full object-cover rounded-full" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-neutral-800 rounded-full">
+                                    <Scissors className={`w-10 h-10 md:w-14 md:h-14 text-${accentColor}`} />
+                                </div>
+                            )
+                        }
                         {/* Status Pulse */}
                         <div className="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-                    </div>
+                    </div >
 
                     <h1 className="text-4xl md:text-7xl font-heading text-white uppercase tracking-tighter mb-4 drop-shadow-2xl">
                         {business.business_name}
@@ -334,8 +720,8 @@ export const PublicBooking: React.FC = () => {
                     >
                         Agendar Agora
                     </BrutalButton>
-                </div>
-            </div>
+                </div >
+            </div >
 
             <div className="max-w-6xl mx-auto px-4 -mt-10 relative z-10 pb-32">
                 {/* 2. ABOUT & GALLERY GRID */}
@@ -521,6 +907,13 @@ export const PublicBooking: React.FC = () => {
                                         <h2 className="text-2xl font-heading text-white uppercase tracking-tight">Agendamento</h2>
                                     </div>
 
+                                    {/* Region Warning/Indicator if needed */}
+                                    {currencyRegion === 'PT' && (
+                                        <div className="bg-neutral-900/50 border border-neutral-800 p-2 rounded text-xs text-neutral-500 text-center mb-4">
+                                            Horário de Lisboa (GMT/WEST)
+                                        </div>
+                                    )}
+
                                     {/* Profissional */}
                                     {business?.enable_professional_selection !== false && professionals.length > 0 && (
                                         <section>
@@ -556,9 +949,12 @@ export const PublicBooking: React.FC = () => {
                                     )}
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className={`${cardClass} p-4`}>
-                                            <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} isBeauty={isBeauty} />
-                                        </div>
+                                        <CalendarPicker
+                                            selectedDate={selectedDate}
+                                            onDateSelect={setSelectedDate}
+                                            isBeauty={isBeauty}
+                                            fullDates={fullDates}
+                                        />
                                         {selectedDate ? (
                                             <div className="animate-in fade-in duration-500">
                                                 <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} isBeauty={isBeauty} />
@@ -568,6 +964,18 @@ export const PublicBooking: React.FC = () => {
                                                 Selecione uma data para ver os horários disponíveis.
                                             </div>
                                         )}
+                                    </div>
+                                    <div className="mt-8 flex justify-end">
+                                        <BrutalButton
+                                            disabled={!selectedTime}
+                                            onClick={() => {
+                                                setStep('contact');
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }}
+                                            className="w-full md:w-auto"
+                                        >
+                                            Continuar
+                                        </BrutalButton>
                                     </div>
                                 </div>
                             )}
@@ -583,36 +991,122 @@ export const PublicBooking: React.FC = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                                         <div className="md:col-span-3">
-                                            <ClientAuthModal
-                                                businessId={businessId!}
-                                                onSuccess={() => { }}
-                                                accentColor={accentColor}
-                                            />
+                                            <div className={`${cardClass} p-6 md:p-8 space-y-6`}>
+                                                <h3 className="text-lg font-bold text-white uppercase flex items-center gap-2">
+                                                    <User className={`w-5 h-5 text-${accentColor}`} />
+                                                    Seus Dados
+                                                </h3>
 
-                                            {client && (
-                                                <div className={`mt-8 ${cardClass} p-6 border-l-4 border-green-500`}>
-                                                    <div className="flex items-center gap-3 mb-4">
-                                                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                                                            <Check className="w-5 h-5 text-green-500" />
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-white font-bold">Identificado como {client.name}</p>
-                                                            <p className="text-neutral-500 text-xs">{client.phone}</p>
-                                                        </div>
+                                                {/* Phone Input */}
+                                                <div>
+                                                    <label className="text-neutral-400 text-xs font-mono uppercase mb-2 block">Seu Celular (WhatsApp)</label>
+                                                    <PhoneInput
+                                                        value={customerPhone}
+                                                        onChange={setCustomerPhone}
+                                                        defaultRegion={currencyRegion as 'BR' | 'PT'}
+                                                    />
+                                                    <p className="text-[10px] text-neutral-500 mt-1">
+                                                        Usaremos para confirmar seu agendamento.
+                                                    </p>
+                                                </div>
+
+                                                {/* Name Input */}
+                                                <div>
+                                                    <label className="text-neutral-400 text-xs font-mono uppercase mb-2 block tracking-widest">Seu Nome Completo</label>
+                                                    <div className="relative group">
+                                                        <div className={`absolute inset-0 bg-${accentColor}/5 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition-opacity`}></div>
+                                                        <input
+                                                            type="text"
+                                                            value={customerName}
+                                                            onChange={(e) => setCustomerName(e.target.value)}
+                                                            className={`
+                                                                relative w-full p-4 text-white focus:outline-none transition-all duration-300
+                                                                ${isBeauty
+                                                                    ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:bg-beauty-card placeholder-beauty-neon/30 h-[56px]'
+                                                                    : 'bg-neutral-900 border-2 border-brutal-border focus:border-accent-gold placeholder-neutral-600 shadow-[2px_2px_0px_0px_#000000] focus:shadow-[4px_4px_0px_0px_#C29B40] h-[56px]'
+                                                                }
+                                                            `}
+                                                            placeholder="Como gostaria de ser chamado?"
+                                                        />
+                                                        <User className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${customerName ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-neutral-600'}`} />
                                                     </div>
+                                                </div>
+
+                                                {/* Photo Input (Optional) */}
+                                                <div>
+                                                    <label className="text-neutral-400 text-xs font-mono uppercase mb-2 block">Sua Foto (Opcional)</label>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 rounded-full bg-neutral-800 border border-neutral-700 overflow-hidden flex items-center justify-center">
+                                                            {customerPhoto ? (
+                                                                <img src={URL.createObjectURL(customerPhoto)} alt="Preview" className="w-full h-full object-cover" />
+                                                            ) : existingPhotoUrl ? (
+                                                                <img src={existingPhotoUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <User className="w-6 h-6 text-neutral-500" />
+                                                            )}
+                                                        </div>
+                                                        <label className="cursor-pointer">
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    if (e.target.files && e.target.files[0]) {
+                                                                        setCustomerPhoto(e.target.files[0]);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <span className={`text-sm font-bold text-${accentColor} hover:underline decoration-dotted flex items-center gap-2`}>
+                                                                <Upload className="w-4 h-4" />
+                                                                Carregar Foto
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                {/* Terms Checkbox */}
+                                                <div className="pt-4 border-t border-white/5">
                                                     <label className="flex items-start gap-3 cursor-pointer group">
+                                                        <div className={`
+                                                            w-6 h-6 rounded border-2 flex items-center justify-center transition-all mt-0.5
+                                                            ${acceptedPolicy
+                                                                ? `bg-${accentColor} border-${accentColor} text-black`
+                                                                : 'border-neutral-700 bg-neutral-800 group-hover:border-neutral-500'
+                                                            }
+                                                        `}>
+                                                            {acceptedPolicy && <Check className="w-4 h-4" />}
+                                                        </div>
                                                         <input
                                                             type="checkbox"
+                                                            className="hidden"
                                                             checked={acceptedPolicy}
-                                                            onChange={e => setAcceptedPolicy(e.target.checked)}
-                                                            className={`mt-1 h-5 w-5 rounded border-neutral-700 bg-black text-${accentColor} focus:ring-0`}
+                                                            onChange={(e) => setAcceptedPolicy(e.target.checked)}
                                                         />
-                                                        <span className="text-xs text-neutral-400 leading-relaxed group-hover:text-neutral-300">
-                                                            Declaro estar ciente da política de agendamento e cancelamento do estabelecimento.
-                                                        </span>
+                                                        <div className="text-sm text-neutral-400">
+                                                            Concordo com a <span className="text-white underline decoration-dotted hover:opacity-80 transition-opacity" onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setShowPolicyModal(true);
+                                                            }}>política de cancelamento</span> e confirmo que comparecerei no horário agendado.
+                                                        </div>
                                                     </label>
                                                 </div>
-                                            )}
+
+                                                <BrutalButton
+                                                    onClick={handleSubmit}
+                                                    disabled={!customerName || !customerPhone || !acceptedPolicy || customerPhone.length < 9 || isSubmitting}
+                                                    variant="primary"
+                                                    size="lg"
+                                                    className="w-full flex items-center justify-center gap-2"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" /> Processando...
+                                                        </>
+                                                    ) : (
+                                                        'Confirmar Agendamento'
+                                                    )}
+                                                </BrutalButton>
+                                            </div>
                                         </div>
 
                                         <div className="md:col-span-2 space-y-6">
@@ -643,18 +1137,6 @@ export const PublicBooking: React.FC = () => {
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <BrutalButton
-                                                onClick={handleSubmit}
-                                                disabled={!client || !acceptedPolicy}
-                                                variant="primary"
-                                                size="lg"
-                                                fullWidth
-                                                icon={<Sparkles className={isBeauty ? 'animate-pulse-neon' : ''} />}
-                                                className="mt-6"
-                                            >
-                                                Confirmar Agendamento
-                                            </BrutalButton>
                                         </div>
                                     </div>
                                 </div>
@@ -726,31 +1208,33 @@ export const PublicBooking: React.FC = () => {
             </div>
 
             {/* STICKY BOTTOM SUMMARY */}
-            {selectedServices.length > 0 && step === 'services' && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 z-50 animate-in slide-in-from-bottom duration-300">
-                    <div className={`
+            {
+                selectedServices.length > 0 && step === 'services' && (
+                    <div className="fixed bottom-0 left-0 right-0 p-4 z-50 animate-in slide-in-from-bottom duration-300">
+                        <div className={`
                                         max-w-6xl mx-auto
                                         ${isBeauty ? 'bg-beauty-card/90 border border-beauty-neon/20' : 'bg-neutral-900 border-4 border-brutal-border'} 
                                         backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex items-center justify-between
                                     `}>
-                        <div>
-                            <p className="text-neutral-500 text-[10px] md:text-xs uppercase font-mono tracking-widest">{selectedServices.length} {selectedServices.length === 1 ? 'Serviço' : 'Serviços'}</p>
-                            <p className={`text-2xl md:text-4xl font-bold text-${accentColor}`}>{formatCurrency(calculateTotal(), currencyRegion)}</p>
+                            <div>
+                                <p className="text-neutral-500 text-[10px] md:text-xs uppercase font-mono tracking-widest">{selectedServices.length} {selectedServices.length === 1 ? 'Serviço' : 'Serviços'}</p>
+                                <p className={`text-2xl md:text-4xl font-bold text-${accentColor}`}>{formatCurrency(calculateTotal(), currencyRegion)}</p>
+                            </div>
+                            <BrutalButton
+                                onClick={() => {
+                                    setStep('datetime');
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                variant="primary"
+                                size="lg"
+                                className="px-8 md:px-12"
+                            >
+                                Próximo Passo
+                            </BrutalButton>
                         </div>
-                        <BrutalButton
-                            onClick={() => {
-                                setStep('datetime');
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            variant="primary"
-                            size="lg"
-                            className="px-8 md:px-12"
-                        >
-                            Próximo Passo
-                        </BrutalButton>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

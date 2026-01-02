@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Plus, Search, User, Star, ChevronRight } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
+import { Plus, Search, User, Star, ChevronRight, MessageCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { formatPhone } from '../utils/formatters';
 
 export const Clients: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user, userType, region } = useAuth();
     const [searchParams] = useSearchParams();
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -224,7 +226,22 @@ export const Clients: React.FC = () => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h3 className={`text-lg font-heading text-white mb-1 group-hover:${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} transition-colors`}>{client.name}</h3>
-                                            <p className="text-sm text-text-secondary font-mono">{client.phone || 'Sem telefone'}</p>
+                                            <p className="text-sm text-text-secondary font-mono flex items-center gap-2">
+                                                {client.phone ? formatPhone(client.phone, region as any) : 'Sem telefone'}
+                                                {client.phone && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}`, '_blank');
+                                                        }}
+                                                        className={`p-1 rounded-full hover:bg-green-500/10 transition-colors ${isBeauty ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-500'}`}
+                                                        title="WhatsApp"
+                                                    >
+                                                        <MessageCircle className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </p>
                                         </div>
                                         {/* Clickable Indicator */}
                                         <ChevronRight className={`w-5 h-5 text-neutral-600 group-hover:${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} group-hover:translate-x-1 transition-all`} />
@@ -238,11 +255,11 @@ export const Clients: React.FC = () => {
 
             {/* Modal */}
             {showModal && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/90 backdrop-blur-sm' : 'bg-black/85'}`}>
+                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85'}`}>
                     <div className={`
                         w-full max-w-md p-6 relative modal-enter
                         ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
+                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
                             : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg'
                         }
                     `}>
@@ -264,7 +281,7 @@ export const Clients: React.FC = () => {
                                     className={`
                                         w-full p-3 text-white outline-none transition-all duration-300
                                         ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]'
                                             : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
                                         }
                                     `}
@@ -274,18 +291,11 @@ export const Clients: React.FC = () => {
 
                             <div>
                                 <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Telefone</label>
-                                <input
-                                    type="text"
+                                <PhoneInput
                                     value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    className={`
-                                        w-full p-3 text-white outline-none transition-all duration-300
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                                            : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
-                                        }
-                                    `}
-                                    placeholder="(XX) 9XXXX-XXXX"
+                                    onChange={setPhone}
+                                    defaultRegion={region as 'BR' | 'PT'}
+                                    className="w-full"
                                 />
                             </div>
 
@@ -298,7 +308,7 @@ export const Clients: React.FC = () => {
                                     className={`
                                         w-full p-3 text-white outline-none transition-all duration-300
                                         ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]'
                                             : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
                                         }
                                     `}

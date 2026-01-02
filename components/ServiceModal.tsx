@@ -214,24 +214,53 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     };
 
 
+    const isBeauty = userType === 'beauty';
+
+    // Estilos dinâmicos baseados no userType
+    const modalStyles = isBeauty
+        ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
+        : 'bg-brutal-card border-4 border-brutal-border shadow-[8px_8px_0px_0px_#000000]';
+
+    const headerStyles = isBeauty
+        ? 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent px-6 py-4'
+        : 'border-b-2 border-black border-dashed px-6 py-4 bg-neutral-900/50';
+
+    const inputStyles = isBeauty
+        ? 'w-full p-3 bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:outline-none focus:border-beauty-neon focus:bg-beauty-dark transition-all placeholder-beauty-neon/30'
+        : 'w-full p-3 bg-neutral-900 border-2 border-brutal-border text-white focus:outline-none focus:border-accent-gold placeholder-neutral-600 shadow-[2px_2px_0px_0px_#000000] focus:shadow-[3px_3px_0px_0px_#C29B40] transition-all';
+
+    const buttonAccentStyles = isBeauty
+        ? 'bg-beauty-neon hover:bg-beauty-neon/90 text-black shadow-[0_0_15px_rgba(167,139,250,0.3)] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)]'
+        : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:shadow-[4px_4px_0px_0px_#000000]';
+
+    const backdropStyles = isBeauty
+        ? 'bg-beauty-dark/80'
+        : 'bg-black/85';
+
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div className="flex items-center justify-between p-4 border-b border-neutral-800 sticky top-0 bg-neutral-900 z-10">
-                    <h3 className="text-white font-bold text-lg">
+        <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-50 p-4`}>
+            <div className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300`}>
+                {/* Header */}
+                <div className={`flex items-center justify-between ${headerStyles} sticky top-0 z-10`}>
+                    <h3 className={`font-heading text-lg md:text-xl ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}`}>
                         {service ? 'Editar Serviço' : 'Novo Serviço'}
                     </h3>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-white">
+                    <button
+                        onClick={onClose}
+                        className={isBeauty
+                            ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all'
+                            : 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1 transition-colors'}
+                    >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Suggestions Bar */}
                 {!service && (
-                    <div className="p-4 border-b border-neutral-800 bg-neutral-800/20">
+                    <div className={`p-4 ${isBeauty ? 'border-b border-beauty-neon/20 bg-beauty-neon/5' : 'border-b-2 border-black bg-neutral-900/30'}`}>
                         <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className={`w-4 h-4 text-${accentColor}`} />
-                            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Sugestões Rápidas:</span>
+                            <Sparkles className={`w-4 h-4 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400 font-mono'}`}>Sugestões Rápidas:</span>
                         </div>
                         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                             {suggestions.map((s, i) => (
@@ -239,10 +268,13 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     key={i}
                                     type="button"
                                     onClick={() => handleApplySuggestion(s)}
-                                    className="whitespace-nowrap px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-full text-xs text-white hover:bg-neutral-700 hover:border-neutral-600 transition-all flex items-center gap-2"
+                                    className={`whitespace-nowrap px-3 py-1.5 text-xs text-white transition-all flex items-center gap-2 ${isBeauty
+                                        ? 'bg-beauty-card/50 border border-beauty-neon/30 rounded-full hover:bg-beauty-neon/20 hover:border-beauty-neon'
+                                        : 'bg-neutral-800 border-2 border-neutral-700 hover:bg-neutral-700 shadow-[2px_2px_0px_0px_#000000]'
+                                        }`}
                                 >
                                     {s.name}
-                                    <span className={`text-${accentColor} font-bold`}>R${s.price}</span>
+                                    <span className={`font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>{currencySymbol}{s.price}</span>
                                 </button>
                             ))}
                         </div>
@@ -292,7 +324,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     required
                                     value={name}
                                     onChange={e => setName(e.target.value)}
-                                    className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                    className={inputStyles}
                                     placeholder={accentColor === 'beauty-neon' ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"}
                                 />
                             </div>
@@ -336,7 +368,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                                 type="button"
                                                 onClick={handleCreateCategory}
                                                 disabled={!newCategoryName.trim() || savingCategory}
-                                                className={`px-3 py-2 bg-${accentColor} text-black rounded-lg hover:bg-${accentColor}/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                className={`px-3 py-2 text-black ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${buttonAccentStyles}`}
                                             >
                                                 {savingCategory ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                                             </button>
@@ -357,7 +389,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     <select
                                         value={categoryId}
                                         onChange={e => setCategoryId(e.target.value)}
-                                        className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                        className={inputStyles}
                                     >
                                         <option value="" disabled>Selecione uma categoria</option>
                                         {localCategories.map(cat => (
@@ -379,7 +411,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                         step="0.01"
                                         value={price}
                                         onChange={e => setPrice(e.target.value)}
-                                        className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                        className={inputStyles}
                                         placeholder="0.00"
                                     />
                                 </div>
@@ -388,7 +420,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     <select
                                         value={duration}
                                         onChange={e => setDuration(e.target.value)}
-                                        className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
+                                        className={inputStyles}
                                     >
                                         <option value="15">15 min</option>
                                         <option value="30">30 min</option>
@@ -413,7 +445,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                                         max="12"
                                                         value={customHours}
                                                         onChange={e => setCustomHours(e.target.value)}
-                                                        className={`w-full p-2 bg-neutral-900 border border-neutral-700 rounded text-white focus:outline-none focus:border-${accentColor}`}
+                                                        className={inputStyles}
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -422,7 +454,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                                     <select
                                                         value={customMinutes}
                                                         onChange={e => setCustomMinutes(e.target.value)}
-                                                        className={`w-full p-2 bg-neutral-900 border border-neutral-700 rounded text-white focus:outline-none focus:border-${accentColor}`}
+                                                        className={inputStyles}
                                                     >
                                                         <option value="0">0</option>
                                                         <option value="15">15</option>
@@ -431,7 +463,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                                     </select>
                                                 </div>
                                             </div>
-                                            <p className={`text-xs text-${accentColor} font-mono mt-2`}>
+                                            <p className={`text-xs font-mono mt-2 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
                                                 Total: {customHours}h {customMinutes}min = {(parseInt(customHours) * 60) + parseInt(customMinutes)} minutos
                                             </p>
                                         </div>
@@ -445,7 +477,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
                                     rows={3}
-                                    className={`w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} resize-none`}
+                                    className={`${inputStyles} resize-none`}
                                     placeholder="Detalhes do serviço..."
                                 />
                             </div>
@@ -496,7 +528,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`px-6 py-3 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors flex items-center gap-2`}
+                            className={`px-6 py-3 text-black font-bold ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors flex items-center gap-2 ${buttonAccentStyles}`}
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Serviço'}
                         </button>

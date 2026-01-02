@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { PhoneInput } from '../PhoneInput';
 
 interface StepBusinessInfoProps {
     onNext: () => void;
@@ -18,7 +19,7 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
     useEffect(() => {
         const loadInitialData = async () => {
             if (!user) return;
-            
+
             // Tenta carregar dados do perfil público (que são populados pelo trigger de signup)
             const { data: profile, error } = await supabase
                 .from('profiles')
@@ -95,13 +96,10 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
 
             <div>
                 <label className="text-white font-mono text-sm mb-2 block">Telefone / WhatsApp</label>
-                <input
-                    type="tel"
-                    required
+                <PhoneInput
                     value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    placeholder="(11) 99999-9999"
-                    className={accentColor === 'beauty-neon' ? 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-beauty-neon text-lg' : 'w-full p-4 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold text-lg'}
+                    onChange={setPhone}
+                    placeholder="Telefone"
                 />
             </div>
 

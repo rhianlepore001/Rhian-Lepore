@@ -3,6 +3,7 @@ import { BrutalCard } from './BrutalCard';
 import { BrutalButton } from './BrutalButton';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { Phone, User, Mail, Camera, ArrowRight, Loader2, LogOut, Check } from 'lucide-react';
+import { PhoneInput } from './PhoneInput';
 
 interface ClientAuthModalProps {
     businessId: string;
@@ -59,16 +60,8 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
         );
     }
 
-    const formatPhone = (value: string) => {
-        return value
-            .replace(/\D/g, '')
-            .replace(/(\d{2})(\d)/, '($1) $2')
-            .replace(/(\d{5})(\d)/, '$1-$2')
-            .replace(/(-\d{4})\d+?$/, '$1');
-    };
-
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPhone(formatPhone(e.target.value));
+    const handlePhoneChange = (value: string) => {
+        setPhone(value);
         setError('');
     };
 
@@ -76,7 +69,8 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
         e.preventDefault();
         setError('');
 
-        if (phone.length < 14) {
+        const cleanPhone = phone.replace(/\D/g, '');
+        if (cleanPhone.length < 10) {
             setError('Digite um telefone válido');
             return;
         }
@@ -143,24 +137,18 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                     <form onSubmit={handleCheckPhone} className="space-y-4">
                         <div>
                             <label className="text-neutral-400 text-sm font-mono block mb-2">Seu Telefone / WhatsApp</label>
-                            <div className="relative">
-                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
-                                <input
-                                    type="tel"
-                                    value={phone}
-                                    onChange={handlePhoneChange}
-                                    placeholder="(11) 99999-9999"
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-white transition-colors"
-                                    maxLength={15}
-                                />
-                            </div>
+                            <PhoneInput
+                                value={phone}
+                                onChange={handlePhoneChange}
+                                placeholder="Telefone"
+                            />
                         </div>
 
                         {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
                         <BrutalButton
                             className={`w-full bg-${accentColor} hover:bg-${accentColor}Hover text-black`}
-                            disabled={isSubmitting || phone.length < 14}
+                            disabled={isSubmitting || !phone || phone.replace(/\D/g, '').length < 10}
                         >
                             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (
                                 <span className="flex items-center justify-center gap-2">

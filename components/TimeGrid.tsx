@@ -24,14 +24,32 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
     const lunchBreak = 'ALMOÇO';
 
     // Group slots by period
+    // Morning slots: earlier than the first interval after 12:00
     const morningSlots = availableSlots.filter(slot => {
         const hour = parseInt(slot.split(':')[0]);
-        return hour < 12;
+        return hour < 13;
     });
 
+    // Afternoon slots: everything after the first morning period
     const afternoonSlots = availableSlots.filter(slot => {
         const hour = parseInt(slot.split(':')[0]);
-        return hour >= 14;
+        if (morningSlots.length > 0) {
+            const lastMorning = morningSlots[morningSlots.length - 1];
+            const [lastMHour, lastMMin] = lastMorning.split(':').map(Number);
+            const [currHour, currMin] = slot.split(':').map(Number);
+            const diff = (currHour * 60 + currMin) - (lastMHour * 60 + lastMMin);
+            return diff > 45; // Only treat as afternoon if there's a gap
+        }
+        return false;
+    });
+
+    // Re-calculating actual display slots to avoid duplicates
+    const displayMorning = availableSlots.filter(slot => {
+        if (afternoonSlots.length > 0) {
+            const firstAfternoon = afternoonSlots[0];
+            return slot < firstAfternoon;
+        }
+        return true;
     });
 
     const renderTimeSlot = (time: string) => {
@@ -64,21 +82,22 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
             </div>
 
             {/* Morning slots */}
-            {morningSlots.length > 0 && (
+            {displayMorning.length > 0 && (
                 <div className="mb-4">
                     <p className="text-neutral-400 text-xs font-mono uppercase mb-2">Manhã</p>
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                        {morningSlots.map(renderTimeSlot)}
+                        {displayMorning.map(renderTimeSlot)}
                     </div>
                 </div>
             )}
 
-            {/* Lunch break indicator */}
-            <div className="flex items-center justify-center py-2 mb-4">
-                <div className="text-neutral-500 text-xs font-mono uppercase border-t border-b border-neutral-700 px-4 py-1">
-                    {lunchBreak}
+            {afternoonSlots.length > 0 && (
+                <div className="flex items-center justify-center py-2 mb-4">
+                    <div className="text-neutral-500 text-xs font-mono uppercase border-t border-b border-neutral-700 px-4 py-1">
+                        {lunchBreak}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Afternoon slots */}
             {afternoonSlots.length > 0 && (

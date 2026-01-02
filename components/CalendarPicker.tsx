@@ -6,13 +6,15 @@ interface CalendarPickerProps {
     onDateSelect: (date: Date) => void;
     minDate?: Date;
     isBeauty?: boolean;
+    fullDates?: string[]; // Array of 'YYYY-MM-DD'
 }
 
 export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     selectedDate,
     onDateSelect,
     minDate = new Date(),
-    isBeauty = false
+    isBeauty = false,
+    fullDates = []
 }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -50,7 +52,16 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
 
     const isDateDisabled = (day: number) => {
         const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-        return date < minDate;
+        const dateStr = date.toISOString().split('T')[0];
+
+        // Reset minDate time for accurate comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const checkDate = new Date(date);
+        checkDate.setHours(0, 0, 0, 0);
+
+        return checkDate < today || fullDates.includes(dateStr);
     };
 
     const isDateSelected = (day: number) => {

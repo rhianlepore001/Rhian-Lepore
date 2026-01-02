@@ -63,8 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
         bg-gradient-to-br from-beauty-card to-beauty-dark
         border border-beauty-neon/30
         rounded-2xl
-        shadow-[0_0_50px_rgba(167,139,250,0.2)]
-        backdrop-blur-xl
+        shadow-[0_0_20px_rgba(167,139,250,0.15)]
       `;
         } else {
             return `
@@ -99,7 +98,7 @@ export const Modal: React.FC<ModalProps> = ({
             <div
                 className={`
           absolute inset-0 
-          ${isBeauty ? 'bg-beauty-dark/90 backdrop-blur-sm' : 'bg-black/85'}
+          ${isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85'}
           transition-opacity duration-300
         `}
                 onClick={() => !preventClose && onClose()}

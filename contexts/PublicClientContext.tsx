@@ -58,10 +58,40 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const register = async (data: Omit<PublicClient, 'id'>) => {
         setLoading(true);
         try {
-            // Check if already exists first to avoid duplicate errors if constraints fail
-            const existing = await login(data.phone, data.business_id);
-            if (existing) return existing;
+            // Check if already exists first using RPC to avoid RLS issues
+            const { data: existingClients, error: searchError } = await supabase.rpc('get_public_client_by_phone', {
+                p_business_id: data.business_id,
+                p_phone: data.phone
+            });
 
+            if (searchError) {
+                console.warn('Error searching client via RPC, falling back to insert:', searchError);
+            }
+
+            const existing = existingClients?.[0];
+
+            if (existing) {
+                // Update existing client with new info
+                const { data: updatedClient, error: updateError } = await supabase
+                    .from('public_clients')
+                    .update({
+                        name: data.name,
+                        photo_url: data.photo_url || existing.photo_url
+                    })
+                    .eq('id', existing.id)
+                    .select()
+                    .single();
+
+                if (updateError) throw updateError;
+
+                if (updatedClient) {
+                    setClient(updatedClient);
+                    localStorage.setItem('rhian_public_client', JSON.stringify(updatedClient));
+                    return updatedClient;
+                }
+            }
+
+            // Create new client
             const { data: newClient, error } = await supabase
                 .from('public_clients')
                 .insert([data])
@@ -78,7 +108,7 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
             return null;
         } catch (error) {
             console.error('Error registering public client:', error);
-            return null;
+            throw error; // Re-throw to be caught by the caller
         } finally {
             setLoading(false);
         }

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { DollarSign, Calendar, Users, TrendingUp, Percent, AlertCircle } from 'lucide-react';
+import { DollarSign, Calendar, Users, TrendingUp, Percent, AlertCircle, Loader2, Check } from 'lucide-react';
 
 interface TeamMember {
     id: string;
@@ -208,7 +208,11 @@ export const CommissionsSettings: React.FC = () => {
                                         max="31"
                                         value={settlementDay}
                                         onChange={(e) => setSettlementDay(parseInt(e.target.value) || 1)}
-                                        className={`w-full pl-12 pr-4 py-3 bg-neutral-900 border-2 border-neutral-700 rounded-lg text-white font-mono text-lg focus:outline-none focus:border-${accentColor} transition-colors`}
+                                        className={`w-full pl-12 pr-4 py-3 rounded-lg text-white font-mono text-lg outline-none transition-all
+                                            ${isBeauty
+                                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon focus:shadow-neon'
+                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-${accentColor}`}
+                                        `}
                                     />
                                 </div>
                                 <p className="text-neutral-500 text-xs mt-1 font-mono">
@@ -250,10 +254,11 @@ export const CommissionsSettings: React.FC = () => {
                                 return (
                                     <div
                                         key={member.id}
-                                        className={`bg-neutral-900 border-2 rounded-lg p-4 transition-all ${isEditing
-                                            ? `border-${accentColor}`
-                                            : 'border-neutral-800 hover:border-neutral-700'
-                                            }`}
+                                        className={`transition-all p-4 rounded-lg
+                                            ${isBeauty
+                                                ? 'bg-beauty-dark/40 border border-beauty-neon/20 hover:border-beauty-neon/50'
+                                                : `bg-neutral-900 border-2 ${isEditing ? `border-${accentColor}` : 'border-neutral-800 hover:border-neutral-700'}`}
+                                        `}
                                     >
                                         <div className="flex items-center justify-between gap-4">
                                             {/* Professional Info */}
@@ -297,7 +302,11 @@ export const CommissionsSettings: React.FC = () => {
                                                                 ...prev,
                                                                 [member.id]: e.target.value
                                                             }))}
-                                                            className={`w-24 px-3 py-2 bg-black border-2 border-${accentColor} rounded-lg text-white font-mono text-center focus:outline-none`}
+                                                            className={`w-24 px-3 py-2 rounded-lg text-white font-mono text-center outline-none transition-all
+                                                                ${isBeauty
+                                                                    ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
+                                                                    : `bg-black border-2 border-${accentColor}`}
+                                                            `}
                                                             autoFocus
                                                         />
                                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono">

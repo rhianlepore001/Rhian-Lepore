@@ -83,17 +83,34 @@ export const formatCompactCurrency = (value: number, region: Region = 'BR'): str
  * Portugal: +351 9XX XXX XXX
  */
 export const formatPhone = (phone: string, region: Region = 'BR'): string => {
+    if (!phone) return '';
+
     // Remove tudo que não for número
-    const numbers = phone.replace(/\D/g, '');
+    let numbers = phone.replace(/\D/g, '');
 
     if (region === 'PT') {
         // Portugal: +351 9XX XXX XXX
-        if (numbers.length <= 3) return numbers;
-        if (numbers.length <= 6) return `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
-        if (numbers.length <= 9) return `${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6)}`;
-        return `+351 ${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6, 9)}`;
+        // Limpa TODOS os 351 extras que possam ter sido salvos por erro
+        while (numbers.startsWith('351') && numbers.length >= 12) {
+            numbers = numbers.slice(3);
+        }
+
+        // Formata a parte local: XXX XXX XXX
+        let formatted = numbers;
+        if (numbers.length > 6) {
+            formatted = `${numbers.slice(0, 3)} ${numbers.slice(3, 6)} ${numbers.slice(6, 9)}`;
+        } else if (numbers.length > 3) {
+            formatted = `${numbers.slice(0, 3)} ${numbers.slice(3)}`;
+        }
+
+        return `+351 ${formatted}`;
     } else {
         // Brasil: (XX) 9XXXX-XXXX
+        // Limpa TODOS os 55 extras que possam ter sido salvos por erro
+        while (numbers.startsWith('55') && numbers.length >= 12) {
+            numbers = numbers.slice(2);
+        }
+
         if (numbers.length <= 2) return `(${numbers}`;
         if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
         if (numbers.length <= 11) {
@@ -102,7 +119,7 @@ export const formatPhone = (phone: string, region: Region = 'BR'): string => {
             const lastPart = numbers.slice(-4);
             return `(${ddd}) ${firstPart}-${lastPart}`;
         }
-        return phone; // Retorna original se muito longo
+        return `+55 ${numbers}`; // Caso não se encaixe, mostra com +55
     }
 };
 

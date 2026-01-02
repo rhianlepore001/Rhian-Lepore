@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft, Trash2, Edit2, Save, X, Tag } from 'lucide-react';
+import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft, Trash2, Edit2, Save, X, Tag, MessageCircle } from 'lucide-react';
+import { PhoneInput } from '../components/PhoneInput';
 import { useParams, useNavigate } from 'react-router-dom';
 import { calculateNextVisitPrediction } from '../utils/tierSystem';
 import { useAuth } from '../contexts/AuthContext';
+import { formatPhone } from '../utils/formatters';
 
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -134,6 +136,15 @@ export const ClientCRM: React.FC = () => {
     } finally {
       setSavingNotes(false);
     }
+  };
+
+  const handleWhatsAppClick = () => {
+    if (!client?.phone) {
+      alert('Cliente sem telefone cadastrado.');
+      return;
+    }
+    const cleanPhone = client.phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${cleanPhone}`, '_blank');
   };
 
   const handleUpdateClient = async (e: React.FormEvent) => {
@@ -290,7 +301,10 @@ export const ClientCRM: React.FC = () => {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-text-secondary font-mono text-xs md:text-sm">
                   <span className="flex items-center gap-2"><Mail className="w-3 h-3" /> {client.email}</span>
-                  <span className="flex items-center gap-2"><Phone className="w-3 h-3" /> {client.phone}</span>
+                  <span className="flex items-center gap-2">
+                    <Phone className="w-3 h-3" />
+                    {client.phone ? formatPhone(client.phone, region as any) : 'Sem telefone'}
+                  </span>
                 </div>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
@@ -302,6 +316,15 @@ export const ClientCRM: React.FC = () => {
                   disabled={deleting}
                 >
                   <Trash2 className="w-4 h-4" />
+                </BrutalButton>
+                <BrutalButton
+                  variant="ghost"
+                  size="sm"
+                  className={`border-green-900/50 ${isBeauty ? 'text-green-400 hover:text-green-300 hover:bg-green-400/10' : 'text-green-600 hover:text-green-500 hover:bg-green-500/10'}`}
+                  onClick={handleWhatsAppClick}
+                  title="Abrir WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
                 </BrutalButton>
                 <BrutalButton
                   variant="primary"
@@ -456,46 +479,64 @@ export const ClientCRM: React.FC = () => {
       </div>
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border-2 border-white/20 w-full max-w-md p-6 shadow-heavy relative">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
+          <div className={`w-full max-w-md p-6 relative transition-all
+              ${isBeauty
+              ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
+              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]'}
+          `}>
             <button
               onClick={() => setShowEditModal(false)}
-              className="absolute top-4 right-4 text-neutral-500 hover:text-white"
+              className={`absolute top-4 right-4 transition-colors
+                  ${isBeauty
+                  ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5'
+                  : 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1'}
+              `}
             >
               <X className="w-6 h-6" />
             </button>
-            <h3 className="text-xl font-heading text-white mb-6 uppercase">Editar Cliente</h3>
+
+            <div className={`mb-6 ${isBeauty ? 'border-b border-beauty-neon/20 pb-4' : 'border-b-2 border-dashed border-neutral-800 pb-4'}`}>
+              <h3 className={`text-xl font-heading uppercase ${isBeauty ? 'text-white tracking-normal' : 'text-white tracking-wider'}`}>Editar Cliente</h3>
+            </div>
 
             <form onSubmit={handleUpdateClient} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-1">Nome Completo</label>
+                <label className={`block text-xs mb-1 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Nome Completo</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none"
+                  className={`w-full p-3 outline-none transition-all
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:border-beauty-neon focus:bg-beauty-dark placeholder-beauty-neon/30'
+                      : 'bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:border-accent-gold placeholder-neutral-600'}
+                  `}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-1">Telefone</label>
-                <input
-                  type="text"
+                <label className={`block text-xs mb-2 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Telefone</label>
+                <PhoneInput
                   value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none"
-                  placeholder="(XX) 9XXXX-XXXX"
+                  onChange={setEditPhone}
+                  defaultRegion={region as 'BR' | 'PT'}
+                  className="w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-1">Email</label>
+                <label className={`block text-xs mb-1 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Email</label>
                 <input
                   type="email"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full bg-black border border-neutral-700 p-3 text-white focus:border-white outline-none"
+                  className={`w-full p-3 outline-none transition-all
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:border-beauty-neon focus:bg-beauty-dark placeholder-beauty-neon/30'
+                      : 'bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:border-accent-gold placeholder-neutral-600'}
+                  `}
                 />
               </div>
 
@@ -503,14 +544,22 @@ export const ClientCRM: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 font-bold uppercase tracking-wider bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700"
+                  className={`flex-1 py-3 font-bold uppercase tracking-wider transition-colors
+                      ${isBeauty
+                      ? 'bg-transparent text-white border border-white/10 hover:bg-white/5 rounded-xl'
+                      : 'bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700 rounded-lg'}
+                  `}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={updating}
-                  className={`flex-1 py-3 font-bold uppercase tracking-wider ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} hover:opacity-90 disabled:opacity-50`}
+                  className={`flex-1 py-3 font-bold uppercase tracking-wider transition-all disabled:opacity-50
+                      ${isBeauty
+                      ? 'bg-beauty-neon text-black hover:bg-beauty-neonHover rounded-xl shadow-[0_0_15px_rgba(167,139,250,0.3)]'
+                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_#000000]'}
+                  `}
                 >
                   {updating ? 'Salvando...' : 'Salvar'}
                 </button>

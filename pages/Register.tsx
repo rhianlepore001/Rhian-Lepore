@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Screw } from '../components/Screw';
 import { Scissors, Sparkles, Zap, Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
+import { PhoneInput } from '../components/PhoneInput';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -203,11 +204,10 @@ export const Register: React.FC = () => {
                   <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
                     {region === 'BR' ? 'Celular / WhatsApp' : 'Telemóvel'}
                   </label>
-                  <input
-                    type="text"
+                  <PhoneInput
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                    onChange={setPhone}
+                    defaultRegion={region}
                     placeholder={region === 'BR' ? "(XX) 9XXXX-XXXX" : "+351 XXX XXX XXX"}
                   />
                 </div>
@@ -236,20 +236,20 @@ export const Register: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-xs font-mono uppercase text-neutral-500 ml-1">Senha</label>
                 <div className="relative">
-                    <input
-                        type={showPassword ? 'text' : 'password'} // Dynamic type
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
-                        placeholder="••••••••"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword(prev => !prev)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
-                    >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                  <input
+                    type={showPassword ? 'text' : 'password'} // Dynamic type
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`w-full bg-black/40 border-2 border-neutral-800 p-4 text-white font-mono text-sm focus:outline-none transition-colors ${styles.inputFocus}`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 

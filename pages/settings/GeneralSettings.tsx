@@ -6,6 +6,7 @@ import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
 import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
 import { SaveFooter } from '../../components/SaveFooter';
+import { PhoneInput } from '../../components/PhoneInput';
 
 export const GeneralSettings: React.FC = () => {
     const { user, userType, region } = useAuth();
@@ -212,8 +213,8 @@ export const GeneralSettings: React.FC = () => {
 
                 <BusinessGalleryManager accentColor={accentColor} />
 
-                <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
-                    <h3 className="text-white font-bold text-base md:text-lg mb-4">
+                <div className={`p-4 md:p-6 mb-4 md:mb-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
+                    <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
                         Informações do Negócio
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -226,7 +227,11 @@ export const GeneralSettings: React.FC = () => {
                                 value={businessName}
                                 onChange={e => setBusinessName(e.target.value)}
                                 placeholder="Barbearia Premium"
-                                className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
+                                className={`w-full p-3 rounded-lg text-white outline-none transition-all
+                                    ${isBeauty
+                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
+                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                `}
                             />
                         </div>
 
@@ -234,12 +239,11 @@ export const GeneralSettings: React.FC = () => {
                             <label className="text-white font-mono text-xs md:text-sm mb-2 block">
                                 Telefone/WhatsApp
                             </label>
-                            <input
-                                type="tel"
+                            <PhoneInput
                                 value={phone}
-                                onChange={e => setPhone(e.target.value)}
-                                placeholder="(11) 98765-4321"
-                                className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
+                                onChange={setPhone}
+                                defaultRegion={region}
+                                placeholder="Telefone"
                             />
                         </div>
 
@@ -254,7 +258,11 @@ export const GeneralSettings: React.FC = () => {
                                     value={instagram}
                                     onChange={e => setInstagram(e.target.value)}
                                     placeholder="suabarbearia"
-                                    className="w-full p-3 pl-8 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
+                                    className={`w-full p-3 pl-8 rounded-lg text-white outline-none transition-all
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
+                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                    `}
                                 />
                             </div>
                         </div>
@@ -268,7 +276,11 @@ export const GeneralSettings: React.FC = () => {
                                 value={address}
                                 onChange={e => setAddress(e.target.value)}
                                 placeholder="Rua Exemplo, 123 - Bairro, Cidade - SP"
-                                className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold"
+                                className={`w-full p-3 rounded-lg text-white outline-none transition-all
+                                    ${isBeauty
+                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
+                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                `}
                             />
                             <p className="text-neutral-500 text-xs mt-1">
                                 Este endereço será usado para gerar o link do Google Maps para seus clientes.
@@ -277,8 +289,8 @@ export const GeneralSettings: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
-                    <h3 className="text-white font-bold text-base md:text-lg mb-4">
+                <div className={`p-4 md:p-6 mb-4 md:mb-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
+                    <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
                         Horário de Funcionamento
                     </h3>
                     <BusinessHoursEditor
@@ -288,8 +300,8 @@ export const GeneralSettings: React.FC = () => {
                     />
                 </div>
 
-                <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-6 md:mb-8">
-                    <h3 className="text-white font-bold text-base md:text-lg mb-4">
+                <div className={`p-4 md:p-6 mb-6 md:mb-8 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
+                    <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
                         Política de Cancelamento
                     </h3>
 
@@ -303,8 +315,8 @@ export const GeneralSettings: React.FC = () => {
                                 key={template.id}
                                 onClick={() => handlePolicyTemplateChange(template.id)}
                                 className={`px-3 py-2 rounded-lg text-sm border transition-all ${policyTemplate === template.id
-                                    ? `bg-${accentColor}/10 border-${accentColor} text-white`
-                                    : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'
+                                    ? isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white' : `bg-${accentColor}/10 border-${accentColor} text-white`
+                                    : isBeauty ? 'bg-beauty-dark/50 border-beauty-neon/10 text-neutral-400 hover:text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'
                                     }`}
                             >
                                 <span className="block font-bold">{template.label}</span>
@@ -318,7 +330,11 @@ export const GeneralSettings: React.FC = () => {
                         onChange={e => setCancellationPolicy(e.target.value)}
                         rows={4}
                         placeholder="Descreva sua política de cancelamento..."
-                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold resize-none"
+                        className={`w-full p-3 rounded-lg text-white outline-none resize-none transition-all
+                            ${isBeauty
+                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
+                                : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                        `}
                     />
                     <p className="text-neutral-500 text-xs mt-2">
                         💡 Você pode editar o texto acima para personalizar sua política.

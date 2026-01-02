@@ -640,16 +640,24 @@ export const Finance: React.FC = () => {
 
       {/* New Transaction Modal */}
       {showNewTransactionModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-neutral-900 border-2 border-neutral-800 rounded-xl w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-white font-heading text-xl uppercase flex items-center gap-2">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80 backdrop-blur-sm'}`}>
+          <div className={`w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh] transition-all
+              ${isBeauty
+              ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
+              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl'}
+          `}>
+            <div className={`flex items-center justify-between mb-6 ${isBeauty ? 'border-b border-beauty-neon/20 pb-4' : ''}`}>
+              <h3 className={`font-heading text-xl uppercase flex items-center gap-2 ${isBeauty ? 'text-white' : 'text-white'}`}>
                 <DollarSign className={`w-6 h-6 ${accentText}`} />
                 Nova Transação
               </h3>
               <button
                 onClick={() => setShowNewTransactionModal(false)}
-                className="text-neutral-400 hover:text-white transition-colors p-1 hover:bg-neutral-800 rounded-full"
+                className={`transition-colors p-1 rounded-full
+                    ${isBeauty
+                    ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10'
+                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}
+                `}
               >
                 <X className="w-6 h-6" />
               </button>
@@ -658,7 +666,7 @@ export const Finance: React.FC = () => {
             <div className="space-y-4">
               {/* Type Selector */}
               <div>
-                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Tipo</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Tipo</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNewTransactionType('income')}
@@ -683,12 +691,16 @@ export const Finance: React.FC = () => {
 
               {/* Description */}
               <div>
-                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Descrição *</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Descrição *</label>
                 <input
                   type="text"
                   value={newTransactionDescription}
                   onChange={(e) => setNewTransactionDescription(e.target.value)}
-                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
+                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                  `}
                   placeholder="Ex: Venda de produto, Pagamento de aluguel..."
                   required
                 />
@@ -696,14 +708,18 @@ export const Finance: React.FC = () => {
 
               {/* Amount */}
               <div>
-                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Valor ({currencySymbol}) *</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Valor ({currencySymbol}) *</label>
                 <input
                   type="number"
                   value={newTransactionAmount}
                   onChange={(e) => setNewTransactionAmount(e.target.value)}
                   step="0.01"
                   min="0"
-                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white font-mono text-lg focus:outline-none focus:border-${accentColor} transition-colors`}
+                  className={`w-full p-3 rounded-lg text-white font-mono text-lg transition-all outline-none
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
+                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                  `}
                   placeholder="0.00"
                   required
                 />
@@ -712,32 +728,44 @@ export const Finance: React.FC = () => {
               {/* Date and Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Data</label>
+                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Data</label>
                   <input
                     type="date"
                     value={newTransactionDate}
                     onChange={(e) => setNewTransactionDate(e.target.value)}
-                    className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                        ${isBeauty
+                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                        : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                    `}
                   />
                 </div>
                 <div>
-                  <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Horário (opcional)</label>
+                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Horário (opcional)</label>
                   <input
                     type="time"
                     value={newTransactionTime}
                     onChange={(e) => setNewTransactionTime(e.target.value)}
-                    className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                        ${isBeauty
+                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                        : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                    `}
                   />
                 </div>
               </div>
 
               {/* Service */}
               <div>
-                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Serviço (opcional)</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Serviço (opcional)</label>
                 <select
                   value={newTransactionService}
                   onChange={(e) => setNewTransactionService(e.target.value)}
-                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                  `}
                 >
                   <option value="">Selecione um serviço</option>
                   {services.map(s => (
@@ -748,11 +776,15 @@ export const Finance: React.FC = () => {
 
               {/* Client */}
               <div>
-                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Cliente (opcional)</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Cliente (opcional)</label>
                 <select
                   value={newTransactionClient}
                   onChange={(e) => setNewTransactionClient(e.target.value)}
-                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                  `}
                 >
                   <option value="">Selecione um cliente</option>
                   {clients.map(c => (
@@ -763,11 +795,15 @@ export const Finance: React.FC = () => {
 
               {/* Professional */}
               <div>
-                <label className="text-neutral-400 font-mono text-xs uppercase mb-2 block">Profissional (opcional)</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Profissional (opcional)</label>
                 <select
                   value={newTransactionProfessional}
                   onChange={(e) => setNewTransactionProfessional(e.target.value)}
-                  className={`w-full p-3 bg-black border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor} transition-colors`}
+                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                      ${isBeauty
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                  `}
                 >
                   <option value="">Selecione um profissional</option>
                   {professionals.map(p => (

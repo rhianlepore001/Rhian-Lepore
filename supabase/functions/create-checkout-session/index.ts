@@ -77,7 +77,10 @@ serve(async (req) => {
                     quantity: 1,
                 },
             ],
-            mode: mode, // 'subscription' or 'payment'
+            mode: mode,
+            automatic_payment_methods: {
+                enabled: true,
+            },
             success_url: successUrl,
             cancel_url: cancelUrl,
             allow_promotion_codes: true,

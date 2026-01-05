@@ -91,12 +91,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user?.id) {
         // Re-fetch profile data on sign in/change
-        fetchProfileData(session.user.id);
+        fetchProfileData(session.user.id).then(() => {
+          setLoading(false);
+        });
       } else {
         // Reset state on sign out
         setTutorialCompleted(true);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

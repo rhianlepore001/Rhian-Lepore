@@ -18,12 +18,8 @@ serve(async (req) => {
     }
 
     try {
-        // Debug logging
-        console.log("Request received");
-
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
         if (!stripeKey) {
-            console.error("STRIPE_SECRET_KEY is missing in Edge Function secrets");
             throw new Error("Server configuration error: Stripe key missing");
         }
 
@@ -42,13 +38,10 @@ serve(async (req) => {
         } = await supabaseClient.auth.getUser();
 
         if (!user) {
-            console.error("User not found in auth check");
             throw new Error("User not found");
         }
 
         const { priceId, successUrl, cancelUrl, mode = "subscription" } = await req.json();
-
-        console.log(`Processing subscription for user ${user.id} with price ${priceId}`);
 
         if (!priceId) {
             throw new Error("Price ID is required");
@@ -66,7 +59,6 @@ serve(async (req) => {
 
         if (!customerId) {
             // Create new customer
-            console.log("Creating new Stripe customer");
             const newCustomer = await stripe.customers.create({
                 email: user.email,
                 metadata: {
@@ -77,7 +69,6 @@ serve(async (req) => {
         }
 
         // 2. Create Checkout Session
-        console.log("Creating checkout session");
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             line_items: [
@@ -100,7 +91,8 @@ serve(async (req) => {
             status: 200,
         });
     } catch (error) {
-        console.error("Detailed Error in create-checkout-session:", error);
+        // Keep only critical error logging
+        console.error("Error:", error);
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 400,

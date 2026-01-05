@@ -1,23 +1,45 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../hooks/useSubscription';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
-import { Check, Sparkles, CreditCard, Calendar, ShieldCheck, Zap } from 'lucide-react';
+import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { loadStripe } from '@stripe/stripe-js';
+
+// Initialize Stripe outside component to avoid recreation
+// Replace with your actual publishable key from the dashboard or env var
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Rk3ZLPUPmLLh2qESPurB4bgAa4VqLe41OQPtQNUQTfu2A8pV8Zk7rYIBgg8SWUA9ItuYyGfGBr8cSw4YMa9tMJY004eg5XVbo');
 
 export const SubscriptionSettings: React.FC = () => {
-    const { userType, businessName } = useAuth();
+    const { userType, businessName, region } = useAuth();
     const { subscriptionStatus, trialDaysRemaining, isSubscriptionActive, isTrial } = useSubscription();
+    // Auto-detect currency based on region
+    const currency = region === 'PT' ? 'EUR' : 'BRL';
+    const [loading, setLoading] = useState<string | null>(null);
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
+
+    // Pricing Configuration
+    // Pricing Configuration
+    const pricing = {
+        BRL: {
+            solo: { price: 'R$ 34,90', value: 34.90, priceId: 'price_1SmKO0PUPmLLh2qEwaMMPA6i' },
+            team: { price: 'R$ 59,90', value: 59.90, priceId: 'price_1SmKQPPUPmLLh2qEwY9lvQki' }
+        },
+        EUR: {
+            solo: { price: '€ 9,90', value: 9.90, priceId: 'price_1SmKQPPUPmLLh2qEtjjlg2S1' },
+            team: { price: '€ 19,90', value: 19.90, priceId: 'price_1SmKQPPUPmLLh2qEomuqHXvt' }
+        }
+    };
 
     const plans = [
         {
             id: 'solo',
             name: 'Plano Solo',
-            price: 'R$ 34,90',
+            price: pricing[currency].solo.price,
             period: '/mês',
             description: 'Ideal para profissionais autônomos.',
             features: [
@@ -27,12 +49,13 @@ export const SubscriptionSettings: React.FC = () => {
                 'Relatórios Básicos',
                 'Suporte via WhatsApp'
             ],
-            recommended: !isBeauty
+            recommended: !isBeauty,
+            priceId: pricing[currency].solo.priceId
         },
         {
             id: 'team',
             name: 'Plano Equipe',
-            price: 'R$ 59,90',
+            price: pricing[currency].team.price,
             period: '/mês',
             description: 'Para estabelecimentos com equipe.',
             features: [
@@ -43,26 +66,53 @@ export const SubscriptionSettings: React.FC = () => {
                 'Marketing com IA',
                 'Prioridade no Suporte'
             ],
-            recommended: isBeauty
+            recommended: isBeauty,
+            priceId: pricing[currency].team.priceId
         }
     ];
 
-    const handleSubscribe = (planId: string) => {
-        // No futuro, aqui redirecionamos para o Stripe/Mercado Pago
-        alert(`Redirecionando para o pagamento do ${planId}... (Simulado)`);
-        window.open('https://buy.stripe.com/mock_link', '_blank');
+    const handleSubscribe = async (planId: string, priceId: string) => {
+        try {
+            setLoading(planId);
+
+            const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+                body: {
+                    priceId,
+                    successUrl: `${window.location.origin}/#/?session_id={CHECKOUT_SESSION_ID}`,
+                    cancelUrl: `${window.location.href}`,
+                    mode: 'subscription'
+                }
+            });
+
+            if (error) throw error;
+
+            if (data?.url) {
+                window.location.href = data.url;
+            } else {
+                alert('Erro ao iniciar checkout: URL não retornada.');
+            }
+        } catch (error: any) {
+            console.error('Error:', error);
+            alert(`Erro ao iniciar pagamento: ${error.message || 'Erro desconhecido'}`);
+        } finally {
+            setLoading(null);
+        }
     };
 
     return (
         <SettingsLayout>
             <div className="max-w-4xl pb-20">
-                <div className="mb-8 md:mb-12">
-                    <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
-                        Assinatura e Planos
-                    </h1>
-                    <p className="text-sm md:text-base text-neutral-400">
-                        Gerencie seu plano e garanta o crescimento do seu negócio
-                    </p>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 md:mb-12">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
+                            Assinatura e Planos
+                        </h1>
+                        <p className="text-sm md:text-base text-neutral-400">
+                            Gerencie seu plano e garanta o crescimento do seu negócio
+                        </p>
+                    </div>
+
+
                 </div>
 
                 {/* Status Atual */}
@@ -118,6 +168,9 @@ export const SubscriptionSettings: React.FC = () => {
                                     <span className="text-4xl font-black text-white">{plan.price}</span>
                                     <span className="text-neutral-500 text-sm">{plan.period}</span>
                                 </div>
+                                <div className="text-xs text-neutral-500 mt-1 font-mono">
+                                    {currency === 'EUR' ? 'Cobrança em Euro' : 'Cobrança em Reais'}
+                                </div>
                             </div>
 
                             <div className="space-y-4 mb-8 flex-1">
@@ -132,10 +185,15 @@ export const SubscriptionSettings: React.FC = () => {
                             <BrutalButton
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
                                 variant={plan.recommended ? 'primary' : 'ghost'}
-                                onClick={() => handleSubscribe(plan.id)}
+                                onClick={() => handleSubscribe(plan.id, plan.priceId)}
                                 className="w-full"
+                                disabled={loading !== null}
                             >
-                                {isTrial ? 'Começar Assinatura' : 'Alterar Plano'}
+                                {loading === plan.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                ) : (
+                                    isTrial ? 'Começar Assinatura' : 'Alterar Plano'
+                                )}
                             </BrutalButton>
                         </BrutalCard>
                     ))}
@@ -145,7 +203,7 @@ export const SubscriptionSettings: React.FC = () => {
                 <div className="mt-12 text-center text-neutral-500">
                     <div className="flex items-center justify-center gap-6 mb-4">
                         <div className="flex items-center gap-2 text-xs uppercase font-mono">
-                            <ShieldCheck className="w-4 h-4" /> Pagamento Seguro
+                            <ShieldCheck className="w-4 h-4" /> Pagamento Seguro via Stripe
                         </div>
                         <div className="flex items-center gap-2 text-xs uppercase font-mono">
                             <CreditCard className="w-4 h-4" /> Cancele a qualquer momento
@@ -156,3 +214,4 @@ export const SubscriptionSettings: React.FC = () => {
         </SettingsLayout>
     );
 };
+

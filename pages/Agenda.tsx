@@ -87,6 +87,7 @@ export const Agenda: React.FC = () => {
     const [customTime, setCustomTime] = useState('');
     const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(formatDateForInput(selectedDate));
     const [discountPercentage, setDiscountPercentage] = useState('0'); // NEW STATE FOR DISCOUNT
+    const [notes, setNotes] = useState(''); // NEW STATE FOR NOTES
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -249,7 +250,8 @@ export const Agenda: React.FC = () => {
                     price: apt.price,
                     status: apt.status,
                     professional_id: apt.professional_id,
-                    basePrice: basePrice
+                    basePrice: basePrice,
+                    notes: apt.notes
                 };
             }));
         }
@@ -288,7 +290,8 @@ export const Agenda: React.FC = () => {
                     price: apt.price,
                     status: apt.status,
                     professional_id: apt.professional_id,
-                    basePrice: basePrice
+                    basePrice: basePrice,
+                    notes: apt.notes
                 };
             }));
         }
@@ -360,7 +363,8 @@ export const Agenda: React.FC = () => {
                     price: apt.price,
                     status: apt.status,
                     professional_id: apt.professional_id,
-                    basePrice: basePrice
+                    basePrice: basePrice,
+                    notes: apt.notes
                 };
             }));
         }
@@ -617,6 +621,7 @@ export const Agenda: React.FC = () => {
         setCustomTime('');
         setSelectedAppointmentDate(formatDateForInput(selectedDate));
         setDiscountPercentage('0'); // Reset discount
+        setNotes('');
     };
 
     const handleCreateAppointment = async () => {
@@ -652,7 +657,8 @@ export const Agenda: React.FC = () => {
                     service: serviceNames,
                     appointment_time: dateTime.toISOString(),
                     price: finalPrice, // Use final price after discount
-                    status: 'Confirmed'
+                    status: 'Confirmed',
+                    notes: notes
                 });
 
             if (error) throw error;
@@ -1505,6 +1511,21 @@ export const Agenda: React.FC = () => {
                                 accentColor={accentColor}
                                 multiple={true}
                             />
+
+                            {/* Notes / Observation */}
+                            <div>
+                                <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Observação</label>
+                                <textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none min-h-[80px] resize-y
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                    `}
+                                    placeholder="Adicione observações sobre o agendamento..."
+                                />
+                            </div>
 
                             <div>
                                 <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Horário</label>

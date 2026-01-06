@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
 import { formatDateForInput } from '../utils/date';
+import { SearchableSelect } from './SearchableSelect';
 
 interface Appointment {
     id: string;
@@ -14,6 +15,7 @@ interface Appointment {
     price: number;
     status: string;
     professional_id: string | null;
+    notes?: string;
 }
 
 interface TeamMember {
@@ -90,25 +92,39 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         : 'text-neutral-400 hover:text-white transition-colors';
 
     // Initial state setup
+    // Initial state setup
     const initialDate = formatDateForInput(appointment.appointment_time);
     const initialTime = new Date(appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
-    const initialService = services.find(s => s.name === appointment.service)?.id || '';
-    const initialBasePrice = services.find(s => s.name === appointment.service)?.price || appointment.price;
+    // Parse initial services (comma separated names -> IDs)
+    const initialServiceNames = appointment.service.split(',').map(s => s.trim());
+    const initialServiceIds = services
+        .filter(s => initialServiceNames.includes(s.name))
+        .map(s => s.id);
+
+    // Calculate initial base price from current service prices
+    const calculatedBasePrice = services
+        .filter(s => initialServiceIds.includes(s.id))
+        .reduce((sum, s) => sum + s.price, 0);
+
+    const initialBasePrice = calculatedBasePrice || appointment.price;
 
     // Calculate initial discount percentage based on stored price vs base price
+    // If appointment.price (final) < initialBasePrice, there IS a discount
     const initialDiscountRate = initialBasePrice > 0 ? ((initialBasePrice - appointment.price) / initialBasePrice) * 100 : 0;
     const initialDiscountPercentage = Math.max(0, Math.round(initialDiscountRate)).toString();
 
     // Determine initial priceBeforeDiscount
+    // Usually this is the base price, but if the final price is actually HIGHER (custom price), we use that.
     const initialPriceBeforeDiscount = appointment.price > initialBasePrice ? appointment.price : initialBasePrice;
 
     // State for form fields
     const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
-    const [selectedService, setSelectedService] = useState(initialService);
+    const [selectedServices, setSelectedServices] = useState<string[]>(initialServiceIds);
     const [selectedProfessional, setSelectedProfessional] = useState(appointment.professional_id || '');
     const [selectedDate, setSelectedDate] = useState(initialDate);
     const [selectedTime, setSelectedTime] = useState(initialTime);
+    const [notes, setNotes] = useState(appointment.notes || '');
 
     // Price states
     const [basePrice, setBasePrice] = useState(initialBasePrice);
@@ -116,19 +132,19 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
     const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
 
-    // 1. Update Base Price and Reference Price when service changes
+    // 1. Update Base Price and Reference Price when services change
     useEffect(() => {
-        const service = services.find(s => s.id === selectedService);
-        const currentServiceBasePrice = service?.price || 0;
-        setBasePrice(currentServiceBasePrice);
+        const currentServices = services.filter(s => selectedServices.includes(s.id));
+        const currentBasePrice = currentServices.reduce((sum, s) => sum + s.price, 0);
 
-        setPriceBeforeDiscount(currentServiceBasePrice);
+        setBasePrice(currentBasePrice);
+        setPriceBeforeDiscount(currentBasePrice);
 
         const discountRate = parseFloat(discountPercentage) / 100;
-        const calculatedFinalPrice = currentServiceBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+        const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
         setFinalPriceInput(calculatedFinalPrice.toFixed(2));
 
-    }, [selectedService, services]);
+    }, [selectedServices, services]);
 
     // 2. Recalculate Price when Discount changes
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,7 +181,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const handleSave = async () => {
         const finalPriceValue = parseFloat(finalPriceInput);
 
-        if (!user || !selectedClient || !selectedService || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPriceValue)) {
+        if (!user || !selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPriceValue)) {
             alert('Por favor, preencha todos os campos obrigatórios e verifique o preço final.');
             return;
         }
@@ -173,8 +189,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         setLoading(true);
 
         try {
-            const serviceDetails = services.find(s => s.id === selectedService);
-            if (!serviceDetails) throw new Error('Serviço inválido.');
+            const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
+            const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
             const dateTime = new Date(selectedDate);
             const [hours, minutes] = selectedTime.split(':');
@@ -185,9 +201,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 .update({
                     client_id: selectedClient,
                     professional_id: selectedProfessional,
-                    service: serviceDetails.name,
+                    service: serviceNames,
                     appointment_time: dateTime.toISOString(),
                     price: finalPriceValue,
+                    notes: notes
                 })
                 .eq('id', appointment.id);
 
@@ -254,23 +271,31 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     </div>
 
                     {/* Service */}
+                    <SearchableSelect
+                        label="Serviços"
+                        placeholder="Selecione um ou mais serviços"
+                        options={services.map(s => ({
+                            id: s.id,
+                            name: s.name,
+                            subtext: `${currencySymbol} ${s.price.toFixed(2)}`
+                        }))}
+                        value={selectedServices}
+                        onChange={setSelectedServices}
+                        accentColor={accentColor}
+                        multiple={true}
+                        disabled={loading}
+                    />
+
+                    {/* Notes / Observation */}
                     <div>
-                        <label className={labelStyles}>Serviço</label>
-                        <select
-                            value={selectedService}
-                            onChange={(e) => {
-                                setSelectedService(e.target.value);
-                            }}
-                            className={inputStyles}
+                        <label className={labelStyles}>Observação</label>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            className={`${inputStyles} min-h-[80px] resize-y`}
+                            placeholder="Adicione observações sobre o agendamento..."
                             disabled={loading}
-                        >
-                            <option value="">Selecione um serviço</option>
-                            {services.map(service => (
-                                <option key={service.id} value={service.id}>
-                                    {service.name}
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </div>
 
                     {/* Date & Time */}

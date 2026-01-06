@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
+import { parseDate } from '../utils/date';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -150,7 +151,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tutorialCompleted,
       subscriptionStatus,
       trialEndsAt,
-      isSubscriptionActive: subscriptionStatus === 'active' || (subscriptionStatus === 'trial' && !!trialEndsAt && new Date() < new Date(trialEndsAt)),
+      isSubscriptionActive: subscriptionStatus === 'active' || (
+        subscriptionStatus === 'trial' &&
+        !!trialEndsAt &&
+        (() => {
+          const end = parseDate(trialEndsAt);
+          return end ? new Date() < end : false;
+        })()
+      ),
       loading,
       login,
       logout,

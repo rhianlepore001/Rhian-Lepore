@@ -8,6 +8,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { SearchableSelect } from '../components/SearchableSelect'; // Importando o novo componente
 import { formatCurrency, formatPhone } from '../utils/formatters';
+import { formatDateForInput } from '../utils/date';
 
 interface Appointment {
     id: string;
@@ -84,7 +85,7 @@ export const Agenda: React.FC = () => {
     const [selectedProfessional, setSelectedProfessional] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
     const [customTime, setCustomTime] = useState('');
-    const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(selectedDate.toISOString().split('T')[0]);
+    const [selectedAppointmentDate, setSelectedAppointmentDate] = useState(formatDateForInput(selectedDate));
     const [discountPercentage, setDiscountPercentage] = useState('0'); // NEW STATE FOR DISCOUNT
 
     const isBeauty = userType === 'beauty';
@@ -154,7 +155,7 @@ export const Agenda: React.FC = () => {
     // Update selectedAppointmentDate when modal opens or selectedDate changes
     useEffect(() => {
         if (showNewAppointmentModal) {
-            setSelectedAppointmentDate(selectedDate.toISOString().split('T')[0]);
+            setSelectedAppointmentDate(formatDateForInput(selectedDate));
 
             // Auto-select professional if filter is active or only one exists
             if (selectedProfessionalFilter) {
@@ -178,7 +179,7 @@ export const Agenda: React.FC = () => {
             if (serviceNameParam && services.length > 0) {
                 const matchedService = services.find(s => s.name === serviceNameParam);
                 if (matchedService) {
-                    setSelectedService(matchedService.id);
+                    setSelectedServices([matchedService.id]);
                 }
             }
 
@@ -614,7 +615,7 @@ export const Agenda: React.FC = () => {
         setSelectedProfessional('');
         setSelectedTime('');
         setCustomTime('');
-        setSelectedAppointmentDate(selectedDate.toISOString().split('T')[0]);
+        setSelectedAppointmentDate(formatDateForInput(selectedDate));
         setDiscountPercentage('0'); // Reset discount
     };
 
@@ -1432,7 +1433,7 @@ export const Agenda: React.FC = () => {
 
             {/* New Appointment Modal */}
             {showNewAppointmentModal && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
+                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'}`}>
                     <div className={`w-full max-w-md p-6 overflow-y-auto max-h-[90vh] transition-all
                         ${isBeauty
                             ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'

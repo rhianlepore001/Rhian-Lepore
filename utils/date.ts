@@ -50,3 +50,19 @@ export const parseDate = (dateString: string | null | undefined): Date | null =>
         return null;
     }
 };
+
+/**
+ * Formata com segurança uma data para uso em input type="date" (YYYY-MM-DD)
+ * Retorna string vazia se data inválida, evitando crash.
+ */
+export const formatDateForInput = (date: Date | string | null | undefined): string => {
+    if (!date) return '';
+    try {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        return d.toISOString().split('T')[0];
+    } catch (e) {
+        console.error('formatDateForInput error', e);
+        return '';
+    }
+};

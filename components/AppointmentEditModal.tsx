@@ -3,6 +3,7 @@ import { X, Loader2, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
+import { formatDateForInput } from '../utils/date';
 
 interface Appointment {
     id: string;
@@ -89,7 +90,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         : 'text-neutral-400 hover:text-white transition-colors';
 
     // Initial state setup
-    const initialDate = new Date(appointment.appointment_time).toISOString().split('T')[0];
+    const initialDate = formatDateForInput(appointment.appointment_time);
     const initialTime = new Date(appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
     const initialService = services.find(s => s.name === appointment.service)?.id || '';
@@ -207,7 +208,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const discountAmount = priceBeforeDiscount - (parseFloat(finalPriceInput) || 0);
 
     return (
-        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'} flex items-center justify-center z-50 p-4`}>
+        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center z-50 p-4`}>
             <div className={`${modalStyles} w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}>
                 <div className={`flex items-center justify-between p-6 ${headerStyles}`}>
                     <h3 className={`font-heading text-xl uppercase ${isBeauty ? 'text-white' : 'text-white'}`}>Editar Agendamento</h3>

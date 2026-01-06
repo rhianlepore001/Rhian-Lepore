@@ -25,7 +25,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     placeholder,
     label,
     accentColor,
-    multiple = false
+    multiple = false,
+    disabled
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -132,7 +133,6 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                         filteredOptions.map(option => (
                             <div
                                 key={option.id}
-                                onClick={() => handleSelect(option.id)}
                                 onClick={() => handleSelect(option.id)}
                                 className={`p-3 cursor-pointer hover:bg-neutral-800 flex items-center justify-between transition-colors ${isSelected(option.id) ? accentBg : ''}`}
                             >

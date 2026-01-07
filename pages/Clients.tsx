@@ -47,7 +47,8 @@ export const Clients: React.FC = () => {
                     .from('appointments')
                     .select('client_id')
                     .in('client_id', clientIds)
-                    .eq('status', 'Completed');
+                    .eq('status', 'Completed')
+                    .eq('user_id', user.id);
 
                 if (!countError && appointmentCounts) {
                     // Count visits per client

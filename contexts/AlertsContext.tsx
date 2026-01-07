@@ -208,7 +208,15 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 schema: 'public',
                 table: 'public_bookings',
                 filter: `business_id=eq.${user?.id}`
-            }, () => {
+            }, (payload) => {
+                // Play notification sound
+                try {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Gentle notification sound
+                    audio.play().catch(e => console.log('Audio play failed (interaction needed?):', e));
+                } catch (e) {
+                    console.error('Error playing sound:', e);
+                }
+
                 refreshAlerts();
             })
             .subscribe();

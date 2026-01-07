@@ -44,7 +44,7 @@ export const TeamSettings: React.FC = () => {
         if (!confirm('Tem certeza que deseja excluir este profissional?')) return;
 
         try {
-            const { error } = await supabase.from('team_members').delete().eq('id', id);
+            const { error } = await supabase.from('team_members').delete().eq('id', id).eq('user_id', user.id);
             if (error) throw error;
             fetchMembers();
         } catch (error) {

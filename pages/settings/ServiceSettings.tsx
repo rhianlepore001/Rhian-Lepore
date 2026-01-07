@@ -60,7 +60,7 @@ export const ServiceSettings: React.FC = () => {
     const handleDeleteService = async (id: string) => {
         if (!confirm('Tem certeza que deseja excluir este serviço?')) return;
         try {
-            await supabase.from('services').delete().eq('id', id);
+            await supabase.from('services').delete().eq('id', id).eq('user_id', user.id);
             fetchData();
         } catch (error) {
             console.error('Error deleting service:', error);
@@ -70,7 +70,7 @@ export const ServiceSettings: React.FC = () => {
     const handleDeleteCategory = async (id: string) => {
         if (!confirm('Tem certeza? Isso pode afetar serviços vinculados.')) return;
         try {
-            await supabase.from('service_categories').delete().eq('id', id);
+            await supabase.from('service_categories').delete().eq('id', id).eq('user_id', user.id);
             fetchData();
         } catch (error) {
             console.error('Error deleting category:', error);

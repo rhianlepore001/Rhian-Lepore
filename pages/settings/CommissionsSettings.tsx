@@ -115,7 +115,8 @@ export const CommissionsSettings: React.FC = () => {
                     commission_rate: rate,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', memberId);
+                .eq('id', memberId)
+                .eq('user_id', user.id);
 
             if (error) throw error;
 

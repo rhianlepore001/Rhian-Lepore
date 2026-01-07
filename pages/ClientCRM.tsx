@@ -51,6 +51,7 @@ export const ClientCRM: React.FC = () => {
           .from('clients')
           .select('*')
           .eq('id', id)
+          .eq('user_id', user.id)
           .single();
 
         if (clientError) throw clientError;
@@ -64,6 +65,7 @@ export const ClientCRM: React.FC = () => {
             .from('appointments')
             .select('*, team_members(name)')
             .eq('client_id', clientData.id)
+            .eq('user_id', user.id)
             .eq('status', 'Completed')
             .order('appointment_time', { ascending: false });
 
@@ -80,6 +82,7 @@ export const ClientCRM: React.FC = () => {
             .from('hair_records')
             .select('*')
             .eq('client_id', clientData.id)
+            .eq('user_id', user.id)
             .order('date', { ascending: false });
 
           if (historyError) throw historyError;
@@ -123,6 +126,7 @@ export const ClientCRM: React.FC = () => {
         .from('clients')
         .update({ notes: notes })
         .eq('id', client.id)
+        .eq('user_id', user.id)
         .select();
 
       if (error) throw error;
@@ -159,7 +163,8 @@ export const ClientCRM: React.FC = () => {
           phone: editPhone,
           email: editEmail
         })
-        .eq('id', client.id);
+        .eq('id', client.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -185,7 +190,8 @@ export const ClientCRM: React.FC = () => {
       const { error } = await supabase
         .from('clients')
         .update({ is_active: false })
-        .eq('id', client.id);
+        .eq('id', client.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -259,7 +265,8 @@ export const ClientCRM: React.FC = () => {
                       const { error: updateError } = await supabase
                         .from('clients')
                         .update({ photo_url: publicUrl })
-                        .eq('id', client.id);
+                        .eq('id', client.id)
+                        .eq('user_id', user.id);
 
                       if (updateError) throw updateError;
 

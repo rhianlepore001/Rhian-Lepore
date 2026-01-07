@@ -210,11 +210,11 @@ export const Finance: React.FC = () => {
 
       if (record?.appointment_id) {
         if (confirm('Esta transação está vinculada a um agendamento. Deseja excluir o agendamento também?')) {
-          await supabase.from('appointments').delete().eq('id', record.appointment_id);
+          await supabase.from('appointments').delete().eq('id', record.appointment_id).eq('user_id', user.id);
         }
       }
 
-      const { error } = await supabase.from('finance_records').delete().eq('id', transactionId);
+      const { error } = await supabase.from('finance_records').delete().eq('id', transactionId).eq('user_id', user.id);
       if (error) throw error;
 
       alert('Transação excluída com sucesso!');

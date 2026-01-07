@@ -20,7 +20,8 @@ interface Service {
     image_url: string | null;
     description: string | null;
     duration_minutes: number;
-    category: string;
+    category?: string; // Legacy
+    category_id?: string; // New FK
 }
 
 interface Professional {
@@ -31,6 +32,11 @@ interface Professional {
     individual_rating: number;
     total_reviews: number;
     name: string; // Added for compatibility
+}
+
+interface Category {
+    id: string;
+    name: string;
 }
 
 interface BusinessProfile {
@@ -53,6 +59,8 @@ export const PublicBooking: React.FC = () => {
     const [businessId, setBusinessId] = useState<string | null>(null);
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [services, setServices] = useState<Service[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]); // New state for categories
+    const [activeCategory, setActiveCategory] = useState<string>('all'); // New state for filter
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [gallery, setGallery] = useState<any[]>([]); // New state for gallery
@@ -181,10 +189,18 @@ export const PublicBooking: React.FC = () => {
                 console.log(`Supabase Realtime status for booking ${activeBooking.id}:`, status);
             });
 
+        // Fallback polling every 5 seconds in case Realtime fails
+        const interval = setInterval(() => {
+            if (activeBooking.status === 'pending') {
+                fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
+            }
+        }, 5000);
+
         return () => {
             supabase.removeChannel(channel);
+            clearInterval(interval);
         };
-    }, [activeBooking?.id]);
+    }, [activeBooking?.id, activeBooking?.status]);
 
     const isBeauty = business?.user_type === 'beauty';
 
@@ -274,6 +290,14 @@ export const PublicBooking: React.FC = () => {
 
                     if (servicesError) throw servicesError;
                     setServices(servicesData || []);
+
+                    // Fetch categories
+                    const { data: categoriesData } = await supabase
+                        .from('service_categories')
+                        .select('id, name')
+                        .eq('user_id', profileData.id)
+                        .order('display_order');
+                    setCategories(categoriesData || []);
 
                     // Fetch professionals
                     const { data: professionalsData, error: professionalsError } = await supabase
@@ -871,86 +895,119 @@ export const PublicBooking: React.FC = () => {
                                         <p className="text-neutral-500 text-xs font-mono">{services.length} Opções</p>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {services.map(service => {
-                                            const isSelected = selectedServices.includes(service.id);
-                                            return (
-                                                <div
-                                                    key={service.id}
-                                                    onClick={() => toggleService(service.id)}
+                                    {/* Category Filter */}
+                                    {categories.length > 0 && (
+                                        <div className="flex gap-2 mb-2 overflow-x-auto pb-2 custom-scrollbar -mx-2 px-2 md:mx-0 md:px-0">
+                                            <button
+                                                onClick={() => setActiveCategory('all')}
+                                                className={`
+                                                    px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all
+                                                    ${activeCategory === 'all'
+                                                        ? `bg-${accentColor} text-black border-2 border-${accentColor}`
+                                                        : 'bg-neutral-800 text-neutral-400 border-2 border-transparent hover:bg-neutral-700 hover:text-white'}
+                                                `}
+                                            >
+                                                Todos
+                                            </button>
+                                            {categories.map(cat => (
+                                                <button
+                                                    key={cat.id}
+                                                    onClick={() => setActiveCategory(cat.id)}
                                                     className={`
-                                                        relative cursor-pointer transition-all duration-300 group overflow-hidden flex flex-col h-full
-                                                        ${isBeauty
-                                                            ? 'rounded-2xl border'
-                                                            : 'border-2 border-black'
-                                                        }
-                                                        ${isSelected
-                                                            ? (isBeauty
-                                                                ? 'bg-beauty-card border-beauty-neon shadow-neon scale-[1.02] z-10'
-                                                                : 'bg-neutral-900 border-accent-gold shadow-heavy-sm translate-x-[-2px] translate-y-[-2px]')
-                                                            : (isBeauty
-                                                                ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
-                                                                : 'bg-brutal-card border-transparent hover:border-neutral-700 hover:shadow-heavy-sm')
-                                                        }
+                                                        px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all
+                                                        ${activeCategory === cat.id
+                                                            ? `bg-${accentColor} text-black border-2 border-${accentColor}`
+                                                            : 'bg-neutral-800 text-neutral-400 border-2 border-transparent hover:bg-neutral-700 hover:text-white'}
                                                     `}
                                                 >
-                                                    {service.image_url && (
-                                                        <div className="h-56 overflow-hidden relative bg-neutral-900 flex items-center justify-center group-hover:shadow-2xl transition-all duration-500">
-                                                            {/* Blurred Background Continuation */}
-                                                            <div className="absolute inset-0 scale-125 blur-xl opacity-40">
+                                                    {cat.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {services
+                                            .filter(service => activeCategory === 'all' || service.category_id === activeCategory)
+                                            .map(service => {
+                                                const isSelected = selectedServices.includes(service.id);
+                                                return (
+                                                    <div
+                                                        key={service.id}
+                                                        onClick={() => toggleService(service.id)}
+                                                        className={`
+                                                        relative cursor-pointer transition-all duration-300 group overflow-hidden flex flex-col h-full
+                                                        ${isBeauty
+                                                                ? 'rounded-2xl border'
+                                                                : 'border-2 border-black'
+                                                            }
+                                                        ${isSelected
+                                                                ? (isBeauty
+                                                                    ? 'bg-beauty-card border-beauty-neon shadow-neon scale-[1.02] z-10'
+                                                                    : 'bg-neutral-900 border-accent-gold shadow-heavy-sm translate-x-[-2px] translate-y-[-2px]')
+                                                                : (isBeauty
+                                                                    ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
+                                                                    : 'bg-brutal-card border-transparent hover:border-neutral-700 hover:shadow-heavy-sm')
+                                                            }
+                                                    `}
+                                                    >
+                                                        {service.image_url && (
+                                                            <div className="h-56 overflow-hidden relative bg-neutral-900 flex items-center justify-center group-hover:shadow-2xl transition-all duration-500">
+                                                                {/* Blurred Background Continuation */}
+                                                                <div className="absolute inset-0 scale-125 blur-xl opacity-40">
+                                                                    <img
+                                                                        src={service.image_url}
+                                                                        alt=""
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                                {/* Actual Full Image */}
                                                                 <img
                                                                     src={service.image_url}
-                                                                    alt=""
-                                                                    className="w-full h-full object-cover"
+                                                                    alt={service.name}
+                                                                    className="relative z-10 max-w-full max-h-full object-contain transition-all duration-700 p-2 group-hover:scale-[1.03]"
                                                                 />
-                                                            </div>
-                                                            {/* Actual Full Image */}
-                                                            <img
-                                                                src={service.image_url}
-                                                                alt={service.name}
-                                                                className="relative z-10 max-w-full max-h-full object-contain transition-all duration-700 p-2 group-hover:scale-[1.03]"
-                                                            />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none z-20"></div>
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none z-20"></div>
 
-                                                            {/* Selection Checkmark Overlay */}
-                                                            <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0'}`}>
-                                                                <div className={`
+                                                                {/* Selection Checkmark Overlay */}
+                                                                <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0'}`}>
+                                                                    <div className={`
                                                                     w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transform transition-transform duration-300
                                                                     ${isSelected ? 'scale-100' : 'scale-50'}
                                                                     ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black border-2 border-black'}
                                                                 `}>
-                                                                    <Check className="w-6 h-6" />
+                                                                        <Check className="w-6 h-6" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        <div className="p-5 flex flex-col flex-1">
+                                                            <div className="flex justify-between items-start gap-2 mb-2">
+                                                                <h3 className={`text-lg md:text-xl font-bold leading-tight ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
+                                                                    {service.name}
+                                                                </h3>
+                                                                {service.category && (
+                                                                    <span className="text-[10px] font-mono uppercase bg-black/30 text-neutral-400 px-2 py-0.5 rounded border border-white/5">
+                                                                        {service.category}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-neutral-400 text-xs leading-relaxed mb-4 flex-1 line-clamp-2">
+                                                                {service.description || "Atendimento especializado com produtos premium."}
+                                                            </p>
+                                                            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                                                                <div className={`text-xl font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
+                                                                    {formatCurrency(service.price, currencyRegion)}
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5 text-neutral-400 text-[10px] font-mono bg-black/20 px-2 py-1 rounded">
+                                                                    <Clock className="w-3.5 h-3.5" />
+                                                                    {service.duration_minutes} MIN
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    )}
-                                                    <div className="p-5 flex flex-col flex-1">
-                                                        <div className="flex justify-between items-start gap-2 mb-2">
-                                                            <h3 className={`text-lg md:text-xl font-bold leading-tight ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
-                                                                {service.name}
-                                                            </h3>
-                                                            {service.category && (
-                                                                <span className="text-[10px] font-mono uppercase bg-black/30 text-neutral-400 px-2 py-0.5 rounded border border-white/5">
-                                                                    {service.category}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-neutral-400 text-xs leading-relaxed mb-4 flex-1 line-clamp-2">
-                                                            {service.description || "Atendimento especializado com produtos premium."}
-                                                        </p>
-                                                        <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                                                            <div className={`text-xl font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
-                                                                {formatCurrency(service.price, currencyRegion)}
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 text-neutral-400 text-[10px] font-mono bg-black/20 px-2 py-1 rounded">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                {service.duration_minutes} MIN
-                                                            </div>
-                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
                                     </div>
                                 </div>
                             )}

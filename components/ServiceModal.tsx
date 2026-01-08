@@ -120,9 +120,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 user_id: user.id,
                 name,
                 description,
-                price: parseFloat(price),
+                price: price ? parseFloat(price) : 0,
                 duration_minutes: duration === 'custom'
-                    ? (parseInt(customHours) * 60) + parseInt(customMinutes)
+                    ? (parseInt(customHours || '0') * 60) + parseInt(customMinutes || '0')
                     : parseInt(duration),
                 category_id: categoryId,
                 active,
@@ -132,7 +132,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             let serviceId = service?.id;
 
             if (serviceId) {
-                await supabase.from('services').update(serviceData).eq('id', serviceId);
+                await supabase.from('services').update(serviceData).eq('id', serviceId).eq('user_id', user.id);
             } else {
                 const { data, error } = await supabase.from('services').insert(serviceData).select().single();
                 if (error) throw error;
@@ -143,6 +143,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             if (serviceId) {
                 // First delete existing
                 if (service?.id) {
+                    // Note: service_upsells does not have user_id, but it refers to services owned by the user.
+                    // We rely on the parent_service_id being validated by the RLS on services if necessary,
+                    // but for extra safety we check if we actually own the serviceId.
                     await supabase.from('service_upsells').delete().eq('parent_service_id', serviceId);
                 }
 

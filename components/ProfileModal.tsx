@@ -72,6 +72,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
             if (profileError) console.error("Error updating public profile:", profileError);
 
+            // Sync with team_members for the owner
+            const { error: teamError } = await supabase
+                .from('team_members')
+                .update({
+                    name: newFullName,
+                    photo_url: newPhotoUrl
+                })
+                .eq('user_id', user?.id)
+                .eq('is_owner', true); // Assuming the profile being edited belongs to the owner/admin
+
+            if (teamError) console.error("Error syncing team member profile:", teamError);
+
             alert('Perfil atualizado com sucesso! Recarregue a página para ver as alterações.');
             onClose();
             window.location.reload();

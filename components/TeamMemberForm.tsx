@@ -24,7 +24,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [role, setRole] = useState(member?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
     const [slug, setSlug] = useState(member?.slug || '');
     const [bio, setBio] = useState(member?.bio || '');
-    const [commissionRate, setCommissionRate] = useState(member?.commission_rate || (isOwnerForm ? 100 : 0));
+    const [commissionRate, setCommissionRate] = useState<string | number>(member?.commission_rate?.toString() || (isOwnerForm ? '100' : '0'));
     const [isOwner, setIsOwner] = useState(member?.is_owner || (isOwnerForm ? true : false));
     const [active, setActive] = useState(member?.active ?? true);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -50,7 +50,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         setName(fullName || businessName || '');
         setRole('Dono / Profissional');
         setPhotoPreview(avatarUrl || null);
-        setCommissionRate(100);
+        setCommissionRate('100');
         setIsOwner(true);
     };
 
@@ -92,7 +92,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 bio: bio.trim(),
                 active,
                 photo_url: photoUrl,
-                commission_rate: commissionRate,
+                commission_rate: commissionRate === '' ? 0 : Number(commissionRate),
                 is_owner: isOwner
             };
 
@@ -100,7 +100,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 const { error: updateError } = await supabase
                     .from('team_members')
                     .update(teamMemberData)
-                    .eq('id', member.id);
+                    .eq('id', member.id)
+                    .eq('user_id', user.id);
                 if (updateError) throw updateError;
             } else {
                 const { error: insertError } = await supabase
@@ -244,7 +245,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 min="0"
                                 max="100"
                                 value={commissionRate}
-                                onChange={e => setCommissionRate(Number(e.target.value))}
+                                onChange={e => setCommissionRate(e.target.value)}
                                 className={`w-full p-3 rounded-lg text-white transition-all outline-none
                                     ${isBeauty
                                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'

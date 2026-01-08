@@ -9,6 +9,7 @@ import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { SearchableSelect } from '../components/SearchableSelect'; // Importando o novo componente
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
+import { useAppTour } from '../hooks/useAppTour';
 
 interface Appointment {
     id: string;
@@ -61,6 +62,7 @@ export const Agenda: React.FC = () => {
     const { user, userType, region } = useAuth();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    useAppTour(); // Instancia para detectar continuação do tour
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -75,6 +77,7 @@ export const Agenda: React.FC = () => {
     const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState<string | null>(null);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
+    const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
 
     // State for editing
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
@@ -213,7 +216,8 @@ export const Agenda: React.FC = () => {
             fetchAppointments(),
             fetchPublicBookings(),
             fetchClients(),
-            fetchServices()
+            fetchServices(),
+            fetchBusinessProfile()
         ]);
         setLoading(false);
     };
@@ -350,6 +354,16 @@ export const Agenda: React.FC = () => {
         if (data) setServices(data as Service[]);
     };
 
+    const fetchBusinessProfile = async () => {
+        if (!user) return;
+        const { data } = await supabase
+            .from('profiles')
+            .select('business_name')
+            .eq('id', user.id)
+            .single();
+        if (data) setBusinessName(data.business_name || 'Seu Estabelecimento');
+    };
+
     const fetchHistoryAppointments = async () => {
         if (!user) return;
         const startOfMonth = new Date(historyMonth.getFullYear(), historyMonth.getMonth(), 1);
@@ -420,12 +434,20 @@ export const Agenda: React.FC = () => {
             // 1. Check for existing client by phone number
             // Sanitize phone number for search (remove non-digits?) 
             // Better to search exactly as stored first, or maybe both formats if possible.
-            // For now, we assume consistency or searching exact match.
+            // We search for both Raw (+55...) and Formatted ((11)...) to catch legacy clients.
+            const rawPhone = booking.customer_phone;
+            const formattedPhoneBR = formatPhone(rawPhone, 'BR'); // Try BR mask
+            const formattedPhonePT = formatPhone(rawPhone, 'PT'); // Try PT mask
+
+            // Or filter construction: phone.eq.RAW,phone.eq.FORMATTED...
+            // Note: supabase .or() syntax expects comma separated filters
+            const orFilter = `phone.eq.${rawPhone},phone.eq.${formattedPhoneBR},phone.eq.${formattedPhonePT}`;
+
             const { data: existingClient } = await supabase
                 .from('clients')
                 .select('id, photo_url')
                 .eq('user_id', user.id)
-                .eq('phone', booking.customer_phone)
+                .or(orFilter)
                 .maybeSingle();
 
             if (existingClient) {
@@ -540,6 +562,23 @@ export const Agenda: React.FC = () => {
             const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
 
             if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
+                const dateObj = new Date(booking.appointment_time);
+                const formattedDate = dateObj.toLocaleDateString('pt-BR');
+                const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const establishment = businessName;
+
+                const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
+                const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
+
+                const message = `Agendamento confirmado! ✨
+📅 Data: ${formattedDate}
+⏰ Horário: ${formattedTime}
+💇‍♀️ Serviço: ${serviceNames}
+💰 Valor: ${currencySymbol} ${formattedPrice}
+
+Obrigada pela confiança! Te espero no ${establishment}.`;
+
+                const waMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
             }
 
@@ -754,6 +793,23 @@ export const Agenda: React.FC = () => {
                 const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
 
                 if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
+                    const dateObj = dateTime;
+                    const formattedDate = dateObj.toLocaleDateString('pt-BR');
+                    const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const establishment = businessName;
+
+                    const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
+                    const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
+
+                    const message = `Agendamento confirmado! ✨
+📅 Data: ${formattedDate}
+⏰ Horário: ${formattedTime}
+💇‍♀️ Serviço: ${serviceNames}
+💰 Valor: ${currencySymbol} ${formattedPrice}
+
+Obrigada pela confiança! Te espero no ${establishment}.`;
+
+                    const waMessage = encodeURIComponent(message);
                     window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
                 }
             } else {
@@ -850,6 +906,7 @@ export const Agenda: React.FC = () => {
             const discountPercentage = Math.round((discountAmount / apt.basePrice!) * 100);
             return {
                 hasDiscount: true,
+                basePrice: apt.basePrice,
                 discountAmount: discountAmount,
                 discountPercentage: discountPercentage,
                 isCustomPriceHigher: false
@@ -858,13 +915,14 @@ export const Agenda: React.FC = () => {
             // If price is higher, treat it as a custom price without discount
             return {
                 hasDiscount: false,
+                basePrice: apt.basePrice,
                 discountAmount: 0,
                 discountPercentage: 0,
                 isCustomPriceHigher: true
             };
         }
 
-        return { hasDiscount: false, discountAmount: 0, discountPercentage: 0, isCustomPriceHigher: false };
+        return { hasDiscount: false, basePrice: apt.basePrice, discountAmount: 0, discountPercentage: 0, isCustomPriceHigher: false };
     };
 
     if (loading) {
@@ -1218,9 +1276,15 @@ export const Agenda: React.FC = () => {
                         return (
                             <div key={member.id} className="flex flex-col">
                                 {/* Professional Header */}
-                                <div className={`${isBeauty
-                                    ? 'bg-gradient-to-r from-beauty-neon/20 to-beauty-neon/5'
-                                    : 'bg-accent-gold'} text-white p-4 rounded-t-lg border-2 border-b-0 border-white/20 min-h-[90px] flex items-center`}>
+                                <div
+                                    onClick={() => {
+                                        setSelectedProfessional(member.id);
+                                        setShowNewAppointmentModal(true);
+                                    }}
+                                    className={`${isBeauty
+                                        ? 'bg-gradient-to-r from-beauty-neon/20 to-beauty-neon/5 hover:from-beauty-neon/30'
+                                        : 'bg-accent-gold hover:opacity-90'} text-white p-4 rounded-t-lg border-2 border-b-0 border-white/20 min-h-[90px] flex items-center cursor-pointer transition-all group relative`}
+                                    title="Clique para agendar com este profissional">
                                     <div className="flex items-center gap-3 w-full">
                                         {member.photo_url ? (
                                             <img
@@ -1243,6 +1307,9 @@ export const Agenda: React.FC = () => {
                                                 </span>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 p-1 rounded-full">
+                                        <Plus className={`w-4 h-4 ${isBeauty ? 'text-white' : 'text-black'}`} />
                                     </div>
                                 </div>
 

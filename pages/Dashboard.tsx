@@ -2,20 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Wallet, TrendingUp, Clock, AlertTriangle, ExternalLink, Settings } from 'lucide-react';
+import { Wallet, TrendingUp, Clock, AlertTriangle, ExternalLink, Settings, Edit2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { GoalHistory } from '../components/GoalHistory';
-import { TutorialOverlay } from '../components/TutorialOverlay'; // Importando o Tutorial
 
 import { formatCurrency } from '../utils/formatters';
+import { useAppTour } from '../hooks/useAppTour';
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, user, tutorialCompleted } = useAuth(); // Usando tutorialCompleted
+  const { userType, region, user } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
+  const { startTour } = useAppTour();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [profit, setProfit] = useState(0);
   const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
@@ -27,20 +28,12 @@ export const Dashboard: React.FC = () => {
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState('');
   const [goalHistory, setGoalHistory] = useState<any[]>([]);
-  const [showTutorial, setShowTutorial] = useState(false); // Estado para controlar a exibição
 
   const isBeauty = userType === 'beauty';
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-
-  // Efeito para exibir o tutorial automaticamente na primeira visita
-  useEffect(() => {
-    if (!loading && user && !tutorialCompleted) {
-      setShowTutorial(true);
-    }
-  }, [loading, user, tutorialCompleted]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -187,12 +180,18 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-8">
-      {showTutorial && <TutorialOverlay onComplete={() => setShowTutorial(false)} />} {/* Exibe o tutorial */}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-white/10 pb-4 gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Resumo Diário</h2>
+            <button
+              onClick={startTour}
+              className="p-1 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+              title="Iniciar Tour Guiado"
+            >
+              <InfoButton text="Clique para ver o tutorial do sistema" />
+            </button>
             <AIAssistantButton context="o painel geral e suas métricas diárias" />
           </div>
           <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
@@ -200,6 +199,7 @@ export const Dashboard: React.FC = () => {
           </p>
         </div>
         <BrutalButton
+          id="dashboard-new-appointment"
           variant="primary"
           size="md"
           icon={<Clock />}
@@ -210,9 +210,62 @@ export const Dashboard: React.FC = () => {
         </BrutalButton>
       </div>
 
-      {/* ROW 1: Financial Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <BrutalCard className="h-full">
+      {/* ROW 1: Priority Overview (Appointments & Profit) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <BrutalCard
+          id="dashboard-appointments-list"
+          title={
+            <div className="flex items-center gap-2">
+              <span>Próximos Agendamentos</span>
+              <InfoButton text="Lista dos seus próximos 5 compromissos agendados." />
+            </div>
+          }
+          className="h-full"
+          noPadding
+        >
+          {loading ? (
+            <div className="p-4 text-center text-text-secondary">Carregando agendamentos...</div>
+          ) : (
+            <ul className="divide-y-2 divide-neutral-800">
+              {appointments.map((apt) => (
+                <li
+                  key={apt.id}
+                  className="p-3 md:p-4 hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
+                  onClick={() => navigate(`/agenda?date=${apt.rawDate}`)}
+                >
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className={`font-mono text-base md:text-xl font-bold ${accentText} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700 flex flex-col items-center min-w-[70px]`}>
+                      <span>{apt.time}</span>
+                      <span className="text-[10px] md:text-xs opacity-70 mt-1">
+                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-heading text-sm md:text-lg text-white">{apt.clientName}</p>
+                      <p className="text-[10px] md:text-sm text-text-secondary font-mono">{apt.service}</p>
+                    </div>
+                  </div>
+                  <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <BrutalButton size="sm" variant="ghost">Ver</BrutalButton>
+                  </div>
+                </li>
+              ))}
+              {appointments.length === 0 && (
+                <li className="p-4 text-center text-text-secondary">Nenhum agendamento encontrado.</li>
+              )}
+            </ul>
+          )}
+          <div className="p-4 border-t-2 border-dashed border-neutral-700">
+            <button
+              onClick={() => navigate('/agenda')}
+              className={`w-full py-2 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-widest transition-colors`}
+            >
+              Ver Agenda Completa →
+            </button>
+          </div>
+        </BrutalCard>
+
+        <BrutalCard id="dashboard-profit-card" className="h-full">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center">
@@ -232,106 +285,73 @@ export const Dashboard: React.FC = () => {
             <span>{weeklyGrowth >= 0 ? '+' : ''}{weeklyGrowth}% vs. semana passada</span>
           </div>
         </BrutalCard>
+      </div>
 
-        <BrutalCard className="h-full flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center">
-              <p className="text-text-secondary font-mono text-xs md:text-sm uppercase tracking-widest">Meta Mensal</p>
-              <InfoButton text="Seu objetivo de faturamento para o mês atual. Clique no ícone de engrenagem para editar." />
-            </div>
-            <span className="font-bold text-white font-mono">
-              {Math.min(Math.round((currentMonthRevenue / monthlyGoal) * 100), 100)}%
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            <div className="relative h-6 md:h-8 bg-neutral-900 border-2 border-neutral-700 w-full skew-x-[-10deg]">
-              <div
-                className={`absolute top-0 left-0 h-full ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'} border-r-2 border-black transition-all duration-1000`}
-                style={{ width: `${Math.min((currentMonthRevenue / monthlyGoal) * 100, 100)}%` }}
-              >
-                <div className="w-full h-full opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_5px,#000_5px,#000_10px)]"></div>
+      {/* ROW 2: Performance & Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <BrutalCard
+          title={
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 w-full pr-2">
+              <div className="flex items-center gap-2">
+                <span>Performance de Metas</span>
+                <InfoButton text="Acompanhe sua meta mensal e histórico." />
               </div>
-            </div>
-            <div className="flex justify-between text-xs md:text-sm font-mono text-text-muted items-center">
-              <span>Atual: {formatCurrency(currentMonthRevenue, currencyRegion)}</span>
               {isEditingGoal ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-neutral-900 p-1 rounded-lg border border-neutral-700 animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                  <span className="text-[10px] uppercase text-text-secondary font-bold pl-1 hidden sm:inline">Nova:</span>
                   <input
                     type="number"
                     value={newGoal}
                     onChange={(e) => setNewGoal(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSaveGoal()}
-                    className="w-24 bg-black/50 border border-neutral-700 text-white p-1 text-right rounded-md"
+                    className="w-20 bg-black/50 border border-neutral-600 focus:border-white text-white p-1 text-right text-xs outline-none font-mono rounded"
                     autoFocus
+                    placeholder="Valor"
                   />
-                  <button onClick={handleSaveGoal} className={`text-xs p-1 rounded ${accentText} hover:bg-white/10`}>Salvar</button>
-                  <button onClick={() => setIsEditingGoal(false)} className="text-xs p-1 rounded text-neutral-500 hover:bg-white/10">X</button>
+                  <button onClick={handleSaveGoal} className={`text-xs px-2 py-1 rounded ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} font-bold hover:brightness-110 transition-all`}>OK</button>
+                  <button onClick={() => setIsEditingGoal(false)} className="text-xs px-2 py-1 rounded text-neutral-400 hover:bg-white/10 hover:text-white transition-all">✕</button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <span>Meta: {formatCurrency(monthlyGoal, currencyRegion)}</span>
-                  <button onClick={() => setIsEditingGoal(true)} className="text-text-secondary hover:text-white transition-colors">
-                    <Settings className="w-3 h-3" />
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-end hidden xs:flex">
+                    <span className="text-[10px] uppercase text-text-secondary tracking-wider font-bold">Meta Atual</span>
+                    <span className={`text-sm font-mono font-bold ${accentText}`}>{formatCurrency(monthlyGoal, currencyRegion)}</span>
+                  </div>
+                  <button
+                    onClick={() => setIsEditingGoal(true)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:border-neutral-500 transition-all group`}
+                    title="Alterar Meta Mensal"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-text-secondary group-hover:text-white transition-colors" />
+                    <span className="text-xs font-bold text-text-secondary group-hover:text-white uppercase tracking-wider hidden sm:inline-block">Editar</span>
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-        </BrutalCard>
-      </div>
-
-      {/* NEW ROW 2: Appointments and Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <BrutalCard
-          title={
-            <div className="flex items-center gap-2">
-              <span>Próximos Agendamentos</span>
-              <InfoButton text="Lista dos seus próximos 5 compromissos agendados." />
             </div>
           }
           className="h-full"
           noPadding
         >
-          {loading ? (
-            <div className="p-4 text-center text-text-secondary">Carregando agendamentos...</div>
-          ) : (
-            <ul className="divide-y-2 divide-neutral-800">
-              {appointments.map((apt) => (
-                <li
-                  key={apt.id}
-                  className="p-3 md:p-4 hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer"
-                  onClick={() => navigate(`/agenda?date=${apt.rawDate}`)} // Redireciona para a data específica
-                >
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className={`font-mono text-base md:text-xl font-bold ${accentText} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700 flex flex-col items-center min-w-[70px]`}>
-                      <span>{apt.time}</span>
-                      <span className="text-[10px] md:text-xs opacity-70 mt-1">
-                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-heading text-sm md:text-lg text-white">{apt.clientName}</p>
-                      <p className="text-[10px] md:text-sm text-text-secondary font-mono">{apt.service}</p>
-                    </div>
-                  </div>
-                  <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    <BrutalButton size="sm" variant="ghost">Ver</BrutalButton>
-                  </div>
+          <div className="p-4">
+            {goalHistory.length > 0 ? (
+              <GoalHistory
+                history={goalHistory}
+                currencySymbol={currencySymbol}
+                isBeauty={isBeauty}
+              />
+            ) : (
+              <div className="p-8 text-center text-text-secondary">
+                <p>Sem histórico suficiente para exibir gráficos.</p>
+              </div>
+            )}
+          </div>
 
-                </li>
-              ))}
-              {appointments.length === 0 && (
-                <li className="p-4 text-center text-text-secondary">Nenhum agendamento encontrado.</li>
-              )}
-            </ul>
-          )}
           <div className="p-4 border-t-2 border-dashed border-neutral-700">
             <button
-              onClick={() => navigate('/agenda')}
-              className={`w-full py-2 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-widest transition-colors`}
+              onClick={() => navigate('/financeiro')}
+              className={`w-full py-2 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-widest transition-colors flex items-center justify-center gap-2`}
             >
-              Ver Agenda Completa →
+              Ver Relatório Financeiro Completo <ArrowRight className="w-3 h-3" />
             </button>
           </div>
         </BrutalCard>
@@ -391,15 +411,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* ROW 3: Goal History (Moved Down) */}
-      {goalHistory.length > 0 && (
-        <BrutalCard title="Performance de Metas">
-          <GoalHistory
-            history={goalHistory}
-            currencySymbol={currencySymbol}
-            isBeauty={isBeauty}
-          />
-        </BrutalCard>
-      )}
+
     </div>
   );
 };

@@ -17,7 +17,7 @@ interface TeamMember {
 export const CommissionsSettings: React.FC = () => {
     const { user, userType } = useAuth();
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-    const [settlementDay, setSettlementDay] = useState<number>(5);
+    const [settlementDay, setSettlementDay] = useState<number | string>(5);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editingMember, setEditingMember] = useState<string | null>(null);
@@ -77,12 +77,18 @@ export const CommissionsSettings: React.FC = () => {
         if (!user) return;
         setSaving(true);
 
+        let day = typeof settlementDay === 'string' ? parseInt(settlementDay) : settlementDay;
+        if (isNaN(day) || day < 1 || day > 31) {
+            day = 5; // Default fallback
+            setSettlementDay(5);
+        }
+
         try {
             const { error } = await supabase
                 .from('business_settings')
                 .upsert({
                     user_id: user.id,
-                    commission_settlement_day_of_month: settlementDay,
+                    commission_settlement_day_of_month: day,
                     updated_at: new Date().toISOString()
                 }, {
                     onConflict: 'user_id'
@@ -208,7 +214,7 @@ export const CommissionsSettings: React.FC = () => {
                                         min="1"
                                         max="31"
                                         value={settlementDay}
-                                        onChange={(e) => setSettlementDay(parseInt(e.target.value) || 1)}
+                                        onChange={(e) => setSettlementDay(e.target.value)}
                                         className={`w-full pl-12 pr-4 py-3 rounded-lg text-white font-mono text-lg outline-none transition-all
                                             ${isBeauty
                                                 ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon focus:shadow-neon'
@@ -298,7 +304,7 @@ export const CommissionsSettings: React.FC = () => {
                                                             min="0"
                                                             max="100"
                                                             step="0.5"
-                                                            value={tempRates[member.id] || '0'}
+                                                            value={tempRates[member.id]}
                                                             onChange={(e) => setTempRates(prev => ({
                                                                 ...prev,
                                                                 [member.id]: e.target.value

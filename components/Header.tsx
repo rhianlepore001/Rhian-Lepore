@@ -1,25 +1,24 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, BookOpen, ArrowLeft } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
-import { TutorialOverlay } from './TutorialOverlay';
-import { useSubscription } from '../hooks/useSubscription';
+import { useAppTour } from '../hooks/useAppTour';
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
-  const { businessName, fullName, userType, logout, avatarUrl, markTutorialCompleted } = useAuth();
+  const { businessName, fullName, userType, logout, avatarUrl } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { startTour } = useAppTour();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showTutorialModal, setShowTutorialModal] = useState(false); // NEW STATE
 
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBeauty = userType === 'beauty';
@@ -57,6 +56,7 @@ export const Header: React.FC = () => {
               </button>
             ) : (
               <button
+                id="mobile-menu-btn"
                 onClick={toggleSidebar}
                 className={`md:hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
               >
@@ -82,20 +82,21 @@ export const Header: React.FC = () => {
 
           {/* Right: Profile & Actions */}
           <div className="flex items-center gap-3 md:gap-6">
-            {/* Tutorial Button */}
+            {/* Tour Button */}
             <button
-              onClick={() => setShowTutorialModal(true)}
+              onClick={() => startTour('dashboard')}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-colors
                     ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon hover:bg-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20'}
                 `}
             >
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Tutorial</span>
+              <Compass className="w-4 h-4" />
+              <span className="hidden sm:inline">Tour</span>
             </button>
 
             {/* Notifications */}
             <div className="relative">
               <button
+                id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 hover:bg-neutral-800 rounded border border-transparent hover:border-neutral-700 transition-colors"
               >
@@ -154,6 +155,7 @@ export const Header: React.FC = () => {
             {/* Profile Dropdown */}
             <div className="relative">
               <button
+                id="header-profile-btn"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-3 pl-0 md:pl-6 md:border-l-2 md:border-neutral-800 hover:opacity-80 transition-opacity"
               >
@@ -203,7 +205,6 @@ export const Header: React.FC = () => {
       </header>
 
       {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
-      {showTutorialModal && <TutorialOverlay onComplete={() => { setShowTutorialModal(false); markTutorialCompleted(); }} />}
     </>
   );
 };

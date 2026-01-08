@@ -1,7 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
     apiVersion: "2023-10-16",
@@ -47,28 +46,43 @@ serve(async (req) => {
             throw new Error("Price ID is required");
         }
 
-        // 1. Check if customer exists in your database or Stripe
-        // For simplicity, we search customer by email in Stripe or create a new one
-        // In a real app, you should store stripe_customer_id in your users table
-        const customers = await stripe.customers.list({
-            email: user.email,
-            limit: 1,
-        });
+        // 1. Check if customer exists in your database
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('stripe_customer_id')
+            .eq('id', user.id)
+            .single();
 
-        let customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
+        let customerId = profile?.stripe_customer_id;
 
         if (!customerId) {
-            // Create new customer
-            const newCustomer = await stripe.customers.create({
+            // 2. Check if customer exists in Stripe by email
+            const customers = await stripe.customers.list({
                 email: user.email,
-                metadata: {
-                    supabase_user_id: user.id
-                }
+                limit: 1,
             });
-            customerId = newCustomer.id;
+
+            if (customers.data.length > 0) {
+                customerId = customers.data[0].id;
+            } else {
+                // 3. Create new customer
+                const newCustomer = await stripe.customers.create({
+                    email: user.email,
+                    metadata: {
+                        supabase_user_id: user.id
+                    }
+                });
+                customerId = newCustomer.id;
+            }
+
+            // 4. Save stripe_customer_id to profile
+            await supabaseClient
+                .from('profiles')
+                .update({ stripe_customer_id: customerId })
+                .eq('id', user.id);
         }
 
-        // 2. Create Checkout Session
+        // 5. Create Checkout Session
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             line_items: [
@@ -94,7 +108,6 @@ serve(async (req) => {
             status: 200,
         });
     } catch (error) {
-        // Keep only critical error logging
         console.error("Error:", error);
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },

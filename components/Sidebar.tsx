@@ -27,6 +27,7 @@ export const Sidebar: React.FC = () => {
       )}
 
       <aside
+        id="sidebar-container"
         className={`
           fixed left-0 z-50 w-64 flex flex-col
           transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
@@ -59,11 +60,13 @@ export const Sidebar: React.FC = () => {
         <nav className="flex-1 py-8 overflow-y-auto space-y-2 px-4">
           {NAVIGATION_ITEMS.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+            const itemId = `sidebar-item-${item.name.toLowerCase().replace(/\s+/g, '-')}`;
 
             // Beauty Theme Active State
             if (isBeauty) {
               return (
                 <Link
+                  id={itemId}
                   key={item.name}
                   to={item.path}
                   onClick={closeSidebar}
@@ -83,6 +86,7 @@ export const Sidebar: React.FC = () => {
             // Barber Theme Active State (Original)
             return (
               <Link
+                id={itemId}
                 key={item.name}
                 to={item.path}
                 onClick={closeSidebar}

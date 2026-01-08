@@ -206,7 +206,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     price: finalPriceValue,
                     notes: notes
                 })
-                .eq('id', appointment.id);
+                .eq('id', appointment.id)
+                .eq('user_id', user.id);
 
             if (error) throw error;
 

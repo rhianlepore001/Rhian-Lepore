@@ -61,6 +61,7 @@ export const PublicBooking: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [categories, setCategories] = useState<Category[]>([]); // New state for categories
     const [activeCategory, setActiveCategory] = useState<string>('all'); // New state for filter
+    const [searchQuery, setSearchQuery] = useState<string>(''); // New state for search
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [gallery, setGallery] = useState<any[]>([]); // New state for gallery
@@ -133,8 +134,12 @@ export const PublicBooking: React.FC = () => {
                     });
 
                     if (booking && booking[0]) {
-                        setActiveBooking(booking[0]);
-                        setStep('success');
+                        // Professional Rule: Only block/show status if it is PENDING.
+                        // If confirmed, user can make a NEW booking (e.g. for next month).
+                        if (booking[0].status === 'pending') {
+                            setActiveBooking(booking[0]);
+                            setStep('success');
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching existing client:', error);
@@ -156,6 +161,11 @@ export const PublicBooking: React.FC = () => {
             });
 
             if (booking && booking[0]) {
+                // If the booking we were tracking is confirmed, we might want to stop blocking?
+                // But this function is used for REFRESHING status.
+                // If it IS confirmed, we want to show that status on the success screen!
+                // Wait, if it *became* confirmed, we show "Confirmed".
+                // But if the user *starts* fresh, we don't block.
                 setActiveBooking(booking[0]);
             } else {
                 setActiveBooking(null);
@@ -890,9 +900,37 @@ export const PublicBooking: React.FC = () => {
                         <div className="animate-in fade-in duration-700">
                             {step === 'services' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-2xl md:text-3xl font-heading text-white uppercase tracking-tight">Menu de Serviços</h2>
-                                        <p className="text-neutral-500 text-xs font-mono">{services.length} Opções</p>
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-2xl md:text-3xl font-heading text-white uppercase tracking-tight">Menu de Serviços</h2>
+                                            <p className="text-neutral-500 text-xs font-mono">{services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length} Opções</p>
+                                        </div>
+
+                                        {/* Search Bar */}
+                                        <div className="flex flex-col gap-2">
+                                            <label className="text-xs font-mono text-neutral-500 uppercase tracking-widest">Pesquisar serviço:</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    placeholder="Digite o nome do serviço..."
+                                                    className={`w-full px-4 py-3 pl-10 rounded-lg font-medium transition-all ${isBeauty
+                                                        ? 'bg-beauty-card border border-beauty-neon/20 text-white placeholder:text-neutral-500 focus:border-beauty-neon'
+                                                        : 'bg-neutral-900 border-2 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-accent-gold'
+                                                        }`}
+                                                />
+                                                <Sparkles className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${searchQuery ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-neutral-500'}`} />
+                                                {searchQuery && (
+                                                    <button
+                                                        onClick={() => setSearchQuery('')}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Category Filter */}
@@ -926,88 +964,143 @@ export const PublicBooking: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {services
-                                            .filter(service => activeCategory === 'all' || service.category_id === activeCategory)
-                                            .map(service => {
-                                                const isSelected = selectedServices.includes(service.id);
-                                                return (
-                                                    <div
-                                                        key={service.id}
-                                                        onClick={() => toggleService(service.id)}
-                                                        className={`
-                                                        relative cursor-pointer transition-all duration-300 group overflow-hidden flex flex-col h-full
-                                                        ${isBeauty
-                                                                ? 'rounded-2xl border'
-                                                                : 'border-2 border-black'
-                                                            }
-                                                        ${isSelected
-                                                                ? (isBeauty
-                                                                    ? 'bg-beauty-card border-beauty-neon shadow-neon scale-[1.02] z-10'
-                                                                    : 'bg-neutral-900 border-accent-gold shadow-heavy-sm translate-x-[-2px] translate-y-[-2px]')
-                                                                : (isBeauty
-                                                                    ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
-                                                                    : 'bg-brutal-card border-transparent hover:border-neutral-700 hover:shadow-heavy-sm')
-                                                            }
-                                                    `}
-                                                    >
-                                                        {service.image_url && (
-                                                            <div className="h-56 overflow-hidden relative bg-neutral-900 flex items-center justify-center group-hover:shadow-2xl transition-all duration-500">
-                                                                {/* Blurred Background Continuation */}
-                                                                <div className="absolute inset-0 scale-125 blur-xl opacity-40">
-                                                                    <img
-                                                                        src={service.image_url}
-                                                                        alt=""
-                                                                        className="w-full h-full object-cover"
-                                                                    />
-                                                                </div>
-                                                                {/* Actual Full Image */}
-                                                                <img
-                                                                    src={service.image_url}
-                                                                    alt={service.name}
-                                                                    className="relative z-10 max-w-full max-h-full object-contain transition-all duration-700 p-2 group-hover:scale-[1.03]"
-                                                                />
-                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none z-20"></div>
+                                    {/* Services organized by category */}
+                                    <div className="space-y-6">
+                                        {(() => {
+                                            // Group services by category with search filter
+                                            const servicesByCategory = services
+                                                .filter(service => {
+                                                    // Category filter
+                                                    const matchesCategory = activeCategory === 'all' || service.category_id === activeCategory;
+                                                    // Search filter
+                                                    const matchesSearch = !searchQuery ||
+                                                        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                        (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
+                                                    return matchesCategory && matchesSearch;
+                                                })
+                                                .reduce((acc, service) => {
+                                                    const categoryId = service.category_id || 'uncategorized';
+                                                    if (!acc[categoryId]) acc[categoryId] = [];
+                                                    acc[categoryId].push(service);
+                                                    return acc;
+                                                }, {} as Record<string, typeof services>);
 
-                                                                {/* Selection Checkmark Overlay */}
-                                                                <div className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0'}`}>
+                                            // Sort services within each category alphabetically
+                                            Object.keys(servicesByCategory).forEach(catId => {
+                                                servicesByCategory[catId].sort((a, b) => a.name.localeCompare(b.name));
+                                            });
+
+                                            // Get category names for headers
+                                            const getCategoryName = (catId: string) => {
+                                                if (catId === 'uncategorized') return 'Outros Serviços';
+                                                const cat = categories.find(c => c.id === catId);
+                                                return cat?.name || 'Serviços';
+                                            };
+
+                                            return Object.entries(servicesByCategory).map(([categoryId, categoryServices]) => (
+                                                <div key={categoryId} className="space-y-3">
+                                                    {/* Category Header (only show if not filtering by specific category) */}
+                                                    {activeCategory === 'all' && (
+                                                        <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
+                                                            {getCategoryName(categoryId)}
+                                                        </h3>
+                                                    )}
+
+                                                    {/* Services List - Compact Layout */}
+                                                    <div className="space-y-2">
+                                                        {categoryServices.map(service => {
+                                                            const isSelected = selectedServices.includes(service.id);
+                                                            return (
+                                                                <div
+                                                                    key={service.id}
+                                                                    onClick={() => toggleService(service.id)}
+                                                                    className={`
+                                                                        relative cursor-pointer transition-all duration-200 group overflow-hidden flex items-center gap-4 p-4
+                                                                        ${isBeauty
+                                                                            ? 'rounded-xl border'
+                                                                            : 'border-2 border-black'}
+                                                                        ${isSelected
+                                                                            ? (isBeauty
+                                                                                ? 'bg-beauty-card border-beauty-neon shadow-neon'
+                                                                                : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
+                                                                            : (isBeauty
+                                                                                ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
+                                                                                : 'bg-brutal-card border-transparent hover:border-neutral-700')}
+                                                                    `}
+                                                                >
+                                                                    {/* Selection Indicator */}
                                                                     <div className={`
-                                                                    w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transform transition-transform duration-300
-                                                                    ${isSelected ? 'scale-100' : 'scale-50'}
-                                                                    ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black border-2 border-black'}
-                                                                `}>
-                                                                        <Check className="w-6 h-6" />
+                                                                        shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                                                                        ${isSelected
+                                                                            ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
+                                                                            : 'border-neutral-600 bg-transparent'}
+                                                                    `}>
+                                                                        {isSelected && <Check className="w-4 h-4 text-black" />}
+                                                                    </div>
+
+                                                                    {/* Service Info */}
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h4 className={`font-bold text-base leading-tight truncate ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
+                                                                            {service.name}
+                                                                        </h4>
+                                                                        {service.description && (
+                                                                            <p className="text-neutral-400 text-xs mt-1 line-clamp-1">
+                                                                                {service.description}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {/* Price and Duration */}
+                                                                    <div className="shrink-0 text-right">
+                                                                        <div className={`text-lg font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
+                                                                            {formatCurrency(service.price, currencyRegion)}
+                                                                        </div>
+                                                                        <div className="flex items-center justify-end gap-1 text-neutral-400 text-[10px] font-mono mt-1">
+                                                                            <Clock className="w-3 h-3" />
+                                                                            {service.duration_minutes}min
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ));
+                                        })()}
+
+                                        {/* Empty State */}
+                                        {(() => {
+                                            const filteredCount = services.filter(service => {
+                                                const matchesCategory = activeCategory === 'all' || service.category_id === activeCategory;
+                                                const matchesSearch = !searchQuery ||
+                                                    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                    (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
+                                                return matchesCategory && matchesSearch;
+                                            }).length;
+
+                                            if (filteredCount === 0) {
+                                                return (
+                                                    <div className={`text-center py-12 px-4 rounded-xl border-2 border-dashed ${isBeauty ? 'border-white/10 bg-beauty-card/30' : 'border-neutral-800 bg-neutral-900/30'}`}>
+                                                        <Sparkles className={`w-12 h-12 mx-auto mb-4 ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}`} />
+                                                        <h3 className="text-white font-bold text-lg mb-2">Nenhum serviço encontrado</h3>
+                                                        <p className="text-neutral-400 text-sm mb-4">
+                                                            {searchQuery
+                                                                ? `Não encontramos serviços com "${searchQuery}"`
+                                                                : 'Não há serviços nesta categoria'}
+                                                        </p>
+                                                        {searchQuery && (
+                                                            <button
+                                                                onClick={() => setSearchQuery('')}
+                                                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${isBeauty ? 'bg-beauty-neon text-black hover:bg-beauty-neon/80' : 'bg-accent-gold text-black hover:bg-accent-gold/80'}`}
+                                                            >
+                                                                Limpar pesquisa
+                                                            </button>
                                                         )}
-                                                        <div className="p-5 flex flex-col flex-1">
-                                                            <div className="flex justify-between items-start gap-2 mb-2">
-                                                                <h3 className={`text-lg md:text-xl font-bold leading-tight ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
-                                                                    {service.name}
-                                                                </h3>
-                                                                {service.category && (
-                                                                    <span className="text-[10px] font-mono uppercase bg-black/30 text-neutral-400 px-2 py-0.5 rounded border border-white/5">
-                                                                        {service.category}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-neutral-400 text-xs leading-relaxed mb-4 flex-1 line-clamp-2">
-                                                                {service.description || "Atendimento especializado com produtos premium."}
-                                                            </p>
-                                                            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                                                                <div className={`text-xl font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
-                                                                    {formatCurrency(service.price, currencyRegion)}
-                                                                </div>
-                                                                <div className="flex items-center gap-1.5 text-neutral-400 text-[10px] font-mono bg-black/20 px-2 py-1 rounded">
-                                                                    <Clock className="w-3.5 h-3.5" />
-                                                                    {service.duration_minutes} MIN
-                                                                </div>
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 );
-                                            })}
+                                            }
+                                            return null;
+                                        })()}
                                     </div>
                                 </div>
                             )}

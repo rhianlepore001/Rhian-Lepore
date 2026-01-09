@@ -87,6 +87,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     const handleDateClick = (day: number) => {
         if (isDateDisabled(day)) return;
         const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+        date.setHours(0, 0, 0, 0);
         onDateSelect(date);
     };
 

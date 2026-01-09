@@ -6,7 +6,8 @@ import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
-import { SearchableSelect } from '../components/SearchableSelect'; // Importando o novo componente
+import { AppointmentWizard } from '../components/AppointmentWizard';
+
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
@@ -1767,182 +1768,21 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 </div>
             )}
 
-            {/* New Appointment Modal */}
+            {/* New Appointment Wizard */}
             {showNewAppointmentModal && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'}`}>
-                    <div className={`w-full max-w-md p-6 overflow-y-auto max-h-[90vh] transition-all
-                        ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                            : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]'}
-                    `}>
-                        <div className={`flex items-center justify-between mb-6 ${isBeauty ? 'border-b border-beauty-neon/20 pb-4' : ''}`}>
-                            <h3 className="text-white font-heading text-xl uppercase">Novo Agendamento</h3>
-                            <button
-                                onClick={() => {
-                                    setShowNewAppointmentModal(false);
-                                    resetForm();
-                                }}
-                                className="text-neutral-400 hover:text-white transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Data</label>
-                                <input
-                                    type="date"
-                                    value={selectedAppointmentDate}
-                                    onChange={(e) => setSelectedAppointmentDate(e.target.value)}
-                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
-                                    `}
-                                />
-                            </div>
-
-                            {/* Searchable Client Select */}
-                            <SearchableSelect
-                                label="Cliente"
-                                placeholder="Buscar cliente por nome ou telefone"
-                                options={clientOptions}
-                                value={selectedClient}
-                                onChange={setSelectedClient}
-                                accentColor={accentColor}
-                            />
-
-                            <div>
-                                <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Profissional</label>
-                                <select
-                                    value={selectedProfessional}
-                                    onChange={(e) => setSelectedProfessional(e.target.value)}
-                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
-                                    `}
-                                >
-                                    <option value="">Selecione um profissional</option>
-                                    {teamMembers.map(member => (
-                                        <option key={member.id} value={member.id}>{member.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Searchable Service Select */}
-                            <SearchableSelect
-                                label="Serviços"
-                                placeholder="Selecione um ou mais serviços"
-                                options={serviceOptions}
-                                value={selectedServices}
-                                onChange={setSelectedServices}
-                                accentColor={accentColor}
-                                multiple={true}
-                            />
-
-                            {/* Notes / Observation */}
-                            <div>
-                                <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Observação</label>
-                                <textarea
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none min-h-[80px] resize-y
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
-                                    `}
-                                    placeholder="Adicione observações sobre o agendamento..."
-                                />
-                            </div>
-
-                            <div>
-                                <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Horário</label>
-                                <select
-                                    value={selectedTime}
-                                    onChange={(e) => setSelectedTime(e.target.value)}
-                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
-                                    `}
-                                >
-                                    <option value="">Selecione um horário</option>
-                                    {timeSlots.map(time => (
-                                        <option key={time} value={time}>{time}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Discount Field */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Desconto (%)</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            step="1"
-                                            value={discountPercentage}
-                                            onChange={(e) => setDiscountPercentage(e.target.value)}
-                                            className={`w-full p-3 rounded-lg text-white text-lg pr-8 transition-all outline-none
-                                                ${isBeauty
-                                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
-                                            `}
-                                            placeholder="0"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">%</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className={`font-mono text-sm mb-2 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white'}`}>Preço Final</label>
-                                    <div className="relative">
-                                        <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
-                                            {currencySymbol}
-                                        </span>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={finalPriceInput}
-                                            onChange={(e) => setFinalPriceInput(e.target.value)}
-                                            className={`w-full p-3 pl-10 rounded-lg text-white text-lg font-bold border transition-all outline-none
-                                                ${isBeauty
-                                                    ? 'bg-beauty-dark/50 border-beauty-neon/30 focus:border-beauty-neon text-beauty-neon'
-                                                    : 'bg-neutral-800 border-neutral-700 focus:border-accent-gold text-accent-gold'}
-                                            `}
-                                        />
-                                    </div>
-                                    <p className={`text-xs mt-1 ${isBeauty ? 'text-beauty-neon/60' : 'text-neutral-500'}`}>
-                                        Preço base: {formatCurrency(basePriceNew, currencyRegion)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <BrutalButton
-                                    variant="secondary"
-                                    className="flex-1"
-                                    onClick={() => {
-                                        setShowNewAppointmentModal(false);
-                                        resetForm();
-                                    }}
-                                >
-                                    Cancelar
-                                </BrutalButton>
-                                <BrutalButton
-                                    variant="primary"
-                                    className="flex-1"
-                                    onClick={handleCreateAppointment}
-                                >
-                                    Criar Agendamento
-                                </BrutalButton>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <AppointmentWizard
+                    onClose={() => setShowNewAppointmentModal(false)}
+                    onSuccess={(date) => {
+                        const newDateStr = date.toISOString().split('T')[0];
+                        navigate(`/agenda?date=${newDateStr}`);
+                        fetchData(); // Refresh data
+                    }}
+                    initialDate={selectedDate}
+                    teamMembers={teamMembers}
+                    services={services}
+                    clients={clients}
+                    onRefreshClients={fetchClients}
+                />
             )}
 
             {/* Edit Appointment Modal */}

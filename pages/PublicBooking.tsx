@@ -464,7 +464,13 @@ export const PublicBooking: React.FC = () => {
             });
 
             // 3. Format appointment time and Calculate Total
-            const dateStr = selectedDate.toISOString().split('T')[0];
+            // FIX: Use local date parts to ensure we keep the visual date selected by the user,
+            // regardless of their local timezone (toISOString() shifts to UTC which causes "previous day" bugs in East timezones)
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
             const totalPrice = calculateTotal();
             const duration = calculateDuration();
 
@@ -475,8 +481,12 @@ export const PublicBooking: React.FC = () => {
                 return 'Z';
             };
             const offset = getBusinessOffset(business?.region || 'BR');
+            // Construct the ISO string manually with the correct offset
             const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
-            const appointmentTime = new Date(appointmentTimeISO);
+
+            // NOTE: We do NOT convert this back to a Date object using new Date(appointmentTimeISO)
+            // for the RPC call because Safari/iOS often fails to parse ISO strings with explicit offsets,
+            // resulting in "Invalid Date". We send the string directly to Supabase (Postgres handles it).
 
             // 3.5 Check if already has an active booking (Extra safety for concurrency)
             const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', {
@@ -497,7 +507,7 @@ export const PublicBooking: React.FC = () => {
             if (selectedProfessional === 'any') {
                 const { data: autoProId, error: autoProError } = await supabase.rpc('get_first_available_professional', {
                     p_business_id: businessId,
-                    p_appointment_time: appointmentTime.toISOString(),
+                    p_appointment_time: appointmentTimeISO, // Send the string directly!
                     p_duration_min: duration
                 });
 
@@ -1303,7 +1313,7 @@ export const PublicBooking: React.FC = () => {
                                                     disabled={!customerName || !customerPhone || !acceptedPolicy || customerPhone.length < 9 || isSubmitting}
                                                     variant="primary"
                                                     size="lg"
-                                                    className="w-full flex items-center justify-center gap-2"
+                                                    className="w-full flex items-center justify-center gap-2 touch-manipulation"
                                                 >
                                                     {isSubmitting ? (
                                                         <>

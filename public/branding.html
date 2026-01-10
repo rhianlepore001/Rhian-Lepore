@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conceitos de Marca - BB OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brutal: { main: '#121212', card: '#1E1E1E' },
+                        accent: { gold: '#C29B40' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#121212] text-white min-h-screen p-8">
+    <div class="max-w-4xl mx-auto space-y-12">
+        <header class="text-center space-y-4">
+            <h1 class="text-4xl font-bold text-[#C29B40]">Conceitos de Marca BB OS</h1>
+            <p class="text-gray-400">Analise as opções abaixo focadas em SaaS e Gestão</p>
+        </header>
+
+        <section class="bg-[#1E1E1E] p-8 rounded-xl border border-gray-800">
+            <h2 class="text-2xl font-bold mb-6">Opção 1: Logotipo Tipográfico</h2>
+            <p class="mb-4 text-gray-400">Foco na tipografia forte e entrelaçada.</p>
+            <div class="bg-white p-8 rounded-lg flex justify-center">
+                <img src="/logo-concept-1.png" alt="Conceito 1" class="max-w-md shadow-lg rounded">
+            </div>
+        </section>
+
+        <section class="bg-[#1E1E1E] p-8 rounded-xl border border-gray-800">
+            <h2 class="text-2xl font-bold mb-6">Opção 2: Conceitos SaaS (Calendário, Gráfico, Core)</h2>
+            <p class="mb-4 text-gray-400">Explorações focadas em funcionalidade: grade de agenda, crescimento e segurança.</p>
+            <div class="bg-white p-8 rounded-lg flex justify-center">
+                <img src="/logo-concept-2.png" alt="Conceito 2" class="max-w-full shadow-lg rounded">
+            </div>
+        </section>
+        
+        <footer class="text-center text-gray-500 text-sm">
+            <p>Se as imagens não carregarem, reinicie o servidor de desenvolvimento.</p>
+        </footer>
+    </div>
+</body>
+</html>

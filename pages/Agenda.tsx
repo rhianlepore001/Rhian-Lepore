@@ -36,6 +36,13 @@ interface Service {
     name: string;
     price: number;
     duration_minutes?: number;
+    category_id?: string;
+    description?: string | null;
+}
+
+interface Category {
+    id: string;
+    name: string;
 }
 
 interface Client {
@@ -69,6 +76,7 @@ export const Agenda: React.FC = () => {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [clients, setClients] = useState<Client[]>([]);
     const [services, setServices] = useState<Service[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
@@ -218,6 +226,7 @@ export const Agenda: React.FC = () => {
             fetchPublicBookings(),
             fetchClients(),
             fetchServices(),
+            fetchCategories(),
             fetchBusinessProfile()
         ]);
         setLoading(false);
@@ -348,11 +357,21 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         const { data } = await supabase
             .from('services')
-            .select('id, name, price, duration_minutes') // Adicionando duration_minutes para subtext
+            .select('id, name, price, duration_minutes, category_id, description') // Adicionando details para wizard
             .eq('user_id', user.id)
             .eq('active', true)
             .order('name');
         if (data) setServices(data as Service[]);
+    };
+
+    const fetchCategories = async () => {
+        if (!user) return;
+        const { data } = await supabase
+            .from('service_categories')
+            .select('id, name')
+            .eq('user_id', user.id)
+            .order('name');
+        if (data) setCategories(data);
     };
 
     const fetchBusinessProfile = async () => {
@@ -1780,6 +1799,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     initialDate={selectedDate}
                     teamMembers={teamMembers}
                     services={services}
+                    categories={categories}
                     clients={clients}
                     onRefreshClients={fetchClients}
                 />

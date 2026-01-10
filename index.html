@@ -4,8 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="google" content="notranslate" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Barber OS</title>
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Beauty OS</title>
+  <meta name="theme-color" content="#1F1B2E">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/pwa-192x192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Beauty OS">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +30,7 @@
               main: '#121212',
               card: '#1E1E1E',
               border: '#000000',
-                            surface: '#252525'
+              surface: '#252525'
             },
             accent: {
               gold: '#C29B40',
@@ -103,10 +111,22 @@
     }
   </script>
   <style>
+    /* Global iOS Optimizations */
+    * {
+      touch-action: manipulation;
+      /* Remove 300ms delay globally */
+      -webkit-tap-highlight-color: transparent;
+      /* Remove gray highlight */
+    }
+
     body {
       background-color: #121212;
       color: #EAEAEA;
       font-family: 'Inter', sans-serif;
+      -webkit-overflow-scrolling: touch;
+      /* Momentum scrolling */
+      overscroll-behavior-y: none;
+      /* Prevent bounce if needed, or leave usually fine */
     }
 
     /* Custom Scrollbar - Brutalismo */
@@ -141,7 +161,7 @@
       border: none;
     }
 
-    /* Texture Overlay Class */
+    /* Texture Overlay Class - DISABLED ON MOBILE to prevent GPU crash */
     .texture-overlay {
       position: fixed;
       top: 0;
@@ -152,6 +172,12 @@
       z-index: 50;
       background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+');
       opacity: 0.4;
+    }
+
+    @media (max-width: 768px) {
+      .texture-overlay {
+        display: none !important;
+      }
     }
 
     .grunge-border {
@@ -184,11 +210,20 @@
       box-shadow: 0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2);
     }
 
-    /* Glass Effect para Beauty */
+    /* Glass Effect para Beauty - OPTIMIZED FOR MOBILE */
     .glass-beauty {
       background: rgba(46, 43, 59, 0.7);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(167, 139, 250, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .glass-beauty {
+        backdrop-filter: blur(8px);
+        /* Reduced blur for performance */
+        background: rgba(46, 43, 59, 0.85);
+        /* Slightly more opaque */
+      }
     }
 
     /* Input Focus States */
@@ -221,6 +256,7 @@
         opacity: 0;
         transform: scale(0.95) translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: scale(1) translateY(0);

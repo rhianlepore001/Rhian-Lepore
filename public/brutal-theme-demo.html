@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tema Brutalista Barber - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brutal: {
+                            main: '#121212',
+                            card: '#1E1E1E',
+                            border: '#000000',
+                            surface: '#252525'
+                        },
+                        accent: {
+                            gold: '#C29B40',
+                            goldHover: '#D4AF50',
+                            goldDim: '#8a6d2a',
+                        },
+                        text: {
+                            primary: '#EAEAEA',
+                            secondary: '#A0A0A0',
+                            muted: '#525252'
+                        }
+                    },
+                    fontFamily: {
+                        heading: ['"Chivo"', 'sans-serif'],
+                        body: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    boxShadow: {
+                        'heavy': '4px 4px 0px 0px #000000',
+                        'heavy-sm': '2px 2px 0px 0px #000000',
+                        'heavy-lg': '8px 8px 0px 0px #000000',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #EAEAEA;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+
+        /* Brutal Barber Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(18, 18, 18, 0.85) 50%, rgba(18, 18, 18, 0.95) 100%),
+                url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gMTAwIDAgTCAwIDAgMCAxMDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyMDAsMTU1LDY0LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=');
+            background-size: cover, 100px 100px;
+            background-position: center, center;
+            background-attachment: fixed;
+            opacity: 1;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Animated Gold Accents */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(194, 155, 64, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(194, 155, 64, 0.02) 0%, transparent 40%);
+            z-index: -1;
+            pointer-events: none;
+            animation: pulseGold 8s ease-in-out infinite;
+        }
+
+        @keyframes pulseGold {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* Enhanced Brutal Cards */
+        .brutal-card-enhanced {
+            position: relative;
+            background: linear-gradient(135deg, #1E1E1E 0%, #252525 100%);
+            border: 3px solid #000;
+            box-shadow:
+                4px 4px 0px 0px #000000,
+                inset 0 1px 0 rgba(194, 155, 64, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .brutal-card-enhanced::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(45deg, transparent 48%, rgba(194, 155, 64, 0.03) 50%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, rgba(194, 155, 64, 0.03) 50%, transparent 52%);
+            background-size: 20px 20px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .brutal-card-enhanced:hover {
+            transform: translate(-2px, -2px);
+            box-shadow:
+                6px 6px 0px 0px #000000,
+                inset 0 1px 0 rgba(194, 155, 64, 0.2);
+        }
+
+        /* Gold Accent Borders */
+        .gold-accent-border {
+            position: relative;
+        }
+
+        .gold-accent-border::after {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #C29B40 0%, transparent 30%, transparent 70%, #C29B40 100%);
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Brutal Button Enhancements */
+        .brutal-button-premium {
+            position: relative;
+            background: linear-gradient(135deg, #C29B40 0%, #D4AF50 100%);
+            border: 3px solid #000;
+            box-shadow:
+                3px 3px 0px 0px #000000,
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .brutal-button-premium::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .brutal-button-premium:hover::before {
+            left: 100%;
+        }
+
+        .brutal-button-premium:hover {
+            transform: translate(-1px, -1px);
+            box-shadow:
+                4px 4px 0px 0px #000000,
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .brutal-button-premium:active {
+            transform: translate(1px, 1px);
+            box-shadow:
+                2px 2px 0px 0px #000000,
+                inset 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Stat Card with Glow */
+        .stat-card-brutal {
+            position: relative;
+            background: #1E1E1E;
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px 0px #000000;
+            overflow: hidden;
+        }
+
+        .stat-card-brutal::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(194, 155, 64, 0.1), transparent);
+            animation: slideGlow 3s infinite;
+        }
+
+        @keyframes slideGlow {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 150%;
+            }
+        }
+    </style>
+</head>
+
+<body class="p-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="font-heading text-5xl font-black text-accent-gold mb-4">
+                TEMA BRUTALISTA BARBER
+            </h1>
+            <p class="text-text-secondary text-lg font-mono">
+                Demonstração dos novos estilos premium
+            </p>
+        </header>
+
+        <!-- Grid de Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Stat Card 1 -->
+            <div class="stat-card-brutal p-6 rounded-lg">
+                <div class="text-sm text-text-secondary font-mono uppercase mb-2">Lucro Total</div>
+                <div class="text-4xl font-bold text-accent-gold mb-1">R$ 25,00</div>
+                <div class="text-sm text-green-400">+6% vs. semana passada</div>
+            </div>
+
+            <!-- Stat Card 2 -->
+            <div class="stat-card-brutal p-6 rounded-lg">
+                <div class="text-sm text-text-secondary font-mono uppercase mb-2">Meta Mensal</div>
+                <div class="text-4xl font-bold text-accent-gold mb-1">0%</div>
+                <div class="text-sm text-text-muted">R$ 0,00 de R$ 15.000,00</div>
+            </div>
+
+            <!-- Stat Card 3 -->
+            <div class="stat-card-brutal p-6 rounded-lg">
+                <div class="text-sm text-text-secondary font-mono uppercase mb-2">Faturamento Total</div>
+                <div class="text-4xl font-bold text-accent-gold mb-1">R$ 25,00</div>
+                <div class="text-sm text-text-muted">Janeiro 2026</div>
+            </div>
+        </div>
+
+        <!-- Enhanced Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card Normal -->
+            <div class="brutal-card-enhanced p-6 rounded-lg">
+                <h3 class="font-heading text-2xl font-bold text-accent-gold mb-4">
+                    PRÓXIMOS AGENDAMENTOS
+                </h3>
+                <p class="text-text-secondary mb-4">
+                    Nenhum agendamento encontrado.
+                </p>
+                <button class="brutal-button-premium px-6 py-3 font-bold text-black rounded-md w-full">
+                    VER AGENDA COMPLETA
+                </button>
+            </div>
+
+            <!-- Card com Gold Border -->
+            <div class="gold-accent-border brutal-card-enhanced p-6 rounded-lg">
+                <h3 class="font-heading text-2xl font-bold text-accent-gold mb-4">
+                    PERFORMANCE DE METAS
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-text-secondary">Total de Receita</span>
+                            <span class="text-accent-gold font-bold">0%</span>
+                        </div>
+                        <div class="h-2 bg-brutal-surface rounded-full overflow-hidden border-2 border-black">
+                            <div class="h-full bg-accent-gold" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-text-secondary">Meta Mensal</span>
+                            <span class="text-accent-gold font-bold">0%</span>
+                        </div>
+                        <div class="h-2 bg-brutal-surface rounded-full overflow-hidden border-2 border-black">
+                            <div class="h-full bg-accent-gold" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons Demo -->
+        <div class="brutal-card-enhanced p-8 rounded-lg">
+            <h3 class="font-heading text-2xl font-bold text-accent-gold mb-6">
+                BOTÕES PREMIUM
+            </h3>
+            <div class="flex flex-wrap gap-4">
+                <button class="brutal-button-premium px-8 py-4 font-bold text-black rounded-md">
+                    NOVO AGENDAMENTO
+                </button>
+                <button class="brutal-button-premium px-8 py-4 font-bold text-black rounded-md">
+                    ADICIONAR CLIENTE
+                </button>
+                <button class="brutal-button-premium px-8 py-4 font-bold text-black rounded-md">
+                    VER RELATÓRIOS
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="brutal-card-enhanced p-8 rounded-lg text-center">
+            <h3 class="font-heading text-3xl font-black text-accent-gold mb-4">
+                ✨ TEMA PREMIUM ATIVADO ✨
+            </h3>
+            <p class="text-text-secondary text-lg mb-6">
+                Background animado com grid geométrico, acentos dourados pulsantes,<br>
+                cards com texturas diagonais e botões com efeito shimmer.
+            </p>
+            <div class="inline-block bg-brutal-surface border-3 border-black px-6 py-3 rounded-lg font-mono text-sm">
+                <span class="text-text-muted">Otimizado para</span>
+                <span class="text-accent-gold font-bold"> Desktop & Mobile</span>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

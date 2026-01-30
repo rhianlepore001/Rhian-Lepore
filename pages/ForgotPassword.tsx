@@ -65,7 +65,10 @@ export const ForgotPassword: React.FC = () => {
                             </div>
 
                             {error && (
-                                <div className="p-4 bg-red-500/10 border-2 border-red-500 text-red-500 text-xs font-mono mb-6 flex items-start gap-3">
+                                <div
+                                    role="alert"
+                                    className="p-4 bg-red-500/10 border-2 border-red-500 text-red-500 text-xs font-mono mb-6 flex items-start gap-3"
+                                >
                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                     <span>{error}</span>
                                 </div>
@@ -89,10 +92,14 @@ export const ForgotPassword: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={loading || !email}
+                                    aria-busy={loading}
                                     className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white font-heading text-lg uppercase tracking-wider transition-all border-2 border-black flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
                                 >
                                     {loading ? (
-                                        <span className="animate-pulse">ENVIANDO...</span>
+                                        <span className="animate-pulse flex items-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                            ENVIANDO...
+                                        </span>
                                     ) : (
                                         <>
                                             <Send className="w-5 h-5" />
@@ -103,7 +110,7 @@ export const ForgotPassword: React.FC = () => {
                             </form>
                         </>
                     ) : (
-                        <div className="text-center py-4">
+                        <div className="text-center py-4" id="recovery-success-message">
                             <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle2 className="w-10 h-10 text-green-500" />
                             </div>

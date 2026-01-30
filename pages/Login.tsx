@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Screw } from '../components/Screw';
-import { Zap, Scissors, Lock, Sparkles, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Scissors, Lock, Sparkles, ArrowLeft, Eye, EyeOff, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { Screw } from '../components/Screw';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -12,7 +12,7 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [showPassword, setShowPassword] = useState(false); // NEW STATE
+    const [showPassword, setShowPassword] = useState(false);
 
     // Adaptive Theme State
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
@@ -56,7 +56,7 @@ export const Login: React.FC = () => {
     if (showGateway) {
         return (
             <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4 md:p-8">
-                <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
+                <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 animate-in fade-in zoom-in-95 duration-500">
 
                     {/* BARBER CARD */}
                     <button
@@ -101,44 +101,55 @@ export const Login: React.FC = () => {
         );
     }
 
-    // LOGIN SCREEN (ADAPTIVE)
+    // LOGIN SCREEN (THEME SPECIFIC)
     return (
-        <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500
-        ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
-    `}>
-            {/* Background Accents */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className={`absolute top-0 left-0 w-full h-32 bg-gradient-to-b transition-all duration-500
-            ${isBeauty ? 'from-beauty-neon/10' : 'from-accent-gold/5'} to-transparent
-        `}></div>
+        <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-700
+            ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
+        `}>
+            {/* Background Atmosphere */}
+            <div className="absolute inset-0 pointer-events-none transition-opacity duration-700">
+                {isBeauty ? (
+                    <>
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/10 rounded-full blur-[120px]"></div>
+                        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-beauty-neon/5 rounded-full blur-[120px]"></div>
+                    </>
+                ) : (
+                    <>
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-gold/5 rounded-full blur-[120px]"></div>
+                        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-gold/5 rounded-full blur-[120px]"></div>
+                    </>
+                )}
             </div>
 
             {/* Back to Gateway */}
             <button
                 onClick={() => setShowGateway(true)}
                 className={`absolute top-8 left-8 z-20 flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all
-            ${isBeauty ? 'text-neutral-400 hover:text-white font-sans' : 'text-neutral-500 hover:text-accent-gold font-mono'}
-        `}
+                    ${isBeauty ? 'text-neutral-400 hover:text-white font-sans' : 'text-neutral-500 hover:text-accent-gold font-mono'}
+                `}
             >
                 <ArrowLeft className="w-4 h-4" /> Voltar
             </button>
 
-            <div className={`w-full max-w-md relative z-10 transition-all duration-500
-        ${isBeauty
+            {/* THEME SPECIFIC CARD */}
+            <div className={`w-full max-w-md relative z-10 duration-500 transition-all
+                ${isBeauty
                     ? 'bg-beauty-card/80 backdrop-blur-xl border border-white/10 shadow-soft rounded-2xl'
                     : 'bg-brutal-card border-4 border-black shadow-heavy'}
-      `}>
+            `}>
+
                 {/* Header */}
                 <div className={`flex justify-between items-center transition-all duration-500
-            ${isBeauty
+                    ${isBeauty
                         ? 'p-6 border-b border-white/5 bg-transparent'
                         : 'p-4 bg-black border-b-4 border-white/10'}
-        `}>
+                `}>
                     <div className="flex items-center gap-2">
-                        {isBeauty ? <Sparkles className="w-5 h-5 text-beauty-neon" /> : <Scissors className="w-5 h-5 text-accent-gold" />}
-                        <span className={`font-heading uppercase tracking-wider ${isBeauty ? 'text-white' : 'text-white'}`}>
-                            {isBeauty ? 'Beauty OS' : 'Barber OS'}
-                        </span>
+                        <img
+                            src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
+                            alt={isBeauty ? "Beauty OS" : "Barber OS"}
+                            className="h-8 w-auto object-contain"
+                        />
                     </div>
                 </div>
 
@@ -157,7 +168,10 @@ export const Login: React.FC = () => {
                     </div>
 
                     {error && (
-                        <div className={`p-3 text-xs text-center border ${isBeauty ? 'bg-red-500/10 border-red-500/20 text-red-200 rounded-lg' : 'bg-red-500/10 border-red-500 text-red-500 font-mono'}`}>
+                        <div
+                            role="alert"
+                            className={`p-3 text-xs text-center border ${isBeauty ? 'bg-red-500/10 border-red-500/20 text-red-200 rounded-lg' : 'bg-red-500/10 border-red-500 text-red-500 font-mono'}`}
+                        >
                             {error}
                         </div>
                     )}
@@ -170,10 +184,10 @@ export const Login: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className={`w-full p-4 text-white text-sm focus:outline-none transition-all
-                    ${isBeauty
+                                    ${isBeauty
                                         ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50 focus:bg-white/10 font-sans'
                                         : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                `}
+                                `}
                                 placeholder="seu.email@exemplo.com"
                             />
                         </div>
@@ -182,20 +196,20 @@ export const Login: React.FC = () => {
                             <label className={`text-xs uppercase ml-1 ${isBeauty ? 'text-neutral-400 font-sans font-bold' : 'text-neutral-500 font-mono'}`}>Senha</label>
                             <div className="relative">
                                 <input
-                                    type={showPassword ? 'text' : 'password'} // Dynamic type
+                                    type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     className={`w-full p-4 text-white text-sm focus:outline-none transition-all
-                    ${isBeauty
+                                        ${isBeauty
                                             ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50 focus:bg-white/10 font-sans'
                                             : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                  `}
+                                    `}
                                     placeholder="Sua senha secreta"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(prev => !prev)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
@@ -206,14 +220,18 @@ export const Login: React.FC = () => {
                     <button
                         onClick={handleLogin}
                         disabled={loading}
+                        aria-busy={loading}
                         className={`w-full h-14 font-heading text-lg uppercase tracking-wider transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed
-                ${isBeauty
+                            ${isBeauty
                                 ? 'bg-beauty-neon text-white hover:bg-beauty-neonHover rounded-xl shadow-soft hover:shadow-neon'
                                 : 'bg-accent-gold hover:bg-accent-goldHover text-black border-2 border-black shadow-heavy active:shadow-none active:translate-y-1'}
-            `}
+                        `}
                     >
                         {loading ? (
-                            <span className="animate-pulse">CARREGANDO...</span>
+                            <span className="animate-pulse flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                CARREGANDO...
+                            </span>
                         ) : (
                             <>
                                 {isBeauty ? <Sparkles className="w-5 h-5" /> : <Zap className="w-5 h-5" fill="black" />}
@@ -222,7 +240,7 @@ export const Login: React.FC = () => {
                         )}
                     </button>
 
-                    <div className="flex flex-col gap-4 text-center mt-6">
+                    <div className="flex flex-col gap-4 text-center mt-6 pt-4 border-t border-white/5">
                         <Link to="/forgot-password" className={`text-xs font-bold uppercase transition-all
                             ${isBeauty
                                 ? 'text-neutral-500 hover:text-white font-sans'
@@ -240,6 +258,10 @@ export const Login: React.FC = () => {
                         </Link>
                     </div>
                 </div>
+            </div>
+
+            <div className="absolute bottom-6 text-[10px] text-white/20 font-mono uppercase tracking-[0.2em]">
+                {isBeauty ? 'Beauty & Spa OS' : 'Barber Shop OS'} • v2.0
             </div>
         </div>
     );

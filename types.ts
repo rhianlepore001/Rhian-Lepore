@@ -45,3 +45,16 @@ export interface PublicClient {
   photo_url?: string | null;
   business_id: string;
 }
+
+export interface QueueEntry {
+  id: string;
+  business_id: string;
+  client_name: string;
+  client_phone: string;
+  service_id?: string;
+  professional_id?: string;
+  status: 'waiting' | 'calling' | 'serving' | 'completed' | 'cancelled' | 'no_show';
+  joined_at: string;
+  estimated_wait_time?: number;
+  notes?: string;
+}

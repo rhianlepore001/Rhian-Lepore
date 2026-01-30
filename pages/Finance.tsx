@@ -313,7 +313,7 @@ export const Finance: React.FC = () => {
       const professionalName = professionals.find(p => p.id === newTransactionProfessional)?.name || 'Manual';
 
       // Create date with time if provided
-      let transactionDateTime = new Date(newTransactionDate);
+      const transactionDateTime = new Date(newTransactionDate);
       if (newTransactionTime) {
         const [hours, minutes] = newTransactionTime.split(':');
         transactionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -496,7 +496,7 @@ export const Finance: React.FC = () => {
           </div>
 
           {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <BrutalCard title={`Fluxo de Caixa - ${months[selectedMonth]} ${selectedYear}`}>
               <div className="h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -521,25 +521,6 @@ export const Finance: React.FC = () => {
                     <Area type="monotone" dataKey="receita" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" name="Receita" />
                     <Area type="monotone" dataKey="despesas" stroke="#EF4444" fillOpacity={1} fill="url(#colorExpense)" name="Despesas" />
                   </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </BrutalCard>
-
-            <BrutalCard title="Receita vs Despesas">
-              <div className="h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
-                    <YAxis stroke="#666" style={{ fontSize: '12px' }} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
-                      cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                    />
-                    <Legend />
-                    <Bar dataKey="receita" fill="#10B981" name="Receita" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="despesas" fill="#EF4444" name="Despesas" radius={[4, 4, 0, 0]} />
-                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </BrutalCard>

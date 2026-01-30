@@ -126,6 +126,20 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [selectedTime, setSelectedTime] = useState(initialTime);
     const [notes, setNotes] = useState(appointment.notes || '');
 
+    // Custom Service State
+    const [isCustomService, setIsCustomService] = useState(appointment.price > initialBasePrice || (appointment.service && initialServiceIds.length === 0));
+    const [customServiceName, setCustomServiceName] = useState('');
+
+    useEffect(() => {
+        // If there's a custom part in the string not matched by IDs
+        const matchedServiceNames = services.filter(s => initialServiceIds.includes(s.id)).map(s => s.name);
+        const customPart = initialServiceNames.filter(name => !matchedServiceNames.includes(name)).join(', ');
+        if (customPart) {
+            setCustomServiceName(customPart);
+            setIsCustomService(true);
+        }
+    }, [appointment.service, services, initialServiceNames, initialServiceIds]);
+
     // Price states
     const [basePrice, setBasePrice] = useState(initialBasePrice);
     const [priceBeforeDiscount, setPriceBeforeDiscount] = useState(initialPriceBeforeDiscount);
@@ -140,11 +154,13 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         setBasePrice(currentBasePrice);
         setPriceBeforeDiscount(currentBasePrice);
 
-        const discountRate = parseFloat(discountPercentage) / 100;
-        const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
-        setFinalPriceInput(calculatedFinalPrice.toFixed(2));
+        if (!isCustomService) {
+            const discountRate = parseFloat(discountPercentage) / 100;
+            const calculatedFinalPrice = currentBasePrice * (1 - (isNaN(discountRate) ? 0 : discountRate));
+            setFinalPriceInput(calculatedFinalPrice.toFixed(2));
+        }
 
-    }, [selectedServices, services]);
+    }, [selectedServices, services, isCustomService]);
 
     // 2. Recalculate Price when Discount changes
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,7 +217,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 .update({
                     client_id: selectedClient,
                     professional_id: selectedProfessional,
-                    service: serviceNames,
+                    service: isCustomService && customServiceName
+                        ? (serviceNames ? serviceNames + ', ' + customServiceName : customServiceName)
+                        : serviceNames,
                     appointment_time: dateTime.toISOString(),
                     price: finalPriceValue,
                     notes: notes
@@ -286,6 +304,28 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         multiple={true}
                         disabled={loading}
                     />
+
+                    {/* Custom Service Edit */}
+                    <div className={`p-4 rounded-xl border-2 transition-all ${isCustomService ? (isBeauty ? 'border-beauty-neon bg-beauty-card/30' : 'border-accent-gold bg-neutral-800') : 'border-neutral-800 bg-transparent'}`}>
+                        <div className="flex items-center gap-3 mb-2">
+                            <input
+                                type="checkbox"
+                                checked={isCustomService}
+                                onChange={e => setIsCustomService(e.target.checked)}
+                                className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                            />
+                            <label className={`text-xs uppercase font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>Serviço Personalizado</label>
+                        </div>
+                        {isCustomService && (
+                            <input
+                                value={customServiceName}
+                                onChange={e => setCustomServiceName(e.target.value)}
+                                className={inputStyles}
+                                placeholder="Nome do serviço extra..."
+                                disabled={loading}
+                            />
+                        )}
+                    </div>
 
                     {/* Notes / Observation */}
                     <div>

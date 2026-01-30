@@ -1,104 +1,209 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText, BarChart3, TrendingUp, PieChart, Clock, Bell } from 'lucide-react';
-import { BrutalButton } from '../components/BrutalButton';
+import { supabase } from '../lib/supabase';
+import { Users, UserPlus, Calendar, TrendingUp, BarChart2, Star, DollarSign } from 'lucide-react';
+import { MonthYearSelector } from '../components/MonthYearSelector';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
+import { formatCurrency } from '../utils/formatters';
 
 export const Reports: React.FC = () => {
-    const { userType } = useAuth();
+    const { user, userType, region } = useAuth();
+    const [loading, setLoading] = useState(true);
+    const currentDate = new Date();
+    const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+    const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+
+    // Insights Data
+    const [insights, setInsights] = useState({
+        total_appointments: 0,
+        new_clients: 0,
+        active_clients: 0,
+        top_professionals: [],
+        top_services: [],
+        appointments_by_day: []
+    });
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+    const accentBg = isBeauty ? 'bg-beauty-neon/20 text-beauty-neon' : 'bg-accent-gold/20 text-accent-gold';
+    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
-    const upcomingFeatures = [
-        {
-            icon: BarChart3,
-            title: 'Relatório de Vendas',
-            description: 'Análise detalhada de vendas por período, serviço e profissional'
-        },
-        {
-            icon: TrendingUp,
-            title: 'Métricas de Crescimento',
-            description: 'Acompanhe o crescimento do seu negócio mês a mês'
-        },
-        {
-            icon: PieChart,
-            title: 'Análise de Serviços',
-            description: 'Descubra quais serviços são mais populares e lucrativos'
-        },
-        {
-            icon: FileText,
-            title: 'Exportação Completa',
-            description: 'Exporte relatórios em PDF e Excel para sua contabilidade'
+    useEffect(() => {
+        fetchInsights();
+    }, [selectedMonth, selectedYear, user]);
+
+    const fetchInsights = async () => {
+        try {
+            setLoading(true);
+            const startOfMonth = new Date(selectedYear, selectedMonth, 1).toISOString().split('T')[0];
+            const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split('T')[0];
+
+            const { data, error } = await supabase.rpc('get_dashboard_insights', {
+                p_user_id: user.id,
+                p_start_date: startOfMonth,
+                p_end_date: endOfMonth
+            });
+
+            if (error) {
+                console.error('Error fetching insights RPC:', error);
+                // Fallback or empty state if function doesn't exist yet
+            }
+
+            if (data) {
+                setInsights(data);
+            }
+        } catch (error) {
+            console.error('Unexpected error fetching insights:', error);
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const handleMonthChange = (month: number, year: number) => {
+        setSelectedMonth(month);
+        setSelectedYear(year);
+    };
+
+    const months = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
 
     return (
         <div className="space-y-6 md:space-y-8 pb-20">
             {/* Header */}
-            <div className="border-b-4 border-white/10 pb-4">
-                <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Relatórios</h2>
-                <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
-                    Análises detalhadas do seu negócio
-                </p>
+            <div className="flex flex-col gap-4 border-b-4 border-white/10 pb-4">
+                <div>
+                    <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Insights</h2>
+                    <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
+                        Análise de desempenho e métricas operacionais
+                    </p>
+                </div>
+
+                <MonthYearSelector
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    onChange={handleMonthChange}
+                    accentColor={accentColor}
+                />
             </div>
 
-            {/* Coming Soon Banner */}
-            <BrutalCard className={`border-l-4 border-${accentColor} bg-gradient-to-r from-neutral-900 to-neutral-800`}>
-                <div className="flex flex-col md:flex-row items-center gap-6 py-8">
-                    <div className={`p-6 rounded-full ${accentBg}/10`}>
-                        <Clock className={`w-16 h-16 ${accentText}`} />
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-neutral-500'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon' : 'bg-neutral-800 text-white'}`}>
+                            <UserPlus className="w-5 h-5" />
+                        </div>
+                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Novos Clientes</span>
                     </div>
-                    <div className="text-center md:text-left flex-1">
-                        <h3 className={`text-3xl font-heading ${accentText} uppercase mb-2`}>
-                            Em Breve!
-                        </h3>
-                        <p className="text-white text-lg mb-4">
-                            Estamos desenvolvendo relatórios poderosos para você tomar decisões melhores.
-                        </p>
-                        <p className="text-neutral-400 text-sm">
-                            Esta funcionalidade estará disponível em breve. Enquanto isso, você pode acompanhar
-                            seus dados financeiros na seção <strong className="text-white">Financeiro</strong>.
-                        </p>
+                    <h3 className="text-3xl font-heading text-white">{insights.new_clients}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">Cadastrados este mês</p>
+                </BrutalCard>
+
+                <BrutalCard className={`border-l-4 ${isBeauty ? 'border-purple-500' : 'border-accent-gold'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon' : 'bg-accent-gold/10 text-yellow-600'}`}>
+                            <DollarSign className="w-6 h-6" />
+                        </div>
+                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Clientes Ativos</span>
                     </div>
+                    <h3 className="text-3xl font-heading text-white">{insights.active_clients}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">Visitaram este mês</p>
+                </BrutalCard>
+
+                <BrutalCard className="border-l-4 border-blue-500">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                            <Calendar className="w-5 h-5" />
+                        </div>
+                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Agendamentos</span>
+                    </div>
+                    <h3 className="text-3xl font-heading text-white">{insights.total_appointments}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">Concluídos este mês</p>
+                </BrutalCard>
+            </div>
+
+            {/* Charts Section 1: Volume Daily */}
+            <BrutalCard title={`Volume de Atendimentos - ${months[selectedMonth]}`}>
+                <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={insights.appointments_by_day}>
+                            <defs>
+                                <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                            <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
+                            <YAxis stroke="#666" style={{ fontSize: '12px' }} />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
+                                labelStyle={{ color: '#fff' }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="count"
+                                stroke={isBeauty ? '#A78BFA' : '#EAB308'}
+                                fillOpacity={1}
+                                fill="url(#colorVisits)"
+                                name="Agendamentos"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
             </BrutalCard>
 
-            {/* Upcoming Features */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {upcomingFeatures.map((feature, index) => (
-                    <BrutalCard key={index} className="opacity-60 hover:opacity-80 transition-opacity">
-                        <div className="flex items-start gap-4">
-                            <div className="p-3 bg-neutral-800 rounded-lg">
-                                <feature.icon className="w-6 h-6 text-neutral-400" />
-                            </div>
-                            <div>
-                                <h4 className="text-white font-bold text-lg mb-1">{feature.title}</h4>
-                                <p className="text-neutral-500 text-sm">{feature.description}</p>
-                            </div>
-                        </div>
-                    </BrutalCard>
-                ))}
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Professionals */}
+                <BrutalCard title="Desempenho da Equipe">
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                        {insights.top_professionals.length === 0 ? (
+                            <p className="text-neutral-500 text-sm">Sem dados de equipe.</p>
+                        ) : (
+                            insights.top_professionals.map((prof: any, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-black ${accentBg}`}>
+                                            {idx + 1}
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-bold">{prof.name}</p>
+                                            <p className="text-xs text-neutral-400">{prof.count} atendimentos</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={`font-mono font-bold ${accentText}`}>
+                                            {formatCurrency(prof.revenue, currencyRegion)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </BrutalCard>
 
-            {/* Notify Me */}
-            <BrutalCard className="text-center">
-                <Bell className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-                <h4 className="text-white font-heading text-xl uppercase mb-2">
-                    Quer ser notificado?
-                </h4>
-                <p className="text-neutral-400 text-sm mb-6 max-w-md mx-auto">
-                    Você será avisado automaticamente quando os relatórios estiverem disponíveis.
-                </p>
-                <BrutalButton variant="secondary" disabled>
-                    <span className="flex items-center gap-2">
-                        <Bell className="w-4 h-4" />
-                        Notificação Ativada
-                    </span>
-                </BrutalButton>
-            </BrutalCard>
+                {/* Top Services */}
+                <BrutalCard title="Serviços Mais Populares">
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={insights.top_services} layout="vertical" margin={{ left: 20 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
+                                <XAxis type="number" stroke="#666" style={{ fontSize: '12px' }} />
+                                <YAxis dataKey="name" type="category" stroke="#fff" tick={{ fontSize: 11, fill: '#fff' }} width={100} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                    contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
+                                />
+                                <Bar dataKey="count" fill={isBeauty ? '#A78BFA' : '#fff'} name="Agendamentos" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </BrutalCard>
+            </div>
         </div>
     );
 };

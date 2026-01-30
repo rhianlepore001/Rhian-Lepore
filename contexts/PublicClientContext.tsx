@@ -92,52 +92,45 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
 
             // Create new client
-            // We use a try-catch specifically for the insert to handle race conditions where the client
-            // might have been created between the check and the insert (Unique Violation)
-            try {
-                const { data: newClient, error } = await supabase
-                    .from('public_clients')
-                    .insert([data])
-                    .select()
-                    .single();
+            const { data: newClient, error } = await supabase
+                .from('public_clients')
+                .insert([data])
+                .select()
+                .single();
 
-                if (error) {
-                    // If error is unique constraint violation (code 23505), try updating instead
-                    if (error.code === '23505') {
-                        // Fallback to update by phone and business_id
-                        const { data: fallbackClient, error: fallbackError } = await supabase
-                            .from('public_clients')
-                            .update({
-                                name: data.name,
-                                // If we are here, we missed the read, so we can't easily preserve old photo if current is null.
-                                // However, this path is rare (race condition). We prioritize the new data.
-                                // If data.photo_url is provided, use it.
-                                ...(data.photo_url ? { photo_url: data.photo_url } : {})
-                            })
-                            .eq('business_id', data.business_id)
-                            .eq('phone', data.phone)
-                            .select()
-                            .single();
+            if (error) {
+                // If error is unique constraint violation (code 23505), try updating instead
+                if (error.code === '23505') {
+                    // Fallback to update by phone and business_id
+                    const { data: fallbackClient, error: fallbackError } = await supabase
+                        .from('public_clients')
+                        .update({
+                            name: data.name,
+                            // If we are here, we missed the read, so we can't easily preserve old photo if current is null.
+                            // However, this path is rare (race condition). We prioritize the new data.
+                            // If data.photo_url is provided, use it.
+                            ...(data.photo_url ? { photo_url: data.photo_url } : {})
+                        })
+                        .eq('business_id', data.business_id)
+                        .eq('phone', data.phone)
+                        .select()
+                        .single();
 
-                        if (fallbackError) throw fallbackError;
+                    if (fallbackError) throw fallbackError;
 
-                        if (fallbackClient) {
-                            setClient(fallbackClient);
-                            localStorage.setItem('rhian_public_client', JSON.stringify(fallbackClient));
-                            return fallbackClient;
-                        }
+                    if (fallbackClient) {
+                        setClient(fallbackClient);
+                        localStorage.setItem('rhian_public_client', JSON.stringify(fallbackClient));
+                        return fallbackClient;
                     }
-                    throw error;
                 }
+                throw error;
+            }
 
-                if (newClient) {
-                    setClient(newClient);
-                    localStorage.setItem('rhian_public_client', JSON.stringify(newClient));
-                    return newClient;
-                }
-            } catch (insertError: any) {
-                // Re-check if it was handled in the nested try/catch (it re-throws if not 23505)
-                throw insertError;
+            if (newClient) {
+                setClient(newClient);
+                localStorage.setItem('rhian_public_client', JSON.stringify(newClient));
+                return newClient;
             }
 
             return null;

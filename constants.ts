@@ -1,14 +1,15 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LayoutDashboard, Calendar, Users, TrendingUp, FileText, Settings, DollarSign, LogOut, Package, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, TrendingUp, FileText, Settings, DollarSign, LogOut, Package, CreditCard, Clock, BarChart3 } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
   { name: 'Agenda', icon: Calendar, path: '/agenda' },
+  { name: 'Fila Digital', icon: Clock, path: '/fila' },
   { name: 'Clientes CRM', icon: Users, path: '/clientes' },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
   { name: 'Marketing', icon: TrendingUp, path: '/marketing' },
-  { name: 'Relatórios', icon: FileText, path: '/relatorios' },
+  { name: 'Insights', icon: BarChart3, path: '/insights' },
   { name: 'Ajustes', icon: Settings, path: '/configuracoes' },
 ];
 

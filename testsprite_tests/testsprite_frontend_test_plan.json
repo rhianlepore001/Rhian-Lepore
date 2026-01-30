@@ -1,0 +1,672 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Registration Success",
+    "description": "Verify that a new user (owner) can successfully register with valid email and password, and receive confirmation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the registration page"
+      },
+      {
+        "type": "action",
+        "description": "Input a valid email address and strong password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm registration success message is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is created in the system and prompted to login"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Registration with Invalid Email",
+    "description": "Verify registration fails when an invalid email format is entered.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the registration page"
+      },
+      {
+        "type": "action",
+        "description": "Input an invalid email format and valid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an error message about invalid email is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm registration is not completed"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "User Login Success",
+    "description": "Verify that registered users can login successfully using valid credentials.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Input registered email and correct password"
+      },
+      {
+        "type": "action",
+        "description": "Click the login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the user is successfully logged in and redirected to dashboard"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "User Login Failure with Incorrect Password",
+    "description": "Verify login fails when a registered user inputs an incorrect password.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Input registered email and incorrect password"
+      },
+      {
+        "type": "action",
+        "description": "Click the login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that login fails with an appropriate error message"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Password Recovery Flow",
+    "description": "Verify that users can request password recovery and receive reset instructions.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the forgot password page"
+      },
+      {
+        "type": "action",
+        "description": "Input registered email address"
+      },
+      {
+        "type": "action",
+        "description": "Submit password recovery request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user receives a password reset email or notification"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Profile Management - Update User Details",
+    "description": "Verify that authenticated users can update their profile details successfully.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login with valid credentials"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to profile management page"
+      },
+      {
+        "type": "action",
+        "description": "Update profile fields such as name and contact details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify profile updates are saved and displayed correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Add Business Profile via Onboarding Wizard",
+    "description": "Verify new business owners can complete onboarding wizard to setup business profile including branding and operating hours.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a new business owner"
+      },
+      {
+        "type": "action",
+        "description": "Start onboarding wizard"
+      },
+      {
+        "type": "action",
+        "description": "Input business name, type (salon or barber), and branding preferences"
+      },
+      {
+        "type": "action",
+        "description": "Set operating hours and time zone"
+      },
+      {
+        "type": "action",
+        "description": "Complete onboarding and save configuration"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify business profile is created with correct details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify onboarding wizard completes successfully without errors"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Visual Theme Application and Switching",
+    "description": "Verify custom themes (Barber brutalist dark and Beauty elegant neon) apply consistently and can be switched manually or automatically.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login and navigate to theme settings"
+      },
+      {
+        "type": "action",
+        "description": "Switch theme manually from Barber to Beauty"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI updates reflect the selected theme styles across pages"
+      },
+      {
+        "type": "action",
+        "description": "Set theme to automatic switching based on business preference"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify theme updates automatically according to configured preferences"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Appointment Scheduling: Book Appointment via Public Link",
+    "description": "Verify that clients can successfully book appointments using a public booking link without login, receiving confirmation via WhatsApp or email.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the public booking link for an establishment"
+      },
+      {
+        "type": "action",
+        "description": "Select appointment date, time, and service"
+      },
+      {
+        "type": "action",
+        "description": "Enter client information (name, contact details)"
+      },
+      {
+        "type": "action",
+        "description": "Submit the booking request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking confirmation is displayed on screen"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify client receives confirmation via WhatsApp or email"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Appointment Scheduling: Internal Staff Agenda View",
+    "description": "Verify that staff members can access their internal agenda showing accurate schedule and can mark services complete.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as staff member"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to internal agenda page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify schedule is displayed correctly with all appointments"
+      },
+      {
+        "type": "action",
+        "description": "Select an appointment and mark service as complete"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify appointment status updates to completed"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Appointment Scheduling: Automatic Time Blocking",
+    "description": "Verify the system automatically blocks unavailable times preventing double-booking and overlapping appointments.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as owner or staff"
+      },
+      {
+        "type": "action",
+        "description": "Create an appointment at a specific time slot"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to create another appointment overlapping with the booked time"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system blocks the time slot and prevents double-booking"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Queue Management: Add and Manage Walk-in Clients",
+    "description": "Verify staff members can add walk-in clients to the digital queue, update status, and manage client flow in real-time.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as staff member"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to queue management page"
+      },
+      {
+        "type": "action",
+        "description": "Add a new walk-in client to the queue"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify client appears in the queue with correct details"
+      },
+      {
+        "type": "action",
+        "description": "Update client status (e.g. waiting, being served, completed)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status updates reflect immediately in queue view"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Financial Management: Record Sales Transaction",
+    "description": "Verify that sales transactions can be recorded correctly and reflected in daily and monthly cash flow tracking.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as business owner"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to financial management page"
+      },
+      {
+        "type": "action",
+        "description": "Record a new sales transaction with amount, service, and date"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the transaction appears in daily cash flow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify monthly cash flow is updated accordingly"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Financial Management: Professional Commission Calculations",
+    "description": "Verify that the platform calculates professional commissions accurately based on predefined rules and transactions.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as owner or finance manager"
+      },
+      {
+        "type": "action",
+        "description": "Access commissions management module"
+      },
+      {
+        "type": "action",
+        "description": "Define commission percentages for professionals"
+      },
+      {
+        "type": "action",
+        "description": "Record related sales transactions completed by professionals"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify commissions are calculated correctly for each professional"
+      },
+      {
+        "type": "assertion",
+        "description": "Commission payment history reflects accurate payout data"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Subscription Payments via Stripe Integration",
+    "description": "Verify subscription payment flow through Stripe integration works reliably for business owners.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as owner"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to subscription payment page"
+      },
+      {
+        "type": "action",
+        "description": "Select subscription plan and proceed to payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Stripe payment form loads correctly"
+      },
+      {
+        "type": "action",
+        "description": "Complete a payment with valid card details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment is successful and subscription status updates"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Dashboard KPIs and Financial Reports Accuracy",
+    "description": "Verify executive dashboards show accurate KPIs such as revenue, average ticket size, occupancy rates and financial reports update in real-time.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as owner"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to dashboard and reports pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify revenue, average ticket size, occupancy rate KPIs match underlying data"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify reports generate correct financial insights and update in real-time"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Multi-Tenant Data Access Isolation",
+    "description": "Verify that data isolation is enforced correctly between multiple tenant establishments using row level security in Supabase.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as user belonging to tenant A"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access data belonging to tenant B via UI or API"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied and no data leakage occurs"
+      },
+      {
+        "type": "action",
+        "description": "Verify all data retrieved via queries is only within tenant scope"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Administrative Route Protection",
+    "description": "Verify routes requiring administrative privileges are properly protected and unauthorized access is prevented.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a non-admin user"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to navigate to admin-only pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is blocked with an unauthorized or redirect message"
+      },
+      {
+        "type": "action",
+        "description": "Login as admin user and access admin pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify full access is granted"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Responsive Design and Mobile UX",
+    "description": "Verify UI elements adapt correctly to various screen sizes including mobile devices and maintain usability and aesthetics.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the platform from desktop resolution"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI elements render correctly and fully functional"
+      },
+      {
+        "type": "action",
+        "description": "Resize viewport to multiple mobile sizes (e.g. 375x667, 414x736)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify layout adapts to screen size without horizontal scroll or overlap"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify interactive elements remain accessible and visually clear"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Offline Usage Support as PWA",
+    "description": "Verify that the platform supports offline usage with relevant UI states and data caching for a Progressive Web App experience.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the application online and navigate through key pages"
+      },
+      {
+        "type": "action",
+        "description": "Simulate offline network condition"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify cached pages load successfully with appropriate offline indicators"
+      },
+      {
+        "type": "action",
+        "description": "Attempt operations requiring network (e.g. booking new appointments)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system handles errors gracefully and informs the user"
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "Team & Services: Add and Manage Professionals",
+    "description": "Verify ability to add, edit, and remove team members and their services, including business operating hours configuration.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as business owner"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to team and services management module"
+      },
+      {
+        "type": "action",
+        "description": "Add a new professional with required details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify professional appears in team list"
+      },
+      {
+        "type": "action",
+        "description": "Assign services and configure working hours for the professional"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify service and hours reflect correctly in schedules"
+      },
+      {
+        "type": "action",
+        "description": "Edit professional details and save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are persisted"
+      },
+      {
+        "type": "action",
+        "description": "Delete a professional and confirm removal"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify professional no longer appears in list and related data is cleaned up"
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Client CRM: Add and Manage Client Records",
+    "description": "Verify users can add new clients to CRM, edit their information, and search/filter client database.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as staff or owner"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to clients CRM page"
+      },
+      {
+        "type": "action",
+        "description": "Add a new client with contact and profile details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify new client appears in client list"
+      },
+      {
+        "type": "action",
+        "description": "Edit existing client details and save changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are reflected in client database"
+      },
+      {
+        "type": "action",
+        "description": "Use search and filters to locate clients"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify client list filters results correctly"
+      }
+    ]
+  }
+]

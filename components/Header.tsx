@@ -58,7 +58,7 @@ export const Header: React.FC = () => {
               <button
                 id="mobile-menu-btn"
                 onClick={toggleSidebar}
-                className={`md:hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
+                className={`hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
               >
                 <Menu className="w-6 h-6" />
               </button>

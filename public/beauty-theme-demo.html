@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tema Beauty Premium - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beauty: {
+                            neon: '#A78BFA',
+                            neonHover: '#C4B5FD',
+                            acid: '#8B5CF6',
+                            silver: '#E9D5FF',
+                            dark: '#1F1B2E',
+                            card: '#2E2B3B',
+                        },
+                        text: {
+                            primary: '#EAEAEA',
+                            secondary: '#A0A0A0',
+                            muted: '#525252'
+                        }
+                    },
+                    fontFamily: {
+                        body: ['"Inter"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'neon': '0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3)',
+                        'neon-strong': '0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #1F1B2E;
+            color: #EAEAEA;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+
+        /* Beauty Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(135deg, rgba(31, 27, 46, 0.92) 0%, rgba(31, 27, 46, 0.88) 50%, rgba(31, 27, 46, 0.92) 100%),
+                url('/beauty-bg.png');
+            background-size: cover, 600px 600px;
+            background-position: center, center;
+            background-repeat: no-repeat, repeat;
+            background-attachment: fixed;
+            opacity: 1;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Animated Purple Accents */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 15% 25%, rgba(167, 139, 250, 0.08) 0%, transparent 35%),
+                radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.06) 0%, transparent 35%),
+                radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.04) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+            animation: pulseBeauty 8s ease-in-out infinite;
+        }
+
+        @keyframes pulseBeauty {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Beauty Cards */
+        .beauty-card {
+            position: relative;
+            background: linear-gradient(135deg, rgba(46, 43, 59, 0.9) 0%, rgba(31, 27, 46, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .beauty-card:hover {
+            border-color: rgba(167, 139, 250, 0.5);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+        }
+
+        /* Beauty Stat Card with Glow */
+        .stat-card-beauty {
+            position: relative;
+            background: rgba(46, 43, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .stat-card-beauty::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.2), transparent);
+            animation: slideGlowBeauty 3s infinite;
+        }
+
+        @keyframes slideGlowBeauty {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 150%;
+            }
+        }
+
+        /* Beauty Button */
+        .beauty-button {
+            position: relative;
+            background: linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .beauty-button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .beauty-button:hover::before {
+            left: 100%;
+        }
+
+        .beauty-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+        }
+    </style>
+</head>
+
+<body class="p-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-bold text-beauty-neon mb-4">
+                TEMA BEAUTY PREMIUM
+            </h1>
+            <p class="text-text-secondary text-lg">
+                Demonstração dos novos estilos elegantes
+            </p>
+        </header>
+
+        <!-- Grid de Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Stat Card 1 -->
+            <div class="stat-card-beauty p-6">
+                <div class="text-sm text-text-secondary uppercase mb-2">Lucro Total</div>
+                <div class="text-4xl font-bold text-beauty-neon mb-1">R$ 25,00</div>
+                <div class="text-sm text-green-400">+6% vs. semana passada</div>
+            </div>
+
+            <!-- Stat Card 2 -->
+            <div class="stat-card-beauty p-6">
+                <div class="text-sm text-text-secondary uppercase mb-2">Meta Mensal</div>
+                <div class="text-4xl font-bold text-beauty-neon mb-1">0%</div>
+                <div class="text-sm text-text-muted">R$ 0,00 de R$ 15.000,00</div>
+            </div>
+
+            <!-- Stat Card 3 -->
+            <div class="stat-card-beauty p-6">
+                <div class="text-sm text-text-secondary uppercase mb-2">Faturamento Total</div>
+                <div class="text-4xl font-bold text-beauty-neon mb-1">R$ 25,00</div>
+                <div class="text-sm text-text-muted">Janeiro 2026</div>
+            </div>
+        </div>
+
+        <!-- Enhanced Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card Normal -->
+            <div class="beauty-card p-6">
+                <h3 class="text-2xl font-bold text-beauty-neon mb-4">
+                    Próximos Agendamentos
+                </h3>
+                <p class="text-text-secondary mb-4">
+                    Nenhum agendamento encontrado.
+                </p>
+                <button class="beauty-button px-6 py-3 font-bold text-white rounded-lg w-full">
+                    Ver Agenda Completa
+                </button>
+            </div>
+
+            <!-- Card com Glow -->
+            <div class="beauty-card p-6"
+                style="border-color: rgba(167, 139, 250, 0.5); box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);">
+                <h3 class="text-2xl font-bold text-beauty-neon mb-4">
+                    Performance de Metas
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-text-secondary">Total de Receita</span>
+                            <span class="text-beauty-neon font-bold">0%</span>
+                        </div>
+                        <div class="h-2 bg-beauty-dark rounded-full overflow-hidden border border-beauty-neon/30">
+                            <div class="h-full bg-beauty-neon" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-text-secondary">Meta Mensal</span>
+                            <span class="text-beauty-neon font-bold">0%</span>
+                        </div>
+                        <div class="h-2 bg-beauty-dark rounded-full overflow-hidden border border-beauty-neon/30">
+                            <div class="h-full bg-beauty-neon" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons Demo -->
+        <div class="beauty-card p-8">
+            <h3 class="text-2xl font-bold text-beauty-neon mb-6">
+                Botões Premium
+            </h3>
+            <div class="flex flex-wrap gap-4">
+                <button class="beauty-button px-8 py-4 font-bold text-white rounded-lg">
+                    Novo Agendamento
+                </button>
+                <button class="beauty-button px-8 py-4 font-bold text-white rounded-lg">
+                    Adicionar Cliente
+                </button>
+                <button class="beauty-button px-8 py-4 font-bold text-white rounded-lg">
+                    Ver Relatórios
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="beauty-card p-8 text-center">
+            <h3 class="text-3xl font-bold text-beauty-neon mb-4">
+                ✨ TEMA PREMIUM ATIVADO ✨
+            </h3>
+            <p class="text-text-secondary text-lg mb-6">
+                Background animado com elementos de beleza art nouveau,<br>
+                acentos roxos pulsantes, cards com glassmorphism e efeitos neon.
+            </p>
+            <div class="inline-block bg-beauty-dark border border-beauty-neon/30 px-6 py-3 rounded-lg">
+                <span class="text-text-muted">Otimizado para</span>
+                <span class="text-beauty-neon font-bold"> Desktop & Mobile</span>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

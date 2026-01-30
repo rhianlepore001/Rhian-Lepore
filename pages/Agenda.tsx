@@ -201,6 +201,11 @@ export const Agenda: React.FC = () => {
     useEffect(() => {
         const clientIdParam = searchParams.get('clientId');
         const serviceNameParam = searchParams.get('service');
+        const isNewQuery = searchParams.get('new') === 'true';
+
+        if (isNewQuery) {
+            setShowNewAppointmentModal(true);
+        }
 
         if (clientIdParam && clients.length > 0) {
             // Pre-select the client
@@ -1110,9 +1115,9 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
                 <div className="space-y-4">
-                    <BrutalCard className="border-l-4 border-yellow-500 bg-yellow-500/5">
+                    <BrutalCard className="border-l-4 border-accent-gold bg-accent-gold/5">
                         <div className="flex items-center gap-3">
-                            <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                            <AlertTriangle className="w-6 h-6 text-accent-gold" />
                             <div>
                                 <h3 className="text-white font-bold text-lg mb-1">
                                     📌 {publicBookings.length} Solicitação(ões) Pendente(s)
@@ -1135,7 +1140,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     relative p-5 transition-all duration-300 group
                                     ${isBeauty
                                         ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/30 rounded-2xl hover:border-beauty-neon shadow-neon-sm hover:shadow-neon'
-                                        : 'bg-neutral-900 border-2 border-yellow-500/50 rounded-xl hover:border-yellow-500 shadow-heavy-sm'
+                                        : 'bg-neutral-900 border-2 border-accent-gold/50 rounded-xl hover:border-accent-gold shadow-heavy-sm'
                                     }
                                 `}>
                                     <div className="flex items-start justify-between mb-4">
@@ -1143,7 +1148,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                             <span className={`
                                                 text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors
                                                 ${isToday
-                                                    ? (isBeauty ? 'bg-beauty-neon text-black border-beauty-neon' : 'bg-yellow-500 text-black border-yellow-600')
+                                                    ? (isBeauty ? 'bg-beauty-neon text-black border-beauty-neon' : 'bg-accent-gold text-black border-accent-gold')
                                                     : 'bg-neutral-800 text-neutral-400 border-neutral-700 group-hover:text-white'
                                                 }
                                             `}>
@@ -1180,16 +1185,16 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
                                     <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">
-                                            <div className={`p-1.5 rounded-lg ${isBeauty ? 'bg-beauty-neon/10' : 'bg-yellow-500/10'}`}>
-                                                <Scissors className={`w-3.5 h-3.5 ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'}`} />
+                                            <div className={`p-1.5 rounded-lg ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'}`}>
+                                                <Scissors className={`w-3.5 h-3.5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                                             </div>
                                             <span className="font-medium">
                                                 {booking.service_ids?.length || 0} serviço(s) • <span className="text-white font-bold">{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">
-                                            <div className={`p-1.5 rounded-lg ${isBeauty ? 'bg-beauty-neon/10' : 'bg-yellow-500/10'}`}>
-                                                <User className={`w-3.5 h-3.5 ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'}`} />
+                                            <div className={`p-1.5 rounded-lg ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'}`}>
+                                                <User className={`w-3.5 h-3.5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                                             </div>
                                             <span>
                                                 Profissional: <span className="font-bold text-white uppercase tracking-tighter">{professional?.name || 'Qualquer um'}</span>
@@ -1339,10 +1344,10 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     {memberPendingBookings.map(booking => (
                                         <div
                                             key={booking.id}
-                                            className="bg-yellow-500/10 border-2 border-yellow-500 rounded-lg p-3"
+                                            className="bg-accent-gold/10 border-2 border-accent-gold rounded-lg p-3"
                                         >
                                             <div className="flex items-start justify-between mb-2">
-                                                <span className="text-xs font-mono text-yellow-500 font-bold">
+                                                <span className="text-xs font-mono text-accent-gold font-bold">
                                                     📌 SOLICITAÇÃO ONLINE
                                                 </span>
                                             </div>
@@ -1615,7 +1620,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         </span>
                                     </div>
                                     <p className="text-neutral-300 text-sm leading-relaxed italic">
-                                        "{showingDetailsAppointment.notes}"
+                                        &quot;{showingDetailsAppointment.notes}&quot;
                                     </p>
                                 </div>
                             )}

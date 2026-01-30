@@ -109,10 +109,10 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
     // Configuration form when no slug exists
     if (!businessSlug) {
         return (
-            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-yellow-500">
+            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-accent-gold">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                        <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0 mt-1" />
+                        <AlertTriangle className="w-6 h-6 text-accent-gold flex-shrink-0 mt-1" />
                         <div className="flex-1">
                             <h3 className="text-white font-heading text-lg uppercase mb-1">
                                 Configure seu Link de Agendamento
@@ -212,10 +212,10 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
     // Show disabled state when public booking is off
     if (!publicBookingEnabled) {
         return (
-            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-yellow-500">
+            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-accent-gold">
                 <div className="flex items-start gap-4">
-                    <div className="p-3 bg-yellow-500/10 rounded-lg">
-                        <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                    <div className="p-3 bg-accent-gold/10 rounded-lg">
+                        <AlertTriangle className="w-6 h-6 text-accent-gold" />
                     </div>
                     <div>
                         <h3 className="text-white font-heading text-lg uppercase mb-1">Agendamento Público Desativado</h3>

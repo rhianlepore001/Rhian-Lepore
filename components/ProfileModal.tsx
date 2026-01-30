@@ -95,13 +95,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
         }
     };
 
+    // Unified Modal Styles
+    const modalStyles = isBeauty
+        ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
+        : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg';
+
     return (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className={`w-full max-w-md p-6 relative transition-all
-                ${isBeauty
-                    ? 'bg-beauty-card/90 backdrop-blur-xl border border-white/10 shadow-soft rounded-2xl'
-                    : 'bg-neutral-900 border-2 border-white/20 shadow-heavy'}
-            `}>
+            <div className={`w-full max-w-md p-6 relative transition-all ${modalStyles}`}>
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
@@ -182,10 +183,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-3 font-bold uppercase tracking-wider mt-4 disabled:opacity-50 transition-all
+                        className={`w-full py-3 font-bold uppercase tracking-wider mt-4 disabled:opacity-50 transition-all rounded-xl
                             ${isBeauty
-                                ? 'bg-beauty-neon text-white hover:bg-beauty-neonHover rounded-xl shadow-soft'
-                                : 'bg-accent-gold hover:bg-accent-goldHover text-black'}
+                                ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90 shadow-neon'
+                                : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-heavy hover:shadow-heavy-lg'}
                         `}
                     >
                         {loading ? 'Salvando...' : 'Salvar Alterações'}

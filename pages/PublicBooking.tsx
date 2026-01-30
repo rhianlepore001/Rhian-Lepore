@@ -692,12 +692,14 @@ export const PublicBooking: React.FC = () => {
                     {!isConfirmed && activeBooking && (
                         <div className="grid grid-cols-2 gap-3 mb-6">
                             <button
+                                id="cancel-booking-btn"
                                 onClick={() => handleCancelBooking(activeBooking.id)}
                                 className="p-3 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-mono"
                             >
                                 CANCELAR
                             </button>
                             <button
+                                id="edit-booking-btn"
                                 onClick={() => handleEditBooking(activeBooking)}
                                 className="p-3 text-xs font-bold text-white bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-all font-mono"
                             >

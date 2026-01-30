@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "user authentication flows",
+    "description": "Test the user authentication endpoints including login, registration, password recovery, and profile management to ensure secure and successful user authentication flows."
+  },
+  {
+    "id": "TC002",
+    "title": "appointment scheduling system",
+    "description": "Verify the appointment scheduling API endpoints for internal staff agenda, public booking links, time blocking, and queue management to ensure correct booking and scheduling functionality."
+  },
+  {
+    "id": "TC003",
+    "title": "financial management endpoints",
+    "description": "Test the financial management APIs for sales recording, cash flow tracking, commission calculations, and Stripe subscription payment integration to ensure accurate financial operations."
+  },
+  {
+    "id": "TC004",
+    "title": "dashboard and reports data",
+    "description": "Validate the executive dashboard and reports endpoints to ensure KPIs, revenue, ticket size, and occupancy rates are correctly calculated and displayed."
+  },
+  {
+    "id": "TC005",
+    "title": "theme management endpoints",
+    "description": "Test the API endpoints responsible for applying and switching customizable visual themes between barber and beauty styles, including automatic and manual switching."
+  },
+  {
+    "id": "TC006",
+    "title": "mobile responsive ui endpoints",
+    "description": "Verify the endpoints related to UI responsiveness and PWA support to ensure the application performs well on mobile devices and supports offline usage."
+  },
+  {
+    "id": "TC007",
+    "title": "security and data isolation",
+    "description": "Test the security features including row-level security and route protection APIs to ensure multi-tenant data isolation and secure administrative access."
+  },
+  {
+    "id": "TC008",
+    "title": "queue management system",
+    "description": "Validate the digital queue system endpoints for managing walk-in clients, real-time updates, and status tracking to ensure efficient client flow management."
+  },
+  {
+    "id": "TC009",
+    "title": "onboarding wizard endpoints",
+    "description": "Test the onboarding wizard APIs to ensure smooth new business setup, including team and service configuration creation."
+  },
+  {
+    "id": "TC010",
+    "title": "external integrations stability",
+    "description": "Verify the stability and data integrity of integrations with external APIs such as Stripe, Supabase, and AI services."
+  }
+]

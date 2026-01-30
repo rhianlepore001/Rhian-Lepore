@@ -174,7 +174,10 @@ export const Register: React.FC = () => {
               <Screw className={`top-[-10px] right-[-10px] ${styles.screw}`} />
 
               {error && (
-                <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 text-xs font-mono text-center">
+                <div
+                  role="alert"
+                  className="bg-red-500/10 border border-red-500 text-red-500 p-3 text-xs font-mono text-center"
+                >
                   {error}
                 </div>
               )}
@@ -266,17 +269,21 @@ export const Register: React.FC = () => {
             <button
               onClick={handleRegister}
               disabled={loading}
+              aria-busy={loading}
               className={`w-full ${styles.button} h-14 font-heading text-lg uppercase tracking-wider transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed
                 ${isBarber
                   ? 'border-2 border-black shadow-heavy active:shadow-none active:translate-y-1'
                   : 'rounded-xl shadow-neon hover:shadow-neonStrong active:scale-95'}`}
             >
               {loading ? (
-                <span className="animate-pulse">PROCESSANDO...</span>
+                <span className="animate-pulse flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  PROCESSANDO...
+                </span>
               ) : (
                 <>
                   <Zap className="w-5 h-5" fill="black" />
-                  {region === 'BR' ? 'INICIAR SISTEMA' : 'INICIAR SISTEMA'}
+                  INICIAR SISTEMA
                 </>
               )}
             </button>

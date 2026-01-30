@@ -1,0 +1,47 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "React",
+        "Vite",
+        "Supabase",
+        "Tailwind CSS"
+    ],
+    "features": [
+        {
+            "name": "Queue Management",
+            "description": "Real-time queue system for managing customer flow, including joining, status tracking, and management interfaces.",
+            "files": [
+                "pages/QueueManagement.tsx",
+                "pages/QueueStatus.tsx",
+                "pages/QueueJoin.tsx"
+            ]
+        },
+        {
+            "name": "Scheduling & Agenda",
+            "description": "Calendar and appointment management system for professionals, including public booking and internal agenda.",
+            "files": [
+                "pages/Agenda.tsx",
+                "pages/PublicBooking.tsx",
+                "components/ServiceModal.tsx"
+            ]
+        },
+        {
+            "name": "Authentication & Profiles",
+            "description": "User authentication, profile management, and role-based access control (Beauty/Brutal themes).",
+            "files": [
+                "contexts/AuthContext.tsx",
+                "pages/Login.tsx",
+                "components/ProfileModal.tsx"
+            ]
+        },
+        {
+            "name": "Financial & Reports",
+            "description": "Financial tracking, commissions calculation, and performance reporting dashboards.",
+            "files": [
+                "pages/Finance.tsx",
+                "pages/Reports.tsx",
+                "components/CommissionsManagement.tsx"
+            ]
+        }
+    ]
+}

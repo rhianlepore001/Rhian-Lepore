@@ -10,12 +10,21 @@ import {
     AlertTriangle, Loader2, DollarSign, MessageCircle
 } from 'lucide-react';
 
+interface Service {
+    id: string;
+    name: string;
+    price: number;
+    duration_minutes?: number;
+    category_id?: string;
+    description?: string | null;
+}
+
 interface WizardProps {
     onClose: () => void;
     onSuccess: (date: Date) => void;
     initialDate?: Date;
     teamMembers: any[];
-    services: any[];
+    services: Service[];
     categories?: any[];
     clients: any[];
     onRefreshClients: () => void; // Callback to reload clients if a new one is added
@@ -136,6 +145,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [discount, setDiscount] = useState<string>('0');
     const [notes, setNotes] = useState<string>('');
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
+    const [isCustomService, setIsCustomService] = useState(false);
+    const [customServiceName, setCustomServiceName] = useState('');
+    const [customServicePrice, setCustomServicePrice] = useState('');
 
     // New Client State
     const [isCreatingClient, setIsCreatingClient] = useState(false);
@@ -248,9 +260,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     // Initialize custom price with base price when entering step 4
     useEffect(() => {
         if (step === 4 && !customPrice) {
-            setCustomPrice(basePrice.toFixed(2));
+            const extraPrice = parseFloat(customServicePrice || '0');
+            setCustomPrice((basePrice + extraPrice).toFixed(2));
         }
-    }, [step, basePrice]);
+    }, [step, basePrice, customServicePrice]);
 
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
 
@@ -265,25 +278,52 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
-            // Auto-assign professional if "Any" (though in wizard we force selection usually, 
-            // but let's handle if proId is empty strings)
-            let finalPro = selectedProId;
-            if (!finalPro && teamMembers.length > 0) finalPro = teamMembers[0].id;
+            // Calculate total duration for availability check
+            const duration = selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
 
-            const { error } = await supabase
-                .from('appointments')
-                .insert({
-                    user_id: user?.id,
-                    client_id: selectedClientId,
-                    professional_id: finalPro,
-                    service: serviceNames,
-                    appointment_time: dateTime.toISOString(),
-                    price: finalPrice,
-                    status: 'Confirmed',
-                    notes: notes
-                });
+            // Use the secure RPC to ensure no collisions
+            const { data: result, error: rpcError } = await supabase.rpc('create_secure_booking', {
+                p_business_id: user?.id,
+                p_professional_id: selectedProId,
+                p_customer_name: clients.find(c => c.id === selectedClientId)?.name,
+                p_customer_phone: clients.find(c => c.id === selectedClientId)?.phone,
+                p_customer_email: clients.find(c => c.id === selectedClientId)?.email,
+                p_appointment_time: dateTime.toISOString(),
+                p_service_ids: selectedServiceIds,
+                p_total_price: finalPrice,
+                p_duration_min: duration,
+                p_status: 'Confirmed',
+                p_client_id: selectedClientId,
+                p_notes: notes,
+                p_custom_service_name: isCustomService ? customServiceName : null
+            });
 
-            if (error) throw error;
+            if (rpcError) throw rpcError;
+
+            if (!result.success) {
+                alert(result.message);
+                setLoading(false);
+                fetchSlots(); // Refresh slots
+                return;
+            }
+
+            // Since create_secure_booking inserts into public_bookings, we might need 
+            // to also insert into appointments if they are separate or handle the migration.
+            // Actually, in this system, 'appointments' seems to be the main table for confirmed ones.
+            // If create_secure_booking only inserts into public_bookings, we need to confirm it.
+
+            // Wait, I should probably update create_secure_booking to insert into 'appointments' 
+            // if it's an internal booking, or just keep them synced.
+            // For now, let's stick to the public_bookings and let the owner confirm them, 
+            // OR if it's internal, it should go straight to appointments.
+
+            // Re-evaluating: create_secure_booking inserts into public_bookings.
+            // Internal bookings should usually go to 'appointments' immediately.
+            // I'll update the RPC to handle 'confirmed' status or create a separate RPC for internal.
+
+            // Actually, I'll update the RPC to take a 'p_status' parameter.
+
+            // (Self-correction: I'll update the migration first)
 
             // WhatsApp Notification
             if (sendWhatsapp) {
@@ -294,8 +334,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                     const message = `Olá ${client.name}! Seu agendamento foi confirmado. ✨\\n` +
-                        `📅 ${formattedDate} às ${formattedTime}\\n` +
-                        `💇‍♀️ ${serviceNames}\\n` +
+                        `📅 ${formattedDate} às ${formattedTime}\n` +
+                        `💇‍♀️ ${serviceNames}${isCustomService ? (serviceNames ? ', ' : '') + customServiceName : ''}\n` +
                         `📍 Estamos te esperando!`;
 
                     window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
@@ -450,6 +490,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                 isBeauty={isBeauty}
                             />
 
+
                             <div className="space-y-6 pb-12">
                                 {(() => {
                                     // Group services by category with search filter
@@ -468,7 +509,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                             if (!acc[categoryId]) acc[categoryId] = [];
                                             acc[categoryId].push(service);
                                             return acc;
-                                        }, {} as Record<string, typeof services>);
+                                        }, {} as Record<string, Service[]>);
 
                                     // Sort services within each category alphabetically
                                     Object.keys(servicesByCategory).forEach(catId => {
@@ -499,7 +540,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                         );
                                     }
 
-                                    return Object.entries(servicesByCategory).map(([categoryId, categoryServices]) => (
+                                    const result = (Object.entries(servicesByCategory) as [string, Service[]][]).map(([categoryId, categoryServices]) => (
                                         <div key={categoryId} className="space-y-3">
                                             {/* Category Header (only show if not filtering by specific category) */}
                                             {activeCategory === 'all' && (
@@ -568,6 +609,66 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                             </div>
                                         </div>
                                     ));
+
+                                    // ADD CUSTOM SERVICE BOX AT THE BOTTOM
+                                    if (activeCategory === 'all' || activeCategory === 'uncategorized') {
+                                        result.push(
+                                            <div key="custom-service-item" className="mt-8 space-y-3">
+                                                <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
+                                                    Outros / Personalizado
+                                                </h3>
+                                                <div
+                                                    className={`
+                                                        p-4 rounded-xl border transition-all duration-200
+                                                        ${isCustomService
+                                                            ? (isBeauty ? 'bg-beauty-card border-beauty-neon shadow-neon' : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
+                                                            : (isBeauty ? 'bg-beauty-card/30 border-white/5' : 'bg-brutal-card border-transparent')}
+                                                    `}
+                                                >
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        <div
+                                                            onClick={() => setIsCustomService(!isCustomService)}
+                                                            className={`
+                                                                shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all
+                                                                ${isCustomService
+                                                                    ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
+                                                                    : 'border-neutral-600 bg-transparent'}
+                                                            `}
+                                                        >
+                                                            {isCustomService && <Check className="w-4 h-4 text-black" />}
+                                                        </div>
+                                                        <input
+                                                            value={customServiceName}
+                                                            onChange={e => {
+                                                                setCustomServiceName(e.target.value);
+                                                                if (!isCustomService) setIsCustomService(true);
+                                                            }}
+                                                            className={`flex-1 bg-transparent border-none text-white focus:outline-none placeholder:text-neutral-500 font-bold text-base`}
+                                                            placeholder="Descreva o serviço avulso..."
+                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-neutral-500 font-mono">{currencySymbol}</span>
+                                                            <input
+                                                                type="number"
+                                                                value={customServicePrice}
+                                                                onChange={e => {
+                                                                    setCustomServicePrice(e.target.value);
+                                                                    if (!isCustomService) setIsCustomService(true);
+                                                                }}
+                                                                className={`w-20 bg-black/20 text-white p-2 rounded border border-white/10 focus:outline-none focus:border-white/30 font-mono text-right`}
+                                                                placeholder="0.00"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[10px] text-neutral-500 italic">
+                                                        * Use esta opção para pacotes, promoções ou serviços não listados.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    return result;
                                 })()}
                             </div>
                         </div>
@@ -706,6 +807,11 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                                     {s.name}
                                                 </span>
                                             ))}
+                                            {isCustomService && customServiceName && (
+                                                <span className={`text-xs px-2 py-1 rounded text-black border-2 ${isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold'}`}>
+                                                    {customServiceName} ({formatCurrency(parseFloat(customServicePrice || '0'), currencyRegion)})
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

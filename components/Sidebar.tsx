@@ -41,15 +41,12 @@ export const Sidebar: React.FC = () => {
       >
         {/* Logo Area */}
         <div className={`h-20 flex items-center justify-between px-6 ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b-4 border-brutal-border bg-brutal-card'}`}>
-          <div className="flex items-center">
-            {isBeauty ? (
-              <Sparkles className={`w-8 h-8 ${themeColor} mr-3`} />
-            ) : (
-              <Scissors className={`w-8 h-8 ${themeColor} mr-3`} />
-            )}
-            <h1 className="font-heading text-2xl tracking-tighter text-white">
-              {isBeauty ? 'BEAUTY' : 'BARBER'} <span className={themeColor}>OS</span>
-            </h1>
+          <div className="flex items-center justify-center">
+            <img
+              src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
+              alt={isBeauty ? "Beauty OS" : "Barber OS"}
+              className="h-10 w-auto object-contain"
+            />
           </div>
           <button onClick={closeSidebar} className="md:hidden text-text-secondary hover:text-white transition-colors">
             <X className="w-6 h-6" />

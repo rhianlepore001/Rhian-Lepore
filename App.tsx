@@ -23,6 +23,10 @@ import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
 import { ProfessionalPortfolio } from './pages/ProfessionalPortfolio';
 
+import { QueueJoin } from './pages/QueueJoin';
+import { QueueStatus } from './pages/QueueStatus';
+import { QueueManagement } from './pages/QueueManagement';
+
 import { Placeholder } from './pages/Placeholder';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { UpdatePassword } from './pages/UpdatePassword';
@@ -91,6 +95,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/update-password" element={<UpdatePassword />} />
       <Route path="/book/:slug" element={<PublicBooking />} />
+      <Route path="/queue/:slug" element={<QueueJoin />} />
+      <Route path="/queue-status/:id" element={<QueueStatus />} />
       <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
       <Route path="/onboarding" element={
         <RequireAuth>
@@ -102,11 +108,12 @@ const AppRoutes: React.FC = () => {
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/agenda" element={<Agenda />} />
+        <Route path="/fila" element={<QueueManagement />} />
         <Route path="/clientes" element={<Clients />} />
         <Route path="/clientes/:id" element={<ClientCRM />} />
         <Route path="/financeiro" element={<Finance />} />
         <Route path="/marketing" element={<Marketing />} />
-        <Route path="/relatorios" element={<Reports />} />
+        <Route path="/insights" element={<Reports />} />
 
         {/* Settings Routes */}
         <Route path="/configuracoes" element={<Navigate to="/configuracoes/geral" replace />} />

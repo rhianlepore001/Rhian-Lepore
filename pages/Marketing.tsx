@@ -41,11 +41,21 @@ export const Marketing: React.FC = () => {
     return (
         <div className="space-y-6 md:space-y-8 pb-20">
             {/* Header */}
-            <div className="border-b-4 border-white/10 pb-4">
-                <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Marketing Inteligente</h2>
-                <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
-                    Atraia e fidelize mais clientes usando o poder da IA
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-white/10 pb-4">
+                <div>
+                    <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Marketing Inteligente</h2>
+                    <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
+                        Atraia e fidelize mais clientes usando o poder da IA
+                    </p>
+                </div>
+                <BrutalButton
+                    variant="primary"
+                    icon={<Plus />}
+                    onClick={() => alert('O Criador de Campanhas com IA está em fase final de desenvolvimento e será liberado em breve!')}
+                    id="create-campaign-btn"
+                >
+                    Criar Campanha
+                </BrutalButton>
             </div>
 
             {/* Coming Soon Banner */}

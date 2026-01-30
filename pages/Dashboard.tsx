@@ -220,7 +220,7 @@ export const Dashboard: React.FC = () => {
               <InfoButton text="Lista dos seus próximos 5 compromissos agendados." />
             </div>
           }
-          className="h-full"
+          className="h-full brutal-card-enhanced"
           noPadding
         >
           {loading ? (
@@ -265,7 +265,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </BrutalCard>
 
-        <BrutalCard id="dashboard-profit-card" className="h-full">
+        <BrutalCard id="dashboard-profit-card" className="h-full stat-card-brutal">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center">
@@ -329,7 +329,7 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
           }
-          className="h-full"
+          className="h-full brutal-card-enhanced gold-accent-border"
           noPadding
         >
           <div className="p-4">
@@ -363,7 +363,7 @@ export const Dashboard: React.FC = () => {
               <InfoButton text="Alertas automáticos sobre o status do seu negócio e ações recomendadas." />
             </div>
           }
-          className="h-full"
+          className="h-full brutal-card-enhanced"
         >
           {loading ? (
             <div className="p-4 text-center text-text-secondary">Carregando avisos...</div>

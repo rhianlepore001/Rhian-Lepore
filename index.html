@@ -38,7 +38,7 @@
               goldDim: '#8a6d2a',
             },
             beauty: {
-              neon: '#A78BFA',     /* Lavender 400 */
+              neon: '#A78BFA',     /* Lavender 400 - Brand Purple */
               neonHover: '#C4B5FD', /* Lavender 300 */
               acid: '#8B5CF6',     /* Violet 500 */
               silver: '#E9D5FF',   /* Purple 200 */
@@ -127,6 +127,54 @@
       /* Momentum scrolling */
       overscroll-behavior-y: none;
       /* Prevent bounce if needed, or leave usually fine */
+      position: relative;
+    }
+
+    /* Brutal Barber Background */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(18, 18, 18, 0.85) 50%, rgba(18, 18, 18, 0.95) 100%),
+        url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gMTAwIDAgTCAwIDAgMCAxMDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyMDAsMTU1LDY0LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=');
+      background-size: cover, 100px 100px;
+      background-position: center, center;
+      background-attachment: fixed;
+      opacity: 1;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    /* Animated Gold Accents */
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(194, 155, 64, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(194, 155, 64, 0.02) 0%, transparent 40%);
+      z-index: -1;
+      pointer-events: none;
+      animation: pulseGold 8s ease-in-out infinite;
+    }
+
+    @keyframes pulseGold {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
     }
 
     /* Custom Scrollbar - Brutalismo */
@@ -279,19 +327,161 @@
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
+
+    /* Enhanced Brutal Cards */
+    .brutal-card-enhanced {
+      position: relative;
+      background: linear-gradient(135deg, #1E1E1E 0%, #252525 100%);
+      border: 3px solid #000;
+      box-shadow:
+        4px 4px 0px 0px #000000,
+        inset 0 1px 0 rgba(194, 155, 64, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .brutal-card-enhanced::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        linear-gradient(45deg, transparent 48%, rgba(194, 155, 64, 0.03) 50%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, rgba(194, 155, 64, 0.03) 50%, transparent 52%);
+      background-size: 20px 20px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .brutal-card-enhanced:hover {
+      transform: translate(-2px, -2px);
+      box-shadow:
+        6px 6px 0px 0px #000000,
+        inset 0 1px 0 rgba(194, 155, 64, 0.2);
+    }
+
+    /* Gold Accent Borders */
+    .gold-accent-border {
+      position: relative;
+    }
+
+    .gold-accent-border::after {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(135deg, #C29B40 0%, transparent 30%, transparent 70%, #C29B40 100%);
+      z-index: -1;
+      opacity: 0.3;
+    }
+
+    /* Brutal Button Enhancements */
+    .brutal-button-premium {
+      position: relative;
+      background: linear-gradient(135deg, #C29B40 0%, #D4AF50 100%);
+      border: 3px solid #000;
+      box-shadow:
+        3px 3px 0px 0px #000000,
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .brutal-button-premium::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .brutal-button-premium:hover::before {
+      left: 100%;
+    }
+
+    .brutal-button-premium:hover {
+      transform: translate(-1px, -1px);
+      box-shadow:
+        4px 4px 0px 0px #000000,
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .brutal-button-premium:active {
+      transform: translate(1px, 1px);
+      box-shadow:
+        2px 2px 0px 0px #000000,
+        inset 0 1px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    /* Sidebar Enhancement */
+    .brutal-sidebar {
+      background: linear-gradient(180deg, #1E1E1E 0%, #121212 100%);
+      border-right: 3px solid #000;
+      box-shadow:
+        inset -1px 0 0 rgba(194, 155, 64, 0.1),
+        4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Header Enhancement */
+    .brutal-header {
+      background: linear-gradient(90deg, #1E1E1E 0%, #252525 50%, #1E1E1E 100%);
+      border-bottom: 3px solid #000;
+      box-shadow:
+        0 3px 0 0 #000,
+        inset 0 -1px 0 rgba(194, 155, 64, 0.1);
+    }
+
+    /* Stat Card with Glow */
+    .stat-card-brutal {
+      position: relative;
+      background: #1E1E1E;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0px 0px #000000;
+      overflow: hidden;
+    }
+
+    .stat-card-brutal::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(194, 155, 64, 0.1), transparent);
+      animation: slideGlow 3s infinite;
+    }
+
+    @keyframes slideGlow {
+      0% {
+        left: -100%;
+      }
+
+      50%,
+      100% {
+        left: 150%;
+      }
+    }
+
+    /* Mobile Optimizations */
+    @media (max-width: 768px) {
+
+      body::before,
+      body::after {
+        background-attachment: scroll;
+      }
+
+      .brutal-card-enhanced::before {
+        opacity: 0.3;
+      }
+    }
   </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.4.1"
-  }
-}
-</script>
+
 </head>
 
 <body>

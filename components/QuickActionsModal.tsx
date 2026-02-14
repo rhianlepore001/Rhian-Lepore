@@ -45,7 +45,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                         <div className={`p-3 rounded-full mb-3 ${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon' : 'bg-accent-gold/20 text-accent-goldDim'}`}>
                             <Calendar className="w-8 h-8" />
                         </div>
-                        <span className={`font-bold text-sm ${isBeauty ? 'text-white' : 'text-gray-800'}`}>Novo Agendamento</span>
+                        <span className={`font-bold text-sm ${isBeauty ? 'text-white' : 'text-gray-800'}`}>Novo Atendimento</span>
                     </button>
 
                     <button

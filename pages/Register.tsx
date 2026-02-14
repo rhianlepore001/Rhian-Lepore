@@ -5,6 +5,7 @@ import { Screw } from '../components/Screw';
 import { Scissors, Sparkles, Zap, Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
 import { PhoneInput } from '../components/PhoneInput';
+import { validatePassword } from '../utils/passwordValidation';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -50,7 +51,14 @@ export const Register: React.FC = () => {
     setLoading(true);
     setError(null);
 
+
     try {
+      // Password Validation
+      const passwordCheck = validatePassword(password);
+      if (!passwordCheck.isValid) {
+        throw new Error(`Senha fraca: ${passwordCheck.errors.join(', ')}`);
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

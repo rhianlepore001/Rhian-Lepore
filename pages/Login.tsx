@@ -71,7 +71,17 @@ export const Login: React.FC = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30 z-10"></div>
 
                         <div className="absolute bottom-0 left-0 p-8 z-20">
-                            <Scissors className="w-12 h-12 text-accent-gold mb-4 group-hover:scale-110 transition-transform duration-300" />
+                            <div className="w-16 h-16 mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" className="w-full h-full">
+                                    <g transform="translate(100, 100)">
+                                        <path d="M 0,-40 L 15,-10 L 0,40 L -15,-10 Z" fill="#C29B40" opacity="0.9" />
+                                        <path d="M -50,-30 L -20,-15 L -15,-25 L -45,-40 Z" fill="#C29B40" />
+                                        <path d="M 50,-30 L 20,-15 L 15,-25 L 45,-40 Z" fill="#C29B40" />
+                                        <rect x="-60" y="30" width="120" height="6" rx="3" fill="#C29B40" opacity="0.8" />
+                                        <circle cx="0" cy="-45" r="4" fill="#D4AF50" />
+                                    </g>
+                                </svg>
+                            </div>
                             <h2 className="font-heading text-4xl text-white uppercase tracking-wider mb-2 group-hover:text-accent-gold transition-colors">Barbearia</h2>
                             <p className="font-mono text-sm text-neutral-400 uppercase tracking-widest border-l-2 border-accent-gold pl-3">Domine seu território</p>
                         </div>
@@ -90,7 +100,22 @@ export const Login: React.FC = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-beauty-dark via-beauty-dark/60 to-beauty-dark/20 z-10"></div>
 
                         <div className="absolute bottom-0 left-0 p-8 z-20">
-                            <Sparkles className="w-12 h-12 text-beauty-neon mb-4 group-hover:rotate-12 transition-transform duration-500" />
+                            <div className="w-16 h-16 mb-4 group-hover:rotate-12 transition-transform duration-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" className="w-full h-full">
+                                    <g transform="translate(100, 100)">
+                                        <ellipse cx="0" cy="-35" rx="8" ry="28" fill="#A78BFA" />
+                                        <ellipse cx="30" cy="-17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(60 100 100)" />
+                                        <ellipse cx="30" cy="17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(120 100 100)" />
+                                        <ellipse cx="0" cy="35" rx="8" ry="28" fill="#A78BFA" transform="rotate(180 100 100)" />
+                                        <ellipse cx="-30" cy="17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(240 100 100)" />
+                                        <ellipse cx="-30" cy="-17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(300 100 100)" />
+                                        <circle cx="0" cy="0" r="18" fill="#8B5CF6" />
+                                        <circle cx="0" cy="0" r="12" fill="#C4B5FD" opacity="0.8" />
+                                        <circle cx="0" cy="0" r="6" fill="white" opacity="0.6" />
+                                        <circle cx="-4" cy="-4" r="3" fill="white" opacity="0.9" />
+                                    </g>
+                                </svg>
+                            </div>
                             <h2 className="font-heading text-4xl text-white mb-2 group-hover:text-beauty-neon transition-colors tracking-tight">Beauty & Spa</h2>
                             <p className="font-sans text-sm text-beauty-silver tracking-wide border-l border-beauty-neon pl-3">Revele sua essência</p>
                         </div>

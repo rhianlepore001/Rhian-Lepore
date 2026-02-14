@@ -1,0 +1,29 @@
+{
+    "name": "Barber OS - Gestão Profissional para Barbearias",
+    "short_name": "Barber OS",
+    "description": "Sistema completo de gestão e agendamento para barbearias",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#121212",
+    "theme_color": "#121212",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/logo-barber.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo-barber.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "business",
+        "productivity"
+    ],
+    "screenshots": []
+}

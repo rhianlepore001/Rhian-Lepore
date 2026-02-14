@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { useState } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Wallet, TrendingUp, Clock, AlertTriangle, ExternalLink, Settings, Edit2, ArrowRight } from 'lucide-react';
+import { Wallet, TrendingUp, Clock, AlertTriangle, ExternalLink, Edit2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,23 +10,26 @@ import { GoalHistory } from '../components/GoalHistory';
 
 import { formatCurrency } from '../utils/formatters';
 import { useAppTour } from '../hooks/useAppTour';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, user } = useAuth();
+  const { userType, region } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const { startTour } = useAppTour();
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [profit, setProfit] = useState(0);
-  const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
-  const [weeklyGrowth, setWeeklyGrowth] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [businessSlug, setBusinessSlug] = useState<string | null>(null);
-  const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
-  const [monthlyGoal, setMonthlyGoal] = useState(15000);
+
+  const {
+    appointments,
+    profit,
+    weeklyGrowth,
+    loading,
+    monthlyGoal,
+    goalHistory,
+    updateGoal
+  } = useDashboardData();
+
   const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [newGoal, setNewGoal] = useState('');
-  const [goalHistory, setGoalHistory] = useState<any[]>([]);
+  const [newGoal, setNewGoal] = useState(monthlyGoal.toString());
 
   const isBeauty = userType === 'beauty';
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
@@ -35,148 +37,19 @@ export const Dashboard: React.FC = () => {
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      try {
-        let userCreatedAt: Date | null = null;
-
-        if (user) {
-          if (user.created_at) {
-            userCreatedAt = new Date(user.created_at);
-            setAccountCreatedAt(userCreatedAt);
-          }
-
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('business_slug, monthly_goal')
-            .eq('id', user.id)
-            .single();
-
-          if (profileData?.business_slug) {
-            setBusinessSlug(profileData.business_slug);
-          }
-          if (profileData?.monthly_goal) {
-            setMonthlyGoal(profileData.monthly_goal);
-            setNewGoal(profileData.monthly_goal.toString());
-          }
-        }
-
-        const now = new Date().toISOString();
-        const { data: aptData, error: aptError } = await supabase
-          .from('appointments')
-          .select('*, clients(name)')
-          .eq('user_id', user.id)
-          .eq('status', 'Confirmed')
-          .gte('appointment_time', now)
-          .order('appointment_time', { ascending: true })
-          .limit(5);
-
-        if (aptError) throw aptError;
-
-        if (aptData) {
-          setAppointments(aptData.map((apt: any) => ({
-            id: apt.id,
-            clientName: apt.clients?.name || 'Cliente Desconhecido',
-            service: apt.service,
-            time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-            rawDate: new Date(apt.appointment_time).toISOString().split('T')[0], // Para navegação
-            status: apt.status,
-            price: apt.price,
-            appointment_time: apt.appointment_time
-          })));
-        }
-
-        const { data: statsData, error: statsError } = await supabase
-          .rpc('get_dashboard_stats', { p_user_id: user.id });
-
-        if (statsError) throw statsError;
-
-        if (statsData) {
-          setProfit(statsData.total_profit);
-          setCurrentMonthRevenue(statsData.current_month_revenue);
-          setWeeklyGrowth(statsData.weekly_growth);
-          if (statsData.monthly_goal) {
-            setMonthlyGoal(statsData.monthly_goal);
-            setNewGoal(statsData.monthly_goal.toString());
-          }
-        }
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchGoalHistory = async () => {
-      if (!user) return;
-      try {
-        const history = [];
-        const months = [
-          'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-        ];
-
-        for (let i = 0; i < 6; i++) {
-          const date = new Date();
-          date.setMonth(date.getMonth() - i);
-          const month = date.getMonth();
-          const year = date.getFullYear();
-
-          const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
-          const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
-
-          const { data } = await supabase.rpc('get_finance_stats', {
-            p_user_id: user.id,
-            p_start_date: startOfMonth,
-            p_end_date: endOfMonth
-          });
-
-          if (data) {
-            const percentage = monthlyGoal > 0 ? Math.round((data.revenue / monthlyGoal) * 100) : 0;
-            history.push({
-              month: months[month],
-              year: year,
-              goal: monthlyGoal,
-              achieved: data.revenue,
-              percentage: percentage,
-              success: percentage >= 100
-            });
-          }
-        }
-
-        setGoalHistory(history);
-      } catch (error) {
-        console.error('Error fetching goal history:', error);
-      }
-    };
-
-    fetchData();
-    fetchGoalHistory();
-  }, [user, monthlyGoal]);
-
   const handleSaveGoal = async () => {
-    if (!user || !newGoal) return;
     const goalValue = parseFloat(newGoal);
     if (isNaN(goalValue)) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ monthly_goal: goalValue })
-      .eq('id', user.id);
+    const { error } = await updateGoal(goalValue);
 
     if (error) {
       console.error("Error updating goal:", error);
       alert("Erro ao atualizar a meta.");
     } else {
-      setMonthlyGoal(goalValue);
       setIsEditingGoal(false);
     }
   };
-
-  // Removed manual formatting variables in favor of direct formatCurrency usage
 
   return (
     <div className="space-y-4 md:space-y-8">
@@ -206,7 +79,7 @@ export const Dashboard: React.FC = () => {
           className="w-full md:w-auto"
           onClick={() => navigate('/agenda')}
         >
-          Novo Agendamento
+          Novo Atendimento
         </BrutalButton>
       </div>
 
@@ -216,7 +89,7 @@ export const Dashboard: React.FC = () => {
           id="dashboard-appointments-list"
           title={
             <div className="flex items-center gap-2">
-              <span>Próximos Agendamentos</span>
+              <span>Próximos Atendimentos</span>
               <InfoButton text="Lista dos seus próximos 5 compromissos agendados." />
             </div>
           }
@@ -318,7 +191,10 @@ export const Dashboard: React.FC = () => {
                     <span className={`text-sm font-mono font-bold ${accentText}`}>{formatCurrency(monthlyGoal, currencyRegion)}</span>
                   </div>
                   <button
-                    onClick={() => setIsEditingGoal(true)}
+                    onClick={() => {
+                      setNewGoal(monthlyGoal.toString());
+                      setIsEditingGoal(true);
+                    }}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-700 bg-neutral-800 hover:bg-neutral-700 hover:border-neutral-500 transition-all group`}
                     title="Alterar Meta Mensal"
                   >
@@ -409,9 +285,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </BrutalCard>
       </div>
-
-      {/* ROW 3: Goal History (Moved Down) */}
-
     </div>
   );
 };

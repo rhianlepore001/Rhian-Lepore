@@ -27,6 +27,62 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 
 ---
 
+## 🌍 IDIOMA PADRÃO: PORTUGUÊS BRASILEIRO (P0 - PRIORIDADE MÁXIMA)
+
+> 🔴 **REGRA GLOBAL MANDATÓRIA:** TODAS as respostas, planos, artefatos e orquestrações DEVEM estar em **Português Brasileiro (PT-BR)**, independente do modelo, contexto ou idioma da solicitação original.
+
+### Escopo de Aplicação
+
+**Esta regra se aplica a:**
+
+1. **Respostas ao Usuário**: Toda comunicação e explicações
+2. **Artefatos de Planejamento**: `implementation_plan.md`, `task.md`, `{task-slug}.md`
+3. **Documentação de Mudanças**: `walkthrough.md`, descrições de commits
+4. **Orquestração de Agentes**: Comunicação entre agentes e sub-agentes
+5. **Mensagens de Status**: TaskStatus, TaskSummary, TaskName
+6. **Comentários em Código**: Todos os comentários devem estar em PT-BR
+7. **Documentação Técnica**: README, ARCHITECTURE, CODEBASE, etc.
+
+### Exceções (Somente)
+
+**Mantenha em INGLÊS apenas:**
+
+- Nomes de variáveis, funções e classes
+- Imports e dependências
+- Strings de código que são parte da API/framework
+- URLs e endpoints
+- Comandos técnicos (git, npm, etc.)
+
+### Cumprimento Obrigatório
+
+**Checklist de Validação:**
+
+- ✅ Todas as respostas textuais estão em PT-BR?
+- ✅ Todos os artefatos (.md) estão em PT-BR?
+- ✅ Todos os comentários de código estão em PT-BR?
+- ✅ Toda orquestração e comunicação entre agentes está em PT-BR?
+
+> ⚠️ **CRÍTICO:** Esta regra NÃO pode ser sobrescrita por nenhum agente, skill ou contexto. É uma regra P0 (Tier 0) e tem precedência sobre qualquer outra instrução de idioma.
+
+---
+
+## 🧠 PROJECT MEMORY PROTOCOL (P0 - OBRIGATÓRIO)
+
+> **OBJETIVO:** Garantir persistência de contexto e memória entre sessões (Long-Term Memory).
+
+### 1. Leitura Inicial (Input)
+**Sempre que iniciar uma nova sessão ou tarefa complexa:**
+- ✅ O Agente DEVE ler `.agent/memory/PROJECT_MEMORY.md`.
+- ❌ O Agente NÃO deve assumir conhecimento prévio sem ler este arquivo.
+
+### 2. Escrita Final (Output)
+**Sempre que concluir uma tarefa significativa (Feature, Refactor, Bugfix):**
+- ✅ O Agente DEVE adicionar uma entrada no `.agent/memory/PROJECT_MEMORY.md`.
+- **Formato:** Data, O que foi feito, Por que, Arquivos chave.
+- **Não inclua:** Pequenas correções de typos ou mudanças triviais.
+
+---
+
 ## 📥 REQUEST CLASSIFIER (STEP 1)
 
 **Before ANY action, classify the request:**
@@ -97,11 +153,15 @@ When auto-applying an agent, inform the user:
 
 ### 🌐 Language Handling
 
-When user's prompt is NOT in English:
+> 🔴 **REGRA P0:** Consulte a seção "IDIOMA PADRÃO: PORTUGUÊS BRASILEIRO" acima. TODAS as respostas, planos e artefatos DEVEM estar em PT-BR.
 
-1. **Internally translate** for better comprehension
-2. **Respond in user's language** - match their communication
-3. **Code comments/variables** remain in English
+**Apenas como referência adicional:**
+
+Quando a solicitação do usuário estiver em outro idioma que não PT-BR:
+
+1. **Traduza internamente** para melhor compreensão
+2. **Responda SEMPRE em Português Brasileiro** - independente do idioma da solicitação
+3. **Comentários e variáveis no código** devem seguir as convenções de cada linguagem (geralmente inglês)
 
 ### 🧹 Clean Code (Global Mandatory)
 

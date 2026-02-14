@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Ícone Minimalista Geométrico para Barber -->
+  <!-- Forma abstrata inspirada em lâminas cruzadas, mas moderna e minimalista -->
+  
+  <!-- Background Circle (opcional, para testar) -->
+  <circle cx="100" cy="100" r="90" fill="#121212" opacity="0.1"/>
+  
+  <!-- Elemento Principal - Forma Geométrica Abstrata -->
+  <g transform="translate(100, 100)">
+    <!-- Diamante Central -->
+    <path d="M 0,-40 L 15,-10 L 0,40 L -15,-10 Z" fill="#C29B40" opacity="0.9"/>
+    
+    <!-- Lâminas Estilizadas (linhas angulares) -->
+    <path d="M -50,-30 L -20,-15 L -15,-25 L -45,-40 Z" fill="#C29B40"/>
+    <path d="M 50,-30 L 20,-15 L 15,-25 L 45,-40 Z" fill="#C29B40"/>
+    
+    <!-- Linha de Base -->
+    <rect x="-60" y="30" width="120" height="6" rx="3" fill="#C29B40" opacity="0.8"/>
+    
+    <!-- Detalhe Dourado Superior -->
+    <circle cx="0" cy="-45" r="4" fill="#D4AF50"/>
+  </g>
+  
+  <!-- Borda Sutil (opcional) -->
+  <circle cx="100" cy="100" r="95" stroke="#C29B40" stroke-width="0.5" opacity="0.3" fill="none"/>
+</svg>

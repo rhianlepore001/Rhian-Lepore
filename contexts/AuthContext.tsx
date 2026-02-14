@@ -106,6 +106,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    // 1. Check Rate Limit (Anti-brute force)
+    try {
+      const { data: allowed } = await supabase.rpc('check_login_rate_limit', { p_email: email });
+      if (allowed === false) {
+        return { error: { message: 'Muitas tentativas de login. Por segurança, aguarde 1 minuto.' } };
+      }
+    } catch (err) {
+      console.error('Erro ao verificar rate limit:', err);
+      // Fail open to avoid blocking legitimate users on system error
+    }
+
+    // 2. Perform Login
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -139,31 +151,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const value = React.useMemo(() => ({
+    isAuthenticated: !!session,
+    user: session?.user ?? null,
+    userType,
+    region,
+    businessName,
+    fullName,
+    avatarUrl,
+    tutorialCompleted,
+    subscriptionStatus,
+    trialEndsAt,
+    isSubscriptionActive: subscriptionStatus === 'active' || (
+      subscriptionStatus === 'trial' &&
+      !!trialEndsAt &&
+      (() => {
+        const end = parseDate(trialEndsAt);
+        return end ? new Date() < end : false;
+      })()
+    ),
+    loading,
+    login,
+    logout,
+    markTutorialCompleted
+  }), [
+    session,
+    userType,
+    region,
+    businessName,
+    fullName,
+    avatarUrl,
+    tutorialCompleted,
+    subscriptionStatus,
+    trialEndsAt,
+    loading
+  ]);
+
   return (
-    <AuthContext.Provider value={{
-      isAuthenticated: !!session,
-      user: session?.user ?? null,
-      userType,
-      region,
-      businessName,
-      fullName,
-      avatarUrl,
-      tutorialCompleted,
-      subscriptionStatus,
-      trialEndsAt,
-      isSubscriptionActive: subscriptionStatus === 'active' || (
-        subscriptionStatus === 'trial' &&
-        !!trialEndsAt &&
-        (() => {
-          const end = parseDate(trialEndsAt);
-          return end ? new Date() < end : false;
-        })()
-      ),
-      loading,
-      login,
-      logout,
-      markTutorialCompleted
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

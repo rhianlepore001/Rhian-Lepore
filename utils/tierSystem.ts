@@ -1,3 +1,5 @@
+import { Appointment } from '../types';
+
 export type LoyaltyTier = 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
 
 export interface TierConfig {
@@ -55,21 +57,25 @@ export function getTierConfig(tier: LoyaltyTier): TierConfig {
     return TIER_CONFIGS.find(t => t.name === tier) || TIER_CONFIGS[0];
 }
 
-export function calculateNextVisitPrediction(appointments: any[]): string {
+export function calculateNextVisitPrediction(appointments: Appointment[]): string {
     if (!appointments || appointments.length < 2) {
         return 'Dados insuficientes';
     }
 
     // Calculate average days between visits
     const sortedAppointments = [...appointments]
-        .sort((a, b) => new Date(a.appointment_time).getTime() - new Date(b.appointment_time).getTime());
+        .sort((a, b) => {
+            const timeA = new Date(a.appointment_time || a.time).getTime();
+            const timeB = new Date(b.appointment_time || b.time).getTime();
+            return timeA - timeB;
+        });
 
     let totalDays = 0;
     let intervals = 0;
 
     for (let i = 1; i < sortedAppointments.length; i++) {
-        const prevDate = new Date(sortedAppointments[i - 1].appointment_time);
-        const currDate = new Date(sortedAppointments[i].appointment_time);
+        const prevDate = new Date(sortedAppointments[i - 1].appointment_time || sortedAppointments[i - 1].time);
+        const currDate = new Date(sortedAppointments[i].appointment_time || sortedAppointments[i].time);
         const daysDiff = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
         totalDays += daysDiff;
         intervals++;

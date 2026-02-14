@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
 import { Screw } from '../components/Screw';
+import { validatePassword } from '../utils/passwordValidation';
 
 export const UpdatePassword: React.FC = () => {
     const navigate = useNavigate();
@@ -87,8 +88,9 @@ export const UpdatePassword: React.FC = () => {
             return;
         }
 
-        if (password.length < 6) {
-            setError('A senha deve ter pelo menos 6 caracteres.');
+        const passwordCheck = validatePassword(password);
+        if (!passwordCheck.isValid) {
+            setError(`Senha fraca: ${passwordCheck.errors.join(', ')}`);
             return;
         }
 

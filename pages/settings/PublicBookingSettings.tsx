@@ -87,10 +87,10 @@ export const PublicBookingSettings: React.FC = () => {
         <SettingsLayout>
             <div className="max-w-4xl">
                 <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
-                    Agendamento Público
+                    Reservas Online
                 </h1>
                 <p className="text-sm md:text-base text-neutral-400 mb-4 md:mb-8">
-                    Configure como clientes agendam online
+                    Configure como clientes fazem reservas online
                 </p>
 
                 <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
@@ -99,10 +99,10 @@ export const PublicBookingSettings: React.FC = () => {
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                             <h3 className={`font-bold text-base md:text-lg mb-1 md:mb-2 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                                Ativar Agendamento Público
+                                Ativar Reservas Online
                             </h3>
                             <p className="text-neutral-400 text-xs md:text-sm">
-                                Permite que clientes agendem através do seu link público.
+                                Seus clientes podem marcar horário através do seu link de reserva.
                             </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">

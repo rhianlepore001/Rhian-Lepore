@@ -25,8 +25,10 @@ export interface Appointment {
   clientName: string;
   service: string;
   time: string;
+  appointment_time?: string; // DB field
   status: 'Confirmed' | 'Pending' | 'Completed';
   price: number;
+  user_id?: string; // For RLS checks
 }
 
 export interface FinanceRecord {

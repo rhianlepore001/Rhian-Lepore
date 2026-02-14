@@ -3,12 +3,44 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
+interface GeminiPhotoAnalysis {
+    suggestions: string[];
+    background_options: string[];
+    quality_score: number;
+    recommended_edits: string[];
+}
+
+interface GeminiSocialContent {
+    caption: string;
+    hashtags: string[];
+    cta: string;
+}
+
+interface GeminiCalendarDay {
+    day: string;
+    content_type: 'carousel' | 'reel' | 'story' | 'post';
+    topic: string;
+    caption: string;
+    hashtags: string[];
+    posting_time: string;
+}
+
+interface GeminiMarketingCampaign {
+    name: string;
+    type: 'birthday' | 'reactivation' | 'promotion' | 'premium' | 'seasonal';
+    target_audience: string;
+    objective: string;
+    timing: string;
+    expected_impact: string;
+    message: string;
+}
+
 /**
  * Analyze a photo and suggest professional edits
  */
-export async function analyzePhoto(imageBase64: string) {
+export async function analyzePhoto(imageBase64: string): Promise<GeminiPhotoAnalysis> {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-image-preview' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const prompt = `Analyze this haircut/beauty salon photo and suggest professional edits for social media.
 
@@ -54,7 +86,7 @@ export async function generateSocialContent(
     businessType: 'barber' | 'beauty',
     businessName: string,
     customRequest?: string
-) {
+): Promise<GeminiSocialContent> {
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
@@ -92,7 +124,7 @@ Return ONLY valid JSON in this exact format:
 export async function generateContentCalendar(
     businessType: 'barber' | 'beauty',
     businessName: string
-) {
+): Promise<GeminiCalendarDay[]> {
     try {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -168,11 +200,11 @@ Return ONLY valid JSON array with 7 objects in this exact format:
  * Analyze business data and suggest marketing campaigns
  */
 export async function analyzeCampaignOpportunities(
-    clients: any[],
-    appointments: any[],
+    clients: any[], // TODO: Type this properly with imported Client type
+    appointments: any[], // TODO: Type this properly with imported Appointment type
     businessType: 'barber' | 'beauty',
     businessName: string
-) {
+): Promise<GeminiMarketingCampaign[]> {
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 

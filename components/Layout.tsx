@@ -6,7 +6,8 @@ import { TrialBanner } from './TrialBanner';
 import { PaywallModal } from './PaywallModal';
 import { BottomMobileNav } from './BottomMobileNav';
 import { BrutalBackground } from './BrutalBackground';
-import { UIProvider } from '../contexts/UIContext';
+import { UIProvider, useUI } from '../contexts/UIContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { useLocation } from 'react-router-dom';
 
@@ -23,6 +24,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const showBanner = !isBillingRoute && (isTrial || isExpired);
   const headerTop = showBanner ? '40px' : '0px';
   const paddingTop = showBanner ? 'pt-[104px] md:pt-[120px]' : 'pt-16 md:pt-20';
+
+  const { isSidebarOpen, isModalOpen } = useUI();
 
   return (
     <div
@@ -45,8 +48,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      {!isSettingsRoute && !isBillingRoute && <BottomMobileNav />}
+      {/* Mobile Bottom Navigation - Hidden when modal is open */}
+      {!isSettingsRoute && !isBillingRoute && !isModalOpen && !new URLSearchParams(useLocation().search).get('new') && <BottomMobileNav />}
     </div>
   );
 };

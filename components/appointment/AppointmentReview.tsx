@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check, MessageCircle } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, Region } from '../../utils/formatters';
 
 interface AppointmentReviewProps {
     clients: any[];
@@ -15,7 +15,7 @@ interface AppointmentReviewProps {
     isCustomService: boolean;
     customServiceName: string;
     customServicePrice: string;
-    currencyRegion: string;
+    currencyRegion: Region;
     isBeauty: boolean;
     accentColor: string;
     sendWhatsapp: boolean;
@@ -28,6 +28,8 @@ interface AppointmentReviewProps {
     notes: string;
     setNotes: (v: string) => void;
     currencySymbol: string;
+    paymentMethod: string;
+    setPaymentMethod: (v: string) => void;
 }
 
 export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
@@ -54,8 +56,15 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
     finalPrice,
     notes,
     setNotes,
-    currencySymbol
+    currencySymbol,
+    paymentMethod,
+    setPaymentMethod
 }) => {
+    const paymentOptions = [
+        { id: 'Dinheiro', label: 'Dinheiro', icon: '💵' },
+        { id: 'Pix', label: 'Pix', icon: '💎' },
+        { id: 'Cartão', label: 'Cartão', icon: '💳' },
+    ];
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-6">
@@ -149,6 +158,25 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
                             className="w-full bg-black/20 text-white p-3 rounded-lg border border-white/10 focus:outline-none focus:border-white/30 min-h-[80px]"
                             placeholder="Ex: Cliente prefere água gelada..."
                         />
+                    </div>
+
+                    <div className="pt-4 border-t border-white/10">
+                        <label className="text-xs text-neutral-400 uppercase font-bold mb-3 block">Forma de Pagamento</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {paymentOptions.map((opt) => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => setPaymentMethod(opt.id)}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === opt.id
+                                        ? `${isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white' : 'bg-accent-gold border-accent-gold text-black'} scale-95 shadow-lg`
+                                        : 'bg-black/20 border-white/5 text-neutral-500 hover:border-white/20'
+                                        }`}
+                                >
+                                    <span className="text-xl mb-1">{opt.icon}</span>
+                                    <span className="text-[10px] font-bold uppercase">{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

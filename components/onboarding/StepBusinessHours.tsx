@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { BusinessHoursEditor } from '../BusinessHoursEditor';
+import { logger } from '../../utils/Logger';
 
 interface StepBusinessHoursProps {
     onNext: () => void;
@@ -37,7 +38,7 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
         setLoading(true);
 
         try {
-            console.log('Saving business hours:', businessHours);
+            logger.info('Saving business hours', { businessHours });
 
             const { error: settingsError } = await supabase.from('business_settings').upsert({
                 user_id: user.id,
@@ -45,13 +46,13 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
             }, { onConflict: 'user_id' });
 
             if (settingsError) {
-                console.error('Error saving business hours:', settingsError);
+                logger.error('Error saving business hours', settingsError);
                 alert('Erro ao salvar horários. Por favor, tente novamente.');
                 setLoading(false);
                 return;
             }
 
-            console.log('Business hours saved successfully');
+            logger.info('Business hours saved successfully');
 
             const { error: stepError } = await supabase.rpc('update_onboarding_step', {
                 p_user_id: user.id,
@@ -59,12 +60,12 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
             });
 
             if (stepError) {
-                console.error('Error updating onboarding step:', stepError);
+                logger.error('Error updating onboarding step', stepError);
             }
 
             onNext();
         } catch (error) {
-            console.error('Error saving hours:', error);
+            logger.error('Error saving hours', error);
             alert('Erro ao salvar horários. Por favor, tente novamente.');
         } finally {
             setLoading(false);

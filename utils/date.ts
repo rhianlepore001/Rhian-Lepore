@@ -1,4 +1,4 @@
-export const parseDate = (dateString: string | null | undefined): Date | null => {
+export const parseDate = (dateString: Date | string | null | undefined): Date | null => {
     if (!dateString) return null;
 
     // Se já for um objeto Date (as vezes o Supabase retorna assim dependendo da config)
@@ -36,7 +36,20 @@ export const parseDate = (dateString: string | null | undefined): Date | null =>
                 const minute = parts.length > 4 ? parseInt(parts[4], 10) : 0;
                 const second = parts.length > 5 ? parseInt(parts[5], 10) : 0;
 
+                // Validação básica de limites
+                if (month < 0 || month > 11 || day < 1 || day > 31) {
+                    console.warn('parseDate: Data inválida (componentes fora do limite)', dateString);
+                    return null;
+                }
+
                 date = new Date(year, month, day, hour, minute, second);
+
+                // Validação de rollover (ex: 31 de abril vira 1 de maio)
+                if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+                    console.warn('parseDate: Data inválida (rollover detectado)', dateString);
+                    return null;
+                }
+
                 if (!isNaN(date.getTime())) {
                     return date;
                 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,12 +10,15 @@ import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
+import { Modal } from '../components/Modal';
 import { formatCurrency } from '../utils/formatters';
+import { logger } from '../utils/Logger';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
 export const Finance: React.FC = () => {
   const { user, userType, region } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [summary, setSummary] = useState({
@@ -23,7 +27,9 @@ export const Finance: React.FC = () => {
     commissionsPending: 0,
     profit: 0,
     growth: 0,
-    previousMonthRevenue: 0
+    previousMonthRevenue: 0,
+    revenueByMethod: { pix: 0, dinheiro: 0, cartao: 0 },
+    pendingExpenses: 0
   });
   const [chartData, setChartData] = useState<any[]>([]);
   const [monthlyHistory, setMonthlyHistory] = useState<any[]>([]);
@@ -31,6 +37,7 @@ export const Finance: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<FinanceTabType>('overview');
 
   // New Transaction Modal State
@@ -40,6 +47,8 @@ export const Finance: React.FC = () => {
   const [newTransactionAmount, setNewTransactionAmount] = useState('');
   const [newTransactionDate, setNewTransactionDate] = useState(new Date().toISOString().split('T')[0]);
   const [newTransactionTime, setNewTransactionTime] = useState('');
+  const [newTransactionStatus, setNewTransactionStatus] = useState<'paid' | 'pending'>('paid');
+  const [newTransactionDueDate, setNewTransactionDueDate] = useState('');
   const [newTransactionService, setNewTransactionService] = useState('');
   const [newTransactionClient, setNewTransactionClient] = useState('');
   const [newTransactionProfessional, setNewTransactionProfessional] = useState('');
@@ -72,6 +81,16 @@ export const Finance: React.FC = () => {
       fetchMonthlyHistory();
     }
   }, [activeTab, selectedMonth, selectedYear, user]);
+
+  useEffect(() => {
+    const isNewQuery = searchParams.get('new') === 'true';
+    if (isNewQuery && user) {
+      handleOpenNewTransaction();
+      // Limpar o parâmetro da URL para evitar reabrir ao atualizar
+      searchParams.delete('new');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, user]);
 
   const fetchFinanceData = async () => {
     try {
@@ -113,7 +132,9 @@ export const Finance: React.FC = () => {
           commissionsPending: data.commissions_pending || 0,
           profit: data.profit || 0,
           growth: growth || 0,
-          previousMonthRevenue: prevData?.revenue || 0
+          previousMonthRevenue: prevData?.revenue || 0,
+          revenueByMethod: data.revenue_by_method || { pix: 0, dinheiro: 0, cartao: 0 },
+          pendingExpenses: data.pending_expenses || 0
         });
 
         setChartData(data.chart_data || []);
@@ -122,7 +143,7 @@ export const Finance: React.FC = () => {
           const createdAt = new Date(item.created_at);
           return {
             id: item.id,
-            serviceName: item.service_name || 'Serviço',
+            serviceName: item.service_name || item.description || 'Serviço',
             professionalName: item.barber_name || 'Manual',
             clientName: item.client_name || '',
             amount: item.amount || 0,
@@ -131,22 +152,21 @@ export const Finance: React.FC = () => {
             time: createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             rawDate: createdAt,
             type: item.type,
-            commission_paid: item.commission_paid
+            payment_method: item.payment_method,
+            commission_paid: item.commission_paid,
+            status: item.status || 'paid'
           };
         });
-
-        const filtered = filterType === 'all'
-          ? formattedTransactions
-          : formattedTransactions.filter(t => {
-            if (filterType === 'revenue') return t.type === 'revenue';
-            if (filterType === 'expense') return t.type === 'expense'; // Only show actual expense payments
-            return true;
-          });
+        const filtered = formattedTransactions.filter((t: any) => {
+          const matchesType = filterType === 'all' || (filterType === 'revenue' ? t.type === 'revenue' : t.type === 'expense');
+          const matchesPayment = filterPaymentMethod === 'all' || t.payment_method === filterPaymentMethod;
+          return matchesType && matchesPayment;
+        });
 
         setTransactions(filtered);
       }
     } catch (error) {
-      console.error('Error fetching finance data:', error);
+      logger.error('Error fetching finance data', error);
     } finally {
       setLoading(false);
     }
@@ -193,7 +213,7 @@ export const Finance: React.FC = () => {
 
       setMonthlyHistory(history.reverse()); // Most recent first
     } catch (error) {
-      console.error('Error fetching monthly history:', error);
+      logger.error('Error fetching monthly history', error);
     }
   };
 
@@ -220,7 +240,7 @@ export const Finance: React.FC = () => {
       alert('Transação excluída com sucesso!');
       fetchFinanceData(); // Refresh finance data
     } catch (error) {
-      console.error('Error deleting transaction:', error);
+      logger.error('Error deleting transaction', error);
       alert('Erro ao excluir transação.');
     }
   };
@@ -257,6 +277,7 @@ export const Finance: React.FC = () => {
     setStartDate('');
     setEndDate('');
     setFilterType('all');
+    setFilterPaymentMethod('all');
     fetchFinanceData();
     setShowFilterModal(false);
   };
@@ -275,7 +296,7 @@ export const Finance: React.FC = () => {
       setClients(clientsRes.data || []);
       setProfessionals(professionalsRes.data || []);
     } catch (error) {
-      console.error('Error fetching dropdown data:', error);
+      logger.error('Error fetching dropdown data', error);
     }
   };
 
@@ -327,7 +348,11 @@ export const Finance: React.FC = () => {
         commission_value: newTransactionType === 'expense' ? amount : 0,
         commission_rate: 0,
         type: newTransactionType === 'income' ? 'revenue' : 'expense',
-        created_at: transactionDateTime.toISOString()
+        description: newTransactionDescription,
+        created_at: transactionDateTime.toISOString(),
+        payment_method: newTransactionType === 'income' ? 'Dinheiro' : null, // Default for manual income
+        status: newTransactionStatus,
+        due_date: newTransactionStatus === 'pending' ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString()) : null
       };
 
       // Add optional fields if they have values
@@ -348,7 +373,7 @@ export const Finance: React.FC = () => {
       setShowNewTransactionModal(false);
       fetchFinanceData();
     } catch (error: any) {
-      console.error('Error creating transaction:', error);
+      logger.error('Error creating transaction', error);
       alert(`❌ Erro ao registrar transação: ${error.message || JSON.stringify(error)}`);
     } finally {
       setSavingTransaction(false);
@@ -369,6 +394,9 @@ export const Finance: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
+          <BrutalButton variant="secondary" size="sm" icon={<Filter />} onClick={() => setShowFilterModal(true)}>
+            Filtrar
+          </BrutalButton>
           <BrutalButton variant="primary" size="sm" icon={<Plus />} onClick={handleOpenNewTransaction}>
             Nova Transação
           </BrutalButton>
@@ -483,7 +511,7 @@ export const Finance: React.FC = () => {
                   <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
                   <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
                 </div>
-                <InfoButton text="O valor que sobra após subtrair as despesas da receita. Seu lucro real." />
+                <InfoButton text="O valor que sobra após subtrair as despesas pagas da receita. Seu lucro real no período." />
               </div>
               <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
                 {formatCurrency(summary.profit || 0, currencyRegion)}
@@ -492,6 +520,45 @@ export const Finance: React.FC = () => {
                 <Wallet className="w-3 h-3" />
                 <span>Margem: {summary.revenue > 0 ? Math.round(((summary.profit || 0) / summary.revenue) * 100) : 0}%</span>
               </div>
+            </BrutalCard>
+
+            <BrutalCard className="border-l-4 border-yellow-600 bg-yellow-500/5">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-yellow-500 font-mono text-xs uppercase tracking-widest">A Pagar (Pendente)</p>
+                  <p className="text-[10px] text-neutral-500 font-mono mt-1">Total de despesas não liquidadas</p>
+                </div>
+                <InfoButton text="Despesas registradas como 'Pendentes' que ainda não saíram do seu caixa." />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-heading text-yellow-500 font-bold">
+                {formatCurrency(summary.pendingExpenses || 0, currencyRegion)}
+              </h3>
+              <div className="flex items-center gap-1 text-yellow-500/70 text-xs font-mono mt-2">
+                <Clock className="w-3 h-3 text-yellow-500" />
+                <span>Impacto futuro no fluxo</span>
+              </div>
+            </BrutalCard>
+          </div>
+
+          {/* Detailed Revenue Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <BrutalCard className="border-l-4 border-green-400 bg-green-500/5">
+              <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Pix</p>
+              <h4 className="text-xl font-heading text-white mt-1">
+                {formatCurrency(summary.revenueByMethod.pix || 0, currencyRegion)}
+              </h4>
+            </BrutalCard>
+            <BrutalCard className="border-l-4 border-emerald-400 bg-emerald-500/5">
+              <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Dinheiro</p>
+              <h4 className="text-xl font-heading text-white mt-1">
+                {formatCurrency(summary.revenueByMethod.dinheiro || 0, currencyRegion)}
+              </h4>
+            </BrutalCard>
+            <BrutalCard className="border-l-4 border-teal-400 bg-teal-500/5">
+              <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Cartão</p>
+              <h4 className="text-xl font-heading text-white mt-1">
+                {formatCurrency(summary.revenueByMethod.cartao || 0, currencyRegion)}
+              </h4>
             </BrutalCard>
           </div>
 
@@ -527,17 +594,20 @@ export const Finance: React.FC = () => {
           </div>
 
           {/* Recent Transactions */}
+          {/* Recent Transactions */}
           <BrutalCard title="Transações Recentes">
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b-2 border-neutral-800 text-text-secondary font-mono text-xs uppercase">
                     <th className="p-3">Data/Hora</th>
-                    <th className="p-3">Serviço</th>
+                    <th className="p-3">Descrição / Serviço</th>
                     <th className="p-3">Profissional</th>
                     <th className="p-3">Cliente</th>
                     <th className="p-3 text-right">Valor</th>
                     <th className="p-3 text-center">Tipo</th>
+                    <th className="p-3 text-center">Pagamento</th>
                     <th className="p-3 text-right">Ações</th>
                   </tr>
                 </thead>
@@ -552,7 +622,7 @@ export const Finance: React.FC = () => {
                       </td>
                       <td className="p-3">
                         <span className="text-white font-medium">
-                          {t.type === 'expense' ? 'Pagamento de Comissão' : t.serviceName}
+                          {t.serviceName}
                         </span>
                       </td>
                       <td className="p-3">
@@ -571,8 +641,20 @@ export const Finance: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${t.type === 'expense' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
-                          {t.type === 'expense' ? 'Despesa' : 'Receita'}
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.type === 'expense' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                            {t.type === 'expense' ? 'Despesa' : 'Receita'}
+                          </span>
+                          {t.status === 'pending' && (
+                            <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                              Pendente
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-center">
+                        <span className="text-white text-xs font-mono bg-white/5 px-2 py-1 rounded border border-white/10 uppercase">
+                          {t.payment_method || '—'}
                         </span>
                       </td>
                       <td className="p-3 text-right">
@@ -586,64 +668,144 @@ export const Finance: React.FC = () => {
                       </td>
                     </tr>
                   ))}
-                  {transactions.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-text-secondary">
-                        Nenhuma transação registrada em {months[selectedMonth]} {selectedYear}.
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
-          </BrutalCard>
-        </>
-      )}
 
-      {activeTab === 'history' && (
-        <BrutalCard title="Histórico Mensal - Últimos 12 Meses">
-          <MonthlyHistory
-            data={monthlyHistory}
-            currencySymbol={currencySymbol}
-            accentColor={accentColor}
-            isBeauty={isBeauty}
-          />
-        </BrutalCard>
-      )}
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-4">
+              {transactions.map((t) => (
+                <div
+                  key={t.id}
+                  className={`p-4 rounded-xl border-l-4 transition-all ${t.type === 'expense'
+                    ? 'bg-red-500/5 border-red-500/50 hover:bg-red-500/10'
+                    : 'bg-green-500/5 border-green-500/50 hover:bg-green-500/10'
+                    }`}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex flex-col">
+                      <span className="text-white font-heading text-base">{t.serviceName}</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-neutral-500 text-xs font-mono">{t.date}</span>
+                        <span className="text-neutral-700 text-xs">•</span>
+                        <span className="text-neutral-500 text-xs font-mono">{t.time}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`font-mono font-bold text-lg ${t.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}>
+                        {t.type === 'expense' ? '-' : '+'}{formatCurrency((t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)), currencyRegion, false)}
+                      </span>
+                      <div className="flex flex-col items-end gap-1 mt-1">
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${t.type === 'expense'
+                          ? 'bg-red-500/10 text-red-500'
+                          : 'bg-green-500/10 text-green-500'
+                          }`}>
+                          {t.type === 'expense' ? 'Despesa' : 'Receita'}
+                        </span>
+                        {t.status === 'pending' && (
+                          <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                            Pendente
+                          </span>
+                        )}
+                      </div>
+                      {t.payment_method && (
+                        <span className="text-[10px] text-white/40 font-mono mt-1">
+                          PAG: {t.payment_method.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-      {activeTab === 'commissions' && (
-        <CommissionsManagement
-          accentColor={accentColor}
-          currencySymbol={currencySymbol}
-          onPaymentSuccess={fetchFinanceData}
-        />
-      )}
+                  <div className="grid grid-cols-2 gap-2 py-3 border-y border-white/5 my-3">
+                    <div>
+                      <p className="text-[10px] text-neutral-500 uppercase font-mono tracking-wider">Profissional</p>
+                      <p className={`text-sm font-medium ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>{t.professionalName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-neutral-500 uppercase font-mono tracking-wider">Cliente</p>
+                      <p className="text-sm text-neutral-300 truncate">{t.clientName || '—'}</p>
+                    </div>
+                  </div>
 
-      {/* New Transaction Modal */}
-      {showNewTransactionModal && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80 backdrop-blur-sm'}`}>
-          <div className={`w-full max-w-lg p-6 shadow-2xl overflow-y-auto max-h-[90vh] transition-all
-              ${isBeauty
-              ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl'}
-          `}>
-            <div className={`flex items-center justify-between mb-6 ${isBeauty ? 'border-b border-beauty-neon/20 pb-4' : ''}`}>
-              <h3 className={`font-heading text-xl uppercase flex items-center gap-2 ${isBeauty ? 'text-white' : 'text-white'}`}>
-                <DollarSign className={`w-6 h-6 ${accentText}`} />
-                Nova Transação
-              </h3>
-              <button
-                onClick={() => setShowNewTransactionModal(false)}
-                className={`transition-colors p-1 rounded-full
-                    ${isBeauty
-                    ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10'
-                    : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}
-                `}
-              >
-                <X className="w-6 h-6" />
-              </button>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleDeleteTransaction(t.id)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg active:scale-95 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
 
+            {transactions.length === 0 && (
+              <div className="p-12 text-center">
+                <div className="bg-neutral-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <History className="w-8 h-8 text-neutral-500" />
+                </div>
+                <p className="text-text-secondary font-medium">Nenhuma transação encontrada</p>
+                <p className="text-neutral-500 text-sm mt-1">Registre uma nova transação ou mude o filtro.</p>
+              </div>
+            )}
+          </BrutalCard>
+        </>
+      )
+      }
+
+      {
+        activeTab === 'history' && (
+          <BrutalCard title="Histórico Mensal - Últimos 12 Meses">
+            <MonthlyHistory
+              data={monthlyHistory}
+              currencySymbol={currencySymbol}
+              accentColor={accentColor}
+              isBeauty={isBeauty}
+            />
+          </BrutalCard>
+        )
+      }
+
+      {
+        activeTab === 'commissions' && (
+          <CommissionsManagement
+            accentColor={accentColor}
+            currencySymbol={currencySymbol}
+            onPaymentSuccess={fetchFinanceData}
+          />
+        )
+      }
+
+      {/* New Transaction Modal */}
+      {
+        showNewTransactionModal && (
+          <Modal
+            isOpen={showNewTransactionModal}
+            onClose={() => setShowNewTransactionModal(false)}
+            title="Nova Transação"
+            size="lg"
+            footer={
+              <div className="flex gap-3 w-full">
+                <BrutalButton
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setShowNewTransactionModal(false)}
+                >
+                  Cancelar
+                </BrutalButton>
+                <BrutalButton
+                  variant="primary"
+                  className="flex-1"
+                  onClick={handleCreateTransaction}
+                  disabled={savingTransaction}
+                  icon={savingTransaction ? <Loader2 className="animate-spin" /> : undefined}
+                >
+                  {savingTransaction ? 'Salvando...' : 'Registrar'}
+                </BrutalButton>
+              </div>
+            }
+          >
             <div className="space-y-4">
               {/* Type Selector */}
               <div>
@@ -678,13 +840,47 @@ export const Finance: React.FC = () => {
                   value={newTransactionDescription}
                   onChange={(e) => setNewTransactionDescription(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
+                    ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
                       : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                  `}
+                `}
                   placeholder="Ex: Venda de produto, Pagamento de aluguel..."
                   required
                 />
+              </div>
+
+              {/* Status and Due Date */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Status</label>
+                  <select
+                    value={newTransactionStatus}
+                    onChange={(e) => setNewTransactionStatus(e.target.value as 'paid' | 'pending')}
+                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                      ${isBeauty
+                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                        : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                  `}
+                  >
+                    <option value="paid">Pago / Recebido</option>
+                    <option value="pending">Pendente / Agendado</option>
+                  </select>
+                </div>
+                {newTransactionStatus === 'pending' && (
+                  <div>
+                    <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Vencimento</label>
+                    <input
+                      type="date"
+                      value={newTransactionDueDate}
+                      onChange={(e) => setNewTransactionDueDate(e.target.value)}
+                      className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                        ${isBeauty
+                          ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                          : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                      `}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Amount */}
@@ -697,10 +893,10 @@ export const Finance: React.FC = () => {
                   step="0.01"
                   min="0"
                   className={`w-full p-3 rounded-lg text-white font-mono text-lg transition-all outline-none
-                      ${isBeauty
+                    ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
                       : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                  `}
+                `}
                   placeholder="0.00"
                   required
                 />
@@ -715,10 +911,10 @@ export const Finance: React.FC = () => {
                     value={newTransactionDate}
                     onChange={(e) => setNewTransactionDate(e.target.value)}
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                        ${isBeauty
+                      ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
                         : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                    `}
+                  `}
                   />
                 </div>
                 <div>
@@ -728,10 +924,10 @@ export const Finance: React.FC = () => {
                     value={newTransactionTime}
                     onChange={(e) => setNewTransactionTime(e.target.value)}
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                        ${isBeauty
+                      ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
                         : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                    `}
+                  `}
                   />
                 </div>
               </div>
@@ -743,10 +939,10 @@ export const Finance: React.FC = () => {
                   value={newTransactionService}
                   onChange={(e) => setNewTransactionService(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
+                    ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
                       : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                  `}
+                `}
                 >
                   <option value="">Selecione um serviço</option>
                   {services.map(s => (
@@ -762,10 +958,10 @@ export const Finance: React.FC = () => {
                   value={newTransactionClient}
                   onChange={(e) => setNewTransactionClient(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
+                    ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
                       : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                  `}
+                `}
                 >
                   <option value="">Selecione um cliente</option>
                   {clients.map(c => (
@@ -781,10 +977,10 @@ export const Finance: React.FC = () => {
                   value={newTransactionProfessional}
                   onChange={(e) => setNewTransactionProfessional(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
+                    ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
                       : `bg-black border border-neutral-700 focus:border-${accentColor}`}
-                  `}
+                `}
                 >
                   <option value="">Selecione um profissional</option>
                   {professionals.map(p => (
@@ -792,30 +988,70 @@ export const Finance: React.FC = () => {
                   ))}
                 </select>
               </div>
+            </div>
+          </Modal>
+        )
+      }
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-4">
-                <BrutalButton
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setShowNewTransactionModal(false)}
-                >
-                  Cancelar
+      {/* Filter Modal */}
+      {
+        showFilterModal && (
+          <Modal
+            isOpen={showFilterModal}
+            onClose={() => setShowFilterModal(false)}
+            title="Filtrar Transações"
+            size="md"
+            footer={
+              <div className="flex gap-3 w-full">
+                <BrutalButton variant="secondary" className="flex-1" onClick={handleClearFilter}>
+                  Limpar
                 </BrutalButton>
-                <BrutalButton
-                  variant="primary"
-                  className="flex-1"
-                  onClick={handleCreateTransaction}
-                  disabled={savingTransaction}
-                  icon={savingTransaction ? <Loader2 className="animate-spin" /> : undefined}
-                >
-                  {savingTransaction ? 'Salvando...' : 'Registrar'}
+                <BrutalButton variant="primary" className="flex-1" onClick={handleApplyFilter}>
+                  Aplicar
                 </BrutalButton>
               </div>
+            }
+          >
+            <div className="space-y-4">
+              <div>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Tipo de Transação</label>
+                <div className="flex gap-2">
+                  {(['all', 'revenue', 'expense'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setFilterType(type)}
+                      className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-all
+                      ${filterType === type
+                          ? `${accentBg} text-black`
+                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                    >
+                      {type === 'all' ? 'Tudo' : type === 'revenue' ? 'Entradas' : 'Saídas'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Forma de Pagamento</label>
+                <div className="flex flex-wrap gap-2">
+                  {['all', 'Dinheiro', 'Pix', 'Cartão'].map((method) => (
+                    <button
+                      key={method}
+                      onClick={() => setFilterPaymentMethod(method)}
+                      className={`px-3 py-2 rounded-lg font-bold text-xs uppercase transition-all
+                      ${filterPaymentMethod === method
+                          ? `${accentBg} text-black`
+                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                    >
+                      {method === 'all' ? 'Todas' : method}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </Modal>
+        )
+      }
+    </div >
   );
 };

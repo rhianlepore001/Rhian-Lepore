@@ -12,7 +12,7 @@ allowed-tools: Read, Glob, Grep
 - [ ] Code does what it's supposed to do
 - [ ] Edge cases handled
 - [ ] Error handling in place
-- [ ] No obvious bugs
+- [ ] No obvious bugs uma
 
 ### Security
 - [ ] Input validated and sanitized

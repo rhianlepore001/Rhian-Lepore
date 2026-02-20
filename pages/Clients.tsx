@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
+import { logger } from '../utils/Logger';
 import { PhoneInput } from '../components/PhoneInput';
 import { Plus, Search, User, Star, ChevronRight, MessageCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -69,7 +70,7 @@ export const Clients: React.FC = () => {
                 }
             }
         } catch (error) {
-            console.error('Error fetching clients:', error);
+            logger.error('Error fetching clients', error);
         } finally {
             setLoading(false);
         }
@@ -101,14 +102,14 @@ export const Clients: React.FC = () => {
                     const fileExt = photo.name.split('.').pop();
                     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-                    console.log('Attempting to upload photo to client_photos bucket...');
+                    logger.info('Attempting to upload photo to client_photos bucket...');
 
                     const { data: uploadData, error: uploadError } = await supabase.storage
                         .from('client_photos')
                         .upload(fileName, photo);
 
                     if (uploadError) {
-                        console.error('Photo upload error:', uploadError);
+                        logger.error('Photo upload error', uploadError);
                         // Don't throw - just warn the user and continue without photo
                         alert('Aviso: Não foi possível fazer upload da foto. O cliente será criado sem foto.');
                     } else {
@@ -116,10 +117,10 @@ export const Clients: React.FC = () => {
                             .from('client_photos')
                             .getPublicUrl(fileName);
                         photoUrl = publicUrl;
-                        console.log('Photo uploaded successfully:', publicUrl);
+                        logger.info('Photo uploaded successfully', { publicUrl });
                     }
                 } catch (photoError) {
-                    console.error('Photo upload exception:', photoError);
+                    logger.error('Photo upload exception', photoError);
                     alert('Aviso: Erro ao fazer upload da foto. O cliente será criado sem foto.');
                 }
             }
@@ -146,7 +147,7 @@ export const Clients: React.FC = () => {
             setPhone('');
             setPhoto(null);
         } catch (error: any) {
-            console.error('Error creating client:', error);
+            logger.error('Error creating client', error);
             alert(`Erro ao criar cliente: ${error.message || JSON.stringify(error)}`);
         } finally {
             setUploading(false);

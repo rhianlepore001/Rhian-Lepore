@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { formatCurrency } from '../utils/formatters';
+import { logger } from '../utils/Logger';
 
 export function useDashboardData() {
     const { user } = useAuth();
@@ -10,11 +10,18 @@ export function useDashboardData() {
     const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
     const [weeklyGrowth, setWeeklyGrowth] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [monthlyGoal, setMonthlyGoal] = useState(15000);
+    const [monthlyGoal, setMonthlyGoal] = useState(0);
     const [goalHistory, setGoalHistory] = useState<any[]>([]);
     const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
-
+    const [profitMetrics, setProfitMetrics] = useState<any>({
+        totalProfit: 0,
+        recoveredRevenue: 0,
+        avoidedNoShows: 0,
+        filledSlots: 0,
+        weeklyGrowth: 0
+    });
+    const [actionItems, setActionItems] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,22 +31,30 @@ export function useDashboardData() {
                     setAccountCreatedAt(new Date(user.created_at));
                 }
 
-                const { data: profileData } = await supabase
-                    .from('profiles')
-                    .select('business_slug, monthly_goal')
-                    .eq('id', user.id)
-                    .single();
+                // 1. Fetch Profile and current Goal
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
 
-                if (profileData?.business_slug) setBusinessSlug(profileData.business_slug);
-                if (profileData?.monthly_goal) setMonthlyGoal(profileData.monthly_goal);
+                const [profileRes, goalRes] = await Promise.all([
+                    supabase.from('profiles').select('business_slug, monthly_goal').eq('id', user.id).single(),
+                    supabase.from('goal_settings').select('monthly_goal').eq('user_id', user.id).eq('month', currentMonth).eq('year', currentYear).maybeSingle()
+                ]);
 
-                const now = new Date().toISOString();
+                if (profileRes.data?.business_slug) setBusinessSlug(profileRes.data.business_slug);
+
+                // Priority: goal_settings > profiles.monthly_goal > default(15000)
+                const effectiveGoal = goalRes.data?.monthly_goal ?? profileRes.data?.monthly_goal ?? 15000;
+                setMonthlyGoal(effectiveGoal);
+
+                // 2. Fetch Appointments
+                const nowIso = now.toISOString();
                 const { data: aptData, error: aptError } = await supabase
                     .from('appointments')
                     .select('*, clients(name)')
                     .eq('user_id', user.id)
                     .eq('status', 'Confirmed')
-                    .gte('appointment_time', now)
+                    .gte('appointment_time', nowIso)
                     .order('appointment_time', { ascending: true })
                     .limit(5);
 
@@ -59,6 +74,7 @@ export function useDashboardData() {
                     })));
                 }
 
+                // 3. Simple Stats
                 const { data: statsData, error: statsError } = await supabase
                     .rpc('get_dashboard_stats', { p_user_id: user.id });
 
@@ -68,11 +84,26 @@ export function useDashboardData() {
                     setProfit(statsData.total_profit);
                     setCurrentMonthRevenue(statsData.current_month_revenue);
                     setWeeklyGrowth(statsData.weekly_growth);
-                    if (statsData.monthly_goal) setMonthlyGoal(statsData.monthly_goal);
                 }
 
+                // Mocking new metrics for MVP
+                setProfitMetrics({
+                    totalProfit: statsData?.total_profit || 0,
+                    recoveredRevenue: 450,
+                    avoidedNoShows: 120,
+                    filledSlots: 80,
+                    weeklyGrowth: statsData?.weekly_growth || 0
+                });
+
+                // Mocking action items
+                setActionItems([
+                    { id: '1', type: 'recovery', title: 'João Silva', description: 'Não corta há 45 dias. Enviar convite.', value: 50 },
+                    { id: '2', type: 'gap', title: 'Buraco Amanhã 14h', description: 'Publique nos stories agora.', time: 'Amanhã 14:00' },
+                    { id: '3', type: 'upsell', title: 'Pedro Santos', description: 'Agendou corte. Ofereça barba.', clientName: 'Pedro Santos' }
+                ]);
+
             } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+                logger.error('Error fetching dashboard data:', error);
             } finally {
                 setLoading(false);
             }
@@ -82,11 +113,9 @@ export function useDashboardData() {
             if (!user) return;
             try {
                 const history = [];
-                const months = [
-                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                ];
+                const monthsNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
+                // We'll fetch the last 6 months
                 for (let i = 0; i < 6; i++) {
                     const date = new Date();
                     date.setMonth(date.getMonth() - i);
@@ -96,27 +125,28 @@ export function useDashboardData() {
                     const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
                     const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
-                    const { data } = await supabase.rpc('get_finance_stats', {
-                        p_user_id: user.id,
-                        p_start_date: startOfMonth,
-                        p_end_date: endOfMonth
-                    });
+                    // Fetch revenue and goal for that specific month
+                    const [statsRes, goalRes] = await Promise.all([
+                        supabase.rpc('get_finance_stats', { p_user_id: user.id, p_start_date: startOfMonth, p_end_date: endOfMonth }),
+                        supabase.from('goal_settings').select('monthly_goal').eq('user_id', user.id).eq('month', month).eq('year', year).maybeSingle()
+                    ]);
 
-                    if (data) {
-                        const percentage = monthlyGoal > 0 ? Math.round((data.revenue / monthlyGoal) * 100) : 0;
-                        history.push({
-                            month: months[month],
-                            year: year,
-                            goal: monthlyGoal,
-                            achieved: data.revenue,
-                            percentage: percentage,
-                            success: percentage >= 100
-                        });
-                    }
+                    const revenue = statsRes.data?.revenue || 0;
+                    const monthGoal = goalRes.data?.monthly_goal || monthlyGoal || 15000;
+                    const percentage = monthGoal > 0 ? Math.round((revenue / monthGoal) * 100) : 0;
+
+                    history.push({
+                        month: monthsNames[month],
+                        year: year,
+                        goal: monthGoal,
+                        achieved: revenue,
+                        percentage: percentage,
+                        success: percentage >= 100
+                    });
                 }
                 setGoalHistory(history);
             } catch (error) {
-                console.error('Error fetching goal history:', error);
+                logger.error('Error fetching goal history:', error);
             }
         };
 
@@ -125,15 +155,31 @@ export function useDashboardData() {
     }, [user, monthlyGoal]);
 
     const updateGoal = async (newGoalValue: number) => {
-        if (!user) return;
+        if (!user) return { error: { message: 'User not authenticated' } };
+
+        const now = new Date();
+        const month = now.getMonth();
+        const year = now.getFullYear();
+
+        // Upsert into goal_settings
         const { error } = await supabase
-            .from('profiles')
-            .update({ monthly_goal: newGoalValue })
-            .eq('id', user.id);
+            .from('goal_settings')
+            .upsert({
+                user_id: user.id,
+                month,
+                year,
+                monthly_goal: newGoalValue
+            }, {
+                onConflict: 'user_id,month,year'
+            });
 
         if (!error) {
             setMonthlyGoal(newGoalValue);
+            // Also sync back to profiles for legacy compatibility if needed, 
+            // but goal_settings is now the source of truth for current month
+            await supabase.from('profiles').update({ monthly_goal: newGoalValue }).eq('id', user.id);
         }
+
         return { error };
     }
 
@@ -147,6 +193,8 @@ export function useDashboardData() {
         goalHistory,
         businessSlug,
         accountCreatedAt,
-        updateGoal
+        updateGoal,
+        profitMetrics,
+        actionItems
     };
 }

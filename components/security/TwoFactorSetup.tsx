@@ -25,7 +25,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
 
     const isBeauty = userType === 'beauty';
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const buttonVariant = isBeauty ? 'beauty' : 'primary';
+    const buttonVariant = isBeauty ? 'primary' : 'primary'; // Simplificando para evitar erros de tipo, já que não é usado
 
     // Passo 1: Gerar Secret e QR Code
     const handleStart = async () => {
@@ -33,6 +33,8 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
         setError(null);
         try {
             const data = await enroll();
+            if (!data) throw new Error('Dados do fator 2FA não retornados');
+
             setFactorId(data.id);
             setSecret(data.totp.secret);
 

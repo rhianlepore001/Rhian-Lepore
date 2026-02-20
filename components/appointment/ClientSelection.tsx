@@ -4,7 +4,9 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { BrutalButton } from '../BrutalButton';
 import { SearchableSelect } from '../SearchableSelect';
-import { formatPhone } from '../../utils/formatters';
+import { formatPhone, Region } from '../../utils/formatters';
+import { PhoneInput } from '../PhoneInput';
+import { logger } from '../../utils/Logger';
 
 interface ClientSelectionProps {
     clients: any[];
@@ -13,7 +15,7 @@ interface ClientSelectionProps {
     onRefreshClients: () => void;
     onClientCreated: (id: string) => void;
     isBeauty: boolean;
-    currencyRegion: string;
+    currencyRegion: Region;
     cardBg: string;
 }
 
@@ -54,7 +56,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                 setIsCreatingClient(false);
             }
         } catch (error) {
-            console.error(error);
+            logger.error('Erro ao criar cliente:', error);
             alert('Erro ao criar cliente');
         } finally {
             setLoading(false);
@@ -91,7 +93,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
 
                     <BrutalButton
                         onClick={() => setIsCreatingClient(true)}
-                        variant="outline"
+                        variant="secondary"
                         className="w-full py-4 border-dashed"
                         icon={<Plus />}
                     >
@@ -114,11 +116,12 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                     </div>
                     <div>
                         <label className="text-sm text-neutral-400 block mb-1">Telefone / WhatsApp</label>
-                        <input
+                        <PhoneInput
                             value={newClientPhone}
-                            onChange={e => setNewClientPhone(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30"
-                            placeholder="(00) 00000-0000"
+                            onChange={setNewClientPhone}
+                            placeholder="Telefone"
+                            defaultRegion={currencyRegion === 'PT' ? 'PT' : 'BR'}
+                            forceTheme={isBeauty ? 'beauty' : 'barber'}
                         />
                     </div>
                     <div className="flex gap-3 pt-2">

@@ -1,4 +1,10 @@
 {
+  "exclude": [
+    "clerk-migration",
+    "node_modules",
+    "supabase",
+    "vitest.config.ts"
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "experimentalDecorators": true,

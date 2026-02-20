@@ -3,7 +3,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { useAuth } from '../contexts/AuthContext';
 import {
     Megaphone, Sparkles, Calendar, Target,
-    MessageSquare, ImageIcon, Wand2, Clock, Bell, Info
+    MessageSquare, ImageIcon, Wand2, Clock, Bell, Info, Plus
 } from 'lucide-react';
 import { BrutalButton } from '../components/BrutalButton';
 

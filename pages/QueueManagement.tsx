@@ -6,6 +6,7 @@ import { BrutalButton } from '../components/BrutalButton';
 import { Clock, User, Phone, Play, X, Check, Megaphone, Trash2, QrCode, Download, DollarSign, Calendar, Save, AlertTriangle } from 'lucide-react';
 import { QueueEntry } from '../types';
 import { formatPhone, formatCurrency } from '../utils/formatters';
+import { logger } from '../utils/Logger';
 
 export const QueueManagement: React.FC = () => {
     const { user, userType, region } = useAuth();
@@ -70,7 +71,7 @@ export const QueueManagement: React.FC = () => {
             }
 
         } catch (err) {
-            console.error('Error fetching queue:', err);
+            logger.error('Error fetching queue', err);
         } finally {
             setLoading(false);
         }
@@ -107,11 +108,11 @@ export const QueueManagement: React.FC = () => {
             ));
 
             if (newStatus === 'calling' && audioRef.current) {
-                audioRef.current.play().catch(e => console.log('Audio play failed', e));
+                audioRef.current.play().catch(e => logger.warn('Audio play failed', { error: e }));
             }
 
         } catch (err) {
-            console.error('Error updating status:', err);
+            logger.error('Error updating status', err);
             alert('Erro ao atualizar status');
         }
     };
@@ -238,7 +239,7 @@ export const QueueManagement: React.FC = () => {
                 .eq('id', finishingEntry.id);
 
             if (updateError) {
-                console.error('Error updating queue status:', updateError);
+                logger.error('Error updating queue status', updateError);
                 throw updateError;
             }
 
@@ -262,7 +263,7 @@ export const QueueManagement: React.FC = () => {
             setTimeout(() => fetchQueue(), 100);
 
         } catch (e: any) {
-            console.error('Error finishing:', e);
+            logger.error('Error finishing', e);
             alert('Erro ao finalizar atendimento: ' + e.message);
         } finally {
             setIsFinishing(false);
@@ -300,7 +301,7 @@ export const QueueManagement: React.FC = () => {
             link.click();
             document.body.removeChild(link);
         } catch (error) {
-            console.error('Error downloading QR:', error);
+            logger.error('Error downloading QR', error);
             alert('Erro ao baixar QR Code.');
         }
     };

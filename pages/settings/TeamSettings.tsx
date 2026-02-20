@@ -169,7 +169,7 @@ export const TeamSettings: React.FC = () => {
 
                 {isModalOpen && (
                     <TeamMemberForm
-                        member={editingMember}
+                        initialData={editingMember}
                         onClose={() => setIsModalOpen(false)}
                         onSave={fetchMembers}
                         accentColor={accentColor}

@@ -34,10 +34,10 @@ export const BottomMobileNav: React.FC = () => {
     return (
         <>
             <div
-                className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-2 pb-[env(safe-area-inset-bottom)] pt-2 h-[80px] transition-all duration-300
+                className={`md:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between px-2 pb-[env(safe-area-inset-bottom)] pt-2 h-[72px] transition-all duration-300 rounded-2xl border-2 shadow-2xl
                 ${isBeauty
-                        ? 'bg-beauty-dark/95 backdrop-blur-xl border-t border-white/5 shadow-soft'
-                        : 'bg-white border-t-2 border-brutal-border shadow-heavy-sm'}`}
+                        ? 'bg-beauty-dark/80 backdrop-blur-2xl border-beauty-neon/20 shadow-beauty-neon/10'
+                        : 'bg-brutal-main/90 backdrop-blur-xl border-brutal-border shadow-black/40 text-black'}`}
             >
                 {/* 1. Agenda */}
                 <button

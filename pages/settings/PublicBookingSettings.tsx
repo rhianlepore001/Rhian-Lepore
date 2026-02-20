@@ -14,6 +14,8 @@ export const PublicBookingSettings: React.FC = () => {
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
     const [leadTimeHours, setLeadTimeHours] = useState(2);
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
+    const [enableEmailReminders, setEnableEmailReminders] = useState(true);
+    const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
 
     useEffect(() => {
         fetchSettings();
@@ -38,6 +40,8 @@ export const PublicBookingSettings: React.FC = () => {
                 setPublicBookingEnabled(settingsData.public_booking_enabled ?? true);
                 setLeadTimeHours(settingsData.lead_time_hours ?? 2);
                 setMaxBookingsPerDay(settingsData.max_bookings_per_day);
+                setEnableEmailReminders(settingsData.enable_email_reminders ?? true);
+                setEnableSelfRescheduling(settingsData.enable_self_rescheduling ?? true);
             }
 
             const { data: profileData, error: profileError } = await supabase
@@ -69,7 +73,9 @@ export const PublicBookingSettings: React.FC = () => {
                     enable_professional_selection: enableProfessionalSelection,
                     public_booking_enabled: publicBookingEnabled,
                     lead_time_hours: leadTimeHours,
-                    max_bookings_per_day: maxBookingsPerDay
+                    max_bookings_per_day: maxBookingsPerDay,
+                    enable_email_reminders: enableEmailReminders,
+                    enable_self_rescheduling: enableSelfRescheduling
                 });
 
             if (error) throw error;
@@ -192,6 +198,54 @@ export const PublicBookingSettings: React.FC = () => {
                                 </p>
                             </div>
                         )}
+                    </div>
+
+                    <div className={`p-4 md:p-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
+                        <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
+                            Automação e Lembretes
+                        </h3>
+
+                        <div className="space-y-6">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-white text-sm md:text-base mb-1">
+                                        Lembretes por E-mail
+                                    </h4>
+                                    <p className="text-neutral-400 text-xs md:text-sm">
+                                        Envia um e-mail automático para o cliente 24h antes do agendamento.
+                                    </p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={enableEmailReminders}
+                                        onChange={(e) => setEnableEmailReminders(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                </label>
+                            </div>
+
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-white text-sm md:text-base mb-1">
+                                        Reagendamento Automático
+                                    </h4>
+                                    <p className="text-neutral-400 text-xs md:text-sm">
+                                        Permite que o cliente reagende o horário sozinho através do link no e-mail.
+                                    </p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={enableSelfRescheduling}
+                                        onChange={(e) => setEnableSelfRescheduling(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

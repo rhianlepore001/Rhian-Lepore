@@ -26,6 +26,7 @@ const SubscriptionSettings = React.lazy(() => import('./pages/settings/Subscript
 const AuditLogs = React.lazy(() => import('./pages/settings/AuditLogs').then(module => ({ default: module.AuditLogs })));
 const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(module => ({ default: module.RecycleBin })));
 const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySettings').then(module => ({ default: module.SecuritySettings })));
+const SystemLogs = React.lazy(() => import('./pages/settings/SystemLogs').then(module => ({ default: module.SystemLogs })));
 const OnboardingWizard = React.lazy(() => import('./pages/OnboardingWizard').then(module => ({ default: module.OnboardingWizard })));
 const Reports = React.lazy(() => import('./pages/Reports').then(module => ({ default: module.Reports })));
 const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortfolio').then(module => ({ default: module.ProfessionalPortfolio })));
@@ -132,6 +133,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/auditoria" element={<AuditLogs />} />
           <Route path="/configuracoes/lixeira" element={<RecycleBin />} />
           <Route path="/configuracoes/seguranca" element={<SecuritySettings />} />
+          <Route path="/configuracoes/erros" element={<SystemLogs />} />
           <Route path="/configuracoes/notificacoes" element={<Placeholder title="Notificações" />} />
         </Route>
 

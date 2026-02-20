@@ -17,6 +17,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isOwnerMode, setIsOwnerMode] = useState(false);
+    const [editingMember, setEditingMember] = useState<any>(null);
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -95,7 +96,10 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                             <TeamMemberCard
                                 key={member.id}
                                 member={member}
-                                onEdit={() => { }} // Edit disabled in onboarding for simplicity
+                                onEdit={(member) => {
+                                    setEditingMember(member);
+                                    setIsModalOpen(true);
+                                }}
                                 onDelete={async (id) => {
                                     await supabase.from('team_members').delete().eq('id', id);
                                     fetchMembers();
@@ -135,10 +139,12 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                     onClose={() => {
                         setIsModalOpen(false);
                         setIsOwnerMode(false);
+                        setEditingMember(null);
                     }}
                     onSave={fetchMembers}
                     accentColor={accentColor}
-                    isOwnerForm={isOwnerMode}
+                    isOwnerForm={isOwnerMode || (editingMember?.is_owner ?? false)}
+                    initialData={editingMember}
                 />
             )}
         </div>

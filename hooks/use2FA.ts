@@ -30,7 +30,7 @@ export function use2FA() {
         });
 
         if (error) throw error;
-        return data as unknown as AuthMFAEnrollResponse;
+        return data;
     };
 
     // 2. Verificar Código e Ativar

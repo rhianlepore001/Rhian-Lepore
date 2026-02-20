@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -100,8 +101,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
         ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
         : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg';
 
-    return (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    return createPortal(
+        <div className="fixed inset-0 bg-black/80 z-[100] md:left-64 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className={`w-full max-w-md p-6 relative transition-all ${modalStyles}`}>
                 <button
                     onClick={onClose}
@@ -209,6 +210,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

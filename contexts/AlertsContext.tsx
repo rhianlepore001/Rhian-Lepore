@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { logger } from '../utils/Logger';
 
 export interface Alert {
     id: string;
@@ -165,7 +166,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             }
         } catch (error) {
-            console.error('Error generating alerts:', error);
+            logger.error('Error generating alerts', error);
         }
 
         return generatedAlerts;
@@ -188,7 +189,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const newAlerts = await generateSmartAlerts(userCreatedAt);
             setAlerts(newAlerts);
         } catch (error) {
-            console.error('Error refreshing alerts:', error);
+            logger.error('Error refreshing alerts', error);
         } finally {
             setLoading(false);
         }
@@ -212,9 +213,9 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 // Play notification sound
                 try {
                     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Gentle notification sound
-                    audio.play().catch(e => console.log('Audio play failed (interaction needed?):', e));
+                    audio.play().catch(e => logger.warn('Audio play failed (interaction needed?)', { error: e }));
                 } catch (e) {
-                    console.error('Error playing sound:', e);
+                    logger.error('Error playing sound', e);
                 }
 
                 refreshAlerts();

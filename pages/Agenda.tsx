@@ -11,6 +11,7 @@ import { AppointmentWizard } from '../components/AppointmentWizard';
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
+import { logger } from '../utils/Logger';
 
 interface Appointment {
     id: string;
@@ -205,6 +206,13 @@ export const Agenda: React.FC = () => {
 
         if (isNewQuery) {
             setShowNewAppointmentModal(true);
+            // Limpar o parâmetro da URL para evitar reabrir ao atualizar
+            searchParams.delete('new');
+            navigate({ search: searchParams.toString() }, { replace: true });
+        } else if (showNewAppointmentModal) {
+            // Ensure URL has ?new=true if modal is open via state, so Layout hides nav
+            // But be careful not to trigger loop. 
+            // Better approach: when opening modal via button, use navigate.
         }
 
         if (clientIdParam && clients.length > 0) {
@@ -444,7 +452,7 @@ export const Agenda: React.FC = () => {
             fetchHistoryAppointments(); // Refresh history
             fetchData(); // Also refresh main agenda data in case it affects counts/stats
         } catch (error) {
-            console.error('Error deleting history appointment:', error);
+            logger.error('Error deleting history appointment', error);
             alert('Erro ao excluir agendamento do histórico.');
         }
     };
@@ -595,13 +603,21 @@ export const Agenda: React.FC = () => {
                 const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
                 const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
 
-                const message = `Agendamento confirmado! ✨
-📅 Data: ${formattedDate}
-⏰ Horário: ${formattedTime}
-💇‍♀️ Serviço: ${serviceNames}
-💰 Valor: ${currencySymbol} ${formattedPrice}
-
-Obrigada pela confiança! Te espero no ${establishment}.`;
+                const message = isBeauty
+                    ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
+                    `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
+                    `📅 *${formattedDate}* às *${formattedTime}*\n` +
+                    `💼 *Serviço*: ${serviceNames}\n` +
+                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                    `📍 Local: estamos te esperando!\n\n` +
+                    `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
+                    : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️\n` +
+                    `Marque na sua agenda:\n` +
+                    `🗓️ *${formattedDate}* às *${formattedTime}*\n` +
+                    `✂️ *Serviço*: ${serviceNames}\n` +
+                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                    `📍 Onde: *${establishment || 'Barbearia'}*.\n\n` +
+                    `Prepare-se para o trato! Nos vemos em breve. 👋`;
 
                 const waMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
@@ -609,7 +625,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
             fetchData();
         } catch (error) {
-            console.error('Error accepting booking:', error);
+            logger.error('Error accepting booking', error);
             alert('Erro ao aceitar agendamento.');
         } finally {
             setIsProcessing(false);
@@ -626,7 +642,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             alert('Solicitação recusada.');
             fetchData();
         } catch (error) {
-            console.error('Error rejecting booking:', error);
+            logger.error('Error rejecting booking', error);
         }
     };
 
@@ -643,12 +659,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 fetchData();
             }
         } catch (error: any) {
-            console.error('Error completing appointment:', error);
+            logger.error('Error completing appointment', error);
 
             // Fallback for missing updated_at column or other RPC errors
             if (error.message?.includes('updated_at') || error.message?.includes('does not exist')) {
                 try {
-                    console.log('Attempting client-side fallback for completion...');
+                    logger.info('Attempting client-side fallback for completion...');
 
                     // 1. Get appointment details
                     const { data: appointment, error: fetchError } = await supabase
@@ -712,7 +728,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     return; // Exit successfully
 
                 } catch (fallbackError: any) {
-                    console.error('Fallback failed:', fallbackError);
+                    logger.error('Fallback failed', fallbackError);
                     alert(`Erro ao concluir agendamento (Fallback falhou): ${fallbackError.message || fallbackError}`);
                 }
             } else {
@@ -735,7 +751,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 fetchData();
             }
         } catch (error) {
-            console.error('Error cancelling appointment:', error);
+            logger.error('Error cancelling appointment', error);
             alert('Erro ao cancelar agendamento.');
         }
     };
@@ -749,7 +765,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             if (error) throw error;
             fetchData();
         } catch (error) {
-            console.error('Error assigning professional:', error);
+            logger.error('Error assigning professional', error);
             alert('Erro ao atribuir profissional.');
         }
     };
@@ -856,7 +872,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
 
         } catch (error) {
-            console.error('Error creating appointment:', error);
+            logger.error('Error creating appointment', error);
             alert('Erro ao criar agendamento.');
         }
     };
@@ -981,7 +997,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     <BrutalButton
                         variant="primary"
                         icon={<Plus />}
-                        onClick={() => setShowNewAppointmentModal(true)}
+                        onClick={() => navigate('?new=true')}
                         className="flex-1 md:flex-none"
                     >
                         Novo Agendamento
@@ -1795,11 +1811,15 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             {/* New Appointment Wizard */}
             {showNewAppointmentModal && (
                 <AppointmentWizard
-                    onClose={() => setShowNewAppointmentModal(false)}
+                    onClose={() => {
+                        setShowNewAppointmentModal(false);
+                        navigate(location.pathname, { replace: true });
+                    }}
                     onSuccess={(date) => {
                         const newDateStr = date.toISOString().split('T')[0];
-                        navigate(`/agenda?date=${newDateStr}`);
+                        navigate(`/agenda?date=${newDateStr}`, { replace: true });
                         fetchData(); // Refresh data
+                        setShowNewAppointmentModal(false);
                     }}
                     initialDate={selectedDate}
                     teamMembers={teamMembers}

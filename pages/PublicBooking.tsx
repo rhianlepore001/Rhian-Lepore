@@ -12,6 +12,7 @@ import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { BrutalButton } from '../components/BrutalButton';
 import { formatCurrency, formatPhone } from '../utils/formatters';
+import { logger } from '../utils/Logger';
 
 interface Service {
     id: string;
@@ -142,7 +143,7 @@ export const PublicBooking: React.FC = () => {
                         }
                     }
                 } catch (error) {
-                    console.error('Error fetching existing client:', error);
+                    logger.error('Error fetching existing client', error);
                 }
             } else if (customerPhone.length < 9) {
                 // Reset if phone is cleared
@@ -171,7 +172,7 @@ export const PublicBooking: React.FC = () => {
                 setActiveBooking(null);
             }
         } catch (error) {
-            console.error('Error fetching fresh active booking:', error);
+            logger.error('Error fetching fresh active booking', error);
         }
     };
 
@@ -190,13 +191,13 @@ export const PublicBooking: React.FC = () => {
                     filter: `id=eq.${activeBooking.id}`
                 },
                 (payload) => {
-                    console.log('Booking update received:', payload);
+                    logger.info('Booking update received', { payload });
                     // Refresh the booking data to get joined professional info etc.
                     fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
                 }
             )
             .subscribe((status) => {
-                console.log(`Supabase Realtime status for booking ${activeBooking.id}:`, status);
+                logger.info(`Supabase Realtime status for booking ${activeBooking.id}`, { status });
             });
 
         // Fallback polling every 5 seconds in case Realtime fails
@@ -221,23 +222,43 @@ export const PublicBooking: React.FC = () => {
                 const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
                 const day = String(selectedDate.getDate()).padStart(2, '0');
                 const dateStr = `${year}-${month}-${day}`;
+                const duration = calculateDuration();
+
+                logger.info('🔍 Buscando horários disponíveis', {
+                    businessId,
+                    dateStr,
+                    selectedProfessional,
+                    duration,
+                    selectedServices: selectedServices
+                });
 
                 const { data, error } = await supabase.rpc('get_available_slots', {
                     p_business_id: businessId,
                     p_date: dateStr,
                     p_professional_id: selectedProfessional === 'any' ? null : selectedProfessional,
-                    p_duration_min: calculateDuration()
+                    p_duration_min: duration
                 });
 
                 if (error) {
-                    console.error('Error fetching slots:', error);
-                } else if (data) {
+                    logger.error('❌ Erro ao buscar horários', {
+                        error,
+                        errorMessage: error.message,
+                        errorDetails: error.details,
+                        errorHint: error.hint
+                    });
+                } else {
+                    logger.info('✅ Horários recebidos', {
+                        data,
+                        slotsCount: data?.slots?.length || 0,
+                        slots: data?.slots
+                    });
                     setAvailableSlots(data.slots || []);
                 }
             }
         };
         fetchSlots();
     }, [selectedDate, businessId, selectedProfessional]);
+
 
     // Fetch full dates for the calendar
     useEffect(() => {
@@ -334,7 +355,7 @@ export const PublicBooking: React.FC = () => {
                     setGallery(galleryData || []);
                 }
             } catch (error) {
-                console.error('Error fetching business data:', error);
+                logger.error('Error fetching business data', error);
             } finally {
                 setLoading(false);
             }
@@ -397,7 +418,7 @@ export const PublicBooking: React.FC = () => {
             setStep('services');
             alert('Agendamento cancelado com sucesso.');
         } catch (error) {
-            console.error('Error cancelling booking:', error);
+            logger.error('Error cancelling booking', error);
             alert('Erro ao cancelar agendamento.');
         }
     };
@@ -514,7 +535,7 @@ export const PublicBooking: React.FC = () => {
                 if (autoProId) {
                     finalProfessionalId = autoProId;
                 } else {
-                    console.warn('Auto-assign failed, falling back to unassigned:', autoProError);
+                    logger.warn('Auto-assign failed, falling back to unassigned', { error: autoProError });
                 }
             }
 
@@ -570,7 +591,7 @@ export const PublicBooking: React.FC = () => {
             setSelectedTime(null);
             setAcceptedPolicy(false);
         } catch (error: any) {
-            console.error('Error creating booking:', error);
+            logger.error('Error creating booking', error);
             alert(`Erro ao criar agendamento: ${error.message || error}`);
         } finally {
             setIsSubmitting(false);
@@ -760,7 +781,7 @@ export const PublicBooking: React.FC = () => {
             )}
 
             {/* 1. CINEMATIC HERO SECTION */}
-            <div className="relative h-[60vh] md:h-[70vh] overflow-hidden">
+            <div className="relative h-[35vh] md:h-[70vh] overflow-hidden transition-all duration-500">
                 {/* Background Cover */}
                 <div className="absolute inset-0">
                     {
@@ -780,23 +801,23 @@ export const PublicBooking: React.FC = () => {
                 </div >
 
                 {/* Hero Content */}
-                < div className="absolute inset-0 flex flex-col items-center justify-end pb-12 px-4 text-center" >
+                < div className="absolute inset-0 flex flex-col items-center justify-end pb-8 md:pb-12 px-4 text-center" >
                     {/* Logo/Avatar */}
-                    < div className={`relative w-24 h-24 md:w-32 md:h-32 mb-6 rounded-full p-1 bg-white/10 backdrop-blur-xl border-2 border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-700`}>
+                    < div className={`relative w-20 h-20 md:w-32 md:h-32 mb-4 md:mb-6 rounded-full p-1 bg-white/10 backdrop-blur-xl border-2 border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-700`}>
                         {
                             business.logo_url ? (
                                 <img src={business.logo_url} alt="Logo" className="w-full h-full object-cover rounded-full" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-neutral-800 rounded-full">
-                                    <Scissors className={`w-10 h-10 md:w-14 md:h-14 text-${accentColor}`} />
+                                    <Scissors className={`w-8 h-8 md:w-14 md:h-14 text-${accentColor}`} />
                                 </div>
                             )
                         }
                         {/* Status Pulse */}
-                        <div className="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+                        <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_#22c55e]"></div>
                     </div >
 
-                    <h1 className="text-4xl md:text-7xl font-heading text-white uppercase tracking-tighter mb-4 drop-shadow-2xl">
+                    <h1 className="text-2xl md:text-7xl font-heading text-white uppercase tracking-tighter mb-2 md:mb-4 drop-shadow-2xl">
                         {business.business_name}
                     </h1>
 
@@ -995,7 +1016,7 @@ export const PublicBooking: React.FC = () => {
                                                     if (!acc[categoryId]) acc[categoryId] = [];
                                                     acc[categoryId].push(service);
                                                     return acc;
-                                                }, {} as Record<string, typeof services>);
+                                                }, {} as Record<string, Service[]>);
 
                                             // Sort services within each category alphabetically
                                             Object.keys(servicesByCategory).forEach(catId => {
@@ -1008,6 +1029,8 @@ export const PublicBooking: React.FC = () => {
                                                 const cat = categories.find(c => c.id === catId);
                                                 return cat?.name || 'Serviços';
                                             };
+
+
 
                                             return Object.entries(servicesByCategory).map(([categoryId, categoryServices]) => (
                                                 <div key={categoryId} className="space-y-3">

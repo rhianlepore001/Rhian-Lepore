@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft } from 'lucide-react';
+import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft, Scissors, Sparkles } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
 import { useAppTour } from '../hooks/useAppTour';
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
-  const { businessName, fullName, userType, logout, avatarUrl } = useAuth();
+  const { businessName, fullName, userType, logout, avatarUrl, isDev, setDevUserType } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -38,39 +38,34 @@ export const Header: React.FC = () => {
     <>
       <header className={`fixed left-0 ${!isSettingsRoute ? 'md:left-64' : ''} right-0 z-30 transition-all duration-300
         ${isBeauty
-          ? 'bg-beauty-dark/80 backdrop-blur-md border-b border-white/5 shadow-sm'
-          : 'bg-brutal-main border-b-4 border-brutal-border shadow-lg'}
+          ? 'bg-beauty-dark/70 backdrop-blur-xl border-b border-white/5'
+          : 'bg-brutal-main/80 backdrop-blur-xl border-b border-white/5'}
       `}
         style={{ top: 'var(--header-top, 0)' }}
       >
         <div className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
 
-          <div className="flex items-center gap-3 md:gap-4">
-            {/* Mobile Menu Button / Back Arrow */}
-            {isSettingsRoute ? (
-              <button
-                onClick={() => navigate('/')}
-                className={`md:hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-            ) : (
-              <button
-                id="mobile-menu-btn"
-                onClick={toggleSidebar}
-                className={`hidden p-2 -ml-2 ${accentColor} hover:bg-neutral-800 border-2 border-transparent hover:border-neutral-700 transition-colors`}
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-            )}
+          <div className="flex items-center gap-4">
+            {/* Logo como Botão Home */}
+            <Link
+              to="/"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              title="Início"
+            >
+              <img
+                src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
+                alt="Logo"
+                className="h-8 md:h-10 w-auto object-contain bg-white/5 rounded px-2 py-1"
+              />
+            </Link>
 
-            {/* Left: Shop Info */}
-            <div className="flex flex-col justify-center h-full">
-              <h2 className={`font-heading text-lg md:text-xl ${accentColor} uppercase tracking-wide truncate max-w-[120px] sm:max-w-[180px] md:max-w-none leading-tight`}>
-                {businessName || 'Seu Negócio'}
+            {/* Left: Shop Info - Agora fixo como Gestão */}
+            <div className="flex flex-col justify-center">
+              <h2 className={`font-heading text-base md:text-lg ${accentColor} uppercase tracking-widest leading-none`}>
+                Gestão
               </h2>
-              <p className="text-xs text-text-secondary font-mono hidden md:block leading-none mt-1">
-                {isBeauty ? 'Realçando sua beleza natural' : 'Pronto para mais um dia de arte e cortes impecáveis?'}
+              <p className="text-[10px] text-text-secondary font-mono mt-1 opacity-70">
+                {isBeauty ? 'Painel de Controle' : 'Sistema de Gestão'}
               </p>
             </div>
           </div>
@@ -82,6 +77,22 @@ export const Header: React.FC = () => {
 
           {/* Right: Profile & Actions */}
           <div className="flex items-center gap-3 md:gap-6">
+            {/* Dev Theme Switcher */}
+            {isDev && (
+              <button
+                onClick={() => setDevUserType(isBeauty ? 'barber' : 'beauty')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-all shadow-lg hover:scale-105 active:scale-95
+                      ${isBeauty
+                    ? 'bg-neutral-800 text-accent-gold border border-accent-gold/50'
+                    : 'bg-beauty-dark text-beauty-neon border border-beauty-neon/50'}
+                  `}
+                title="Trocar Estilo (Modo DEV)"
+              >
+                {isBeauty ? <Scissors className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                <span className="hidden lg:inline">{isBeauty ? 'Viram Barber' : 'Virar Beauty'}</span>
+              </button>
+            )}
+
             {/* Tour Button */}
             <button
               onClick={() => startTour('dashboard')}

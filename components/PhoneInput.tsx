@@ -127,9 +127,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`flex items-center gap-1 pl-3 pr-2 py-3 border border-r-0 h-[50px] transition-all ${isBeauty
+                    className={`flex items-center gap-1 pl-3 pr-2 py-3 border border-r-0 h-[54px] transition-all ${isBeauty
                         ? 'bg-beauty-card/50 border-beauty-neon/20 rounded-l-2xl hover:bg-beauty-card hover:border-beauty-neon/40'
-                        : 'bg-neutral-900 border-brutal-border border-2 hover:bg-neutral-800 shadow-[2px_2px_0px_0px_#000000]'
+                        : 'bg-neutral-900 border-neutral-800 border-2 hover:bg-neutral-800'
                         }`}
                 >
                     <span className="text-xl leading-none">{REGIONS[region].flag}</span>
@@ -138,7 +138,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 {isOpen && (
                     <div className={`absolute top-full left-0 mt-1 w-40 shadow-xl z-50 overflow-hidden ${isBeauty
                         ? 'bg-beauty-dark border border-beauty-neon/30 rounded-xl shadow-[0_0_20px_rgba(167,139,250,0.2)]'
-                        : 'bg-brutal-card border-4 border-brutal-border shadow-[4px_4px_0px_0px_#000000]'
+                        : 'bg-neutral-900 border-2 border-neutral-800 shadow-heavy'
                         }`}>
                         {(Object.keys(REGIONS) as Array<'BR' | 'PT'>).map((r) => (
                             <button
@@ -170,9 +170,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                         type="tel"
                         value={displayValue}
                         onChange={handleChange}
-                        className={`w-full pl-14 pr-4 py-3 text-white focus:outline-none font-mono h-[50px] transition-all ${isBeauty
+                        className={`w-full pl-14 pr-4 py-3 text-white focus:outline-none font-mono h-[54px] transition-all ${isBeauty
                             ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-r-2xl focus:border-beauty-neon focus:bg-beauty-card placeholder-beauty-neon/30 focus:shadow-[0_0_15px_rgba(167,139,250,0.15)]'
-                            : 'bg-neutral-900 border-2 border-brutal-border border-l-0 focus:border-accent-gold placeholder-neutral-600 shadow-[2px_2px_0px_0px_#000000] focus:shadow-[3px_3px_0px_0px_#C29B40]'
+                            : 'bg-neutral-900 border-2 border-neutral-800 border-l-0 focus:border-accent-gold placeholder-neutral-600'
                             }`}
                         placeholder={region === 'BR' ? '(99) 99999-9999' : '999 999 999'}
                     />

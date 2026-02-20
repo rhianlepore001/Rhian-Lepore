@@ -3,6 +3,7 @@ import { Screw } from './Screw';
 import { useAuth } from '../contexts/AuthContext';
 
 interface BrutalCardProps {
+  id?: string;
   children: React.ReactNode;
   className?: string;
   title?: string | React.ReactNode;
@@ -11,9 +12,11 @@ interface BrutalCardProps {
   accent?: boolean;
   glow?: boolean;
   forceTheme?: 'beauty' | 'barber';
+  style?: React.CSSProperties;
 }
 
 export const BrutalCard: React.FC<BrutalCardProps> = ({
+  id,
   children,
   className = '',
   title,
@@ -21,7 +24,8 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   noPadding = false,
   accent = false,
   glow = false,
-  forceTheme
+  forceTheme,
+  style
 }) => {
   const { userType } = useAuth();
   const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
@@ -34,28 +38,26 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   const getContainerClass = () => {
     if (isBeauty) {
       // Estilo Beauty - Elegante, moderno, bordas arredondadas
-      const baseBeauty = 'relative bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl transition-all duration-300';
-      const hoverBeauty = 'hover:border-beauty-neon/40 hover:shadow-neon';
-      const accentBeauty = accent ? 'border-beauty-neon/50 shadow-neon' : '';
-      const glowBeauty = glow ? 'shadow-[0_0_30px_rgba(167,139,250,0.3)]' : 'shadow-soft';
+      const baseBeauty = 'relative bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-white/10 rounded-2xl transition-all duration-300 overflow-hidden select-none touch-none outline-none focus:outline-none';
+      const accentBeauty = accent ? 'border-beauty-neon/40 shadow-[0_0_20px_rgba(167,139,250,0.15)]' : '';
+      const glowBeauty = glow ? 'shadow-[0_0_15px_rgba(167,139,250,0.1)]' : 'shadow-sm';
 
-      return `${baseBeauty} ${hoverBeauty} ${accentBeauty} ${glowBeauty} ${className}`;
+      return `${baseBeauty} ${accentBeauty} ${glowBeauty} ${className}`;
     } else {
-      // Estilo Brutalismo - Industrial, robusto, bordas retas
-      const baseBrutal = 'relative bg-brutal-card border-4 border-brutal-border transition-all duration-200';
-      const hoverBrutal = 'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#000000]';
-      const accentBrutal = accent ? 'border-accent-gold bg-gradient-to-br from-brutal-card to-neutral-900' : '';
-      const glowBrutal = glow ? 'shadow-[4px_4px_0px_0px_#C29B40]' : 'shadow-heavy';
+      // Estilo Industrial Premium - Robusto mas sofisticado
+      const baseBrutal = 'relative bg-brutal-card/95 backdrop-blur-md border border-white/10 rounded-xl transition-all duration-300 select-none touch-none outline-none focus:outline-none overflow-hidden';
+      const accentBrutal = accent ? 'border-accent-gold/50 bg-gradient-to-br from-brutal-card to-neutral-900 shadow-[0_0_20px_rgba(194,155,64,0.1)]' : '';
+      const glowBrutal = glow ? 'shadow-[0_0_15px_rgba(194,155,64,0.1)]' : 'shadow-md';
 
-      return `${baseBrutal} ${hoverBrutal} ${accentBrutal} ${glowBrutal} ${className}`;
+      return `${baseBrutal} ${accentBrutal} ${glowBrutal} ${className}`;
     }
   };
 
   const getHeaderClass = () => {
     if (isBeauty) {
-      return 'flex justify-between items-center px-5 py-4 md:px-6 md:py-5 border-b border-beauty-neon/10 bg-gradient-to-r from-beauty-neon/5 to-transparent';
+      return 'flex justify-between items-center px-5 py-4 md:px-6 md:py-5 border-b border-white/5 bg-gradient-to-r from-white/5 to-transparent';
     } else {
-      return 'flex justify-between items-center px-4 pt-4 pb-3 md:px-6 md:pt-5 md:pb-4 border-b-2 border-brutal-border border-dashed mx-2 mb-2 bg-gradient-to-r from-neutral-900/50 to-transparent';
+      return 'flex justify-between items-center px-4 py-3 md:px-6 md:py-4 border-b border-white/5 bg-gradient-to-r from-white/5 to-transparent';
     }
   };
 
@@ -68,7 +70,16 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   };
 
   return (
-    <div className={getContainerClass()}>
+    <div
+      className={getContainerClass()}
+      style={{
+        outline: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+        ...style
+      }}
+      tabIndex={-1} // Remove do fluxo de tabulação para evitar foco acidental
+    >
       {/* Decorative Screws (Only for Barber/Brutalismo) */}
       {!isBeauty && (
         <>

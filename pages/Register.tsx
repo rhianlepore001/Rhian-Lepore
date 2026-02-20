@@ -29,7 +29,25 @@ export const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false); // NEW STATE
+  const [showPassword, setShowPassword] = useState(false);
+  const errorRef = React.useRef<HTMLDivElement>(null);
+
+  // Translation of common Supabase/Auth errors
+  const translateError = (err: string) => {
+    if (err.includes('Anonymous sign-ins are disabled')) return 'O cadastro de novos usuários está temporariamente desabilitado.';
+    if (err.includes('Email not confirmed')) return 'E-mail não confirmado. Verifique sua caixa de entrada.';
+    if (err.includes('Invalid login credentials')) return 'Email ou senha incorretos.';
+    if (err.includes('User already registered')) return 'Este e-mail já está cadastrado.';
+    if (err.includes('Password should be')) return 'A senha deve ter pelo menos 6 caracteres.';
+    return err;
+  };
+
+  // Scroll to error when it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   // Dynamic Styles based on Type
   const isBarber = type === 'barber';
@@ -50,7 +68,6 @@ export const Register: React.FC = () => {
   const handleRegister = async () => {
     setLoading(true);
     setError(null);
-
 
     try {
       // Password Validation
@@ -75,8 +92,6 @@ export const Register: React.FC = () => {
 
       if (error) throw error;
 
-      // If auto-confirm is enabled, we can log them in directly or let the AuthContext handle the session change
-      // For now, we'll try to login immediately if session is returned, otherwise ask to check email
       if (data.session) {
         navigate('/onboarding');
       } else {
@@ -183,10 +198,11 @@ export const Register: React.FC = () => {
 
               {error && (
                 <div
+                  ref={errorRef}
                   role="alert"
-                  className="bg-red-500/10 border border-red-500 text-red-500 p-3 text-xs font-mono text-center"
+                  className="bg-red-500/10 border border-red-500 text-red-500 p-3 text-xs font-mono text-center animate-in fade-in slide-in-from-top-2 duration-300"
                 >
-                  {error}
+                  {translateError(error)}
                 </div>
               )}
 
@@ -198,7 +214,7 @@ export const Register: React.FC = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
+                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                   placeholder="SEU NOME COMPLETO"
                 />
               </div>
@@ -211,12 +227,12 @@ export const Register: React.FC = () => {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
+                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                   placeholder={type === 'barber' ? "EX: CAVALHEIROS & NAVALHAS" : "EX: STUDIO GLOW"}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
                     {region === 'BR' ? 'Celular / WhatsApp' : 'Telemóvel'}
@@ -246,7 +262,7 @@ export const Register: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
+                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                   placeholder="admin@seudominio.com"
                 />
               </div>
@@ -258,7 +274,7 @@ export const Register: React.FC = () => {
                     type={showPassword ? 'text' : 'password'} // Dynamic type
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
+                    className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
                     placeholder="••••••••"
                   />
                   <button

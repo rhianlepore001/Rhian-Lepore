@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { Client, Appointment } from '../types';
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
@@ -200,8 +201,8 @@ Return ONLY valid JSON array with 7 objects in this exact format:
  * Analyze business data and suggest marketing campaigns
  */
 export async function analyzeCampaignOpportunities(
-    clients: any[], // TODO: Type this properly with imported Client type
-    appointments: any[], // TODO: Type this properly with imported Appointment type
+    clients: Client[],
+    appointments: Appointment[],
     businessType: 'barber' | 'beauty',
     businessName: string
 ): Promise<GeminiMarketingCampaign[]> {

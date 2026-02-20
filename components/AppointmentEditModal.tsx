@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Loader2, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
 import { BrutalButton } from './BrutalButton';
 import { formatDateForInput } from '../utils/date';
 import { SearchableSelect } from './SearchableSelect';
@@ -66,7 +68,13 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     currencySymbol
 }) => {
     const { user, userType } = useAuth();
+    const { setModalOpen } = useUI();
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setModalOpen(true);
+        return () => setModalOpen(false);
+    }, [setModalOpen]);
 
     const isBeauty = userType === 'beauty';
 
@@ -243,8 +251,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const currentDiscount = parseFloat(discountPercentage) || 0;
     const discountAmount = priceBeforeDiscount - (parseFloat(finalPriceInput) || 0);
 
-    return (
-        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center z-50 p-4`}>
+    return createPortal(
+        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center z-[999] md:left-64 p-4`}>
             <div className={`${modalStyles} w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}>
                 <div className={`flex items-center justify-between p-6 ${headerStyles}`}>
                     <h3 className={`font-heading text-xl uppercase ${isBeauty ? 'text-white' : 'text-white'}`}>Editar Agendamento</h3>
@@ -430,6 +438,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

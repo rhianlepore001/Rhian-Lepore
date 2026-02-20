@@ -108,7 +108,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                                     <td className="p-3">
                                         <div className="flex items-center gap-2">
                                             <span className="text-white font-medium">{month.month} {month.year}</span>
-                                            {isBest && <Award className="w-4 h-4 text-green-500" title="Melhor mês" />}
+                                            {isBest && <Award className="w-4 h-4 text-green-500" />}
                                         </div>
                                     </td>
                                     <td className="p-3 text-right font-mono text-green-500">

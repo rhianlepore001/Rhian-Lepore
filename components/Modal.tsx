@@ -1,7 +1,9 @@
 import React, { useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
+import { useUI } from '../contexts/UIContext';
 
 interface ModalProps {
     isOpen: boolean;
@@ -27,6 +29,7 @@ export const Modal: React.FC<ModalProps> = ({
     forceTheme
 }) => {
     const { userType } = useAuth();
+    const { setModalOpen } = useUI();
     const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
     // Fecha ao pressionar ESC
@@ -38,14 +41,19 @@ export const Modal: React.FC<ModalProps> = ({
 
     useEffect(() => {
         if (isOpen) {
+            setModalOpen(true);
             document.addEventListener('keydown', handleEscape);
             document.body.style.overflow = 'hidden';
+        } else {
+            setModalOpen(false);
         }
+
         return () => {
+            setModalOpen(false);
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = '';
         };
-    }, [isOpen, handleEscape]);
+    }, [isOpen, handleEscape, setModalOpen]);
 
     if (!isOpen) return null;
 
@@ -94,8 +102,8 @@ export const Modal: React.FC<ModalProps> = ({
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    const modalContent = (
+        <div className="fixed inset-0 z-[999] md:left-64 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className={`
@@ -177,6 +185,8 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 // ===========================================

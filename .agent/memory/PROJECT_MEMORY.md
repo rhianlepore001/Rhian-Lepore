@@ -34,8 +34,54 @@
 
 ## 📝 Memória de Alterações (Reverse Chronological)
 
-### [14/02/2026] - Implementação da Memória Persistente
-- **O que foi feito:** Criação do sistema de memória centralizada (`PROJECT_MEMORY.md`).
+### [20/02/2026] - Estabilização de Tipos e Preparação para Deploy de Produção
+- **Type Safety:** Correção massiva de erros de TypeScript em componentes críticos: `Appointment` (interface central), `BrutalCard` (props de estilo), `use2FA` (retorno de hook) e `CommissionsManagement`.
+- **Build:** Sucesso no build de produção (`npm run build`) após resolução de conflitos entre Vite e Vitest no `tsconfig.json`.
+- **Segurança:** Refatoração da inicialização do Supabase para usar variáveis de ambiente (`import.meta.env`) e limpeza de credenciais hardcoded.
+- **Qualidade:** Unificação do sistema de logs e correção de referências de propriedades em formulários (`TeamMemberForm`).
+- **Arquivos Chave:** `types.ts`, `hooks/use2FA.ts`, `components/BrutalCard.tsx`, `lib/supabase.ts`, `walkthrough.md`.
+
+### [17/02/2026] - Serviço Personalizado no Agendamento
+- **Frontend:** Atualização de "ServiceList.tsx" para exibir a opção "Outros / Personalizado" independentemente da categoria selecionada. Correção de cálculo de preço no "AppointmentWizard.tsx".
+- **Backend:** Validação da função RPC "create_secure_booking" que já suportava "p_custom_service_name".
+- **Verificação:** Criação de script "test/verify_custom_service.ts" para testar o fluxo completo de criação de agendamento personalizado.
+- **Por que:** Permitir que o estabelecimento agende serviços avulsos ou promocionais sem necessidade de cadastro prévio no catálogo.
+
+### [17/02/2026] - Sprint 1: Setup de Testes & Code Quality (Concluída)
+- **Quality:** Limpeza total de `console.log` e aplicação de regras ESLint (`no-console`).
+- **Testing:** Configuração robusta do Vitest, correção de mocks (Supabase) e fix de testes instáveis (`BrutalCard`, `date.ts`).
+- **Type Safety:** Validação de tipos estritos (`tsc`), correções de erros de compilação em `clerk-migration` e `utils`.
+- **Por que:** Garantir base sólida para desenvolvimento de features e evitar regressões silenciosas.
+- **Arquivos:** `.eslintrc.json`, `utils/Logger.ts`, `vitest.config.ts`, `test/setup.ts`.
+
+### [16/02/2026] - Sprint 2: Segurança e Auditoria (Enterprise Features)
+- **Features:** 2FA (TOTP), Rate Limiting (Postgres), Logs de Auditoria Completos, Soft Delete (Lixeira), Política de Senhas.
+- **Arquitetura:** Migrations SQL para procedures de segurança, Hooks customizados (`use2FA`), Contexto de Auth reforçado.
+- **Por que:** Blindar o sistema contra ataques de força bruta, garantir rastreabilidade de ações e permitir recuperação de dados.
+- **Arquivos Chave:** `hooks/use2FA.ts`, `migrations/20260214_rate_limiting.sql`, `pages/settings/AuditLogs.tsx`.
+
+### [16/02/2026] - Blindagem Total (Supabase RLS & Infraestrutura)
+- **Segurança:** Implementação de RLS estrito ("Condomínio Fechado") em TODAS as tabelas.
+- **Infra:** Correção de vulnerabilidades RPC (Search Path Hijacking) em funções críticas.
+- **Isolamento:** Separação total de dados financeiros e operacionais entre tenants.
+- **Por que:** Evitar vazamento de dados entre concorrentes e proteger informações sensíveis.
+- **Arquivos:** `migrations/20260216_rls_phase*_*.sql`, `walkthrough.md`.
+
+### [16/02/2026] - Reset Operacional & Hardening
+- **Ação:** `TRUNCATE` em cascata de todas as tabelas operacionais (Reset de Fábrica).
+- **Segurança:** Ativação de Trigger `ensure_email_confirmed` para bloquear perfis sem email validado.
+- **Motivo:** Corrupção irreversível de dados legados (mistura de tenants) e reforço de onboarding seguro.
+- **Estado Atual:** Banco limpo, pronto para reinício seguro.
+
+### [16/02/2026] - Documentação de Competências
+- **Docs:** Criação do `docs/GUIA_COMPETENCIAS.md`.
+- **Objetivo:** Explicar para o usuário (leigo) as principais Skills e Workflows do agente.
+- **Destaques:** `/brainstorm`, `/plan`, `frontend-design`, `security-auditor`.
+
+### [14/02/2026] - Implementação da Memória Persistente & Deploy
+- **Deploy:** Deploy para Vercel realizado via Git (`git push`).
+- **Feature:** Criação do sistema de memória centralizada (`PROJECT_MEMORY.md`).
+- **Regras:** Adição de `PROJECT MEMORY PROTOCOL` e Regra GLOBAL PT-BR em `GEMINI.md`.
 - **Por que:** Evitar fragmentação de contexto e economizar tokens entre sessões.
 - **Arquivos:** `.agent/memory/PROJECT_MEMORY.md`, `.agent/rules/GEMINI.md`.
 

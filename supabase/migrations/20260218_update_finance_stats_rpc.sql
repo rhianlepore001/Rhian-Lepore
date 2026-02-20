@@ -16,8 +16,9 @@ DECLARE
   v_result JSON;
 BEGIN
   -- Default to last 30 days if not specified
-  v_start_date := COALESCE(p_start_date, NOW() - INTERVAL '30 days');
-  v_end_date := COALESCE(p_end_date, NOW());
+  v_start_date := COALESCE(p_start_date, (NOW() - INTERVAL '30 days')::DATE)::TIMESTAMP;
+  -- Set end date to the very end of the day (23:59:59.999) to include all records
+  v_end_date := (COALESCE(p_end_date, NOW()::DATE)::DATE + INTERVAL '1 day' - INTERVAL '1 millisecond')::TIMESTAMP;
 
   -- Calculate total revenue from appointments
   SELECT COALESCE(SUM(price), 0) INTO v_revenue
@@ -80,7 +81,7 @@ BEGIN
       created_at,
       barber_name,
       client_name,
-      service_name,
+      COALESCE(description, service_name) as service_name,
       amount,
       expense,
       type,
@@ -93,6 +94,7 @@ BEGIN
         tm.name as barber_name,
         c.name as client_name,
         a.service as service_name,
+        NULL::TEXT as description,
         a.price as amount,
         0 as expense,
         'revenue' as type,
@@ -112,8 +114,9 @@ BEGIN
         f.id,
         f.created_at,
         f.barber_name,
-        f.client_name, -- Ensure this column exists or add NULL
-        f.service_name, -- Ensure this column exists or add NULL
+        f.client_name,
+        f.service_name,
+        f.description,
         0 as amount,
         f.commission_value as expense,
         'expense' as type,

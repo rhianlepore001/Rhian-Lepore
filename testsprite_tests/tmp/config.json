@@ -7,12 +7,12 @@
   "executionArgs": {
     "projectName": "Rhian-Lepore-main",
     "projectPath": "c:\\Users\\User\\Downloads\\Rhian-Lepore-main",
-    "testIds": [
-      "TC001"
-    ],
-    "additionalInstruction": "Run TC001 only to verify SPA mounting improvement after removing importmap.",
+    "testIds": [],
+    "additionalInstruction": "CONFIGURAÇÃO CRÍTICA: O backend REAL é o Supabase em https://lcqwrngscsziysyfhpfj.supabase.co. \nNÃO USE localhost:3000 para testes de backend. \nUse a VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjcXdybmdzY3N6aXlzeWZocGZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MzYwNzMsImV4cCI6MjA3OTQxMjA3M30.Kpb-focSL2eny9gJkNjtDACl-J4jlGZoNPEgnTG-5Ug.\nPara os testes, prefira usar o SDK @supabase/supabase-js ou chamadas REST diretamente para o endpoint do Supabase. \nFocar na validação das RPCs: create_secure_booking, update_finance_stats, calculate_commissions. Responder em Português Brasileiro (PT-BR).",
     "envs": {
       "API_KEY": "sk-user-uz-gmVncdHzSt7gb4G5I6Y3Hh-SaTywmIWUz4cPdjLD-VlaXjmaVBd-nUnrUNmvuFCACQd-X-qJiJ8QwraUQBXmFvvXf5x2m8pZ2mBZQ4K0UMMIStRIqRVHBtm9KWw2Yxfs"
     }
-  }
+  },
+  "serverPort": 54562,
+  "proxy": "http://4a125f60-a78a-4fea-b09e-aac320e3b270:nfGV2CQRp7tQvrLA4pFjt6uEOqtzWrHT@tun.testsprite.com:8080"
 }

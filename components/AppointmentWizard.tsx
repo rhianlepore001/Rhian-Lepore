@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
 import { BrutalButton } from './BrutalButton';
 import {
     X, ChevronLeft, Loader2, Plus
 } from 'lucide-react';
 import { WizardProps } from './appointment/types';
+import { formatCurrency } from '../utils/formatters';
+import type { Region } from '../utils/formatters';
 import { ServiceSearchBar } from './appointment/ServiceSearchBar';
 import { CategoryFilter } from './appointment/CategoryFilter';
 import { ServiceList } from './appointment/ServiceList';
 import { ClientSelection } from './appointment/ClientSelection';
 import { ScheduleSelection } from './appointment/ScheduleSelection';
 import { AppointmentReview } from './appointment/AppointmentReview';
+import { logger } from '../utils/Logger';
 
 export const AppointmentWizard: React.FC<WizardProps> = ({
     onClose,
@@ -24,8 +29,14 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     onRefreshClients
 }) => {
     const { user, userType, region } = useAuth();
+    const { setModalOpen } = useUI();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setModalOpen(true);
+        return () => setModalOpen(false);
+    }, [setModalOpen]);
 
     // Step 2 State
     const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -46,11 +57,12 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [discount, setDiscount] = useState<string>('0');
     const [notes, setNotes] = useState<string>('');
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
+    const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const currencySymbol = region === 'PT' ? '€' : 'R$';
-    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+    const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
 
     // Styles
     const modalBg = isBeauty
@@ -76,7 +88,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
     // Initialize custom price with base price when entering step 4
     useEffect(() => {
-        if (step === 4 && !customPrice) {
+        // Recalculate price whenever entering step 4 or underlying values change
+        if (step === 4) {
             // Assuming customServicePrice is only relevant if selected?
             // The original logic just added it. If isCustomService is true?
             // Re-checking original logic: it parses customServicePrice regardless? 
@@ -104,21 +117,24 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             // Calculate total duration for availability check
             const duration = selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
 
+            const client = clients.find(c => c.id === selectedClientId);
+
             // Use the secure RPC to ensure no collisions
             const { data: result, error: rpcError } = await supabase.rpc('create_secure_booking', {
                 p_business_id: user?.id,
                 p_professional_id: selectedProId,
-                p_customer_name: clients.find(c => c.id === selectedClientId)?.name,
-                p_customer_phone: clients.find(c => c.id === selectedClientId)?.phone,
-                p_customer_email: clients.find(c => c.id === selectedClientId)?.email,
+                p_customer_name: client?.name || 'Cliente',
+                p_customer_phone: client?.phone || null,
+                p_customer_email: client?.email || null,
                 p_appointment_time: dateTime.toISOString(),
                 p_service_ids: selectedServiceIds,
-                p_total_price: finalPrice,
-                p_duration_min: duration,
+                p_total_price: finalPrice || 0,
+                p_duration_min: duration || 30,
                 p_status: 'Confirmed',
                 p_client_id: selectedClientId,
-                p_notes: notes,
-                p_custom_service_name: isCustomService ? customServiceName : null
+                p_notes: notes || null,
+                p_custom_service_name: isCustomService ? (customServiceName || 'Serviço Personalizado') : null,
+                p_payment_method: paymentMethod
             });
 
             if (rpcError) throw rpcError;
@@ -141,10 +157,19 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                     const formattedDate = dateTime.toLocaleDateString('pt-BR');
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                    const message = `Olá ${client.name}! Seu agendamento foi confirmado. ✨\\n` +
-                        `📅 ${formattedDate} às ${formattedTime}\n` +
-                        `💇‍♀️ ${serviceNames}${isCustomService ? (serviceNames ? ', ' : '') + customServiceName : ''}\n` +
-                        `📍 Estamos te esperando!`;
+                    const message = isBeauty
+                        ? `Olá ${client.name}! Tudo bem? ✨\n` +
+                        `Sua reserva na *${user?.email?.split('@')[0] || 'Estética'}* está confirmada!\n` +
+                        `📅 *${formattedDate}* às *${formattedTime}*\n` +
+                        `💼 *Serviços*: ${serviceNames}${isCustomService ? (serviceNames ? ', ' : '') + customServiceName : ''}\n` +
+                        `📍 Local: estamos te esperando!\n\n` +
+                        `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
+                        : `Fala, ${client.name}! Seu horário está garantido! 🛡️\n` +
+                        `Marque na sua agenda:\n` +
+                        `🗓️ *${formattedDate}* às *${formattedTime}*\n` +
+                        `✂️ *Serviço*: ${serviceNames}${isCustomService ? (serviceNames ? ', ' : '') + customServiceName : ''}\n` +
+                        `📍 Onde: *${user?.email?.split('@')[0] || 'Barbearia'}*.\n\n` +
+                        `Prepare-se para o trato! Nos vemos em breve. 👋`;
 
                     window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
                 }
@@ -153,16 +178,16 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             onSuccess(dateTime);
             onClose();
         } catch (error) {
-            console.error(error);
+            logger.error('Erro ao criar agendamento:', error);
             alert('Erro ao criar agendamento');
         } finally {
             setLoading(false);
         }
     };
 
-    return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} backdrop-blur-sm`}>
-            <div className={`w-full max-w-4xl h-[85vh] flex flex-col relative overflow-hidden rounded-2xl shadow-2xl transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
+    return createPortal(
+        <div className={`fixed inset-0 z-[999] md:left-64 flex items-center justify-center p-0 md:p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} backdrop-blur-sm`}>
+            <div className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-2xl transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
 
                 {/* HEADER */}
                 <div className={`p-6 flex items-center justify-between border-b ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-neutral-800 bg-neutral-900'}`}>
@@ -170,14 +195,16 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                         <h2 className="text-2xl font-heading text-white uppercase tracking-wider">
                             Novo Atendimento
                         </h2>
-                        <div className="flex items-center gap-2 text-sm text-neutral-400 mt-1">
+                        <div className="flex items-center gap-2 text-xs md:text-sm text-neutral-400 mt-1">
                             <span className={step >= 1 ? accentColor : ''}>Cliente</span>
                             <span>→</span>
                             <span className={step >= 2 ? accentColor : ''}>Serviços</span>
                             <span>→</span>
-                            <span className={step >= 3 ? accentColor : ''}>Horário</span>
-                            <span>→</span>
-                            <span className={step >= 4 ? accentColor : ''}>Confirmar</span>
+                            <span className={`hidden md:inline ${step >= 3 ? accentColor : ''}`}>Horário</span>
+                            <span className="hidden md:inline">→</span>
+                            <span className={`hidden md:inline ${step >= 4 ? accentColor : ''}`}>Confirmar</span>
+                            {/* Mobile Steps Indicator */}
+                            <span className="md:hidden text-white font-bold ml-1">Passo {step}/4</span>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
@@ -298,6 +325,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                             notes={notes}
                             setNotes={setNotes}
                             currencySymbol={currencySymbol}
+                            paymentMethod={paymentMethod}
+                            setPaymentMethod={setPaymentMethod}
                         />
                     )}
 
@@ -321,7 +350,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                 onClick={() => setStep(prev => (prev + 1) as any)}
                                 disabled={
                                     (step === 1 && !selectedClientId) ||
-                                    (step === 2 && selectedServiceIds.length === 0) ||
+                                    (step === 2 && selectedServiceIds.length === 0 && !(isCustomService && customServiceName.trim())) ||
                                     (step === 3 && (!selectedProId || !selectedTime))
                                 }
                                 className="px-8"
@@ -341,6 +370,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

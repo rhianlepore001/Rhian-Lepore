@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Info, Bot, X, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { createPortal } from 'react-dom';
 
 interface InfoButtonProps {
     text: string;
@@ -8,21 +9,95 @@ interface InfoButtonProps {
 
 export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
     const [showTooltip, setShowTooltip] = useState(false);
+    const triggerRef = React.useRef<HTMLDivElement>(null);
+    const tooltipRef = React.useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+    // Atualizar coordenadas quando o tooltip for exibido
+    const updateCoords = () => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setCoords({
+                top: rect.top + window.scrollY,
+                left: rect.left + window.scrollX + (rect.width / 2)
+            });
+        }
+    };
+
+    // Fechar ao clicar fora
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node) &&
+                triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
+                setShowTooltip(false);
+            }
+        };
+
+        if (showTooltip) {
+            updateCoords();
+            document.addEventListener('mousedown', handleClickOutside);
+            window.addEventListener('scroll', updateCoords);
+            window.addEventListener('resize', updateCoords);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', updateCoords);
+            window.removeEventListener('resize', updateCoords);
+        };
+    }, [showTooltip]);
+
+    const handleToggle = (e: React.MouseEvent | React.KeyboardEvent) => {
+        e.stopPropagation();
+        setShowTooltip(!showTooltip);
+    };
 
     return (
-        <div className="relative inline-block ml-2">
-            <button
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-                className="text-text-secondary hover:text-white transition-colors"
+        <div className="relative inline-flex items-center ml-2" ref={triggerRef}>
+            <div
+                role="button"
+                tabIndex={0}
+                onClick={handleToggle}
+                onMouseEnter={() => !('ontouchstart' in window) && setShowTooltip(true)}
+                onMouseLeave={() => !('ontouchstart' in window) && setShowTooltip(false)}
+                onKeyDown={(e) => e.key === 'Enter' && handleToggle(e)}
+                className={`group cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300 ${showTooltip
+                        ? 'bg-white/20 text-white ring-2 ring-white/10'
+                        : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
+                    }`}
             >
-                <Info className="w-4 h-4" />
-            </button>
-            {showTooltip && (
-                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-48 p-3 bg-neutral-800 border border-neutral-700 text-xs text-white rounded shadow-lg z-50 text-center pointer-events-none whitespace-normal">
-                    {text}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-neutral-800"></div>
-                </div>
+                <Info className={`w-3.5 h-3.5 transition-transform duration-300 ${showTooltip ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="text-[10px] font-mono uppercase tracking-widest font-bold opacity-70 group-hover:opacity-100">Ajuda</span>
+            </div>
+
+            {showTooltip && createPortal(
+                <div
+                    ref={tooltipRef}
+                    style={{
+                        position: 'absolute',
+                        top: `${coords.top - 12}px`,
+                        left: `${coords.left}px`,
+                        transform: 'translate(-50%, -100%)',
+                        zIndex: 9999
+                    }}
+                    className="w-64 md:w-72 p-4 bg-neutral-900/90 backdrop-blur-xl border border-white/20 text-xs text-white 
+                               rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-left 
+                               animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
+                >
+                    <div className="flex items-start gap-3">
+                        <div className="mt-0.5 p-1.5 rounded-lg bg-white/10 shrink-0">
+                            <Bot className="w-3.5 h-3.5 text-blue-400" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <p className="font-bold text-[10px] uppercase tracking-wider text-blue-400 font-mono">Dica do Assistente</p>
+                            <p className="text-[11px] leading-relaxed text-neutral-200 font-medium">{text}</p>
+                        </div>
+                    </div>
+                    {/* Seta do Tooltip */}
+                    <div
+                        className="absolute top-full left-1/2 transform -translate-x-1/2 border-[6px] border-transparent border-t-neutral-900/90"
+                    ></div>
+                </div>,
+                document.body
             )}
         </div>
     );
@@ -83,11 +158,11 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
 
                         {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {messages.map((msg, idx) => (
-                                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            {messages.map((msg, i) => (
+                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] p-3 rounded-lg text-sm ${msg.role === 'user'
-                                            ? (isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black')
-                                            : 'bg-neutral-800 text-white'
+                                            ? `${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} font-bold`
+                                            : 'bg-neutral-800 text-white border border-neutral-700'
                                         }`}>
                                         {msg.content}
                                     </div>
@@ -101,13 +176,13 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                                 placeholder="Digite sua dúvida..."
-                                className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30"
+                                className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-neutral-500"
                             />
                             <button
                                 onClick={handleSend}
-                                className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon text-black hover:bg-beauty-neonHover' : 'bg-accent-gold text-black hover:bg-accent-goldHover'}`}
+                                className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} hover:opacity-90 transition-opacity`}
                             >
                                 <Send className="w-4 h-4" />
                             </button>

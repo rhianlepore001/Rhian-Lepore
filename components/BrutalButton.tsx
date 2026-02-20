@@ -57,24 +57,24 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   const getVariantStyles = () => {
     const variants = {
       primary: isBeauty
-        ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white font-bold hover:shadow-neon border-beauty-neon/30'
-        : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy hover:shadow-[6px_6px_0px_0px_#000000]',
+        ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white font-bold hover:shadow-neon border-white/10'
+        : 'bg-gradient-to-r from-accent-gold to-accent-goldHover text-black hover:opacity-90 shadow-sm border-white/10',
 
       secondary: isBeauty
-        ? 'bg-white/10 text-white hover:bg-white/20 border-white/10 backdrop-blur-sm hover:border-beauty-neon/30'
-        : 'bg-brutal-surface text-text-primary hover:bg-neutral-700 shadow-heavy border-neutral-800',
+        ? 'bg-white/10 text-white hover:bg-white/20 border-white/10 backdrop-blur-sm'
+        : 'bg-white/5 text-text-primary hover:bg-white/10 shadow-sm border-white/10',
 
       danger: isBeauty
-        ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 hover:from-red-500/30 hover:to-red-600/30 border-red-500/30'
-        : 'bg-red-900 text-white hover:bg-red-800 shadow-heavy border-red-950',
+        ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 hover:bg-red-500/30 border-red-500/20'
+        : 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20',
 
       ghost: isBeauty
-        ? 'bg-transparent border-transparent text-beauty-neon hover:bg-beauty-neon/10 hover:text-beauty-neonHover'
-        : 'bg-transparent border-transparent text-accent-gold hover:bg-neutral-900 hover:border-neutral-800 shadow-none hover:shadow-none',
+        ? 'bg-transparent border-transparent text-beauty-neon hover:bg-white/5'
+        : 'bg-transparent border-transparent text-accent-gold hover:bg-white/5',
 
       success: isBeauty
-        ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-500/30 hover:from-emerald-500/30 hover:to-green-500/30'
-        : 'bg-green-900 text-white hover:bg-green-800 shadow-heavy border-green-950'
+        ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-white/5'
+        : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-white/5'
     };
     return variants[variant];
   };

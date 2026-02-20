@@ -15,9 +15,11 @@ interface AuthContextType {
   fullName: string;
   avatarUrl: string | null;
   tutorialCompleted: boolean;
-  subscriptionStatus: 'trial' | 'active' | 'past_due' | 'canceled';
+  subscriptionStatus: 'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber';
   trialEndsAt: string | null;
   isSubscriptionActive: boolean;
+  isDev: boolean;
+  setDevUserType: (type: UserType) => void;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
@@ -34,8 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [fullName, setFullName] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [tutorialCompleted, setTutorialCompleted] = useState(true);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled'>('trial');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber'>('trial');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [isDev, setIsDev] = useState(false);
+  const [devUserType, setDevUserTypeState] = useState<UserType | null>(() => {
+    const saved = localStorage.getItem('rhian_lepore_dev_type');
+    return (saved as UserType) || null;
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchProfileData = async (userId: string) => {
@@ -91,13 +98,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (session?.user?.id) {
+        setIsDev(session.user.email === 'rleporesilva@gmail.com');
         // Re-fetch profile data on sign in/change
         fetchProfileData(session.user.id).then(() => {
           setLoading(false);
         });
       } else {
         // Reset state on sign out
+        setIsDev(false);
+        setUserType('barber');
+        setRegion('BR');
+        setBusinessName('');
+        setFullName('');
+        setAvatarUrl(null);
         setTutorialCompleted(true);
+        setSubscriptionStatus('trial');
+        setTrialEndsAt(null);
         setLoading(false);
       }
     });
@@ -151,10 +167,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const setDevUserType = (type: UserType) => {
+    setDevUserTypeState(type);
+    localStorage.setItem('rhian_lepore_dev_type', type);
+  };
+
+  const activeUserType = (isDev && devUserType) ? devUserType : userType;
+
   const value = React.useMemo(() => ({
     isAuthenticated: !!session,
     user: session?.user ?? null,
-    userType,
+    userType: activeUserType,
     region,
     businessName,
     fullName,
@@ -162,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tutorialCompleted,
     subscriptionStatus,
     trialEndsAt,
-    isSubscriptionActive: subscriptionStatus === 'active' || (
+    isSubscriptionActive: subscriptionStatus === 'active' || subscriptionStatus === 'subscriber' || (
       subscriptionStatus === 'trial' &&
       !!trialEndsAt &&
       (() => {
@@ -170,13 +193,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return end ? new Date() < end : false;
       })()
     ),
+    isDev,
+    setDevUserType,
     loading,
     login,
     logout,
     markTutorialCompleted
   }), [
     session,
-    userType,
+    activeUserType,
     region,
     businessName,
     fullName,
@@ -184,6 +209,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tutorialCompleted,
     subscriptionStatus,
     trialEndsAt,
+    isDev,
+    devUserType,
     loading
   ]);
 

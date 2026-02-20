@@ -5,30 +5,30 @@ import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
 
 interface TeamMemberFormProps {
-    member?: any;
+    initialData?: any;
     onClose: () => void;
     onSave: () => void;
     accentColor: string;
-    isOwnerForm?: boolean; // NEW: Indica que o formulário deve ser preenchido com dados do dono
+    isOwnerForm?: boolean;
 }
 
 export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
-    member,
+    initialData,
     onClose,
     onSave,
     accentColor,
     isOwnerForm = false
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
-    const [name, setName] = useState(member?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
-    const [role, setRole] = useState(member?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
-    const [slug, setSlug] = useState(member?.slug || '');
-    const [bio, setBio] = useState(member?.bio || '');
-    const [commissionRate, setCommissionRate] = useState<string | number>(member?.commission_rate?.toString() || (isOwnerForm ? '100' : '0'));
-    const [isOwner, setIsOwner] = useState(member?.is_owner || (isOwnerForm ? true : false));
-    const [active, setActive] = useState(member?.active ?? true);
+    const [name, setName] = useState(initialData?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
+    const [role, setRole] = useState(initialData?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
+    const [slug, setSlug] = useState(initialData?.slug || '');
+    const [bio, setBio] = useState(initialData?.bio || '');
+    const [commissionRate, setCommissionRate] = useState<string | number>(initialData?.commission_rate?.toString() || (isOwnerForm ? '100' : '0'));
+    const [isOwner, setIsOwner] = useState(initialData?.is_owner || (isOwnerForm ? true : false));
+    const [active, setActive] = useState(initialData?.active ?? true);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
-    const [photoPreview, setPhotoPreview] = useState<string | null>(member?.photo_url || null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo_url || null);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,11 +96,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 is_owner: isOwner
             };
 
-            if (member?.id) {
+            if (initialData?.id) {
                 const { error: updateError } = await supabase
                     .from('team_members')
                     .update(teamMemberData)
-                    .eq('id', member.id)
+                    .eq('id', initialData.id)
                     .eq('user_id', user.id);
                 if (updateError) throw updateError;
             } else {
@@ -131,7 +131,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             `}>
                 <div className={`flex items-center justify-between p-4 ${isBeauty ? 'border-b border-beauty-neon/20' : 'border-b border-neutral-800'}`}>
                     <h3 className={`font-bold text-lg ${isBeauty ? 'text-white font-sans' : 'text-white font-heading uppercase'}`}>
-                        {member ? 'Editar Profissional' : 'Novo Profissional'}
+                        {initialData ? 'Editar Profissional' : 'Novo Profissional'}
                     </h3>
                     <button onClick={onClose} className={`transition-colors ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon' : 'text-neutral-400 hover:text-white'}`}>
                         <X className="w-5 h-5" />
@@ -139,7 +139,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                    {!member && (
+                    {!initialData && (
                         <button
                             type="button"
                             onClick={handleFillWithOwner}

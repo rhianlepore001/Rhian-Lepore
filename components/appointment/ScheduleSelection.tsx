@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Calendar, ChevronLeft, ChevronRight, Clock, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { logger } from '../../utils/Logger';
 
 interface ScheduleSelectionProps {
     teamMembers: any[];
@@ -61,6 +62,14 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 .filter(s => selectedServiceIds.includes(s.id))
                 .reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
 
+            logger.info('Buscando horários', {
+                businessId: user?.id,
+                dateStr,
+                selectedProId,
+                duration,
+                selectedServiceIds
+            });
+
             const { data, error } = await supabase.rpc('get_available_slots', {
                 p_business_id: user?.id,
                 p_date: dateStr,
@@ -68,15 +77,30 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 p_duration_min: duration
             });
 
+            if (error) {
+                logger.error('Erro ao buscar horários:', error, {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint
+                });
+            } else {
+                logger.info('Horários recebidos:', {
+                    data,
+                    slotsCount: data?.slots?.length || 0,
+                    slots: data?.slots
+                });
+            }
+
             if (data?.slots) {
                 setAvailableSlots(data.slots);
             }
         } catch (error) {
-            console.error('Error fetching slots:', error);
+            logger.error('Exceção ao buscar horários:', error);
         } finally {
             setIsLoadingSlots(false);
         }
     };
+
 
     return (
         <div className="h-full flex flex-col md:flex-row gap-6 animate-in fade-in slide-in-from-right-4 duration-300">

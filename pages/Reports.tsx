@@ -6,6 +6,7 @@ import { Users, UserPlus, Calendar, TrendingUp, BarChart2, Star, DollarSign } fr
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
+import { logger } from '../utils/Logger';
 
 export const Reports: React.FC = () => {
     const { user, userType, region } = useAuth();
@@ -47,7 +48,7 @@ export const Reports: React.FC = () => {
             });
 
             if (error) {
-                console.error('Error fetching insights RPC:', error);
+                logger.error('Error fetching insights RPC', error);
                 // Fallback or empty state if function doesn't exist yet
             }
 
@@ -55,7 +56,7 @@ export const Reports: React.FC = () => {
                 setInsights(data);
             }
         } catch (error) {
-            console.error('Unexpected error fetching insights:', error);
+            logger.error('Unexpected error fetching insights', error);
         } finally {
             setLoading(false);
         }

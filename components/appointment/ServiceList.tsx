@@ -8,7 +8,7 @@ interface ServiceListProps {
     selectedServiceIds: string[];
     toggleService: (id: string) => void;
     isBeauty: boolean;
-    currencyRegion: string;
+    currencyRegion: 'BR' | 'PT';
     searchQuery: string;
     activeCategory: string;
     categories: any[];
@@ -164,62 +164,60 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     ));
 
     // ADD CUSTOM SERVICE BOX AT THE BOTTOM
-    if (activeCategory === 'all' || activeCategory === 'uncategorized') {
-        result.push(
-            <div key="custom-service-item" className="mt-8 space-y-3">
-                <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
-                    Outros / Personalizado
-                </h3>
-                <div
-                    className={`
+    // Updated: Always show custom service option regardless of category filter
+    result.push(
+        <div key="custom-service-item" className="mt-8 space-y-3">
+            <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
+                Outros / Personalizado
+            </h3>
+            <div
+                className={`
                         p-4 rounded-xl border transition-all duration-200
                         ${isCustomService
-                            ? (isBeauty ? 'bg-beauty-card border-beauty-neon shadow-neon' : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
-                            : (isBeauty ? 'bg-beauty-card/30 border-white/5' : 'bg-brutal-card border-transparent')}
+                        ? (isBeauty ? 'bg-beauty-card border-beauty-neon shadow-neon' : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
+                        : (isBeauty ? 'bg-beauty-card/30 border-white/5' : 'bg-brutal-card border-transparent')}
                     `}
-                >
-                    <div className="flex items-center gap-4 mb-4">
-                        <div
-                            onClick={() => setIsCustomService(!isCustomService)}
-                            className={`
+            >
+                <div className="flex items-center gap-4 mb-4">
+                    <div
+                        onClick={() => setIsCustomService(!isCustomService)}
+                        className={`
                                 shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all
                                 ${isCustomService
-                                    ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
-                                    : 'border-neutral-600 bg-transparent'}
+                                ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
+                                : 'border-neutral-600 bg-transparent'}
                             `}
-                        >
-                            {isCustomService && <Check className="w-4 h-4 text-black" />}
-                        </div>
+                    >
+                        {isCustomService && <Check className="w-4 h-4 text-black" />}
+                    </div>
+                    <input
+                        value={customServiceName}
+                        onChange={e => {
+                            setCustomServiceName(e.target.value);
+                            if (!isCustomService) setIsCustomService(true);
+                        }}
+                        className={`flex-1 bg-transparent border-none text-white focus:outline-none placeholder:text-neutral-500 font-bold text-base`}
+                        placeholder="Descreva o serviço avulso..."
+                    />
+                    <div className="flex items-center gap-2">
+                        <span className="text-neutral-500 font-mono">{currencySymbol}</span>
                         <input
-                            value={customServiceName}
+                            type="number"
+                            value={customServicePrice}
                             onChange={e => {
-                                setCustomServiceName(e.target.value);
+                                setCustomServicePrice(e.target.value);
                                 if (!isCustomService) setIsCustomService(true);
                             }}
-                            className={`flex-1 bg-transparent border-none text-white focus:outline-none placeholder:text-neutral-500 font-bold text-base`}
-                            placeholder="Descreva o serviço avulso..."
+                            className={`w-20 bg-black/20 text-white p-2 rounded border border-white/10 focus:outline-none focus:border-white/30 font-mono text-right`}
+                            placeholder="0.00"
                         />
-                        <div className="flex items-center gap-2">
-                            <span className="text-neutral-500 font-mono">{currencySymbol}</span>
-                            <input
-                                type="number"
-                                value={customServicePrice}
-                                onChange={e => {
-                                    setCustomServicePrice(e.target.value);
-                                    if (!isCustomService) setIsCustomService(true);
-                                }}
-                                className={`w-20 bg-black/20 text-white p-2 rounded border border-white/10 focus:outline-none focus:border-white/30 font-mono text-right`}
-                                placeholder="0.00"
-                            />
-                        </div>
                     </div>
-                    <p className="text-[10px] text-neutral-500 italic">
-                        * Use esta opção para pacotes, promoções ou serviços não listados.
-                    </p>
                 </div>
+                <p className="text-[10px] text-neutral-500 italic">
+                    * Use esta opção para pacotes, promoções ou serviços não listados.
+                </p>
             </div>
-        );
-    }
-
+        </div>
+    );
     return <div className="space-y-6 pb-12">{result}</div>;
 };

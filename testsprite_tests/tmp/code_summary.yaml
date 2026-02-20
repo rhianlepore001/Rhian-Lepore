@@ -1,0 +1,53 @@
+version: "2"
+type: backend
+tech_stack:
+  - TypeScript
+  - Supabase (PostgreSQL)
+  - Clerk (Auth)
+  - Stripe (Payments)
+base_url: "https://lcqwrngscsziysyfhpfj.supabase.co"
+features:
+  - name: Booking System (Agendamentos)
+    description: Gerenciamento de agendamentos via RPCs seguras e tabelas RLS no Supabase.
+    files:
+      - supabase/migrations/20260217_fix_secure_booking_final.sql
+      - supabase/migrations/20260218_full_schema_fix.sql
+    endpoints:
+      - method: RPC
+        path: create_secure_booking
+        description: Cria um agendamento com validação de disponibilidade e segurança.
+        auth_required: false
+      - method: RPC
+        path: update_onboarding_step
+        description: Atualiza o progresso do onboarding do proprietário.
+        auth_required: true
+  - name: Finance System (Financeiro)
+    description: Cálculo de comissões, estatísticas financeiras e registros de vendas via Supabase.
+    files:
+      - supabase/migrations/20260218_finance_system.sql
+      - supabase/migrations/20260218_commissions_rpc.sql
+    endpoints:
+      - method: RPC
+        path: update_finance_stats
+        description: Atualiza estatísticas financeiras com base em transações.
+        auth_required: true
+      - method: RPC
+        path: calculate_commissions
+        description: Calcula comissões para profissionais do time.
+        auth_required: true
+  - name: User Profiles (Perfis)
+    description: Gestão de perfis de usuários e configurações de negócio.
+    files:
+      - supabase/migrations/20260218_full_schema_fix.sql
+    endpoints:
+      - method: GET
+        path: /rest/v1/profiles
+        description: Recupera perfil do usuário autenticado via API REST do Supabase.
+        auth_required: true
+known_limitations:
+  - issue: Requer VITE_SUPABASE_ANON_KEY
+    location: .env.local
+    impact: Testes falham sem a chave anon do Supabase.
+  - issue: Migração Clerk em andamento
+    location: clerk-migration/
+    impact: Possível inconsistência temporária entre auth do Supabase e Clerk.

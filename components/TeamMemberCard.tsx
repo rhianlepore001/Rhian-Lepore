@@ -32,9 +32,10 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
 
     return (
         <div className={`
-            relative p-5 rounded-2xl border-2 transition-all duration-300 group
-            ${member.active ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700' : 'bg-neutral-900/50 border-neutral-800/50 grayscale opacity-70'}
-            ${member.is_owner ? `ring-1 ring-${accentColor}/20 shadow-[0_0_20px_rgba(0,0,0,0.3)]` : ''}
+            relative p-4 md:p-5 rounded-2xl border-2 transition-all duration-300 group
+            ${member.active ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-lg hover:shadow-xl' : 'bg-neutral-900/50 border-neutral-800/50 grayscale opacity-70'}
+            ${member.is_owner ? `ring-2 ring-${accentColor}/30 shadow-[0_0_25px_rgba(0,0,0,0.4)]` : ''}
+            active:scale-[0.98] md:active:scale-100
         `}>
             {/* Owner/Status Badges */}
             <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -55,7 +56,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 {/* Avatar Section */}
                 <div className="relative">
                     <div className={`
-                        w-16 h-16 md:w-20 md:h-20 rounded-2xl flex-shrink-0 overflow-hidden bg-neutral-800 border-2 transition-all
+                        w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex-shrink-0 overflow-hidden bg-neutral-800 border-2 transition-all
                         ${member.active ? `border-${accentColor}/40 group-hover:border-${accentColor}` : 'border-neutral-700'}
                     `}>
                         {member.photo_url ? (
@@ -73,10 +74,10 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
 
                 {/* Content Section */}
                 <div className="flex-1 min-w-0">
-                    <h3 className={`font-heading text-lg md:text-xl truncate leading-tight ${member.active ? 'text-white' : 'text-neutral-500'}`}>
+                    <h3 className={`font-heading text-base md:text-xl font-bold truncate leading-tight ${member.active ? 'text-white' : 'text-neutral-500'}`}>
                         {member.name}
                     </h3>
-                    <p className="text-neutral-400 text-xs font-mono uppercase tracking-wider mb-2">
+                    <p className={`text-[10px] md:text-xs font-mono uppercase tracking-widest mb-2 ${accentText} opacity-80`}>
                         {member.role}
                     </p>
 
@@ -96,20 +97,32 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             </div>
 
             {/* Hover Actions */}
-            <div className="mt-5 pt-4 border-t border-neutral-800/50 flex justify-end gap-2">
+            <div className="mt-4 pt-3 border-t border-neutral-800/50 flex justify-end items-center gap-3">
                 <button
-                    onClick={() => onEdit(member)}
-                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors text-xs font-bold uppercase tracking-widest"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(member);
+                    }}
+                    className={`
+                        flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 
+                        bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 
+                        transition-all text-[11px] font-bold uppercase tracking-widest
+                        border border-neutral-700 hover:border-neutral-600
+                        active:bg-neutral-600
+                    `}
                 >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    <Edit2 className={`w-3.5 h-3.5 ${accentText}`} />
                     Editar
                 </button>
                 <button
-                    onClick={() => onDelete(member.id)}
-                    className="p-2 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(member.id);
+                    }}
+                    className="p-2.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20 active:scale-90"
                     title="Excluir"
                 >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4.5 h-4.5" />
                 </button>
             </div>
         </div>

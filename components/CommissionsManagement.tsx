@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalCard } from './BrutalCard';
 import { BrutalButton } from './BrutalButton';
-import { User, DollarSign, Check, Loader2, X, Percent, TrendingUp, Clock, Scissors, HelpCircle } from 'lucide-react';
+import { User, DollarSign, Check, Loader2, X, Percent, TrendingUp, Clock, Scissors, Info as InfoIcon } from 'lucide-react';
+import { InfoButton } from './HelpButtons';
 import { useNavigate } from 'react-router-dom';
 import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
 import { CommissionPaymentHistory } from './CommissionPaymentHistory';
@@ -159,20 +160,9 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         <div className="space-y-6 md:space-y-8 pb-10">
             {/* Header Section */}
             <div className="px-1 md:px-0">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-1">
                     <h2 className="text-2xl md:text-3xl font-heading text-white uppercase tracking-tighter">Gestão de Comissões</h2>
-                    <div className="group relative">
-                        <HelpCircle className="w-5 h-5 text-neutral-500 cursor-help hover:text-white transition-colors" />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-64 md:w-72 p-4 bg-neutral-900 border-2 border-neutral-700 rounded-xl shadow-2xl text-[10px] md:text-xs text-neutral-300 opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50">
-                            <p className="mb-2"><strong className="text-white text-sm">💡 Como funciona:</strong></p>
-                            <p className="mb-1">1. O sistema calcula a comissão em cada corte concluído.</p>
-                            <p className="mb-1">2. Aqui você vê o saldo acumulado de cada profissional.</p>
-                            <p className="mb-1">3. Ao <strong>Pagar</strong>, o sistema gera uma despesa e zera o saldo pendente.</p>
-                            <div className="mt-2 pt-2 border-t border-neutral-800 text-[9px] md:text-[10px] text-neutral-500 italic">
-                                * Valores baseados nas taxas configuradas em Configurações.
-                            </div>
-                        </div>
-                    </div>
+                    <InfoButton text="Aqui você tem o controle total dos repasses da sua equipe. O sistema calcula automaticamente o que cada profissional deve receber com base nas taxas de comissão e pro-labore configuradas. Ao realizar um pagamento, o saldo é zerado e uma despesa é lançada no seu financeiro." />
                 </div>
                 <p className="text-neutral-400 text-sm md:text-base max-w-2xl leading-relaxed">
                     Controle financeiro total da sua equipe. Acompanhe ganhos, valide serviços e realize pagamentos de forma transparente.
@@ -460,7 +450,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         </div>
 
                         <div className="mt-8 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex gap-3">
-                            <HelpCircle className="w-5 h-5 text-blue-500 shrink-0" />
+                            <InfoIcon className="w-5 h-5 text-blue-500 shrink-0" />
                             <p className="text-blue-400 text-[11px] leading-snug">
                                 <strong>Aviso:</strong> Este registro gerará uma saída no caixa (Despesa) e marcará as comissões do período como liquidadas.
                             </p>

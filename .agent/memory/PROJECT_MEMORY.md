@@ -35,10 +35,11 @@
 ## 📝 Memória de Alterações (Reverse Chronological)
 
 ### [20/02/2026] - Estabilização de Tipos e Preparação para Deploy de Produção
-- **Type Safety:** Correção massiva de erros de TypeScript em componentes críticos: `Appointment` (interface central), `BrutalCard` (props de estilo), `use2FA` (retorno de hook) e `CommissionsManagement`.
+- **Type Safety:** Correção massiva de erros de TypeScript em componentes críticos: `Appointment` (interface central), `BrutalCard` (props de estilo), `use2FA` (retorno de hook) e `CommissionsManagement.tsx`.
 - **Build:** Sucesso no build de produção (`npm run build`) após resolução de conflitos entre Vite e Vitest no `tsconfig.json`.
-- **Segurança:** Refatoração da inicialização do Supabase para usar variáveis de ambiente (`import.meta.env`) e limpeza de credenciais hardcoded.
-- **Qualidade:** Unificação do sistema de logs e correção de referências de propriedades em formulários (`TeamMemberForm`).
+- **Segurança:** Refatoração da inicialização do Supabase para usar variáveis de ambiente (`import.meta.env`).
+- **Hotfix:** Restauração de valores de fallback no `lib/supabase.ts` para garantir o funcionamento em ambientes (como a Vercel) onde as variáveis `VITE_` ainda não foram configuradas manualmente no painel de controle.
+- **Qualidade:** Unificação do sistema de logs e correção de referências de propriedades em formulários (`TeamMemberForm.tsx`).
 - **Arquivos Chave:** `types.ts`, `hooks/use2FA.ts`, `components/BrutalCard.tsx`, `lib/supabase.ts`, `walkthrough.md`.
 
 ### [17/02/2026] - Serviço Personalizado no Agendamento

@@ -60,27 +60,21 @@ export const OnboardingWizard: React.FC = () => {
     const steps = [
         {
             title: isBeauty ? 'Bem-vindo ao Beauty OS' : 'Bem-vindo ao Barber OS',
-            description: 'Vamos começar configurando as informações básicas do seu negócio.',
-            component: <StepBusinessInfo onNext={() => setStep(2)} accentColor={accentColor} />
+            description: 'Vamos começar com o básico. O resto? A nossa IA cuida para você.',
+            component: <StepBusinessInfo onNext={async () => {
+                if (!user) return;
+                // Pula direto para o sucesso e marca como concluído
+                await supabase.rpc('update_onboarding_step', {
+                    p_user_id: user.id,
+                    p_step: 2,
+                    p_completed: true
+                });
+                setStep(2);
+            }} accentColor={accentColor} />
         },
         {
-            title: 'Horário de Funcionamento',
-            description: 'Defina os dias e horários que seu estabelecimento está aberto.',
-            component: <StepBusinessHours onNext={() => setStep(3)} onBack={() => setStep(1)} accentColor={accentColor} />
-        },
-        {
-            title: 'Sua Equipe',
-            description: 'Adicione os profissionais que atenderão seus clientes.',
-            component: <StepTeam onNext={() => setStep(4)} onBack={() => setStep(2)} accentColor={accentColor} />
-        },
-        {
-            title: 'Seus Serviços',
-            description: 'Cadastre os serviços que você oferece.',
-            component: <StepServices onNext={() => setStep(5)} onBack={() => setStep(3)} accentColor={accentColor} />
-        },
-        {
-            title: 'Parabéns!',
-            description: 'Configuração concluída com sucesso.',
+            title: 'Tudo pronto!',
+            description: 'Seu sistema já está inteligente. Vamos ao trabalho?',
             component: <StepSuccess accentColor={accentColor} />
         }
     ];
@@ -90,7 +84,7 @@ export const OnboardingWizard: React.FC = () => {
     return (
         <OnboardingLayout
             currentStep={step}
-            totalSteps={5}
+            totalSteps={2}
             title={currentStepData.title}
             description={currentStepData.description}
         >

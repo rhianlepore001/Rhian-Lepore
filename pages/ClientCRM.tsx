@@ -8,11 +8,13 @@ import { PhoneInput } from '../components/PhoneInput';
 import { useParams, useNavigate } from 'react-router-dom';
 import { calculateNextVisitPrediction } from '../utils/tierSystem';
 import { useAuth } from '../contexts/AuthContext';
-import { formatPhone } from '../utils/formatters';
+import { formatPhone, formatCurrency } from '../utils/formatters';
+import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
+import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
 
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { userType, user, region } = useAuth();
+  const { userType, user, region, businessName } = useAuth();
   const isBeauty = userType === 'beauty';
 
   // Theme helpers
@@ -34,6 +36,11 @@ export const ClientCRM: React.FC = () => {
   const [editEmail, setEditEmail] = useState('');
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // AIOS Context
+  const { aiosEnabled } = useAuth();
+  const { diagnostic, logCampaignActivity } = useAIOSDiagnostic();
+  const isAtRisk = diagnostic?.at_risk_clients.find(c => c.id === id);
 
   useEffect(() => {
     if (region === 'PT') {
@@ -142,13 +149,33 @@ export const ClientCRM: React.FC = () => {
     }
   };
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = async () => {
     if (!client?.phone) {
       alert('Cliente sem telefone cadastrado.');
       return;
     }
-    const cleanPhone = client.phone.replace(/\D/g, '');
-    window.open(`https://wa.me/${cleanPhone}`, '_blank');
+
+    let url = '';
+    if (isAtRisk && aiosEnabled) {
+      // ✅ AIOS 2.0: Log Campaign Activity for ROI Attribution
+      await logCampaignActivity(
+        client.id,
+        isBeauty ? 'Beauty AI' : 'Barber AI',
+        'reactivation_spark'
+      );
+
+      const message = generateReactivationMessage({
+        clientName: client.name,
+        businessName: businessName || 'nossa unidade',
+        userType: userType,
+        daysMissing: isAtRisk.days_since_last_visit
+      });
+      url = getWhatsAppUrl(client.phone, message);
+    } else {
+      url = getWhatsAppUrl(client.phone, '');
+    }
+
+    window.open(url, '_blank');
   };
 
   const handleUpdateClient = async (e: React.FormEvent) => {
@@ -466,22 +493,57 @@ export const ClientCRM: React.FC = () => {
         </div>
 
         {/* AI Insight Mini Card */}
-        <BrutalCard className={`bg-gradient-to-br from-brutal-card to-neutral-900 ${isBeauty ? 'border-beauty-neon/30' : 'border-accent-gold/30'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
-              <Sparkles className="w-5 h-5" />
-              <h3 className="font-heading text-lg uppercase">{isBeauty ? 'Beauty AI' : 'Barber AI'}</h3>
+        <BrutalCard
+          className={`bg-gradient-to-br from-brutal-card to-neutral-900 overflow-hidden relative ${isBeauty ? 'border-beauty-neon/50 shadow-neon-soft' : 'border-accent-gold/50 shadow-heavy'}`}
+        >
+          {isAtRisk ? (
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
+                  <Sparkles className="w-5 h-5 animate-pulse" />
+                  <h3 className="font-heading text-lg uppercase tracking-wider">Radar de Reativação</h3>
+                </div>
+                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase tracking-widest`}>AIOS 2.0</span>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm text-text-secondary leading-relaxed border-l-2 border-white/10 pl-3">
+                  Detectamos que o ticket médio de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${themeColor} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
+                </p>
+
+                <div className="bg-white/5 p-3 rounded border border-white/5">
+                  <p className="text-[10px] uppercase font-mono text-text-secondary mb-1">Sugestão da IA:</p>
+                  <p className="text-xs italic text-white/80">"Enviar mensagem de saudades e oferecer um horário prioritário para esta semana."</p>
+                </div>
+
+                <BrutalButton
+                  variant="primary"
+                  size="md"
+                  className="w-full shadow-lg"
+                  onClick={handleWhatsAppClick}
+                  icon={<MessageCircle className="w-4 h-4" />}
+                >
+                  Enviar Reativação
+                </BrutalButton>
+              </div>
             </div>
-            <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase`}>EM DESENVOLVIMENTO</span>
-          </div>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            O cliente {client.name.split(' ')[0]} costuma agendar às sextas-feiras antes das 18h.
-            <br /><br />
-            <strong>Sugestão:</strong> Enviar lembrete via WhatsApp na próxima terça-feira ofertando um horário às 17:30.
-          </p>
-          <div className="mt-6">
-            <BrutalButton variant="ghost" size="sm" className="w-full border border-neutral-800">Gerar Ação</BrutalButton>
-          </div>
+          ) : (
+            <div className="opacity-50 grayscale pointer-events-none">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
+                  <Sparkles className="w-5 h-5" />
+                  <h3 className="font-heading text-lg uppercase">{isBeauty ? 'Beauty AI' : 'Barber AI'}</h3>
+                </div>
+                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase`}>ESTÁVEL</span>
+              </div>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Este cliente está com o retorno em dia. A IA continuará monitorando o comportamento de agendamento.
+              </p>
+            </div>
+          )}
+
+          {/* Subtle background icon */}
+          <Sparkles className={`absolute -bottom-4 -right-4 w-24 h-24 opacity-5 ${themeColor}`} />
         </BrutalCard>
       </div>
       {/* Edit Modal */}

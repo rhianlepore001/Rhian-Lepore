@@ -38,36 +38,38 @@ export const Header: React.FC = () => {
     <>
       <header className={`fixed left-0 ${!isSettingsRoute ? 'md:left-64' : ''} right-0 z-30 transition-all duration-300
         ${isBeauty
-          ? 'bg-beauty-dark/70 backdrop-blur-xl border-b border-white/5'
-          : 'bg-brutal-main/80 backdrop-blur-xl border-b border-white/5'}
+          ? 'bg-beauty-dark/40 backdrop-blur-2xl border-b border-white/5 shadow-promax-glass'
+          : 'bg-brutal-main/40 backdrop-blur-2xl border-b border-white/5 shadow-promax-glass'}
       `}
         style={{ top: 'var(--header-top, 0)' }}
       >
         <div className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
 
           <div className="flex items-center gap-4">
-            {/* Logo como Botão Home */}
+            {/* Logo como Botão Home - Posição de Destaque */}
             <Link
               to="/"
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-3 hover:opacity-80 transition-all active:scale-95 group"
               title="Início"
             >
-              <img
-                src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
-                alt="Logo"
-                className="h-8 md:h-10 w-auto object-contain bg-white/5 rounded px-2 py-1"
-              />
-            </Link>
+              <div className="relative">
+                <div className={`absolute -inset-1 rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></div>
+                <img
+                  src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
+                  alt="Logo"
+                  className="h-10 md:h-12 w-auto object-contain relative z-10 drop-shadow-2xl"
+                />
+              </div>
 
-            {/* Left: Shop Info - Agora fixo como Gestão */}
-            <div className="flex flex-col justify-center">
-              <h2 className={`font-heading text-base md:text-lg ${accentColor} uppercase tracking-widest leading-none`}>
-                Gestão
-              </h2>
-              <p className="text-[10px] text-text-secondary font-mono mt-1 opacity-70">
-                {isBeauty ? 'Painel de Controle' : 'Sistema de Gestão'}
-              </p>
-            </div>
+              <div className="flex flex-col">
+                <h1 className={`font-heading text-sm md:text-xl text-white tracking-widest leading-none border-l-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} pl-3`}>
+                  {businessName || 'GESTÃO'}
+                </h1>
+                <p className="text-[9px] md:text-[11px] text-text-secondary font-mono mt-0.5 opacity-60 ml-3 uppercase">
+                  {isBeauty ? 'Professional Suite' : 'Brutal Systems'}
+                </p>
+              </div>
+            </Link>
           </div>
 
           {/* Center: Search (REMOVED) */}

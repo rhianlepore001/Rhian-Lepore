@@ -51,7 +51,19 @@ export const RecycleBin: React.FC = () => {
     const handleRestore = async (item: DeletedItem) => {
         setRestoring(item.id);
         try {
-            const functionName = `restore_${item.resource_type.slice(0, -1)}`; // Remove 's' do final
+            const resourceMap: Record<string, string> = {
+                'appointments': 'restore_appointment',
+                'clients': 'restore_client',
+                'services': 'restore_service',
+                'financial_records': 'restore_financial_record',
+                'team_members': 'restore_team_member'
+            };
+
+            const functionName = resourceMap[item.resource_type];
+
+            if (!functionName) {
+                throw new Error(`Tipo de recurso desconhecido: ${item.resource_type}`);
+            }
 
             const { error } = await supabase.rpc(functionName, {
                 p_id: item.id
@@ -62,7 +74,7 @@ export const RecycleBin: React.FC = () => {
             // Remover item da lista
             setItems(items.filter(i => i.id !== item.id));
 
-            // Mostrar mensagem de sucesso (você pode adicionar um toast aqui)
+            // Mostrar mensagem de sucesso
             alert('Item restaurado com sucesso!');
         } catch (error) {
             console.error('Erro ao restaurar item:', error);

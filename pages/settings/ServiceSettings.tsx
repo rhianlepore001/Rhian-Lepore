@@ -4,6 +4,8 @@ import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus } from 'lucide-r
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ServiceModal } from '../../components/ServiceModal';
+import { BrutalCard } from '../../components/BrutalCard';
+import { BrutalButton } from '../../components/BrutalButton';
 
 export const ServiceSettings: React.FC = () => {
     const { user, userType } = useAuth();
@@ -81,23 +83,18 @@ export const ServiceSettings: React.FC = () => {
         <SettingsLayout>
             <div className="max-w-5xl pb-20 md:pb-0">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
-                            Menu de Serviços
-                        </h1>
-                        <p className="text-neutral-400">
-                            Gerencie seus serviços, preços e configure upsells estratégicos.
-                        </p>
-                    </div>
+                    {/* Título gerenciado pelo Layout */}
+                    <div className="flex-1" />
                     <div className="flex gap-3">
-                        <button
+                        <BrutalButton
+                            variant="secondary"
                             onClick={() => setIsCategoryModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors border border-neutral-700"
+                            className="flex-1 md:flex-none"
                         >
-                            <FolderPlus className="w-5 h-5" />
-                            <span className="hidden md:inline">Nova Categoria</span>
-                        </button>
-                        <button
+                            <FolderPlus className="w-5 h-5 mr-2" />
+                            <span>Categoria</span>
+                        </BrutalButton>
+                        <BrutalButton
                             onClick={() => {
                                 if (categories.length === 0) {
                                     alert('Crie uma categoria primeiro!');
@@ -107,11 +104,11 @@ export const ServiceSettings: React.FC = () => {
                                 setEditingService(null);
                                 setIsServiceModalOpen(true);
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors`}
+                            className="flex-1 md:flex-none"
                         >
-                            <Plus className="w-5 h-5" />
-                            <span className="hidden md:inline">Novo Serviço</span>
-                        </button>
+                            <Plus className="w-5 h-5 mr-2" />
+                            <span>Serviço</span>
+                        </BrutalButton>
                     </div>
                 </div>
 
@@ -136,84 +133,85 @@ export const ServiceSettings: React.FC = () => {
                         </button>
                     </div>
                 ) : (
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                         {categories.map(category => {
                             const categoryServices = services.filter(s => s.category_id === category.id);
                             return (
-                                <div key={category.id} className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-                                    <div className="bg-neutral-800/50 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
-                                        <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                                            <GripVertical className="w-4 h-4 text-neutral-600 cursor-move" />
-                                            {category.name}
-                                            <span className="text-xs font-normal text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full ml-2">
-                                                {categoryServices.length} serviços
-                                            </span>
-                                        </h3>
+                                <BrutalCard
+                                    key={category.id}
+                                    noPadding
+                                    title={
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-3">
+                                                <GripVertical className="w-4 h-4 text-white/20 cursor-move" />
+                                                <span>{category.name}</span>
+                                                <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full text-neutral-400">
+                                                    {categoryServices.length}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                    action={
                                         <button
                                             onClick={() => handleDeleteCategory(category.id)}
-                                            className="text-neutral-500 hover:text-red-400 p-1"
+                                            className="text-neutral-500 hover:text-red-400 p-2 transition-colors active:animate-haptic-click"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                    </div>
-
-                                    <div className="divide-y divide-neutral-800">
+                                    }
+                                >
+                                    <div className="divide-y divide-white/5">
                                         {categoryServices.length === 0 ? (
-                                            <div className="p-8 text-center text-neutral-500 text-sm">
+                                            <div className="p-12 text-center text-neutral-500 text-sm italic">
                                                 Nenhum serviço nesta categoria.
                                             </div>
                                         ) : (
                                             categoryServices.map(service => (
-                                                <div key={service.id} className="p-4 flex items-center gap-4 hover:bg-neutral-800/30 transition-colors group">
-                                                    <div className="w-16 h-16 rounded-lg bg-black overflow-hidden flex-shrink-0 flex items-center justify-center relative border border-neutral-800">
+                                                <div
+                                                    key={service.id}
+                                                    className="p-4 flex items-center gap-4 hover:bg-white/5 transition-all group cursor-pointer active:scale-[0.99] active:animate-haptic-click"
+                                                    onClick={() => {
+                                                        setEditingService(service);
+                                                        setIsServiceModalOpen(true);
+                                                    }}
+                                                >
+                                                    <div className="w-14 h-14 rounded-2xl bg-black/40 overflow-hidden flex-shrink-0 flex items-center justify-center relative border border-white/5 shadow-inner">
                                                         {service.image_url ? (
                                                             <>
-                                                                <div className="absolute inset-0 scale-125 blur-md opacity-40">
+                                                                <div className="absolute inset-0 scale-125 blur-md opacity-20">
                                                                     <img src={service.image_url} alt="" className="w-full h-full object-cover" />
                                                                 </div>
-                                                                <img src={service.image_url} alt={service.name} className="relative z-10 max-w-full max-h-full object-contain p-0.5" />
+                                                                <img src={service.image_url} alt={service.name} className="relative z-10 max-w-full max-h-full object-cover" />
                                                             </>
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-neutral-600">
+                                                            <div className="w-full h-full flex items-center justify-center text-white/10">
                                                                 <Package className="w-6 h-6" />
                                                             </div>
                                                         )}
                                                     </div>
 
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <h4 className="text-white font-bold truncate">{service.name}</h4>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="text-white font-bold tracking-tight truncate">{service.name}</h4>
                                                             {!service.active && (
-                                                                <span className="text-xs bg-neutral-800 text-neutral-500 px-2 py-0.5 rounded">Inativo</span>
+                                                                <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Inativo</span>
                                                             )}
                                                         </div>
-                                                        <p className="text-sm text-neutral-400">
-                                                            {service.duration_minutes} min • R$ {service.price.toFixed(2)}
+                                                        <p className="text-sm font-mono text-neutral-400">
+                                                            {service.duration_minutes}m • <span className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}>R$ {service.price.toFixed(2)}</span>
                                                         </p>
                                                     </div>
 
-                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => {
-                                                                setEditingService(service);
-                                                                setIsServiceModalOpen(true);
-                                                            }}
-                                                            className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg"
-                                                        >
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="p-2 text-neutral-500 hover:text-white">
                                                             <Edit2 className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteService(service.id)}
-                                                            className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
                                         )}
                                     </div>
-                                </div>
+                                </BrutalCard>
                             );
                         })}
                     </div>

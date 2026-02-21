@@ -19,6 +19,7 @@ interface AuthContextType {
   trialEndsAt: string | null;
   isSubscriptionActive: boolean;
   isDev: boolean;
+  aiosEnabled: boolean;
   setDevUserType: (type: UserType) => void;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
@@ -38,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tutorialCompleted, setTutorialCompleted] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber'>('trial');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [aiosEnabled, setAiosEnabled] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [devUserType, setDevUserTypeState] = useState<UserType | null>(() => {
     const saved = localStorage.getItem('rhian_lepore_dev_type');
@@ -49,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('user_type, region, business_name, full_name, photo_url, tutorial_completed, subscription_status, trial_ends_at')
+        .select('user_type, region, business_name, full_name, photo_url, tutorial_completed, subscription_status, trial_ends_at, aios_enabled')
         .eq('id', userId)
         .single();
 
@@ -64,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTutorialCompleted(profile.tutorial_completed ?? true);
         setSubscriptionStatus((profile.subscription_status as any) || 'trial');
         setTrialEndsAt(profile.trial_ends_at || null);
+        setAiosEnabled(profile.aios_enabled ?? false);
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -114,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTutorialCompleted(true);
         setSubscriptionStatus('trial');
         setTrialEndsAt(null);
+        setAiosEnabled(false);
         setLoading(false);
       }
     });
@@ -194,6 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })()
     ),
     isDev,
+    aiosEnabled,
     setDevUserType,
     loading,
     login,
@@ -210,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     subscriptionStatus,
     trialEndsAt,
     isDev,
+    aiosEnabled,
     devUserType,
     loading
   ]);

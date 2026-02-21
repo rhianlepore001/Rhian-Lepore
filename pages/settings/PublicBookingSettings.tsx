@@ -4,6 +4,8 @@ import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
+import { BrutalCard } from '../../components/BrutalCard';
+import { BrutalButton } from '../../components/BrutalButton';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user, userType } = useAuth();
@@ -89,177 +91,153 @@ export const PublicBookingSettings: React.FC = () => {
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
+    if (loading) return (
+        <SettingsLayout>
+            <div className="p-8 text-center text-neutral-400">Carregando agendamento...</div>
+        </SettingsLayout>
+    );
+
     return (
         <SettingsLayout>
-            <div className="max-w-4xl">
-                <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
-                    Reservas Online
-                </h1>
-                <p className="text-sm md:text-base text-neutral-400 mb-4 md:mb-8">
-                    Configure como clientes fazem reservas online
-                </p>
+            <div className="max-w-4xl space-y-8 pb-20 md:pb-0">
+                {/* Cabeçalho redundante removido (gerenciado pelo SettingsLayout) */}
 
                 <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
 
-                <div className={`p-4 md:p-6 mb-4 md:mb-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                    <div className="flex items-start justify-between gap-4">
+                <BrutalCard noPadding>
+                    <div className="p-6 md:p-8 flex items-start justify-between gap-6">
                         <div className="flex-1">
-                            <h3 className={`font-bold text-base md:text-lg mb-1 md:mb-2 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
+                            <h3 className="font-bold text-lg md:text-xl mb-2 text-white">
                                 Ativar Reservas Online
                             </h3>
-                            <p className="text-neutral-400 text-xs md:text-sm">
-                                Seus clientes podem marcar horário através do seu link de reserva.
+                            <p className="text-neutral-400 text-sm leading-relaxed">
+                                Seus clientes podem marcar horário através do seu link de reserva personalizado.
                             </p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
                             <input
                                 type="checkbox"
                                 checked={publicBookingEnabled}
                                 onChange={(e) => setPublicBookingEnabled(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                            <div className={`
+                                w-12 h-6 md:w-14 md:h-7 bg-white/5 border border-white/10 peer-focus:outline-none rounded-full peer 
+                                peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] 
+                                after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full 
+                                after:h-4 after:w-4 md:after:h-5 md:after:w-5 after:transition-all 
+                                peer-checked:bg-gradient-to-r ${isBeauty ? 'from-pink-500 to-purple-600' : 'from-accent-gold to-yellow-600'}
+                                shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]
+                            `}></div>
                         </label>
                     </div>
-                </div>
+                </BrutalCard>
 
-                <div className="space-y-4 md:space-y-6 mb-6 md:mb-8">
-                    <div className={`p-4 md:p-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                        <div className="flex items-start justify-between gap-4 mb-3 md:mb-4">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1 md:mb-2">
-                                    <h3 className={`font-bold text-base md:text-lg ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                                        Upsells Inteligentes
-                                    </h3>
-                                    <button className="text-neutral-400 hover:text-white">
-                                        <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
-                                    </button>
-                                </div>
-                                <p className="text-neutral-400 text-xs md:text-sm mb-2 md:mb-3">
-                                    Sugere serviços complementares para aumentar o ticket médio.
-                                </p>
-                                <div className={`inline-block px-2 md:px-3 py-1 rounded-full bg-${accentColor}/10 text-${accentColor} text-xs font-bold`}>
-                                    💰 +R$ 1.200/mês
-                                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <BrutalCard
+                        title={
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">Upsells Inteligentes</span>
+                                <HelpCircle className="w-4 h-4 text-neutral-500" />
                             </div>
-                            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                                <input
-                                    type="checkbox"
-                                    checked={enableUpsells}
-                                    onChange={(e) => setEnableUpsells(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
-                            </label>
-                        </div>
-
-                        {enableUpsells && (
-                            <div className={`mt-3 md:mt-4 p-3 md:p-4 rounded-lg border transition-all ${isBeauty ? 'bg-beauty-dark/50 border-beauty-neon/20 text-beauty-neon/80' : 'bg-neutral-800 border-neutral-700 text-neutral-300'}`}>
-                                <p className="text-xs md:text-sm">
-                                    ✅ <strong>Ativado!</strong> Configure os upsells na página de Serviços.
-                                </p>
+                        }
+                    >
+                        <div className="space-y-4">
+                            <p className="text-neutral-400 text-xs leading-relaxed">
+                                Sugere serviços complementares para aumentar o ticket médio automaticamente.
+                            </p>
+                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl bg-${accentColor}/5 border border-${accentColor}/10 text-${accentColor} text-[10px] font-bold uppercase tracking-wider`}>
+                                💰 +R$ 1.200/mês méd.
                             </div>
-                        )}
-                    </div>
-
-                    <div className={`p-4 md:p-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                        <div className="flex items-start justify-between gap-4 mb-3 md:mb-4">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1 md:mb-2">
-                                    <h3 className={`font-bold text-base md:text-lg ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                                        Seleção de Profissional
-                                    </h3>
-                                    <button className="text-neutral-400 hover:text-white">
-                                        <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
-                                    </button>
-                                </div>
-                                <p className="text-neutral-400 text-xs md:text-sm mb-2 md:mb-3">
-                                    Permite que clientes escolham com qual profissional desejam agendar.
-                                </p>
-                                <div className={`inline-block px-2 md:px-3 py-1 rounded-full bg-${accentColor}/10 text-${accentColor} text-xs font-bold`}>
-                                    📈 +114% recorrentes
-                                </div>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                                <input
-                                    type="checkbox"
-                                    checked={enableProfessionalSelection}
-                                    onChange={(e) => setEnableProfessionalSelection(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
-                            </label>
-                        </div>
-
-                        {enableProfessionalSelection && (
-                            <div className={`mt-3 md:mt-4 p-3 md:p-4 rounded-lg border transition-all ${isBeauty ? 'bg-beauty-dark/50 border-beauty-neon/20 text-beauty-neon/80' : 'bg-neutral-800 border-neutral-700 text-neutral-300'}`}>
-                                <p className="text-xs md:text-sm">
-                                    ✅ <strong>Ativado!</strong> Adicione sua equipe na aba &quot;Equipe&quot;.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className={`p-4 md:p-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                        <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                            Automação e Lembretes
-                        </h3>
-
-                        <div className="space-y-6">
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-white text-sm md:text-base mb-1">
-                                        Lembretes por E-mail
-                                    </h4>
-                                    <p className="text-neutral-400 text-xs md:text-sm">
-                                        Envia um e-mail automático para o cliente 24h antes do agendamento.
-                                    </p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <div className="flex justify-end pt-2">
+                                <label className="relative inline-flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        checked={enableEmailReminders}
-                                        onChange={(e) => setEnableEmailReminders(e.target.checked)}
+                                        checked={enableUpsells}
+                                        onChange={(e) => setEnableUpsells(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
-                                </label>
-                            </div>
-
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-white text-sm md:text-base mb-1">
-                                        Reagendamento Automático
-                                    </h4>
-                                    <p className="text-neutral-400 text-xs md:text-sm">
-                                        Permite que o cliente reagende o horário sozinho através do link no e-mail.
-                                    </p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                                    <input
-                                        type="checkbox"
-                                        checked={enableSelfRescheduling}
-                                        onChange={(e) => setEnableSelfRescheduling(e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className={`w-11 h-6 md:w-14 md:h-7 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 md:after:h-6 md:after:w-6 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                    <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </BrutalCard>
+
+                    <BrutalCard
+                        title={
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">Profissionais</span>
+                                <HelpCircle className="w-4 h-4 text-neutral-500" />
+                            </div>
+                        }
+                    >
+                        <div className="space-y-4">
+                            <p className="text-neutral-400 text-xs leading-relaxed">
+                                Permite que os clientes escolham com quem desejam realizar o procedimento.
+                            </p>
+                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl bg-green-500/5 border border-green-500/10 text-green-400 text-[10px] font-bold uppercase tracking-wider`}>
+                                📈 +114% Retenção
+                            </div>
+                            <div className="flex justify-end pt-2">
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={enableProfessionalSelection}
+                                        onChange={(e) => setEnableProfessionalSelection(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                </label>
+                            </div>
+                        </div>
+                    </BrutalCard>
                 </div>
 
-                <button
-                    onClick={handleSave}
-                    className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 font-bold rounded-lg transition-all
-                        ${isBeauty
-                            ? 'bg-beauty-neon text-black hover:bg-white hover:shadow-neon'
-                            : `bg-${accentColor} hover:bg-${accentColor}/90 text-black`}
-                    `}
-                >
-                    <Save className="w-5 h-5" />
-                    Salvar Alterações
-                </button>
+                <BrutalCard title="Automação e Lembretes">
+                    <div className="space-y-8 py-2">
+                        <div className="flex items-center justify-between gap-6">
+                            <div>
+                                <h4 className="text-white text-sm font-bold mb-1">Lembretes por E-mail</h4>
+                                <p className="text-neutral-500 text-xs">Aviso automático 24h antes do serviço.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={enableEmailReminders}
+                                    onChange={(e) => setEnableEmailReminders(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                            </label>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-6">
+                            <div>
+                                <h4 className="text-white text-sm font-bold mb-1">Reagendamento Autônomo</h4>
+                                <p className="text-neutral-500 text-xs">Cliente reagenda sozinho via link de e-mail.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={enableSelfRescheduling}
+                                    onChange={(e) => setEnableSelfRescheduling(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                            </label>
+                        </div>
+                    </div>
+                </BrutalCard>
+
+                <div className="flex justify-end pt-4">
+                    <BrutalButton
+                        onClick={handleSave}
+                        className="w-full md:w-auto min-w-[200px]"
+                    >
+                        <Save className="w-5 h-5 mr-2" />
+                        Salvar Alterações
+                    </BrutalButton>
+                </div>
             </div>
         </SettingsLayout >
     );

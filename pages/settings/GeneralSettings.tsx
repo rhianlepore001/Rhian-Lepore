@@ -7,6 +7,8 @@ import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
 import { SaveFooter } from '../../components/SaveFooter';
 import { PhoneInput } from '../../components/PhoneInput';
+import { BrutalCard } from '../../components/BrutalCard';
+import { InfoButton } from '../../components/HelpButtons';
 
 export const GeneralSettings: React.FC = () => {
     const { user, userType, region } = useAuth();
@@ -190,16 +192,7 @@ export const GeneralSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="max-w-4xl pb-20 md:pb-0">
-                <div className="flex items-center justify-between mb-6 md:mb-8">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
-                            Configurações Gerais
-                        </h1>
-                        <p className="text-sm md:text-base text-neutral-400">
-                            Gerencie a identidade e funcionamento do seu negócio
-                        </p>
-                    </div>
-                </div>
+                {/* Header dinâmico no SettingsLayout */}
 
                 <BrandIdentitySection
                     logoPreview={logoPreview}
@@ -213,10 +206,15 @@ export const GeneralSettings: React.FC = () => {
 
                 <BusinessGalleryManager accentColor={accentColor} />
 
-                <div className={`p-4 md:p-6 mb-4 md:mb-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                    <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                        Informações do Negócio
-                    </h3>
+                <BrutalCard
+                    title={
+                        <div className="flex items-center gap-2">
+                            <span>Informações do Negócio</span>
+                            <InfoButton text="Dados básicos que aparecem no seu perfil público." />
+                        </div>
+                    }
+                    className="mb-4 md:mb-6"
+                >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <div className="col-span-1 md:col-span-2">
                             <label className="text-white font-mono text-xs md:text-sm mb-2 block">
@@ -229,8 +227,8 @@ export const GeneralSettings: React.FC = () => {
                                 placeholder="Barbearia Premium"
                                 className={`w-full p-3 rounded-lg text-white outline-none transition-all
                                     ${isBeauty
-                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
-                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                        ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                        : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
                                 `}
                             />
                         </div>
@@ -260,8 +258,8 @@ export const GeneralSettings: React.FC = () => {
                                     placeholder="suabarbearia"
                                     className={`w-full p-3 pl-8 rounded-lg text-white outline-none transition-all
                                         ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
-                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                            ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                            : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
                                     `}
                                 />
                             </div>
@@ -278,8 +276,8 @@ export const GeneralSettings: React.FC = () => {
                                 placeholder="Rua Exemplo, 123 - Bairro, Cidade - SP"
                                 className={`w-full p-3 rounded-lg text-white outline-none transition-all
                                     ${isBeauty
-                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
-                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                        ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                        : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
                                 `}
                             />
                             <p className="text-neutral-500 text-xs mt-1">
@@ -287,24 +285,23 @@ export const GeneralSettings: React.FC = () => {
                             </p>
                         </div>
                     </div>
-                </div>
+                </BrutalCard>
 
-                <div className={`p-4 md:p-6 mb-4 md:mb-6 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                    <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                        Horário de Funcionamento
-                    </h3>
+                <BrutalCard
+                    title="Horário de Funcionamento"
+                    className="mb-4 md:mb-6"
+                >
                     <BusinessHoursEditor
                         hours={businessHours}
                         onChange={setBusinessHours}
                         isBeauty={isBeauty}
                     />
-                </div>
+                </BrutalCard>
 
-                <div className={`p-4 md:p-6 mb-6 md:mb-8 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border border-neutral-800 rounded-lg'}`}>
-                    <h3 className={`font-bold text-base md:text-lg mb-4 ${isBeauty ? 'text-white' : 'text-white uppercase'}`}>
-                        Política de Cancelamento
-                    </h3>
-
+                <BrutalCard
+                    title="Política de Cancelamento"
+                    className="mb-6 md:mb-8"
+                >
                     <div className="flex flex-wrap gap-2 mb-4">
                         {[
                             { id: 'flexible', label: '😊 Flexível', desc: '24h' },
@@ -314,9 +311,9 @@ export const GeneralSettings: React.FC = () => {
                             <button
                                 key={template.id}
                                 onClick={() => handlePolicyTemplateChange(template.id)}
-                                className={`px-3 py-2 rounded-lg text-sm border transition-all ${policyTemplate === template.id
-                                    ? isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white' : `bg-${accentColor}/10 border-${accentColor} text-white`
-                                    : isBeauty ? 'bg-beauty-dark/50 border-beauty-neon/10 text-neutral-400 hover:text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'
+                                className={`px-3 py-2 rounded-xl text-sm border transition-all active:animate-haptic-click ${policyTemplate === template.id
+                                    ? isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white shadow-neon' : `bg-${accentColor}/10 border-${accentColor} text-white shadow-gold`
+                                    : isBeauty ? 'bg-white/5 border-white/10 text-neutral-400 hover:text-white' : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-neutral-800'
                                     }`}
                             >
                                 <span className="block font-bold">{template.label}</span>
@@ -330,16 +327,16 @@ export const GeneralSettings: React.FC = () => {
                         onChange={e => setCancellationPolicy(e.target.value)}
                         rows={4}
                         placeholder="Descreva sua política de cancelamento..."
-                        className={`w-full p-3 rounded-lg text-white outline-none resize-none transition-all
+                        className={`w-full p-4 rounded-xl text-white outline-none resize-none transition-all
                             ${isBeauty
-                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-white/20'
-                                : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}
+                                ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
                         `}
                     />
-                    <p className="text-neutral-500 text-xs mt-2">
+                    <p className="text-neutral-500 text-[10px] mt-2 italic px-1">
                         💡 Você pode editar o texto acima para personalizar sua política.
                     </p>
-                </div>
+                </BrutalCard>
 
                 <SaveFooter
                     onSave={handleSave}

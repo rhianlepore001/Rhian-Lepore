@@ -11,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "sync:ide": "node .aios-core/infrastructure/scripts/ide-sync/index.js sync",
+    "sync:ide:antigravity": "node .aios-core/infrastructure/scripts/ide-sync/index.js sync --ide antigravity",
+    "aios:doctor": "npx aios-core doctor"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

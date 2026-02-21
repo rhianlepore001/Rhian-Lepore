@@ -37,7 +37,7 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
         transition-all duration-300 ease-out
         flex items-center justify-center gap-2 
         rounded-xl border
-        transform hover:scale-[1.02] active:scale-[0.98]
+        transform hover:scale-[1.02] active:scale-[0.98] active:animate-haptic-click
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
       `;
     } else {
@@ -46,7 +46,7 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
         border-2 border-black 
         transition-all duration-150
         flex items-center justify-center gap-2 
-        transform active:translate-y-1 active:translate-x-1 active:shadow-none
+        transform active:translate-y-1 active:translate-x-1 active:shadow-none active:animate-haptic-click
         hover:translate-x-[-2px] hover:translate-y-[-2px]
         disabled:opacity-70 disabled:grayscale disabled:cursor-not-allowed
         disabled:hover:translate-x-0 disabled:hover:translate-y-0

@@ -16,6 +16,31 @@ import { logger } from '../utils/Logger';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
+interface Transaction {
+  id: string;
+  serviceName: string;
+  professionalName: string;
+  clientName: string;
+  amount: number;
+  expense: number;
+  date: string;
+  time: string;
+  rawDate: Date;
+  type: 'revenue' | 'expense';
+  payment_method: string | null;
+  commission_paid: boolean;
+  status: 'paid' | 'pending';
+}
+
+interface MonthlyHistoryItem {
+  month: string;
+  year: number;
+  revenue: number;
+  expenses: number;
+  profit: number;
+  growth: number;
+}
+
 export const Finance: React.FC = () => {
   const { user, userType, region } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -173,45 +198,35 @@ export const Finance: React.FC = () => {
   };
 
   const fetchMonthlyHistory = async () => {
+    if (!user) return;
     try {
-      const history = [];
+      const { data, error } = await supabase.rpc('get_monthly_finance_history', {
+        p_user_id: user.id,
+        p_months_count: 12
+      });
 
-      // Get last 12 months
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const month = date.getMonth();
-        const year = date.getFullYear();
+      if (error) throw error;
 
-        const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
-        const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
-
-        const { data } = await supabase.rpc('get_finance_stats', {
-          p_user_id: user.id,
-          p_start_date: startOfMonth,
-          p_end_date: endOfMonth
-        });
-
-        if (data) {
-          // Calculate growth vs previous month
+      if (data) {
+        const history = data.map((item: any, index: number, arr: any[]) => {
           let growth = 0;
-          if (i < 11 && history.length > 0) {
-            const prevRevenue = history[history.length - 1].revenue;
-            growth = prevRevenue > 0 ? ((data.revenue - prevRevenue) / prevRevenue) * 100 : 0;
+          if (index > 0) {
+            const prevRevenue = arr[index - 1].revenue;
+            growth = prevRevenue > 0 ? ((item.revenue - prevRevenue) / prevRevenue) * 100 : 0;
           }
 
-          history.push({
-            month: months[month],
-            year: year,
-            revenue: data.revenue,
-            expenses: data.expenses,
-            profit: data.profit,
+          return {
+            month: item.month_name.trim(),
+            year: item.year_num,
+            revenue: parseFloat(item.revenue),
+            expenses: parseFloat(item.expenses),
+            profit: parseFloat(item.profit),
             growth: growth
-          });
-        }
-      }
+          };
+        });
 
-      setMonthlyHistory(history.reverse()); // Most recent first
+        setMonthlyHistory(history.reverse()); // Recentes primeiro para a lista
+      }
     } catch (error) {
       logger.error('Error fetching monthly history', error);
     }
@@ -565,9 +580,9 @@ export const Finance: React.FC = () => {
           {/* Charts */}
           <div className="grid grid-cols-1 gap-6">
             <BrutalCard title={`Fluxo de Caixa - ${months[selectedMonth]} ${selectedYear}`}>
-              <div className="h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
+              <div className="h-[350px] min-h-[300px] w-full mt-4">
+                <ResponsiveContainer width="99%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />

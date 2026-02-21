@@ -74,33 +74,38 @@ export function useDashboardData() {
                     })));
                 }
 
-                // 3. Simple Stats
-                const { data: statsData, error: statsError } = await supabase
-                    .rpc('get_dashboard_stats', { p_user_id: user.id });
+                // 3. Stats and Actions
+                const [statsRes, actionsRes] = await Promise.all([
+                    supabase.rpc('get_dashboard_stats', { p_user_id: user.id }),
+                    supabase.rpc('get_dashboard_actions', { p_user_id: user.id })
+                ]);
 
-                if (statsError) throw statsError;
+                if (statsRes.error) throw statsRes.error;
+                if (actionsRes.error) throw actionsRes.error;
+
+                const statsData = statsRes.data;
 
                 if (statsData) {
                     setProfit(statsData.total_profit);
                     setCurrentMonthRevenue(statsData.current_month_revenue);
                     setWeeklyGrowth(statsData.weekly_growth);
+
+                    setProfitMetrics({
+                        totalProfit: statsData.total_profit || 0,
+                        recoveredRevenue: statsData.recovered_revenue || 0,
+                        avoidedNoShows: statsData.avoided_no_shows || 0,
+                        filledSlots: statsData.filled_slots || 0,
+                        weeklyGrowth: statsData.weekly_growth || 0,
+                        campaignsSent: statsData.campaigns_sent || 0
+                    });
                 }
 
-                // Mocking new metrics for MVP
-                setProfitMetrics({
-                    totalProfit: statsData?.total_profit || 0,
-                    recoveredRevenue: 450,
-                    avoidedNoShows: 120,
-                    filledSlots: 80,
-                    weeklyGrowth: statsData?.weekly_growth || 0
-                });
-
-                // Mocking action items
-                setActionItems([
-                    { id: '1', type: 'recovery', title: 'João Silva', description: 'Não corta há 45 dias. Enviar convite.', value: 50 },
-                    { id: '2', type: 'gap', title: 'Buraco Amanhã 14h', description: 'Publique nos stories agora.', time: 'Amanhã 14:00' },
-                    { id: '3', type: 'upsell', title: 'Pedro Santos', description: 'Agendou corte. Ofereça barba.', clientName: 'Pedro Santos' }
-                ]);
+                if (actionsRes.data) {
+                    setActionItems(actionsRes.data.map((item: any, index: number) => ({
+                        id: item.id || `action-${index}`,
+                        ...item
+                    })));
+                }
 
             } catch (error) {
                 logger.error('Error fetching dashboard data:', error);

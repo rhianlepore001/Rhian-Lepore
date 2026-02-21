@@ -5,6 +5,7 @@ import { Shield, Lock, Smartphone, Trash2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { use2FA } from '../../hooks/use2FA';
 import { TwoFactorSetup } from '../../components/security/TwoFactorSetup';
+import { SettingsLayout } from '../../components/SettingsLayout';
 
 export const SecuritySettings: React.FC = () => {
     const { userType } = useAuth();
@@ -32,114 +33,116 @@ export const SecuritySettings: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-neutral-400">Carregando configurações de segurança...</div>;
+    if (loading) return (
+        <SettingsLayout>
+            <div className="p-8 text-center text-neutral-400">Carregando configurações de segurança...</div>
+        </SettingsLayout>
+    );
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="border-b-4 border-white/10 pb-4">
-                <h2 className="text-2xl md:text-4xl font-heading text-white uppercase flex items-center gap-3">
-                    <Shield className={`w-8 h-8 ${accentText}`} />
-                    Segurança
-                </h2>
-                <p className="text-text-secondary font-mono mt-2 text-sm">
-                    Gerencie a proteção da sua conta e métodos de acesso
-                </p>
-            </div>
+        <SettingsLayout>
+            <div className="max-w-4xl space-y-6 pb-20 md:pb-0">
+                {/* Header dinâmico no SettingsLayout */}
 
-            {/* 2FA Section */}
-            <BrutalCard>
-                <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                            <Smartphone className="w-6 h-6 text-white" />
-                            <h3 className="text-xl font-bold text-white">Autenticação em Dois Fatores (2FA)</h3>
+                {/* 2FA Section */}
+                <BrutalCard
+                    title={
+                        <div className="flex items-center gap-3">
+                            <Smartphone className="w-5 h-5" />
+                            <span>Autenticação em Dois Fatores</span>
                         </div>
-                        <p className="text-neutral-400 text-sm mb-4">
-                            Adicione uma camada extra de segurança. Ao fazer login, você precisará fornecer um código
-                            gerado pelo seu celular além da senha.
-                        </p>
+                    }
+                >
+                    <div className="flex flex-col md:flex-row gap-8">
+                        <div className="flex-1">
+                            <p className="text-neutral-400 text-sm mb-6 leading-relaxed">
+                                Adicione uma camada extra de segurança. Ao fazer login, você precisará fornecer um código
+                                gerado pelo seu celular além da senha tradicional.
+                            </p>
 
-                        {!isEnabled ? (
-                            <div className="flex items-center gap-2 text-orange-500 mb-4 bg-orange-500/10 p-2 rounded w-fit">
-                                <Lock className="w-4 h-4" />
-                                <span className="text-sm font-bold">Não Ativado</span>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 text-green-500 mb-4 bg-green-500/10 p-2 rounded w-fit">
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span className="text-sm font-bold">Ativado e Protegido</span>
-                            </div>
-                        )}
-                    </div>
+                            {!isEnabled ? (
+                                <div className="flex items-center gap-2 text-orange-400 mb-6 bg-orange-500/5 border border-orange-500/10 p-3 rounded-xl w-fit">
+                                    <Lock className="w-4 h-4" />
+                                    <span className="text-xs font-bold uppercase tracking-wider">Proteção Desativada</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 text-green-400 mb-6 bg-green-500/5 border border-green-500/10 p-3 rounded-xl w-fit">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    <span className="text-xs font-bold uppercase tracking-wider">Conta Protegida</span>
+                                </div>
+                            )}
+                        </div>
 
-                    <div className="flex-1 border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-6">
-                        {!showSetup ? (
-                            <>
-                                {!isEnabled ? (
-                                    <div className="h-full flex flex-col justify-center">
-                                        <BrutalButton
-                                            variant="primary"
-                                            onClick={() => setShowSetup(true)}
-                                            className="w-full"
-                                        >
-                                            Ativar 2FA
-                                        </BrutalButton>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <h4 className="text-white font-bold text-sm uppercase">Métodos Ativos</h4>
-                                        {factors.map(factor => (
-                                            <div key={factor.id} className="bg-neutral-800 p-3 rounded flex justify-between items-center">
-                                                <div className="flex items-center gap-2">
-                                                    <Smartphone className="w-4 h-4 text-neutral-400" />
-                                                    <div>
-                                                        <p className="text-white text-sm font-bold">{factor.friendly_name || 'Aplicativo Autenticador'}</p>
-                                                        <p className="text-neutral-500 text-xs">TOTP (Google Auth/Authy)</p>
+                        <div className="flex-1">
+                            {!showSetup ? (
+                                <>
+                                    {!isEnabled ? (
+                                        <div className="h-full flex flex-col justify-center">
+                                            <BrutalButton
+                                                variant="primary"
+                                                onClick={() => setShowSetup(true)}
+                                                className="w-full"
+                                            >
+                                                Configurar 2FA
+                                            </BrutalButton>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <h4 className="text-white/40 font-mono text-[10px] uppercase tracking-[0.2em] mb-4">Métodos Verificados</h4>
+                                            {factors.map(factor => (
+                                                <div key={factor.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:bg-white/10 transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5">
+                                                            <Smartphone className="w-5 h-5 text-neutral-400" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-white text-sm font-bold">{factor.friendly_name || 'Autenticador'}</p>
+                                                            <p className="text-neutral-500 text-[10px] uppercase">Algoritmo TOTP</p>
+                                                        </div>
                                                     </div>
+                                                    <button
+                                                        onClick={() => handleUnenroll(factor.id)}
+                                                        className="p-2 hover:bg-red-500/20 rounded-xl text-neutral-500 hover:text-red-400 transition-all active:animate-haptic-click"
+                                                        title="Remover"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    onClick={() => handleUnenroll(factor.id)}
-                                                    className="p-2 hover:bg-red-500/20 rounded text-neutral-400 hover:text-red-500 transition-colors"
-                                                    title="Remover"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        <BrutalButton
-                                            variant="secondary"
-                                            onClick={() => setShowSetup(true)}
-                                            className="w-full text-sm"
-                                        >
-                                            Adicionar novo dispositivo
-                                        </BrutalButton>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <TwoFactorSetup
-                                onComplete={handleSetupComplete}
-                                onCancel={() => setShowSetup(false)}
-                            />
-                        )}
+                                            ))}
+                                            <BrutalButton
+                                                variant="secondary"
+                                                onClick={() => setShowSetup(true)}
+                                                className="w-full text-xs"
+                                            >
+                                                + Novo Dispositivo
+                                            </BrutalButton>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <TwoFactorSetup
+                                    onComplete={handleSetupComplete}
+                                    onCancel={() => setShowSetup(false)}
+                                />
+                            )}
+                        </div>
                     </div>
-                </div>
-            </BrutalCard>
+                </BrutalCard>
 
-            {/* Password Section (Placeholder for Sprint 2 Part 3) */}
-            <BrutalCard className="opacity-50">
-                <div className="flex items-center gap-3 mb-4">
-                    <Lock className="w-6 h-6 text-white" />
-                    <h3 className="text-xl font-bold text-white">Alterar Senha</h3>
-                </div>
-                <p className="text-neutral-400 text-sm mb-4">
-                    Para alterar sua senha, você receberá um email de confirmação.
-                </p>
-                <BrutalButton variant="secondary" disabled>
-                    Alterar Senha (Em Breve)
-                </BrutalButton>
-            </BrutalCard>
-        </div>
+                {/* Password Section */}
+                <BrutalCard className="opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                    <div className="flex items-center gap-3 mb-4">
+                        <Lock className="w-5 h-5 text-neutral-400" />
+                        <h3 className="text-lg font-bold text-white">Alterar Senha</h3>
+                    </div>
+                    <p className="text-neutral-400 text-sm mb-6 max-w-md">
+                        Mantenha sua senha forte e atualizada para evitar acessos não autorizados.
+                    </p>
+                    <BrutalButton variant="secondary" disabled className="text-xs">
+                        Recuperação em Breve
+                    </BrutalButton>
+                </BrutalCard>
+            </div>
+        </SettingsLayout>
     );
 };

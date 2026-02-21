@@ -37,17 +37,17 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
 
   const getContainerClass = () => {
     if (isBeauty) {
-      // Estilo Beauty - Elegante, moderno, bordas arredondadas
-      const baseBeauty = 'relative bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-white/10 rounded-2xl transition-all duration-300 overflow-hidden select-none touch-none outline-none focus:outline-none';
-      const accentBeauty = accent ? 'border-beauty-neon/40 shadow-[0_0_20px_rgba(167,139,250,0.15)]' : '';
-      const glowBeauty = glow ? 'shadow-[0_0_15px_rgba(167,139,250,0.1)]' : 'shadow-sm';
+      // Estilo Beauty - Pro Max Glass
+      const baseBeauty = 'relative bg-gradient-beauty backdrop-blur-2xl border border-white/10 rounded-[28px] transition-all duration-300 overflow-hidden select-none touch-none shadow-promax-glass active:scale-[0.98] active:animate-haptic-click';
+      const accentBeauty = accent ? 'border-beauty-neon/40 shadow-neon bg-beauty-neon/5' : '';
+      const glowBeauty = glow ? 'shadow-neon-strong ring-1 ring-beauty-neon/30' : '';
 
       return `${baseBeauty} ${accentBeauty} ${glowBeauty} ${className}`;
     } else {
-      // Estilo Industrial Premium - Robusto mas sofisticado
-      const baseBrutal = 'relative bg-brutal-card/95 backdrop-blur-md border border-white/10 rounded-xl transition-all duration-300 select-none touch-none outline-none focus:outline-none overflow-hidden';
-      const accentBrutal = accent ? 'border-accent-gold/50 bg-gradient-to-br from-brutal-card to-neutral-900 shadow-[0_0_20px_rgba(194,155,64,0.1)]' : '';
-      const glowBrutal = glow ? 'shadow-[0_0_15px_rgba(194,155,64,0.1)]' : 'shadow-md';
+      // Estilo Barber Premium - Industrial Depth Pro Max
+      const baseBrutal = 'relative bg-gradient-brutal backdrop-blur-2xl border border-white/15 rounded-[28px] transition-all duration-300 select-none touch-none shadow-promax-glass overflow-hidden active:scale-[0.98] active:animate-haptic-click';
+      const accentBrutal = accent ? 'border-accent-gold/60 shadow-gold bg-accent-gold/5' : '';
+      const glowBrutal = glow ? 'shadow-promax-depth ring-1 ring-accent-gold/30' : '';
 
       return `${baseBrutal} ${accentBrutal} ${glowBrutal} ${className}`;
     }
@@ -90,10 +90,9 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
         </>
       )}
 
-      {/* Beauty Gradient Overlay */}
-      {isBeauty && (
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-beauty-neon/5 via-transparent to-beauty-acid/5 pointer-events-none" />
-      )}
+      {/* Glass & Noise Overlay */}
+      <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-promax opacity-10 pointer-events-none" />
 
       {/* Header Area if title exists */}
       {(title || action) && (

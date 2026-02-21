@@ -45,8 +45,8 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
                 onClick={onClose}
             />
 
-            <div className={`relative w-full rounded-t-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full duration-500 max-h-[90vh] pb-8
-          ${isBeauty ? 'bg-beauty-card border-t border-white/10' : 'bg-neutral-900 border-t-4 border-brutal-border'}
+            <div className={`relative w-full rounded-t-[32px] shadow-promax-depth overflow-hidden animate-in slide-in-from-bottom-full duration-500 max-h-[90vh] pb-8 backdrop-blur-3xl
+          ${isBeauty ? 'bg-beauty-dark/80 border-t border-white/10' : 'bg-brutal-main/90 border-t-2 border-accent-gold/30'}
       `}>
                 {/* Header with User Info */}
                 <div className={`p-6 border-b relative ${isBeauty ? 'border-white/10 bg-white/5' : 'border-neutral-800 bg-black/20'}`}>

@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { BrutalCard } from '../../components/BrutalCard';
+import { BrutalButton } from '../../components/BrutalButton';
 
 export const TeamSettings: React.FC = () => {
     const { user, userType } = useAuth();
@@ -59,38 +60,17 @@ export const TeamSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="max-w-5xl space-y-8 pb-20">
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className={`p-2 rounded-lg bg-${accentColor}/10 border border-${accentColor}/20`}>
-                                <Users className={`w-6 h-6 text-${accentColor}`} />
-                            </div>
-                            <h1 className="text-3xl md:text-4xl font-heading text-white uppercase tracking-tight">
-                                Gestão de Equipe
-                            </h1>
-                        </div>
-                        <p className="text-neutral-400 max-w-lg">
-                            Configure os profissionais, defina comissões e gerencie quem atende seus clientes.
-                        </p>
-                    </div>
-
-                    <button
+                {/* Header dinâmico no SettingsLayout */}
+                <div className="flex justify-end mb-6">
+                    <BrutalButton
                         onClick={() => {
                             setEditingMember(null);
                             setIsModalOpen(true);
                         }}
-                        className={`
-                            group flex items-center justify-center gap-2 px-6 py-4 font-heading uppercase text-sm tracking-widest transition-all
-                            ${isBeauty
-                                ? 'bg-beauty-neon text-black hover:shadow-[0_0_20px_rgba(235,166,240,0.4)]'
-                                : 'bg-accent-gold text-black hover:shadow-[0_0_20px_rgba(196,160,111,0.4)]'}
-                            rounded-xl active:scale-95
-                        `}
                     >
-                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                        Novo Profissional
-                    </button>
+                        <Plus className="w-5 h-5 mr-1" />
+                        Profissional
+                    </BrutalButton>
                 </div>
 
                 {loading ? (

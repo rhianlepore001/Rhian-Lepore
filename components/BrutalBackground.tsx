@@ -85,17 +85,17 @@ export const ThemeBackground: React.FC = () => {
           }}
         />
 
-        {/* Background Layer 2: Animated Gold Glow Accents */}
+        {/* Background Layer 2: Animated Gold Glow Accents - Intensified for Pro Max */}
         <div
           className="fixed top-0 left-0 w-full h-full pointer-events-none"
           style={{
             background: `
-              radial-gradient(circle at 15% 25%, rgba(194, 155, 64, 0.04) 0%, transparent 35%),
-              radial-gradient(circle at 85% 75%, rgba(194, 155, 64, 0.03) 0%, transparent 35%),
-              radial-gradient(circle at 50% 50%, rgba(194, 155, 64, 0.02) 0%, transparent 50%)
+              radial-gradient(circle at 15% 25%, rgba(194, 155, 64, 0.08) 0%, transparent 40%),
+              radial-gradient(circle at 85% 75%, rgba(194, 155, 64, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 50% 50%, rgba(194, 155, 64, 0.04) 0%, transparent 60%)
             `,
             zIndex: 0,
-            animation: 'pulseGold 8s ease-in-out infinite',
+            animation: 'pulseGold 10s ease-in-out infinite',
           }}
         />
 

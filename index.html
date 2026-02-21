@@ -67,11 +67,14 @@
             'soft': '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
             'soft-lg': '0 20px 40px -15px rgba(0, 0, 0, 0.6)',
             'gold': '0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2)',
+            'promax-glass': '0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
+            'promax-depth': '0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.1)',
           },
           backgroundImage: {
             'noise': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+')",
             'gradient-beauty': 'linear-gradient(135deg, #1F1B2E 0%, #2E2B3B 50%, #1F1B2E 100%)',
             'gradient-brutal': 'linear-gradient(135deg, #121212 0%, #1E1E1E 50%, #121212 100%)',
+            'gradient-promax': 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)',
           },
           animation: {
             'fade-in': 'fadeIn 0.3s ease-out',
@@ -80,6 +83,7 @@
             'scale-in': 'scaleIn 0.2s ease-out',
             'pulse-neon': 'pulseNeon 2s ease-in-out infinite',
             'shimmer': 'shimmer 2s linear infinite',
+            'haptic-click': 'hapticClick 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
           },
           keyframes: {
             fadeIn: {
@@ -105,6 +109,10 @@
             shimmer: {
               '0%': { backgroundPosition: '-200% 0' },
               '100%': { backgroundPosition: '200% 0' },
+            },
+            hapticClick: {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(0.92)' },
             },
           }
         }

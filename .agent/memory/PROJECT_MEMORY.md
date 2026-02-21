@@ -1,14 +1,14 @@
 # 🧠 PROJECT MEMORY - Barber/Beauty OS
 
-> **Última Atualização:** 14/02/2026
-> **Versão:** 0.1.0
-> **Status:** Em Desenvolvimento
+> **Última Atualização:** 21/02/2026
+> **Versão:** 0.2.0
+> **Status:** AIOS Engine - Prova de Valor
 
 ---
 
 ## 🏗️ Contexto do Projeto
 
-**Objetivo:** SaaS de gestão para Barbearias e Salões de Beleza (Multi-tenant / Multi-tema).
+**Objetivo:** SaaS de gestão para Barbearias e Salões de Beleza (Multi-tenant / Multi-tema). Atualmente evoluindo para **AIOS (AI Operating System)** - Atuando como um sócio virtual para crescimento de banca.
 **Tech Stack:** React (Vite), TypeScript, Supabase, Clerk (Auth), TailwindCSS (v4), Stripe.
 
 ### 🎨 Temas e Design
@@ -33,6 +33,65 @@
 ---
 
 ## 📝 Memória de Alterações (Reverse Chronological)
+
+### 💎 [21/02/2026] Elite Hero AIOS & Performance Quest
+- **Dashboard**: Redesign completo do Hero para o formato "Elite Command Strip". Design minimalista, focado no nome do profissional, altura reduzida em 50%, e integração cirúrgica de insights proativos (Receita Recuperável).
+- **Performance**: Redução de 12 requisições sequenciais para 1 RPC unificada no módulo Financeiro (`get_monthly_finance_history`).
+- **Estabilidade**: Fix no bug de navegação mobile que fechava o menu "Mais" e refatoração da restauração da Lixeira.
+- **Design Tokens**: Intensificação dos efeitos Pro Max (Glow, Glassmorphism, Sombras) em toda a aplicação.
+ de funções.
+- **Tipagem Estrita**: Introdução de interfaces TypeScript para dados financeiros, eliminando o uso de `any` e aumentando a confiabilidade do código.
+- **Gráficos Pro Max**: Ajustes de layout no `Recharts` para evitar avisos de dimensão e garantir fluidez visual em resoluções variadas.
+- **Por que**: Eliminar gargalos de rede, estabilizar recursos críticos e profissionalizar a base de código (Type Safety).
+- **Arquivos Chave**: `Finance.tsx`, `RecycleBin.tsx`, `migrations/20260221_performance_optimization_v2.sql`.
+
+### [21/02/2026] - AIOS 2.0 Fase 4: Campaign ROI & Attribution
+- **Rastreamento de Campanhas**: Implementação da RPC `log_aios_campaign` e integração no clique do WhatsApp no CRM.
+- **ROI Real**: Refatoração da RPC `get_dashboard_stats` com atribuição de 30 dias para provar o valor financeiro da IA.
+- **Hotfix de Sincronia**: Resolução de conflito de tipos (UUID vs TEXT) e remoção de funções duplicadas que causavam zeramento no Dashboard.
+- **UI de Performance**: Novo componente `AIOSCampaignStats` com explicações didáticas via `InfoButton`.
+- **Arquivos Chave**: `Dashboard.tsx`, `AIOSCampaignStats.tsx`, `migrations/20260221_aios_roi_tracking.sql`, `migrations/20260221_dashboard_stats_hotfix.sql`.
+
+### [21/02/2026] - Faxina Técnica: Performance & Consistência RPC
+- **Otimização de Performance**: Redução de 12 chamadas de API para 1 no `Finance.tsx` através da nova RPC `get_monthly_finance_history`.
+- **Estabilização da Lixeira**: Correção definitiva de erros 404 e refatoração da lógica de restauração em `RecycleBin.tsx` usando mapeamento explícito de funções.
+- **Tipagem Estrita**: Introdução de interfaces TypeScript para dados financeiros, eliminando o uso de `any` e aumentando a confiabilidade do código.
+- **Gráficos Pro Max**: Ajustes de layout no `Recharts` para evitar avisos de dimensão e garantir fluidez visual em resoluções variadas.
+- **Por que**: Eliminar gargalos de rede, estabilizar recursos críticos e profissionalizar a base de código (Type Safety).
+- **Arquivos Chave**: `Finance.tsx`, `RecycleBin.tsx`, `migrations/20260221_performance_optimization_v2.sql`.
+
+### [21/02/2026] - Revitalização Pro Max: Seção de Configurações
+- **SettingsLayout 2.0**: Implementação de uma navegação flutuante (`Floating Pill Nav`) com Glassmorphism avançado e transições suaves.
+- **Refatoração Global**: Atualização das páginas `Geral`, `Serviços`, `Equipe`, `Segurança` e `Agendamento Público` para o design system Brutal/Pro Max.
+- **Componentização**: Uso extensivo de `BrutalCard` (com suporte a ícones e ações no header) e `BrutalButton` em toda a interface de settings.
+- **UX/UI Pro Max**: Remoção de cabeçalhos redundantes, introdução de feedback tátil (`haptic-click`) e polimento de elementos interativos (Toggles e botões pomocionais).
+- **Hotfix de Navegação Mobile**: Corrigido bug no `Layout.tsx` que desmontava o `BottomMobileNav` ao abrir modais, causando o fechamento precoce do menu "Mais".
+- **Design Pro Max Intensificado**: Aumento do contraste, profundidade de sombras e introdução de "Vidro Colorido" (Tinted Glass) com tons de Ouro/Neon para tornar a estética Pro Max evidente no tema Barber.
+- **Correção de RPC**: Restaurada a função `get_commissions_due` no Supabase para eliminar erros 404 no Dashboard.
+- **Por que**: Garantir funcionalidade plena no mobile e atender ao feedback do usuário sobre a sutileza do design anterior.
+- **Arquivos Chave**: `Layout.tsx`, `BrutalCard.tsx`, `BrutalBackground.tsx`, `MoreOptionsDrawer.tsx`, `index.html`.
+
+### [21/02/2026] - Resolução de Status Premium & Sincronização de Esquema
+- **Análise de Status**: Verificação manual e confirmação do status `subscriber` (premium) para as contas `rleporesilva@gmail.com` e `vanessa.lepore2009@gmail.com` no Supabase.
+- **Sincronização de Banco (Bugfix)**: Identificação e correção de inconsistência entre frontend e backend. O código já exigia recursos do Motor AIOS e Rate Limiting que não estavam presentes no banco de produção.
+- **Ações**: Aplicação manual das migrações `20260214_rate_limiting.sql` e `20260221_aios_foundation.sql` (colunas `aios_enabled`, `aios_features` e RPC `check_login_rate_limit`).
+- **Por que**: A falha no carregamento do perfil do usuário devido a colunas ausentes causava a exibição incorreta da tela "Teste Expirado", mesmo para contas premium.
+- **Arquivos Chave**: `contexts/AuthContext.tsx`, `migrations/20260221_aios_foundation.sql`, `migrations/20260214_rate_limiting.sql`.
+
+### [21/02/2026] - Operação Mobile Pro Max & Dashboard Real (Fase 3 & 4)
+- **Dashboard Data Integration**: Eliminação de dados mockados. Implementação das RPCs `get_dashboard_stats` e `get_dashboard_actions` para exibir métricas reais de lucro, receita recuperada, no-shows evitados e vagas preenchidas via agendamento online.
+- **Revitalização Visual 'Pro Max'**: Refatoração completa da estética mobile. Introdução de Glassmorphism 2.0 (`backdrop-blur-2xl`), Navegação flutuante com feedback tátil, Redesign do Header com logo dinâmico e suporte a Skeleton Loaders premium.
+- **Design System**: Novos tokens de design no `index.html` (sombras de profundidade e gradientes Pro Max) e atualização do `BrutalCard` e `BrutalButton` para consistência sistêmica.
+- **Por que**: Elevar a percepção de valor do produto para um patamar Enterprise/Premium e fornecer dados acionáveis reais para o dono do negócio.
+- **Arquivos Chave**: `hooks/useDashboardData.ts`, `components/BottomMobileNav.tsx`, `components/Header.tsx`, `components/BrutalCard.tsx`, `components/SkeletonLoader.tsx`, `pages/Dashboard.tsx`.
+
+### [21/02/2026] - Lançamento do Motor AIOS 2.0 (Fase 1 & 2)
+- **AIOS Foundation:** Implementação de Feature Flags (`aios_enabled`, `aios_features`) e Sistema de Memória Agêntica (`aios_logs`).
+- **Invisible Onboarding:** Redução drástica do atrito inicial (onboarding de 5 para 2 passos), focando na coleta progressiva de dados pela IA.
+- **Motor de Diagnóstico (QuickScan):** Criação do RPC `get_aios_diagnostic` no Supabase para detecção automática de Churn (clientes sumidos há >30 dias) e cálculo de Receita Recuperável.
+- **Interface Inteligente:** Lançamento do `AIOSDiagnosticCard` (Radar de Lucro) no Dashboard e integração do `AIOSCopywriter` no `ClientCRM` para reativação personalizada via WhatsApp (`wa.me`).
+- **Por que:** Transformar o sistema em um gerador ativo de lucro, reduzindo o churn e aumentando o faturamento sem esforço manual do dono.
+- **Arquivos Chave:** `hooks/useAIOSDiagnostic.ts`, `utils/aiosCopywriter.ts`, `components/dashboard/AIOSDiagnosticCard.tsx`, `migrations/20260221_aios_diagnostic_rpc.sql`.
 
 ### [20/02/2026] - Estabilização de Tipos e Preparação para Deploy de Produção
 - **Type Safety:** Correção massiva de erros de TypeScript em componentes críticos: `Appointment` (interface central), `BrutalCard` (props de estilo), `use2FA` (retorno de hook) e `CommissionsManagement.tsx`.

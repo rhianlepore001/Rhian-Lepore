@@ -34,58 +34,70 @@ export const BottomMobileNav: React.FC = () => {
     return (
         <>
             <div
-                className={`md:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between px-2 pb-[env(safe-area-inset-bottom)] pt-2 h-[72px] transition-all duration-300 rounded-2xl border-2 shadow-2xl
+                className={`md:hidden fixed bottom-6 left-6 right-6 z-40 flex items-center justify-between px-3 pb-[env(safe-area-inset-bottom)] pt-3 h-[76px] transition-all duration-300 rounded-[28px] border border-white/10 shadow-promax-glass backdrop-blur-2xl
                 ${isBeauty
-                        ? 'bg-beauty-dark/80 backdrop-blur-2xl border-beauty-neon/20 shadow-beauty-neon/10'
-                        : 'bg-brutal-main/90 backdrop-blur-xl border-brutal-border shadow-black/40 text-black'}`}
+                        ? 'bg-beauty-dark/40 shadow-beauty-neon/5'
+                        : 'bg-brutal-main/40 shadow-black/40 text-black'}`}
             >
                 {/* 1. Agenda */}
                 <button
                     onClick={() => navigate('/agenda')}
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive('/agenda') ? activeColor : inactiveColor}`}
+                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/agenda') ? activeColor : inactiveColor}`}
                 >
-                    <Calendar className="w-6 h-6" strokeWidth={isActive('/agenda') ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Agenda</span>
+                    <div className={`p-2 rounded-xl transition-all ${isActive('/agenda') ? 'bg-white/5' : ''}`}>
+                        <Calendar className="w-6 h-6" strokeWidth={isActive('/agenda') ? 2.5 : 2} />
+                    </div>
+                    <span className="text-[10px] font-bold tracking-tight">Agenda</span>
                 </button>
 
                 {/* 2. Clientes */}
                 <button
                     onClick={() => navigate('/clientes')}
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive('/clientes') ? activeColor : inactiveColor}`}
+                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/clientes') ? activeColor : inactiveColor}`}
                 >
-                    <Users className="w-6 h-6" strokeWidth={isActive('/clientes') ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Clientes</span>
+                    <div className={`p-2 rounded-xl transition-all ${isActive('/clientes') ? 'bg-white/5' : ''}`}>
+                        <Users className="w-6 h-6" strokeWidth={isActive('/clientes') ? 2.5 : 2} />
+                    </div>
+                    <span className="text-[10px] font-bold tracking-tight">Clientes</span>
                 </button>
 
                 {/* 3. CENTER PLUS BUTTON */}
-                <div className="relative -top-5 flex justify-center w-full">
+                <div className="relative -top-10 flex justify-center w-full">
                     <button
                         onClick={() => setShowQuickActions(true)}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition-transform active:scale-95 ${isBeauty
-                            ? 'bg-beauty-neon text-white shadow-beauty-neon/30'
-                            : 'bg-black text-accent-gold shadow-black/30'
+                        className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-promax-depth transform transition-all active:scale-95 group relative overflow-hidden
+                        ${isBeauty
+                                ? 'bg-beauty-neon text-white'
+                                : 'bg-accent-gold text-black'
                             }`}
                     >
-                        <Plus className="w-8 h-8" strokeWidth={2.5} />
+                        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <Plus className="w-10 h-10 relative z-10" strokeWidth={3} />
                     </button>
+                    {/* Ring Glow */}
+                    <div className={`absolute -top-1 w-18 h-18 rounded-3xl blur-xl opacity-20 -z-10 ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></div>
                 </div>
 
                 {/* 4. Financeiro */}
                 <button
                     onClick={() => navigate('/financeiro')}
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive('/financeiro') ? activeColor : inactiveColor}`}
+                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/financeiro') ? activeColor : inactiveColor}`}
                 >
-                    <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Financeiro</span>
+                    <div className={`p-2 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-white/5' : ''}`}>
+                        <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} />
+                    </div>
+                    <span className="text-[10px] font-bold tracking-tight">Financeiro</span>
                 </button>
 
                 {/* 5. Mais */}
                 <button
                     onClick={() => setShowMoreMenu(true)}
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${showMoreMenu ? activeColor : inactiveColor}`}
+                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${showMoreMenu ? activeColor : inactiveColor}`}
                 >
-                    <Menu className="w-6 h-6" strokeWidth={2} />
-                    <span className="text-[10px] font-medium">Mais</span>
+                    <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-white/5' : ''}`}>
+                        <Menu className="w-6 h-6" strokeWidth={2} />
+                    </div>
+                    <span className="text-[10px] font-bold tracking-tight">Mais</span>
                 </button>
             </div>
 

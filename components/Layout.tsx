@@ -48,8 +48,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation - Hidden when modal is open */}
-      {!isSettingsRoute && !isBillingRoute && !isModalOpen && !new URLSearchParams(useLocation().search).get('new') && <BottomMobileNav />}
+      {/* Mobile Bottom Navigation - Agora sempre renderizado para manter o estado interno */}
+      {!isSettingsRoute && !isBillingRoute && !new URLSearchParams(useLocation().search).get('new') && <BottomMobileNav />}
     </div>
   );
 };

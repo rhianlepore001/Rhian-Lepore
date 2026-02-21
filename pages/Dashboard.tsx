@@ -4,17 +4,21 @@ import { BrutalButton } from '../components/BrutalButton';
 import { Clock, AlertTriangle, ArrowRight, Target } from 'lucide-react';
 import { ProfitMetrics } from '../components/dashboard/ProfitMetrics';
 import { ActionCenter } from '../components/dashboard/ActionCenter';
+import { AIOSDiagnosticCard } from '../components/dashboard/AIOSDiagnosticCard';
+import { AIOSCampaignStats } from '../components/dashboard/AIOSCampaignStats';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { GoalHistory } from '../components/GoalHistory';
 import { GoalSettingsModal } from '../components/dashboard/GoalSettingsModal';
+import { DashboardHero } from '../components/dashboard/DashboardHero';
 
 import { formatCurrency } from '../utils/formatters';
 import { useAppTour } from '../hooks/useAppTour';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { logger } from '../utils/Logger';
+import { Skeleton } from '../components/SkeletonLoader';
 
 export const Dashboard: React.FC = () => {
   const { userType, region, businessName } = useAuth();
@@ -57,29 +61,15 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 md:space-y-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/5 pb-6 md:pb-8 gap-4 md:gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
-        <div className="flex-1">
-          <h1 className="text-4xl md:text-7xl font-heading text-white mt-2 leading-tight tracking-tight">
-            {businessName || 'Seu '}<span className={accentText}>{businessName ? '' : 'Negócio'}</span>
-          </h1>
-          <p className="text-xs md:text-sm text-text-secondary font-mono mt-3 uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
-            <span className={`w-8 h-[1px] ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></span>
-            Acompanhe a gestão do seu negócio
-          </p>
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <InfoButton text="Assista ao tutorial guiado do sistema para aprender a usar todas as funcionalidades do seu painel e otimizar seu tempo." />
-          <BrutalButton
-            id="dashboard-new-appointment"
-            variant="primary"
-            size="md"
-            icon={<Clock />}
-            className="w-full md:w-auto flex-1 text-sm md:text-base h-11 md:h-auto"
-            onClick={() => navigate('/agenda')}
-          >
-            Novo Agendamento
-          </BrutalButton>
-        </div>
+      <DashboardHero isBeauty={isBeauty} />
+
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+        <AIOSCampaignStats
+          campaignsSent={profitMetrics.campaignsSent}
+          recoveredRevenue={profitMetrics.recoveredRevenue}
+          isBeauty={isBeauty}
+          currencySymbol={currencySymbol}
+        />
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
@@ -110,10 +100,13 @@ export const Dashboard: React.FC = () => {
               </div>
             }
             className="brutal-card-enhanced"
-            noPadding
           >
             {loading ? (
-              <div className="p-4 text-center text-text-secondary">Carregando agendamentos...</div>
+              <div className="p-4 space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full opacity-60" />
+                <Skeleton className="h-12 w-full opacity-30" />
+              </div>
             ) : (
               <ul className="divide-y-2 divide-neutral-800">
                 {appointments.map((apt) => (

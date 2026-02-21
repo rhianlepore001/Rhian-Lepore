@@ -34,41 +34,42 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                 p-6 flex flex-col h-full
                 ${isBeauty
-                    ? 'bg-beauty-dark/95 backdrop-blur-xl border-r border-white/5'
-                    : 'bg-brutal-main border-r-4 border-brutal-border'}
+                    ? 'bg-beauty-dark/95 backdrop-blur-3xl border-r border-white/5 shadow-promax-glass'
+                    : 'bg-brutal-main/95 backdrop-blur-3xl border-r border-white/5 shadow-promax-depth'}
             `}>
                 <div className="flex items-center justify-between mb-8 flex-shrink-0">
-                    <h2 className={`font-heading text-xl uppercase tracking-wider ${isBeauty ? 'text-white' : 'text-white'}`}>
+                    <h2 className={`font-heading text-xl uppercase tracking-wider text-white`}>
                         Configurações
                     </h2>
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="md:hidden p-2 text-neutral-400 hover:text-white rounded-full hover:bg-neutral-800"
+                        className="md:hidden p-2 text-neutral-400 hover:text-white rounded-full hover:bg-white/10 active:animate-haptic-click"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <nav className="space-y-2 flex-1 overflow-y-auto">
+                <nav className="space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                     {menuItems.map(item => (
                         <NavLink
                             key={item.path}
                             to={item.path}
                             onClick={() => setIsSidebarOpen(false)}
                             className={({ isActive }) => `
-                                flex items-center gap-3 px-4 py-3 rounded-lg transition-all group shrink-0
+                                flex items-center gap-3 px-4 py-3 rounded-xl transition-all group shrink-0
+                                active:animate-haptic-click
                                 ${isBeauty
                                     ? (isActive
-                                        ? 'bg-beauty-neon/10 text-beauty-neon'
+                                        ? 'bg-beauty-neon/20 text-beauty-neon shadow-[0_0_15px_rgba(167,139,250,0.2)]'
                                         : 'text-neutral-400 hover:text-white hover:bg-white/5')
                                     : (isActive
-                                        ? 'bg-accent-gold text-black font-bold shadow-lg border-2 border-black'
-                                        : 'text-neutral-400 hover:text-white hover:bg-neutral-900 border-2 border-transparent')
+                                        ? 'bg-accent-gold text-black font-bold shadow-promax-depth'
+                                        : 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent')
                                 }
                             `}
                         >
                             <item.icon className="w-5 h-5 flex-shrink-0" />
-                            <span className="text-sm">{item.label}</span>
+                            <span className="text-sm font-medium">{item.label}</span>
                         </NavLink>
                     ))}
                 </nav>
@@ -76,7 +77,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 <div className="pt-6 border-t border-white/10 mt-auto flex-shrink-0">
                     <NavLink
                         to="/dashboard"
-                        className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors px-2"
+                        className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors px-2 active:animate-haptic-click"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="text-sm font-medium">Voltar ao Dashboard</span>
@@ -87,7 +88,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-md transition-opacity"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -95,50 +96,47 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             {/* Main Content */}
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col w-full max-w-[100vw]">
 
-                {/* Mobile Header + Sticky Nav */}
-                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark/95 border-white/10' : 'bg-neutral-900 border-neutral-800'} backdrop-blur-md`}>
+                {/* Mobile Header + Sticky Nav - PRO MAX REVITALIZATION */}
+                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark/80 border-white/5 shadow-promax-glass' : 'bg-neutral-900/80 border-white/5 shadow-promax-depth'} backdrop-blur-2xl`}>
                     {/* Top Bar */}
-                    <div className="flex items-center justify-between px-4 py-3">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between px-6 py-4">
+                        <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className={`p-2 -ml-2 rounded-lg transition-colors ${isBeauty ? 'text-white hover:bg-white/10' : 'text-white hover:bg-neutral-800'}`}
+                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click ${isBeauty ? 'bg-white/5 text-white' : 'bg-white/5 text-white shadow-sm'}`}
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
-                            <h1 className="text-base font-bold text-white uppercase tracking-tight">
-                                {currentPageTitle}
-                            </h1>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold">Ajustes</span>
+                                <h1 className="text-lg font-black text-white uppercase tracking-tight leading-none">
+                                    {currentPageTitle}
+                                </h1>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Horizontal Scrollable Nav (Mobile Only) */}
-                    <div className="px-4 pb-0 overflow-x-auto hide-scrollbar border-b border-white/5">
-                        <div className="flex gap-4 pb-3 min-w-max">
+                    {/* Horizontal Scrollable Nav (Mobile Only) - PRO MAX STYLE */}
+                    <div className="px-4 pb-4 overflow-x-auto hide-scrollbar">
+                        <div className="flex gap-3 min-w-max px-2">
                             {menuItems.map(item => (
                                 <NavLink
                                     key={item.path}
                                     to={item.path}
                                     className={({ isActive }) => `
-                                        flex flex-col items-center gap-1 min-w-[64px] transition-opacity
-                                        ${isActive ? 'opacity-100' : 'opacity-40 hover:opacity-70'}
+                                        flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
+                                        ${isActive
+                                            ? (isBeauty
+                                                ? 'bg-beauty-neon/20 border-beauty-neon/50 text-white shadow-[0_0_15px_rgba(167,139,250,0.3)]'
+                                                : 'bg-accent-gold text-black border-accent-gold shadow-promax-depth')
+                                            : 'bg-white/5 border-white/5 text-neutral-400 opacity-60'
+                                        }
                                     `}
                                 >
-                                    {({ isActive }) => (
-                                        <>
-                                            <div className={`
-                                                w-10 h-10 rounded-full flex items-center justify-center mb-1 transition-all
-                                                ${isActive
-                                                    ? `${isBeauty ? 'bg-beauty-neon text-black shadow-[0_0_10px_rgba(167,139,250,0.5)]' : 'bg-accent-gold text-black shadow-lg'}`
-                                                    : 'bg-neutral-800 text-neutral-400 border border-neutral-700'}
-                                            `}>
-                                                <item.icon className="w-5 h-5" />
-                                            </div>
-                                            <span className={`text-[10px] uppercase font-bold tracking-wide ${isActive ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-neutral-500'}`}>
-                                                {item.label.split(' ')[0]}
-                                            </span>
-                                        </>
-                                    )}
+                                    <item.icon className="w-4 h-4" />
+                                    <span className="text-xs font-bold uppercase tracking-wide">
+                                        {item.label.split(' ')[0]}
+                                    </span>
                                 </NavLink>
                             ))}
                         </div>

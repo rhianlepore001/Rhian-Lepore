@@ -159,4 +159,5 @@ export interface DashboardStats {
   current_month_revenue: number;
   weekly_growth: number;
   monthly_goal?: number;
+  ai_insights?: ActionItem[];
 }

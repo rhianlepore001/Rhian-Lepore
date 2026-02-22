@@ -37,7 +37,9 @@ export const OnboardingWizard: React.FC = () => {
         }
 
         if (data?.onboarding_step) {
-            setStep(data.onboarding_step);
+            // Garantir que o passo esteja dentro dos limites suportados (1.2)
+            const validStep = Math.min(Math.max(data.onboarding_step, 1), 2);
+            setStep(validStep);
         }
         setLoading(false);
     };

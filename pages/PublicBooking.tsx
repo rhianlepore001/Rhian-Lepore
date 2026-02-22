@@ -49,6 +49,11 @@ interface BusinessProfile {
     phone: string;
     enable_upsells: boolean;
     enable_professional_selection: boolean;
+    region?: string;
+    cover_photo_url?: string | null;
+    logo_url?: string | null;
+    address_street?: string | null;
+    instagram_handle?: string | null;
 }
 
 export const PublicBooking: React.FC = () => {

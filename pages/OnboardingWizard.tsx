@@ -59,7 +59,7 @@ export const OnboardingWizard: React.FC = () => {
 
     const steps = [
         {
-            title: isBeauty ? 'Bem-vindo ao Beauty OS' : 'Bem-vindo ao Barber OS',
+            title: isBeauty ? 'Bem-vindo ao AgenX Beauty' : 'Bem-vindo ao AgenX Barber',
             description: 'Vamos começar com o básico. O resto? A nossa IA cuida para você.',
             component: <StepBusinessInfo onNext={async () => {
                 if (!user) return;

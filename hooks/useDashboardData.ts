@@ -31,7 +31,6 @@ export function useDashboardData() {
                     setAccountCreatedAt(new Date(user.created_at));
                 }
 
-                // 1. Fetch Profile and current Goal
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
@@ -43,11 +42,11 @@ export function useDashboardData() {
 
                 if (profileRes.data?.business_slug) setBusinessSlug(profileRes.data.business_slug);
 
-                // Priority: goal_settings > profiles.monthly_goal > default(15000)
                 const effectiveGoal = goalRes.data?.monthly_goal ?? profileRes.data?.monthly_goal ?? 15000;
-                setMonthlyGoal(effectiveGoal);
 
-                // 2. Fetch Appointments
+                // Only update if different to avoid unnecessary re-renders
+                setMonthlyGoal(prev => prev !== effectiveGoal ? effectiveGoal : prev);
+
                 const nowIso = now.toISOString();
                 const { data: aptData, error: aptError } = await supabase
                     .from('appointments')
@@ -74,7 +73,6 @@ export function useDashboardData() {
                     })));
                 }
 
-                // 3. Stats and Actions
                 const [statsRes, actionsRes] = await Promise.all([
                     supabase.rpc('get_dashboard_stats', { p_user_id: user.id }),
                     supabase.rpc('get_dashboard_actions', { p_user_id: user.id })
@@ -120,30 +118,37 @@ export function useDashboardData() {
                 const history = [];
                 const monthsNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
-                // We'll fetch the last 6 months
+                const date = new Date();
+                const currentMonth = date.getMonth();
+                const currentYear = date.getFullYear();
+
+                const historyPromises = [];
                 for (let i = 0; i < 6; i++) {
-                    const date = new Date();
-                    date.setMonth(date.getMonth() - i);
-                    const month = date.getMonth();
-                    const year = date.getFullYear();
+                    const targetDate = new Date(currentYear, currentMonth - i, 1);
+                    const month = targetDate.getMonth();
+                    const year = targetDate.getFullYear();
 
                     const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
                     const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
-                    // Fetch revenue and goal for that specific month
-                    const [statsRes, goalRes] = await Promise.all([
+                    historyPromises.push(Promise.all([
                         supabase.rpc('get_finance_stats', { p_user_id: user.id, p_start_date: startOfMonth, p_end_date: endOfMonth }),
-                        supabase.from('goal_settings').select('monthly_goal').eq('user_id', user.id).eq('month', month).eq('year', year).maybeSingle()
-                    ]);
+                        supabase.from('goal_settings').select('monthly_goal').eq('user_id', user.id).eq('month', month).eq('year', year).maybeSingle(),
+                        Promise.resolve({ month, year })
+                    ]));
+                }
 
+                const results = await Promise.all(historyPromises);
+
+                for (const [statsRes, goalRes, meta] of results) {
                     const revenue = statsRes.data?.revenue || 0;
-                    const monthGoal = goalRes.data?.monthly_goal || monthlyGoal || 15000;
-                    const percentage = monthGoal > 0 ? Math.round((revenue / monthGoal) * 100) : 0;
+                    const mGoal = goalRes.data?.monthly_goal || effectiveGoalValue || 15000;
+                    const percentage = mGoal > 0 ? Math.round((revenue / mGoal) * 100) : 0;
 
                     history.push({
-                        month: monthsNames[month],
-                        year: year,
-                        goal: monthGoal,
+                        month: monthsNames[meta.month],
+                        year: meta.year,
+                        goal: mGoal,
                         achieved: revenue,
                         percentage: percentage,
                         success: percentage >= 100
@@ -155,9 +160,12 @@ export function useDashboardData() {
             }
         };
 
+        // Get value from state for history fallback if not yet fetched
+        const effectiveGoalValue = monthlyGoal;
+
         fetchData();
         fetchGoalHistory();
-    }, [user, monthlyGoal]);
+    }, [user]); // Removed monthlyGoal from dependencies to break infinite loop
 
     const updateGoal = async (newGoalValue: number) => {
         if (!user) return { error: { message: 'User not authenticated' } };

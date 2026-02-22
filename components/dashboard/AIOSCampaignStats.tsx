@@ -10,12 +10,12 @@ interface AIOSCampaignStatsProps {
     currencySymbol: string;
 }
 
-export const AIOSCampaignStats: React.FC<AIOSCampaignStatsProps> = ({
+export const AIOSCampaignStats = React.memo(({
     campaignsSent,
     recoveredRevenue,
     isBeauty,
     currencySymbol
-}) => {
+}: AIOSCampaignStatsProps) => {
     const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
     const accentBorder = isBeauty ? 'border-beauty-neon' : 'border-accent-gold';
@@ -72,4 +72,6 @@ export const AIOSCampaignStats: React.FC<AIOSCampaignStatsProps> = ({
             <Send className={`absolute -bottom-6 -right-6 w-32 h-32 opacity-5 ${accentColor} rotate-12`} />
         </BrutalCard>
     );
-};
+});
+
+AIOSCampaignStats.displayName = 'AIOSCampaignStats';

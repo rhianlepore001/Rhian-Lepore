@@ -2,334 +2,327 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Screw } from '../components/Screw';
-import { Scissors, Sparkles, Zap, Check, Eye, EyeOff } from 'lucide-react';
+import { Check, Eye, EyeOff, Zap, Sparkles } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
 import { PhoneInput } from '../components/PhoneInput';
 import { validatePassword } from '../utils/passwordValidation';
+import { AgenXLogo } from '../components/AgenXLogo';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { register } = useAuth();
   const [searchParams] = useSearchParams();
-  const [type, setType] = useState<UserType>('barber');
-  const [region, setRegion] = useState<Region>('BR');
 
-  // Read type from URL parameter
-  useEffect(() => {
-    const typeParam = searchParams.get('type');
-    if (typeParam === 'beauty' || typeParam === 'barber') {
-      setType(typeParam as UserType);
-    }
-  }, [searchParams]);
-
-  const [name, setName] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [userType, setUserType] = useState<UserType>((searchParams.get('type') as UserType) || 'barber');
+  const [region, setRegion] = useState<Region>('BR');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const errorRef = React.useRef<HTMLDivElement>(null);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Translation of common Supabase/Auth errors
-  const translateError = (err: string) => {
-    if (err.includes('Anonymous sign-ins are disabled')) return 'O cadastro de novos usuários está temporariamente desabilitado.';
-    if (err.includes('Email not confirmed')) return 'E-mail não confirmado. Verifique sua caixa de entrada.';
-    if (err.includes('Invalid login credentials')) return 'Email ou senha incorretos.';
-    if (err.includes('User already registered')) return 'Este e-mail já está cadastrado.';
-    if (err.includes('Password should be')) return 'A senha deve ter pelo menos 6 caracteres.';
-    return err;
-  };
+  const isBeauty = userType === 'beauty';
 
-  // Scroll to error when it appears
   useEffect(() => {
-    if (error && errorRef.current) {
-      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const typeFromUrl = searchParams.get('type') as UserType;
+    if (typeFromUrl && (typeFromUrl === 'barber' || typeFromUrl === 'beauty')) {
+      setUserType(typeFromUrl);
     }
-  }, [error]);
+  }, [searchParams]);
 
-  // Dynamic Styles based on Type
-  const isBarber = type === 'barber';
-
-  const styles = {
-    bg: isBarber ? 'bg-brutal-main' : 'bg-beauty-dark',
-    cardBg: isBarber ? 'bg-brutal-card' : 'bg-beauty-card',
-    accent: isBarber ? 'text-accent-gold' : 'text-beauty-neon',
-    border: isBarber ? 'border-accent-gold' : 'border-beauty-neon',
-    button: isBarber ? 'bg-accent-gold hover:bg-accent-goldHover text-black' : 'bg-beauty-neon hover:bg-beauty-neonHover text-black',
-    screw: isBarber ? 'text-neutral-800' : 'text-beauty-silver',
-    inputFocus: isBarber ? 'focus:border-accent-gold' : 'focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]',
-    inputBg: isBarber ? 'bg-black/40' : 'bg-beauty-dark/50',
-    inputBorder: isBarber ? 'border-neutral-800' : 'border-beauty-neon/20',
-    inputRadius: isBarber ? 'rounded-none' : 'rounded-xl',
-  };
-
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
 
-    try {
-      // Password Validation
-      const passwordCheck = validatePassword(password);
-      if (!passwordCheck.isValid) {
-        throw new Error(`Senha fraca: ${passwordCheck.errors.join(', ')}`);
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            business_name: businessName,
-            phone,
-            region,
-            type
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
-        navigate('/onboarding');
-      } else {
-        alert('Cadastro realizado! Verifique seu email para confirmar.');
-        navigate('/login');
-      }
-
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem');
       setLoading(false);
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.errors.join(', '));
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await register({
+      email,
+      password,
+      fullName,
+      businessName,
+      userType,
+      region,
+      phone
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      navigate('/onboarding');
     }
   };
 
   return (
-    <div className={`h-screen ${styles.bg} relative overflow-y-auto transition-colors duration-700`}>
-
+    <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-700
+      ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
+    `}>
       {/* Background Atmosphere */}
-      {!isBarber && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-beauty-neon/10 rounded-full blur-[100px]"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-900/20 rounded-full blur-[100px]"></div>
-        </div>
-      )}
-      {isBarber && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-accent-gold/5 to-transparent"></div>
-        </div>
-      )}
+      <div className="absolute inset-0 pointer-events-none">
+        {isBeauty ? (
+          <>
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-beauty-neon/5 rounded-full blur-[150px]"></div>
+            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-beauty-neon/5 rounded-full blur-[150px]"></div>
+          </>
+        ) : (
+          <>
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-gold/5 rounded-full blur-[150px]"></div>
+            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent-gold/5 rounded-full blur-[150px]"></div>
+          </>
+        )}
+      </div>
 
-      <div className="flex items-center justify-center p-4 py-8">
-        <div className={`w-full max-w-lg relative z-10 ${styles.cardBg} transition-all duration-500 my-8
-          ${isBarber
-            ? 'border-4 border-black shadow-heavy'
-            : 'border border-beauty-neon/30 rounded-2xl shadow-[0_0_30px_rgba(167,139,250,0.15)] bg-gradient-to-br from-beauty-card to-beauty-dark'}`}>
-          {/* Top Header Bar */}
-          <div className={`p-4 flex justify-between items-center transition-all ${isBarber ? 'bg-black border-b-4 border-white/10' : 'bg-beauty-dark/40 border-b border-white/5 rounded-t-2xl'}`}>
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${isBarber ? 'bg-accent-gold animate-pulse' : 'bg-beauty-neon animate-pulse'}`}></div>
-              <span className="font-mono text-xs text-neutral-400 tracking-widest">CONFIGURAÇÃO INICIAL</span>
-            </div>
-            <div className="font-mono text-xs text-neutral-500"></div> {/* Removed ID */}
+      <div className={`w-full max-w-2xl relative z-10 transition-all duration-500
+        ${isBeauty ? 'bg-beauty-card/80 backdrop-blur-xl border border-white/10 shadow-soft rounded-3xl' : 'bg-brutal-card border-4 border-black shadow-heavy'}
+      `}>
+
+        {/* Header Branding */}
+        <div className={`flex justify-center items-center py-6 border-b transition-all duration-500
+          ${isBeauty ? 'border-white/5 bg-transparent' : 'border-black bg-black'}
+        `}>
+          <AgenXLogo size={40} isBeauty={isBeauty} showText={true} />
+        </div>
+
+        <form onSubmit={handleRegister} className="p-8 md:p-12">
+          {!isBeauty && (
+            <>
+              <Screw className="top-[-10px] left-[-10px] text-neutral-800" />
+              <Screw className="top-[-10px] right-[-10px] text-neutral-800" />
+              <Screw className="bottom-[-10px] left-[-10px] text-neutral-800" />
+              <Screw className="bottom-[-10px] right-[-10px] text-neutral-800" />
+            </>
+          )}
+
+          <div className="mb-10 text-center">
+            <h1 className={`font-heading text-3xl uppercase mb-2 ${isBeauty ? 'text-white' : 'text-white'}`}>Criar sua Conta</h1>
+            <p className={`text-sm ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>
+              Junte-se à elite da gestão inteligente.
+            </p>
           </div>
 
-          {/* THE SWITCHES - CONTROL PANEL */}
-          <div className="p-6 md:p-8 space-y-8">
-
-            {/* Type Selector */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setType('barber')}
-                className={`h-20 border-2 relative flex flex-col items-center justify-center gap-2 transition-all duration-300 ${isBarber
-                  ? 'bg-neutral-900 border-accent-gold shadow-[inset_0_0_20px_rgba(194,155,64,0.2)]'
-                  : 'bg-transparent border-neutral-800 opacity-50 hover:opacity-80'
-                  }`}
-              >
-                <Scissors className={`w-6 h-6 ${isBarber ? 'text-accent-gold' : 'text-neutral-600'}`} />
-                <span className={`font-heading uppercase tracking-widest ${isBarber ? 'text-white' : 'text-neutral-600'}`}>Barber OS</span>
-                {isBarber && <div className="absolute top-2 right-2 w-2 h-2 bg-accent-gold rounded-full shadow-[0_0_10px_#C29B40]"></div>}
-              </button>
-
-              <button
-                onClick={() => setType('beauty')}
-                className={`h-20 border-2 relative flex flex-col items-center justify-center gap-2 transition-all duration-300 ${!isBarber
-                  ? 'bg-neutral-900 border-beauty-neon shadow-[inset_0_0_20px_rgba(255,0,255,0.2)]'
-                  : 'bg-transparent border-neutral-800 opacity-50 hover:opacity-80'
-                  }`}
-              >
-                <Sparkles className={`w-6 h-6 ${!isBarber ? 'text-beauty-neon' : 'text-neutral-600'}`} />
-                <span className={`font-heading uppercase tracking-widest ${!isBarber ? 'text-white' : 'text-neutral-600'}`}>Beauty OS</span>
-                {!isBarber && <div className="absolute top-2 right-2 w-2 h-2 bg-beauty-neon rounded-full shadow-[0_0_10px_#FF00FF]"></div>}
-              </button>
+          {error && (
+            <div className={`mb-6 p-4 text-xs text-center border ${isBeauty ? 'bg-red-500/10 border-red-500/20 text-red-200 rounded-xl' : 'bg-red-500/10 border-red-500 text-red-500 font-mono'}`}>
+              {error}
             </div>
+          )}
 
-            {/* Region Selector */}
-            <div className="bg-black/30 p-1 flex justify-between items-center border border-white/5">
-              <div className="flex-1 flex">
-                <button
-                  onClick={() => setRegion('BR')}
-                  className={`flex-1 py-2 text-xs font-mono font-bold uppercase transition-all ${region === 'BR'
-                    ? `${styles.bg} ${styles.accent} border border-white/10`
-                    : 'text-neutral-600 hover:text-neutral-400'
-                    }`}
-                >
-                  🇧🇷 Brasil (BRL)
-                </button>
-                <button
-                  onClick={() => setRegion('PT')}
-                  className={`flex-1 py-2 text-xs font-mono font-bold uppercase transition-all ${region === 'PT'
-                    ? `${styles.bg} ${styles.accent} border border-white/10`
-                    : 'text-neutral-600 hover:text-neutral-400'
-                    }`}
-                >
-                  🇵🇹 Portugal (EUR)
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Domínio</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setUserType('barber')}
+                    className={`flex flex-col items-center justify-center p-6 transition-all border-2
+                      ${userType === 'barber'
+                        ? 'bg-accent-gold/10 border-accent-gold text-accent-gold shadow-glow'
+                        : 'bg-black/40 border-neutral-800 text-neutral-600 hover:border-neutral-700'}
+                      ${isBeauty ? 'rounded-2xl' : ''}
+                    `}
+                  >
+                    <AgenXLogo size={32} isBeauty={false} showText={false} className="mb-2" />
+                    <span className="text-[10px] font-mono opacity-50 mb-1">UNIFIED</span>
+                    <span className="font-heading font-bold tracking-tighter text-sm uppercase">Barber</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserType('beauty')}
+                    className={`flex flex-col items-center justify-center p-6 transition-all border-2
+                      ${userType === 'beauty'
+                        ? 'bg-beauty-neon/10 border-beauty-neon text-beauty-neon shadow-neon'
+                        : 'bg-black/40 border-neutral-800 text-neutral-600 hover:border-neutral-700'}
+                      ${isBeauty ? 'rounded-2xl' : ''}
+                    `}
+                  >
+                    <AgenXLogo size={32} isBeauty={true} showText={false} className="mb-2" />
+                    <span className="text-[10px] font-mono opacity-50 mb-1">UNIFIED</span>
+                    <span className="font-heading font-bold tracking-tighter text-sm uppercase">Beauty</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Região & Moeda</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setRegion('BR')}
+                    className={`p-4 text-xs font-bold transition-all border-2
+                      ${region === 'BR'
+                        ? (isBeauty ? 'bg-beauty-neon/10 border-beauty-neon text-white' : 'bg-accent-gold/10 border-accent-gold text-accent-gold')
+                        : 'bg-black/20 border-neutral-800 text-neutral-600'}
+                      ${isBeauty ? 'rounded-xl' : ''}
+                    `}
+                  >
+                    BR BRASIL (BRL)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegion('PT')}
+                    className={`p-4 text-xs font-bold transition-all border-2
+                      ${region === 'PT'
+                        ? (isBeauty ? 'bg-beauty-neon/10 border-beauty-neon text-white' : 'bg-accent-gold/10 border-accent-gold text-accent-gold')
+                        : 'bg-black/20 border-neutral-800 text-neutral-600'}
+                      ${isBeauty ? 'rounded-xl' : ''}
+                    `}
+                  >
+                    PT PORTUGAL (EUR)
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Seu Nome</label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                  `}
+                  placeholder="EX: JOÃO SILVA"
+                />
               </div>
             </div>
 
-            {/* Dynamic Form */}
-            <div className="space-y-4 relative">
-              {/* Screws for visual anchor */}
-              <Screw className={`top-[-10px] left-[-10px] ${styles.screw}`} />
-              <Screw className={`top-[-10px] right-[-10px] ${styles.screw}`} />
-
-              {error && (
-                <div
-                  ref={errorRef}
-                  role="alert"
-                  className="bg-red-500/10 border border-red-500 text-red-500 p-3 text-xs font-mono text-center animate-in fade-in slide-in-from-top-2 duration-300"
-                >
-                  {translateError(error)}
-                </div>
-              )}
-
+            <div className="space-y-6">
               <div className="space-y-1">
-                <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
-                  {region === 'BR' ? 'Nome do Responsável' : 'Nome do Gerente'}
-                </label>
+                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Nome do Negócio</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
-                  placeholder="SEU NOME COMPLETO"
+                  required
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                  `}
+                  placeholder="EX: STUDIO GLOW"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
-                  {type === 'barber' ? 'Nome da Barbearia' : (region === 'BR' ? 'Nome do Salão/Studio' : 'Nome do Salão/Espaço')}
-                </label>
+                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>WhatsApp</label>
+                <PhoneInput
+                  value={phone}
+                  onChange={setPhone}
+                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                  `}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Email Profissional</label>
                 <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
-                  placeholder={type === 'barber' ? "EX: CAVALHEIROS & NAVALHAS" : "EX: STUDIO GLOW"}
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                  `}
+                  placeholder="contato@empresa.com"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
-                    {region === 'BR' ? 'Celular / WhatsApp' : 'Telemóvel'}
-                  </label>
-                  <PhoneInput
-                    value={phone}
-                    onChange={setPhone}
-                    defaultRegion={region}
-                    forceTheme={type}
-                    placeholder={region === 'BR' ? "(XX) 9XXXX-XXXX" : "+351 XXX XXX XXX"}
-                  />
+                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Senha</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                        ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                      `}
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500">
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-mono uppercase text-neutral-500 ml-1">
-                    Moeda Config
-                  </label>
-                  <div className={`w-full h-[54px] ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} flex items-center px-4 text-neutral-400 font-mono text-sm`}>
-                    {region === 'BR' ? 'R$ (Real)' : '€ (Euro)'}
-                    <Check className="w-4 h-4 ml-auto opacity-50" />
+                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Confirmar</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                        ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                      `}
+                    />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500">
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-mono uppercase text-neutral-500 ml-1">Email de Acesso</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
-                  placeholder="admin@seudominio.com"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-mono uppercase text-neutral-500 ml-1">Senha</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'} // Dynamic type
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full ${styles.inputBg} border-2 ${styles.inputBorder} ${styles.inputRadius} p-4 h-[54px] text-white font-mono text-sm focus:outline-none transition-all ${styles.inputFocus}`}
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(prev => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
             </div>
+          </div>
 
-            {/* Submit */}
+          <div className="mt-12 space-y-4">
             <button
-              onClick={handleRegister}
+              type="submit"
               disabled={loading}
-              aria-busy={loading}
-              className={`w-full ${styles.button} h-14 font-heading text-lg uppercase tracking-wider transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed
-                ${isBarber
-                  ? 'border-2 border-black shadow-heavy active:shadow-none active:translate-y-1'
-                  : 'rounded-xl shadow-neon hover:shadow-neonStrong active:scale-95'}`}
+              className={`w-full p-5 font-heading text-xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50
+                ${isBeauty
+                  ? 'bg-beauty-neon text-white hover:shadow-neon rounded-2xl'
+                  : 'bg-accent-gold text-black border-2 border-black shadow-heavy hover:translate-y-[-2px]'}
+              `}
             >
               {loading ? (
-                <span className="animate-pulse flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  PROCESSANDO...
-                </span>
+                <div className="w-6 h-6 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <Zap className="w-5 h-5" fill="black" />
-                  INICIAR SISTEMA
+                  {isBeauty ? <Sparkles size={24} /> : <Zap size={24} fill="black" />}
+                  Finalizar Cadastro
                 </>
               )}
             </button>
 
-            <div className="text-center space-y-2">
-              <p className="text-neutral-500 text-xs font-mono">
-                {/* Removed debug message */}
-              </p>
-              <Link to="/login" className={`text-xs font-bold font-mono uppercase ${styles.accent} border-b border-transparent hover:border-current transition-all`}>
-                Já tenho conta // Login
-              </Link>
-            </div>
-
+            <p className="text-center text-[10px] text-neutral-500 uppercase font-mono tracking-widest">
+              Ao se cadastrar, você concorda com nossos <a href="#" className="underline">Termos</a> e <a href="#" className="underline">Privacidade</a>.
+            </p>
           </div>
-        </div>
 
-        {/* Visual Footer Text - REMOVED DEBUG TEXTS */}
-        <div className="absolute bottom-4 left-0 right-0 text-center">
-          <p className="text-[10px] text-neutral-700 font-mono uppercase tracking-[0.3em]">
-            POWERED BY {type === 'barber' ? 'BARBER OS' : 'BEAUTY OS'}
-          </p>
-        </div>
+          <div className="text-center mt-12 pt-8 border-t border-white/5 font-mono text-xs">
+            <span className="text-neutral-600 uppercase">Já possui uma conta? </span>
+            <Link
+              to="/login"
+              className={`uppercase font-bold transition-all ${isBeauty ? 'text-beauty-neon hover:text-white' : 'text-accent-gold hover:text-white'}`}
+            >
+              Fazer Login
+            </Link>
+          </div>
+        </form>
+      </div>
+
+      <div className="absolute bottom-6 text-[10px] text-white/20 font-mono uppercase tracking-[0.2em]">
+        AgenX Management Flow • v2.0
       </div>
     </div>
   );

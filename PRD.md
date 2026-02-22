@@ -1,27 +1,27 @@
-# Product Requirements Document (PRD) - Beauty OS / Barber OS
+# Product Requirements Document (PRD) - AgenX (AIOS)
 
-> **Versão:** 2.0  
-> **Última Atualização:** 16/02/2026  
-> **Status:** Em Produção (MVP + Enterprise Features)
+> **Versão:** 3.0  
+> **Última Atualização:** 22/02/2026  
+> **Status:** AIOS Core - Produção / Launch Ready
 
 ---
 
 ## 1. Visão Geral do Produto
 
-**Nome do Produto:** Beauty OS (com variante Barber OS)
+**Nome do Produto:** AgenX (AI Operating System)
 
 **Descrição:**
-O Beauty OS é uma plataforma SaaS (Software as a Service) **enterprise-grade** projetada para modernizar a gestão de salões de beleza e barbearias. O sistema oferece uma experiência premium e altamente visual, diferenciando-se pela estética cuidada, segurança robusta e funcionalidades que cobrem agendamento, gestão financeira, CRM de clientes, auditoria completa e insights operacionais.
+O AgenX não é apenas um software de gestão, mas um **AI Operating System (AIOS)** projetado para atuar como um sócio virtual estratégico para barbearias e salões de beleza de alto nível. Com foco em crescimento de receita e redução de churn, o sistema combina uma interface premium (temas Brutalista/Barber e Elegante/Beauty) com um motor de inteligência que automatiza a recuperação de clientes e otimiza o ROI operacional.
 
 **Proposta de Valor:**
 Transformar a gestão administrativa de negócios de beleza em uma experiência visualmente impactante, **segura** e eficiente, permitindo que os proprietários foquem na arte e no atendimento ao cliente, enquanto o software cuida da organização com estilos que se adaptam à identidade da marca (Barbearia "Brutalista" ou Salão "Beauty").
 
 **Diferenciais Competitivos:**
-- 🎨 **Design como Feature:** Temas visuais premium (Brutalist/Elegant) com troca dinâmica
-- 🔐 **Segurança Enterprise:** 2FA, Rate Limiting, Audit Logs, RLS total
-- 📱 **PWA Dinâmico:** Logos, favicons e manifests adaptados por tema
-- 🚀 **Performance:** Otimizado para mobile-first com Core Web Vitals em mente
-- 🧠 **IA Integrada:** Google Gemini para insights e automações (roadmap)
+- 🎨 **Design Pro Max:** Temas visuais de elite (Brutalist/Elegant) com glassmorphism avançado.
+- 🔐 **Segurança Enterprise:** 2FA, Rate Limiting, Audit Logs e Row Level Security (RLS) total.
+- 📱 **60 FPS Mobile UX:** Otimização agressiva de GPU para fluidez total em dispositivos móveis.
+- 🧠 **Motor AIOS:** Ativação proativa de clientes via WhatsApp e radar de receita recuperável.
+- 🚀 **PWA Unificado:** Experiência cross-platform sob a marca AgenX com logos dinâmicos.
 
 ---
 
@@ -143,16 +143,16 @@ Transformar a gestão administrativa de negócios de beleza em uma experiência 
 
 ### 4.5. Inteligência e Relatórios (Insights) 🔄 **[EM DESENVOLVIMENTO]**
 
-#### Dashboard Executivo
-- **KPIs:** Faturamento, Ticket Médio, Taxa de Ocupação, Clientes Ativos, Serviços Mais Vendidos
-- **Gráficos:** Linha (tendências), Barra (comparações), Pizza (distribuição)
-- **Período:** Hoje, Semana, Mês, Ano, Customizado
+#### Dashboard Elite (Command Strip)
+- **Design Minimalista:** Redução de altura do Hero em 50% para foco em métricas críticas.
+- **Insights AIOS:** Visualização imediata de "Receita Recuperável" e "Vagas Preenchidas por IA".
+- **Identidade Profissional:** Exibição do nome do profissional e branding do estabelecimento integrado.
 
-#### IA (Google Gemini) - Roadmap
-- **Análise de Sentimentos:** Feedback de clientes (reviews)
-- **Geração de Conteúdo:** Descrições de serviços, posts para redes sociais
-- **Previsão de Demanda:** Sugestão de horários de pico
-- **Chatbot:** Atendimento automatizado para agendamentos
+#### IAOS Engine (Motor de Crescimento) ✅ **[IMPLEMENTADO]**
+- **Radar de Lucro:** Identificação automática de clientes em risco de Churn (>30 dias).
+- **Campaign ROI:** Rastreamento de conversão de cliques via WhatsApp e atribuição de receita real.
+- **AIOS Copywriter:** Geração de mensagens personalizadas para reativação de clientes.
+- **Success Playbook:** Tutorial estratégico para maximizar o uso do sistema como sócio virtual.
 
 ### 4.6. Customização e Temas (Visual Engine) ✅ **[IMPLEMENTADO]**
 
@@ -203,10 +203,11 @@ Transformar a gestão administrativa de negócios de beleza em uma experiência 
 
 ### 5.2. Desempenho ✅ **[OTIMIZADO]**
 
-#### Core Web Vitals
-- **LCP (Largest Contentful Paint):** < 2.5s
-- **FID (First Input Delay):** < 100ms
-- **CLS (Cumulative Layout Shift):** < 0.1
+#### 60 FPS UX
+- **GPU Optimization:** Redução de `backdrop-filter` e sombras pesadas em dispositivos móveis.
+- **Hardware Acceleration:** Uso de `backface-visibility` e `will-change` para transições fluidas.
+- **Lite Shadow System:** Sombras suavizadas dinamicamente para manter a economia de processamento.
+- **LCP (Largest Contentful Paint):** < 2.0s no mobile.
 
 #### Otimizações
 - **Bundling:** Vite (code splitting, tree shaking)
@@ -381,20 +382,19 @@ public/
 - [x] RLS Total (100% cobertura)
 - [x] PWA Dinâmico (logos, manifests)
 
-### 🔄 Fase 3: Automação e IA (Em Desenvolvimento)
-- [ ] Notificações WhatsApp (lembretes de agendamento)
-- [ ] Integração Google Gemini (análise de sentimentos)
-- [ ] Chatbot para agendamentos
-- [ ] Previsão de demanda (IA)
-- [ ] Geração automática de posts para redes sociais
+### ✅ Fase 3: AIOS & Performance (Concluída)
+- [x] Motor de Diagnóstico de Lucro (QuickScan)
+- [x] Rastreamento de ROI de Campanhas
+- [x] Otimização 60 FPS Mobile
+- [x] Consolidação Branding AgenX (Logo Unificado)
+- [x] Sucesso do Cliente (Playbook Estratégico)
 
-### 📋 Fase 4: Expansão (Planejada)
-- [ ] App Mobile Nativo (React Native)
-- [ ] Integração com POS (Ponto de Venda)
-- [ ] Programa de Fidelidade
-- [ ] Marketplace de Produtos
+### 📋 Fase 4: Expansão & IA Avançada (Planejada)
+- [ ] Integração Google Gemini (Análise de Sentimento Real)
+- [ ] Notificações Push PWA
 - [ ] Multi-idioma (i18n)
-- [ ] Relatórios Avançados (BI)
+- [ ] App Mobile Nativo (React Native)
+- [ ] Relatórios Avançados de BI com IA
 
 ---
 

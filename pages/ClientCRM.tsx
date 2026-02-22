@@ -513,7 +513,7 @@ export const ClientCRM: React.FC = () => {
 
                 <div className="bg-white/5 p-3 rounded border border-white/5">
                   <p className="text-[10px] uppercase font-mono text-text-secondary mb-1">Sugestão da IA:</p>
-                  <p className="text-xs italic text-white/80">"Enviar mensagem de saudades e oferecer um horário prioritário para esta semana."</p>
+                  <p className="text-xs italic text-white/80">&quot;Enviar mensagem de saudades e oferecer um horário prioritário para esta semana.&quot;</p>
                 </div>
 
                 <BrutalButton

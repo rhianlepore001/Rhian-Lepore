@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface BrutalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
   fullWidth?: boolean;
@@ -74,7 +74,11 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
 
       success: isBeauty
         ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-white/5'
-        : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-white/5'
+        : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-white/5',
+
+      outline: isBeauty
+        ? 'bg-transparent border border-white/20 text-white hover:bg-white/5'
+        : 'bg-transparent border-2 border-black text-black hover:bg-black/5'
     };
     return variants[variant];
   };

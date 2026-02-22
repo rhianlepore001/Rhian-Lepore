@@ -25,6 +25,15 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   markTutorialCompleted: () => Promise<void>;
+  register: (data: {
+    email: string;
+    password: string;
+    fullName: string;
+    businessName: string;
+    userType: UserType;
+    region: Region;
+    phone: string;
+  }) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -171,6 +180,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const register = async (data: {
+    email: string;
+    password: string;
+    fullName: string;
+    businessName: string;
+    userType: UserType;
+    region: Region;
+    phone: string;
+  }) => {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+            business_name: data.businessName,
+          }
+        }
+      });
+
+      if (authError) return { error: authError };
+
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: authData.user.id,
+              full_name: data.fullName,
+              business_name: data.businessName,
+              user_type: data.userType,
+              region: data.region,
+              phone: data.phone,
+              tutorial_completed: false,
+              subscription_status: 'trial',
+              trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days trial
+              aios_enabled: true
+            }
+          ]);
+
+        if (profileError) return { error: profileError };
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
   const setDevUserType = (type: UserType) => {
     setDevUserTypeState(type);
     localStorage.setItem('rhian_lepore_dev_type', type);
@@ -203,7 +262,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     login,
     logout,
-    markTutorialCompleted
+    markTutorialCompleted,
+    register
   }), [
     session,
     activeUserType,

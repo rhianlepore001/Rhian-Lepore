@@ -9,12 +9,26 @@
   <title>Sistema de Gestão</title>
   <meta name="description" content="Sistema profissional de gestão e agendamento">
   <meta name="theme-color" content="#121212">
-  <link rel="icon" href="/logo-barber.png" sizes="any">
-  <link rel="apple-touch-icon" href="/logo-barber.png">
+  <link rel="icon" href="/icon-agenx.svg" sizes="any">
+  <link rel="apple-touch-icon" href="/icon-agenx.svg">
   <link rel="manifest" href="/manifest-barber.webmanifest">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://agenx.app/">
+  <meta property="og:title" content="AgenX - O sistema que faz seu negócio crescer">
+  <meta property="og:description" content="Fluxo automático e gestão inteligente para seu negócio.">
+  <meta property="og:image" content="/icon-agenx.svg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://agenx.app/">
+  <meta property="twitter:title" content="AgenX - O sistema que faz seu negócio crescer">
+  <meta property="twitter:description" content="Fluxo automático e gestão inteligente para seu negócio.">
+  <meta property="twitter:image" content="/icon-agenx.svg">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Beauty OS">
+  <meta name="apple-mobile-web-app-title" content="AgenX">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,6 +83,9 @@
             'gold': '0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2)',
             'promax-glass': '0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
             'promax-depth': '0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.1)',
+            // Lite versions for mobile performance
+            'lite-glass': '0 4px 12px rgba(0, 0, 0, 0.5)',
+            'lite-gold': '0 4px 12px rgba(194, 155, 64, 0.2)',
           },
           backgroundImage: {
             'noise': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+')",
@@ -84,6 +101,8 @@
             'pulse-neon': 'pulseNeon 2s ease-in-out infinite',
             'shimmer': 'shimmer 2s linear infinite',
             'haptic-click': 'hapticClick 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+            'shine': 'shine 1.5s ease-in-out infinite',
+            'flow-slow': 'flow 3s linear infinite',
           },
           keyframes: {
             fadeIn: {
@@ -114,6 +133,13 @@
               '0%, 100%': { transform: 'scale(1)' },
               '50%': { transform: 'scale(0.92)' },
             },
+            flow: {
+              '0%': { strokeDashoffset: '24' },
+              '100%': { strokeDashoffset: '0' },
+            }
+          },
+          dropShadow: {
+            'glow': '0 0 8px rgba(255, 255, 255, 0.4)',
           }
         }
       }
@@ -172,6 +198,16 @@
       z-index: -1;
       pointer-events: none;
       animation: pulseGold 8s ease-in-out infinite;
+    }
+
+    @media (max-width: 768px) {
+      body::after {
+        animation: none !important;
+        /* Disable expensive animations on mobile */
+        opacity: 0.1;
+        background: none;
+        /* Remove gradients complexos no mobile */
+      }
     }
 
     @keyframes pulseGold {
@@ -271,15 +307,15 @@
     .glass-beauty {
       background: rgba(46, 43, 59, 0.7);
       backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(167, 139, 250, 0.2);
     }
 
     @media (max-width: 768px) {
       .glass-beauty {
-        backdrop-filter: blur(8px);
-        /* Reduced blur for performance */
-        background: rgba(46, 43, 59, 0.85);
-        /* Slightly more opaque */
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        background: rgba(46, 43, 59, 0.9);
       }
     }
 
@@ -479,6 +515,11 @@
 
     /* Mobile Optimizations */
     @media (max-width: 768px) {
+      * {
+        /* Force hardware acceleration for common moving parts */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+      }
 
       body::before,
       body::after {
@@ -486,7 +527,15 @@
       }
 
       .brutal-card-enhanced::before {
-        opacity: 0.3;
+        display: none;
+        /* Remove grid textures on mobile to save GPU */
+      }
+
+      .brutal-card-enhanced,
+      .brutal-card,
+      .brutal-button-premium {
+        box-shadow: 2px 2px 0px 0px #000000 !important;
+        /* Force simpler shadows */
       }
     }
   </style>

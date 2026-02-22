@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Search, Menu, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft, Scissors, Sparkles } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +6,8 @@ import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
 import { useAppTour } from '../hooks/useAppTour';
+
+import { AgenXLogo } from './AgenXLogo';
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
@@ -19,11 +21,38 @@ export const Header: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBeauty = userType === 'beauty';
   const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const bgColor = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+
+  // Fechar menus ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    if (showNotifications || showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications, showProfileMenu]);
+
+  // Fechar menus ao navegar
+  useEffect(() => {
+    setShowNotifications(false);
+    setShowProfileMenu(false);
+  }, [pathname]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,27 +75,20 @@ export const Header: React.FC = () => {
         <div className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
 
           <div className="flex items-center gap-4">
-            {/* Logo como Botão Home - Posição de Destaque */}
+            {/* Logo Unificado AgenX como Botão Home */}
             <Link
               to="/"
-              className="flex items-center gap-3 hover:opacity-80 transition-all active:scale-95 group"
+              className="flex items-center hover:opacity-80 transition-all active:scale-95"
               title="Início"
             >
-              <div className="relative">
-                <div className={`absolute -inset-1 rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></div>
-                <img
-                  src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
-                  alt="Logo"
-                  className="h-10 md:h-12 w-auto object-contain relative z-10 drop-shadow-2xl"
-                />
-              </div>
+              <AgenXLogo size={48} showText={true} />
 
-              <div className="flex flex-col">
-                <h1 className={`font-heading text-sm md:text-xl text-white tracking-widest leading-none border-l-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} pl-3`}>
+              <div className="flex flex-col ml-4 border-l-2 border-white/10 pl-4 hidden sm:flex">
+                <h1 className="font-heading text-sm md:text-lg text-white tracking-widest leading-none">
                   {businessName || 'GESTÃO'}
                 </h1>
-                <p className="text-[9px] md:text-[11px] text-text-secondary font-mono mt-0.5 opacity-60 ml-3 uppercase">
-                  {isBeauty ? 'Professional Suite' : 'Brutal Systems'}
+                <p className="text-[9px] text-text-secondary font-mono mt-0.5 opacity-60 uppercase tracking-widest">
+                  Powered by AgenX AIOS
                 </p>
               </div>
             </Link>
@@ -107,7 +129,7 @@ export const Header: React.FC = () => {
             </button>
 
             {/* Notifications */}
-            <div className="relative">
+            <div className="relative" ref={notificationsRef}>
               <button
                 id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -120,7 +142,7 @@ export const Header: React.FC = () => {
               </button>
 
               {showNotifications && (
-                <div className={`absolute right-0 top-full mt-2 w-80 z-50 animate-in fade-in slide-in-from-top-2
+                <div className={`fixed inset-x-4 md:inset-auto md:absolute md:right-0 top-20 md:top-full mt-2 md:w-80 z-50 animate-in fade-in slide-in-from-top-2
                 ${isBeauty
                     ? 'bg-beauty-card border border-white/10 rounded-xl shadow-soft'
                     : 'bg-neutral-900 border-2 border-neutral-700 shadow-heavy'}
@@ -166,7 +188,7 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={profileMenuRef}>
               <button
                 id="header-profile-btn"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}

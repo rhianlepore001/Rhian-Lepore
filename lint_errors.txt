@@ -1,0 +1,26 @@
+
+> barber-os@0.0.0 lint
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\dashboard\AIOSCampaignStats.tsx
+  13:34  error  Component definition is missing display name  react/display-name
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\dashboard\ActionCenter.tsx
+  14:29  error  Component definition is missing display name  react/display-name
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\dashboard\DashboardHero.tsx
+  14:30  error  Component definition is missing display name  react/display-name
+
+C:\Users\User\Downloads\Rhian-Lepore-main\components\dashboard\ProfitMetrics.tsx
+  20:30  error  Component definition is missing display name  react/display-name
+
+C:\Users\User\Downloads\Rhian-Lepore-main\pages\ClientCRM.tsx
+  516:63   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  516:143  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\User\Downloads\Rhian-Lepore-main\vitest.config.ts
+  6:1  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+✖ 7 problems (7 errors, 0 warnings)
+

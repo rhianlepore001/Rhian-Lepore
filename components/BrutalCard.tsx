@@ -1,6 +1,7 @@
 import React from 'react';
 import { Screw } from './Screw';
 import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
 
 interface BrutalCardProps {
   id?: string;
@@ -28,6 +29,7 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   style
 }) => {
   const { userType } = useAuth();
+  const { isMobile } = useUI();
   const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
   // ===========================================
@@ -36,16 +38,22 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   // ===========================================
 
   const getContainerClass = () => {
+    const blurClass = isMobile ? 'backdrop-blur-md' : 'backdrop-blur-2xl';
+
     if (isBeauty) {
       // Estilo Beauty - Pro Max Glass
-      const baseBeauty = 'relative bg-gradient-beauty backdrop-blur-2xl border border-white/10 rounded-[28px] transition-all duration-300 overflow-hidden select-none touch-none shadow-promax-glass active:scale-[0.98] active:animate-haptic-click';
+      const shadowClass = isMobile ? 'shadow-lite-glass' : 'shadow-promax-glass';
+      const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
+      const baseBeauty = `relative bg-gradient-beauty ${blurClass} border border-white/10 rounded-[28px] ${transitionClass} duration-300 overflow-hidden select-none touch-pan-y ${shadowClass} active:scale-[0.98] active:animate-haptic-click`;
       const accentBeauty = accent ? 'border-beauty-neon/40 shadow-neon bg-beauty-neon/5' : '';
       const glowBeauty = glow ? 'shadow-neon-strong ring-1 ring-beauty-neon/30' : '';
 
       return `${baseBeauty} ${accentBeauty} ${glowBeauty} ${className}`;
     } else {
       // Estilo Barber Premium - Industrial Depth Pro Max
-      const baseBrutal = 'relative bg-gradient-brutal backdrop-blur-2xl border border-white/15 rounded-[28px] transition-all duration-300 select-none touch-none shadow-promax-glass overflow-hidden active:scale-[0.98] active:animate-haptic-click';
+      const shadowClass = isMobile ? 'shadow-lite-gold' : 'shadow-promax-glass';
+      const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
+      const baseBrutal = `relative bg-gradient-brutal ${blurClass} border border-white/15 rounded-[28px] ${transitionClass} duration-300 select-none touch-pan-y ${shadowClass} overflow-hidden active:scale-[0.98] active:animate-haptic-click`;
       const accentBrutal = accent ? 'border-accent-gold/60 shadow-gold bg-accent-gold/5' : '';
       const glowBrutal = glow ? 'shadow-promax-depth ring-1 ring-accent-gold/30' : '';
 
@@ -75,7 +83,6 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       style={{
         outline: 'none',
         WebkitTapHighlightColor: 'transparent',
-        userSelect: 'none',
         ...style
       }}
       tabIndex={-1} // Remove do fluxo de tabulação para evitar foco acidental

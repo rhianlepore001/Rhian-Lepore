@@ -1,6 +1,6 @@
 # 🧠 PROJECT MEMORY - Barber/Beauty OS
 
-> **Última Atualização:** 21/02/2026
+> **Última Atualização:** 22/02/2026
 > **Versão:** 0.2.0
 > **Status:** AIOS Engine - Prova de Valor
 
@@ -33,6 +33,51 @@
 ---
 
 ## 📝 Memória de Alterações (Reverse Chronological)
+
+### [22/02/2026] - Atualização do PRD para AgenX 3.0 (AIOS)
+- **O que foi feito**: Atualização massiva do `PRD.md` para a versão 3.0. Consolidação do rebranding para **AgenX**, formalização do conceito de **AIOS (AI Operating System)**, inclusão de requisitos funcionais do motor de lucro (Radar, ROI de Campanhas) e metas de performance (60 FPS Mobile UX).
+- **Por que**: Alinhar a documentação técnica e estratégica com o estado atual do produto antes do lançamento oficial, garantindo que investidores e desenvolvedores tenham a visão correta do ecossistema AIOS.
+- **Arquivos Chave**: `PRD.md`, `walkthrough.md`, `implementation_plan.md`.
+
+### [22/02/2026] - Análise Estratégica & Guia de Sucesso AIOS
+- **O que foi feito**: Análise estratégica de prontidão para lançamento e implementação do "Guia de Sucesso AIOS" (Success Playbook). Criação do componente `AIOSStrategyModal.tsx` e integração na `DashboardHero.tsx`. Validação de build de produção (`npm run build`) bem-sucedida.
+- **Por que**: Maximizar o ROI do usuário no dia do lançamento, transformando a percepção do sistema de uma ferramenta de agenda para um consultor de crescimento de negócios (AIOS).
+- **Arquivos Chave**: `AIOSStrategyModal.tsx`, `DashboardHero.tsx`, `useDashboardData.ts`, `walkthrough.md`.
+
+- **O que foi feito**: Integração das páginas `AuditLogs.tsx` e `RecycleBin.tsx` no `SettingsLayout.tsx`. Implementação de lógica defensiva para tooltips (`InfoButton`) e refatoração do menu de notificações no `Header.tsx` para usar posicionamento `fixed` no mobile, eliminando cortes laterais.
+- **Por que**: Garantir usabilidade total e consistência visual em todas as resoluções, especialmente em dispositivos de tela pequena onde elementos com largura fixa eram cortados.
+- **Arquivos Chave**: `AuditLogs.tsx`, `RecycleBin.tsx`, `HelpButtons.tsx`, `Header.tsx`.
+
+### [22/02/2026] - Rebranding Universal & Consistência PWA AgenX
+- **O que foi feito**: Transição completa da marca de "Barber/Beauty OS" para **AgenX**. Criação do logo universal SVG e ícone unificado (`icon-agenx.svg`) para PWA, unificação de metadados (títulos, manifestos), refatoração do Header, Login, Register, Onboarding e Tour guiado.
+- **Por que**: Consolidar uma identidade de marca forte e profissional focada em **AIOS**, eliminando referências residuais e garantindo que o aplicativo instalado tenha nome e ícone consistentes (AgenX) em qualquer tema.
+- **Arquivos Chave**: `AgenXLogo.tsx`, `icon-agenx.svg`, `useDynamicBranding.ts`, `manifest-barber.webmanifest`, `manifest-beauty.webmanifest`.
+
+### [22/02/2026] - Refinamento de Slogan e Limpeza Visual
+- **O que foi feito**: Atualização do slogan para "O sistema que faz seu negócio crescer" no componente `AgenXLogo`. Remoção de logos redundantes na tela de gateway de login.
+- **Por que**: Melhorar a clareza da proposta de valor e garantir uma interface mais limpa e profissional, sem repetições desnecessárias.
+
+### [22/02/2026] - Otimização de Performance UX Mobile (GPU)
+- **O que foi feito**: Implementação de aceleração de hardware (`backface-visibility`), redução de `backdrop-filter`, uso de sombras 'lite' e desativação de animações custosas em dispositivos móveis.
+- **Por que**: Atingir fluidez de 60 FPS no mobile, reduzindo o jitter e a carga na GPU causada por efeitos Pro Max intensos.
+- **Arquivos Chave**: `index.html`, `DashboardHero.tsx`, `ActionCenter.tsx`, `ProfitMetrics.tsx`.
+
+### [22/02/2026] - Sprint 60 FPS Mobile (@squad)
+- **O que foi feito**: Otimização agressiva de CSS (redução de blur de 20px para 4px no mobile, sombras lite) e transições (substituição de `transition-all` por propriedades específicas e `will-change`).
+- **Por que**: Recuperar a fluidez total (60 FPS) que estava comprometida pelos efeitos visuais pesados do design Pro Max.
+- **Arquivos Chave**: `index.html`, `BrutalCard.tsx`, `Layout.tsx`, `SettingsLayout.tsx`.
+
+### [22/02/2026] - Hotfix de Usabilidade Mobile (@squad)
+- **O que foi feito**: Correção do bloqueio de scroll substituindo `touch-none` por `touch-pan-y` no `BrutalCard.tsx` e remoção de `select-none` obstrutivos.
+- **Por que**: A proteção contra toques acidentais estava impedindo o scroll nativo do navegador quando o usuário iniciava o gesto sobre um card.
+- **Arquivos Chave**: `BrutalCard.tsx`, `ProfitMetrics.tsx`.
+
+
+### [22/02/2026] - Otimização Estratégica de Performance Mobile (@squad)
+- **O que foi feito**: Correção de loop infinito crítico no `useDashboardData.ts`, memoização de componentes do Dashboard (`AIOSCampaignStats`, `ProfitMetrics`, `ActionCenter`, `DashboardHero`) e otimização do `UIContext` com `isMobile`.
+- **Por que**: O sistema apresentava travamentos totais (0 fps) no mobile devido a re-renders infinitos e sobrecarga de CPU/GPU. A interface agora está fluida e responsiva.
+- **Arquivos Chave**: `useDashboardData.ts`, `Dashboard.tsx`, `UIContext.tsx`, `BrutalCard.tsx`, `DashboardHero.tsx`.
+
 
 ### 💎 [21/02/2026] Elite Hero AIOS & Performance Quest
 - **Dashboard**: Redesign completo do Hero para o formato "Elite Command Strip". Design minimalista, focado no nome do profissional, altura reduzida em 50%, e integração cirúrgica de insights proativos (Receita Recuperável).
@@ -132,6 +177,14 @@
 - **Segurança:** Ativação de Trigger `ensure_email_confirmed` para bloquear perfis sem email validado.
 - **Motivo:** Corrupção irreversível de dados legados (mistura de tenants) e reforço de onboarding seguro.
 - **Estado Atual:** Banco limpo, pronto para reinício seguro.
+
+
+### [22/02/2026] - Lançamento Oficial AgenX MVP
+- **Build:** `npm run build` concluído com sucesso e validado.
+- **Técnico:** Resolvidos 100% dos erros de `tsc` e `eslint`.
+- **Feature:** Implementação do **Guia Estratégico AIOS** na Dashboard.
+- **Refactor:** Otimização transversal de interfaces de tipos e componentes visuais (BrutalButton).
+- **Status:** Sistema pronto para produção (Green State).
 
 ### [16/02/2026] - Documentação de Competências
 - **Docs:** Criação do `docs/GUIA_COMPETENCIAS.md`.

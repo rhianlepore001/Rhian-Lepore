@@ -14,22 +14,22 @@ interface BrandingConfig {
 
 const BRANDING_CONFIG: Record<UserType, BrandingConfig> = {
     barber: {
-        title: 'Barber OS - Gestão Profissional',
+        title: 'AgenX - Gestão Inteligente',
         themeColor: '#121212',
         manifestPath: '/manifest-barber.webmanifest',
-        faviconPath: '/logo-barber.png',
-        appleTouchIcon: '/logo-barber.png',
-        ogImage: '/logo-barber.png',
-        description: 'Sistema completo de gestão e agendamento para barbearias'
+        faviconPath: '/icon-agenx.svg',
+        appleTouchIcon: '/icon-agenx.svg',
+        ogImage: '/icon-agenx.svg',
+        description: 'AgenX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
     },
     beauty: {
-        title: 'Beauty OS - Gestão Profissional',
+        title: 'AgenX - Gestão Inteligente',
         themeColor: '#1F1B2E',
         manifestPath: '/manifest-beauty.webmanifest',
-        faviconPath: '/logo-beauty.png',
-        appleTouchIcon: '/logo-beauty.png',
-        ogImage: '/logo-beauty.png',
-        description: 'Sistema completo de gestão e agendamento para salões de beleza'
+        faviconPath: '/icon-agenx.svg',
+        appleTouchIcon: '/icon-agenx.svg',
+        ogImage: '/icon-agenx.svg',
+        description: 'AgenX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
     }
 };
 
@@ -116,7 +116,7 @@ export const useDynamicBranding = () => {
             appleTitle.setAttribute('name', 'apple-mobile-web-app-title');
             document.head.appendChild(appleTitle);
         }
-        appleTitle.setAttribute('content', userType === 'barber' ? 'Barber OS' : 'Beauty OS');
+        appleTitle.setAttribute('content', 'AgenX');
 
     }, [userType, isAuthenticated]);
 

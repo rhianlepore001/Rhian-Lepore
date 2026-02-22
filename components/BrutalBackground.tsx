@@ -20,7 +20,7 @@ export const ThemeBackground: React.FC = () => {
             backgroundSize: 'cover, 600px 600px',
             backgroundPosition: 'center, center',
             backgroundRepeat: 'no-repeat, repeat',
-            backgroundAttachment: 'fixed',
+            backgroundAttachment: typeof window !== 'undefined' && window.innerWidth < 768 ? 'scroll' : 'fixed',
             opacity: 1,
             zIndex: 0,
           }}
@@ -36,7 +36,7 @@ export const ThemeBackground: React.FC = () => {
               radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.04) 0%, transparent 50%)
             `,
             zIndex: 0,
-            animation: 'pulseBeauty 8s ease-in-out infinite',
+            animation: window.innerWidth < 768 ? 'none' : 'pulseBeauty 8s ease-in-out infinite',
           }}
         />
 
@@ -79,7 +79,7 @@ export const ThemeBackground: React.FC = () => {
             backgroundSize: 'cover, 600px 600px',
             backgroundPosition: 'center, center',
             backgroundRepeat: 'no-repeat, repeat',
-            backgroundAttachment: 'fixed',
+            backgroundAttachment: typeof window !== 'undefined' && window.innerWidth < 768 ? 'scroll' : 'fixed',
             opacity: 1,
             zIndex: 0,
           }}
@@ -95,7 +95,7 @@ export const ThemeBackground: React.FC = () => {
               radial-gradient(circle at 50% 50%, rgba(194, 155, 64, 0.04) 0%, transparent 60%)
             `,
             zIndex: 0,
-            animation: 'pulseGold 10s ease-in-out infinite',
+            animation: window.innerWidth < 768 ? 'none' : 'pulseGold 10s ease-in-out infinite',
           }}
         />
 

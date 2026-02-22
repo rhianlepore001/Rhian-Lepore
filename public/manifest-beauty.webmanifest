@@ -1,7 +1,7 @@
 {
-    "name": "Beauty OS - Gestão Profissional para Salões de Beleza",
-    "short_name": "Beauty OS",
-    "description": "Sistema completo de gestão e agendamento para salões de beleza",
+    "name": "AgenX Beauty",
+    "short_name": "AgenX",
+    "description": "AgenX: Fluxo automático e gestão inteligente para salões de beleza",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1F1B2E",
@@ -9,15 +9,9 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/logo-beauty.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/logo-beauty.png",
-            "sizes": "512x512",
-            "type": "image/png",
+            "src": "/icon-agenx.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
             "purpose": "any maskable"
         }
     ],

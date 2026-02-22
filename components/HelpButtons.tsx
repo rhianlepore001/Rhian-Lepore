@@ -17,9 +17,23 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
     const updateCoords = () => {
         if (triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
+            const screenWidth = window.innerWidth;
+            const tooltipWidth = screenWidth < 768 ? 256 : 288; // Correspondente a w-64 e w-72
+            const padding = 16; // Margem de segurança das bordas
+
+            let left = rect.left + window.scrollX + (rect.width / 2);
+
+            // Verificação de limites laterais
+            const halfWidth = tooltipWidth / 2;
+            if (left - halfWidth < padding) {
+                left = halfWidth + padding;
+            } else if (left + halfWidth > screenWidth + window.scrollX - padding) {
+                left = screenWidth + window.scrollX - halfWidth - padding;
+            }
+
             setCoords({
                 top: rect.top + window.scrollY,
-                left: rect.left + window.scrollX + (rect.width / 2)
+                left: left
             });
         }
     };
@@ -61,8 +75,8 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                 onMouseLeave={() => !('ontouchstart' in window) && setShowTooltip(false)}
                 onKeyDown={(e) => e.key === 'Enter' && handleToggle(e)}
                 className={`group cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300 ${showTooltip
-                        ? 'bg-white/20 text-white ring-2 ring-white/10'
-                        : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
+                    ? 'bg-white/20 text-white ring-2 ring-white/10'
+                    : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
                     }`}
             >
                 <Info className={`w-3.5 h-3.5 transition-transform duration-300 ${showTooltip ? 'scale-110' : 'group-hover:scale-110'}`} />
@@ -79,7 +93,7 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                         transform: 'translate(-50%, -100%)',
                         zIndex: 9999
                     }}
-                    className="w-64 md:w-72 p-4 bg-neutral-900/90 backdrop-blur-xl border border-white/20 text-xs text-white 
+                    className="w-64 md:w-72 max-w-[calc(100vw-32px)] p-4 bg-neutral-900/90 backdrop-blur-xl border border-white/20 text-xs text-white 
                                rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-left 
                                animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
                 >
@@ -161,8 +175,8 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] p-3 rounded-lg text-sm ${msg.role === 'user'
-                                            ? `${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} font-bold`
-                                            : 'bg-neutral-800 text-white border border-neutral-700'
+                                        ? `${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} font-bold`
+                                        : 'bg-neutral-800 text-white border border-neutral-700'
                                         }`}>
                                         {msg.content}
                                     </div>

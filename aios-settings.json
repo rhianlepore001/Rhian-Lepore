@@ -1,0 +1,21 @@
+{
+    "project_name": "AgenX",
+    "framework_version": "4.0.0",
+    "operating_mode": "BROWNFIELD",
+    "governance": {
+        "constitution_path": ".aios-core/constitution.md",
+        "workflow_path": "docs/aios-workflow.md",
+        "stories_dir": "docs/stories"
+    },
+    "agents": {
+        "master": "Orion",
+        "scrum_master": "River",
+        "product_manager": "PM",
+        "quality_assurance": "QA"
+    },
+    "features": {
+        "semantic_memory": true,
+        "n8n_automations": true,
+        "token_stewardship": true
+    }
+}

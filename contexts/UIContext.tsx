@@ -7,6 +7,7 @@ interface UIContextType {
   closeSidebar: () => void;
   isModalOpen: boolean;
   setModalOpen: (open: boolean) => void;
+  isMobile: boolean;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -14,6 +15,14 @@ const UIContext = createContext<UIContextType | undefined>(undefined);
 export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -25,7 +34,8 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       toggleSidebar,
       closeSidebar,
       isModalOpen,
-      setModalOpen
+      setModalOpen,
+      isMobile
     }}>
       {children}
     </UIContext.Provider>

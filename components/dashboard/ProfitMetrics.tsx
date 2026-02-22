@@ -17,12 +17,12 @@ interface ProfitMetricsProps {
     isBeauty: boolean;
 }
 
-export const ProfitMetrics: React.FC<ProfitMetricsProps> = ({
+export const ProfitMetrics = React.memo(({
     metrics,
     currencySymbol,
     currencyRegion,
     isBeauty
-}) => {
+}: ProfitMetricsProps) => {
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
@@ -32,15 +32,15 @@ export const ProfitMetrics: React.FC<ProfitMetricsProps> = ({
                 @keyframes slideUp {
                     from {
                         opacity: 0;
-                        transform: translateY(10px) scale(0.98);
+                        transform: translateY(10px);
                     }
                     to {
                         opacity: 1;
-                        transform: translateY(0) scale(1);
+                        transform: translateY(0);
                     }
                 }
             `}</style>
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 select-none">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {/* Lucro Total (Mantido mas compactado) */}
                 <BrutalCard
                     className="h-full brutal-card-enhanced"
@@ -160,4 +160,6 @@ export const ProfitMetrics: React.FC<ProfitMetricsProps> = ({
             </div>
         </>
     );
-};
+});
+
+ProfitMetrics.displayName = 'ProfitMetrics';

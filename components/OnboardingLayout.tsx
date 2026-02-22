@@ -32,7 +32,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                             B
                         </div>
                         <span className="text-white font-heading uppercase tracking-wider">
-                            {isBeauty ? 'Beauty OS' : 'Barber OS'}
+                            {isBeauty ? 'AgenX Beauty' : 'AgenX Barber'}
                         </span>
                     </div>
                     <div className="text-sm text-neutral-400 font-mono">

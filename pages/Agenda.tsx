@@ -24,6 +24,7 @@ interface Appointment {
     professional_id: string | null;
     basePrice?: number; // Base price for discount calculation
     clientPhone?: string;
+    notes?: string;
 }
 
 interface TeamMember {

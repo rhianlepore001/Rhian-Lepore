@@ -59,6 +59,7 @@ export interface PublicClient {
 export interface QueueEntry {
   id: string;
   business_id: string;
+  client_id?: string;
   client_name: string;
   client_phone: string;
   service_id?: string;

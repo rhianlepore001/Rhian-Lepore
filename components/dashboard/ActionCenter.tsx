@@ -11,11 +11,11 @@ interface ActionCenterProps {
     isBeauty: boolean;
 }
 
-export const ActionCenter: React.FC<ActionCenterProps> = ({
+export const ActionCenter = React.memo(({
     actions,
     onActionClick,
     isBeauty
-}) => {
+}: ActionCenterProps) => {
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
     const getIcon = (type: ActionItem['type']) => {
@@ -92,10 +92,12 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
                 )}
             </div>
             <div className="p-2 md:p-3 bg-neutral-900/50 border-t border-neutral-800 text-center">
-                <p className={`text-[9px] md:text-[10px] uppercase tracking-widest ${accentText} font-mono animate-pulse`}>
+                <p className={`text-[9px] md:text-[10px] uppercase tracking-widest ${accentText} font-mono md:animate-pulse`}>
                     {actions.length} Oportunidades
                 </p>
             </div>
         </BrutalCard>
     );
-};
+});
+
+ActionCenter.displayName = 'ActionCenter';

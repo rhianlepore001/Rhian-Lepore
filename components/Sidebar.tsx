@@ -21,7 +21,7 @@ export const Sidebar: React.FC = () => {
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-[4px] animate-in fade-in duration-200"
           onClick={closeSidebar}
         />
       )}
@@ -34,7 +34,7 @@ export const Sidebar: React.FC = () => {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           md:translate-x-0
           ${isBeauty
-            ? 'bg-beauty-dark/95 backdrop-blur-xl border-r border-white/5'
+            ? 'bg-beauty-dark/95 md:backdrop-blur-xl border-r border-white/5'
             : 'bg-brutal-main border-r-4 border-brutal-border'}
         `}
         style={{ top: 'var(--header-top, 0)', bottom: 0 }}

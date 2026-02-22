@@ -34,8 +34,9 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                 p-6 flex flex-col h-full
                 ${isBeauty
-                    ? 'bg-beauty-dark/95 backdrop-blur-3xl border-r border-white/5 shadow-promax-glass'
-                    : 'bg-brutal-main/95 backdrop-blur-3xl border-r border-white/5 shadow-promax-depth'}
+                    ? 'bg-beauty-dark/95 border-r border-white/5 shadow-promax-glass'
+                    : 'bg-brutal-main/95 border-r border-white/5 shadow-promax-depth'}
+                md:backdrop-blur-3xl
             `}>
                 <div className="flex items-center justify-between mb-8 flex-shrink-0">
                     <h2 className={`font-heading text-xl uppercase tracking-wider text-white`}>
@@ -97,7 +98,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col w-full max-w-[100vw]">
 
                 {/* Mobile Header + Sticky Nav - PRO MAX REVITALIZATION */}
-                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark/80 border-white/5 shadow-promax-glass' : 'bg-neutral-900/80 border-white/5 shadow-promax-depth'} backdrop-blur-2xl`}>
+                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark border-white/5' : 'bg-neutral-900 border-white/5'} backdrop-blur-md`}>
                     {/* Top Bar */}
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-4">

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Scissors, Lock, Sparkles, ArrowLeft, Eye, EyeOff, Zap } from 'lucide-react';
+import { Lock, ArrowLeft, Eye, EyeOff, Zap, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Screw } from '../components/Screw';
+import { AgenXLogo } from '../components/AgenXLogo';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -70,17 +71,11 @@ export const Login: React.FC = () => {
                         ></div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30 z-10"></div>
 
+
+
                         <div className="absolute bottom-0 left-0 p-8 z-20">
-                            <div className="w-16 h-16 mb-4 group-hover:scale-110 transition-transform duration-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" className="w-full h-full">
-                                    <g transform="translate(100, 100)">
-                                        <path d="M 0,-40 L 15,-10 L 0,40 L -15,-10 Z" fill="#C29B40" opacity="0.9" />
-                                        <path d="M -50,-30 L -20,-15 L -15,-25 L -45,-40 Z" fill="#C29B40" />
-                                        <path d="M 50,-30 L 20,-15 L 15,-25 L 45,-40 Z" fill="#C29B40" />
-                                        <rect x="-60" y="30" width="120" height="6" rx="3" fill="#C29B40" opacity="0.8" />
-                                        <circle cx="0" cy="-45" r="4" fill="#D4AF50" />
-                                    </g>
-                                </svg>
+                            <div className="mb-4 group-hover:scale-110 transition-transform duration-300">
+                                <AgenXLogo size={64} isBeauty={false} showText={false} />
                             </div>
                             <h2 className="font-heading text-4xl text-white uppercase tracking-wider mb-2 group-hover:text-accent-gold transition-colors">Barbearia</h2>
                             <p className="font-mono text-sm text-neutral-400 uppercase tracking-widest border-l-2 border-accent-gold pl-3">Domine seu território</p>
@@ -99,22 +94,11 @@ export const Login: React.FC = () => {
                         ></div>
                         <div className="absolute inset-0 bg-gradient-to-t from-beauty-dark via-beauty-dark/60 to-beauty-dark/20 z-10"></div>
 
+
+
                         <div className="absolute bottom-0 left-0 p-8 z-20">
-                            <div className="w-16 h-16 mb-4 group-hover:rotate-12 transition-transform duration-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" className="w-full h-full">
-                                    <g transform="translate(100, 100)">
-                                        <ellipse cx="0" cy="-35" rx="8" ry="28" fill="#A78BFA" />
-                                        <ellipse cx="30" cy="-17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(60 100 100)" />
-                                        <ellipse cx="30" cy="17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(120 100 100)" />
-                                        <ellipse cx="0" cy="35" rx="8" ry="28" fill="#A78BFA" transform="rotate(180 100 100)" />
-                                        <ellipse cx="-30" cy="17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(240 100 100)" />
-                                        <ellipse cx="-30" cy="-17.5" rx="8" ry="28" fill="#A78BFA" transform="rotate(300 100 100)" />
-                                        <circle cx="0" cy="0" r="18" fill="#8B5CF6" />
-                                        <circle cx="0" cy="0" r="12" fill="#C4B5FD" opacity="0.8" />
-                                        <circle cx="0" cy="0" r="6" fill="white" opacity="0.6" />
-                                        <circle cx="-4" cy="-4" r="3" fill="white" opacity="0.9" />
-                                    </g>
-                                </svg>
+                            <div className="mb-4 group-hover:rotate-12 transition-transform duration-500">
+                                <AgenXLogo size={64} isBeauty={true} showText={false} />
                             </div>
                             <h2 className="font-heading text-4xl text-white mb-2 group-hover:text-beauty-neon transition-colors tracking-tight">Beauty & Spa</h2>
                             <p className="font-sans text-sm text-beauty-silver tracking-wide border-l border-beauty-neon pl-3">Revele sua essência</p>
@@ -164,17 +148,13 @@ export const Login: React.FC = () => {
             `}>
 
                 {/* Header */}
-                <div className={`flex justify-between items-center transition-all duration-500
+                <div className={`flex justify-center items-center transition-all duration-500
                     ${isBeauty
                         ? 'p-6 border-b border-white/5 bg-transparent'
                         : 'p-4 bg-black border-b-4 border-white/10'}
                 `}>
                     <div className="flex items-center gap-2">
-                        <img
-                            src={isBeauty ? "/logo-beauty.png" : "/logo-barber.png"}
-                            alt={isBeauty ? "Beauty OS" : "Barber OS"}
-                            className="h-8 w-auto object-contain"
-                        />
+                        <AgenXLogo size={40} isBeauty={isBeauty} showText={true} />
                     </div>
                 </div>
 
@@ -286,7 +266,7 @@ export const Login: React.FC = () => {
             </div>
 
             <div className="absolute bottom-6 text-[10px] text-white/20 font-mono uppercase tracking-[0.2em]">
-                {isBeauty ? 'Beauty & Spa OS' : 'Barber Shop OS'} • v2.0
+                AgenX Management Flow • v2.0
             </div>
         </div>
     );

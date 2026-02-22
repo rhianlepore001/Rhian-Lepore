@@ -3,17 +3,19 @@ import { Sparkles, Clock, TrendingUp, ArrowRight, Zap, User as UserIcon } from '
 import { useAuth } from '../../contexts/AuthContext';
 import { useAIOSDiagnostic } from '../../hooks/useAIOSDiagnostic';
 import { formatCurrency } from '../../utils/formatters';
-import { BrutalButton } from '../BrutalButton';
 import { useNavigate } from 'react-router-dom';
+import { AIOSStrategyModal } from './AIOSStrategyModal';
+import { useState } from 'react';
 
 interface DashboardHeroProps {
     isBeauty: boolean;
 }
 
-export const DashboardHero: React.FC<DashboardHeroProps> = ({ isBeauty }) => {
+export const DashboardHero = React.memo(({ isBeauty }: DashboardHeroProps) => {
     const { fullName, avatarUrl, region } = useAuth();
     const { diagnostic, loading } = useAIOSDiagnostic();
     const navigate = useNavigate();
+    const [isStrategyOpen, setIsStrategyOpen] = useState(false);
 
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
@@ -35,9 +37,9 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ isBeauty }) => {
       */}
             <div className={`
         relative z-10 flex flex-col md:flex-row items-center justify-between
-        py-4 px-6 md:px-10 bg-white/[0.03] backdrop-blur-3xl 
+        py-4 px-6 md:px-10 bg-white/[0.03] backdrop-blur-sm md:backdrop-blur-3xl 
         border border-white/10 rounded-3xl overflow-hidden
-        ${isBeauty ? 'shadow-promax-glass' : 'shadow-promax-depth'}
+        ${isBeauty ? 'shadow-lite-glass md:shadow-promax-glass' : 'shadow-lite-gold md:shadow-promax-depth'}
       `}>
 
                 {/* Left Side: Avatar & Greeting & Personal Name */}
@@ -99,15 +101,27 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ isBeauty }) => {
                 </div>
 
                 {/* Right Side: Quick Action (Premium Slim) */}
-                <div className="w-full md:w-auto flex justify-end">
+                <div className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-3">
+                    <button
+                        onClick={() => setIsStrategyOpen(true)}
+                        className={`
+                            px-4 py-3 rounded-xl font-heading text-[10px] tracking-[0.15em]
+                            bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all duration-300
+                            flex items-center gap-2 group/strat
+                        `}
+                    >
+                        <Sparkles size={14} className={`${accentText} group-hover/strat:animate-pulse`} />
+                        GUIA ESTRATÉGICO
+                    </button>
+
                     <button
                         onClick={() => navigate('/agenda')}
                         className={`
-              relative overflow-hidden group/btn
-              px-8 py-3 rounded-xl font-heading text-xs text-black tracking-[0.1em]
-              transition-all duration-500 hover:scale-[1.02] active:scale-95
-              ${accentBg} ${isBeauty ? 'shadow-neon' : 'shadow-gold-strong'}
-            `}
+                            relative overflow-hidden group/btn
+                            px-8 py-3 rounded-xl font-heading text-xs text-black tracking-[0.1em]
+                            transition-all duration-500 hover:scale-[1.02] active:scale-95
+                            ${accentBg} ${isBeauty ? 'shadow-neon' : 'shadow-gold-strong'}
+                        `}
                     >
                         <div className="relative z-10 flex items-center gap-2">
                             <Clock size={16} />
@@ -119,8 +133,16 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({ isBeauty }) => {
                 </div>
             </div>
 
-            {/* Decorative Blur Orbs */}
-            <div className={`absolute top-1/2 left-0 -translate-y-1/2 w-64 h-24 blur-[80px] rounded-full opacity-[0.05] pointer-events-none ${accentBg}`} />
+            <AIOSStrategyModal
+                isOpen={isStrategyOpen}
+                onClose={() => setIsStrategyOpen(false)}
+                isBeauty={isBeauty}
+            />
+
+            {/* Decorative Blur Orbs - Disabled on mobile for performance */}
+            <div className={`absolute top-1/2 left-0 -translate-y-1/2 w-64 h-24 blur-[80px] rounded-full opacity-[0.05] pointer-events-none hidden md:block ${accentBg}`} />
         </div>
     );
-};
+});
+
+DashboardHero.displayName = 'DashboardHero';

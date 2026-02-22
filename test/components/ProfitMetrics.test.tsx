@@ -9,30 +9,42 @@ describe('ProfitMetrics Component', () => {
         recoveredRevenue: 500,
         avoidedNoShows: 200,
         filledSlots: 300,
-        weeklyGrowth: 10
+        weeklyGrowth: 10,
+        campaignsSent: 5
+    };
+
+    const mockMaturity = {
+        appointmentsTotal: 20,
+        appointmentsThisMonth: 10,
+        completedThisMonth: 8,
+        hasPublicBookings: true,
+        accountDaysOld: 30,
+        score: 80
     };
 
     it('renders all metric labels', () => {
         render(
             <ProfitMetrics
                 metrics={mockMetrics}
+                dataMaturity={mockMaturity}
                 currencySymbol="R$"
                 currencyRegion="BR"
                 isBeauty={false}
             />
         );
 
-        // Verifica labels principais
+        // Verifica labels principais (conforme refatorado)
         expect(screen.getByText('Lucro')).toBeInTheDocument();
-        expect(screen.getByText('Recup.')).toBeInTheDocument();
+        expect(screen.getByText('Recuperado')).toBeInTheDocument();
         expect(screen.getByText('Economia')).toBeInTheDocument();
         expect(screen.getByText('Vagas')).toBeInTheDocument();
     });
 
-    it('renders formatted currency values', () => {
+    it('renders formatted currency values when data is mature', () => {
         render(
             <ProfitMetrics
                 metrics={mockMetrics}
+                dataMaturity={mockMaturity}
                 currencySymbol="R$"
                 currencyRegion="BR"
                 isBeauty={false}
@@ -44,18 +56,25 @@ describe('ProfitMetrics Component', () => {
         expect(screen.getByText('R$ 500,00')).toBeInTheDocument();
     });
 
-    it('renders 4 metric cards', () => {
-        const { container } = render(
+    it('renders learning state when data is immature', () => {
+        const immatureMaturity = {
+            ...mockMaturity,
+            appointmentsTotal: 2,
+            score: 10
+        };
+
+        render(
             <ProfitMetrics
-                metrics={mockMetrics}
+                metrics={{ ...mockMetrics, campaignsSent: 0 }}
+                dataMaturity={immatureMaturity}
                 currencySymbol="R$"
                 currencyRegion="BR"
-                isBeauty={true}
+                isBeauty={false}
             />
         );
 
-        // Verifica quantidade de cards
-        const cards = container.querySelectorAll('.brutal-card-enhanced');
-        expect(cards).toHaveLength(4);
+        // Deve mostrar "Em Aprendizado"
+        const learningStates = screen.getAllByText('Em Aprendizado');
+        expect(learningStates.length).toBeGreaterThan(0);
     });
 });

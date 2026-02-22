@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Client, Appointment } from '../types';
+import { supabase } from './supabase';
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
@@ -24,6 +25,70 @@ interface GeminiCalendarDay {
     caption: string;
     hashtags: string[];
     posting_time: string;
+}
+
+/**
+ * Generate embeddings for a given text using text-embedding-004
+ * Gemini's standard embedding model (768 dimensions)
+ */
+export async function generateEmbedding(text: string): Promise<number[]> {
+    try {
+        const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+        const result = await model.embedContent(text);
+        return result.embedding.values;
+    } catch (error) {
+        console.error('Error generating embedding:', error);
+        throw new Error('Falha ao gerar embedding vetorial.');
+    }
+}
+
+/**
+ * Semantic Cache: Busca uma resposta pronta para uma pergunta similar no KB Global
+ * @param query Resumo ou chave da pergunta
+ * @param threshold Nível de similaridade (cosine similarity)
+ */
+export async function getSemanticCache(query: string, threshold = 0.92): Promise<string | null> {
+    try {
+        const embedding = await generateEmbedding(query);
+        const { data, error } = await supabase.rpc('match_kb_content', {
+            query_embedding: embedding,
+            match_threshold: threshold,
+            match_count: 1
+        });
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+            console.log('💎 AIOS Semantic Cache Match! Similarity:', data[0].similarity);
+            return data[0].content;
+        }
+        return null;
+    } catch (error) {
+        console.warn('AIOS Cache bypass due to error:', error);
+        return null;
+    }
+}
+
+/**
+ * Save to Semantic Cache: Armazena uma resposta processada na base de conhecimento
+ */
+export async function saveSemanticCache(query: string, response: string, metadata = {}): Promise<void> {
+    try {
+        const embedding = await generateEmbedding(query);
+        const { error } = await supabase
+            .from('ai_knowledge_base')
+            .insert({
+                content: response,
+                embedding,
+                metadata: {
+                    ...metadata,
+                    original_query: query,
+                    cached_at: new Date().toISOString()
+                }
+            });
+        if (error) throw error;
+    } catch (error) {
+        console.error('Error saving to AI knowledge base:', error);
+    }
 }
 
 interface GeminiMarketingCampaign {
@@ -70,7 +135,6 @@ Return ONLY valid JSON in this exact format:
         ]);
 
         const text = result.response.text();
-        // Remove markdown code blocks if present
         const jsonText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         return JSON.parse(jsonText);
     } catch (error) {
@@ -81,6 +145,7 @@ Return ONLY valid JSON in this exact format:
 
 /**
  * Generate social media content (caption + hashtags)
+ * Integrated with Semantic Cache to reduce token costs
  */
 export async function generateSocialContent(
     imageDescription: string,
@@ -88,7 +153,13 @@ export async function generateSocialContent(
     businessName: string,
     customRequest?: string
 ): Promise<GeminiSocialContent> {
+    const cacheKey = `social-v1:${businessType}:${businessName}:${imageDescription}:${customRequest || ''}`;
+
     try {
+        // 💎 Try Cache First (AIOS Optimization)
+        const cached = await getSemanticCache(cacheKey);
+        if (cached) return JSON.parse(cached);
+
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
         const prompt = `Generate Instagram post content for ${businessName}, a ${businessType === 'barber' ? 'barbearia' : 'salão de beleza'}.
@@ -112,21 +183,33 @@ Return ONLY valid JSON in this exact format:
         const result = await model.generateContent(prompt);
         const text = result.response.text();
         const jsonText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        return JSON.parse(jsonText);
+        const parsed = JSON.parse(jsonText);
+
+        // 💾 Save to Cache for future use (Token Stewardship)
+        await saveSemanticCache(cacheKey, jsonText, { type: 'social_content', businessType });
+
+        return parsed;
     } catch (error) {
-        console.error('Error generating content:', error);
+        console.error('Error generating social content:', error);
         throw new Error('Falha ao gerar conteúdo. Tente novamente.');
     }
 }
 
 /**
  * Generate a weekly content calendar
+ * Integrated with Semantic Cache to reduce token costs
  */
 export async function generateContentCalendar(
     businessType: 'barber' | 'beauty',
     businessName: string
 ): Promise<GeminiCalendarDay[]> {
+    const cacheKey = `calendar-v1:${businessType}:${businessName}`;
+
     try {
+        // 💎 Try Cache First (AIOS Optimization)
+        const cached = await getSemanticCache(cacheKey);
+        if (cached) return JSON.parse(cached);
+
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
         if (!apiKey) {
@@ -163,7 +246,6 @@ Return ONLY valid JSON array with 7 objects in this exact format:
   }
 ]`;
 
-        // Direct API call with proper headers
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
             {
@@ -190,7 +272,12 @@ Return ONLY valid JSON array with 7 objects in this exact format:
         const data = await response.json();
         const text = data.candidates[0].content.parts[0].text;
         const jsonText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        return JSON.parse(jsonText);
+        const parsed = JSON.parse(jsonText);
+
+        // 💾 Save to Cache for future use (Token Stewardship)
+        await saveSemanticCache(cacheKey, jsonText, { type: 'content_calendar', businessType });
+
+        return parsed;
     } catch (error: any) {
         console.error('Error generating calendar:', error);
         throw new Error(error.message || 'Falha ao gerar calendário. Tente novamente.');

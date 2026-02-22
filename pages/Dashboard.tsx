@@ -6,6 +6,8 @@ import { ProfitMetrics } from '../components/dashboard/ProfitMetrics';
 import { ActionCenter } from '../components/dashboard/ActionCenter';
 import { AIOSDiagnosticCard } from '../components/dashboard/AIOSDiagnosticCard';
 import { AIOSCampaignStats } from '../components/dashboard/AIOSCampaignStats';
+import { DataMaturityBadge } from '../components/dashboard/DataMaturityBadge';
+import { FinancialDoctorPanel } from '../components/dashboard/FinancialDoctorPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +36,8 @@ export const Dashboard: React.FC = () => {
     goalHistory,
     updateGoal,
     profitMetrics,
+    dataMaturity,
+    financialDoctor,
     actionItems
   } = useDashboardData();
 
@@ -59,25 +63,58 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleDoctorAction = (action: string) => {
+    if (action.includes('CRM') || action.includes('campanha')) navigate('/crm');
+    else if (action.includes('Marketing') || action.includes('post') || action.includes('conteúdo')) navigate('/marketing');
+    else if (action.includes('agendamento') || action.includes('link')) navigate('/settings');
+  };
+
   return (
     <div className="space-y-6 md:space-y-10">
       <DashboardHero isBeauty={isBeauty} />
 
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-        <AIOSCampaignStats
-          campaignsSent={profitMetrics.campaignsSent}
-          recoveredRevenue={profitMetrics.recoveredRevenue}
-          isBeauty={isBeauty}
-          currencySymbol={currencySymbol}
-        />
-      </div>
+      {/* Seção: AIOS Stats — só exibida se há campanhas */}
+      {profitMetrics.campaignsSent > 0 && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+          <AIOSCampaignStats
+            campaignsSent={profitMetrics.campaignsSent}
+            recoveredRevenue={profitMetrics.recoveredRevenue}
+            isBeauty={isBeauty}
+            currencySymbol={currencySymbol}
+          />
+        </div>
+      )}
 
+      {/* Data Maturity Badge — só exibido enquanto score < 75 */}
+      {dataMaturity.score < 75 && (
+        <div className="animate-in fade-in duration-500 delay-100">
+          <DataMaturityBadge maturity={dataMaturity} isBeauty={isBeauty} />
+        </div>
+      )}
+
+      {/* Seção: Métricas de Lucro com guards de maturidade */}
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
         <ProfitMetrics
           metrics={profitMetrics}
+          dataMaturity={dataMaturity}
           currencySymbol={currencySymbol}
           currencyRegion={currencyRegion}
           isBeauty={isBeauty}
+        />
+      </div>
+
+      {/* Doutor Financeiro */}
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+        <FinancialDoctorPanel
+          weeklyGrowth={profitMetrics.weeklyGrowth}
+          currentMonthRevenue={currentMonthRevenue}
+          monthlyGoal={monthlyGoal}
+          campaignsSent={profitMetrics.campaignsSent}
+          dataMaturity={dataMaturity}
+          financialDoctor={financialDoctor}
+          completedThisMonth={dataMaturity.completedThisMonth}
+          isBeauty={isBeauty}
+          onActionClick={handleDoctorAction}
         />
       </div>
 

@@ -11,7 +11,7 @@ export interface AIOSDiagnostic {
         last_visit: string;
         total_visits: number;
         avg_ticket: number;
-        days_since_last_visit: number;
+        days_since_last_visit: any;
     }>;
     agenda_gaps: Array<{
         date: string;

@@ -34,6 +34,22 @@
 
 ## 📝 Memória de Alterações (Reverse Chronological)
 
+### [22/02/2026] - Finalização do Módulo de Marketing AIOS
+- **O que foi feito**: Transformação da página de Marketing placeholder em um dashboard funcional. Integração do Radar de Reativação (usando `useAIOSDiagnostic`), medição de ROI real, potencial recuperável e botões de ação para WhatsApp com mensagens personalizadas via IA e log de campanhas para atribuição de lucro. Correção de tipagem para intervalos de data do Postgres.
+- **Por que**: Ativar a funcionalidade de "Sócio Virtual" do AIOS, permitindo que o usuário recupere receita de clientes inativos de forma proativa e acompanhe o retorno financeiro real das suas ações de marketing.
+- **Arquivos Chave**: `pages/Marketing.tsx`, `hooks/useAIOSDiagnostic.ts`, `utils/aiosCopywriter.ts`, `walkthrough.md`.
+
+### [22/02/2026] - Relatório de Marketing & Squad Growth GTM
+- **O que foi feito**: Análise profunda de mercado e criação do `squads/marketing-growth-squad.md` (AIOS 2.1). Relatório de marketing com: análise competitiva (Trinks, Booksy, BeautyDate), 3 personas ICP (Barbeiro Empreendedor, Dona do Salão, Multi-Franqueado), 12 estratégias GTM ranqueadas por ROI, e roadmap Q1-Q2 2026. Squad com 6 agentes: Churn Radar, AIOS Copywriter, Campaign ROI Analyst, Content Generator, Referral Manager e NPS Feedback.
+- **Por que**: Definir a estratégia de go-to-market antes do escalonamento. Identificar os highest-leverage growth channels para competir e superar Trinks/Booksy sem guerra de preços, usando o Design Pro Max + AIOS Engine como diferencial único.
+- **Arquivos Chave**: `squads/marketing-growth-squad.md`, `marketing-report.md` (artefato brain).
+
+### [22/02/2026] - Doutor Financeiro & Data Maturity Guard
+- **O que foi feito**: Implementação do sistema de **Data Maturity Guard** para proteger contas novas de métricas enganosas (exibindo estados de "Em Aprendizado"). Criação do módulo **Doutor Financeiro** com score de saúde (gauge SVG) e insights acionáveis automáticos. Refatoração completa do hook `useDashboardData.ts` e componente `ProfitMetrics.tsx`.
+- **Arquivos chave**: `useFinancialDoctor.ts`, `FinancialDoctorPanel.tsx`, `DataMaturityBadge.tsx`, `get_dashboard_stats` (RPC).
+- **Por que**: Reduzir drasticamente o custo de tokens (Token Stewardship), aumentar a velocidade de resposta da IA (<100ms via cache) e fornecer uma experiência "W0W" de personalização para o barbeiro através de um sistema que "lembra" proativamente das preferências dos clientes.
+- **Arquivos Chave**: `lib/gemini.ts`, `hooks/useSemanticMemory.ts`, `components/AISemanticInsights.tsx`, `pages/ClientCRM.tsx`, `migrations/20260222_semantic_memory.sql`.
+
 ### [22/02/2026] - Atualização do PRD para AgenX 3.0 (AIOS)
 - **O que foi feito**: Atualização massiva do `PRD.md` para a versão 3.0. Consolidação do rebranding para **AgenX**, formalização do conceito de **AIOS (AI Operating System)**, inclusão de requisitos funcionais do motor de lucro (Radar, ROI de Campanhas) e metas de performance (60 FPS Mobile UX).
 - **Por que**: Alinhar a documentação técnica e estratégica com o estado atual do produto antes do lançamento oficial, garantindo que investidores e desenvolvedores tenham a visão correta do ecossistema AIOS.

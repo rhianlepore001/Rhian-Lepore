@@ -3,6 +3,31 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../utils/Logger';
 
+export interface DataMaturity {
+    appointmentsTotal: number;
+    appointmentsThisMonth: number;
+    completedThisMonth: number;
+    hasPublicBookings: boolean;
+    accountDaysOld: number;
+    score: number; // 0-100
+}
+
+export interface ProfitMetricsData {
+    totalProfit: number;
+    recoveredRevenue: number;
+    avoidedNoShows: number;
+    filledSlots: number;
+    weeklyGrowth: number;
+    campaignsSent: number;
+}
+
+export interface FinancialDoctorData {
+    avgTicket: number;
+    churnRiskCount: number;
+    topService: string;
+    repeatClientRate: number;
+}
+
 export function useDashboardData() {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState<any[]>([]);
@@ -14,13 +39,32 @@ export function useDashboardData() {
     const [goalHistory, setGoalHistory] = useState<any[]>([]);
     const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [accountCreatedAt, setAccountCreatedAt] = useState<Date | null>(null);
-    const [profitMetrics, setProfitMetrics] = useState<any>({
+
+    const [profitMetrics, setProfitMetrics] = useState<ProfitMetricsData>({
         totalProfit: 0,
         recoveredRevenue: 0,
         avoidedNoShows: 0,
         filledSlots: 0,
-        weeklyGrowth: 0
+        weeklyGrowth: 0,
+        campaignsSent: 0
     });
+
+    const [dataMaturity, setDataMaturity] = useState<DataMaturity>({
+        appointmentsTotal: 0,
+        appointmentsThisMonth: 0,
+        completedThisMonth: 0,
+        hasPublicBookings: false,
+        accountDaysOld: 0,
+        score: 0
+    });
+
+    const [financialDoctor, setFinancialDoctor] = useState<FinancialDoctorData>({
+        avgTicket: 0,
+        churnRiskCount: 0,
+        topService: '',
+        repeatClientRate: 0
+    });
+
     const [actionItems, setActionItems] = useState<any[]>([]);
 
     useEffect(() => {
@@ -43,8 +87,6 @@ export function useDashboardData() {
                 if (profileRes.data?.business_slug) setBusinessSlug(profileRes.data.business_slug);
 
                 const effectiveGoal = goalRes.data?.monthly_goal ?? profileRes.data?.monthly_goal ?? 15000;
-
-                // Only update if different to avoid unnecessary re-renders
                 setMonthlyGoal(prev => prev !== effectiveGoal ? effectiveGoal : prev);
 
                 const nowIso = now.toISOString();
@@ -81,20 +123,38 @@ export function useDashboardData() {
                 if (statsRes.error) throw statsRes.error;
                 if (actionsRes.error) throw actionsRes.error;
 
-                const statsData = statsRes.data;
+                const s = statsRes.data;
 
-                if (statsData) {
-                    setProfit(statsData.total_profit);
-                    setCurrentMonthRevenue(statsData.current_month_revenue);
-                    setWeeklyGrowth(statsData.weekly_growth);
+                if (s) {
+                    setProfit(s.total_profit);
+                    setCurrentMonthRevenue(s.current_month_revenue);
+                    setWeeklyGrowth(s.weekly_growth);
 
                     setProfitMetrics({
-                        totalProfit: statsData.total_profit || 0,
-                        recoveredRevenue: statsData.recovered_revenue || 0,
-                        avoidedNoShows: statsData.avoided_no_shows || 0,
-                        filledSlots: statsData.filled_slots || 0,
-                        weeklyGrowth: statsData.weekly_growth || 0,
-                        campaignsSent: statsData.campaigns_sent || 0
+                        totalProfit: s.total_profit || 0,
+                        recoveredRevenue: s.recovered_revenue || 0,
+                        avoidedNoShows: s.avoided_no_shows || 0,
+                        filledSlots: s.filled_slots || 0,
+                        weeklyGrowth: s.weekly_growth || 0,
+                        campaignsSent: s.campaigns_sent || 0
+                    });
+
+                    // Data Maturity Guard
+                    setDataMaturity({
+                        appointmentsTotal: s.appointments_total || 0,
+                        appointmentsThisMonth: s.appointments_this_month || 0,
+                        completedThisMonth: s.completed_this_month || 0,
+                        hasPublicBookings: s.has_public_bookings || false,
+                        accountDaysOld: s.account_days_old || 0,
+                        score: Math.min(s.data_maturity_score || 0, 100)
+                    });
+
+                    // Doutor Financeiro
+                    setFinancialDoctor({
+                        avgTicket: s.avg_ticket || 0,
+                        churnRiskCount: s.churn_risk_count || 0,
+                        topService: s.top_service || '',
+                        repeatClientRate: s.repeat_client_rate || 0
                     });
                 }
 
@@ -160,12 +220,11 @@ export function useDashboardData() {
             }
         };
 
-        // Get value from state for history fallback if not yet fetched
         const effectiveGoalValue = monthlyGoal;
 
         fetchData();
         fetchGoalHistory();
-    }, [user]); // Removed monthlyGoal from dependencies to break infinite loop
+    }, [user]);
 
     const updateGoal = async (newGoalValue: number) => {
         if (!user) return { error: { message: 'User not authenticated' } };
@@ -174,7 +233,6 @@ export function useDashboardData() {
         const month = now.getMonth();
         const year = now.getFullYear();
 
-        // Upsert into goal_settings
         const { error } = await supabase
             .from('goal_settings')
             .upsert({
@@ -188,8 +246,6 @@ export function useDashboardData() {
 
         if (!error) {
             setMonthlyGoal(newGoalValue);
-            // Also sync back to profiles for legacy compatibility if needed, 
-            // but goal_settings is now the source of truth for current month
             await supabase.from('profiles').update({ monthly_goal: newGoalValue }).eq('id', user.id);
         }
 
@@ -208,6 +264,8 @@ export function useDashboardData() {
         accountCreatedAt,
         updateGoal,
         profitMetrics,
+        dataMaturity,
+        financialDoctor,
         actionItems
     };
 }

@@ -11,6 +11,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { formatPhone, formatCurrency } from '../utils/formatters';
 import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
 import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
+import { useSemanticMemory } from '../hooks/useSemanticMemory';
+import { AISemanticInsights } from '../components/AISemanticInsights';
 
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +42,7 @@ export const ClientCRM: React.FC = () => {
   // AIOS Context
   const { aiosEnabled } = useAuth();
   const { diagnostic, logCampaignActivity } = useAIOSDiagnostic();
+  const { saveMemory } = useSemanticMemory();
   const isAtRisk = diagnostic?.at_risk_clients.find(c => c.id === id);
 
   useEffect(() => {
@@ -144,6 +147,32 @@ export const ClientCRM: React.FC = () => {
     } catch (error: any) {
       console.error('Error saving notes:', error);
       alert('Erro ao salvar notas: ' + (error.message || 'Erro desconhecido'));
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const handleSaveSemanticNote = async () => {
+    if (!client?.id || !notes.trim()) return;
+    setSavingNotes(true);
+    try {
+      // 1. Save standard note
+      const { error: dbError } = await supabase
+        .from('clients')
+        .update({ notes: notes })
+        .eq('id', client.id)
+        .eq('user_id', user.id);
+
+      if (dbError) throw dbError;
+
+      // 2. Save Semantic Memory (Embedding)
+      await saveMemory(client.id, notes, 'preference');
+
+      setClient({ ...client, notes: notes });
+      alert('Nota e Memória de IA salvas!');
+    } catch (error: any) {
+      console.error('Error saving semantic note:', error);
+      alert('Erro: ' + error.message);
     } finally {
       setSavingNotes(false);
     }
@@ -483,10 +512,10 @@ export const ClientCRM: React.FC = () => {
               <BrutalButton
                 variant="secondary"
                 size="sm"
-                onClick={handleSaveNotes}
+                onClick={handleSaveSemanticNote}
                 disabled={savingNotes}
               >
-                {savingNotes ? 'Salvando...' : 'Salvar Notas'}
+                {savingNotes ? 'Processando IA...' : 'Salvar com Memória IA'}
               </BrutalButton>
             </div>
           </BrutalCard>
@@ -498,6 +527,7 @@ export const ClientCRM: React.FC = () => {
         >
           {isAtRisk ? (
             <div className="relative z-10">
+              {/* ... existing code for at risk ... */}
               <div className="flex items-center gap-2 mb-3">
                 <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
                   <Sparkles className="w-5 h-5 animate-pulse" />
@@ -528,17 +558,8 @@ export const ClientCRM: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="opacity-50 grayscale pointer-events-none">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
-                  <Sparkles className="w-5 h-5" />
-                  <h3 className="font-heading text-lg uppercase">{isBeauty ? 'Beauty AI' : 'Barber AI'}</h3>
-                </div>
-                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase`}>ESTÁVEL</span>
-              </div>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Este cliente está com o retorno em dia. A IA continuará monitorando o comportamento de agendamento.
-              </p>
+            <div className="relative z-10">
+              <AISemanticInsights clientId={client.id} clientName={client.name} />
             </div>
           )}
 

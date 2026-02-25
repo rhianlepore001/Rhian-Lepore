@@ -6,9 +6,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ServiceModal } from '../../components/ServiceModal';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
+import { Modal } from '../../components/Modal';
+import { formatCurrency } from '../../utils/formatters';
 
 export const ServiceSettings: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user, userType, region } = useAuth();
     const [categories, setCategories] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -198,7 +200,7 @@ export const ServiceSettings: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <p className="text-sm font-mono text-neutral-400">
-                                                            {service.duration_minutes}m • <span className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}>R$ {service.price.toFixed(2)}</span>
+                                                            {service.duration_minutes}m • <span className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}>{formatCurrency(service.price, region)}</span>
                                                         </p>
                                                     </div>
 
@@ -218,50 +220,46 @@ export const ServiceSettings: React.FC = () => {
                 )}
 
                 {/* Category Modal */}
-                {isCategoryModalOpen && (
-                    <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${isBeauty ? 'bg-beauty-dark/90 backdrop-blur-sm' : 'bg-black/85'}`}>
-                        <div className={`
-                            w-full max-w-md p-6 modal-enter
-                            ${isBeauty
-                                ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
-                                : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg'
-                            }
-                        `}>
-                            <h3 className={`text-white font-bold text-lg mb-4 ${isBeauty ? '' : 'uppercase font-heading'}`}>Nova Categoria</h3>
-                            <input
-                                type="text"
-                                value={newCategoryName}
-                                onChange={e => setNewCategoryName(e.target.value)}
-                                placeholder="Ex: Cabelo, Barba, Tratamentos..."
-                                className={`
-                                    w-full p-3 text-white mb-4 outline-none transition-all duration-300
-                                    ${isBeauty
-                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                                        : 'bg-neutral-800 border-2 border-neutral-700 focus:border-accent-gold'
-                                    }
-                                `}
-                                autoFocus
-                            />
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setIsCategoryModalOpen(false)}
-                                    className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}`}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleAddCategory}
-                                    className={`px-5 py-2.5 font-bold transition-all ${isBeauty
-                                        ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white rounded-xl hover:shadow-neon'
-                                        : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
-                                        }`}
-                                >
-                                    Salvar
-                                </button>
-                            </div>
+                <Modal
+                    isOpen={isCategoryModalOpen}
+                    onClose={() => setIsCategoryModalOpen(false)}
+                    title="Nova Categoria"
+                    size="sm"
+                    footer={
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsCategoryModalOpen(false)}
+                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}`}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleAddCategory}
+                                className={`px-5 py-2.5 font-bold transition-all ${isBeauty
+                                    ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white rounded-xl hover:shadow-neon'
+                                    : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
+                                    }`}
+                            >
+                                Salvar
+                            </button>
                         </div>
-                    </div>
-                )}
+                    }
+                >
+                    <input
+                        type="text"
+                        value={newCategoryName}
+                        onChange={e => setNewCategoryName(e.target.value)}
+                        placeholder="Ex: Cabelo, Barba, Tratamentos..."
+                        className={`
+                            w-full p-3 text-white outline-none transition-all duration-300
+                            ${isBeauty
+                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                : 'bg-neutral-800 border-2 border-neutral-700 focus:border-accent-gold'
+                            }
+                        `}
+                        autoFocus
+                    />
+                </Modal>
 
                 {/* Service Modal */}
                 {isServiceModalOpen && (

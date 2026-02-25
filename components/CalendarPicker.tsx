@@ -18,8 +18,11 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
 }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const hoverBg = isBeauty ? 'hover:bg-beauty-neon/10' : 'hover:bg-accent-gold/10';
+    const hoverBg = isBeauty ? 'hover:bg-stone-100' : 'hover:bg-accent-gold/10';
+    const selectedClass = isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black';
+    const todayClass = isBeauty ? 'border-2 border-stone-800' : 'border-2 border-accent-gold';
+    const baseText = isBeauty ? 'text-stone-700' : 'text-white';
+    const disabledText = isBeauty ? 'text-stone-300' : 'text-neutral-600';
 
     // Get days in month
     const getDaysInMonth = (date: Date) => {
@@ -114,15 +117,15 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                 className={`
           h-12 rounded-lg font-mono text-sm transition-all
           ${disabled
-                        ? 'text-neutral-600 cursor-not-allowed'
-                        : `text-white ${hoverBg} cursor-pointer hover:scale-105`
+                        ? `${disabledText} cursor-not-allowed`
+                        : `${baseText} ${hoverBg} cursor-pointer hover:scale-105`
                     }
           ${selected
-                        ? `bg-${accentColor} text-black font-bold scale-105`
+                        ? `${selectedClass} font-bold scale-105`
                         : ''
                     }
           ${today && !selected
-                        ? `border-2 border-${accentColor}`
+                        ? `${todayClass}`
                         : ''
                     }
         `}
@@ -133,7 +136,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     }
 
     return (
-        <div className={`${isBeauty ? 'bg-white/5 border border-white/10 rounded-2xl' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
+        <div className={`${isBeauty ? 'bg-white border border-stone-200 rounded-2xl' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <button
@@ -141,10 +144,10 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                     onClick={goToPreviousMonth}
                     className={`p-2 ${hoverBg} rounded-lg transition-all`}
                 >
-                    <ChevronLeft className="w-5 h-5 text-white" />
+                    <ChevronLeft className={`w-5 h-5 ${isBeauty ? 'text-stone-700' : 'text-white'}`} />
                 </button>
 
-                <h3 className="text-white font-heading text-lg uppercase">
+                <h3 className={`${isBeauty ? 'text-stone-800' : 'text-white'} font-heading text-lg uppercase`}>
                     {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </h3>
 
@@ -153,14 +156,14 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                     onClick={goToNextMonth}
                     className={`p-2 ${hoverBg} rounded-lg transition-all`}
                 >
-                    <ChevronRight className="w-5 h-5 text-white" />
+                    <ChevronRight className={`w-5 h-5 ${isBeauty ? 'text-stone-700' : 'text-white'}`} />
                 </button>
             </div>
 
             {/* Day names */}
             <div className="grid grid-cols-7 gap-2 mb-2">
                 {dayNames.map(name => (
-                    <div key={name} className="text-center text-neutral-400 text-xs font-mono uppercase">
+                    <div key={name} className={`text-center ${isBeauty ? 'text-stone-400' : 'text-neutral-400'} text-xs font-mono uppercase`}>
                         {name}
                     </div>
                 ))}

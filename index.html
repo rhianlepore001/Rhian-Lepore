@@ -41,6 +41,25 @@
       theme: {
         extend: {
           colors: {
+            // PRO-MAX THEMES
+            obsidian: {
+              bg: '#050505',
+              card: '#0A0A0A',
+              border: '#111111',
+              accent: '#C29B40', // Deep Gold
+              surface: '#0D0D0D',
+            },
+            silk: {
+              bg: '#E2E1DA',
+              card: '#FFFFFF',
+              border: '#CAC9BF',
+              accent: '#1D1D1F',
+              surface: '#F5F4F0',
+              'bg': '#E2E1DA',
+              'accent': '#1D1D1F',
+              'border': '#CAC9BF',
+              'surface': '#F5F4F0',
+            },
             brutal: {
               main: '#121212',
               card: '#1E1E1E',
@@ -68,6 +87,7 @@
           },
           fontFamily: {
             heading: ['"Chivo"', 'sans-serif'],
+            display: ['"Chivo"', 'sans-serif'], // High impact
             body: ['"Inter"', 'sans-serif'],
             mono: ['"JetBrains Mono"', 'monospace'],
           },
@@ -83,6 +103,8 @@
             'gold': '0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2)',
             'promax-glass': '0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
             'promax-depth': '0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.1)',
+            'silk-shadow': '0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05)',
+            'silk-glow': '0 0 20px rgba(212, 175, 55, 0.1)',
             // Lite versions for mobile performance
             'lite-glass': '0 4px 12px rgba(0, 0, 0, 0.5)',
             'lite-gold': '0 4px 12px rgba(194, 155, 64, 0.2)',
@@ -92,9 +114,12 @@
             'gradient-beauty': 'linear-gradient(135deg, #1F1B2E 0%, #2E2B3B 50%, #1F1B2E 100%)',
             'gradient-brutal': 'linear-gradient(135deg, #121212 0%, #1E1E1E 50%, #121212 100%)',
             'gradient-promax': 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)',
+            'gradient-obsidian': 'linear-gradient(180deg, #050505 0%, #080808 100%)',
+            'gradient-silk-premium': 'linear-gradient(135deg, #F5F5F1 0%, #FAF9F6 100%)',
           },
           animation: {
             'fade-in': 'fadeIn 0.3s ease-out',
+            'reveal-fragment': 'revealFragment 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             'slide-up': 'slideUp 0.3s ease-out',
             'slide-down': 'slideDown 0.3s ease-out',
             'scale-in': 'scaleIn 0.2s ease-out',
@@ -108,6 +133,10 @@
             fadeIn: {
               '0%': { opacity: '0' },
               '100%': { opacity: '1' },
+            },
+            revealFragment: {
+              '0%': { opacity: '0', transform: 'translateY(20px) scale(0.98)' },
+              '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
             },
             slideUp: {
               '0%': { opacity: '0', transform: 'translateY(10px)' },
@@ -140,6 +169,7 @@
           },
           dropShadow: {
             'glow': '0 0 8px rgba(255, 255, 255, 0.4)',
+            'gold': '0 0 12px rgba(194, 155, 64, 0.3)',
           }
         }
       }
@@ -163,6 +193,28 @@
       overscroll-behavior-y: none;
       /* Prevent bounce if needed, or leave usually fine */
       position: relative;
+    }
+
+    /* Previne flash branco/escuro na rota pública — aplicado ANTES do React montar */
+    html[data-public-theme="obsidian"] body,
+    html[data-public-theme="obsidian"] {
+      background-color: #050505 !important;
+    }
+
+    html[data-public-theme="silk"] body,
+    html[data-public-theme="silk"] {
+      background-color: #E2E1DA !important;
+      color: #1D1D1F !important;
+    }
+
+    /* Classes aplicadas via JS no useEffect do PublicBooking */
+    body.public-booking-root {
+      background-color: #050505;
+    }
+
+    body.public-booking-root.beauty-theme {
+      background-color: #E2E1DA !important;
+      color: #1D1D1F !important;
     }
 
     /* Brutal Barber Background */
@@ -476,10 +528,51 @@
     /* Header Enhancement */
     .brutal-header {
       background: linear-gradient(90deg, #1E1E1E 0%, #252525 50%, #1E1E1E 100%);
-      border-bottom: 3px solid #000;
+      border: 3px solid #000;
       box-shadow:
         0 3px 0 0 #000,
         inset 0 -1px 0 rgba(194, 155, 64, 0.1);
+    }
+
+    /* PRO-MAX FRAGMENTS */
+    .fragment-obsidian {
+      background: #0A0A0A;
+      border: 1px solid rgba(194, 155, 64, 0.15);
+      position: relative;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .fragment-obsidian::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, transparent 50%, rgba(194, 155, 64, 0.1) 50%);
+    }
+
+    .fragment-silk {
+      background: #FFFFFF;
+      border: 1px solid #E5E5E1;
+      border-radius: 4px;
+      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.03);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .massive-text {
+      font-family: 'Chivo', sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+      line-height: 0.8;
+    }
+
+    .silk-text {
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
     }
 
     /* Stat Card with Glow */
@@ -538,7 +631,64 @@
         /* Force simpler shadows */
       }
     }
+
+    /* Theme Classes */
+    .fragment-obsidian {
+      background-color: #0A0A0A;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 4px 4px 0px 0px #000000;
+    }
+
+    .fragment-silk {
+      background-color: #F5F4F0;
+      border: 1px solid #CAC9BF;
+      box-shadow: 10px 10px 30px -10px rgba(0, 0, 0, 0.15);
+      color: #1A1A1A;
+    }
+
+    .massive-text {
+      font-family: 'Chivo', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+      font-weight: 900;
+      line-height: 0.9;
+    }
+
+    .silk-text {
+      color: #1A1A1A;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Mobile Safe Areas */
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Scrollbar */
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
   </style>
+
+  <!-- Detecção antecipada da rota de agendamento público: previne flash de fundo errado -->
+  <script>
+      (function () {
+        var path = window.location.pathname;
+        // Rotas públicas: /booking/, /b/, /p/
+        if (/^\/(booking|b|p)\//.test(path)) {
+          // Padrão: tema escuro (obsidian). O React vai refinar após carregar o perfil.
+          document.documentElement.setAttribute('data-public-theme', 'obsidian');
+          document.documentElement.style.backgroundColor = '#050505';
+          document.body && (document.body.style.backgroundColor = '#050505');
+        }
+      })();
+  </script>
 
 </head>
 

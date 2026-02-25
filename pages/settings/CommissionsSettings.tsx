@@ -12,6 +12,8 @@ interface TeamMember {
     photo_url?: string;
     commission_rate: number | null;
     active: boolean;
+    commission_payment_frequency?: 'weekly' | 'monthly';
+    commission_payment_day?: number;
 }
 
 export const CommissionsSettings: React.FC = () => {
@@ -41,7 +43,7 @@ export const CommissionsSettings: React.FC = () => {
             // Fetch team members
             const { data: membersData, error: membersError } = await supabase
                 .from('team_members')
-                .select('id, name, photo_url, commission_rate, active')
+                .select('id, name, photo_url, commission_rate, active, commission_payment_frequency, commission_payment_day')
                 .eq('user_id', user.id)
                 .eq('active', true)
                 .order('name');
@@ -115,10 +117,13 @@ export const CommissionsSettings: React.FC = () => {
                 return;
             }
 
+            const member = teamMembers.find(m => m.id === memberId);
             const { error } = await supabase
                 .from('team_members')
                 .update({
                     commission_rate: rate,
+                    commission_payment_frequency: member?.commission_payment_frequency || 'monthly',
+                    commission_payment_day: member?.commission_payment_day || 5,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', memberId)
@@ -297,57 +302,109 @@ export const CommissionsSettings: React.FC = () => {
 
                                             {/* Edit Controls */}
                                             {isEditing ? (
-                                                <div className="flex items-center gap-3">
-                                                    <div className="relative">
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            max="100"
-                                                            step="0.5"
-                                                            value={tempRates[member.id]}
-                                                            onChange={(e) => setTempRates(prev => ({
-                                                                ...prev,
-                                                                [member.id]: e.target.value
-                                                            }))}
-                                                            className={`w-24 px-3 py-2 rounded-lg text-white font-mono text-center outline-none transition-all
-                                                                ${isBeauty
-                                                                    ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
-                                                                    : `bg-black border-2 border-${accentColor}`}
-                                                            `}
-                                                            autoFocus
-                                                        />
-                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono">
-                                                            %
-                                                        </span>
+                                                <div className="flex flex-col gap-4 w-full md:w-auto">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max="100"
+                                                                step="0.5"
+                                                                value={tempRates[member.id]}
+                                                                onChange={(e) => setTempRates(prev => ({
+                                                                    ...prev,
+                                                                    [member.id]: e.target.value
+                                                                }))}
+                                                                className={`w-24 px-3 py-2 rounded-lg text-white font-mono text-center outline-none transition-all
+                                                                    ${isBeauty
+                                                                        ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
+                                                                        : `bg-black border-2 border-${accentColor}`}
+                                                                `}
+                                                                autoFocus
+                                                            />
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono">
+                                                                %
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1">
+                                                            <select
+                                                                value={member.commission_payment_frequency || 'monthly'}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value as 'weekly' | 'monthly';
+                                                                    setTeamMembers(prev => prev.map(m => m.id === member.id ? { ...m, commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 } : m));
+                                                                }}
+                                                                className="bg-neutral-800 text-white text-[10px] p-2 rounded border border-neutral-700 outline-none uppercase font-mono"
+                                                            >
+                                                                <option value="monthly">Mensal</option>
+                                                                <option value="weekly">Semanal</option>
+                                                            </select>
+                                                            <select
+                                                                value={member.commission_payment_day || 5}
+                                                                onChange={(e) => {
+                                                                    const val = parseInt(e.target.value);
+                                                                    setTeamMembers(prev => prev.map(m => m.id === member.id ? { ...m, commission_payment_day: val } : m));
+                                                                }}
+                                                                className="bg-neutral-800 text-white text-[10px] p-2 rounded border border-neutral-700 outline-none uppercase font-mono"
+                                                            >
+                                                                {member.commission_payment_frequency === 'weekly' ? (
+                                                                    <>
+                                                                        <option value={1}>Segunda</option>
+                                                                        <option value={2}>Terça</option>
+                                                                        <option value={3}>Quarta</option>
+                                                                        <option value={4}>Quinta</option>
+                                                                        <option value={5}>Sexta</option>
+                                                                        <option value={6}>Sábado</option>
+                                                                        <option value={0}>Domingo</option>
+                                                                    </>
+                                                                ) : (
+                                                                    Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                                                        <option key={day} value={day}>Dia {day}</option>
+                                                                    ))
+                                                                )}
+                                                            </select>
+                                                        </div>
                                                     </div>
+                                                    <div className="flex gap-2">
+                                                        <BrutalButton
+                                                            variant="primary"
+                                                            size="sm"
+                                                            onClick={() => handleSaveCommissionRate(member.id)}
+                                                            disabled={saving}
+                                                            className="flex-1"
+                                                            icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                                        >
+                                                            {saving ? 'Salvando' : 'Salvar'}
+                                                        </BrutalButton>
 
-                                                    <BrutalButton
-                                                        variant="primary"
-                                                        size="sm"
-                                                        onClick={() => handleSaveCommissionRate(member.id)}
-                                                        disabled={saving}
-                                                        icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                                    >
-                                                        {saving ? 'Salvando' : 'Salvar'}
-                                                    </BrutalButton>
-
+                                                        <BrutalButton
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            className="flex-1"
+                                                            onClick={() => handleCancelEdit(member.id)}
+                                                            disabled={saving}
+                                                        >
+                                                            Cancelar
+                                                        </BrutalButton>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <div className="text-[9px] uppercase font-mono text-neutral-500 whitespace-nowrap bg-white/5 px-2 py-1 rounded">
+                                                        {member.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal'} •
+                                                        {member.commission_payment_frequency === 'weekly'
+                                                            ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][member.commission_payment_day || 0]
+                                                            : ` Dia ${member.commission_payment_day || 5}`
+                                                        }
+                                                    </div>
                                                     <BrutalButton
                                                         variant="secondary"
                                                         size="sm"
-                                                        onClick={() => handleCancelEdit(member.id)}
-                                                        disabled={saving}
+                                                        onClick={() => setEditingMember(member.id)}
                                                     >
-                                                        Cancelar
+                                                        Editar Perfil @ Comissões
                                                     </BrutalButton>
                                                 </div>
-                                            ) : (
-                                                <BrutalButton
-                                                    variant="secondary"
-                                                    size="sm"
-                                                    onClick={() => setEditingMember(member.id)}
-                                                >
-                                                    Editar Taxa
-                                                </BrutalButton>
                                             )}
                                         </div>
                                     </div>

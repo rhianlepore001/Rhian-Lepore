@@ -95,6 +95,22 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 | **COMPLEX CODE** | "build", "create", "implement", "refactor" | TIER 0 + TIER 1 (full) + Agent | **{task-slug}.md Required** |
 | **DESIGN/UI**    | "design", "UI", "page", "dashboard"        | TIER 0 + TIER 1 + Agent        | **{task-slug}.md Required** |
 | **SLASH CMD**    | /create, /orchestrate, /debug              | Command-specific flow          | Variable                    |
+| **AIOS CMD**     | /develop-story, /audit-arch, /status        | AIOS Operational Flow          | Task/Story                  |
+
+---
+
+## 🏗️ AIOS QUARE BRIDGE (MAX COMPATIBILITY)
+
+| Comando CLI AIOS | Slash Command | Agente Responsável | Habilidade Necessária |
+| :--- | :--- | :--- | :--- |
+| `*status` | `/status` | `orchestrator` | `aios-validator` |
+| `*create-next-story` | `/develop-story` | `project-planner` | `plan-writing` |
+| `*audit-arch` | `/audit-arch` | `backend-specialist` | `architecture` |
+| `*ids check` | `/sync-squad` | `orchestrator` | `aios-validator` |
+
+> [!NOTE]
+> Esta ponte garante que a inteligência do `.aios-core` seja consumida nativamente pelo Antigravity sem perda de contexto arquitetural.
+
 
 ---
 

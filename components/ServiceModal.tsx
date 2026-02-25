@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,7 +36,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     allServices,
     onClose,
     onSave,
-    accentColor
+    accentColor: initialAccentColor // Evita conflito com a constante interna se houver
 }) => {
     const { user, userType, region } = useAuth();
     const suggestions = userType === 'beauty' ? PREDEFINED_SERVICES.beauty : PREDEFINED_SERVICES.barber;
@@ -68,6 +69,14 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             fetchUpsells();
         }
     }, [service]);
+
+    // Bloqueia Scroll do Body
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, []);
 
     const fetchUpsells = async () => {
         if (!service) return;
@@ -141,15 +150,10 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
             // Handle Upsells
             if (serviceId) {
-                // First delete existing
                 if (service?.id) {
-                    // Note: service_upsells does not have user_id, but it refers to services owned by the user.
-                    // We rely on the parent_service_id being validated by the RLS on services if necessary,
-                    // but for extra safety we check if we actually own the serviceId.
                     await supabase.from('service_upsells').delete().eq('parent_service_id', serviceId);
                 }
 
-                // Insert new
                 if (selectedUpsells.length > 0) {
                     const upsellData = selectedUpsells.map(upsellId => ({
                         parent_service_id: serviceId,
@@ -192,7 +196,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
             if (error) throw error;
 
-            // Update local categories and select the new one
             setLocalCategories([...localCategories, data]);
             setCategoryId(data.id);
             setNewCategoryName('');
@@ -204,22 +207,21 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             setSavingCategory(false);
         }
     };
+
     const handleApplySuggestion = (suggestion: any) => {
         setName(suggestion.name);
         setPrice(suggestion.price.toString());
         setDuration(suggestion.duration_minutes.toString());
 
-        // Try to find matching category by name
         const match = localCategories.find(c => c.name.toLowerCase() === suggestion.category.toLowerCase());
         if (match) {
             setCategoryId(match.id);
         }
     };
 
-
     const isBeauty = userType === 'beauty';
+    const accentColor = initialAccentColor || (isBeauty ? 'beauty-neon' : 'accent-gold');
 
-    // Estilos dinâmicos baseados no userType
     const modalStyles = isBeauty
         ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
         : 'bg-brutal-card border-4 border-brutal-border shadow-[8px_8px_0px_0px_#000000]';
@@ -236,13 +238,12 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         ? 'bg-beauty-neon hover:bg-beauty-neon/90 text-black shadow-[0_0_15px_rgba(167,139,250,0.3)] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)]'
         : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:shadow-[4px_4px_0px_0px_#000000]';
 
-    const backdropStyles = isBeauty
-        ? 'bg-beauty-dark/80'
-        : 'bg-black/85';
+    const backdropStyles = isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85';
 
-    return (
-        <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-50 p-4`}>
-            <div className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300`}>
+    const modalContent = (
+        <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-[100] p-4 backdrop-blur-sm`}>
+            <div className="absolute inset-0" onClick={onClose} />
+            <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300 shadow-2xl z-10 modal-enter`}>
                 {/* Header */}
                 <div className={`flex items-center justify-between ${headerStyles} sticky top-0 z-10`}>
                     <h3 className={`font-heading text-lg md:text-xl ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}`}>
@@ -258,7 +259,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                     </button>
                 </div>
 
-                {/* Suggestions Bar */}
                 {!service && (
                     <div className={`p-4 ${isBeauty ? 'border-b border-beauty-neon/20 bg-beauty-neon/5' : 'border-b-2 border-black bg-neutral-900/30'}`}>
                         <div className="flex items-center gap-2 mb-3">
@@ -286,7 +286,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Left Column: Image & Basic Info */}
                         <div className="space-y-4">
                             <div
                                 className={`relative w-full h-48 rounded-lg bg-neutral-800 border-2 border-dashed ${imagePreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-${accentColor} overflow-hidden group transition-colors`}
@@ -294,11 +293,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                             >
                                 {imagePreview ? (
                                     <div className="w-full h-full bg-black flex items-center justify-center relative">
-                                        {/* Blurred Background */}
                                         <div className="absolute inset-0 scale-125 blur-xl opacity-50">
                                             <img src={imagePreview} alt="" className="w-full h-full object-cover" />
                                         </div>
-                                        {/* Clear Foreground */}
                                         <img src={imagePreview} alt="Preview" className="relative z-10 max-w-full max-h-full object-contain p-2 shadow-2xl" />
                                     </div>
                                 ) : (
@@ -307,208 +304,81 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                         <span className="text-xs">Adicionar Foto</span>
                                     </div>
                                 )}
-
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                     <Upload className="w-6 h-6 text-white" />
                                 </div>
                             </div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                            />
+                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
 
                             <div>
                                 <label className="text-white font-mono text-xs mb-1 block">Nome do Serviço</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className={inputStyles}
-                                    placeholder={accentColor === 'beauty-neon' ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"}
-                                />
+                                <input type="text" required value={name} onChange={e => setName(e.target.value)} className={inputStyles} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
                                     <label className="text-white font-mono text-xs block">Categoria</label>
                                     {!isCreatingCategory && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsCreatingCategory(true)}
-                                            className={`text-${accentColor} hover:text-${accentColor}/80 text-xs font-bold flex items-center gap-1 transition-colors`}
-                                        >
-                                            <Plus className="w-3 h-3" />
-                                            Nova Categoria
+                                        <button type="button" onClick={() => setIsCreatingCategory(true)} className={`text-${accentColor} hover:text-${accentColor}/80 text-xs font-bold flex items-center gap-1 transition-colors`}>
+                                            <Plus className="w-3 h-3" /> Nova Categoria
                                         </button>
                                     )}
                                 </div>
-
                                 {isCreatingCategory ? (
                                     <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={newCategoryName}
-                                                onChange={e => setNewCategoryName(e.target.value)}
-                                                placeholder="Nome da categoria..."
-                                                className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`}
-                                                onKeyDown={e => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        handleCreateCategory();
-                                                    } else if (e.key === 'Escape') {
-                                                        setIsCreatingCategory(false);
-                                                        setNewCategoryName('');
-                                                    }
-                                                }}
-                                                autoFocus
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handleCreateCategory}
-                                                disabled={!newCategoryName.trim() || savingCategory}
-                                                className={`px-3 py-2 text-black ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${buttonAccentStyles}`}
-                                            >
+                                            <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Nome da categoria..." className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`} autoFocus />
+                                            <button type="button" onClick={handleCreateCategory} disabled={!newCategoryName.trim() || savingCategory} className={`px-3 py-2 text-black ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${buttonAccentStyles}`}>
                                                 {savingCategory ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                                             </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setIsCreatingCategory(false);
-                                                    setNewCategoryName('');
-                                                }}
-                                                className="px-3 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600 transition-colors"
-                                            >
+                                            <button type="button" onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }} className="px-3 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600 transition-colors">
                                                 <X className="w-5 h-5" />
                                             </button>
                                         </div>
-                                        <p className="text-xs text-neutral-500">Pressione Enter para salvar ou Esc para cancelar</p>
                                     </div>
                                 ) : (
-                                    <select
-                                        value={categoryId}
-                                        onChange={e => setCategoryId(e.target.value)}
-                                        className={inputStyles}
-                                    >
+                                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputStyles}>
                                         <option value="" disabled>Selecione uma categoria</option>
-                                        {localCategories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                        ))}
+                                        {localCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                                     </select>
                                 )}
                             </div>
                         </div>
 
-                        {/* Right Column: Details & Upsells */}
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-white font-mono text-xs mb-1 block">Preço ({currencySymbol})</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        step="0.01"
-                                        value={price}
-                                        onChange={e => setPrice(e.target.value)}
-                                        className={inputStyles}
-                                        placeholder="0.00"
-                                    />
+                                    <input type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={inputStyles} placeholder="0.00" />
                                 </div>
                                 <div>
                                     <label className="text-white font-mono text-xs mb-1 block">Duração</label>
-                                    <select
-                                        value={duration}
-                                        onChange={e => setDuration(e.target.value)}
-                                        className={inputStyles}
-                                    >
+                                    <select value={duration} onChange={e => setDuration(e.target.value)} className={inputStyles}>
                                         <option value="15">15 min</option>
                                         <option value="30">30 min</option>
                                         <option value="45">45 min</option>
                                         <option value="60">1 hora</option>
-                                        <option value="90">1h 30min</option>
-                                        <option value="120">2 horas</option>
-                                        <option value="180">3 horas</option>
-                                        <option value="240">4 horas</option>
                                         <option value="custom">⏱️ Personalizado</option>
                                     </select>
-
-                                    {duration === 'custom' && (
-                                        <div className="mt-3 p-3 bg-neutral-800/50 border border-neutral-700 rounded-lg space-y-2">
-                                            <p className="text-xs text-neutral-400 mb-2">Duração Personalizada:</p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label className="text-xs text-neutral-500 block mb-1">Horas</label>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        max="12"
-                                                        value={customHours}
-                                                        onChange={e => setCustomHours(e.target.value)}
-                                                        className={inputStyles}
-                                                        placeholder="0"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="text-xs text-neutral-500 block mb-1">Minutos</label>
-                                                    <select
-                                                        value={customMinutes}
-                                                        onChange={e => setCustomMinutes(e.target.value)}
-                                                        className={inputStyles}
-                                                    >
-                                                        <option value="0">0</option>
-                                                        <option value="15">15</option>
-                                                        <option value="30">30</option>
-                                                        <option value="45">45</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <p className={`text-xs font-mono mt-2 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
-                                                Total: {customHours}h {customMinutes}min = {(parseInt(customHours) * 60) + parseInt(customMinutes)} minutos
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
                             <div>
                                 <label className="text-white font-mono text-xs mb-1 block">Descrição</label>
-                                <textarea
-                                    value={description}
-                                    onChange={e => setDescription(e.target.value)}
-                                    rows={3}
-                                    className={`${inputStyles} resize-none`}
-                                    placeholder="Detalhes do serviço..."
-                                />
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${inputStyles} resize-none`} placeholder="Detalhes do serviço..." />
                             </div>
 
                             <div className="border-t border-neutral-800 pt-4">
-                                <label className="text-white font-bold text-sm mb-2 block flex items-center gap-2">
-                                    🚀 Upsells (Sugestões)
-                                    <span className="text-xs font-normal text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full">Aumente seu ticket médio</span>
-                                </label>
-                                <p className="text-xs text-neutral-500 mb-3">
-                                    Selecione serviços para sugerir quando o cliente escolher este.
-                                </p>
+                                <label className="text-white font-bold text-sm mb-2 block flex items-center gap-2">🚀 Upsells (Sugestões)</label>
                                 <div className="max-h-32 overflow-y-auto space-y-2 bg-neutral-800/50 p-2 rounded-lg border border-neutral-800">
                                     {allServices.filter(s => s.id !== service?.id).map(s => (
-                                        <div
-                                            key={s.id}
-                                            onClick={() => toggleUpsell(s.id)}
-                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `bg-${accentColor}/20 text-white` : 'hover:bg-neutral-700 text-neutral-400'}`}
-                                        >
+                                        <div key={s.id} onClick={() => toggleUpsell(s.id)} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `bg-${accentColor}/20 text-white` : 'hover:bg-neutral-700 text-neutral-400'}`}>
                                             <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedUpsells.includes(s.id) ? `border-${accentColor} bg-${accentColor}` : 'border-neutral-600'}`}>
-                                                {selectedUpsells.includes(s.id) && <div className="w-2 h-2 bg-black rounded-full" />}
+                                                {selectedUpsells.includes(s.id) && <Check className="w-3 h-3 text-black" />}
                                             </div>
                                             <span className="text-sm">{s.name}</span>
                                         </div>
                                     ))}
-                                    {allServices.length <= 1 && (
-                                        <p className="text-xs text-neutral-500 text-center py-2">Nenhum outro serviço disponível.</p>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -516,23 +386,10 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
                     <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
                         <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="active"
-                                checked={active}
-                                onChange={e => setActive(e.target.checked)}
-                                className={`rounded bg-neutral-800 border-neutral-700 text-${accentColor} focus:ring-0`}
-                            />
-                            <label htmlFor="active" className="text-white text-sm cursor-pointer">
-                                Serviço Ativo
-                            </label>
+                            <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded bg-neutral-800 border-neutral-700 text-${accentColor} focus:ring-0`} />
+                            <label htmlFor="active" className="text-white text-sm cursor-pointer">Serviço Ativo</label>
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`px-6 py-3 text-black font-bold ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors flex items-center gap-2 ${buttonAccentStyles}`}
-                        >
+                        <button type="submit" disabled={loading} className={`px-6 py-3 text-black font-bold ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors flex items-center gap-2 ${buttonAccentStyles}`}>
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Serviço'}
                         </button>
                     </div>
@@ -540,4 +397,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };

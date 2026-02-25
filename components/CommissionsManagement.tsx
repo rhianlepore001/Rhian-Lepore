@@ -55,7 +55,16 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             if (error) throw error;
 
-            setCommissionsDue(data || []);
+            const formattedData = (data || []).map((item: any) => ({
+                ...item,
+                total_due: Number(item.total_due) || 0,
+                total_earnings_month: Number(item.total_earnings_month) || 0,
+                total_paid: Number(item.total_paid) || 0,
+                commission_rate: Number(item.commission_rate) || 0,
+                total_pending_records: Number(item.total_pending_records) || 0
+            }));
+
+            setCommissionsDue(formattedData);
         } catch (error) {
             console.error('Error fetching commissions:', error);
         } finally {

@@ -4,7 +4,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock, Check } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -159,13 +159,17 @@ export const Finance: React.FC = () => {
           growth: growth || 0,
           previousMonthRevenue: prevData?.revenue || 0,
           revenueByMethod: data.revenue_by_method || { pix: 0, dinheiro: 0, cartao: 0 },
-          pendingExpenses: data.pending_expenses || 0
+          pendingExpenses: data.pendingExpenses || 0
         });
 
         setChartData(data.chart_data || []);
 
         const formattedTransactions = (data.transactions || []).map((item: any) => {
           const createdAt = new Date(item.created_at);
+          const isExpense = item.type === 'expense';
+          const isPaid = isExpense
+            ? item.commission_paid === true
+            : (item.status ? item.status === 'paid' : true);
           return {
             id: item.id,
             serviceName: item.service_name || item.description || 'Serviço',
@@ -179,7 +183,7 @@ export const Finance: React.FC = () => {
             type: item.type,
             payment_method: item.payment_method,
             commission_paid: item.commission_paid,
-            status: item.status || 'paid'
+            status: isPaid ? 'paid' : 'pending'
           };
         });
         const filtered = formattedTransactions.filter((t: any) => {
@@ -355,6 +359,8 @@ export const Finance: React.FC = () => {
         transactionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       }
 
+      const isExpense = newTransactionType === 'expense';
+      const isPaid = newTransactionStatus === 'paid';
       const transactionData: any = {
         user_id: user.id,
         barber_name: professionalName,
@@ -367,7 +373,9 @@ export const Finance: React.FC = () => {
         created_at: transactionDateTime.toISOString(),
         payment_method: newTransactionType === 'income' ? 'Dinheiro' : null, // Default for manual income
         status: newTransactionStatus,
-        due_date: newTransactionStatus === 'pending' ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString()) : null
+        due_date: newTransactionStatus === 'pending' ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString()) : null,
+        commission_paid: isExpense ? isPaid : true,
+        commission_paid_at: isExpense && isPaid ? transactionDateTime.toISOString() : null
       };
 
       // Add optional fields if they have values
@@ -673,13 +681,38 @@ export const Finance: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-3 text-right">
-                        <button
-                          onClick={() => handleDeleteTransaction(t.id)}
-                          className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                          title="Excluir transação"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          {t.type === 'expense' && t.status === 'pending' && (
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Deseja marcar "${t.serviceName || 'Despesa'}" como paga?`)) {
+                                  try {
+                                    const { error } = await supabase.rpc('mark_expense_as_paid', {
+                                      p_record_id: t.id,
+                                      p_user_id: user?.id
+                                    });
+                                    if (error) throw error;
+                                    fetchFinanceData();
+                                  } catch (err) {
+                                    console.error('Erro ao liquidar despesa:', err);
+                                    alert('Erro ao liquidar despesa.');
+                                  }
+                                }
+                              }}
+                              className="p-2 bg-green-500/10 text-green-500 rounded-lg border border-green-500/20 hover:bg-green-500/20 transition-all"
+                              title="Marcar como Pago"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteTransaction(t.id)}
+                            className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Excluir transação"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -742,7 +775,30 @@ export const Finance: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    {t.type === 'expense' && t.status === 'pending' && (
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Deseja marcar "${t.serviceName || 'Despesa'}" como paga?`)) {
+                            try {
+                              const { error } = await supabase.rpc('mark_expense_as_paid', {
+                                p_record_id: t.id,
+                                p_user_id: user?.id
+                              });
+                              if (error) throw error;
+                              fetchFinanceData();
+                            } catch (err) {
+                              console.error('Erro ao liquidar despesa:', err);
+                              alert('Erro ao liquidar despesa.');
+                            }
+                          }
+                        }}
+                        className="flex items-center gap-2 px-3 py-1.5 text-green-500 text-xs font-bold uppercase bg-green-500/10 rounded-lg active:scale-95 transition-all"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        Liquidar
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteTransaction(t.id)}
                       className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg active:scale-95 transition-all"

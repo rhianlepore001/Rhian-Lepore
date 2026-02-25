@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, ImageIcon, Upload, Loader2, X, AlertTriangle } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, ImageIcon, Upload, Loader2, X, AlertTriangle, Send, MessageSquare } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
@@ -11,8 +11,18 @@ import { ProfessionalSelector } from '../components/ProfessionalSelector';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { BrutalButton } from '../components/BrutalButton';
-import { formatCurrency, formatPhone } from '../utils/formatters';
+import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
+import { ChatBubble } from '../components/ChatBubble';
+import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
+import { formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+
+interface Message {
+    id: string;
+    text: string | React.ReactNode;
+    isAssistant: boolean;
+    type?: 'text' | 'services' | 'professionals' | 'datetime' | 'contact' | 'success';
+}
 
 interface Service {
     id: string;
@@ -65,17 +75,18 @@ export const PublicBooking: React.FC = () => {
     const [businessId, setBusinessId] = useState<string | null>(null);
     const [businessSettings, setBusinessSettings] = useState<any>(null);
     const [services, setServices] = useState<Service[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]); // New state for categories
-    const [activeCategory, setActiveCategory] = useState<string>('all'); // New state for filter
-    const [searchQuery, setSearchQuery] = useState<string>(''); // New state for search
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [activeCategory, setActiveCategory] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
-    const [gallery, setGallery] = useState<any[]>([]); // New state for gallery
+    const [gallery, setGallery] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [step, setStep] = useState<'services' | 'datetime' | 'contact' | 'success'>('services');
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [isTyping, setIsTyping] = useState(false);
     const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-    // Contact form state
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [customerPhoto, setCustomerPhoto] = useState<File | null>(null);
@@ -92,7 +103,6 @@ export const PublicBooking: React.FC = () => {
 
     const { client, register } = usePublicClient();
 
-    // Sync client data from context to form state
     useEffect(() => {
         if (client) {
             setCustomerName(client.name);
@@ -100,13 +110,10 @@ export const PublicBooking: React.FC = () => {
         }
     }, [client]);
 
-    // Auto-fill client data from database when phone number is entered
     useEffect(() => {
         const fetchExistingClient = async () => {
-            // Wait for a valid phone number length (e.g., +5511999999999 is 14 chars, +351912345678 is 13 chars)
             if (customerPhone.length >= 12 && businessId) {
                 try {
-                    // Search in public_clients first as it's for public flow
                     const { data: publicClient } = await supabase
                         .from('public_clients')
                         .select('name, photo_url')
@@ -120,7 +127,6 @@ export const PublicBooking: React.FC = () => {
                         return;
                     }
 
-                    // Then search in main clients table
                     const { data: mainClient } = await supabase
                         .from('clients')
                         .select('name, photo_url')
@@ -133,15 +139,12 @@ export const PublicBooking: React.FC = () => {
                         if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
                     }
 
-                    // Check for active pending booking
-                    const { data: booking, error: bookingError } = await supabase.rpc('get_active_booking_by_phone', {
+                    const { data: booking } = await supabase.rpc('get_active_booking_by_phone', {
                         p_phone: customerPhone,
                         p_business_id: businessId
                     });
 
                     if (booking && booking[0]) {
-                        // Professional Rule: Only block/show status if it is PENDING.
-                        // If confirmed, user can make a NEW booking (e.g. for next month).
                         if (booking[0].status === 'pending') {
                             setActiveBooking(booking[0]);
                             setStep('success');
@@ -151,27 +154,19 @@ export const PublicBooking: React.FC = () => {
                     logger.error('Error fetching existing client', error);
                 }
             } else if (customerPhone.length < 9) {
-                // Reset if phone is cleared
                 setExistingPhotoUrl(null);
             }
         };
-
         fetchExistingClient();
     }, [customerPhone, businessId]);
 
     const fetchFreshActiveBooking = async (phone: string, bId: string) => {
         try {
-            const { data: booking, error: bookingError } = await supabase.rpc('get_active_booking_by_phone', {
+            const { data: booking } = await supabase.rpc('get_active_booking_by_phone', {
                 p_phone: phone,
                 p_business_id: bId
             });
-
             if (booking && booking[0]) {
-                // If the booking we were tracking is confirmed, we might want to stop blocking?
-                // But this function is used for REFRESHING status.
-                // If it IS confirmed, we want to show that status on the success screen!
-                // Wait, if it *became* confirmed, we show "Confirmed".
-                // But if the user *starts* fresh, we don't block.
                 setActiveBooking(booking[0]);
             } else {
                 setActiveBooking(null);
@@ -181,10 +176,8 @@ export const PublicBooking: React.FC = () => {
         }
     };
 
-    // Real-time subscription for booking status changes
     useEffect(() => {
         if (!activeBooking?.id) return;
-
         const channel = supabase
             .channel(`booking_status_${activeBooking.id}`)
             .on(
@@ -197,15 +190,11 @@ export const PublicBooking: React.FC = () => {
                 },
                 (payload) => {
                     logger.info('Booking update received', { payload });
-                    // Refresh the booking data to get joined professional info etc.
                     fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
                 }
             )
-            .subscribe((status) => {
-                logger.info(`Supabase Realtime status for booking ${activeBooking.id}`, { status });
-            });
+            .subscribe();
 
-        // Fallback polling every 5 seconds in case Realtime fails
         const interval = setInterval(() => {
             if (activeBooking.status === 'pending') {
                 fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
@@ -229,14 +218,6 @@ export const PublicBooking: React.FC = () => {
                 const dateStr = `${year}-${month}-${day}`;
                 const duration = calculateDuration();
 
-                logger.info('🔍 Buscando horários disponíveis', {
-                    businessId,
-                    dateStr,
-                    selectedProfessional,
-                    duration,
-                    selectedServices: selectedServices
-                });
-
                 const { data, error } = await supabase.rpc('get_available_slots', {
                     p_business_id: businessId,
                     p_date: dateStr,
@@ -244,19 +225,7 @@ export const PublicBooking: React.FC = () => {
                     p_duration_min: duration
                 });
 
-                if (error) {
-                    logger.error('❌ Erro ao buscar horários', {
-                        error,
-                        errorMessage: error.message,
-                        errorDetails: error.details,
-                        errorHint: error.hint
-                    });
-                } else {
-                    logger.info('✅ Horários recebidos', {
-                        data,
-                        slotsCount: data?.slots?.length || 0,
-                        slots: data?.slots
-                    });
+                if (!error) {
                     setAvailableSlots(data.slots || []);
                 }
             }
@@ -264,14 +233,11 @@ export const PublicBooking: React.FC = () => {
         fetchSlots();
     }, [selectedDate, businessId, selectedProfessional]);
 
-
-    // Fetch full dates for the calendar
     useEffect(() => {
         const fetchFullDates = async () => {
             if (businessId) {
                 const now = new Date();
                 const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
                 const end = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
                 const endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
 
@@ -294,10 +260,9 @@ export const PublicBooking: React.FC = () => {
     useEffect(() => {
         const fetchBusinessData = async () => {
             try {
-                // Fetch business profile by slug - expanded columns
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
-                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection, logo_url, cover_photo_url, address_street, instagram_handle, region')
+                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection, logo_url, cover_photo_url, address_street, instagram_handle, region, business_slug')
                     .eq('business_slug', slug)
                     .single();
 
@@ -307,7 +272,6 @@ export const PublicBooking: React.FC = () => {
                     setBusiness(profileData);
                     setBusinessId(profileData.id);
 
-                    // Fetch settings
                     const { data: settings } = await supabase
                         .from('business_settings')
                         .select('*')
@@ -316,18 +280,15 @@ export const PublicBooking: React.FC = () => {
 
                     if (settings) setBusinessSettings(settings);
 
-                    // Fetch services for this business
-                    const { data: servicesData, error: servicesError } = await supabase
+                    const { data: servicesData } = await supabase
                         .from('services')
                         .select('*')
                         .eq('user_id', profileData.id)
                         .eq('active', true)
                         .order('price', { ascending: true });
 
-                    if (servicesError) throw servicesError;
                     setServices(servicesData || []);
 
-                    // Fetch categories
                     const { data: categoriesData } = await supabase
                         .from('service_categories')
                         .select('id, name')
@@ -335,22 +296,19 @@ export const PublicBooking: React.FC = () => {
                         .order('display_order');
                     setCategories(categoriesData || []);
 
-                    // Fetch professionals
-                    const { data: professionalsData, error: professionalsError } = await supabase
+                    const { data: professionalsData } = await supabase
                         .from('team_members')
                         .select('*')
                         .eq('user_id', profileData.id)
                         .eq('active', true)
                         .order('display_order');
 
-                    if (professionalsError) throw professionalsError;
                     const mappedPros = (professionalsData || []).map((p: any) => ({
                         ...p,
                         name: p.full_name || p.name
                     }));
                     setProfessionals(mappedPros);
 
-                    // Fetch gallery
                     const { data: galleryData } = await supabase
                         .from('business_galleries')
                         .select('*')
@@ -371,7 +329,70 @@ export const PublicBooking: React.FC = () => {
         }
     }, [slug]);
 
-    // Auto-scroll for gallery
+    useEffect(() => {
+        if (business) {
+            const originalBg = document.body.style.backgroundColor;
+            const originalColor = document.body.style.color;
+
+            // Override body styles for public booking
+            const targetBg = isBeauty ? '#E2E1DA' : '#050505';
+            const targetColor = isBeauty ? '#1D1D1F' : '#EAEAEA';
+
+            document.body.style.backgroundColor = targetBg;
+            document.body.style.color = targetColor;
+
+            // Force documentElement background to avoid white flashes
+            document.documentElement.style.backgroundColor = targetBg;
+
+            // Atualiza o atributo de tema no <html> para o CSS pre-carregado do index.html atuar
+            document.documentElement.setAttribute('data-public-theme', isBeauty ? 'silk' : 'obsidian');
+
+            // Add a class for specific overrides
+            document.body.classList.add('public-booking-root');
+            if (isBeauty) document.body.classList.add('beauty-theme');
+            else document.body.classList.remove('beauty-theme');
+
+            return () => {
+                document.body.style.backgroundColor = originalBg;
+                document.body.style.color = originalColor;
+                document.documentElement.style.backgroundColor = '';
+                document.documentElement.removeAttribute('data-public-theme');
+                document.body.classList.remove('public-booking-root');
+                document.body.classList.remove('beauty-theme');
+            };
+        }
+    }, [business, isBeauty]);
+
+    useEffect(() => {
+        if (business && messages.length === 0) {
+            const addWelcome = async () => {
+                setIsTyping(true);
+                setTimeout(() => {
+                    setMessages([
+                        {
+                            id: 'welcome',
+                            text: `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`,
+                            isAssistant: true
+                        },
+                        {
+                            id: 'services-ask',
+                            text: "Qual serviço você gostaria de realizar hoje?",
+                            isAssistant: true,
+                            type: 'services'
+                        }
+                    ]);
+                    setIsTyping(false);
+                }, 1000);
+            };
+            addWelcome();
+        }
+    }, [business]);
+
+    const chatEndRef = React.useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             if (galleryRef.current) {
@@ -386,6 +407,16 @@ export const PublicBooking: React.FC = () => {
         return () => clearInterval(interval);
     }, [gallery]);
 
+    // Narrative Auto-Scroll (Pro-Max UX)
+    useEffect(() => {
+        if (messages.length > 0) {
+            const timer = setTimeout(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [messages, step, isTyping]);
+
     const toggleService = (serviceId: string) => {
         setSelectedServices(prev =>
             prev.includes(serviceId)
@@ -394,31 +425,16 @@ export const PublicBooking: React.FC = () => {
         );
     };
 
-    const calculateTotal = () => {
-        return services
-            .filter(s => selectedServices.includes(s.id))
-            .reduce((sum, s) => sum + s.price, 0);
-    };
-
-    const calculateDuration = () => {
-        return services
-            .filter(s => selectedServices.includes(s.id))
-            .reduce((sum, s) => sum + s.duration_minutes, 0);
-    };
+    const calculateTotal = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
+    const calculateDuration = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration_minutes, 0);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleCancelBooking = async (bookingId: string) => {
         if (!confirm('Tem certeza que deseja cancelar sua solicitação de agendamento?')) return;
-
         try {
-            const { error } = await supabase
-                .from('public_bookings')
-                .delete()
-                .eq('id', bookingId);
-
+            const { error } = await supabase.from('public_bookings').delete().eq('id', bookingId);
             if (error) throw error;
-
             setActiveBooking(null);
             setStep('services');
             alert('Agendamento cancelado com sucesso.');
@@ -430,26 +446,15 @@ export const PublicBooking: React.FC = () => {
 
     const handleEditBooking = (booking: any) => {
         setEditingBookingId(booking.id);
-
-        // Populate services
-        if (booking.service_ids) {
-            setSelectedServices(booking.service_ids);
-        }
-
-        // Populate professional
+        if (booking.service_ids) setSelectedServices(booking.service_ids);
         setSelectedProfessional(booking.professional_id || 'any');
-
-        // Populate date/time
         const bDate = new Date(booking.appointment_time);
         if (!isNaN(bDate.getTime())) {
             setSelectedDate(bDate);
-            const timeStr = bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            setSelectedTime(timeStr);
+            setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
         }
-
         setCustomerName(booking.customer_name);
         setStep('services');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleSubmit = async () => {
@@ -457,69 +462,29 @@ export const PublicBooking: React.FC = () => {
             alert('Por favor, preencha todos os campos e aceite a política de cancelamento.');
             return;
         }
-
         setIsSubmitting(true);
-
         try {
             let photoUrl = client?.photo_url || null;
-
-            // 1. Upload photo if provided
             if (customerPhoto) {
                 const fileExt = customerPhoto.name.split('.').pop();
                 const fileName = `public_${businessId}_${Date.now()}.${fileExt}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from('client_photos')
-                    .upload(fileName, customerPhoto);
-
+                const { error: uploadError } = await supabase.storage.from('client_photos').upload(fileName, customerPhoto);
                 if (!uploadError) {
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('client_photos')
-                        .getPublicUrl(fileName);
+                    const { data: { publicUrl } } = supabase.storage.from('client_photos').getPublicUrl(fileName);
                     photoUrl = publicUrl;
                 }
             }
-
-            // 2. Register/Update client
-            // This returns the FRESH client record
-            const registeredClient = await register({
-                name: customerName,
-                phone: customerPhone,
-                photo_url: photoUrl,
-                business_id: businessId
-            });
-
-            // 3. Format appointment time and Calculate Total
-            // FIX: Use local date parts to ensure we keep the visual date selected by the user,
-            // regardless of their local timezone (toISOString() shifts to UTC which causes "previous day" bugs in East timezones)
+            await register({ name: customerName, phone: customerPhone, photo_url: photoUrl, business_id: businessId });
             const year = selectedDate.getFullYear();
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const day = String(selectedDate.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
-
             const totalPrice = calculateTotal();
             const duration = calculateDuration();
-
-            // Handle business timezone offset to ensure consistency regardless of client location
-            const getBusinessOffset = (region: string) => {
-                if (region === 'BR') return '-03:00';
-                if (region === 'PT') return '+00:00'; // Defaulting to winter, PT is Lisbon
-                return 'Z';
-            };
-            const offset = getBusinessOffset(business?.region || 'BR');
-            // Construct the ISO string manually with the correct offset
+            const offset = business?.region === 'PT' ? '+00:00' : '-03:00';
             const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
 
-            // NOTE: We do NOT convert this back to a Date object using new Date(appointmentTimeISO)
-            // for the RPC call because Safari/iOS often fails to parse ISO strings with explicit offsets,
-            // resulting in "Invalid Date". We send the string directly to Supabase (Postgres handles it).
-
-            // 3.5 Check if already has an active booking (Extra safety for concurrency)
-            const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', {
-                p_phone: customerPhone,
-                p_business_id: businessId
-            });
-
+            const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
             if (existingBooking && existingBooking[0]) {
                 setActiveBooking(existingBooking[0]);
                 setStep('success');
@@ -527,74 +492,21 @@ export const PublicBooking: React.FC = () => {
                 return;
             }
 
-            // 4. Auto-assign professional if "any" is selected
             let finalProfessionalId = selectedProfessional === 'any' ? null : selectedProfessional;
-
             if (selectedProfessional === 'any') {
-                const { data: autoProId, error: autoProError } = await supabase.rpc('get_first_available_professional', {
-                    p_business_id: businessId,
-                    p_appointment_time: appointmentTimeISO, // Send the string directly!
-                    p_duration_min: duration
-                });
-
-                if (autoProId) {
-                    finalProfessionalId = autoProId;
-                } else {
-                    logger.warn('Auto-assign failed, falling back to unassigned', { error: autoProError });
-                }
+                const { data: autoProId } = await supabase.rpc('get_first_available_professional', { p_business_id: businessId, p_appointment_time: appointmentTimeISO, p_duration_min: duration });
+                if (autoProId) finalProfessionalId = autoProId;
             }
 
-            // 5. Create or Update Booking
             if (editingBookingId) {
-                const { error } = await supabase
-                    .from('public_bookings')
-                    .update({
-                        customer_name: customerName,
-                        service_ids: selectedServices,
-                        professional_id: finalProfessionalId,
-                        appointment_time: appointmentTimeISO,
-                        total_price: totalPrice,
-                        status: 'pending', // Reset to pending if edited? Usually yes.
-                        duration_minutes: duration
-                    })
-                    .eq('id', editingBookingId);
-
-                if (error) throw error;
+                await supabase.from('public_bookings').update({ customer_name: customerName, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration }).eq('id', editingBookingId);
             } else {
-                const { error } = await supabase
-                    .from('public_bookings')
-                    .insert({
-                        business_id: businessId,
-                        customer_name: customerName,
-                        customer_phone: customerPhone,
-                        service_ids: selectedServices,
-                        professional_id: finalProfessionalId,
-                        appointment_time: appointmentTimeISO,
-                        total_price: totalPrice,
-                        status: 'pending',
-                        duration_minutes: duration
-                    });
-
-                if (error) throw error;
+                await supabase.from('public_bookings').insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration });
             }
 
-            setEditingBookingId(null);
-            // Refresh active booking data to show up-to-date info on success screen
-            const { data: refreshedBooking } = await supabase.rpc('get_active_booking_by_phone', {
-                p_phone: customerPhone,
-                p_business_id: businessId
-            });
-            if (refreshedBooking && refreshedBooking[0]) {
-                setActiveBooking(refreshedBooking[0]);
-            }
-
+            const { data: refreshedBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
+            if (refreshedBooking && refreshedBooking[0]) setActiveBooking(refreshedBooking[0]);
             setStep('success');
-            // Form cleaned up when navigating away or new booking
-            setSelectedServices([]);
-            setSelectedProfessional(null);
-            setSelectedDate(null);
-            setSelectedTime(null);
-            setAcceptedPolicy(false);
         } catch (error: any) {
             logger.error('Error creating booking', error);
             alert(`Erro ao criar agendamento: ${error.message || error}`);
@@ -603,881 +515,596 @@ export const PublicBooking: React.FC = () => {
         }
     };
 
+    const accentColor = isBeauty ? 'silk-accent' : 'obsidian-accent';
+    const bgClass = isBeauty ? 'bg-[#E2E1DA]' : 'bg-obsidian-bg';
+    const cardClass = isBeauty ? 'bg-white shadow-silk-shadow border border-[#CAC9BF] rounded-lg' : 'bg-obsidian-surface border border-white/5 shadow-heavy rounded-none';
+    const currencyRegion = (business?.region as Region) || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
+    // Link do WhatsApp do estabelecimento (usado no empty state e na tela de sucesso)
+    const whatsappLink = business?.phone
+        ? `https://wa.me/${business.phone.replace(/\D/g, '')}`
+        : null;
+
+    // Barra de progresso: mapeia steps para números
+    const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
+    const currentStepNum = stepIndex[step];
+    const stepLabels = ['Serviços', 'Agenda', 'Dados', 'Confirmado'];
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-                <div className="text-white text-xl font-mono">Carregando...</div>
+            <div className={`h-screen flex items-center justify-center ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className={`w-10 h-10 ${isBeauty ? 'text-stone-500' : 'text-accent-gold'} animate-spin`} />
+                    <p className={`${isBeauty ? 'text-stone-400' : 'text-white/30'} font-black text-[10px] uppercase tracking-[0.2em]`}>
+                        Carregando Experiência...
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (!business) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-                <div className="text-white text-xl font-mono">Estabelecimento não encontrado</div>
-            </div>
-        );
-    }
-
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const bgClass = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
-    const cardClass = isBeauty
-        ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/20 rounded-2xl shadow-soft transition-all duration-300'
-        : 'bg-brutal-card border-4 border-brutal-border shadow-heavy transition-all duration-300';
-    const currencyRegion = business?.region || businessSettings?.region || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
-
-    const accentColorValue = isBeauty ? '#A78BFA' : '#C29B40';
-
-    // SUCCESS SCREEN
-    if (step === 'success') {
-        const displayBooking = activeBooking || {
-            customer_name: customerName,
-            customer_phone: customerPhone,
-            appointment_time: selectedDate ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), parseInt(selectedTime?.split(':')[0] || '0'), parseInt(selectedTime?.split(':')[1] || '0')) : new Date(),
-            service_names: selectedServices.map(id => services.find(s => s.id === id)?.name).filter(Boolean),
-            status: 'pending',
-            professional_id: selectedProfessional === 'any' ? null : selectedProfessional
-        };
-
-        const bookingDate = new Date(displayBooking.appointment_time);
-        const isConfirmed = displayBooking.status === 'confirmed';
-
-        return (
-            <div className={`min-h-screen ${bgClass} flex items-center justify-center p-6`}>
-                <div className={`${cardClass} p-8 max-w-md w-full text-center relative overflow-hidden animate-in zoom-in-95 duration-300`}>
-                    <div className={`absolute top-0 left-0 w-full h-1 bg-${isConfirmed ? 'green-500' : accentColor}`}></div>
-
-                    <div className={`w-20 h-20 rounded-full bg-${isConfirmed ? 'green-500' : accentColor}/10 flex items-center justify-center mx-auto mb-6`}>
-                        <Check className={`w-10 h-10 text-${isConfirmed ? 'green-500' : accentColor}`} />
+            <div className={`h-screen flex items-center justify-center bg-[#050505]`}>
+                <div className="flex flex-col items-center gap-6 text-center px-8">
+                    <div className="w-20 h-20 rounded-none bg-neutral-900 border-2 border-white/10 flex items-center justify-center">
+                        <Sparkles className="w-10 h-10 text-white/10" />
                     </div>
-
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                        {isConfirmed ? 'Agendamento Confirmado!' : (activeBooking ? 'Você já tem uma solicitação!' : 'Solicitação Recebida!')}
-                    </h2>
-                    <p className="text-neutral-400 mb-8 max-w-[280px] mx-auto text-sm">
-                        {isConfirmed
-                            ? 'Seu horário foi confirmado. Estamos te esperando!'
-                            : (activeBooking
-                                ? 'Você já possui uma solicitação pendente. Aguarde a nossa confirmação via WhatsApp.'
-                                : 'Em breve iremos confirmar seu horário no seu WhatsApp. Fique atento às notificações.')
-                        }
-                    </p>
-
-                    <div className="bg-white/5 rounded-2xl p-5 mb-8 border border-white/10 text-left space-y-4">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Status</span>
-                                <span className={`inline-block px-2 py-0.5 ${isConfirmed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} text-[10px] font-bold rounded uppercase`}>
-                                    {isConfirmed ? 'Confirmado' : 'Pendente'}
-                                </span>
-                            </div>
-                            <div className="text-right">
-                                <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Data e Hora</span>
-                                <span className="text-white font-bold text-sm">
-                                    {!isNaN(bookingDate.getTime())
-                                        ? `${bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • ${bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`
-                                        : 'A definir'
-                                    }
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="h-px bg-white/10"></div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Serviço(s)</span>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {(displayBooking.service_names && displayBooking.service_names.length > 0) ? (
-                                        displayBooking.service_names.map((name: string, i: number) => (
-                                            <span key={i} className="text-[11px] bg-white/10 px-2.5 py-1 rounded-full text-neutral-300 border border-white/5">{name}</span>
-                                        ))
-                                    ) : (
-                                        <span className="text-white text-sm font-bold opacity-60">
-                                            {selectedServices.length > 0 ? `${selectedServices.length} serviço(s)` : 'Nenhum serviço'}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-center gap-4">
-                                <div className="flex-1">
-                                    <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">Profissional</span>
-                                    <span className="text-white font-bold text-sm">
-                                        {displayBooking.professional_name || (professionals.find(p => p.id === displayBooking.professional_id)?.name) || 'A Distribuir'}
-                                    </span>
-                                </div>
-                                <div className="text-right">
-                                    <span className="block text-[10px] uppercase text-neutral-500 mb-1 font-mono tracking-wider">WhatsApp</span>
-                                    <span className="text-white font-bold text-sm">{formatPhone(displayBooking.customer_phone, currencyRegion)}</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div>
+                        <p className="text-white font-black text-xl uppercase tracking-widest mb-2" style={{ fontFamily: 'Chivo,sans-serif' }}>Não encontrado</p>
+                        <p className="text-white/30 text-sm">O estabelecimento não existe ou o link está incorreto.</p>
                     </div>
-
-                    {!isConfirmed && activeBooking && (
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                            <button
-                                id="cancel-booking-btn"
-                                onClick={() => handleCancelBooking(activeBooking.id)}
-                                className="p-3 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/20 transition-all font-mono"
-                            >
-                                CANCELAR
-                            </button>
-                            <button
-                                id="edit-booking-btn"
-                                onClick={() => handleEditBooking(activeBooking)}
-                                className="p-3 text-xs font-bold text-white bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-all font-mono"
-                            >
-                                ALTERAR
-                            </button>
-                        </div>
-                    )}
-
-                    <BrutalButton
-                        onClick={() => window.location.reload()}
-                        variant="primary"
-                        className="w-full"
-                    >
-                        Voltar ao Início
-                    </BrutalButton>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen ${bgClass} font-sans selection:bg-${accentColor}/30`}>
-            {/* Policy Modal */}
-            {showPolicyModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className={`${cardClass} max-w-lg w-full p-6 relative animate-in zoom-in-95 duration-200`}>
-                        <button
-                            onClick={() => setShowPolicyModal(false)}
-                            className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
+        <div id="booking-root" className={`min-h-screen ${bgClass} ${isBeauty ? 'text-stone-800' : 'text-white'} selection:bg-accent-gold selection:text-black font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
+            {/* Background Texture Overlay (Pro-Max Detail) */}
+            <div className="fixed inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-noise z-[1]" />
 
-                        <h3 className={`text-xl font-bold text-white mb-4 flex items-center gap-2`}>
-                            <AlertTriangle className={`w-5 h-5 text-${accentColor}`} />
-                            Política de Cancelamento
-                        </h3>
+            {/* Sophisticated Glows */}
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
+                <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${isBeauty ? 'bg-silk-accent/5' : 'bg-obsidian-accent/5'}`}></div>
+                <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${isBeauty ? 'bg-stone-200/5' : 'bg-neutral-900/40'}`}></div>
+            </div>
 
-                        <div className="text-neutral-300 space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                            {businessSettings?.cancellation_policy ? (
-                                <p className="whitespace-pre-wrap leading-relaxed">{businessSettings.cancellation_policy}</p>
-                            ) : (
-                                <p>Por favor, avise com antecedência caso não possa comparecer. O não comparecimento sem aviso prévio pode sujeitar a cobranças ou restrições em agendamentos futuros.</p>
-                            )}
-                        </div>
+            <PublicBusinessHeader
+                businessName={business.business_name}
+                logoUrl={business.logo_url}
+                coverPhotoUrl={business.cover_photo_url}
+                instagramHandle={business.instagram_handle}
+                phone={business.phone}
+                address={business.address_street}
+                googleRating={business.google_rating}
+                totalReviews={business.total_reviews}
+                isBeauty={isBeauty}
+                userType={business.user_type}
+                gallery={gallery}
+            />
 
-                        <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
-                            <BrutalButton
-                                onClick={() => setShowPolicyModal(false)}
-                                variant="outline"
-                                size="sm"
-                            >
-                                Entendi
-                            </BrutalButton>
-                        </div>
+            {/* Barra de Progresso de Etapas */}
+            {step !== 'success' && (
+                <div className={`sticky top-0 z-30 w-full border-b ${isBeauty ? 'bg-[#E2E1DA]/95 border-stone-200' : 'bg-[#050505]/95 border-white/5'} backdrop-blur-md`}>
+                    <div className="container mx-auto px-4 max-w-3xl py-3 flex items-center gap-0">
+                        {stepLabels.map((label, idx) => (
+                            <React.Fragment key={label}>
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-black transition-all duration-500 ${idx < currentStepNum
+                                        ? (isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black')
+                                        : idx === currentStepNum
+                                            ? (isBeauty ? 'bg-stone-800 text-white scale-110 shadow-lg' : 'bg-accent-gold text-black scale-110 shadow-[0_0_12px_rgba(194,155,64,0.4)]')
+                                            : (isBeauty ? 'bg-stone-200 text-stone-400' : 'bg-white/5 text-white/20')
+                                        }`}>
+                                        {idx < currentStepNum ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+                                    </div>
+                                    <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentStepNum
+                                        ? (isBeauty ? 'text-stone-800' : 'text-accent-gold')
+                                        : (isBeauty ? 'text-stone-300' : 'text-white/20')
+                                        }`}>{label}</span>
+                                </div>
+                                {idx < stepLabels.length - 1 && (
+                                    <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentStepNum
+                                        ? (isBeauty ? 'bg-stone-400' : 'bg-accent-gold/50')
+                                        : (isBeauty ? 'bg-stone-200' : 'bg-white/5')
+                                        }`} />
+                                )}
+                            </React.Fragment>
+                        ))}
                     </div>
                 </div>
             )}
 
-            {/* 1. CINEMATIC HERO SECTION */}
-            <div className="relative h-[35vh] md:h-[70vh] overflow-hidden transition-all duration-500">
-                {/* Background Cover */}
-                <div className="absolute inset-0">
-                    {
-                        business.cover_photo_url ? (
-                            <img
-                                src={business.cover_photo_url}
-                                alt="Cover"
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className={`w-full h-full ${isBeauty ? 'bg-gradient-to-br from-beauty-dark via-beauty-card to-beauty-neon/20' : 'bg-neutral-900 border-b-4 border-neutral-800'}`}></div>
-                        )
-                    }
-                    {/* Immersive Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                    <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
-                </div >
-
-                {/* Hero Content */}
-                < div className="absolute inset-0 flex flex-col items-center justify-end pb-8 md:pb-12 px-4 text-center" >
-                    {/* Logo/Avatar */}
-                    < div className={`relative w-20 h-20 md:w-32 md:h-32 mb-4 md:mb-6 rounded-full p-1 bg-white/10 backdrop-blur-xl border-2 border-white/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-700`}>
-                        {
-                            business.logo_url ? (
-                                <img src={business.logo_url} alt="Logo" className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-neutral-800 rounded-full">
-                                    <Scissors className={`w-8 h-8 md:w-14 md:h-14 text-${accentColor}`} />
-                                </div>
-                            )
-                        }
-                        {/* Status Pulse */}
-                        <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-                    </div >
-
-                    <h1 className="text-2xl md:text-7xl font-heading text-white uppercase tracking-tighter mb-2 md:mb-4 drop-shadow-2xl">
-                        {business.business_name}
-                    </h1>
-
-                    <div className="flex flex-wrap items-center justify-center gap-4 text-sm md:text-base">
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
-                            <Star className={`w-4 h-4 text-${accentColor} fill-current`} />
-                            <span className="text-white font-bold">{business.google_rating || '5.0'}</span>
-                            <span className="text-neutral-400">({business.total_reviews || '0'})</span>
+            <div className="container mx-auto px-4 max-w-3xl relative z-10 pt-10 pb-32">
+                {/* Professional Service Grade (Strategic Section) */}
+                {proIdParam && step === 'services' && (
+                    <div className="mb-16 animate-reveal-fragment">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className={`w-12 h-[2px] ${isBeauty ? 'bg-silk-accent' : 'bg-obsidian-accent'}`}></div>
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isBeauty ? 'text-stone-400' : 'text-obsidian-accent'}`}>
+                                Grade de Serviços: {professionals.find(p => p.id === proIdParam)?.name.split(' ')[0] || 'Profissional'}
+                            </span>
                         </div>
-                        {business.address_street && (
-                            <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-neutral-300">
-                                <Calendar className="w-4 h-4" />
-                                <span>{business.address_street.split(',')[0]}</span>
-                            </div>
-                        )}
+                        <h2 className={`text-4xl md:text-5xl lg:text-6xl mb-8 ${isBeauty ? 'text-stone-800 font-light italic leading-tight' : 'massive-text text-white'}`}>
+                            Escolha sua <br /> Experiência
+                        </h2>
                     </div>
+                )}
 
-                    {/* Quick CTA */}
-                    <BrutalButton
-                        variant="primary"
-                        size="lg"
-                        className="mt-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300"
-                        onClick={() => document.getElementById('booking-start')?.scrollIntoView({ behavior: 'smooth' })}
-                    >
-                        Agendar Agora
-                    </BrutalButton>
-                </div >
-            </div >
-
-            <div className="max-w-6xl mx-auto px-4 -mt-10 relative z-10 pb-32">
-                {/* 2. ABOUT & GALLERY GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12" id="booking-start">
-                    {/* Main Content Area */}
-                    <div className="lg:col-span-2 space-y-8">
-
-                        {/* Business Gallery (The Portfolio Part) */}
-                        {gallery.length > 0 && (
-                            <section className={`${cardClass} p-6 md:p-8 animate-in slide-in-from-bottom duration-500 overflow-hidden`}>
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl md:text-2xl font-heading text-white uppercase tracking-tight flex items-center gap-2">
-                                        <Sparkles className={`w-5 h-5 text-${accentColor}`} />
-                                        Galeria de Trabalhos
-                                    </h2>
-                                    <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-widest hidden md:block">Arraste para ver mais →</p>
-                                </div>
-                                <div
-                                    ref={galleryRef}
-                                    className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
-                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                                >
-                                    {gallery.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="min-w-[280px] md:min-w-[400px] aspect-[4/3] rounded-2xl overflow-hidden group cursor-pointer relative snap-start shadow-2xl border border-white/10"
-                                        >
-                                            {/* Blurred Background */}
-                                            <div className="absolute inset-0 scale-110 blur-2xl opacity-50">
-                                                <img
-                                                    src={item.image_url}
-                                                    alt=""
-                                                    className="w-full h-full object-cover"
-                                                />
+                <div className="space-y-12">
+                    {messages.map((msg, idx) => (
+                        <ChatBubble
+                            key={msg.id}
+                            message={msg.text}
+                            isAssistant={msg.isAssistant}
+                            delay={idx === messages.length - 1 ? 200 : 0}
+                            isBeauty={isBeauty}
+                        >
+                            {msg.isAssistant && idx === messages.length - 1 && !isSubmitting && (
+                                <div className="mt-8 animate-reveal-fragment duration-700">
+                                    {msg.type === 'services' && step === 'services' && (
+                                        <div className="space-y-12">
+                                            {/* Luxury Filters - Staggered Slide Animation */}
+                                            <div className="animate-reveal-fragment duration-700">
+                                                <div className={`p-1.5 ${isBeauty ? 'bg-white shadow-silk-shadow border border-stone-100 rounded-2xl' : 'bg-white/5 border border-white/10 rounded-none'} backdrop-blur-xl`}>
+                                                    <div className="flex gap-2 overflow-x-auto p-1 scrollbar-hide">
+                                                        <button onClick={() => setActiveCategory('all')}
+                                                            className={`px-8 py-2.5 ${isBeauty ? 'rounded-xl' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
+                                                            ${activeCategory === 'all'
+                                                                    ? (isBeauty ? 'bg-stone-800 text-white shadow-lg scale-105' : 'bg-accent-gold text-black shadow-heavy scale-105')
+                                                                    : (isBeauty ? 'text-stone-400 hover:bg-stone-100' : 'text-neutral-500 hover:bg-white/5')}`}>
+                                                            Todos
+                                                        </button>
+                                                        {categories.map(cat => (
+                                                            <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                                                                className={`px-8 py-2.5 ${isBeauty ? 'rounded-xl border border-stone-50' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
+                                                                ${activeCategory === cat.id
+                                                                        ? (isBeauty ? 'bg-stone-800 text-white shadow-lg scale-105' : 'bg-accent-gold text-black shadow-heavy scale-105')
+                                                                        : (isBeauty ? 'text-stone-400 bg-transparent hover:bg-stone-100' : 'text-neutral-500 hover:bg-white/5')}`}>
+                                                                {cat.name}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            {/* Clear Foreground Image */}
-                                            <div className="w-full h-full relative z-10 flex items-center justify-center p-2">
-                                                <img
-                                                    src={item.image_url}
-                                                    alt={item.title || "Trabalho"}
-                                                    className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-105"
-                                                />
-                                            </div>
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4 z-20">
-                                                {item.title && <p className="text-white font-bold text-sm uppercase tracking-wider font-mono">{item.title}</p>}
+
+                                            {/* Empty state se não há serviços */}
+                                            {services.length === 0 && (
+                                                <div className={`flex flex-col items-center justify-center py-20 gap-6 text-center ${isBeauty ? '' : ''}`}>
+                                                    <div className={`w-20 h-20 flex items-center justify-center border-2 ${isBeauty ? 'bg-stone-100 border-stone-200 rounded-2xl' : 'bg-white/5 border-white/10 rounded-none'}`}>
+                                                        <Sparkles className={`w-10 h-10 ${isBeauty ? 'text-stone-300' : 'text-white/20'}`} />
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-black text-lg uppercase tracking-widest mb-2 ${isBeauty ? 'text-stone-500' : 'text-white/40'}`}>Em Breve</p>
+                                                        <p className={`text-sm ${isBeauty ? 'text-stone-400' : 'text-white/30'}`}>Nossos serviços serão apresentados em breve.<br />Entre em contato diretamente para agendar.</p>
+                                                    </div>
+                                                    {whatsappLink && (
+                                                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                                                            className={`flex items-center gap-3 px-8 py-4 font-black text-xs uppercase tracking-widest transition-all ${isBeauty ? 'bg-stone-800 text-white rounded-xl hover:scale-105' : 'bg-accent-gold text-black border-4 border-black shadow-heavy hover:translate-x-1 hover:translate-y-1'}`}>
+                                                            <Phone className="w-4 h-4" /> Falar via WhatsApp
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Service Staggered Grid - Extra Polish */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                                                {services.filter(s => (activeCategory === 'all' || s.category_id === activeCategory) && (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((service, sIdx) => {
+                                                    const isSelected = selectedServices.includes(service.id);
+                                                    return (
+                                                        <div key={service.id}
+                                                            onClick={() => toggleService(service.id)}
+                                                            style={{ animationDelay: `${sIdx * 80}ms` }}
+                                                            className={`
+                                                                relative overflow-hidden cursor-pointer transition-all duration-700 animate-reveal-fragment group
+                                                                ${isBeauty ? 'rounded-3xl' : 'rounded-none'}
+                                                                ${isSelected
+                                                                    ? (isBeauty ? 'md:scale-[1.03] shadow-2xl ring-2 ring-stone-800' : 'md:scale-[1.03] shadow-heavy-lg border-4 border-accent-gold ring-4 ring-black')
+                                                                    : (isBeauty ? 'bg-white shadow-silk-shadow hover:-translate-y-1' : 'bg-obsidian-card border border-white/5 shadow-heavy hover:-translate-y-1')
+                                                                }
+                                                            `}>
+                                                            {/* Service Image/Cover with Persistent Category — Mobile-first height */}
+                                                            <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
+                                                                {service.image_url ? (
+                                                                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                                                                ) : (
+                                                                    <div className={`w-full h-full flex items-center justify-center ${isBeauty ? 'bg-stone-50' : 'bg-neutral-800'}`}>
+                                                                        <Sparkles className={`w-12 h-12 opacity-10 ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`} />
+                                                                    </div>
+                                                                )}
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                                                                {/* Persistent Category Label */}
+                                                                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${isBeauty ? 'bg-white/90 border-stone-100 text-stone-800' : 'bg-black/60 border-white/10 text-white/70'}`}>
+                                                                    {categories.find(c => c.id === service.category_id)?.name || 'Especial'}
+                                                                </div>
+
+                                                                {/* Select Indicator Over Image */}
+                                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 ${isBeauty ? 'rounded-full' : 'rounded-none'} ${isSelected ? (isBeauty ? 'bg-stone-800 border-white text-white rotate-12 scale-110' : 'bg-accent-gold border-black text-black scale-110 rotate-12') : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                                    <Check className="w-6 h-6" />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Service Content - Massive Design */}
+                                                            <div className="p-6">
+                                                                <div className="flex justify-between items-end">
+                                                                    <div className="flex-1 space-y-3">
+                                                                        <h4 className={`
+                                                                            ${isBeauty ? 'font-black text-stone-800 tracking-tight' : 'massive-text text-white tracking-tighter'} 
+                                                                            text-2xl group-hover:text-accent-gold transition-colors duration-500
+                                                                        `}>
+                                                                            {service.name}
+                                                                        </h4>
+                                                                        {service.description && (
+                                                                            <p className={`text-xs line-clamp-1 opacity-50 ${isBeauty ? 'font-medium' : 'font-mono'}`}>
+                                                                                {service.description}
+                                                                            </p>
+                                                                        )}
+                                                                        <div className="flex items-center gap-4">
+                                                                            <span className={`text-base font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`}>
+                                                                                {formatCurrency(service.price, currencyRegion)}
+                                                                            </span>
+                                                                            <div className="w-1 h-1 rounded-full bg-neutral-500/30" />
+                                                                            <span className="text-[11px] font-bold text-neutral-500 flex items-center gap-1.5">
+                                                                                <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Bottom Glow on Selection */}
+                                                            {isSelected && !isBeauty && (
+                                                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent-gold animate-shimmer" />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
+                                    )}
 
-                        {/* STEPPER NAV */}
-                        <div className={`
-                            ${isBeauty
-                                ? 'bg-beauty-card/90 border-b border-beauty-neon/20 backdrop-blur-xl'
-                                : 'bg-brutal-card border-4 border-brutal-border shadow-heavy'
-                            }
-                            p-4 rounded-xl flex items-center justify-center gap-4 md:gap-12 sticky top-4 z-40 transition-all duration-300
-                        `}>
-                            {[
-                                { id: 'services', label: 'Serviços', num: 1 },
-                                { id: 'datetime', label: 'Data & Hora', num: 2 },
-                                { id: 'contact', label: 'Finalizar', num: 3 }
-                            ].map((s) => (
-                                <div
-                                    key={s.id}
-                                    className={`flex items-center gap-2 transition-all duration-300 ${step === s.id ? `text-${accentColor} scale-105` : 'text-neutral-500 opacity-60'}`}
-                                >
-                                    <span className={`
-                                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                                        ${step === s.id
-                                            ? (isBeauty ? 'bg-beauty-neon text-black shadow-neon' : 'bg-accent-gold text-black border-2 border-black')
-                                            : 'bg-neutral-800 border border-neutral-700'
-                                        }
-                                    `}>
-                                        {step === s.id ? <Check className="w-4 h-4" /> : s.num}
-                                    </span>
-                                    <span className="text-xs font-mono uppercase font-bold hidden md:block tracking-wider">{s.label}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Booking Steps Content */}
-                        <div className="animate-in fade-in duration-700">
-                            {step === 'services' && (
-                                <div className="space-y-6">
-                                    <div className="flex flex-col gap-4">
-                                        <div className="flex items-center justify-between">
-                                            <h2 className="text-2xl md:text-3xl font-heading text-white uppercase tracking-tight">Menu de Serviços</h2>
-                                            <p className="text-neutral-500 text-xs font-mono">{services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length} Opções</p>
-                                        </div>
-
-                                        {/* Search Bar */}
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-xs font-mono text-neutral-500 uppercase tracking-widest">Pesquisar serviço:</label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    placeholder="Digite o nome do serviço..."
-                                                    className={`w-full px-4 py-3 pl-10 rounded-lg font-medium transition-all ${isBeauty
-                                                        ? 'bg-beauty-card border border-beauty-neon/20 text-white placeholder:text-neutral-500 focus:border-beauty-neon'
-                                                        : 'bg-neutral-900 border-2 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-accent-gold'
-                                                        }`}
-                                                />
-                                                <Sparkles className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${searchQuery ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-neutral-500'}`} />
-                                                {searchQuery && (
-                                                    <button
-                                                        onClick={() => setSearchQuery('')}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Category Filter */}
-                                    {categories.length > 0 && (
-                                        <div className="flex gap-2 mb-2 overflow-x-auto pb-2 custom-scrollbar -mx-2 px-2 md:mx-0 md:px-0">
+                                    {msg.type === 'professionals' && step === 'datetime' && !selectedProfessional && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                             <button
-                                                onClick={() => setActiveCategory('all')}
+                                                onClick={() => {
+                                                    setSelectedProfessional('any');
+                                                    setMessages(prev => [...prev,
+                                                    { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false },
+                                                    { id: (Date.now() + 1).toString(), text: "Perfeito escolha. Qual dia e horário ficam melhores para você explorar nossa agenda?", isAssistant: true, type: 'datetime' }
+                                                    ]);
+                                                }}
                                                 className={`
-                                                    px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all
-                                                    ${activeCategory === 'all'
-                                                        ? `bg-${accentColor} text-black border-2 border-${accentColor}`
-                                                        : 'bg-neutral-800 text-neutral-400 border-2 border-transparent hover:bg-neutral-700 hover:text-white'}
-                                                `}
-                                            >
-                                                Todos
+                                                    p-6 flex flex-col items-center gap-3 transition-all duration-300
+                                                    ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
+                                                `}>
+                                                <div className={`w-16 h-16 flex items-center justify-center border-2 ${isBeauty ? 'bg-white border-stone-200 text-stone-300 rounded-full' : 'bg-neutral-900 border-black text-neutral-600 rounded-none'}`}>
+                                                    <Users className="w-8 h-8" />
+                                                </div>
+                                                <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>Qualquer Profissional</span>
                                             </button>
-                                            {categories.map(cat => (
+
+                                            {professionals.map((pro, pIdx) => (
                                                 <button
-                                                    key={cat.id}
-                                                    onClick={() => setActiveCategory(cat.id)}
+                                                    key={pro.id}
+                                                    style={{ animationDelay: `${pIdx * 100}ms` }}
+                                                    onClick={() => {
+                                                        setSelectedProfessional(pro.id);
+                                                        setMessages(prev => [...prev,
+                                                        { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false },
+                                                        { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para sua visita?`, isAssistant: true, type: 'datetime' }
+                                                        ]);
+                                                    }}
                                                     className={`
-                                                        px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all
-                                                        ${activeCategory === cat.id
-                                                            ? `bg-${accentColor} text-black border-2 border-${accentColor}`
-                                                            : 'bg-neutral-800 text-neutral-400 border-2 border-transparent hover:bg-neutral-700 hover:text-white'}
-                                                    `}
-                                                >
-                                                    {cat.name}
+                                                        p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment
+                                                        ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
+                                                    `}>
+                                                    <div className={`w-16 h-16 overflow-hidden border-2 ${isBeauty ? 'bg-white border-stone-200 rounded-full' : 'bg-neutral-900 border-black rounded-none'}`}>
+                                                        {pro.photo_url ? (
+                                                            <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold">{pro.name.charAt(0)}</div>
+                                                        )}
+                                                    </div>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                                        {pro.name.split(' ')[0]}
+                                                    </span>
                                                 </button>
                                             ))}
                                         </div>
                                     )}
 
-                                    {/* Services organized by category */}
-                                    <div className="space-y-6">
-                                        {(() => {
-                                            // Group services by category with search filter
-                                            const servicesByCategory = services
-                                                .filter(service => {
-                                                    // Category filter
-                                                    const matchesCategory = activeCategory === 'all' || service.category_id === activeCategory;
-                                                    // Search filter
-                                                    const matchesSearch = !searchQuery ||
-                                                        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                        (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
-                                                    return matchesCategory && matchesSearch;
-                                                })
-                                                .reduce((acc, service) => {
-                                                    const categoryId = service.category_id || 'uncategorized';
-                                                    if (!acc[categoryId]) acc[categoryId] = [];
-                                                    acc[categoryId].push(service);
-                                                    return acc;
-                                                }, {} as Record<string, Service[]>);
+                                    {msg.type === 'datetime' && step === 'datetime' && (
+                                        <div className="space-y-12 max-w-2xl mx-auto">
+                                            <div className={`${isBeauty ? 'bg-white shadow-silk-shadow p-8 rounded-3xl' : 'bg-obsidian-card border-2 border-black p-8 shadow-heavy-lg'}`}>
+                                                <h3 className={`mb-8 ${isBeauty ? 'text-stone-800 silk-text' : 'massive-text text-white'} text-center md:text-left`}>Seleção de Agenda</h3>
+                                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} isBeauty={isBeauty} fullDates={fullDates} />
+                                            </div>
 
-                                            // Sort services within each category alphabetically
-                                            Object.keys(servicesByCategory).forEach(catId => {
-                                                servicesByCategory[catId].sort((a, b) => a.name.localeCompare(b.name));
-                                            });
-
-                                            // Get category names for headers
-                                            const getCategoryName = (catId: string) => {
-                                                if (catId === 'uncategorized') return 'Outros Serviços';
-                                                const cat = categories.find(c => c.id === catId);
-                                                return cat?.name || 'Serviços';
-                                            };
-
-
-
-                                            return Object.entries(servicesByCategory).map(([categoryId, categoryServices]) => (
-                                                <div key={categoryId} className="space-y-3">
-                                                    {/* Category Header (only show if not filtering by specific category) */}
-                                                    {activeCategory === 'all' && (
-                                                        <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
-                                                            {getCategoryName(categoryId)}
-                                                        </h3>
-                                                    )}
-
-                                                    {/* Services List - Compact Layout */}
-                                                    <div className="space-y-2">
-                                                        {categoryServices.map(service => {
-                                                            const isSelected = selectedServices.includes(service.id);
-                                                            return (
-                                                                <div
-                                                                    key={service.id}
-                                                                    onClick={() => toggleService(service.id)}
-                                                                    className={`
-                                                                        relative cursor-pointer transition-all duration-200 group overflow-hidden flex items-center gap-4 p-4
-                                                                        ${isBeauty
-                                                                            ? 'rounded-xl border'
-                                                                            : 'border-2 border-black'}
-                                                                        ${isSelected
-                                                                            ? (isBeauty
-                                                                                ? 'bg-beauty-card border-beauty-neon shadow-neon'
-                                                                                : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
-                                                                            : (isBeauty
-                                                                                ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
-                                                                                : 'bg-brutal-card border-transparent hover:border-neutral-700')}
-                                                                    `}
-                                                                >
-                                                                    {/* Selection Indicator */}
-                                                                    <div className={`
-                                                                        shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
-                                                                        ${isSelected
-                                                                            ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
-                                                                            : 'border-neutral-600 bg-transparent'}
-                                                                    `}>
-                                                                        {isSelected && <Check className="w-4 h-4 text-black" />}
-                                                                    </div>
-
-                                                                    {/* Service Info */}
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h4 className={`font-bold text-base leading-tight truncate ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
-                                                                            {service.name}
-                                                                        </h4>
-                                                                        {service.description && (
-                                                                            <p className="text-neutral-400 text-xs mt-1 line-clamp-1">
-                                                                                {service.description}
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {/* Price and Duration */}
-                                                                    <div className="shrink-0 text-right">
-                                                                        <div className={`text-lg font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
-                                                                            {formatCurrency(service.price, currencyRegion)}
-                                                                        </div>
-                                                                        <div className="flex items-center justify-end gap-1 text-neutral-400 text-[10px] font-mono mt-1">
-                                                                            <Clock className="w-3 h-3" />
-                                                                            {service.duration_minutes}min
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
+                                            {selectedDate && (
+                                                <div className="animate-reveal-fragment duration-700">
+                                                    <h4 className={`mb-6 ${isBeauty ? 'text-stone-400 silk-text text-sm' : 'text-obsidian-accent massive-text text-xl'} text-center md:text-left`}>Horários Disponíveis</h4>
+                                                    <TimeGrid
+                                                        selectedTime={selectedTime}
+                                                        onTimeSelect={(time) => {
+                                                            setSelectedTime(time);
+                                                            setMessages(prev => [...prev,
+                                                            { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
+                                                            { id: (Date.now() + 1).toString(), text: "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }
+                                                            ]);
+                                                            setStep('contact');
+                                                        }}
+                                                        availableSlots={availableSlots}
+                                                        isBeauty={isBeauty}
+                                                    />
                                                 </div>
-                                            ));
-                                        })()}
-
-                                        {/* Empty State */}
-                                        {(() => {
-                                            const filteredCount = services.filter(service => {
-                                                const matchesCategory = activeCategory === 'all' || service.category_id === activeCategory;
-                                                const matchesSearch = !searchQuery ||
-                                                    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                    (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
-                                                return matchesCategory && matchesSearch;
-                                            }).length;
-
-                                            if (filteredCount === 0) {
-                                                return (
-                                                    <div className={`text-center py-12 px-4 rounded-xl border-2 border-dashed ${isBeauty ? 'border-white/10 bg-beauty-card/30' : 'border-neutral-800 bg-neutral-900/30'}`}>
-                                                        <Sparkles className={`w-12 h-12 mx-auto mb-4 ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}`} />
-                                                        <h3 className="text-white font-bold text-lg mb-2">Nenhum serviço encontrado</h3>
-                                                        <p className="text-neutral-400 text-sm mb-4">
-                                                            {searchQuery
-                                                                ? `Não encontramos serviços com "${searchQuery}"`
-                                                                : 'Não há serviços nesta categoria'}
-                                                        </p>
-                                                        {searchQuery && (
-                                                            <button
-                                                                onClick={() => setSearchQuery('')}
-                                                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${isBeauty ? 'bg-beauty-neon text-black hover:bg-beauty-neon/80' : 'bg-accent-gold text-black hover:bg-accent-gold/80'}`}
-                                                            >
-                                                                Limpar pesquisa
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                );
-                                            }
-                                            return null;
-                                        })()}
-                                    </div>
-                                </div>
-                            )}
-
-                            {step === 'datetime' && (
-                                <div className="space-y-8 animate-in slide-in-from-right duration-500">
-                                    <div className="flex items-center gap-4 mb-2">
-                                        <button onClick={() => setStep('services')} className="p-2 bg-neutral-800 rounded-lg text-white hover:bg-neutral-700 transition-colors">
-                                            ←
-                                        </button>
-                                        <h2 className="text-2xl font-heading text-white uppercase tracking-tight">Agendamento</h2>
-                                    </div>
-
-                                    {/* Region Warning/Indicator if needed */}
-                                    {currencyRegion === 'PT' && (
-                                        <div className="bg-neutral-900/50 border border-neutral-800 p-2 rounded text-xs text-neutral-500 text-center mb-4">
-                                            Horário de Lisboa (GMT/WEST)
+                                            )}
                                         </div>
                                     )}
 
-                                    {/* Profissional */}
-                                    {business?.enable_professional_selection !== false && professionals.length > 0 && (
-                                        <section>
-                                            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4">Selecione quem irá te atender:</h3>
-                                            <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                                                <button
-                                                    onClick={() => setSelectedProfessional('any')}
-                                                    className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedProfessional === 'any' ? `border-${accentColor} bg-${accentColor}/10` : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'}`}
-                                                >
-                                                    <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700">
-                                                        <Users className="w-6 h-6 text-neutral-500" />
+                                    {msg.type === 'contact' && step === 'contact' && (
+                                        <div className={`p-8 md:p-12 ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl' : 'bg-obsidian-card border-2 border-black shadow-heavy-lg'} animate-reveal-fragment overflow-hidden relative`}>
+                                            {!isBeauty && <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none select-none massive-text text-8xl">INFO</div>}
+
+                                            <div className="relative z-10 space-y-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                    <div className="space-y-2">
+                                                        <label className={`${isBeauty ? 'text-stone-400 silk-text text-[10px]' : 'text-neutral-600 massive-text text-xs'} block`}>Nome Completo</label>
+                                                        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                                                            className={`w-full py-4 px-5 outline-none transition-all ${isBeauty ? 'bg-stone-50 border-stone-100 focus:bg-white rounded-lg' : 'bg-black/40 border-white/5 focus:border-obsidian-accent rounded-none'}`}
+                                                            placeholder="Como devemos te chamar?" />
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-white uppercase">Qualquer um</span>
-                                                </button>
-                                                {professionals.map(pro => (
-                                                    <button
-                                                        key={pro.id}
-                                                        onClick={() => setSelectedProfessional(pro.id)}
-                                                        className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedProfessional === pro.id ? `border-${accentColor} bg-${accentColor}/10` : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'}`}
-                                                    >
-                                                        <div className="w-14 h-14 rounded-full overflow-hidden border border-neutral-700 shadow-lg">
-                                                            {pro.photo_url ? (
-                                                                <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold">{pro.name.charAt(0)}</div>
-                                                            )}
-                                                        </div>
-                                                        <span className="text-[10px] font-bold text-white uppercase truncate max-w-[80px]">{pro.name.split(' ')[0]}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </section>
-                                    )}
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <CalendarPicker
-                                            selectedDate={selectedDate}
-                                            onDateSelect={setSelectedDate}
-                                            isBeauty={isBeauty}
-                                            fullDates={fullDates}
-                                        />
-                                        {selectedDate ? (
-                                            <div className="animate-in fade-in duration-500">
-                                                <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} isBeauty={isBeauty} />
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-center bg-neutral-900/30 rounded-2xl border-2 border-dashed border-neutral-800 text-neutral-600 italic text-sm p-12 text-center">
-                                                Selecione uma data para ver os horários disponíveis.
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="mt-8 flex justify-end">
-                                        <BrutalButton
-                                            disabled={!selectedTime}
-                                            onClick={() => {
-                                                setStep('contact');
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }}
-                                            className="w-full md:w-auto"
-                                        >
-                                            Continuar
-                                        </BrutalButton>
-                                    </div>
-                                </div>
-                            )}
-
-                            {step === 'contact' && (
-                                <div className="space-y-8 animate-in slide-in-from-right duration-500">
-                                    <div className="flex items-center gap-4 mb-2">
-                                        <button onClick={() => setStep('datetime')} className="p-2 bg-neutral-800 rounded-lg text-white hover:bg-neutral-700 transition-colors">
-                                            ←
-                                        </button>
-                                        <h2 className="text-2xl font-heading text-white uppercase tracking-tight">Confirmar</h2>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-                                        <div className="md:col-span-3">
-                                            <div className={`${cardClass} p-6 md:p-8 space-y-6`}>
-                                                <h3 className="text-lg font-bold text-white uppercase flex items-center gap-2">
-                                                    <User className={`w-5 h-5 text-${accentColor}`} />
-                                                    Seus Dados
-                                                </h3>
-
-                                                {/* Phone Input */}
-                                                <div>
-                                                    <label className="text-neutral-400 text-xs font-mono uppercase mb-2 block">Seu Celular (WhatsApp)</label>
-                                                    <PhoneInput
-                                                        value={customerPhone}
-                                                        onChange={setCustomerPhone}
-                                                        defaultRegion={currencyRegion as 'BR' | 'PT'}
-                                                    />
-                                                    <p className="text-[10px] text-neutral-500 mt-1">
-                                                        Usaremos para confirmar seu agendamento.
-                                                    </p>
-                                                </div>
-
-                                                {/* Name Input */}
-                                                <div>
-                                                    <label className="text-neutral-400 text-xs font-mono uppercase mb-2 block tracking-widest">Seu Nome Completo</label>
-                                                    <div className="relative group">
-                                                        <div className={`absolute inset-0 bg-${accentColor}/5 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition-opacity`}></div>
-                                                        <input
-                                                            type="text"
-                                                            value={customerName}
-                                                            onChange={(e) => setCustomerName(e.target.value)}
-                                                            className={`
-                                                                relative w-full p-4 text-white focus:outline-none transition-all duration-300
-                                                                ${isBeauty
-                                                                    ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:bg-beauty-card placeholder-beauty-neon/30 h-[56px]'
-                                                                    : 'bg-neutral-900 border-2 border-brutal-border focus:border-accent-gold placeholder-neutral-600 shadow-[2px_2px_0px_0px_#000000] focus:shadow-[4px_4px_0px_0px_#C29B40] h-[56px]'
-                                                                }
-                                                            `}
-                                                            placeholder="Como gostaria de ser chamado?"
-                                                        />
-                                                        <User className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${customerName ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-neutral-600'}`} />
+                                                    <div className="space-y-2">
+                                                        <label className={`${isBeauty ? 'text-stone-400 silk-text text-[10px]' : 'text-neutral-600 massive-text text-xs'} block`}>WhatsApp</label>
+                                                        <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                                     </div>
                                                 </div>
 
-                                                {/* Photo Input (Optional) */}
-                                                <div>
-                                                    <label className="text-neutral-400 text-xs font-mono uppercase mb-2 block">Sua Foto (Opcional)</label>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-full bg-neutral-800 border border-neutral-700 overflow-hidden flex items-center justify-center">
-                                                            {customerPhoto ? (
-                                                                <img src={URL.createObjectURL(customerPhoto)} alt="Preview" className="w-full h-full object-cover" />
-                                                            ) : existingPhotoUrl ? (
-                                                                <img src={existingPhotoUrl} alt="Preview" className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <User className="w-6 h-6 text-neutral-500" />
-                                                            )}
-                                                        </div>
-                                                        <label className="cursor-pointer">
-                                                            <input
-                                                                type="file"
-                                                                className="hidden"
-                                                                accept="image/*"
-                                                                onChange={(e) => {
-                                                                    if (e.target.files && e.target.files[0]) {
-                                                                        setCustomerPhoto(e.target.files[0]);
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <span className={`text-sm font-bold text-${accentColor} hover:underline decoration-dotted flex items-center gap-2`}>
-                                                                <Upload className="w-4 h-4" />
-                                                                Carregar Foto
-                                                            </span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-
-                                                {/* Terms Checkbox */}
-                                                <div className="pt-4 border-t border-white/5">
-                                                    <label className="flex items-start gap-3 cursor-pointer group">
-                                                        <div className={`
-                                                            w-6 h-6 rounded border-2 flex items-center justify-center transition-all mt-0.5
-                                                            ${acceptedPolicy
-                                                                ? `bg-${accentColor} border-${accentColor} text-black`
-                                                                : 'border-neutral-700 bg-neutral-800 group-hover:border-neutral-500'
-                                                            }
-                                                        `}>
-                                                            {acceptedPolicy && <Check className="w-4 h-4" />}
-                                                        </div>
-                                                        <input
-                                                            type="checkbox"
-                                                            className="hidden"
-                                                            checked={acceptedPolicy}
-                                                            onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                                        />
-                                                        <div className="text-sm text-neutral-400">
-                                                            Concordo com a <span className="text-white underline decoration-dotted hover:opacity-80 transition-opacity" onClick={(e) => {
-                                                                e.preventDefault();
-                                                                setShowPolicyModal(true);
-                                                            }}>política de cancelamento</span> e confirmo que comparecerei no horário agendado.
-                                                        </div>
+                                                <div className="flex items-start gap-4 p-4 bg-stone-50/50 rounded-xl border border-stone-100">
+                                                    <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                                                        className={`mt-1.5 w-5 h-5 ${isBeauty ? 'rounded text-stone-800' : 'rounded-none text-obsidian-accent'} border-stone-200`} />
+                                                    <label htmlFor="privacy" className={`text-xs ${isBeauty ? 'text-stone-500 font-light' : 'text-neutral-400 font-medium'} leading-relaxed`}>
+                                                        Confirmo meu compromisso e aceito as <button onClick={() => setShowPolicyModal(true)} className={`font-bold underline ${isBeauty ? 'text-stone-800' : 'text-obsidian-accent'}`}>diretrizes de cancelamento</button>.
                                                     </label>
                                                 </div>
 
-                                                <BrutalButton
+                                                <button
                                                     onClick={handleSubmit}
-                                                    disabled={!customerName || !customerPhone || !acceptedPolicy || customerPhone.length < 9 || isSubmitting}
-                                                    variant="primary"
-                                                    size="lg"
-                                                    className="w-full flex items-center justify-center gap-2 touch-manipulation"
-                                                >
+                                                    disabled={!customerName || !customerPhone || !acceptedPolicy || isSubmitting}
+                                                    className={`
+                                                        w-full py-6 flex items-center justify-center gap-4 transition-all group overflow-hidden relative
+                                                        ${isBeauty ? 'bg-stone-800 text-white rounded-xl shadow-xl hover:scale-[1.01]' : 'bg-obsidian-accent text-black font-bold massive-text text-lg shadow-heavy border-4 border-black'}
+                                                        disabled:opacity-40 disabled:grayscale
+                                                    `}>
                                                     {isSubmitting ? (
-                                                        <>
-                                                            <Loader2 className="w-4 h-4 animate-spin" /> Processando...
-                                                        </>
+                                                        <Loader2 className="w-6 h-6 animate-spin" />
                                                     ) : (
-                                                        'Confirmar Agendamento'
+                                                        <>
+                                                            <span>Confirmar Agendamento</span>
+                                                            <Check className="w-6 h-6 group-hover:scale-125 transition-transform" />
+                                                        </>
                                                     )}
-                                                </BrutalButton>
+                                                    {/* Shine effect */}
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                                                </button>
                                             </div>
                                         </div>
-
-                                        <div className="md:col-span-2 space-y-6">
-                                            <div className={`${cardClass} p-6 bg-black shadow-inner`}>
-                                                <h4 className="text-white font-bold uppercase text-xs tracking-widest mb-4 opacity-50 font-mono">Resumo do Pedido</h4>
-                                                <div className="space-y-3 mb-6">
-                                                    {services.filter(s => selectedServices.includes(s.id)).map(s => (
-                                                        <div key={s.id} className="flex justify-between items-center text-sm">
-                                                            <span className="text-neutral-400">{s.name}</span>
-                                                            <span className="text-white font-mono">{formatCurrency(s.price, currencyRegion)}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="border-t border-neutral-800 pt-4 space-y-2">
-                                                    <div className="flex justify-between text-xs">
-                                                        <span className="text-neutral-500">Data</span>
-                                                        <span className="text-white font-bold">{selectedDate?.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })} • {selectedTime}</span>
-                                                    </div>
-                                                    <div className="flex justify-between text-xs">
-                                                        <span className="text-neutral-500">Duração</span>
-                                                        <span className="text-white font-bold">{calculateDuration()} min</span>
-                                                    </div>
-                                                    <div className="flex justify-between pt-4">
-                                                        <span className="text-white font-bold">Total</span>
-                                                        <span className={`text-2xl font-bold text-${accentColor}`}>
-                                                            {formatCurrency(calculateTotal(), currencyRegion)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    </div>
+                        </ChatBubble>
+                    ))}
 
-                    {/* Sidebar / Info */}
-                    <div className="space-y-6">
-                        <div className={`${cardClass} p-6`}>
-                            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4">Informações</h3>
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <Phone className={`w-4 h-4 text-${accentColor} mt-1`} />
-                                    <div>
-                                        <p className="text-white text-sm font-bold">{business.phone || 'N/A'}</p>
-                                        <p className="text-neutral-500 text-[10px] uppercase">Contato WhatsApp</p>
+                    {isTyping && (
+                        <div className="flex justify-start mb-12 animate-fade-in">
+                            <div className={`px-8 py-5 ${isBeauty ? 'bg-white rounded-2xl shadow-sm' : 'bg-obsidian-card border border-white/5 shadow-heavy rounded-none'} flex items-center gap-2`}>
+                                <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${isBeauty ? 'bg-stone-300' : 'bg-obsidian-accent'}`} />
+                                <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.2s] ${isBeauty ? 'bg-stone-200' : 'bg-obsidian-accent/60'}`} />
+                                <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.4s] ${isBeauty ? 'bg-stone-100' : 'bg-obsidian-accent/30'}`} />
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 'success' && activeBooking && (
+                        <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment">
+                            <div className="relative inline-block mb-10">
+                                <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${isBeauty ? 'bg-stone-800 border-white text-white rounded-full shadow-2xl' : 'bg-accent-gold border-black text-black rounded-none shadow-heavy-lg'}`}>
+                                    <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />
+                                </div>
+                                {/* Decorative sparkles around success icon */}
+                                <div className="absolute -top-4 -right-4 animate-bounce delay-100">
+                                    <Sparkles className="w-8 h-8 text-accent-gold" />
+                                </div>
+                                <div className="absolute -bottom-2 -left-6 animate-bounce delay-300">
+                                    <Sparkles className="w-6 h-6 text-accent-gold opacity-50" />
+                                </div>
+                            </div>
+
+                            <h2 className={`${isBeauty ? 'font-light tracking-widest text-stone-800' : 'massive-text text-white tracking-tighter'} text-5xl md:text-7xl mb-6`}>
+                                {isBeauty ? 'Sua beleza agendada' : 'RESERVA CONFIRMADA'}
+                            </h2>
+
+                            <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${isBeauty ? 'text-stone-500 italic' : 'text-white/40 font-mono uppercase tracking-widest'}`}>
+                                {isBeauty
+                                    ? "Prepare-se para um momento único de auto-cuidado e transformação."
+                                    : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA."
+                                }
+                            </p>
+
+                            {/* Summary Card - Premium Detail */}
+                            <div className={`p-8 mb-12 text-left relative overflow-hidden group ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl border border-stone-100' : 'bg-obsidian-card border-4 border-black shadow-heavy-lg rounded-none'}`}>
+                                <div className="relative z-10 flex flex-col gap-6">
+                                    <div className="flex justify-between items-center border-b pb-4 border-neutral-500/10">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Resumo da Reserva</span>
+                                        <div className="p-1.5 rounded-full bg-accent-gold/10 text-accent-gold">
+                                            <Star className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Data e Hora</p>
+                                            <p className={`text-lg font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                                {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Total</p>
+                                            <p className={`text-lg font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                                {formatCurrency(calculateTotal(), currencyRegion)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Serviços</p>
+                                        <p className={`text-sm font-bold opacity-60 ${isBeauty ? 'text-stone-700' : 'text-white'}`}>
+                                            {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
+                                        </p>
                                     </div>
                                 </div>
-                                {business.address_street && (
-                                    <div className="flex items-start gap-3">
-                                        <Calendar className={`w-4 h-4 text-${accentColor} mt-1`} />
-                                        <div>
-                                            <p className="text-white text-sm font-bold truncate max-w-[180px]">{business.address_street || 'Confirme o local'}</p>
-                                            <p className="text-neutral-500 text-[10px] uppercase">Localização</p>
-                                        </div>
+                                {/* Animated background gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-accent-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                            </div>
+
+                            <div className="flex flex-col gap-5">
+                                <a
+                                    href={`https://wa.me/${(activeBooking?.customer_phone || business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento.${activeBooking?.appointment_time ? ' Dia ' + new Date(activeBooking.appointment_time).toLocaleDateString('pt-BR') + ' às ' + new Date(activeBooking.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`
+                                        group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden
+                                        ${isBeauty ? 'bg-stone-800 text-white rounded-2xl shadow-2xl hover:scale-105' : 'bg-green-500 text-black font-black border-4 border-black shadow-heavy-lg hover:translate-x-1 hover:translate-y-1 uppercase tracking-widest'}
+                                    `}
+                                >
+                                    <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20">
+                                        <Send className="w-5 h-5" />
                                     </div>
-                                )}
-                                {business.instagram_handle && (
-                                    <a
-                                        href={`https://instagram.com/${business.instagram_handle.replace('@', '')}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex items-start gap-3 group"
-                                    >
-                                        <div className={`p-1 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors`}>
-                                            <Scissors className={`w-4 h-4 text-${accentColor}`} />
-                                        </div>
-                                        <div>
-                                            <p className={`text-sm font-bold group-hover:text-${accentColor} transition-colors text-white`}>@{business.instagram_handle.replace('@', '')}</p>
-                                            <p className="text-neutral-500 text-[10px] uppercase">Portfólio Instagram</p>
-                                        </div>
-                                    </a>
-                                )}
+                                    <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
+                                    {/* Animated highlight shine */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                                </a>
+
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${isBeauty ? 'text-stone-800' : 'text-white underline decoration-accent-gold decoration-2 underline-offset-8'}`}
+                                >
+                                    Realizar novo agendamento
+                                </button>
+                            </div>
+
+                            <div className="mt-16 opacity-0 animate-fade-in [animation-delay:1500ms]">
+                                <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
                             </div>
                         </div>
+                    )}
+                    <div ref={chatEndRef} />
+                </div>
+            </div >
 
-                        {/* Professional Preview (Small) */}
-                        <div className={`${cardClass} p-6 bg-gradient-to-br from-neutral-900 to-black`}>
-                            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-widest mb-4">Profissionais</h3>
-                            <div className="flex -space-x-3 overflow-hidden">
-                                {professionals.slice(0, 5).map(pro => (
-                                    <img
-                                        key={pro.id}
-                                        className="inline-block h-10 w-10 md:h-12 md:w-12 rounded-full ring-2 ring-black"
-                                        src={pro.photo_url || `https://ui-avatars.com/api/?name=${pro.name}&background=111&color=fff`}
-                                        alt={pro.name}
-                                    />
-                                ))}
-                                {professionals.length > 5 && (
-                                    <div className="inline-flex h-10 w-10 md:h-12 md:w-12 rounded-full ring-2 ring-black bg-neutral-800 items-center justify-center text-[10px] font-bold text-neutral-400">
-                                        +{professionals.length - 5}
+
+            {/* Bot?o Flutuante "Avancar" ? aparece ao selecionar servi?os com anima??o slide-up */}
+            {step === 'services' && (
+                <div
+                    className={`
+                        fixed bottom-0 left-0 right-0 z-[200] w-full
+                        transition-all duration-500 ease-out
+                        ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
+                    `}
+                >
+                    <div
+                        className={`
+                            w-full px-4 pt-4
+                            ${isBeauty ? 'bg-[#E2E1DA]/90' : 'bg-black/85'}
+                            backdrop-blur-2xl
+                            border-t ${isBeauty ? 'border-stone-300' : 'border-white/10'}
+                            shadow-[0_-20px_50px_-10px_rgba(0,0,0,0.4)]
+                        `}
+                        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+                    >
+                        <button
+                            id="next-button"
+                            onClick={() => {
+                                const serviceNames = services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ');
+                                setMessages(prev => [...prev,
+                                { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false },
+                                { id: (Date.now() + 1).toString(), text: "Com qual profissional voc? gostaria de realizar esses servi?os? Nossa equipe de elite est? pronta para te atender.", isAssistant: true, type: 'professionals' }
+                                ]);
+                                setStep('datetime');
+                            }}
+                            className={`
+                                w-full flex items-center justify-between overflow-hidden group relative
+                                py-4 sm:py-5 px-6 sm:px-8
+                                ${isBeauty
+                                    ? 'rounded-2xl bg-stone-800 text-white shadow-2xl hover:bg-stone-700 active:scale-95'
+                                    : 'rounded-none bg-accent-gold text-black shadow-heavy-lg border-4 border-black font-black uppercase tracking-[0.2em] active:translate-x-0.5 active:translate-y-0.5'
+                                }
+                                transition-all duration-200
+                            `}
+                        >
+                            <div className="flex flex-col items-start z-10">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold uppercase opacity-60">Total</span>
+                                    <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${isBeauty ? 'bg-white/10' : 'bg-black/15'}`}>
+                                        {selectedServices.length} {selectedServices.length === 1 ? 'ITEM' : 'ITENS'}
+                                    </span>
+                                </div>
+                                <span className="text-xl sm:text-2xl font-black leading-none mt-0.5">
+                                    {formatCurrency(calculateTotal(), currencyRegion)}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-3 z-10">
+                                <span className="font-black text-xs uppercase tracking-widest">Avancar</span>
+                                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1.5 transition-transform duration-300" />
+                            </div>
+                            {/* Shine effect no hover */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Float Gallery (Pro-Max Refinement for Desktop) */}
+            {
+                gallery.length > 0 && step !== 'success' && (
+                    <div className="fixed bottom-10 left-10 z-[60] hidden xl:block animate-fade-in">
+                        <div className={`p-4 ${isBeauty ? 'bg-white shadow-silk-shadow rounded-2xl' : 'bg-obsidian-card border-2 border-black shadow-heavy-lg'} w-72`}>
+                            <p className={`text-[10px] uppercase tracking-[0.2em] mb-4 ${isBeauty ? 'text-stone-400 font-light' : 'text-neutral-500 font-medium'}`}>Atmosfera & Arte</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {gallery.slice(0, 4).map((item, idx) => (
+                                    <div key={item.id} className={`aspect-square overflow-hidden ${isBeauty ? 'rounded-lg' : 'rounded-none border border-white/5'}`}>
+                                        <img src={item.image_url} alt="Portfolio" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
                                     </div>
-                                )}
+                                ))}
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                )
+            }
 
-            {/* STICKY BOTTOM SUMMARY */}
             {
-                selectedServices.length > 0 && step === 'services' && (
-                    <div className="fixed bottom-0 left-0 right-0 p-4 z-50 animate-in slide-in-from-bottom duration-300">
-                        <div className={`
-                                        max-w-6xl mx-auto
-                                        ${isBeauty ? 'bg-beauty-card/90 border border-beauty-neon/20' : 'bg-neutral-900 border-4 border-brutal-border'} 
-                                        backdrop-blur-xl p-4 md:p-6 rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex items-center justify-between
-                                    `}>
-                            <div>
-                                <p className="text-neutral-500 text-[10px] md:text-xs uppercase font-mono tracking-widest">{selectedServices.length} {selectedServices.length === 1 ? 'Serviço' : 'Serviços'}</p>
-                                <p className={`text-2xl md:text-4xl font-bold text-${accentColor}`}>{formatCurrency(calculateTotal(), currencyRegion)}</p>
+                showPolicyModal && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className={`${isBeauty ? 'bg-white rounded-3xl' : 'bg-obsidian-card border-4 border-black'} max-w-xl w-full p-10 relative shadow-2xl overflow-hidden`}>
+                            {!isBeauty && <div className="absolute top-0 left-0 w-32 h-32 opacity-5 massive-text text-9xl select-none -translate-x-8 -translate-y-8">RULE</div>}
+
+                            <button onClick={() => setShowPolicyModal(false)} className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors z-30"><X className="w-8 h-8" /></button>
+
+                            <div className="relative z-10 space-y-6">
+                                <h3 className={`text-2xl ${isBeauty ? 'text-stone-800 italic font-light' : 'massive-text text-white'} flex items-center gap-3`}>
+                                    <AlertTriangle className={`w-6 h-6 ${isBeauty ? 'text-stone-800' : 'text-obsidian-accent'}`} />
+                                    Políticas Administrativas
+                                </h3>
+                                <div className={`leading-relaxed ${isBeauty ? 'text-stone-500 font-light' : 'text-neutral-300 font-medium'} max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar`}>
+                                    {businessSettings?.cancellation_policy ?
+                                        <p className="whitespace-pre-wrap">{businessSettings.cancellation_policy}</p> :
+                                        <p>Nossos profissionais reservam tempo exclusivo para você. Cancelamentos devem ser realizados com antecedência mínima de 24h. O não comparecimento impacta a logística de nossa equipe.</p>
+                                    }
+                                </div>
+                                <button
+                                    onClick={() => setShowPolicyModal(false)}
+                                    className={`w-full py-4 ${isBeauty ? 'bg-stone-800 text-white rounded-xl' : 'bg-white text-black font-bold massive-text shadow-heavy'}`}>
+                                    Compreendi as Políticas
+                                </button>
                             </div>
-                            <BrutalButton
-                                onClick={() => {
-                                    setStep('datetime');
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                                variant="primary"
-                                size="lg"
-                                className="px-8 md:px-12"
-                            >
-                                Próximo Passo
-                            </BrutalButton>
                         </div>
                     </div>
                 )

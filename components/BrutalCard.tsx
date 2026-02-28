@@ -44,7 +44,7 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       // Estilo Beauty - Pro Max Glass
       const shadowClass = isMobile ? 'shadow-lite-glass' : 'shadow-promax-glass';
       const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
-      const baseBeauty = `relative bg-gradient-beauty ${blurClass} border border-white/10 rounded-[28px] ${transitionClass} duration-300 overflow-hidden select-none touch-pan-y ${shadowClass} active:scale-[0.98] active:animate-haptic-click`;
+      const baseBeauty = `relative bg-gradient-beauty ${blurClass} border border-white/10 rounded-[28px] ${transitionClass} duration-300 overflow-hidden select-none touch-pan-y ${shadowClass}`;
       const accentBeauty = accent ? 'border-beauty-neon/40 shadow-neon bg-beauty-neon/5' : '';
       const glowBeauty = glow ? 'shadow-neon-strong ring-1 ring-beauty-neon/30' : '';
 
@@ -53,7 +53,7 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       // Estilo Barber Premium - Industrial Depth Pro Max
       const shadowClass = isMobile ? 'shadow-lite-gold' : 'shadow-promax-glass';
       const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
-      const baseBrutal = `relative bg-gradient-brutal ${blurClass} border border-white/15 rounded-[28px] ${transitionClass} duration-300 select-none touch-pan-y ${shadowClass} overflow-hidden active:scale-[0.98] active:animate-haptic-click`;
+      const baseBrutal = `relative bg-gradient-brutal ${blurClass} border border-white/15 rounded-[28px] ${transitionClass} duration-300 select-none touch-pan-y ${shadowClass} overflow-hidden`;
       const accentBrutal = accent ? 'border-accent-gold/60 shadow-gold bg-accent-gold/5' : '';
       const glowBrutal = glow ? 'shadow-promax-depth ring-1 ring-accent-gold/30' : '';
 

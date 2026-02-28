@@ -293,7 +293,7 @@ export const PublicBooking: React.FC = () => {
                             .eq('active', true)
                             .order('price', { ascending: true });
                         if (svErr) logger.error('PublicBooking: Error loading services:', svErr);
-                        logger.info('PublicBooking: Services loaded:', servicesData?.length || 0);
+                        logger.info('PublicBooking: Services loaded:', { count: servicesData?.length || 0 });
                         setServices(servicesData || []);
 
                         const { data: categoriesData, error: catErr } = await supabase
@@ -302,7 +302,7 @@ export const PublicBooking: React.FC = () => {
                             .eq('user_id', profileData.id)
                             .order('display_order');
                         if (catErr) logger.error('PublicBooking: Error loading categories:', catErr);
-                        logger.info('PublicBooking: Categories loaded:', categoriesData?.length || 0);
+                        logger.info('PublicBooking: Categories loaded:', { count: categoriesData?.length || 0 });
 
                         // Add virtual "Outros" category if there are services without category
                         let finalCategories = categoriesData || [];

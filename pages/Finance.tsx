@@ -236,31 +236,56 @@ export const Finance: React.FC = () => {
     }
   };
 
-  const handleDeleteTransaction = async (transactionId: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta transação? Esta ação é irreversível.')) return;
+  const handleDeleteTransaction = async (t: any) => {
+    // Receitas automáticas vêm da tabela appointments — avisar antes com uma única confirmação
+    const isAppointmentRevenue = t.type === 'revenue';
+    const confirmMsg = isAppointmentRevenue
+      ? `Excluir "${t.serviceName}"?\n\nEsta é uma receita gerada por agendamento. O agendamento vinculado também será removido. Esta ação é irreversível.`
+      : `Tem certeza que deseja excluir "${t.serviceName}"? Esta ação é irreversível.`;
+
+    if (!confirm(confirmMsg)) return;
 
     try {
-      // Check if this transaction is linked to an appointment
-      const { data: record } = await supabase
+      // Verifica se existe em finance_records (despesa ou entrada manual)
+      const { data: record, error: findError } = await supabase
         .from('finance_records')
         .select('appointment_id')
-        .eq('id', transactionId)
-        .single();
+        .eq('id', t.id)
+        .maybeSingle();
 
-      if (record?.appointment_id) {
-        if (confirm('Esta transação está vinculada a um agendamento. Deseja excluir o agendamento também?')) {
+      if (findError) throw findError;
+
+      if (record) {
+        // Encontrado em finance_records — exclui também o agendamento vinculado, se houver
+        if (record.appointment_id) {
           await supabase.from('appointments').delete().eq('id', record.appointment_id).eq('user_id', user.id);
+        }
+        const { error } = await supabase.from('finance_records').delete().eq('id', t.id).eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        // Não está em finance_records — é uma receita automática de agendamento
+        const { data: appt, error: apptFindError } = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('id', t.id)
+          .maybeSingle();
+
+        if (apptFindError) throw apptFindError;
+
+        if (appt) {
+          const { error } = await supabase.from('appointments').delete().eq('id', t.id).eq('user_id', user.id);
+          if (error) throw error;
+        } else {
+          alert('Transação não encontrada. Pode já ter sido excluída.');
+          return;
         }
       }
 
-      const { error } = await supabase.from('finance_records').delete().eq('id', transactionId).eq('user_id', user.id);
-      if (error) throw error;
-
       alert('Transação excluída com sucesso!');
-      fetchFinanceData(); // Refresh finance data
-    } catch (error) {
-      logger.error('Error deleting transaction', error);
-      alert('Erro ao excluir transação.');
+      fetchFinanceData();
+    } catch (error: any) {
+      console.error('Erro ao excluir transação', error);
+      alert(`Erro ao excluir transação: ${error.message || 'Erro desconhecido'}`);
     }
   };
 
@@ -684,7 +709,10 @@ export const Finance: React.FC = () => {
                         <div className="flex justify-end gap-2">
                           {t.type === 'expense' && t.status === 'pending' && (
                             <button
-                              onClick={async () => {
+                              type="button"
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 if (confirm(`Deseja marcar "${t.serviceName || 'Despesa'}" como paga?`)) {
                                   try {
                                     const { error } = await supabase.rpc('mark_expense_as_paid', {
@@ -699,18 +727,25 @@ export const Finance: React.FC = () => {
                                   }
                                 }
                               }}
-                              className="p-2 bg-green-500/10 text-green-500 rounded-lg border border-green-500/20 hover:bg-green-500/20 transition-all"
+                              className="flex items-center gap-2 px-3 py-1.5 text-green-500 text-xs font-bold uppercase bg-green-500/10 rounded-lg active:scale-95 transition-all relative z-50 cursor-pointer pointer-events-auto"
                               title="Marcar como Pago"
                             >
-                              <Check className="w-4 h-4" />
+                              <Check className="w-3.5 h-3.5" />
+                              Liquidar
                             </button>
                           )}
                           <button
-                            onClick={() => handleDeleteTransaction(t.id)}
-                            className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteTransaction(t);
+                            }}
+                            className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg transition-all relative z-50 cursor-pointer pointer-events-auto"
                             title="Excluir transação"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Excluir
                           </button>
                         </div>
                       </td>
@@ -800,8 +835,9 @@ export const Finance: React.FC = () => {
                       </button>
                     )}
                     <button
-                      onClick={() => handleDeleteTransaction(t.id)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg active:scale-95 transition-all"
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTransaction(t); }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg transition-all relative z-20 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Excluir

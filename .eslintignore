@@ -2,3 +2,5 @@ dist
 node_modules
 clerk-migration
 .agent
+.aios-core
+.antigravity

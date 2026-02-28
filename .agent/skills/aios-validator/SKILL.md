@@ -14,8 +14,7 @@ Garantir que todos os componentes do `.aios-core` e binários da CLI estejam ope
 2. **Conserto Automático:**
    - Se o `doctor` reportar falhas em scripts binários, tente rodar `npm install` ou `npm run sync:ide`.
 
-3. **Verificação de Squads:**
-   - Validar se o `squad.yaml` do workspace está em conformidade com a `TASK-FORMAT-SPECIFICATION-V1`.
+
 
 ## Constraints
 - NÃO altere arquivos dentro de `.aios-core/` sem emitir um alerta `[!WARNING]`.

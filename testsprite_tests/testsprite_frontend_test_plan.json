@@ -1,671 +1,3252 @@
 [
   {
     "id": "TC001",
-    "title": "User Registration Success",
-    "description": "Verify that a new user (owner) can successfully register with valid email and password, and receive confirmation.",
-    "category": "functional",
+    "title": "Successful registration redirects to onboarding",
+    "description": "Verifies a new user can register with valid details and is redirected into the onboarding wizard.",
+    "category": "User Registration",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the registration page"
-      },
-      {
-        "type": "action",
-        "description": "Input a valid email address and strong password"
-      },
-      {
-        "type": "action",
-        "description": "Submit the registration form"
+        "description": "Navigate to /register"
       },
       {
         "type": "assertion",
-        "description": "Confirm registration success message is displayed"
+        "description": "Verify page title contains \"Register\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"Test Salon LLC\" into the business name input field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"newuser+reg1@example.com\" into the email input field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"ValidPass!234\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the Register button"
       },
       {
         "type": "assertion",
-        "description": "Verify user is created in the system and prompted to login"
+        "description": "Verify URL contains \"/onboarding\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Onboarding\" is visible"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "User Registration with Invalid Email",
-    "description": "Verify registration fails when an invalid email format is entered.",
-    "category": "error handling",
-    "priority": "Medium",
+    "title": "Registration with already-registered email shows error",
+    "description": "Verifies the system blocks registration when the email is already in use and displays an appropriate error message.",
+    "category": "User Registration",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the registration page"
+        "description": "Navigate to /register"
       },
       {
         "type": "action",
-        "description": "Input an invalid email format and valid password"
+        "description": "Type \"Test Barber Shop\" into the business name input field"
       },
       {
         "type": "action",
-        "description": "Submit the registration form"
+        "description": "Type \"existing.user@example.com\" into the email input field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"ValidPass!234\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the Register button"
       },
       {
         "type": "assertion",
-        "description": "Verify an error message about invalid email is displayed"
+        "description": "Verify text \"already\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Confirm registration is not completed"
+        "description": "Verify text \"account\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/register\""
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "User Login Success",
-    "description": "Verify that registered users can login successfully using valid credentials.",
-    "category": "functional",
-    "priority": "High",
+    "title": "Required field validation blocks submit when business name is missing",
+    "description": "Verifies registration cannot proceed and shows a validation message when business name is not provided.",
+    "category": "User Registration",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the login page"
+        "description": "Navigate to /register"
       },
       {
         "type": "action",
-        "description": "Input registered email and correct password"
+        "description": "Type \"newuser+reg2@example.com\" into the email input field"
       },
       {
         "type": "action",
-        "description": "Click the login button"
+        "description": "Type \"ValidPass!234\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the Register button"
       },
       {
         "type": "assertion",
-        "description": "Verify that the user is successfully logged in and redirected to dashboard"
+        "description": "Verify text \"business\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"required\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/register\""
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "User Login Failure with Incorrect Password",
-    "description": "Verify login fails when a registered user inputs an incorrect password.",
-    "category": "error handling",
-    "priority": "High",
+    "title": "Required field validation blocks submit when email is missing",
+    "description": "Verifies registration cannot proceed and shows a validation message when email is not provided.",
+    "category": "User Registration",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the login page"
+        "description": "Navigate to /register"
       },
       {
         "type": "action",
-        "description": "Input registered email and incorrect password"
+        "description": "Type \"Test Salon LLC\" into the business name input field"
       },
       {
         "type": "action",
-        "description": "Click the login button"
+        "description": "Type \"ValidPass!234\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the Register button"
       },
       {
         "type": "assertion",
-        "description": "Verify that login fails with an appropriate error message"
+        "description": "Verify text \"email\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"required\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/register\""
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Password Recovery Flow",
-    "description": "Verify that users can request password recovery and receive reset instructions.",
-    "category": "functional",
+    "title": "Invalid email format shows validation error",
+    "description": "Verifies the registration form rejects an incorrectly formatted email and displays a visible error.",
+    "category": "User Registration",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the forgot password page"
+        "description": "Navigate to /register"
       },
       {
         "type": "action",
-        "description": "Input registered email address"
+        "description": "Type \"Test Salon LLC\" into the business name input field"
       },
       {
         "type": "action",
-        "description": "Submit password recovery request"
+        "description": "Type \"not-an-email\" into the email input field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"ValidPass!234\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the Register button"
       },
       {
         "type": "assertion",
-        "description": "Verify the user receives a password reset email or notification"
+        "description": "Verify text \"email\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"invalid\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/register\""
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Profile Management - Update User Details",
-    "description": "Verify that authenticated users can update their profile details successfully.",
-    "category": "functional",
+    "title": "Weak password shows validation error and stays on register page",
+    "description": "Verifies a too-short or weak password prevents registration and shows a visible message.",
+    "category": "User Registration",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Login with valid credentials"
+        "description": "Navigate to /register"
       },
       {
         "type": "action",
-        "description": "Navigate to profile management page"
+        "description": "Type \"Test Salon LLC\" into the business name input field"
       },
       {
         "type": "action",
-        "description": "Update profile fields such as name and contact details"
+        "description": "Type \"newuser+reg3@example.com\" into the email input field"
       },
       {
         "type": "action",
-        "description": "Save the changes"
+        "description": "Type \"123\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Click the Register button"
       },
       {
         "type": "assertion",
-        "description": "Verify profile updates are saved and displayed correctly"
+        "description": "Verify text \"password\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"minimum\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/register\""
       }
     ]
   },
   {
     "id": "TC007",
-    "title": "Add Business Profile via Onboarding Wizard",
-    "description": "Verify new business owners can complete onboarding wizard to setup business profile including branding and operating hours.",
-    "category": "functional",
-    "priority": "High",
+    "title": "Register page allows navigation to login page",
+    "description": "Verifies a user can move from the registration page to the login page using the visible link.",
+    "category": "User Registration",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Login as a new business owner"
-      },
-      {
-        "type": "action",
-        "description": "Start onboarding wizard"
-      },
-      {
-        "type": "action",
-        "description": "Input business name, type (salon or barber), and branding preferences"
-      },
-      {
-        "type": "action",
-        "description": "Set operating hours and time zone"
-      },
-      {
-        "type": "action",
-        "description": "Complete onboarding and save configuration"
+        "description": "Navigate to /register"
       },
       {
         "type": "assertion",
-        "description": "Verify business profile is created with correct details"
+        "description": "Verify text \"Login\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" link"
       },
       {
         "type": "assertion",
-        "description": "Verify onboarding wizard completes successfully without errors"
+        "description": "Verify URL contains \"/login\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Login\""
       }
     ]
   },
   {
     "id": "TC008",
-    "title": "Visual Theme Application and Switching",
-    "description": "Verify custom themes (Barber brutalist dark and Beauty elegant neon) apply consistently and can be switched manually or automatically.",
-    "category": "functional",
-    "priority": "Medium",
+    "title": "Submitting registration via Enter key triggers form submission",
+    "description": "Verifies pressing Enter in the password field attempts to submit the registration form.",
+    "category": "User Registration",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Login and navigate to theme settings"
+        "description": "Navigate to /register"
       },
       {
         "type": "action",
-        "description": "Switch theme manually from Barber to Beauty"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify UI updates reflect the selected theme styles across pages"
+        "description": "Type \"Test Salon LLC\" into the business name input field"
       },
       {
         "type": "action",
-        "description": "Set theme to automatic switching based on business preference"
+        "description": "Type \"newuser+reg4@example.com\" into the email input field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"ValidPass!234\" into the password input field"
+      },
+      {
+        "type": "action",
+        "description": "Press Enter"
       },
       {
         "type": "assertion",
-        "description": "Verify theme updates automatically according to configured preferences"
+        "description": "Verify URL contains \"/onboarding\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Onboarding\" is visible"
       }
     ]
   },
   {
     "id": "TC009",
-    "title": "Appointment Scheduling: Book Appointment via Public Link",
-    "description": "Verify that clients can successfully book appointments using a public booking link without login, receiving confirmation via WhatsApp or email.",
-    "category": "functional",
+    "title": "Request password reset with a registered email shows confirmation message",
+    "description": "Verifies a user can submit the forgot password form and sees a confirmation to check email.",
+    "category": "Forgot Password",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Access the public booking link for an establishment"
-      },
-      {
-        "type": "action",
-        "description": "Select appointment date, time, and service"
-      },
-      {
-        "type": "action",
-        "description": "Enter client information (name, contact details)"
-      },
-      {
-        "type": "action",
-        "description": "Submit the booking request"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "assertion",
-        "description": "Verify booking confirmation is displayed on screen"
+        "description": "Verify page title contains \"Forgot\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Send reset link\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify client receives confirmation via WhatsApp or email"
+        "description": "Verify text \"check your email\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"reset link\" is visible"
       }
     ]
   },
   {
     "id": "TC010",
-    "title": "Appointment Scheduling: Internal Staff Agenda View",
-    "description": "Verify that staff members can access their internal agenda showing accurate schedule and can mark services complete.",
-    "category": "functional",
+    "title": "Request password reset with an unregistered email shows 'email not found' error",
+    "description": "Verifies submitting an unknown email displays an appropriate error message.",
+    "category": "Forgot Password",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as staff member"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Navigate to internal agenda page"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify schedule is displayed correctly with all appointments"
+        "description": "Type \"unregistered_user_987654@example.com\" into the email field"
       },
       {
         "type": "action",
-        "description": "Select an appointment and mark service as complete"
+        "description": "Click on \"Send reset link\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify appointment status updates to completed"
+        "description": "Verify text \"email not found\" is visible"
       }
     ]
   },
   {
     "id": "TC011",
-    "title": "Appointment Scheduling: Automatic Time Blocking",
-    "description": "Verify the system automatically blocks unavailable times preventing double-booking and overlapping appointments.",
-    "category": "functional",
-    "priority": "High",
+    "title": "Forgot password form blocks submission when email is empty",
+    "description": "Verifies the user cannot submit the forgot password form without providing an email.",
+    "category": "Forgot Password",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Login as owner or staff"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Create an appointment at a specific time slot"
-      },
-      {
-        "type": "action",
-        "description": "Attempt to create another appointment overlapping with the booked time"
+        "description": "Click on \"Send reset link\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify the system blocks the time slot and prevents double-booking"
+        "description": "Verify text \"email\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"required\" is visible"
       }
     ]
   },
   {
     "id": "TC012",
-    "title": "Queue Management: Add and Manage Walk-in Clients",
-    "description": "Verify staff members can add walk-in clients to the digital queue, update status, and manage client flow in real-time.",
-    "category": "functional",
-    "priority": "High",
+    "title": "Forgot password form validates invalid email format",
+    "description": "Verifies the user sees a validation error when entering a malformed email address.",
+    "category": "Forgot Password",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Login as staff member"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Navigate to queue management page"
+        "description": "Type \"not-an-email\" into the email field"
       },
       {
         "type": "action",
-        "description": "Add a new walk-in client to the queue"
+        "description": "Click on \"Send reset link\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify client appears in the queue with correct details"
-      },
-      {
-        "type": "action",
-        "description": "Update client status (e.g. waiting, being served, completed)"
+        "description": "Verify text \"invalid\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify status updates reflect immediately in queue view"
+        "description": "Verify text \"email\" is visible"
       }
     ]
   },
   {
     "id": "TC013",
-    "title": "Financial Management: Record Sales Transaction",
-    "description": "Verify that sales transactions can be recorded correctly and reflected in daily and monthly cash flow tracking.",
-    "category": "functional",
-    "priority": "High",
+    "title": "User can navigate from Forgot Password back to Login",
+    "description": "Verifies the page provides a way to return to the login screen.",
+    "category": "Forgot Password",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Login as business owner"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Navigate to financial management page"
-      },
-      {
-        "type": "action",
-        "description": "Record a new sales transaction with amount, service, and date"
+        "description": "Click on \"Back to login\" link"
       },
       {
         "type": "assertion",
-        "description": "Verify the transaction appears in daily cash flow"
+        "description": "Verify URL contains \"/login\""
       },
       {
         "type": "assertion",
-        "description": "Verify monthly cash flow is updated accordingly"
+        "description": "Verify page title contains \"Login\""
       }
     ]
   },
   {
     "id": "TC014",
-    "title": "Financial Management: Professional Commission Calculations",
-    "description": "Verify that the platform calculates professional commissions accurately based on predefined rules and transactions.",
-    "category": "functional",
-    "priority": "High",
+    "title": "Forgot password submission via Enter key triggers request",
+    "description": "Verifies pressing Enter from the email field submits the form and shows confirmation messaging.",
+    "category": "Forgot Password",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Login as owner or finance manager"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Access commissions management module"
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
       },
       {
         "type": "action",
-        "description": "Define commission percentages for professionals"
-      },
-      {
-        "type": "action",
-        "description": "Record related sales transactions completed by professionals"
+        "description": "Press Enter"
       },
       {
         "type": "assertion",
-        "description": "Verify commissions are calculated correctly for each professional"
+        "description": "Verify text \"check your email\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Commission payment history reflects accurate payout data"
+        "description": "Verify text \"reset link\" is visible"
       }
     ]
   },
   {
     "id": "TC015",
-    "title": "Subscription Payments via Stripe Integration",
-    "description": "Verify subscription payment flow through Stripe integration works reliably for business owners.",
-    "category": "functional",
-    "priority": "High",
+    "title": "Duplicate reset requests show a stable confirmation state",
+    "description": "Verifies submitting the forgot password form twice does not break the UI and continues to show confirmation messaging.",
+    "category": "Forgot Password",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Login as owner"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Navigate to subscription payment page"
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
       },
       {
         "type": "action",
-        "description": "Select subscription plan and proceed to payment"
+        "description": "Click on \"Send reset link\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify Stripe payment form loads correctly"
+        "description": "Verify text \"check your email\" is visible"
       },
       {
         "type": "action",
-        "description": "Complete a payment with valid card details"
+        "description": "Click on \"Send reset link\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify payment is successful and subscription status updates"
+        "description": "Verify text \"check your email\" is visible"
       }
     ]
   },
   {
     "id": "TC016",
-    "title": "Dashboard KPIs and Financial Reports Accuracy",
-    "description": "Verify executive dashboards show accurate KPIs such as revenue, average ticket size, occupancy rates and financial reports update in real-time.",
-    "category": "functional",
+    "title": "Successful password update redirects user to Login",
+    "description": "Verifies a user can set a new password and is redirected to the login page with a visible confirmation.",
+    "category": "Update Password (Reset Flow)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as owner"
+        "description": "Navigate to /update-password"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Update\""
       },
       {
         "type": "action",
-        "description": "Navigate to dashboard and reports pages"
+        "description": "Type \"NewPass!2345\" into the new password field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"NewPass!2345\" into the confirm password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Update Password\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify revenue, average ticket size, occupancy rate KPIs match underlying data"
+        "description": "Verify text \"Password updated\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify reports generate correct financial insights and update in real-time"
+        "description": "Verify URL contains \"/login\""
       }
     ]
   },
   {
     "id": "TC017",
-    "title": "Multi-Tenant Data Access Isolation",
-    "description": "Verify that data isolation is enforced correctly between multiple tenant establishments using row level security in Supabase.",
-    "category": "security",
+    "title": "Mismatched passwords show validation error",
+    "description": "Verifies the form blocks submission when the confirmation password does not match and shows the correct error message.",
+    "category": "Update Password (Reset Flow)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as user belonging to tenant A"
+        "description": "Navigate to /update-password"
       },
       {
         "type": "action",
-        "description": "Attempt to access data belonging to tenant B via UI or API"
+        "description": "Type \"NewPass!2345\" into the new password field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Different!2345\" into the confirm password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Update Password\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify access is denied and no data leakage occurs"
+        "description": "Verify text \"passwords do not match\" is visible"
       },
       {
-        "type": "action",
-        "description": "Verify all data retrieved via queries is only within tenant scope"
+        "type": "assertion",
+        "description": "Verify URL contains \"/update-password\""
       }
     ]
   },
   {
     "id": "TC018",
-    "title": "Administrative Route Protection",
-    "description": "Verify routes requiring administrative privileges are properly protected and unauthorized access is prevented.",
-    "category": "security",
+    "title": "Empty submission shows required field validation",
+    "description": "Verifies the user cannot submit the update form with empty fields and sees required field errors.",
+    "category": "Update Password (Reset Flow)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Login as a non-admin user"
+        "description": "Navigate to /update-password"
       },
       {
         "type": "action",
-        "description": "Attempt to navigate to admin-only pages"
+        "description": "Click the \"Update Password\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify access is blocked with an unauthorized or redirect message"
-      },
-      {
-        "type": "action",
-        "description": "Login as admin user and access admin pages"
+        "description": "Verify text \"New password is required\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify full access is granted"
+        "description": "Verify text \"Confirm password is required\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/update-password\""
       }
     ]
   },
   {
     "id": "TC019",
-    "title": "Responsive Design and Mobile UX",
-    "description": "Verify UI elements adapt correctly to various screen sizes including mobile devices and maintain usability and aesthetics.",
-    "category": "ui",
+    "title": "Password complexity/length validation prevents weak password",
+    "description": "Verifies the UI shows a validation message when the new password does not meet minimum requirements.",
+    "category": "Update Password (Reset Flow)",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Access the platform from desktop resolution"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify UI elements render correctly and fully functional"
+        "description": "Navigate to /update-password"
       },
       {
         "type": "action",
-        "description": "Resize viewport to multiple mobile sizes (e.g. 375x667, 414x736)"
+        "description": "Type \"123\" into the new password field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"123\" into the confirm password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Update Password\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify layout adapts to screen size without horizontal scroll or overlap"
+        "description": "Verify text \"Password must\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify interactive elements remain accessible and visually clear"
+        "description": "Verify URL contains \"/update-password\""
       }
     ]
   },
   {
     "id": "TC020",
-    "title": "Offline Usage Support as PWA",
-    "description": "Verify that the platform supports offline usage with relevant UI states and data caching for a Progressive Web App experience.",
-    "category": "functional",
+    "title": "Trimming/whitespace handling: passwords with trailing spaces should not silently succeed",
+    "description": "Verifies the UI does not allow accidental whitespace discrepancies to pass without an explicit match/validation result.",
+    "category": "Update Password (Reset Flow)",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Access the application online and navigate through key pages"
+        "description": "Navigate to /update-password"
       },
       {
         "type": "action",
-        "description": "Simulate offline network condition"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify cached pages load successfully with appropriate offline indicators"
+        "description": "Type \"NewPass!2345 \" into the new password field"
       },
       {
         "type": "action",
-        "description": "Attempt operations requiring network (e.g. booking new appointments)"
+        "description": "Type \"NewPass!2345\" into the confirm password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Update Password\" button"
       },
       {
         "type": "assertion",
-        "description": "Verify the system handles errors gracefully and informs the user"
+        "description": "Verify text \"passwords do not match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/update-password\""
       }
     ]
   },
   {
     "id": "TC021",
-    "title": "Team & Services: Add and Manage Professionals",
-    "description": "Verify ability to add, edit, and remove team members and their services, including business operating hours configuration.",
-    "category": "functional",
-    "priority": "Medium",
+    "title": "Login link is available from Update Password page",
+    "description": "Verifies users can navigate to the login page from the update password screen via a visible link.",
+    "category": "Update Password (Reset Flow)",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Login as business owner"
-      },
-      {
-        "type": "action",
-        "description": "Navigate to team and services management module"
-      },
-      {
-        "type": "action",
-        "description": "Add a new professional with required details"
+        "description": "Navigate to /update-password"
       },
       {
         "type": "assertion",
-        "description": "Verify professional appears in team list"
+        "description": "Verify element \"Login\" is visible"
       },
       {
         "type": "action",
-        "description": "Assign services and configure working hours for the professional"
+        "description": "Click the \"Login\" link"
       },
       {
         "type": "assertion",
-        "description": "Verify service and hours reflect correctly in schedules"
-      },
-      {
-        "type": "action",
-        "description": "Edit professional details and save changes"
+        "description": "Verify URL contains \"/login\""
       },
       {
         "type": "assertion",
-        "description": "Verify updates are persisted"
-      },
-      {
-        "type": "action",
-        "description": "Delete a professional and confirm removal"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify professional no longer appears in list and related data is cleaned up"
+        "description": "Verify page title contains \"Login\""
       }
     ]
   },
   {
     "id": "TC022",
-    "title": "Client CRM: Add and Manage Client Records",
-    "description": "Verify users can add new clients to CRM, edit their information, and search/filter client database.",
-    "category": "functional",
+    "title": "Join an open queue successfully and land on queue status page",
+    "description": "Verifies a public visitor can join an open queue and is redirected to a queue status page showing their position.",
+    "category": "Queue Join (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public queue join URL for a known professional (a /queue/... page)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Join Queue\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Join Queue\" button."
+      },
+      {
+        "type": "action",
+        "description": "Type \"Test Customer\" into the name input field."
+      },
+      {
+        "type": "action",
+        "description": "Type \"11999990000\" into the phone input field."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue-status/\"."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "Queue join requires name (validation prevents confirmation)",
+    "description": "Verifies the join flow blocks submission when the name field is empty.",
+    "category": "Queue Join (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public queue join URL for a known professional (a /queue/... page)."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Join Queue\" button."
+      },
+      {
+        "type": "action",
+        "description": "Type \"11999990001\" into the phone input field."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Name\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC024",
+    "title": "Queue join requires phone (validation prevents confirmation)",
+    "description": "Verifies the join flow blocks submission when the phone field is empty.",
+    "category": "Queue Join (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public queue join URL for a known professional (a /queue/... page)."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Join Queue\" button."
+      },
+      {
+        "type": "action",
+        "description": "Type \"Test Customer\" into the name input field."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Phone\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Cancel/close the join modal and remain on the join page",
+    "description": "Verifies a visitor can exit the join dialog without joining and stays on the queue join page.",
+    "category": "Queue Join (Public)",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Login as staff or owner"
+        "description": "Navigate to the public queue join URL for a known professional (a /queue/... page)."
       },
       {
         "type": "action",
-        "description": "Navigate to clients CRM page"
-      },
-      {
-        "type": "action",
-        "description": "Add a new client with contact and profile details"
+        "description": "Click on \"Join Queue\" button."
       },
       {
         "type": "assertion",
-        "description": "Verify new client appears in client list"
+        "description": "Verify text \"Confirm Join\" is visible."
       },
       {
         "type": "action",
-        "description": "Edit existing client details and save changes"
+        "description": "Press \"Escape\" key."
       },
       {
         "type": "assertion",
-        "description": "Verify updates are reflected in client database"
+        "description": "Verify text \"Confirm Join\" is not visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC026",
+    "title": "Attempt to join when queue is closed or full shows error message",
+    "description": "Verifies the application shows an explicit error when attempting to join a closed/full queue.",
+    "category": "Queue Join (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public queue join URL for a known professional whose queue is closed or full (a /queue/... page)."
       },
       {
         "type": "action",
-        "description": "Use search and filters to locate clients"
+        "description": "Click on \"Join Queue\" button."
+      },
+      {
+        "type": "action",
+        "description": "Type \"Test Customer\" into the name input field."
+      },
+      {
+        "type": "action",
+        "description": "Type \"11999990002\" into the phone input field."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
       },
       {
         "type": "assertion",
-        "description": "Verify client list filters results correctly"
+        "description": "Verify text \"queue closed or full\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC027",
+    "title": "After a closed/full error, user can retry and error remains consistent",
+    "description": "Verifies the error state is stable and does not redirect to queue status when the queue remains closed/full.",
+    "category": "Queue Join (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public queue join URL for a known professional whose queue is closed or full (a /queue/... page)."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Join Queue\" button."
+      },
+      {
+        "type": "action",
+        "description": "Type \"Retry Customer\" into the name input field."
+      },
+      {
+        "type": "action",
+        "description": "Type \"11999990003\" into the phone input field."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"queue closed or full\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC028",
+    "title": "Successful join shows queue status content after redirect",
+    "description": "Verifies the queue status page displays key status information after a successful join.",
+    "category": "Queue Join (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the public queue join URL for a known professional (a /queue/... page)."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Join Queue\" button."
+      },
+      {
+        "type": "action",
+        "description": "Type \"Status Check\" into the name input field."
+      },
+      {
+        "type": "action",
+        "description": "Type \"11999990004\" into the phone input field."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm Join\" button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue-status/\"."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Queue\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC029",
+    "title": "Valid queue status page shows position and estimated wait",
+    "description": "Verifies that a queue status page displays the client’s current position and an estimated wait time.",
+    "category": "Queue Status (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid public queue status link (a /queue-status/ URL with a real queue id provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Queue\"."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Estimated\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"min\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue-status/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC030",
+    "title": "Valid queue status page shows a clear current status label",
+    "description": "Verifies that the queue status page presents a clear status indicator (e.g., waiting/serving) in addition to numeric details.",
+    "category": "Queue Status (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid public queue status link (a /queue-status/ URL with a real queue id provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Status\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Queue status\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Now serving\" is visible or Verify text \"Waiting\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Estimated\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC031",
+    "title": "Real-time updates refresh visible queue position when it changes",
+    "description": "Verifies the page receives real-time updates by observing a change in the visible position/status within a reasonable time window.",
+    "category": "Queue Status (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid public queue status link (a /queue-status/ URL with a real queue id that is actively moving in the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Wait for 30 seconds."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the displayed queue position value has changed or Verify text \"Now serving\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Wait for 30 seconds."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the displayed queue position value has changed again or Verify text \"Now serving\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC032",
+    "title": "When at the front, page shows 'Now serving' state",
+    "description": "Verifies that when the client reaches the front of the queue, the page shows a clear 'Now serving' status.",
+    "category": "Queue Status (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid public queue status link (a /queue-status/ URL with a real queue id that is expected to be at the front in the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Now serving\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"1\" is visible or Verify text \"0\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Estimated\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"min\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC033",
+    "title": "Invalid queue link shows 'queue not found' error message",
+    "description": "Verifies that an invalid queue status URL shows a clear error message and does not show queue details.",
+    "category": "Queue Status (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /queue-status/invalid."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"queue not found\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is not visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Estimated\" is not visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue-status/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC034",
+    "title": "Malformed queue id shows invalid link messaging",
+    "description": "Verifies that a clearly malformed queue id results in an invalid link/queue not found message.",
+    "category": "Queue Status (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /queue-status/@@@."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"queue not found\" is visible or Verify text \"invalid\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is not visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Estimated\" is not visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/queue-status/\"."
+      }
+    ]
+  },
+  {
+    "id": "TC035",
+    "title": "Queue status page remains readable after waiting (no blank/loader lock)",
+    "description": "Verifies the page does not get stuck in a loading state during normal viewing and continues to show queue details.",
+    "category": "Queue Status (Public)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid public queue status link (a /queue-status/ URL with a real queue id provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Wait for 20 seconds."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Estimated\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Wait for 20 seconds."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Position\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC036",
+    "title": "View professional portfolio details (services and availability)",
+    "description": "Verifies a public professional portfolio page loads and shows services and availability information.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid professional portfolio URL (a working /pro/ slug provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Professional Portfolio\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Services\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Services list\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Availability\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Availability\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC037",
+    "title": "Book a service from the professional portfolio",
+    "description": "Verifies clicking Book from a service on the portfolio takes the user to the public booking page for that professional.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid professional portfolio URL (a working /pro/ slug provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Services list\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Services\" section."
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Book\" for the first visible service."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/book/\"."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Book\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC038",
+    "title": "Portfolio shows service pricing information",
+    "description": "Verifies that services displayed on the portfolio include visible pricing information.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid professional portfolio URL (a working /pro/ slug provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Services\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Services\" section."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Service price\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Service duration\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC039",
+    "title": "Portfolio provides a visible booking call-to-action",
+    "description": "Verifies the portfolio page provides an obvious call-to-action to book a service.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid professional portfolio URL (a working /pro/ slug provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Services list\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Book\" is visible."
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the bottom of the page."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Book\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC040",
+    "title": "Non-existent professional profile shows 'profile not found' error",
+    "description": "Verifies an invalid professional slug results in a visible 'profile not found' error message.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a professional portfolio URL using an invalid slug (for example: /pro/this-slug-should-not-exist-123)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"profile not found\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Professional Portfolio\" is not visible."
+      }
+    ]
+  },
+  {
+    "id": "TC041",
+    "title": "Booking action is not available when no services are listed",
+    "description": "Verifies that if the professional has no services displayed, the page communicates it and does not show a service-level Book action.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a professional portfolio URL for a professional configured with zero services (a working /pro/ slug provided by the test environment)."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Services\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No services\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Book\" is not visible."
+      }
+    ]
+  },
+  {
+    "id": "TC042",
+    "title": "Availability section is present and readable",
+    "description": "Verifies the availability section renders and is readable on the portfolio page.",
+    "category": "Professional Portfolio (Public)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a valid professional portfolio URL (a working /pro/ slug provided by the test environment)."
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the \"Availability\" section."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Availability\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Availability\" is visible."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Available times\" is visible."
+      }
+    ]
+  },
+  {
+    "id": "TC043",
+    "title": "Complete onboarding wizard with required business details and finish setup",
+    "description": "Verifies an authenticated admin can complete the onboarding wizard and is redirected to the dashboard.",
+    "category": "Onboarding Wizard (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Onboarding\" or \"Get started\" from the dashboard navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Beauty OS Test Salon\" into the business name field"
+      }
+    ]
+  },
+  {
+    "id": "TC044",
+    "title": "Configure opening hours during onboarding and complete setup",
+    "description": "Verifies opening hours can be configured in the onboarding wizard and completing setup redirects to the dashboard.",
+    "category": "Onboarding Wizard (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Onboarding\" or \"Get started\" from the dashboard navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Opening hours\" or \"Hours\" step in the wizard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Opening hours\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Complete Setup\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC045",
+    "title": "Validation error when required business name is missing",
+    "description": "Verifies the onboarding wizard blocks progress and shows a validation message when a required field is empty.",
+    "category": "Onboarding Wizard (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Onboarding\" or \"Get started\" from the dashboard navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Complete Setup\" or \"Next\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"required\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/onboarding"
+      }
+    ]
+  },
+  {
+    "id": "TC046",
+    "title": "Validation error when opening hours are incomplete",
+    "description": "Verifies the onboarding wizard shows an error when opening hours are left incomplete and the user attempts to complete setup.",
+    "category": "Onboarding Wizard (Admin)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Onboarding\" or \"Get started\" from the dashboard navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Opening hours\" or \"Hours\" step in the wizard"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Complete Setup\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Opening hours\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC047",
+    "title": "Cancel/exit onboarding returns user to dashboard without completing",
+    "description": "Verifies the user can exit the onboarding wizard (if option exists) and return to the dashboard.",
+    "category": "Onboarding Wizard (Admin)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Onboarding\" or \"Get started\" from the dashboard navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Back\" or \"Cancel\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Dashboard\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC048",
+    "title": "Onboarding wizard displays key sections for business setup",
+    "description": "Verifies the onboarding wizard loads and shows the expected sections for business details and hours configuration.",
+    "category": "Onboarding Wizard (Admin)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Onboarding\" or \"Get started\" from the dashboard navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Business\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Opening hours\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Complete Setup\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC049",
+    "title": "Dashboard loads for authenticated user and shows core KPI and upcoming appointments sections",
+    "description": "Verifies that an authenticated admin can access the dashboard and see KPI cards and upcoming appointments content.",
+    "category": "Dashboard (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Dashboard\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Upcoming\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"KPI\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC050",
+    "title": "View Agenda daily schedule after login",
+    "description": "Verifies a staff user can log in and see the daily schedule on the Agenda page.",
+    "category": "Agenda (Staff)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/agenda\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Agenda\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC051",
+    "title": "Open an appointment from daily schedule",
+    "description": "Verifies a staff user can open appointment details from the daily schedule in Agenda.",
+    "category": "Agenda (Staff)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/agenda\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an appointment item in the schedule list/grid"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Appointment Details\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC052",
+    "title": "Mark an appointment as completed from appointment details",
+    "description": "Verifies a staff user can mark an appointment as completed and see the status updated.",
+    "category": "Agenda (Staff)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on an appointment item in the schedule list/grid"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Mark as Completed\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Completed\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC053",
+    "title": "Mark as completed action is not offered for an already completed appointment",
+    "description": "Verifies the UI prevents completing an appointment that is already completed.",
+    "category": "Agenda (Staff)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on an appointment item that is labeled \"Completed\" in the schedule (if present)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Completed\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Mark as Completed\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC054",
+    "title": "Attempt to edit an appointment without permission shows permission denied",
+    "description": "Verifies an edit attempt outside allowed permissions shows a permission denied error message.",
+    "category": "Agenda (Staff)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on an appointment item in the schedule list/grid"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Edit\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Permission denied\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC055",
+    "title": "Permission denied is dismissible and user stays on appointment details",
+    "description": "Verifies that after a permission denied message, the user can dismiss it and remains on the appointment details view.",
+    "category": "Agenda (Staff)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on an appointment item in the schedule list/grid"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Edit\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Permission denied\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Close\" or \"OK\" button on the permission denied message"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Appointment Details\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC056",
+    "title": "Weekly view toggle shows a week schedule layout",
+    "description": "Verifies the Agenda can switch from daily to weekly view and display a weekly schedule.",
+    "category": "Agenda (Staff)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Agenda\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Week\" view toggle"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Week\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Weekly schedule\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC057",
+    "title": "Move a queued client to In Service",
+    "description": "Verifies an authenticated user can move a selected client from the queue into the 'In Service' status and see the UI update.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/fila\""
+      }
+    ]
+  },
+  {
+    "id": "TC058",
+    "title": "View current queue list on Fila page",
+    "description": "Verifies the queue management page loads and shows a visible queue list section for monitoring clients.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Queue list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC059",
+    "title": "Select a client in the queue to view available actions",
+    "description": "Verifies a user can select a client entry in the queue and see action controls (e.g., move status) appear.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first client in the queue list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Move to In Service\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC060",
+    "title": "Move selected client to In Service and confirm status label changes",
+    "description": "Verifies moving a client to 'In Service' updates the status label in the queue UI.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first client in the queue list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Move to In Service\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"In Service\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC061",
+    "title": "Monitor in-service section after moving a client",
+    "description": "Verifies that after moving a client to 'In Service', the in-service clients section is visible and reflects the change.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first client in the queue list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Move to In Service\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"In Service\" section is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC062",
+    "title": "Attempt queue action without adequate permissions shows permission denied error",
+    "description": "Verifies a user without required permissions is blocked from performing a queue action and sees a permission denied message.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first client in the queue list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Move to In Service\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Permission denied\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC063",
+    "title": "Permission denied error is visible and user remains on Fila page",
+    "description": "Verifies that after a permission denial, the user stays on the queue management page and the error remains visible.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first client in the queue list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Move to In Service\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/fila\""
+      }
+    ]
+  },
+  {
+    "id": "TC064",
+    "title": "Queue page handles empty state gracefully",
+    "description": "Verifies the queue management page shows a clear empty-state message when there are no clients waiting.",
+    "category": "Queue Management (Admin/Fila)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Fila\" (Queue) in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No clients in queue\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC065",
+    "title": "View clients list after login",
+    "description": "Verifies an authenticated user can open the Clients page and see the clients list UI.",
+    "category": "Clients List",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/clientes\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Clients list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC066",
+    "title": "Search clients from the clients list",
+    "description": "Verifies searching on the Clients page filters results based on the typed query.",
+    "category": "Clients List",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/clientes\""
+      },
+      {
+        "type": "action",
+        "description": "Type \"a\" into the \"Search clients\" field"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Client list results\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC067",
+    "title": "Open a client CRM details page from the list",
+    "description": "Verifies clicking a client entry navigates to that client’s CRM details page.",
+    "category": "Clients List",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Clients list\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first client entry in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/clientes/\""
+      }
+    ]
+  },
+  {
+    "id": "TC068",
+    "title": "Empty state is shown when there are no clients",
+    "description": "Verifies the Clients page shows an empty state message and an add/import CTA when no clients exist.",
+    "category": "Clients List",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/clientes\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No clients\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Add client\" or \"Import\" call-to-action is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC069",
+    "title": "Empty state CTA is visible and actionable",
+    "description": "Verifies the empty state provides a visible call-to-action to add or import clients.",
+    "category": "Clients List",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No clients\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Add client\" call-to-action if visible (otherwise click \"Import\" call-to-action)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Add client\" or \"Import clients\" page/section is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC070",
+    "title": "Search with no matches shows a clear 'no results' state",
+    "description": "Verifies searching for a non-matching term shows a no-results message/state instead of stale results.",
+    "category": "Clients List",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Type \"zzzz-nonexistent-client\" into the \"Search clients\" field"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No results\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Clients list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC071",
+    "title": "Clear search restores the full clients list view",
+    "description": "Verifies clearing the search field restores the default clients list state.",
+    "category": "Clients List",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" or \"Log in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Clientes\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Type \"zzzz-nonexistent-client\" into the \"Search clients\" field"
+      },
+      {
+        "type": "action",
+        "description": "Press \"Escape\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Clients list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC072",
+    "title": "Add a new CRM note from Client Details and see it in the timeline",
+    "description": "Verifies an authenticated user can add a note on the Client CRM page and the note becomes visible in the visit/timeline area.",
+    "category": "Client CRM (Client Details)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" / \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click \"Clientes\" in the main navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/clientes\""
+      },
+      {
+        "type": "action",
+        "description": "Click the first client in the clients list"
+      }
+    ]
+  },
+  {
+    "id": "TC073",
+    "title": "Client Details shows contact info and timeline sections",
+    "description": "Verifies core client information and the visit/timeline area are visible on the Client CRM page for a valid client.",
+    "category": "Client CRM (Client Details)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" / \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click \"Clientes\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the first client in the clients list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Client\" / \"Cliente\" header is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC074",
+    "title": "Add Note dialog opens from Client Details",
+    "description": "Verifies the Add Note entry point is present and opens a note input UI on the Client CRM page.",
+    "category": "Client CRM (Client Details)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" / \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Clientes\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the first client in the clients list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Add Note\" / \"Adicionar nota\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Note\" / \"Nota\" input field is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC075",
+    "title": "Saving an empty note is blocked (validation)",
+    "description": "Verifies the system prevents saving a blank CRM note and shows a visible validation message or keeps Save disabled.",
+    "category": "Client CRM (Client Details)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" / \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Clientes\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the first client in the clients list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Add Note\" / \"Adicionar nota\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Save\" / \"Salvar\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC076",
+    "title": "Canceling Add Note does not add a new entry to the timeline",
+    "description": "Verifies cancel/close of the Add Note flow does not create a timeline entry.",
+    "category": "Client CRM (Client Details)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" / \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Clientes\" in the main navigation"
+      },
+      {
+        "type": "action",
+        "description": "Click the first client in the clients list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Add Note\" / \"Adicionar nota\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Cancel\" / \"Cancelar\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC077",
+    "title": "Invalid client id shows 'client not found' error",
+    "description": "Verifies the Client CRM page displays a clear 'client not found' message when the client does not exist.",
+    "category": "Client CRM (Client Details)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sign in\" / \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /clientes/invalid"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"client not found\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC078",
+    "title": "View Finance overview with cash flow summary and revenue charts",
+    "description": "Verifies an authenticated user can open the Finance page and see key financial overview components.",
+    "category": "Finance (Financeiro)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click \"Financeiro\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/financeiro\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Financeiro\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC079",
+    "title": "Finance page shows cash flow summary section",
+    "description": "Verifies the Finance page displays a visible cash flow summary area for the current view.",
+    "category": "Finance (Financeiro)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Financeiro\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/financeiro\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Fluxo de caixa\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"cash flow summary\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC080",
+    "title": "Finance page shows revenue by professional chart",
+    "description": "Verifies the Finance page displays a revenue chart broken down by professional.",
+    "category": "Finance (Financeiro)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Financeiro\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/financeiro\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Receita por profissional\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"revenue chart\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC081",
+    "title": "Access Insights page and view KPI cards/charts",
+    "description": "Verifies an authenticated admin can open Reports/Insights and see KPI cards and at least one chart area rendered.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/insights\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Insights\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC082",
+    "title": "KPI cards are visible for key metrics",
+    "description": "Verifies the main KPIs (e.g., faturamento, ticket médio, ocupação) are visible as cards on the Insights page.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Faturamento\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Ticket médio\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Ocupação\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC083",
+    "title": "Apply date filter and see visible range indication",
+    "description": "Verifies a user can apply a date filter and see the selected range reflected on the page.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the date range filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select the \"Last 30 days\" option from the date range dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Last 30 days\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC084",
+    "title": "Date filter updates charts content (visual refresh)",
+    "description": "Verifies applying a date range triggers a visible chart refresh (e.g., loading state or updated labels) without leaving the page.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the date range filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select the \"This month\" option from the date range dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Loading\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC085",
+    "title": "Very large date range shows loading then timeout error message",
+    "description": "Verifies selecting a very large date range shows a loading indicator and, if a timeout occurs, displays a 'data load failed' error message.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the date range filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select the \"All time\" option from the date range dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Loading\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"data load failed\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC086",
+    "title": "Insights page remains usable after data load failure",
+    "description": "Verifies that after a data load failure, the user can still interact with the date filter to choose a smaller range.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the date range filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select the \"All time\" option from the date range dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"data load failed\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the date range filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select the \"Last 7 days\" option from the date range dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Last 7 days\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC087",
+    "title": "Insights navigation is stable and does not redirect away after filtering",
+    "description": "Verifies the user stays on /insights after applying a filter and the page does not unexpectedly navigate away.",
+    "category": "Reports & Insights (Admin)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insights\" in the main navigation menu"
+      },
+      {
+        "type": "action",
+        "description": "Click on the date range filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select the \"Today\" option from the date range dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/insights\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Today\" is visible"
       }
     ]
   }

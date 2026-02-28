@@ -28,7 +28,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     clients,
     onRefreshClients
 }) => {
-    const { user, userType, region } = useAuth();
+    const { user, userType, region, businessName } = useAuth();
     const { setModalOpen } = useUI();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
@@ -153,23 +153,18 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             if (sendWhatsapp) {
                 const client = clients.find(c => c.id === selectedClientId);
                 if (client?.phone) {
-                    const waPhone = client.phone.replace(/\\D/g, '');
+                    const waPhone = client.phone.replace(/\D/g, '');
                     const formattedDate = dateTime.toLocaleDateString('pt-BR');
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                     const message = isBeauty
-                        ? `Olá ${client.name}! Tudo bem? ✨\n` +
-                        `Sua reserva na *${user?.email?.split('@')[0] || 'Estética'}* está confirmada!\n` +
-                        `📅 *${formattedDate}* às *${formattedTime}*\n` +
-                        `💼 *Serviços*: ${serviceNames}${isCustomService ? (serviceNames ? ', ' : '') + customServiceName : ''}\n` +
-                        `📍 Local: estamos te esperando!\n\n` +
-                        `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
-                        : `Fala, ${client.name}! Seu horário está garantido! 🛡️\n` +
-                        `Marque na sua agenda:\n` +
-                        `🗓️ *${formattedDate}* às *${formattedTime}*\n` +
-                        `✂️ *Serviço*: ${serviceNames}${isCustomService ? (serviceNames ? ', ' : '') + customServiceName : ''}\n` +
-                        `📍 Onde: *${user?.email?.split('@')[0] || 'Barbearia'}*.\n\n` +
-                        `Prepare-se para o trato! Nos vemos em breve. 👋`;
+                        ? `Olá ${client.name}! ✨\n` +
+                        `Passando para confirmar seu horário no *${businessName || 'nossa Estética'}*. Tudo certo para **${formattedDate} às ${formattedTime}**?\n\n` +
+                        `Te aguardamos com muito carinho! 💖`
+                        : `Fala, ${client.name}! ✂️\n` +
+                        `Seu horário está garantido aqui na *${businessName || 'Barbearia'}*.\n` +
+                        `Nos vemos dia **${formattedDate} às ${formattedTime}**.\n\n` +
+                        `Te aguardamos para dar aquele talento! 🚀`;
 
                     window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
                 }

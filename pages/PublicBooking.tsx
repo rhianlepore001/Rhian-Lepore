@@ -77,6 +77,7 @@ export const PublicBooking: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [activeCategory, setActiveCategory] = useState<string>('all');
+    const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -97,6 +98,7 @@ export const PublicBooking: React.FC = () => {
     const [availableSlots, setAvailableSlots] = useState<string[]>([]);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+    const [isDataReady, setIsDataReady] = useState(false);
     const [activeBooking, setActiveBooking] = useState<any>(null);
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
@@ -272,53 +274,78 @@ export const PublicBooking: React.FC = () => {
                     setBusiness(profileData);
                     setBusinessId(profileData.id);
 
-                    const { data: settings } = await supabase
-                        .from('business_settings')
-                        .select('*')
-                        .eq('user_id', profileData.id)
-                        .single();
+                    // Fetch settings, services, categories in parallel or with individual error handling
+                    try {
+                        const { data: settings, error: sErr } = await supabase
+                            .from('business_settings')
+                            .select('*')
+                            .eq('user_id', profileData.id)
+                            .maybeSingle();
+                        if (sErr) console.warn('PublicBooking: Error loading settings:', sErr);
+                        if (settings) setBusinessSettings(settings);
+                    } catch (e) { console.error('Settings fetch failed', e); }
 
-                    if (settings) setBusinessSettings(settings);
+                    try {
+                        const { data: servicesData, error: svErr } = await supabase
+                            .from('services')
+                            .select('*')
+                            .eq('user_id', profileData.id)
+                            .eq('active', true)
+                            .order('price', { ascending: true });
+                        if (svErr) logger.error('PublicBooking: Error loading services:', svErr);
+                        logger.info('PublicBooking: Services loaded:', servicesData?.length || 0);
+                        setServices(servicesData || []);
 
-                    const { data: servicesData } = await supabase
-                        .from('services')
-                        .select('*')
-                        .eq('user_id', profileData.id)
-                        .eq('active', true)
-                        .order('price', { ascending: true });
+                        const { data: categoriesData, error: catErr } = await supabase
+                            .from('service_categories')
+                            .select('id, name')
+                            .eq('user_id', profileData.id)
+                            .order('display_order');
+                        if (catErr) logger.error('PublicBooking: Error loading categories:', catErr);
+                        logger.info('PublicBooking: Categories loaded:', categoriesData?.length || 0);
 
-                    setServices(servicesData || []);
+                        // Add virtual "Outros" category if there are services without category
+                        let finalCategories = categoriesData || [];
+                        if ((servicesData || []).some(s => !s.category_id)) {
+                            finalCategories = [...finalCategories, { id: 'no-category', name: 'Outros' }];
+                        }
+                        setCategories(finalCategories);
+                    } catch (e) { console.error('Services/Categories fetch failed', e); }
 
-                    const { data: categoriesData } = await supabase
-                        .from('service_categories')
-                        .select('id, name')
-                        .eq('user_id', profileData.id)
-                        .order('display_order');
-                    setCategories(categoriesData || []);
+                    try {
+                        const { data: professionalsData, error: pErr } = await supabase
+                            .from('team_members')
+                            .select('*')
+                            .eq('user_id', profileData.id)
+                            .eq('active', true)
+                            .order('display_order');
+                        if (pErr) console.warn('PublicBooking: Error loading professionals:', pErr);
 
-                    const { data: professionalsData } = await supabase
-                        .from('team_members')
-                        .select('*')
-                        .eq('user_id', profileData.id)
-                        .eq('active', true)
-                        .order('display_order');
+                        const mappedPros = (professionalsData || []).map((p: any) => ({
+                            ...p,
+                            name: p.full_name || p.name,
+                            specialties: Array.isArray(p.specialties)
+                                ? p.specialties
+                                : (p.specialties ? [p.specialties] : [])
+                        }));
+                        setProfessionals(mappedPros);
+                    } catch (e) { console.error('Professionals fetch failed', e); }
 
-                    const mappedPros = (professionalsData || []).map((p: any) => ({
-                        ...p,
-                        name: p.full_name || p.name
-                    }));
-                    setProfessionals(mappedPros);
+                    try {
+                        const { data: galleryData } = await supabase
+                            .from('business_galleries')
+                            .select('*')
+                            .eq('user_id', profileData.id)
+                            .eq('is_active', true)
+                            .order('display_order');
+                        setGallery(galleryData || []);
+                    } catch (e) { console.error('Gallery fetch failed', e); }
 
-                    const { data: galleryData } = await supabase
-                        .from('business_galleries')
-                        .select('*')
-                        .eq('user_id', profileData.id)
-                        .eq('is_active', true)
-                        .order('display_order');
-                    setGallery(galleryData || []);
+                    // Signal that we are ready to show the chat even if some data failed
+                    setIsDataReady(true);
                 }
             } catch (error) {
-                logger.error('Error fetching business data', error);
+                console.error('PublicBooking: Critical error in fetchBusinessData:', error);
             } finally {
                 setLoading(false);
             }
@@ -364,7 +391,7 @@ export const PublicBooking: React.FC = () => {
     }, [business, isBeauty]);
 
     useEffect(() => {
-        if (business && messages.length === 0) {
+        if (isDataReady && business && messages.length === 0) {
             const addWelcome = async () => {
                 setIsTyping(true);
                 setTimeout(() => {
@@ -386,7 +413,7 @@ export const PublicBooking: React.FC = () => {
             };
             addWelcome();
         }
-    }, [business]);
+    }, [business, isDataReady]);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -427,6 +454,11 @@ export const PublicBooking: React.FC = () => {
 
     const calculateTotal = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
     const calculateDuration = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration_minutes, 0);
+
+    const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
+    const filteredProfessionals = activeProfessionalCategory === 'all'
+        ? professionals
+        : professionals.filter((p: any) => (p.specialties || []).includes(activeProfessionalCategory));
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -519,6 +551,7 @@ export const PublicBooking: React.FC = () => {
     const bgClass = isBeauty ? 'bg-[#E2E1DA]' : 'bg-obsidian-bg';
     const cardClass = isBeauty ? 'bg-white shadow-silk-shadow border border-[#CAC9BF] rounded-lg' : 'bg-obsidian-surface border border-white/5 shadow-heavy rounded-none';
     const currencyRegion = (business?.region as Region) || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
+
     // Link do WhatsApp do estabelecimento (usado no empty state e na tela de sucesso)
     const whatsappLink = business?.phone
         ? `https://wa.me/${business.phone.replace(/\D/g, '')}`
@@ -647,9 +680,9 @@ export const PublicBooking: React.FC = () => {
                                             {/* Luxury Filters - Staggered Slide Animation */}
                                             <div className="animate-reveal-fragment duration-700">
                                                 <div className={`p-1.5 ${isBeauty ? 'bg-white shadow-silk-shadow border border-stone-100 rounded-2xl' : 'bg-white/5 border border-white/10 rounded-none'} backdrop-blur-xl`}>
-                                                    <div className="flex gap-2 overflow-x-auto p-1 scrollbar-hide">
+                                                    <div className="flex gap-2 overflow-x-auto p-1 scrollbar-thin scrollbar-thumb-stone-200">
                                                         <button onClick={() => setActiveCategory('all')}
-                                                            className={`px-8 py-2.5 ${isBeauty ? 'rounded-xl' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
+                                                            className={`px-5 md:px-8 py-2.5 ${isBeauty ? 'rounded-xl' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
                                                             ${activeCategory === 'all'
                                                                     ? (isBeauty ? 'bg-stone-800 text-white shadow-lg scale-105' : 'bg-accent-gold text-black shadow-heavy scale-105')
                                                                     : (isBeauty ? 'text-stone-400 hover:bg-stone-100' : 'text-neutral-500 hover:bg-white/5')}`}>
@@ -657,7 +690,7 @@ export const PublicBooking: React.FC = () => {
                                                         </button>
                                                         {categories.map(cat => (
                                                             <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                                className={`px-8 py-2.5 ${isBeauty ? 'rounded-xl border border-stone-50' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
+                                                                className={`px-5 md:px-8 py-2.5 ${isBeauty ? 'rounded-xl border border-stone-50' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
                                                                 ${activeCategory === cat.id
                                                                         ? (isBeauty ? 'bg-stone-800 text-white shadow-lg scale-105' : 'bg-accent-gold text-black shadow-heavy scale-105')
                                                                         : (isBeauty ? 'text-stone-400 bg-transparent hover:bg-stone-100' : 'text-neutral-500 hover:bg-white/5')}`}>
@@ -689,7 +722,13 @@ export const PublicBooking: React.FC = () => {
 
                                             {/* Service Staggered Grid - Extra Polish */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                                                {services.filter(s => (activeCategory === 'all' || s.category_id === activeCategory) && (!searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))).map((service, sIdx) => {
+                                                {services.filter(s => {
+                                                    const matchesCategory = activeCategory === 'all'
+                                                        || (activeCategory === 'no-category' && !s.category_id)
+                                                        || s.category_id === activeCategory;
+                                                    const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                                    return matchesCategory && matchesSearch;
+                                                }).map((service, sIdx) => {
                                                     const isSelected = selectedServices.includes(service.id);
                                                     return (
                                                         <div key={service.id}
@@ -765,52 +804,74 @@ export const PublicBooking: React.FC = () => {
                                     )}
 
                                     {msg.type === 'professionals' && step === 'datetime' && !selectedProfessional && (
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedProfessional('any');
-                                                    setMessages(prev => [...prev,
-                                                    { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false },
-                                                    { id: (Date.now() + 1).toString(), text: "Perfeito escolha. Qual dia e horário ficam melhores para você explorar nossa agenda?", isAssistant: true, type: 'datetime' }
-                                                    ]);
-                                                }}
-                                                className={`
-                                                    p-6 flex flex-col items-center gap-3 transition-all duration-300
-                                                    ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
-                                                `}>
-                                                <div className={`w-16 h-16 flex items-center justify-center border-2 ${isBeauty ? 'bg-white border-stone-200 text-stone-300 rounded-full' : 'bg-neutral-900 border-black text-neutral-600 rounded-none'}`}>
-                                                    <Users className="w-8 h-8" />
+                                        <div className="space-y-6">
+                                            {professionalCategories.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    <button
+                                                        onClick={() => setActiveProfessionalCategory('all')}
+                                                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeProfessionalCategory === 'all' ? (isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black border-2 border-black') : (isBeauty ? 'bg-stone-100 text-stone-600' : 'bg-white/5 text-white/50 border border-white/10')}`}
+                                                    >
+                                                        Todos
+                                                    </button>
+                                                    {professionalCategories.map((cat) => (
+                                                        <button
+                                                            key={cat}
+                                                            onClick={() => setActiveProfessionalCategory(cat)}
+                                                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeProfessionalCategory === cat ? (isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black border-2 border-black') : (isBeauty ? 'bg-stone-100 text-stone-600' : 'bg-white/5 text-white/50 border border-white/10')}`}
+                                                        >
+                                                            {cat}
+                                                        </button>
+                                                    ))}
                                                 </div>
-                                                <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>Qualquer Profissional</span>
-                                            </button>
+                                            )}
 
-                                            {professionals.map((pro, pIdx) => (
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                                 <button
-                                                    key={pro.id}
-                                                    style={{ animationDelay: `${pIdx * 100}ms` }}
                                                     onClick={() => {
-                                                        setSelectedProfessional(pro.id);
+                                                        setSelectedProfessional('any');
                                                         setMessages(prev => [...prev,
-                                                        { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false },
-                                                        { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para sua visita?`, isAssistant: true, type: 'datetime' }
+                                                        { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false },
+                                                        { id: (Date.now() + 1).toString(), text: "Perfeito escolha. Qual dia e horário ficam melhores para você explorar nossa agenda?", isAssistant: true, type: 'datetime' }
                                                         ]);
                                                     }}
                                                     className={`
+                                                    p-6 flex flex-col items-center gap-3 transition-all duration-300
+                                                    ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
+                                                `}>
+                                                    <div className={`w-16 h-16 flex items-center justify-center border-2 ${isBeauty ? 'bg-white border-stone-200 text-stone-300 rounded-full' : 'bg-neutral-900 border-black text-neutral-600 rounded-none'}`}>
+                                                        <Users className="w-8 h-8" />
+                                                    </div>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>Qualquer Profissional</span>
+                                                </button>
+
+                                                {filteredProfessionals.map((pro, pIdx) => (
+                                                    <button
+                                                        key={pro.id}
+                                                        style={{ animationDelay: `${pIdx * 100}ms` }}
+                                                        onClick={() => {
+                                                            setSelectedProfessional(pro.id);
+                                                            setMessages(prev => [...prev,
+                                                            { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false },
+                                                            { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para sua visita?`, isAssistant: true, type: 'datetime' }
+                                                            ]);
+                                                        }}
+                                                        className={`
                                                         p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment
                                                         ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
                                                     `}>
-                                                    <div className={`w-16 h-16 overflow-hidden border-2 ${isBeauty ? 'bg-white border-stone-200 rounded-full' : 'bg-neutral-900 border-black rounded-none'}`}>
-                                                        {pro.photo_url ? (
-                                                            <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold">{pro.name.charAt(0)}</div>
-                                                        )}
-                                                    </div>
-                                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
-                                                        {pro.name.split(' ')[0]}
-                                                    </span>
-                                                </button>
-                                            ))}
+                                                        <div className={`w-16 h-16 overflow-hidden border-2 ${isBeauty ? 'bg-white border-stone-200 rounded-full' : 'bg-neutral-900 border-black rounded-none'}`}>
+                                                            {pro.photo_url ? (
+                                                                <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold">{pro.name.charAt(0)}</div>
+                                                            )}
+                                                        </div>
+                                                        <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                                            {pro.name.split(' ')[0]}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
 
@@ -967,7 +1028,7 @@ export const PublicBooking: React.FC = () => {
 
                             <div className="flex flex-col gap-5">
                                 <a
-                                    href={`https://wa.me/${(activeBooking?.customer_phone || business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento.${activeBooking?.appointment_time ? ' Dia ' + new Date(activeBooking.appointment_time).toLocaleDateString('pt-BR') + ' às ' + new Date(activeBooking.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}`)}`}
+                                    href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve! 🚀`)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`

@@ -65,7 +65,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
           ${isBeauty ? 'border border-white/10' : 'border-2 border-neutral-800'}
           ${isSelected
                         ? `bg-${accentColor} text-black font-bold scale-105 shadow-lg`
-                        : `text-white ${hoverBg} hover:scale-105`
+                        : `${isBeauty ? 'text-stone-600' : 'text-white'} ${hoverBg} hover:scale-105`
                     }
         `}
             >
@@ -75,7 +75,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
     };
 
     return (
-        <div className={`${isBeauty ? 'bg-white/5 border border-white/10 rounded-2xl' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
+        <div className={`${isBeauty ? 'bg-stone-50 border border-stone-100 rounded-2xl shadow-sm' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
             <div className="flex items-center gap-2 mb-4">
                 <Clock className={`w-5 h-5 text-${accentColor}`} />
                 <h3 className="text-white font-heading text-lg uppercase">Horários Disponíveis</h3>

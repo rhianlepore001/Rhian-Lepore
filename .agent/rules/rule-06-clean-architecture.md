@@ -1,65 +1,79 @@
-# LEI 06: Arquitetura Limpa Smith
+# LEI 06: Arquitetura Limpa e App Router (Next.js)
 
 ## MOTIVO
-Combater o código sujo e a duplicação de lógica (o "copia e cola" do passado).
+Adequar-se estritamente ao framework (Next.js App Router) e evitar "arquiteturas inventadas" baseadas em Express ou FastAPI (como `routers/`, `controllers/`) que quebram o fluxo Server Components/Client Components.
 
 ## GATILHO
-Ativado ao criar novos arquivos de routers, services, ou ao adicionar lógica de negócio em qualquer camada.
+Ativado ao criar nova modelagem funcional, novos domínios do sistema (ex: cobrança, agendamentos) ou responder formulários do usuário e chamadas de API.
 
-## ESTRUTURA DE CAMADAS
+## ESTRUTURA DE CAMADAS NO NEXT.JS
 
-### Services (Lógica de Negócio)
-Regras complexas (cálculo de preço, RAG, processamento de WhatsApp) residem estritamente em `/app/services/`.
+### Server Actions (Mutations)
+Para operações que alteram o banco de dados e acontecem por interações do usuário (botões, submissão de formulários), o padrão obrigatório é criar **Server Actions** (`"use server"` export function) e não criar endpoints em `app/api/... ` apenas para servir um frontend Next.js.
 
-### Routers (Interface)
-Rotas de API devem apenas validar o input e chamar os serviços necessários.
+### Server Components (Data Fetching)
+A leitura de dados para renderizar a UI DEVE acontecer em React Server Components (RSC) assíncronos (`export default async function Page()`). Passe apenas o dado filtrado (Props) para os Client Components. Evite hooks de data fetching como `useEffect` no client.
 
-### DRY (Don't Repeat Yourself)
-Se a lógica de cálculo de tokens ou billing for necessária em mais de um lugar, ela deve ser centralizada no `UsageService` ou `BillingCore`.
+### Route Handlers (APIs Externas)
+As pastas `/api/...` (Route Handlers, exports HTTP GET/POST) só devem ser utilizadas quando seu sistema precisa ser chamado por máquinas externas, como um App mobile nativo ou webhooks de pagamentos (ex: Stripe).
+
+### Lógica Core em Único Ponto (DRY)
+Funções densas e reaproveitáveis de regra de negócio (ex: cálculo complexo de pagamentos) NÃO devem ficar perdidas no meio do Server Action ou Server Component. Mova para funções auxiliares puras do TS em uma pasta `/utils/` ou `/lib/`.
 
 ## EXEMPLO ERRADO
-```python
-# app/api/billing/router.py - lógica de negócio no router!
-@router.post("/charge")
-async def charge_customer(customer_id: str, amount: float):
-    customer = await supabase.from_("customers").select("*").eq("id", customer_id).single().execute()
-    
-    if customer.data["plan"] == "free":
-        discount = 0
-    elif customer.data["plan"] == "pro":
-        discount = 0.1
-    else:
-        discount = 0.2
-    
-    final_amount = amount * (1 - discount)
-    tokens_used = int(amount / 0.001)
-    # ... mais 50 linhas de lógica
+```typescript
+// app/api/billing/route.ts (Criando rotas API desnecessárias estilo SPA)
+import { createClient } from '@supabase/supabase-js'
+
+export async function POST(req: Request) {
+  // Lógica de cálculo pesada misturada com o parse do Request e injetando dependência forte
+  const payload = await req.json()
+  const discount = payload.plan === "pro" ? 0.1 : 0
+  const finalPrice = payload.amount * (1 - discount)
+  // ...
+  return Response.json({ status: "ok" })
+}
+
+// app/page.tsx
+"use client"
+import { useEffect, useState } from 'react'
+// Fazendo chamadas REST num client component para uma API do próprio Next.js
+export default function Page() {
+  const [data, setData] = useState()
+  useEffect(() => { fetch('/api/data').then(res => res.json()).then(setData) }, [])
+  return <div>Carregando...</div>
+}
 ```
 
 ## EXEMPLO CORRETO
-```python
-# app/services/billing_service.py
-class BillingService:
-    def __init__(self, usage_service: UsageService):
-        self.usage = usage_service
-    
-    def calculate_discount(self, plan: str) -> float:
-        discounts = {"free": 0, "pro": 0.1, "enterprise": 0.2}
-        return discounts.get(plan, 0)
-    
-    async def charge(self, customer_id: str, amount: float) -> ChargeResult:
-        customer = await self.get_customer(customer_id)
-        discount = self.calculate_discount(customer.plan)
-        final_amount = amount * (1 - discount)
-        tokens = self.usage.calculate_tokens(amount)
-        return ChargeResult(amount=final_amount, tokens=tokens)
+```typescript
+// lib/billing/calculateDiscount.ts (Puro TypeScript - Testável, lógica isolada)
+export function calculateDiscount(plan: string, amount: number) {
+  const discount = plan === "pro" ? 0.1 : 0
+  return amount * (1 - discount)
+}
 
-# app/api/billing/router.py - router só valida e delega
-@router.post("/charge")
-async def charge_customer(
-    request: ChargeRequest,
-    billing: BillingService = Depends()
-):
-    result = await billing.charge(request.customer_id, request.amount)
-    return result
+// app/actions/billing.ts (Mutations do App)
+"use server"
+import { createClient } from '@/utils/supabase/server'
+import { calculateDiscount } from '@/lib/billing/calculateDiscount'
+
+export async function chargeAction(amount: number) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const finalPrice = calculateDiscount(user.app_metadata.plan, amount)
+  // ... charge logic ...
+}
+
+// app/page.tsx (Data Fetching DIRETO no Server Component)
+import { createClient } from '@/utils/supabase/server'
+
+export default async function Page() {
+  // Busca direta e rápida no node server
+  const supabase = createClient()
+  const { data } = await supabase.from('stats').select('*')
+  
+  // Renderiza HTML proto com tudo carregado
+  return <div>{data[0].view_count}</div>
+}
 ```

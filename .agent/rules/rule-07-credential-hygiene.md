@@ -1,66 +1,73 @@
-# LEI 07: Higiene de Credenciais
+# LEI 07: Higiene de Credenciais e Autenticação (Next.js)
 
 ## MOTIVO
-Impedir o erro de usar senhas fracas ou hashes obsoletos.
+Garantir que os métodos de hash de senha, validação de requisições e armazenamento de tokens (quando você não usar puramente o `@supabase/ssr`) sigam padrões atualizados do Node.js.
 
 ## GATILHO
-Ativado ao implementar cadastro de usuários, login, reset de senha, ou qualquer função que manipule senhas e tokens de acesso.
+Ativado ao implementar verificações B2B (API Keys), rotas de redefinição de senha ou integrações customizadas sem depender 100% da tabela auth do Supabase.
 
-## REQUISITOS DE SENHA
+## CRIPTOGRAFIA OBRIGATÓRIA
 
-### Hashing
-Use estritamente bcrypt com fator de custo 12. Hashes SHA-256 legados devem ser marcados para migração imediata no próximo login.
+### Hash de Senha Customizado
+Se estiver gerenciando a própria tabela de usuários em vez do Supabase Auth (desaconselhado, mas possível em B2B complexo), NUNCA grave senhas em texto puro, Base64 ou MD5/SHA1.
+**Obrigatório**: Use o pacote `bcrypt` (ou `bcryptjs` caso problema no Vercel Edge build) com cost factor mínimo de 10, ou a Web Crypto API nativa se estrito ao Edge.
 
-### Complexidade
-Valide obrigatoriamente: 8+ caracteres, 1 maiúscula, 1 minúscula e 1 número.
+### Geração de Tokens Temporários (Redefinição de Senha)
+Não use UUIDs previsíveis nem `Math.random()`.
+**Obrigatório**: Use `crypto.randomBytes(32).toString('hex')` (Node.js API) ou `crypto.getRandomValues` (Web Crypto API Edge) para gerar tokens de reset. Defina expiração hard-coded no banco (ex: `expires_at = now() + interval '15 minutes'`).
 
-### Tokens Seguros
-Geradores de tokens de convite ou reset devem usar `secrets.token_urlsafe(32)`.
+## VERIFICAÇÃO DE ASSINATURA DE WEBHOOKS
+Para integração de faturamento (Stripe), a **assinatura do webhook** é estritamente necessária.
+
+```typescript
+// app/api/webhooks/stripe/route.ts
+import Stripe from 'stripe'
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+export async function POST(req: Request) {
+  const body = await req.text()
+  const sig = req.headers.get('stripe-signature')!
+
+  try {
+    const event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    // ... processamento do webhook
+    return Response.json({ received: true })
+  } catch (err: any) {
+    console.error("Webhook stripe erro:", err.message)
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 })
+  }
+}
+```
 
 ## EXEMPLO ERRADO
-```python
-import hashlib
-import random
+```typescript
+// app/actions/auth.ts
+import md5 from 'md5' // VAZAMENTO CRIMINAL! MD5 é quebrado.
 
-def create_user(email: str, password: str):
-    # SHA-256 é rápido demais (brute-force fácil)
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
-    save_user(email, password_hash)  # Sem validação de complexidade
-
-def generate_reset_token():
-    return str(random.randint(100000, 999999))  # Random previsível!
+export async function savePassword(raw: string) {
+  const hash = md5(raw) 
+  await db.from('users').insert({ pass: hash })
+  
+  // ERRO GRAVE: Geração de token fraco
+  const token = Math.random().toString(36).substring(7) 
+  await sendResetEmail(token)
+}
 ```
 
 ## EXEMPLO CORRETO
-```python
-import bcrypt
-import secrets
-import re
+```typescript
+// app/actions/auth.ts
+import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
 
-class PasswordPolicy:
-    MIN_LENGTH = 8
-    PATTERN = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$')
-    
-    @classmethod
-    def validate(cls, password: str) -> tuple[bool, str | None]:
-        if len(password) < cls.MIN_LENGTH:
-            return False, f"Mínimo {cls.MIN_LENGTH} caracteres"
-        if not cls.PATTERN.match(password):
-            return False, "Deve conter maiúscula, minúscula e número"
-        return True, None
-
-def create_user(email: str, password: str):
-    valid, error = PasswordPolicy.validate(password)
-    if not valid:
-        raise ValueError(error)
-    
-    password_hash = bcrypt.hashpw(
-        password.encode(), 
-        bcrypt.gensalt(rounds=12)
-    ).decode()
-    
-    save_user(email, password_hash)
-
-def generate_reset_token() -> str:
-    return secrets.token_urlsafe(32)
+export async function savePassword(raw: string) {
+  // SEGURO: Criptografia moderna e salgada
+  const salt = await bcrypt.genSalt(12)
+  const hash = await bcrypt.hash(raw, salt)
+  await db.from('users').insert({ pass: hash })
+  
+  // SEGURO: Entropia forte
+  const token = randomBytes(32).toString('hex')
+  await sendResetEmail(token)
+}
 ```

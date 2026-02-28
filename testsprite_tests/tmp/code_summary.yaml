@@ -1,53 +1,93 @@
 version: "2"
-type: backend
+type: frontend
 tech_stack:
-  - TypeScript
-  - Supabase (PostgreSQL)
-  - Clerk (Auth)
-  - Stripe (Payments)
-base_url: "https://lcqwrngscsziysyfhpfj.supabase.co"
+  - react
+  - react-router-dom
+  - vite
+  - tailwindcss
+routes:
+  - path: /register
+    file: src/pages/Register.tsx
+    auth_required: false
+    description: User registration page
+  - path: /login
+    file: src/pages/Login.tsx
+    auth_required: false
+    description: User login page
+  - path: /forgot-password
+    file: src/pages/ForgotPassword.tsx
+    auth_required: false
+    description: Forgot password page
+  - path: /update-password
+    file: src/pages/UpdatePassword.tsx
+    auth_required: false
+    description: Update password page
+  - path: /book/:slug
+    file: src/pages/PublicBooking.tsx
+    auth_required: false
+    description: Public booking page for a specific professional
+  - path: /queue/:slug
+    file: src/pages/QueueJoin.tsx
+    auth_required: false
+    description: Public queue join page
+  - path: /queue-status/:id
+    file: src/pages/QueueStatus.tsx
+    auth_required: false
+    description: Public queue status page
+  - path: /pro/:slug
+    file: src/pages/ProfessionalPortfolio.tsx
+    auth_required: false
+    description: Professional portfolio page
+  - path: /onboarding
+    file: src/pages/OnboardingWizard.tsx
+    auth_required: true
+    description: Onboarding wizard
+  - path: /
+    file: src/pages/Dashboard.tsx
+    auth_required: true
+    description: Dashboard page
+  - path: /agenda
+    file: src/pages/Agenda.tsx
+    auth_required: true
+    description: Agenda page
+  - path: /fila
+    file: src/pages/QueueManagement.tsx
+    auth_required: true
+    description: Queue management page
+  - path: /clientes
+    file: src/pages/Clients.tsx
+    auth_required: true
+    description: Clients list page
+  - path: /clientes/:id
+    file: src/pages/ClientCRM.tsx
+    auth_required: true
+    description: Client CRM details page
+  - path: /financeiro
+    file: src/pages/Finance.tsx
+    auth_required: true
+    description: Finance page
+  - path: /marketing
+    file: src/pages/Marketing.tsx
+    auth_required: true
+    description: Marketing page
+  - path: /insights
+    file: src/pages/Reports.tsx
+    auth_required: true
+    description: Reports page
 features:
-  - name: Booking System (Agendamentos)
-    description: Gerenciamento de agendamentos via RPCs seguras e tabelas RLS no Supabase.
+  - name: User Login
+    description: Login with email and password credentials
     files:
-      - supabase/migrations/20260217_fix_secure_booking_final.sql
-      - supabase/migrations/20260218_full_schema_fix.sql
-    endpoints:
-      - method: RPC
-        path: create_secure_booking
-        description: Cria um agendamento com validação de disponibilidade e segurança.
-        auth_required: false
-      - method: RPC
-        path: update_onboarding_step
-        description: Atualiza o progresso do onboarding do proprietário.
-        auth_required: true
-  - name: Finance System (Financeiro)
-    description: Cálculo de comissões, estatísticas financeiras e registros de vendas via Supabase.
-    files:
-      - supabase/migrations/20260218_finance_system.sql
-      - supabase/migrations/20260218_commissions_rpc.sql
-    endpoints:
-      - method: RPC
-        path: update_finance_stats
-        description: Atualiza estatísticas financeiras com base em transações.
-        auth_required: true
-      - method: RPC
-        path: calculate_commissions
-        description: Calcula comissões para profissionais do time.
-        auth_required: true
-  - name: User Profiles (Perfis)
-    description: Gestão de perfis de usuários e configurações de negócio.
-    files:
-      - supabase/migrations/20260218_full_schema_fix.sql
-    endpoints:
-      - method: GET
-        path: /rest/v1/profiles
-        description: Recupera perfil do usuário autenticado via API REST do Supabase.
-        auth_required: true
-known_limitations:
-  - issue: Requer VITE_SUPABASE_ANON_KEY
-    location: .env.local
-    impact: Testes falham sem a chave anon do Supabase.
-  - issue: Migração Clerk em andamento
-    location: clerk-migration/
-    impact: Possível inconsistência temporária entre auth do Supabase e Clerk.
+      - src/pages/Login.tsx
+      - src/contexts/AuthContext.tsx
+    entry_route: /login
+    user_interactions:
+      - Fill email input field
+      - Fill password input field
+      - Click Login button to submit
+      - See error message on invalid credentials
+    api_calls:
+      - method: POST
+        endpoint: /api/auth/login
+    auth_required: false
+known_limitations: []

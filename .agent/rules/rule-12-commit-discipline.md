@@ -1,51 +1,42 @@
-# LEI 12: Disciplina de Commits
+# LEI 12: Disciplina de Commits (Conventional Commits)
 
 ## MOTIVO
-Histórico legível facilita debugging, code review e geração de changelogs automáticos.
+Logs de Git limpos permitem *rollback* transparente, fácil isolamento de onde um bug no Next.js/Supabase aconteceu, e automação fluída de Changelogs para deploy.
 
 ## GATILHO
-Ativado ao gerar mensagens de commit ou preparar releases.
+Ativado SEMPRE que você for gerar um pull request, executar comandos `git commit -m` em nome do usuário, ou escrever documentação de deploy.
 
-## FORMATO OBRIGATÓRIO (Conventional Commits)
+## PADRÃO OBRIGATÓRIO (Angular/Conventional)
 
-```
-<type>(<scope>): <description>
+A sintaxe imutável deve ser:
+`tipo(escopo-opcional): mensagem imperativa e clara`
 
-[body opcional]
+### Tipos Permitidos
+- `feat`: Uma funcionalidade nova (nova página, novo CRUD Supabase).
+- `fix`: A correção de uma falha ou bug.
+- `docs`: Modificações restritas à documentação (`README.md`, `/docs`).
+- `style`: Formatação, tabulação (não afeta regras de lint JS complexas).
+- `refactor`: Reescrever código que não altera comportamento final na interface/banco.
+- `perf`: Otimizações de renderização (LCP, bundle size do App Router).
+- `test`: Adicionar ou refinar specs de testes (Jest/Playwright).
+- `chore`: Modificações de build da Vercel, atualizações de `package.json`.
 
-[footer opcional]
-```
-
-## TYPES PERMITIDOS
-
-- **feat**: nova funcionalidade
-- **fix**: correção de bug
-- **docs**: apenas documentação
-- **style**: formatação (não altera lógica)
-- **refactor**: mudança de código sem alterar comportamento
-- **test**: adição ou correção de testes
-- **chore**: manutenção, configs, deps
-
-## REGRAS ADICIONAIS
-
-- Description em minúsculo, sem ponto final
-- Máximo 72 caracteres na primeira linha
-- Body explica "o que" e "por que", não "como"
-
-## EXEMPLOS ERRADOS
-
+## EXEMPLO ERRADO
 ```bash
-git commit -m "fix"
-git commit -m "wip"
-git commit -m "changes"
-git commit -m "asdfasdf"
+git commit -m "arrumei as coisas da view"
+git commit -m "fiz upload do arquivo login e coloquei middleware"
+git commit -m "Update page.tsx"
 ```
 
-## EXEMPLOS CORRETOS
-
+## EXEMPLO CORRETO
 ```bash
-git commit -m "feat(auth): add Google OAuth2 login flow"
-git commit -m "fix(billing): correct tax calculation for EU customers"
-git commit -m "docs(api): add examples for webhook endpoints"
-git commit -m "chore(deps): upgrade fastapi to 0.109.0"
+git commit -m "feat(auth): implementar formulário de login com @supabase/ssr"
+git commit -m "fix(payment): corrigir cálculo duplicado de imposto na server action"
+git commit -m "refactor(ui): isolar componente de tabela de listagem de usuários"
+git commit -m "chore(deps): atualizar pacote @supabase/supabase-js para v2"
 ```
+
+### Breaking Changes (Mudanças Severas)
+Se a alteração requer que a tabela Supabase precise de uma Migration rodada *antes* no Vercel (senão a produção cai), deve-se usar um `!` no tipo ou adicionar `BREAKING CHANGE:` na descrição longa (corpo) do commit.
+
+`feat(db)!: renomear coluna 'client_id' para 'company_id'`

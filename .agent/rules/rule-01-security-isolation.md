@@ -1,66 +1,66 @@
-# LEI 01: Isolamento de Segurança Smith
+# LEI 01: Isolamento de Segurança e Vercel Edge
 
 ## MOTIVO
-Impedir o erro histórico de expor chaves sensíveis ou permitir que o frontend ignore a camada de lógica do backend.
+Garantir que chamadas ao banco de dados e uso de chaves sensíveis ocorram apenas no ambiente seguro do servidor (Node.js/Edge na Vercel), evitando vazamento de privilégios para o cliente.
 
 ## GATILHO
-Ativado ao criar ou modificar arquivos em `/app`, `/components`, ou qualquer código client-side que interaja com Supabase ou banco de dados.
+Ativado ao criar ou modificar componentes no Next.js App Router (arquivos em `/app`, `/components`) que interajam com o Supabase.
 
 ## RESTRIÇÕES INEGOCIÁVEIS
 
-### Proibição de Service Role no Front
-Nunca, sob qualquer pretexto, utilize a `SUPABASE_SERVICE_ROLE_KEY` em arquivos dentro de `/app` ou `/components`.
+### Proibição de Service Role no Client Components
+Nunca utilize a `SUPABASE_SERVICE_ROLE_KEY` em arquivos marcados com `"use client"`. O service role deve ser restrito a Server Actions, Route Handlers ou Server Components estritos.
 
-### Zero Supabase Direct Writing
-O frontend não deve realizar operações de escrita (insert, update, delete) diretamente via cliente Supabase do lado do cliente. Toda alteração de estado deve passar por uma rota de API (`/api/*`) que valide a sessão.
+### Zero Direct Client Supabase Writes para Dados Críticos
+Operações de escrita (insert, update, delete) não devem ser feitas diretamente pelo cliente Supabase do lado do navegador se envolverem lógica de negócios complexa ou validações severas. Prefira sempre **Server Actions** do Next.js para mutações de dados.
 
-### Headers de Segurança
-Toda nova rota ou middleware deve manter os headers de CSP e Anti-Clickjacking (frame-ancestors 'none' para admin, '*' apenas para /embed).
-
-## PADRÃO DE AUTENTICAÇÃO
-Use sempre `getIronSession` com AES-256-GCM para verificar a identidade do usuário no Next.js.
+### Uso Correto do @supabase/ssr
+Em projetos Next.js App Router, usar exclusivamente o pacote `@supabase/ssr` para criação de clientes Supabase (`createServerClient` e `createBrowserClient`).
 
 ## EXEMPLO ERRADO
 ```typescript
 // app/components/AdminPanel.tsx
+"use client"
 import { createClient } from '@supabase/supabase-js'
 
+// VAZAMENTO DE PRIVILÉGIO NO CLIENTE!
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // VAZAMENTO DE PRIVILÉGIO!
+  process.env.SUPABASE_SERVICE_ROLE_KEY! 
 )
 
 export function AdminPanel() {
   const deleteUser = async (id: string) => {
-    await supabase.from('users').delete().eq('id', id) // Escrita direta!
+    await supabase.from('users').delete().eq('id', id)
   }
 }
 ```
 
 ## EXEMPLO CORRETO
 ```typescript
-// app/components/AdminPanel.tsx
-export function AdminPanel() {
-  const deleteUser = async (id: string) => {
-    await fetch('/api/admin/users', {
-      method: 'DELETE',
-      body: JSON.stringify({ userId: id }),
-      credentials: 'include'
-    })
-  }
+// app/actions/admin.ts
+"use server"
+import { createClient } from '@supabase/supabase-js'
+
+export async function deleteUserAction(id: string) {
+  // Executado de forma segura no servidor Vercel
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  
+  // Adicione validação de admin aqui antes de deletar!
+  const { error } = await supabase.from('users').delete().eq('id', id)
+  if (error) throw new Error("Falha ao deletar")
 }
 
-// app/api/admin/users/route.ts
-import { getIronSession } from 'iron-session'
+// app/components/AdminPanel.tsx
+"use client"
+import { deleteUserAction } from '@/app/actions/admin'
 
-export async function DELETE(req: Request) {
-  const session = await getIronSession(cookies(), sessionOptions)
-  
-  if (!session.user?.isAdmin) {
-    return Response.json({ error: 'Forbidden' }, { status: 403 })
-  }
-  
-  const supabase = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-  // ... delete logic seguro no servidor
+export function AdminPanel() {
+  return (
+    <button onClick={() => deleteUserAction('123')}>Deletar</button>
+  )
 }
 ```

@@ -1,0 +1,23 @@
+squad:
+  name: Orion Squad
+  master: "@aios-master"
+  agents:
+    - name: explorer
+      role: "@explorer-agent"
+      priority: high
+    - name: architect
+      role: "@backend-specialist"
+      priority: medium
+    - name: dev
+      role: "@frontend-specialist"
+      priority: medium
+    - name: QA
+      role: "@qa-automation-engineer"
+      priority: high
+    - name: devops
+      role: "@devops-engineer"
+      priority: low
+  protocols:
+    - constitution-check
+    - story-driven-development
+    - cli-first-validation

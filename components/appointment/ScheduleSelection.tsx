@@ -74,7 +74,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 p_business_id: user?.id,
                 p_date: dateStr,
                 p_professional_id: selectedProId || null,
-                p_duration_min: duration
+                p_duration_min: duration,
+                p_is_professional: true
             });
 
             if (error) {

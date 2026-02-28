@@ -1,76 +1,70 @@
-# LEI 14: Documentação como Código
+# LEI 14: Código como Documentação Essencial
 
 ## MOTIVO
-Código auto-documentado reduz overhead de manutenção e evita docs desatualizados.
+Comentários exaustivos envelhecem e ficam dessincronizados do sistema Typescript verdadeiro. Códigos mal nomeados dependem desses comentários incorretos para serem compreendidos, atrasando iterações de equipe e auditorias de bugs.
 
 ## GATILHO
-Ativado ao criar funções, classes, módulos ou arquivos README.
+Ativado ao escrever Server Actions elaboradas, novos componentes complexos (dashboards, listagens, forms), funções matemáticas (cobrança) ou complexas interações de Row Level Security.
 
-## HIERARQUIA DE CLAREZA
+## REGRAS DE EXPRESSIVIDADE
 
-1. **Nomes Descritivos**: Prefira `user_email` sobre `ue`, `calculate_monthly_revenue` sobre `calc`.
-2. **Funções Pequenas**: Cada função deve fazer UMA coisa. Se precisar de "e" na descrição, quebre em duas.
-3. **Docstrings Obrigatórios**: Toda função pública deve ter docstring com: descrição, parâmetros, retorno, exceções.
-4. **README Vivo**: Deve conter: setup, exemplos de uso, arquitetura básica.
+### Auto-explicatividade via Tipagem TS
+Use inteiramente os recursos do Typescript para inferir o que as coisas fazem. Não adicione JSDoc em tudo se os tipos contarem a história sozinhos. Use interfaces expressivas.
 
-## PROIBIÇÕES
+### Coesão e Limite de Tela
+Uma Server Action ou Componente `page.tsx` jamais deve ser maior do que 3 vezes a altura da tela (Aprox. 100-150 linhas curtas). Se for maior que isso, isole a lógica UI em components pequenos ou isole as lógicas de negócio puras na lib.
 
-- Comentários que repetem o código (`i += 1  # incrementa i`)
-- Código comentado (use git para histórico)
-- TODOs sem issue/ticket associado
+### "Não Explique o QUE, Explique o POR QUÊ"
+Nunca use comentários como `// Loop arrays de clientes`.
+Reserve comentários exclusivamente para decisões "Bizarras" do código ditadas pela regra de negócio, workarounds da Vercel Edge, etc.
 
-## EXEMPLO ERRADO
+## EXEMPLO ERRADO (Over-commenting)
 
-```python
-def calc(a, b, c, t):
-    # calcula o valor
-    x = a * b  # multiplica a por b
-    if t:
-        x = x - c  # subtrai c se t
-    return x
+```typescript
+// Componente de botão
+// Recebe as props para mostrar e clicar
+export function BigButton(props: any) {
+  // Flag p/ evitar clicks
+  const db_click = false; 
 
-# TODO: fix this later
-# def old_calc():
-#     ... 50 linhas comentadas ...
+  // Pega id do user na DB 
+  const gUID = getid(props.u);
+  
+  // faz auth e paga
+  async function clk() {
+    process(gUID);
+  }
+  
+  return <button onClick={clk}>{props.text}</button>
+}
 ```
 
-## EXEMPLO CORRETO
+## EXEMPLO CORRETO (Expressividade TS)
 
-```python
-def calculate_order_total(
-    unit_price: Decimal,
-    quantity: int,
-    discount_amount: Decimal = Decimal("0"),
-    apply_discount: bool = True
-) -> Decimal:
-    """
-    Calcula o valor total de um pedido.
-    
-    Args:
-        unit_price: Preço unitário do produto (deve ser >= 0)
-        quantity: Quantidade de itens (deve ser >= 1)
-        discount_amount: Valor absoluto do desconto a aplicar
-        apply_discount: Se True, subtrai o desconto do total
-    
-    Returns:
-        Valor total do pedido após desconto (se aplicável)
-    
-    Raises:
-        ValueError: Se unit_price < 0 ou quantity < 1
-    
-    Example:
-        >>> calculate_order_total(Decimal("10.00"), 3, Decimal("5.00"))
-        Decimal("25.00")
-    """
-    if unit_price < 0:
-        raise ValueError("Preço unitário não pode ser negativo")
-    if quantity < 1:
-        raise ValueError("Quantidade deve ser pelo menos 1")
-    
-    subtotal = unit_price * quantity
-    
-    if apply_discount:
-        return max(subtotal - discount_amount, Decimal("0"))
-    
-    return subtotal
+```typescript
+import { processPaymentAction } from '@/app/actions/billing'
+
+interface PurchaseButtonProps {
+    userId: string;
+    label: string;
+    isSubmitting?: boolean;
+}
+
+export function PurchaseButton({ userId, label, isSubmitting = false }: PurchaseButtonProps) {
+    // INFO: Precisamos usar o Server Action isolado aqui pois o checkout 
+    // lida com chaves sigilosas de Stripe que não podem vir ao client bundle.
+    async function handlePayment() {
+        await processPaymentAction(userId)
+    }
+  
+    return (
+        <button 
+          onClick={handlePayment} 
+          disabled={isSubmitting}
+          className="bg-blue-600 disabled:bg-gray-400"
+        >
+          {label}
+        </button>
+    )
+}
 ```

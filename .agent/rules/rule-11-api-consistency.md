@@ -1,58 +1,80 @@
-# LEI 11: Consistência de API REST
+# LEI 11: Consistência de API REST e API Routes (Next.js)
 
 ## MOTIVO
-APIs previsíveis reduzem erros de integração e facilitam onboarding de novos devs.
+O Next.js App Router adotou uma estrutura forte e baseada em convenções estritas em sua pasta `app/api/.../route.ts`. Seguir esse padrão previne confusões com o express/fastapi antigos. 
 
 ## GATILHO
-Ativado ao criar routers, controllers ou endpoints de API.
+Ativado ao criar roteamentos web para sistemas externos consumirem a aplicação (Webhooks, apps de celular, etc). 
 
-## CONVENÇÕES DE ROTAS
+> ALERTA: Interfaces da própria aplicação React não deveriam consumir endpoints `app/api` internos se possível — Server Components leem o BD diretamente, Client Components devem usar Server Actions primariamente, exceto em fluxos de arquivos/streams pesados.
 
-| Ação       | Método | Rota             | Response        |
-|------------|--------|------------------|-----------------|
-| Listar     | GET    | /resources       | 200 + array     |
-| Detalhe    | GET    | /resources/:id   | 200 + objeto    |
-| Criar      | POST   | /resources       | 201 + objeto    |
-| Atualizar  | PATCH  | /resources/:id   | 200 + objeto    |
-| Substituir | PUT    | /resources/:id   | 200 + objeto    |
-| Deletar    | DELETE | /resources/:id   | 204 (no content)|
+## CONVENÇÕES DE PASTAS (ROUTE HANDLERS)
 
-## PADRÃO DE RESPOSTA DE ERRO
+O App Router roteia as funções baseado em pastas nomeadas e exports da função HTTP explícita correspondente (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`).
 
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Email inválido",
-    "field": "email",
-    "request_id": "req_abc123"
-  }
-}
+| Rota Next.js (Arquivo)       | Export      | Retorno Padrão  | Ação                     |
+|------------------------------|-------------|-----------------|--------------------------|
+| `app/api/users/route.ts`     | `export GET`| 200 + Array Json| Lista de itens           |
+| `app/api/users/[id]/route.ts`| `export GET`| 200 + Obj Json  | Detalhes de UM item      |
+| `app/api/users/route.ts`     | `export POST`| 201 + Obj Json | Cria um item             |
+| `app/api/users/[id]/route.ts`| `export PATCH`| 200 + Obj Json | Atualização parcial      |
+| `app/api/users/[id]/route.ts`| `export DELETE`| 204 (status)  | Remoção de um item       |
+
+## PADRÃO DE ERROS
+
+Retorne o erro formatado via `Response.json({}, { status })`, padronizando chaves de erro da API. A Vercel/Next irá comprimir e lidar com o cache adequadamente.
+
+```typescript
+// Padrão Unificado de Rejeição de APIs:
+return Response.json(
+  {
+    error: {
+      code: "VALIDATION_ERROR",
+      message: "Email invalido",
+    }
+  },
+  { status: 400 }
+)
 ```
 
 ## EXEMPLO ERRADO
-
-```python
-@app.get("/getUsers")           # verbo no path
-@app.post("/user/create")       # singular + verbo
-@app.post("/delete-user/{id}")  # POST pra delete?
+```typescript
+// /app/api/createUser.ts (Arquivo nomeado com a ação, formato Pages Router velho ou fora do App Router)
+// /app/api/users/route.ts
+export async function UPDATE(req) { // UPDATE NÃO EXITE EM HTTP REST. É UPDATE_ACTION (Server Action) OU PATCH (HTTP METHOD)
+  return Response.json("Sucesso") 
+}
 ```
 
 ## EXEMPLO CORRETO
+```typescript
+// /app/api/users/route.ts
+export async function GET(req: Request) {
+  // Lógica de listagem de usuários...
+  return Response.json([{ id: 1, name: "Maria" }])
+}
 
-```python
-@router.get("")                              # GET /users
-async def list_users(): ...
+export async function POST(req: Request) {
+  // Criação...
+  return Response.json({ id: 2, name: "Novo" }, { status: 201 })
+}
 
-@router.get("/{user_id}")                    # GET /users/:id
-async def get_user(user_id: UUID): ...
+// /app/api/users/[id]/route.ts
+export async function PATCH(
+  req: Request, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  // Atualiza campo parcial...
+  return Response.json({ id, name: "Atualizado" })
+}
 
-@router.post("", status_code=201)            # POST /users
-async def create_user(payload: UserCreate): ...
-
-@router.patch("/{user_id}")                  # PATCH /users/:id
-async def update_user(user_id: UUID, payload: UserUpdate): ...
-
-@router.delete("/{user_id}", status_code=204) # DELETE /users/:id
-async def delete_user(user_id: UUID): ...
+export async function DELETE(
+  req: Request, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  // Deleta do banco...
+  return new Response(null, { status: 204 }) // Sem dados devolvidos, só o status correto
+}
 ```

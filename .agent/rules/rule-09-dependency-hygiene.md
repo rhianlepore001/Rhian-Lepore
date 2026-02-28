@@ -1,49 +1,42 @@
-# LEI 09: Higiene de Dependências
+# LEI 09: Higiene de Dependências NPM
 
 ## MOTIVO
-Prevenir supply chain attacks e acúmulo de vulnerabilidades em pacotes desatualizados ou maliciosos.
+Ataques de Supply Chain são o principal vetor de invasão em ecossistemas JS/TS. Dependências defasadas ou pacotes criados por sequestradores de nome ("typosquatting") comprometem inteiramente a Vercel.
 
 ## GATILHO
-Ativado ao sugerir `npm install`, `pip install`, `cargo add` ou qualquer adição ao `package.json`/`requirements.txt`/`Cargo.toml`.
+Ativado ao rodar comandos como `npm install`, modificar o `package.json`, ou escolher uma biblioteca (ex: "instale o pacote de manipulação de data").
 
-## CRITÉRIOS DE ACEITAÇÃO
+## REGRAS NODE.JS
 
-### Freshness
-Só sugira pacotes com última release < 12 meses.
+### Checagem de Estrela/Downloads
+Nunca escolha de primeira pacotes obscuros para resolver problemas complexos (ex: PDFs, parse JSON, Crypto). Verifique a base de usuários antes de instalar. Bibliotecas consagradas (`zod`, `date-fns`, `clsx`, `lucide-react`) são preferidas a bibliotecas feitas por autores solo de repositórios não mantidos.
 
-### Popularity Threshold
-Prefira pacotes com >1000 downloads semanais (npm) ou >500 stars (GitHub).
+### Auditoria Constante
+Após instalações relevantes, prefira o comando `npm audit` se você suspeitar que uma dependência tem problemas de segurança.
+Não commite bibliotecas instaladas aleatoriamente sem checar se elas funcionam bem no `Edge Runtime` da Vercel (bibliotecas que requerem APIS Nativas C++ frequentemente falham).
 
-### Security Scan
-Antes de adicionar dependência, execute `npm audit` / `pip-audit` / `cargo audit` e rejeite pacotes com CVEs críticos ou altos.
+### Minimalismo no Bundle
+Sempre questione: Essa dependência é MESMO necessária? Posso fazer essa lógica de data apenas com a Intl API do próprio JavaScript?
+Evite `moment.js` (pesado, obsoleto). Prefira `date-fns` ou `dayjs` por suporte a Tree-Shaking.
 
-### Minimal Footprint
-Evite dependências para funções triviais (ex: não use `left-pad`, `is-odd`).
-
-## WORKFLOW DO AGENTE
-
-```
-1. Verificar vulnerabilidades:
-   $ pip-audit nome-do-pacote
-   
-2. Verificar popularidade e manutenção:
-   - Downloads/semana: 50,000+ 
-   - Última release: < 12 meses
-   - GitHub stars: 2,000+
-   - Maintainers ativos: 2+
-
-3. Verificar se é realmente necessário:
-   - Funcionalidade trivial? -> Implemente inline
-   - Já existe no stdlib? -> Use stdlib
+## EXEMPLO ERRADO
+```json
+// package.json (Lixo injetado sem controle)
+{
+  "dependencies": {
+    "left-pad": "1.3.0",    // Desnecessário, nativo no JS agora
+    "moment": "^2.29",      // Huge bundle size, obsoleto
+    "is-odd": "3.0.1",      // Micropacote indesejado
+    "react-cool-onclickoutside": "1.0.0" // Pacote paralisado de 3 anos atrás
+  }
+}
 ```
 
-## EXEMPLO - FUNÇÃO TRIVIAL
-
-```python
-# NÃO FAÇA ISSO:
-# import is_odd
-
-# FAÇA ISSO:
-def is_odd(n: int) -> bool:
-    return n % 2 != 0
+## EXEMPLO CORRETO
+```bash
+# Rodar nativo se possível, usar as API de Web Padrão da Vercel (Edge) e apenas bibliotecas robustas do ecossistema Next.js.
+npm install date-fns zod
+```
+```typescript
+import { format } from "date-fns" // Leve e moderno
 ```

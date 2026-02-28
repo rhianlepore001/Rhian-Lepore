@@ -1,64 +1,53 @@
-# LEI 13: Isolamento de Ambientes
+# LEI 13: Isolamento de Ambientes de Deploy (Vercel Env)
 
 ## MOTIVO
-Prevenir vazamento de dados de produção para dev e execução acidental de código destrutivo no ambiente errado.
+A AWS, Vercel ou outras plataformas lidam com as etapas Preview, Development e Production. Garantir que as variáveis de desenvolvimento nunca sejam importadas em ambiente Vercel Production previne vazamento cross-env e bugs catastróficos.
 
 ## GATILHO
-Ativado ao configurar variáveis de ambiente, connection strings ou deploy configs.
+Ativado ao criar arquivos config, clientes que busquem URL do banco, STRIPE_KEYS, webhooks.
 
 ## SEGREGAÇÃO OBRIGATÓRIA
 
-### Bancos Separados
-Cada ambiente (dev, staging, prod) DEVE ter seu próprio banco de dados. Nunca compartilhe.
+### Supabase URL e Chaves
+Nunca commite chaves de projetos de banco reais para Github.
+O projeto Vercel deverá possuir ambientes configurados para as variáveis.
 
-### Prefixos de Variáveis
-Use prefixos claros: `DEV_`, `STAGING_`, `PROD_` para diferenciar configs.
-
-### Feature Flags
-Código não finalizado deve estar atrás de feature flags, nunca commitado diretamente em main/master.
+### Validação Fortificada (TypeScript)
+TypeScript não sabe tipar e exigir a presença rigorosa do `process.env`.
+Recomenda-se utilizar as bibliotecas de Schema validation (`Zod` via `@t3-oss/env-nextjs` por exemplo) se um env file for denso. Alternativamente, criar checagens vigorosas de runtime e throw Errors em startup caso itens chaves como Supabase URls não existam.
 
 ## PROIBIÇÕES
+- Hardcode de `http://localhost:3000` absoluto como base URL no código para Fetch em rotas API. Isso impede previews na Vercel e chamadas de domínio finais de funcionarem.
+- Uso de prefixos estáticos como `DEV_DATABASE_URL` no código fonte final.
 
-- Hardcode de URLs de produção em código fonte
-- Uso de dados reais de clientes em ambiente de desenvolvimento
-- Conexão de ambiente local com banco de produção
+## MODO CORRETO E DINÂMICO
+A Vercel injeta nativamente `VERCEL_URL` (host da preview deployada branch per branch) e o Next.js lida dinamicamente com as variações dos arquivos `.env.local`, `.env.development`, `.env.production`. O código fonte só precisa pedir o nome genérico da flag. O build system de deploy resolverá qual é o apropriado.
 
-## ARQUIVOS DE ENV SEPARADOS
+```typescript
+// /lib/utils/getBaseUrl.ts
+export function getBaseUrl() {
+  if (typeof window !== "undefined") return "" // No Client side: chamadas relativas /api/route são relativas a base da URL
 
-```bash
-# .env.development
-DEV_DATABASE_URL=postgresql://localhost/myapp_dev
-DEV_STRIPE_KEY=sk_test_xxxxx
+  // Backend Vercel Deployado (Preview Branches / Production Deploy)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
 
-# .env.production (NUNCA commitado)
-PROD_DATABASE_URL=postgresql://prod-db.internal/myapp
-PROD_STRIPE_KEY=sk_live_xxxxx
-```
+  // Fallback dev system local npm run dev
+  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+}
 
-## VALIDAÇÃO NO CÓDIGO
+// Uso para webhooks, redirecionamentos absolutos:
+const urlCallback = `${getBaseUrl()}/auth/callback` 
 
-```python
-class Settings:
-    def __init__(self):
-        self.env = Environment(os.getenv("APP_ENV", "development"))
-        self.prefix = self.env.name + "_"
-        
-        self.database_url = os.getenv(f"{self.prefix}DATABASE_URL")
-        self.stripe_key = os.getenv(f"{self.prefix}STRIPE_KEY")
-        
-        # Validação: não permitir key de prod em dev
-        if self.env == Environment.DEV and "live" in self.stripe_key:
-            raise ValueError("Chave de produção detectada em ambiente dev!")
-```
+// /lib/config/env.ts - VALIDACÃO CRÍTICA (Simples)
+export const ENV = {
+  SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+  STRIPE_KEY: process.env.STRIPE_SECRET_KEY,
+}
 
-## PROTEÇÃO EM SCRIPTS
-
-```python
-async def seed_test_data():
-    settings = Settings()
-    
-    if settings.env == Environment.PROD:
-        raise RuntimeError("SEED BLOQUEADO EM PRODUÇÃO!")
-    
-    await db.execute("DELETE FROM users")
+if (!ENV.SUPABASE_URL || !ENV.SUPABASE_ANON_KEY) {
+  throw new Error("Missing Supabase configuration in environments variables")
+}
 ```

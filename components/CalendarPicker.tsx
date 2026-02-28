@@ -136,7 +136,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     }
 
     return (
-        <div className={`${isBeauty ? 'bg-white border border-stone-200 rounded-2xl' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
+        <div className={`${isBeauty ? 'bg-stone-50 border border-stone-100 rounded-2xl shadow-sm' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <button

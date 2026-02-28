@@ -1,65 +1,70 @@
-# LEI 05: Hardening de Sessão
+# LEI 05: Hardening de Sessão (Supabase Auth em Next.js)
 
 ## MOTIVO
-Proteção contra ataques de sessão e sequestro de cookies.
+O Supabase SSR usa cookies para manter a sessão do usuário autêntica entre cliente e servidor (App Router). Configurações incorretas abrem brechas para sequestro de sessão e ataques CSRF em Vercel deployments.
 
 ## GATILHO
-Ativado ao configurar cookies, sessões, middleware de autenticação, ou lógica de login/logout.
+Ativado ao criar middleware, login, logout, manipulação de cookies, ou qualquer customização de fluxo de `@supabase/ssr`.
 
-## PADRÕES DE COOKIE
+## PADRÕES DE COOKIE NO NEXT.JS
 
-### Atributos
-Todos os cookies de sessão devem obrigatoriamente ter `httpOnly: true`, `secure: true` (em prod) e `sameSite: 'lax'`.
+### O pacote `@supabase/ssr`
+Todas as funções de cliente (Server e Browser) devem ser criadas através dos métodos utilitários do `@supabase/ssr` para que o Supabase gerencie os atributos de segurança dos cookies nativamente (`SameSite`, `Secure`, `HttpOnly`). **Evite implementar lógica manual de parse de cookies JWT.**
 
-### Expiração Dinâmica
-Use a lógica de expiração controlada para diferenciar sessões curtas de sessões "lembrar-me".
+### O Supabase Auth Middleware
+Uma das peças cruciais no Next.js App Router é o `middleware.ts`. O middleware tem a responsabilidade de *atualizar a sessão* para evitar a deslogagem silenciosa de usuários inativos (o Auth token refresh via `supabase.auth.getUser()`).
 
-### Cleanup no Middleware
-Em caso de sessão inválida ou expirada, o middleware deve garantir o `cookies().delete()` para evitar estados inconsistentes.
+### Sessão Expirada e Redirects Seguros
+Em páginas protegidas (`layout.tsx` interno ou `page.tsx` privado) e no `middleware.ts`, uma requisição ao Supabase deve ocorrer para checar se a sessão/usuário ainda existe (`const { data: { user } } = await supabase.auth.getUser()`). Caso contrário, o redirecionamento `/login` é mandatório. Lembre-se, NUNCA use `getSession()` para autorização, apenas `getUser()`.
 
 ## EXEMPLO ERRADO
 ```typescript
-export const sessionOptions = {
-  cookieName: "session",
-  password: process.env.SESSION_SECRET!,
-  cookieOptions: {
-    secure: false,      // Funciona em HTTP!
-    httpOnly: false,    // Acessível via JS (XSS)!
-    sameSite: "none",   // Enviado em qualquer request!
-  },
+// app/actions/auth.ts
+import { cookies } from 'next/headers'
+
+// VULNERÁVEL: Criando cookies com segurança fraca e lógica caseira
+export async function unsafeLogin(token: string) {
+  cookies().set('my-auth-cookie', token, {
+    secure: false, // Inseguro!
+    httpOnly: false, // Permite acesso via JS!
+    sameSite: "none", 
+  })
+}
+
+// app/protected/page.tsx
+export default async function ProtectedPage() {
+  const supabase = createClient()
+  // ERRADO: getSession é puramente baseado em cache local do cookie, fácil de forjar ou ler token expirado localmente.
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) redirect('/login')
+  return <div>Protegido</div>
 }
 ```
 
 ## EXEMPLO CORRETO
 ```typescript
-export const sessionOptions = {
-  cookieName: "__Host-session",
-  password: process.env.SESSION_SECRET!,
-  cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "lax" as const,
-    maxAge: 60 * 60 * 24 * 7, // 7 dias
-  },
-}
+// middleware.ts
+import { updateSession } from '@/utils/supabase/middleware'
 
-// Lógica de "lembrar-me"
-export function getSessionTTL(rememberMe: boolean): number {
-  return rememberMe 
-    ? 60 * 60 * 24 * 30  // 30 dias
-    : 60 * 60 * 24       // 1 dia
-}
-```
-
-## CLEANUP NO MIDDLEWARE
-```typescript
 export async function middleware(request: NextRequest) {
-  const session = await getIronSession(cookies(), sessionOptions)
+  // Apenas delega para o utilitário seguro que usa @supabase/ssr
+  return await updateSession(request)
+}
+
+// app/protected/page.tsx
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
+
+export default async function ProtectedPage() {
+  const supabase = createClient()
   
-  if (session.expiresAt && Date.now() > session.expiresAt) {
-    session.destroy()
-    cookies().delete(sessionOptions.cookieName)
-    return NextResponse.redirect(new URL('/login', request.url))
+  // SEGURO: A API bate no servidor do Auth para validar a criptografia real do token
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
   }
+
+  return <div>Bem-vindo, {user.email}</div>
 }
 ```

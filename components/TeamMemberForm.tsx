@@ -27,6 +27,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [commissionRate, setCommissionRate] = useState<string | number>(initialData?.commission_rate?.toString() || (isOwnerForm ? '100' : '0'));
     const [isOwner, setIsOwner] = useState(initialData?.is_owner || (isOwnerForm ? true : false));
     const [active, setActive] = useState(initialData?.active ?? true);
+    const [specialties, setSpecialties] = useState(
+        Array.isArray(initialData?.specialties)
+            ? initialData.specialties.join(', ')
+            : (initialData?.specialties || '')
+    );
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo_url || null);
     const [loading, setLoading] = useState(false);
@@ -93,7 +98,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 active,
                 photo_url: photoUrl,
                 commission_rate: commissionRate === '' ? 0 : Number(commissionRate),
-                is_owner: isOwner
+                is_owner: isOwner,
+                specialties: specialties.split(',').map(s => s.trim()).filter(Boolean)
             };
 
             if (initialData?.id) {
@@ -282,6 +288,20 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                     ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
                                     : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
                             placeholder="Breve descrição..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Especialidades (Separadas por vírgula)</label>
+                        <input
+                            type="text"
+                            value={specialties}
+                            onChange={e => setSpecialties(e.target.value)}
+                            className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                                ${isBeauty
+                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
+                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
+                            placeholder="Ex: Corte, Barba, Coloração"
                         />
                     </div>
 

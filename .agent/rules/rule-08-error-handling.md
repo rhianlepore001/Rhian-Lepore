@@ -1,74 +1,77 @@
-# LEI 08: Tratamento de Erros com Contexto
+# LEI 08: Tratamento de Erros e Stack Traces TS/Node
 
 ## MOTIVO
-Evitar debugging às cegas por falta de stack trace, correlation IDs ou mensagens genéricas.
+O JavaScript/TypeScript é propenso a engolir erros silenciosamente (swallowing). Falhas severas na Vercel frequentemente resultam em `500 Internal Server Error` vazios, tornando o tracking no log da plataforma impossível sem prints precisos e contextuais.
 
 ## GATILHO
-Ativado ao criar ou modificar blocos try/catch, handlers de exceção ou middleware de erro.
+Ativado ao criar Server Actions, chamadas `fetch` a serviços 3rd-party, endpoints no Next.js App Router e Server Components propensos a falhas de comunicação de dados.
 
 ## PRINCÍPIOS OBRIGATÓRIOS
 
 ### Zero Swallow
-Nunca capture exceções sem logar ou re-lançar. `except: pass` e `catch(e) {}` são estritamente proibidos.
+Nunca capture exceções apenas para retornar genéricos ou retornar arrays curtos sem logar. `catch(e) { return [] }` é proibido. Pelo menos logue o verdadeiro erro usando `console.error`. 
 
-### Correlation ID
-Toda requisição HTTP deve carregar um `X-Request-ID` que propaga entre serviços e aparece em todos os logs relacionados.
+### Stack Trace Amigável para o Servidor
+Mensagens de erro no Server devem conter o stack. A Vercel captura nativamente os `console.error(error)` globalmente em seus Serverless Function Logs.
+No entanto, NUNCA envie o objeto de Error cru ou `error.message` contendo dados de chaves de API/Query de BD diretos para a interface de usuário (Client Components) através de Server Actions. Exiba "Ocorreu um problema ao conectar com o serviço".
 
-### Separação de Audiência
-Mensagens de erro para usuário final devem ser amigáveis. Logs técnicos devem conter stack trace completo, variáveis de contexto e timestamp ISO8601.
-
-### Fail Fast
-Valide inputs no início da função. Não processe dados inválidos para falhar depois.
+### Tratamento de Retorno (Result Pattern)
+Evite propagação cega de exceptions (Throw Driven Development).
+Prefira funções e Server Actions que retornam tipos em formato objeto (Tuple ou `{ data, error }`).
 
 ## EXEMPLO ERRADO
-```python
-async def process_payment(payment_id: str):
-    try:
-        result = await stripe.charges.create(...)
-        return result
-    except Exception:
-        pass  # Erro silencioso!
+```typescript
+// app/actions/payments.ts
+"use server"
+
+export async function processPayment(paymentId: string) {
+  try {
+    const res = await fetch(`https://api.stripe.com/v1/payment_intents/${paymentId}`, {
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` }
+    })
     
-    try:
-        data = json.loads(response.text)
-    except:
-        return {"error": "Algo deu errado"}  # Mensagem inútil!
+    // FETCH NÃO DÁ THROWS EM EXCEÇÕES DE ERROS HTTP 4xx, 5xx POR PADRÃO! (O ERRO NÚMERO 1 NO JS)
+    const json = await res.json()
+    return json;
+  } catch (e) {
+    // ERRO SILENCIOSO (Zero Swallow violado)
+    // Se a rede cair, ou houver JSON malformado, retorna undefined silenciosamente
+  }
+}
 ```
 
 ## EXEMPLO CORRETO
-```python
-import structlog
-from uuid import uuid4
+```typescript
+// app/actions/payments.ts
+"use server"
 
-logger = structlog.get_logger()
+// Padrão consistente de resposta
+export type ActionResponse<T> = 
+  | { success: true; data: T }
+  | { success: false; error: string }
 
-class PaymentError(Exception):
-    def __init__(self, message: str, payment_id: str, original_error: Exception = None):
-        self.message = message
-        self.payment_id = payment_id
-        self.original_error = original_error
-        super().__init__(message)
-
-async def process_payment(payment_id: str, request_id: str = None):
-    request_id = request_id or str(uuid4())
-    log = logger.bind(request_id=request_id, payment_id=payment_id)
+export async function processPayment(paymentId: string): Promise<ActionResponse<any>> {
+  try {
+    const res = await fetch(`https://api.stripe.com/v1/payment_intents/${paymentId}`, {
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` }
+    })
     
-    try:
-        log.info("payment.processing.started")
-        result = await stripe.charges.create(...)
-        log.info("payment.processing.success", amount=result.amount)
-        return result
-        
-    except stripe.error.CardError as e:
-        log.error(
-            "payment.processing.card_declined",
-            error_code=e.code,
-            decline_code=e.decline_code,
-            exc_info=True
-        )
-        raise PaymentError(
-            message="Cartão recusado. Verifique os dados ou tente outro cartão.",
-            payment_id=payment_id,
-            original_error=e
-        )
+    // Tratamento de falhas HTTP Nativas
+    if (!res.ok) {
+      const errorText = await res.text()
+      // Log crítico de backend pra Vercel ler:
+      console.error(`[Stripe Error] Falha requisição para ${paymentId}: Status ${res.status} Body: ${errorText}`)
+      // Mensagem genérica pro usuário
+      return { success: false, error: "Falha na comunicação com gateway de pagamento." }
+    }
+    
+    const data = await res.json()
+    return { success: true, data }
+    
+  } catch (error) {
+    // Captura erros de parsing JSON e falhas de runtime na rede
+    console.error(`[CRITICAL] Falha de infra no pagamento ${paymentId}:`, error)
+    return { success: false, error: "Ocorreu um erro interno. Tente mais tarde." }
+  }
+}
 ```

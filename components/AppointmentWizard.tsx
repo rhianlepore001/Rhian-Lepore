@@ -18,6 +18,31 @@ import { ScheduleSelection } from './appointment/ScheduleSelection';
 import { AppointmentReview } from './appointment/AppointmentReview';
 import { logger } from '../utils/Logger';
 
+/**
+ * Multi-step wizard component for creating and scheduling appointments
+ * Guides users through: service selection → client selection → time selection → review
+ * Supports custom services, discounts, payment methods, and WhatsApp notifications
+ *
+ * @component
+ * @param {WizardProps} props - Wizard configuration
+ * @param {Function} props.onClose - Callback when wizard is closed
+ * @param {Function} props.onSuccess - Callback when appointment is created successfully
+ * @param {Date} [props.initialDate] - Initial date to display (default: today)
+ * @param {Array} props.teamMembers - Available team members for scheduling
+ * @param {Array} props.services - Available services to book
+ * @param {Array} [props.categories] - Service categories for filtering
+ * @param {Array} props.clients - Available clients to schedule
+ * @param {Function} props.onRefreshClients - Callback to refresh client list
+ *
+ * @example
+ * <AppointmentWizard
+ *   onClose={() => setOpen(false)}
+ *   onSuccess={(appointment) => handleSuccess(appointment)}
+ *   teamMembers={team}
+ *   services={services}
+ *   clients={clients}
+ * />
+ */
 export const AppointmentWizard: React.FC<WizardProps> = ({
     onClose,
     onSuccess,

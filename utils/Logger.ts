@@ -1,19 +1,29 @@
 /* eslint-disable no-console */
 import { supabase } from '../lib/supabase';
 
-// Níveis de Log
+/** Log level type for logging severity */
 export type LogLevel = 'info' | 'warning' | 'error' | 'critical';
 
-// Interface para contexto extra
+/**
+ * Additional context information for log entries
+ * @interface LogContext
+ */
 interface LogContext {
     [key: string]: any;
 }
 
+/**
+ * Logging service for application-wide logging and error tracking
+ * Logs to console in development and to Supabase in production for audit trail
+ * @class LoggerService
+ */
 class LoggerService {
     private isDevelopment = import.meta.env.DEV;
 
     /**
-     * Loga mensagem informativa
+     * Log informational message
+     * @param {string} message - Log message
+     * @param {LogContext} [context] - Additional context data
      */
     info(message: string, context?: LogContext) {
         if (this.isDevelopment) {
@@ -22,7 +32,9 @@ class LoggerService {
     }
 
     /**
-     * Loga aviso (Warning)
+     * Log warning message
+     * @param {string} message - Warning message
+     * @param {LogContext} [context] - Additional context data
      */
     warn(message: string, context?: LogContext) {
         if (this.isDevelopment) {
@@ -32,7 +44,11 @@ class LoggerService {
     }
 
     /**
-     * Loga erro (Error) e envia para o backend
+     * Log error message and send to Supabase for audit trail
+     * @async
+     * @param {string} message - Error message
+     * @param {any} [error] - Error object/exception
+     * @param {LogContext} [context] - Additional context data
      */
     async error(message: string, error?: any, context?: LogContext) {
         // 1. Console local
@@ -67,7 +83,12 @@ class LoggerService {
     }
 
     /**
-     * Loga erro crítico (Critical) - sistema inoperante
+     * Log critical error (system-critical level)
+     * Used when system functionality is impaired or unavailable
+     * @async
+     * @param {string} message - Critical error message
+     * @param {any} [error] - Error object/exception
+     * @param {LogContext} [context] - Additional context data
      */
     async critical(message: string, error?: any, context?: LogContext) {
         console.error(`[CRITICAL] ${message}`, error || '', context || '');
@@ -75,4 +96,8 @@ class LoggerService {
     }
 }
 
+/**
+ * Global logger instance for application-wide use
+ * @type {LoggerService}
+ */
 export const logger = new LoggerService();

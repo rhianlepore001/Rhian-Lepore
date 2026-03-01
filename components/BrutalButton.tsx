@@ -1,6 +1,20 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
+/**
+ * Themed button component with support for brutalist and beauty design systems
+ * Automatically adapts styling based on user's theme (barber/beauty)
+ * Can be overridden with forceTheme prop
+ *
+ * @interface BrutalButtonProps
+ * @extends React.ButtonHTMLAttributes<HTMLButtonElement>
+ * @property {string} [variant='primary'] - Button style variant
+ * @property {string} [size='md'] - Button size
+ * @property {React.ReactNode} [icon] - Icon to display in button
+ * @property {boolean} [fullWidth=false] - Whether button takes full width
+ * @property {boolean} [loading=false] - Show loading state
+ * @property {string} [forceTheme] - Override theme (beauty or barber)
+ */
 interface BrutalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success' | 'outline';
   size?: 'sm' | 'md' | 'lg';
@@ -10,6 +24,14 @@ interface BrutalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
   forceTheme?: 'beauty' | 'barber';
 }
 
+/**
+ * A themeable button component supporting both Brutalist and Beauty design systems
+ * @component
+ * @example
+ * <BrutalButton variant="primary" size="lg">Click me</BrutalButton>
+ * @example
+ * <BrutalButton forceTheme="beauty" icon={<Plus />}>Add</BrutalButton>
+ */
 export const BrutalButton: React.FC<BrutalButtonProps> = ({
   children,
   variant = 'primary',

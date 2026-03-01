@@ -3,28 +3,81 @@ import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
 
+/** User type for business classification */
 export type UserType = 'barber' | 'beauty';
+
+/** Region for localization (Brazil or Portugal) */
 export type Region = 'BR' | 'PT';
 
+/**
+ * Authentication context type containing user data, authentication state, and auth methods
+ * @interface AuthContextType
+ */
 interface AuthContextType {
+  /** Whether user is currently authenticated */
   isAuthenticated: boolean;
+
+  /** Current authenticated user or null */
   user: User | null;
+
+  /** User's business type (barber or beauty) */
   userType: UserType;
+
+  /** User's region (Brazil or Portugal) */
   region: Region;
+
+  /** User's business/shop name */
   businessName: string;
+
+  /** User's full name */
   fullName: string;
+
+  /** User's profile avatar URL */
   avatarUrl: string | null;
+
+  /** Whether user completed the onboarding tutorial */
   tutorialCompleted: boolean;
+
+  /** Current subscription status */
   subscriptionStatus: 'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber';
+
+  /** Trial end date in ISO format */
   trialEndsAt: string | null;
+
+  /** Whether subscription is currently active (includes trial and paid) */
   isSubscriptionActive: boolean;
+
+  /** Whether user is a dev/admin */
   isDev: boolean;
+
+  /** Whether AIOS integration is enabled */
   aiosEnabled: boolean;
+
+  /** Override user type for dev mode testing */
   setDevUserType: (type: UserType) => void;
+
+  /** Whether auth state is currently loading */
   loading: boolean;
+
+  /**
+   * Sign in with email and password
+   * @param email - User's email
+   * @param password - User's password
+   * @returns Error object if login fails, null on success
+   */
   login: (email: string, password: string) => Promise<{ error: any }>;
+
+  /** Sign out current user */
   logout: () => Promise<void>;
+
+  /** Mark onboarding tutorial as completed */
   markTutorialCompleted: () => Promise<void>;
+
+  /**
+   * Register new user
+   * @param data - Registration data including email, password, and profile info
+   * @returns Error object if registration fails, null on success
+   */
   register: (data: {
     email: string;
     password: string;
@@ -38,6 +91,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Authentication provider component that wraps the app and provides auth context
+ * Handles session management, user data fetching, and auth state changes
+ * @component
+ * @example
+ * <AuthProvider>
+ *   <App />
+ * </AuthProvider>
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userType, setUserType] = useState<UserType>('barber');
@@ -56,6 +118,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Fetch user profile data from Supabase
+   * @param {string} userId - The user's ID
+   * @async
+   */
   const fetchProfileData = async (userId: string) => {
     try {
       const { data: profile, error } = await supabase
@@ -287,6 +354,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+/**
+ * Custom hook to access authentication context
+ * Must be used within an AuthProvider
+ * @returns {AuthContextType} Authentication context with user data and auth methods
+ * @throws {Error} When used outside of AuthProvider
+ * @example
+ * const { user, isAuthenticated, login } = useAuth();
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

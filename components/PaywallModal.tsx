@@ -6,6 +6,17 @@ import { BrutalCard } from './BrutalCard';
 import { BrutalButton } from './BrutalButton';
 import { Lock, Sparkles, LogOut, ArrowRight } from 'lucide-react';
 
+/**
+ * Modal component displayed when user's trial period has expired
+ * Prompts user to upgrade subscription or logout
+ * Only renders when subscription is expired (not in active or valid trial period)
+ *
+ * @component
+ * @returns {React.ReactElement|null} Paywall modal or null if not expired
+ *
+ * @example
+ * <PaywallModal />
+ */
 export const PaywallModal: React.FC = () => {
     const { isExpired, isLoading } = useSubscription();
     const { userType, logout } = useAuth();

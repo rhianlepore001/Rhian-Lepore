@@ -1,31 +1,89 @@
 import { supabase } from './supabase';
 
+/**
+ * Audit log entry for compliance and activity tracking
+ * @interface AuditLog
+ */
 export interface AuditLog {
+    /** Unique audit log ID */
     id: string;
+
+    /** User who performed the action */
     user_id: string;
+
+    /** User's display name */
     user_name?: string;
+
+    /** Action performed (e.g., 'create', 'update', 'delete') */
     action: string;
+
+    /** Type of resource affected (e.g., 'appointment', 'client', 'service') */
     resource_type: string;
+
+    /** ID of the affected resource */
     resource_id?: string;
+
+    /** Previous values before change */
     old_values?: Record<string, unknown>;
+
+    /** New values after change */
     new_values?: Record<string, unknown>;
+
+    /** IP address of request */
     ip_address?: string;
+
+    /** User agent of request */
     user_agent?: string;
+
+    /** Additional metadata */
     metadata?: Record<string, unknown>;
+
+    /** Timestamp of the audit log */
     created_at: string;
 }
 
+/**
+ * Filter options for audit log queries
+ * @interface AuditLogFilters
+ */
 export interface AuditLogFilters {
+    /** Maximum number of results to return */
     limit?: number;
+
+    /** Offset for pagination */
     offset?: number;
+
+    /** Filter by action type */
     action?: string;
+
+    /** Filter by resource type */
     resource_type?: string;
+
+    /** Start date for range filter (ISO format) */
     start_date?: string;
+
+    /** End date for range filter (ISO format) */
     end_date?: string;
 }
 
 /**
- * Cria um log de auditoria manualmente
+ * Create an audit log entry
+ * Records user actions for compliance and audit trail purposes
+ *
+ * @param {string} action - Action performed (create, update, delete, etc)
+ * @param {string} resource_type - Type of resource affected
+ * @param {string} [resource_id] - ID of the affected resource
+ * @param {Record<string, unknown>} [old_values] - Previous values
+ * @param {Record<string, unknown>} [new_values] - New values after change
+ * @param {Record<string, unknown>} [metadata] - Additional context
+ * @returns {Promise<AuditLog>} Created audit log entry
+ * @throws {Error} If audit log creation fails
+ *
+ * @example
+ * await createAuditLog('update', 'appointment', '123',
+ *   { status: 'pending' },
+ *   { status: 'confirmed' }
+ * );
  */
 export async function createAuditLog(
     action: string,
@@ -53,7 +111,19 @@ export async function createAuditLog(
 }
 
 /**
- * Busca logs de auditoria com filtros opcionais
+ * Fetch audit logs with optional filtering and pagination
+ * Supports filtering by action, resource type, and date range
+ *
+ * @param {AuditLogFilters} [filters={}] - Query filters
+ * @returns {Promise<AuditLog[]>} Array of matching audit logs
+ * @throws {Error} If query fails
+ *
+ * @example
+ * const logs = await getAuditLogs({
+ *   resource_type: 'appointment',
+ *   start_date: '2024-01-01',
+ *   limit: 100
+ * });
  */
 export async function getAuditLogs(filters: AuditLogFilters = {}) {
     const {

@@ -3,6 +3,23 @@ import { Screw } from './Screw';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 
+/**
+ * Themeable card component with support for brutalist and beauty design systems
+ * Provides container with glass morphism effect, optional title, and action buttons
+ * Adapts styling and screw decorations based on user theme
+ *
+ * @interface BrutalCardProps
+ * @property {string} [id] - Unique identifier
+ * @property {React.ReactNode} children - Card content
+ * @property {string} [className] - Additional CSS classes
+ * @property {string|React.ReactNode} [title] - Card title
+ * @property {React.ReactNode} [action] - Action button/element in header
+ * @property {boolean} [noPadding=false] - Remove internal padding
+ * @property {boolean} [accent=false] - Apply accent styling
+ * @property {boolean} [glow=false] - Apply glow effect
+ * @property {string} [forceTheme] - Override theme (beauty or barber)
+ * @property {React.CSSProperties} [style] - Inline styles
+ */
 interface BrutalCardProps {
   id?: string;
   children: React.ReactNode;
@@ -16,6 +33,18 @@ interface BrutalCardProps {
   style?: React.CSSProperties;
 }
 
+/**
+ * Themed card container component for both brutalist and beauty designs
+ * @component
+ * @example
+ * <BrutalCard title="Appointments" glow>
+ *   <AppointmentList />
+ * </BrutalCard>
+ * @example
+ * <BrutalCard forceTheme="beauty" accent>
+ *   <NeonContent />
+ * </BrutalCard>
+ */
 export const BrutalCard: React.FC<BrutalCardProps> = ({
   id,
   children,

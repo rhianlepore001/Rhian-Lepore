@@ -3,6 +3,28 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../utils/Logger';
 
+/**
+ * Custom hook for fetching and managing dashboard data
+ * Retrieves appointments, revenue metrics, goals, and business statistics
+ * Automatically refreshes when user changes
+ *
+ * @returns {Object} Dashboard data object
+ * @returns {Array} appointments - Next 5 confirmed appointments
+ * @returns {number} profit - Total profit earned
+ * @returns {number} currentMonthRevenue - Revenue for current month
+ * @returns {number} weeklyGrowth - Week-over-week growth percentage
+ * @returns {boolean} loading - Whether data is currently loading
+ * @returns {number} monthlyGoal - Monthly revenue goal
+ * @returns {Array} goalHistory - Historical goal achievement data (6 months)
+ * @returns {string|null} businessSlug - Business URL slug
+ * @returns {Date|null} accountCreatedAt - Account creation date
+ * @returns {Function} updateGoal - Update monthly goal
+ * @returns {Object} profitMetrics - Detailed profit metrics
+ * @returns {Array} actionItems - Recommended action items
+ *
+ * @example
+ * const { appointments, profit, monthlyGoal, updateGoal } = useDashboardData();
+ */
 export function useDashboardData() {
     const { user } = useAuth();
     const [appointments, setAppointments] = useState<any[]>([]);
@@ -167,6 +189,12 @@ export function useDashboardData() {
         fetchGoalHistory();
     }, [user]); // Removed monthlyGoal from dependencies to break infinite loop
 
+    /**
+     * Update the monthly revenue goal
+     * @async
+     * @param {number} newGoalValue - New goal amount
+     * @returns {Promise<{error: any}>} Error object if update fails, null on success
+     */
     const updateGoal = async (newGoalValue: number) => {
         if (!user) return { error: { message: 'User not authenticated' } };
 

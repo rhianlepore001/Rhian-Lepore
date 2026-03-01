@@ -40,11 +40,12 @@
 |------|--------|-------------|----------|
 | Criar US-004 (Finance Doctor) | ✅ FEITO | @frontend-specialist | 28 Fev |
 | Criar US-005 (AIOS Integration) | ✅ FEITO | @aios-master | 28 Fev |
-| Criar US-006 (Clerk Migration) | ✅ FEITO | @backend-specialist | 28 Fev |
+| ~~Criar US-006 (Clerk Migration)~~ | ❌ DESCARTADO | N/A | 1 Mar |
 | Atualizar `docs/stories/README.md` | ✅ FEITO | @orchestrator | 28 Fev |
 | Criar `AIOS_COMMANDS_MAPPING.md` | ✅ FEITO | @aios-master | 28 Fev |
-| Testar `/status` comando | ⏳ PRÓXIMO | Você | Hoje |
-| Testar `checklist.py` | ⏳ PRÓXIMO | Você | Hoje |
+| Criar `.ai/CLERK_DECISION.md` (ADR) | ✅ FEITO | @aios-master | 1 Mar |
+| Corrigir Logger.log() (TypeScript) | ✅ FEITO | Você | 28 Fev |
+| Configurar .eslintignore | ✅ FEITO | Você | 28 Fev |
 
 **Saída:** Stories estruturadas + manuais criados
 
@@ -153,9 +154,10 @@
 ## 📈 Métricas de Sucesso
 
 ### Semana 1 (7 Mar)
-- ✅ 6+ stories estruturadas
+- ✅ 4+ stories estruturadas (Finance Doctor, AIOS Integration, + 2 novas)
 - ✅ 0 stories bloqueadas (nada esperando por dependência)
-- ✅ `checklist.py` passa sem erros críticos
+- ✅ `.ai/CLERK_DECISION.md` documentado (decisão arquitetural clara)
+- ✅ Backup automático ativado no Supabase
 - ✅ Todas as regras GEMINI.md são respeitadas
 
 ### Semana 2 (14 Mar)

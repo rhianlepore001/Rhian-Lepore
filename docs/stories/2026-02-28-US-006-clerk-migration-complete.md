@@ -1,25 +1,44 @@
 ---
 id: US-006
-título: Migração Completa para Clerk Auth
-status: in-progress
+título: ❌ [DESCARTADO] Migração Completa para Clerk Auth
+status: deleted
 estimativa: 6h
-prioridade: high
-agente: backend-specialist
-assignee: "@backend-specialist"
+prioridade: low
+agente: N/A
+assignee: N/A
 blockedBy: []
 ---
 
-# US-006: Migração Completa para Clerk Auth
+# ❌ US-006: [DESCARTADO] Migração Completa para Clerk Auth
 
-## Por Quê
+**STATUS: DESCARTADO EM 1 DE MARÇO DE 2026**
 
-O projeto está em transição de Supabase Auth para Clerk. Clerk oferece:
-- Magic Links e OAuth melhores
-- 2FA nativa (crítico para SaaS de salões)
-- Fraud detection automático
-- Integração mais robusta com multi-tenant
+Este story foi cancelado. Veja `.claude-memory/CLERK_DECISION.md` para explicação completa.
 
-A migração precisa ser **completa e testada** para evitar auth breaks em produção.
+## Por Quê Descartado
+
+❌ **Tentativas anteriores: 3x quebraram completamente**
+- Usuários não conseguiam fazer login
+- Dados foram perdidos / configurações deletadas
+- RLS ficou quebrado (vazamento de dados entre empresas)
+
+❌ **Visual premium perdido**
+- Clerk UI é genérica e não se integra com Brutal theme
+- Perda de experiência visual premium dos usuários
+
+❌ **Supabase Auth já oferece segurança suficiente**
+- Clerk não é "mais seguro", é apenas diferente
+- 2FA pode ser ativado no Supabase Auth
+- OAuth disponível no Supabase Auth
+- Custo/benefício negativo para trocar
+
+✅ **Decisão: Continuar com Supabase Auth + melhorias**
+- Manter visual Brutal theme premium
+- Ativar 2FA em Supabase Auth
+- Implementar rate limiting para segurança
+- Zero risco de quebra
+
+Veja decisão arquitetural em `CLERK_DECISION.md`
 
 ## O Que
 

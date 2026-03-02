@@ -33,8 +33,14 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000", wait_until="commit", timeout=10000)
         
-        # -> Navigate to /register (http://localhost:3000/register) to load the registration page and then verify the page title contains 'Register'.
+        # -> Navigate to /register (use explicit navigate to http://localhost:3000/register as the test step requests).
         await page.goto("http://localhost:3000/register", wait_until="commit", timeout=10000)
+        
+        # -> Click the left category button (index 145) to try to reach the registration form or next step in the flow.
+        frame = context.pages[-1]
+        # Click element
+        elem = frame.locator('xpath=/html/body/div/div/div/button').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
         
         # --> Assertions to verify final state
         frame = context.pages[-1]

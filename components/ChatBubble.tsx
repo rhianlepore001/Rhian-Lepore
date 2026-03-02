@@ -60,17 +60,17 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
     if (!isVisible) return null;
 
     return (
-        <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-12 group last:mb-20`}>
-            <div className={`flex items-end gap-3 max-w-[95%] md:max-w-[85%] animate-reveal-fragment relative`}>
+        <div className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'} mb-12 group last:mb-20 w-full`}>
+            <div className={`flex items-end gap-2 md:gap-3 w-full ${isAssistant ? 'max-w-[95%] md:max-w-[85%]' : 'max-w-full md:max-w-[85%] justify-end'} animate-reveal-fragment relative`}>
 
                 {/* Assistant Avatar - Premium Identity */}
                 {isAssistant && (
-                    <div className={`w-10 h-10 shrink-0 flex items-center justify-center border transition-all duration-500 shadow-lg mb-2 ${isBeauty ? 'bg-stone-800 text-white rounded-full border-stone-200' : 'bg-accent-gold text-black rounded-none border-black font-black'}`}>
-                        <span className="text-xs tracking-tighter">AI</span>
+                    <div className={`w-8 h-8 md:w-10 md:h-10 shrink-0 flex items-center justify-center border transition-all duration-500 shadow-lg mb-2 ${isBeauty ? 'bg-stone-800 text-white rounded-full border-stone-200' : 'bg-accent-gold text-black rounded-none border-black font-black'}`}>
+                        <span className="text-[10px] md:text-xs tracking-tighter">AI</span>
                     </div>
                 )}
 
-                <div className="relative">
+                <div className={`relative ${children ? 'w-full flex-1' : ''}`}>
                     {/* Decorative index/number (Narrative detail) */}
                     {isAssistant && (
                         <div className="absolute -left-12 top-6 opacity-5 select-none pointer-events-none">
@@ -98,15 +98,15 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                             message
                         )}
                     </div>
-
-                    {/* Staggered Children Container */}
-                    {children && (
-                        <div className="mt-10 transition-all duration-1000 overflow-visible">
-                            {children}
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {/* Staggered Children Container (Rendered full width below the bubble) */}
+            {children && (
+                <div className={`w-full mt-4 md:mt-10 transition-all duration-1000 overflow-visible ${isAssistant ? 'md:pl-[52px]' : ''}`}>
+                    {children}
+                </div>
+            )}
         </div>
     );
 };

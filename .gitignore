@@ -53,3 +53,35 @@ Thumbs.db
 
 .vercel
 .env*.local
+.env.backup.*
+
+# Lixo de sessões de debug (nunca commitar)
+lint_report*.json
+lint_report*.txt
+lint_errors.txt
+lint_output*.txt
+lint.json
+eslint_output.txt
+checklist_output.txt
+tsc_output.txt
+tsc_errors.log
+test_upload.txt
+test_out.log
+output.log
+output_utf8.log
+audit_report.txt
+*.timestamp-*.mjs
+debug_*.sql
+
+# Scripts pontuais de fix (nunca commitar)
+check_encoding.ps1
+fix_encoding.ps1
+temp_restore.js
+write_phone_input.ps1
+write_file.cjs
+
+# Diretórios de agentes alternativos (usar apenas .agent/ e .aios-core/)
+.antigravity/
+.agents/
+.codex/
+.ai/

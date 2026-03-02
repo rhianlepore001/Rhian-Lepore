@@ -11,7 +11,7 @@ Este diretório contém todas as User Stories do projeto AgenX, seguindo a metod
 | US-003 | Cache Semântico Global | pending | developer | medium |
 | **US-004** | **Módulo Doutor Financeiro** | **in-progress** | **frontend-specialist** | **high** |
 | **US-005** | **Integração Completa do Framework AIOS** | **in-progress** | **aios-master** | **high** |
-| **US-006** | **[DESCARTADO] Migração Clerk Auth** | **deleted** | **backend-specialist** | **high** |
+| **US-006** | **[DESCARTADO] Migração Completa para Clerk Auth** | **deleted** | **backend-specialist** | **high** |
 | **US-007** | **Setup Backup Manual** | **done** | **backend-specialist** | **high** |
 | **US-008** | **2FA Opcional via Email/TOTP** | **done** | **backend-specialist** | **high** |
 | **US-009** | **Radar de Lucro (Churn Detection)** | **pending** | **backend-specialist** | **high** |
@@ -19,6 +19,7 @@ Este diretório contém todas as User Stories do projeto AgenX, seguindo a metod
 | **US-011** | **Deep Link WhatsApp Integration** | **pending** | **frontend-specialist** | **high** |
 | **US-012** | **Soft Delete + Lixeira (Trash System)** | **pending** | **backend-specialist** | **medium** |
 | **US-013** | **Comissões Automáticas** | **pending** | **backend-specialist** | **high** |
+| **US-014** | **Área do Cliente: Portal Pós-Agendamento** | **pending** | **@dev (Dex)** | **high** |
 
 ## Como Trabalhar com Stories
 

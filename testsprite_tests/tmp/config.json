@@ -8,13 +8,17 @@
   "executionArgs": {
     "projectName": "Rhian-Lepore-main",
     "projectPath": "c:\\Users\\User\\Downloads\\Rhian-Lepore-main",
-    "testIds": [],
-    "additionalInstruction": "",
+    "testIds": [
+      "TC001",
+      "TC002",
+      "TC009"
+    ],
+    "additionalInstruction": "Foque nos testes de Registro (TC001, TC002) e Recuperação de Senha (TC009). Certifique-se de que a aplicação carregou completamente antes das asserções. O servidor está rodando em http://localhost:3000.",
     "serverMode": "development",
     "envs": {
       "API_KEY": "sk-user-EhsG18rIB-yp8s7IWIPhIFhvZ4wpcU62kVksDDYWBMrvyfvJOBbwN9dCCJ6aOzc_glznzJcCazBHkjKnswAZQKrbZLylcp24iZ8kjM8fa6aY0zj0Hzb4rmJxhLOhcnVXVqA"
     }
   },
-  "serverPort": 50853,
-  "proxy": "http://e06210c5-b975-45b8-957e-efc912e1fca1:0AHmAtATDfHBs4BMDFmiqGyu2wleJEpn@tun.testsprite.com:8080"
+  "serverPort": 56275,
+  "proxy": "http://843618fc-c3bb-4516-8309-ffe70815311b:g7S8hJVAK4ilWyRRzjg6AUFdF9Bzzi5O@tun.testsprite.com:8080"
 }

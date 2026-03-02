@@ -54,7 +54,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     return (
         <div className={`relative w-full overflow-hidden ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
             {/* Cover / Hero — Mobile-first height */}
-            <div className="relative h-52 sm:h-64 md:h-96 w-full overflow-hidden">
+            <div className="relative h-[35vh] min-h-[220px] md:h-[70vh] w-full overflow-hidden">
                 {coverPhotoUrl ? (
                     <img
                         src={coverPhotoUrl}
@@ -159,7 +159,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         {address && (
                             <p className={`text-xs font-medium mb-3 flex items-center gap-1.5 ${isBeauty ? 'text-stone-400' : 'text-white/40'}`}>
                                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate max-w-xs">{address}</span>
+                                <span className="truncate max-w-full sm:max-w-xs">{address}</span>
                             </p>
                         )}
 

@@ -618,7 +618,7 @@ export const PublicBooking: React.FC = () => {
 
             {/* Barra de Progresso de Etapas */}
             {step !== 'success' && (
-                <div className={`sticky top-0 z-30 w-full border-b ${isBeauty ? 'bg-[#E2E1DA]/95 border-stone-200' : 'bg-[#050505]/95 border-white/5'} backdrop-blur-md`}>
+                <div className={`sticky top-0 z-[60] w-full border-b ${isBeauty ? 'bg-[#E2E1DA]/95 border-stone-200' : 'bg-[#050505]/95 border-white/5'} backdrop-blur-md`}>
                     <div className="container mx-auto px-4 max-w-3xl py-3 flex items-center gap-0">
                         {stepLabels.map((label, idx) => (
                             <React.Fragment key={label}>
@@ -648,7 +648,7 @@ export const PublicBooking: React.FC = () => {
                 </div>
             )}
 
-            <div className="container mx-auto px-4 max-w-3xl relative z-10 pt-10 pb-32">
+            <div className="container mx-auto px-3 md:px-4 max-w-3xl relative z-10 pt-10 pb-32">
                 {/* Professional Service Grade (Strategic Section) */}
                 {proIdParam && step === 'services' && (
                     <div className="mb-16 animate-reveal-fragment">
@@ -658,7 +658,7 @@ export const PublicBooking: React.FC = () => {
                                 Grade de Serviços: {professionals.find(p => p.id === proIdParam)?.name.split(' ')[0] || 'Profissional'}
                             </span>
                         </div>
-                        <h2 className={`text-4xl md:text-5xl lg:text-6xl mb-8 ${isBeauty ? 'text-stone-800 font-light italic leading-tight' : 'massive-text text-white'}`}>
+                        <h2 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 ${isBeauty ? 'text-stone-800 font-light italic leading-tight' : 'massive-text text-white'}`}>
                             Escolha sua <br /> Experiência
                         </h2>
                     </div>
@@ -676,11 +676,11 @@ export const PublicBooking: React.FC = () => {
                             {msg.isAssistant && idx === messages.length - 1 && !isSubmitting && (
                                 <div className="mt-8 animate-reveal-fragment duration-700">
                                     {msg.type === 'services' && step === 'services' && (
-                                        <div className="space-y-12">
+                                        <div className="w-full space-y-8 md:space-y-12">
                                             {/* Luxury Filters - Staggered Slide Animation */}
                                             <div className="animate-reveal-fragment duration-700">
                                                 <div className={`p-1.5 ${isBeauty ? 'bg-white shadow-silk-shadow border border-stone-100 rounded-2xl' : 'bg-white/5 border border-white/10 rounded-none'} backdrop-blur-xl`}>
-                                                    <div className="flex gap-2 overflow-x-auto p-1 scrollbar-thin scrollbar-thumb-stone-200">
+                                                    <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scrollbar-thumb-stone-200">
                                                         <button onClick={() => setActiveCategory('all')}
                                                             className={`px-5 md:px-8 py-2.5 ${isBeauty ? 'rounded-xl' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
                                                             ${activeCategory === 'all'
@@ -721,7 +721,7 @@ export const PublicBooking: React.FC = () => {
                                             )}
 
                                             {/* Service Staggered Grid - Extra Polish */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                                                 {services.filter(s => {
                                                     const matchesCategory = activeCategory === 'all'
                                                         || (activeCategory === 'no-category' && !s.category_id)
@@ -804,7 +804,7 @@ export const PublicBooking: React.FC = () => {
                                     )}
 
                                     {msg.type === 'professionals' && step === 'datetime' && !selectedProfessional && (
-                                        <div className="space-y-6">
+                                        <div className="w-full space-y-6">
                                             {professionalCategories.length > 0 && (
                                                 <div className="flex flex-wrap gap-2">
                                                     <button
@@ -876,8 +876,8 @@ export const PublicBooking: React.FC = () => {
                                     )}
 
                                     {msg.type === 'datetime' && step === 'datetime' && (
-                                        <div className="space-y-12 max-w-2xl mx-auto">
-                                            <div className={`${isBeauty ? 'bg-white shadow-silk-shadow p-8 rounded-3xl' : 'bg-obsidian-card border-2 border-black p-8 shadow-heavy-lg'}`}>
+                                        <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
+                                            <div className={`${isBeauty ? 'bg-white shadow-silk-shadow p-6 md:p-8 rounded-3xl' : 'bg-obsidian-card border-2 border-black p-6 md:p-8 shadow-heavy-lg'}`}>
                                                 <h3 className={`mb-8 ${isBeauty ? 'text-stone-800 silk-text' : 'massive-text text-white'} text-center md:text-left`}>Seleção de Agenda</h3>
                                                 <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} isBeauty={isBeauty} fullDates={fullDates} />
                                             </div>
@@ -904,11 +904,11 @@ export const PublicBooking: React.FC = () => {
                                     )}
 
                                     {msg.type === 'contact' && step === 'contact' && (
-                                        <div className={`p-8 md:p-12 ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl' : 'bg-obsidian-card border-2 border-black shadow-heavy-lg'} animate-reveal-fragment overflow-hidden relative`}>
+                                        <div className={`w-full p-6 md:p-12 ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl' : 'bg-obsidian-card border-2 border-black shadow-heavy-lg'} animate-reveal-fragment overflow-hidden relative`}>
                                             {!isBeauty && <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none select-none massive-text text-8xl">INFO</div>}
 
                                             <div className="relative z-10 space-y-8">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                                                     <div className="space-y-2">
                                                         <label className={`${isBeauty ? 'text-stone-400 silk-text text-[10px]' : 'text-neutral-600 massive-text text-xs'} block`}>Nome Completo</label>
                                                         <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
@@ -1001,7 +1001,7 @@ export const PublicBooking: React.FC = () => {
                                             <Star className="w-4 h-4" />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-2 gap-4 md:gap-8">
                                         <div className="space-y-1">
                                             <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Data e Hora</p>
                                             <p className={`text-lg font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-white'}`}>

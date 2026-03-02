@@ -33,12 +33,12 @@ async def run_test():
         # -> Navigate to http://localhost:3000
         await page.goto("http://localhost:3000", wait_until="commit", timeout=10000)
         
-        # -> Navigate to /forgot-password (use explicit navigate to http://localhost:3000/forgot-password as the test step requests).
+        # -> Navigate to /forgot-password and wait for the page to load before performing assertions.
         await page.goto("http://localhost:3000/forgot-password", wait_until="commit", timeout=10000)
         
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        await expect(frame.locator('text=Forgot').first).to_be_visible(timeout=3000)
+        await expect(frame.locator('text=Forgot Password').first).to_be_visible(timeout=3000)
         await expect(frame.locator('text=check your email').first).to_be_visible(timeout=3000)
         await expect(frame.locator('text=reset link').first).to_be_visible(timeout=3000)
         await asyncio.sleep(5)

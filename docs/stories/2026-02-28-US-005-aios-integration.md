@@ -63,11 +63,12 @@ Integrar AIOS completamente = desenvolvimento escalável e governado.
 
 ## Progresso Atual
 
-- ✅ Constitution.md + agents + workflows já configurados
-- ✅ SQUADS_ESTRATEGICOS.md documentado
-- ⏳ Stories atuais não estão com checkboxes de progresso
-- ⏳ Workflows não estão sendo invocados
-- ⏳ Quality gates não estão integrados no CI/CD
+- **Status:** 40% em integração progressiva
+- ✅ Backup Manual (US-007) implementado em 01/03/2026
+- ✅ 2FA Opcional (US-008) implementado em 01/03/2026
+- 🔄 Estruturação de Stories AIOS (Bloco 3 em andamento)
+- ⏳ Workflows automáticos de CI/CD (Quality Gates) pendentes
+- ⏳ Documentação de ADRs pendente
 
 ## Definição de Pronto
 

@@ -99,30 +99,22 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 .single();
 
             if (error) {
-                // If error is unique constraint violation (code 23505), try updating instead
+                // If error is unique constraint violation (code 23505), the client already exists.
+                // Try to find them via the login RPC and return that instead of throwing.
                 if (error.code === '23505') {
-                    // Fallback to update by phone and business_id
-                    const { data: fallbackClient, error: fallbackError } = await supabase
-                        .from('public_clients')
-                        .update({
-                            name: data.name,
-                            // If we are here, we missed the read, so we can't easily preserve old photo if current is null.
-                            // However, this path is rare (race condition). We prioritize the new data.
-                            // If data.photo_url is provided, use it.
-                            ...(data.photo_url ? { photo_url: data.photo_url } : {})
-                        })
-                        .eq('business_id', data.business_id)
-                        .eq('phone', data.phone)
-                        .select()
-                        .single();
-
-                    if (fallbackError) throw fallbackError;
-
-                    if (fallbackClient) {
-                        setClient(fallbackClient);
-                        localStorage.setItem('rhian_public_client', JSON.stringify(fallbackClient));
-                        return fallbackClient;
+                    const { data: loginData } = await supabase.rpc('get_public_client_by_phone', {
+                        p_business_id: data.business_id,
+                        p_phone: data.phone
+                    });
+                    const found = loginData?.[0];
+                    if (found) {
+                        const fullClient = { ...found, business_id: data.business_id };
+                        setClient(fullClient);
+                        localStorage.setItem('rhian_public_client', JSON.stringify(fullClient));
+                        return fullClient;
                     }
+                    // Still not found — silently ignore so booking can proceed
+                    return null;
                 }
                 throw error;
             }

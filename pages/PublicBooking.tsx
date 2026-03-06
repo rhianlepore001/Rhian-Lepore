@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, ImageIcon, Upload, Loader2, X, AlertTriangle, Send, MessageSquare } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, ImageIcon, Upload, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
@@ -70,6 +70,7 @@ export const PublicBooking: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [searchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
+    const rebookParam = searchParams.get('rebook');
 
     const [business, setBusiness] = useState<BusinessProfile | null>(null);
     const [businessId, setBusinessId] = useState<string | null>(null);
@@ -162,16 +163,16 @@ export const PublicBooking: React.FC = () => {
         fetchExistingClient();
     }, [customerPhone, businessId]);
 
-    const fetchFreshActiveBooking = async (phone: string, bId: string) => {
+    const fetchFreshActiveBooking = async (bookingId: string) => {
         try {
-            const { data: booking } = await supabase.rpc('get_active_booking_by_phone', {
-                p_phone: phone,
-                p_business_id: bId
-            });
-            if (booking && booking[0]) {
-                setActiveBooking(booking[0]);
-            } else {
-                setActiveBooking(null);
+            const { data: booking } = await supabase
+                .from('public_bookings')
+                .select('id, customer_name, customer_phone, appointment_time, service_ids, status, business_id, professional_id, total_price, duration_minutes')
+                .eq('id', bookingId)
+                .single();
+            if (booking) {
+                // Only update status — do NOT null out activeBooking
+                setActiveBooking(booking);
             }
         } catch (error) {
             logger.error('Error fetching fresh active booking', error);
@@ -192,14 +193,14 @@ export const PublicBooking: React.FC = () => {
                 },
                 (payload) => {
                     logger.info('Booking update received', { payload });
-                    fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
+                    fetchFreshActiveBooking(activeBooking.id);
                 }
             )
             .subscribe();
 
         const interval = setInterval(() => {
             if (activeBooking.status === 'pending') {
-                fetchFreshActiveBooking(activeBooking.customer_phone, activeBooking.business_id);
+                fetchFreshActiveBooking(activeBooking.id);
             }
         }, 5000);
 
@@ -395,10 +396,14 @@ export const PublicBooking: React.FC = () => {
             const addWelcome = async () => {
                 setIsTyping(true);
                 setTimeout(() => {
+                    const welcomeText = client
+                        ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
+                        : `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`;
+
                     setMessages([
                         {
                             id: 'welcome',
-                            text: `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`,
+                            text: welcomeText,
                             isAssistant: true
                         },
                         {
@@ -413,7 +418,15 @@ export const PublicBooking: React.FC = () => {
             };
             addWelcome();
         }
-    }, [business, isDataReady]);
+    }, [business, isDataReady, client]);
+
+    // Pre-select services when coming from client area rebook link
+    useEffect(() => {
+        if (rebookParam && services.length > 0) {
+            const ids = rebookParam.split(',').filter(id => services.some(s => s.id === id));
+            if (ids.length > 0) setSelectedServices(ids);
+        }
+    }, [rebookParam, services]);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -531,13 +544,22 @@ export const PublicBooking: React.FC = () => {
             }
 
             if (editingBookingId) {
-                await supabase.from('public_bookings').update({ customer_name: customerName, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration }).eq('id', editingBookingId);
+                const { data: updatedBooking, error: updateError } = await supabase.from('public_bookings')
+                    .update({ customer_name: customerName, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration })
+                    .eq('id', editingBookingId)
+                    .select()
+                    .single();
+                if (updateError) throw updateError;
+                setActiveBooking(updatedBooking);
             } else {
-                await supabase.from('public_bookings').insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration });
+                const { data: newBooking, error: insertError } = await supabase.from('public_bookings')
+                    .insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration })
+                    .select()
+                    .single();
+                if (insertError) throw insertError;
+                setActiveBooking(newBooking);
             }
 
-            const { data: refreshedBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
-            if (refreshedBooking && refreshedBooking[0]) setActiveBooking(refreshedBooking[0]);
             setStep('success');
         } catch (error: any) {
             logger.error('Error creating booking', error);
@@ -614,6 +636,8 @@ export const PublicBooking: React.FC = () => {
                 isBeauty={isBeauty}
                 userType={business.user_type}
                 gallery={gallery}
+                clientSession={client}
+                businessSlug={slug}
             />
 
             {/* Barra de Progresso de Etapas */}
@@ -889,9 +913,10 @@ export const PublicBooking: React.FC = () => {
                                                         selectedTime={selectedTime}
                                                         onTimeSelect={(time) => {
                                                             setSelectedTime(time);
+                                                            const isLogged = !!client;
                                                             setMessages(prev => [...prev,
                                                             { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }
+                                                            { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme a sua reserva." : "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }
                                                             ]);
                                                             setStep('contact');
                                                         }}
@@ -903,54 +928,7 @@ export const PublicBooking: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {msg.type === 'contact' && step === 'contact' && (
-                                        <div className={`w-full p-6 md:p-12 ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl' : 'bg-obsidian-card border-2 border-black shadow-heavy-lg'} animate-reveal-fragment overflow-hidden relative`}>
-                                            {!isBeauty && <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none select-none massive-text text-8xl">INFO</div>}
-
-                                            <div className="relative z-10 space-y-8">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                                                    <div className="space-y-2">
-                                                        <label className={`${isBeauty ? 'text-stone-400 silk-text text-[10px]' : 'text-neutral-600 massive-text text-xs'} block`}>Nome Completo</label>
-                                                        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-                                                            className={`w-full py-4 px-5 outline-none transition-all ${isBeauty ? 'bg-stone-50 border-stone-100 focus:bg-white rounded-lg' : 'bg-black/40 border-white/5 focus:border-obsidian-accent rounded-none'}`}
-                                                            placeholder="Como devemos te chamar?" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className={`${isBeauty ? 'text-stone-400 silk-text text-[10px]' : 'text-neutral-600 massive-text text-xs'} block`}>WhatsApp</label>
-                                                        <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-start gap-4 p-4 bg-stone-50/50 rounded-xl border border-stone-100">
-                                                    <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                                        className={`mt-1.5 w-5 h-5 ${isBeauty ? 'rounded text-stone-800' : 'rounded-none text-obsidian-accent'} border-stone-200`} />
-                                                    <label htmlFor="privacy" className={`text-xs ${isBeauty ? 'text-stone-500 font-light' : 'text-neutral-400 font-medium'} leading-relaxed`}>
-                                                        Confirmo meu compromisso e aceito as <button onClick={() => setShowPolicyModal(true)} className={`font-bold underline ${isBeauty ? 'text-stone-800' : 'text-obsidian-accent'}`}>diretrizes de cancelamento</button>.
-                                                    </label>
-                                                </div>
-
-                                                <button
-                                                    onClick={handleSubmit}
-                                                    disabled={!customerName || !customerPhone || !acceptedPolicy || isSubmitting}
-                                                    className={`
-                                                        w-full py-6 flex items-center justify-center gap-4 transition-all group overflow-hidden relative
-                                                        ${isBeauty ? 'bg-stone-800 text-white rounded-xl shadow-xl hover:scale-[1.01]' : 'bg-obsidian-accent text-black font-bold massive-text text-lg shadow-heavy border-4 border-black'}
-                                                        disabled:opacity-40 disabled:grayscale
-                                                    `}>
-                                                    {isSubmitting ? (
-                                                        <Loader2 className="w-6 h-6 animate-spin" />
-                                                    ) : (
-                                                        <>
-                                                            <span>Confirmar Agendamento</span>
-                                                            <Check className="w-6 h-6 group-hover:scale-125 transition-transform" />
-                                                        </>
-                                                    )}
-                                                    {/* Shine effect */}
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Contact form was moved outside of ChatBubble to a Fixed Modal at the bottom */}
                                 </div>
                             )}
                         </ChatBubble>
@@ -1044,6 +1022,46 @@ export const PublicBooking: React.FC = () => {
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
                                 </a>
 
+                                {/* Client Area CTA — prominent card */}
+                                <Link
+                                    to={`/minha-area/${slug}`}
+                                    className={`
+                                        group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2
+                                        ${isBeauty
+                                            ? 'bg-white border-stone-200 hover:border-stone-400 shadow-lg hover:shadow-xl'
+                                            : 'bg-zinc-900 border-zinc-700 hover:border-white shadow-heavy-lg hover:translate-x-0.5 hover:-translate-y-0.5'
+                                        }
+                                    `}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2.5 rounded-xl ${isBeauty ? 'bg-stone-100' : 'bg-zinc-800'}`}>
+                                                <LayoutDashboard className={`w-5 h-5 ${isBeauty ? 'text-stone-600' : 'text-white'}`} />
+                                            </div>
+                                            <div>
+                                                <p className={`font-black text-sm uppercase tracking-wider ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                                    Minha Área de Cliente
+                                                </p>
+                                                <p className={`text-xs mt-0.5 ${isBeauty ? 'text-stone-500' : 'text-zinc-400'}`}>
+                                                    Acompanhe e gerencie seus agendamentos
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+                                    </div>
+                                    <div className={`flex flex-wrap gap-2 mt-1`}>
+                                        {[
+                                            { icon: <Calendar className="w-3 h-3" />, label: 'Histórico' },
+                                            { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
+                                            { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
+                                        ].map(tag => (
+                                            <span key={tag.label} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${isBeauty ? 'bg-stone-100 text-stone-500' : 'bg-zinc-800 text-zinc-400'}`}>
+                                                {tag.icon}{tag.label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </Link>
+
                                 <button
                                     onClick={() => window.location.reload()}
                                     className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${isBeauty ? 'text-stone-800' : 'text-white underline decoration-accent-gold decoration-2 underline-offset-8'}`}
@@ -1060,6 +1078,97 @@ export const PublicBooking: React.FC = () => {
                     <div ref={chatEndRef} />
                 </div>
             </div >
+
+            {/* Modal/Bottom Sheet de Contato e Resumo */}
+            {step === 'contact' && (
+                <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className={`${isBeauty ? 'bg-[#FAFAF9] sm:rounded-3xl border border-stone-200' : 'bg-obsidian-bg sm:border border-white/10 sm:shadow-heavy-lg'} w-full max-w-2xl p-6 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl`}>
+
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className={`text-2xl ${isBeauty ? 'text-stone-800 silk-text' : 'massive-text text-white'}`}>
+                                Confirmação do Agendamento
+                            </h3>
+                            <button onClick={() => setStep('datetime')} className="text-neutral-400 hover:text-black transition-colors rounded-full p-2 hover:bg-black/5">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Summary Minimalista */}
+                        <div className={`p-4 mb-8 flex justify-between items-center ${isBeauty ? 'bg-white rounded-xl border border-stone-100 shadow-sm' : 'bg-neutral-900 border-l-4 border-obsidian-accent rounded-r-none'}`}>
+                            <div>
+                                <p className={`text-xs font-bold uppercase tracking-widest ${isBeauty ? 'text-stone-400' : 'text-neutral-500'}`}>Resumo</p>
+                                <p className={`font-medium ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                    {selectedDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {selectedTime}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className={`text-xs font-bold uppercase tracking-widest ${isBeauty ? 'text-stone-400' : 'text-neutral-500'}`}>Total</p>
+                                <p className={`font-black ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`}>
+                                    {formatCurrency(calculateTotal(), currencyRegion)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="relative z-10 space-y-6">
+                            {client ? (
+                                <div className={`p-4 rounded-xl flex items-center gap-4 ${isBeauty ? 'bg-stone-100 border border-stone-200' : 'bg-black/30 border border-white/10'}`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isBeauty ? 'bg-white text-stone-800 shadow-sm' : 'bg-accent-gold/10 text-accent-gold border border-accent-gold/20'}`}>
+                                        <User className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className={`font-bold ${isBeauty ? 'text-stone-800' : 'text-white'}`}>{client.name}</p>
+                                        <p className={`text-sm ${isBeauty ? 'text-stone-500' : 'text-neutral-400'}`}>{client.phone}</p>
+                                    </div>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black'}`}>
+                                        <Check className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div className="space-y-2">
+                                        <label className={`${isBeauty ? 'text-stone-500 silk-text text-xs uppercase tracking-widest' : 'text-neutral-500 massive-text text-xs'} block font-bold`}>Nome Completo</label>
+                                        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                                            className={`w-full py-4 px-5 outline-none transition-all ${isBeauty ? 'bg-white border border-stone-200 focus:border-stone-800 focus:ring-1 focus:ring-stone-800 rounded-lg shadow-sm' : 'bg-black/40 border-white/10 focus:border-obsidian-accent rounded-none text-white'}`}
+                                            placeholder="Como devemos te chamar?" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className={`${isBeauty ? 'text-stone-500 silk-text text-xs uppercase tracking-widest' : 'text-neutral-500 massive-text text-xs'} block font-bold`}>WhatsApp</label>
+                                        <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${isBeauty ? 'bg-stone-50 border-stone-100' : 'bg-black/20 border-white/5'}`}>
+                                <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                                    className={`mt-1 w-5 h-5 ${isBeauty ? 'rounded text-stone-800 focus:ring-stone-800' : 'rounded-none text-obsidian-accent focus:ring-obsidian-accent bg-black border-white/20'} cursor-pointer`} />
+                                <label htmlFor="privacy" className={`text-sm cursor-pointer ${isBeauty ? 'text-stone-600' : 'text-neutral-400'} leading-snug`}>
+                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${isBeauty ? 'text-stone-800 hover:text-stone-600' : 'text-obsidian-accent hover:text-white'}`}>diretrizes de cancelamento</button>.
+                                </label>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={(!client && (!customerName || !customerPhone)) || !acceptedPolicy || isSubmitting}
+                                    className={`
+                                        w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative
+                                        ${isBeauty ? 'bg-stone-800 text-white rounded-xl shadow-lg hover:bg-stone-700' : 'bg-obsidian-accent text-black font-black uppercase text-lg tracking-[0.2em] shadow-heavy border-4 border-black active:translate-y-1 active:translate-x-1'}
+                                        disabled:opacity-50 disabled:cursor-not-allowed
+                                    `}>
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <span className={!isBeauty ? 'mt-0.5' : 'font-semibold'}>Confirmar & Agendar</span>
+                                            <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
             {/* Bot?o Flutuante "Avancar" ? aparece ao selecionar servi?os com anima??o slide-up */}

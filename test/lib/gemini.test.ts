@@ -96,6 +96,7 @@ describe('Gemini AI Lib', () => {
         });
 
         it('should generate calendar via fetch', async () => {
+            vi.stubEnv('VITE_GEMINI_API_KEY', 'test-key');
             // Mock global fetch
             const mockFetch = vi.fn();
             global.fetch = mockFetch;
@@ -121,6 +122,7 @@ describe('Gemini AI Lib', () => {
                 expect.stringContaining('generativelanguage.googleapis.com'),
                 expect.objectContaining({ method: 'POST' })
             );
+            vi.unstubAllEnvs();
         });
     });
 

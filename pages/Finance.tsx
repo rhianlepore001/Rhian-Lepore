@@ -13,6 +13,8 @@ import { MonthlyHistory } from '../components/MonthlyHistory';
 import { Modal } from '../components/Modal';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
+import { ChurnRadar } from '../components/ChurnRadar';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
@@ -43,6 +45,7 @@ interface MonthlyHistoryItem {
 
 export const Finance: React.FC = () => {
   const { user, userType, region } = useAuth();
+  const { diagnostic, loading: diagnosticLoading } = useAIOSDiagnostic();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -500,6 +503,10 @@ export const Finance: React.FC = () => {
 
       {activeTab === 'overview' && (
         <>
+          <div className="mb-8">
+            <ChurnRadar clients={diagnostic?.at_risk_clients} loading={diagnosticLoading} />
+          </div>
+
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <BrutalCard className="border-l-4 border-green-500">

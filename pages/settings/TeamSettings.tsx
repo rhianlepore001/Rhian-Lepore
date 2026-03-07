@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Plus, Users, ShieldCheck, UserCheck } from 'lucide-react';
+import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
@@ -15,6 +15,7 @@ export const TeamSettings: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
+    const [copiedLink, setCopiedLink] = useState(false);
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -72,6 +73,49 @@ export const TeamSettings: React.FC = () => {
                         Profissional
                     </BrutalButton>
                 </div>
+
+                {/* Invite Link Section */}
+                <BrutalCard className="p-6 md:p-8 bg-neutral-900 border-2 border-neutral-800">
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Users className={`w-5 h-5 text-${accentColor}`} />
+                                <h3 className={`text-lg font-heading uppercase text-white`}>Convide sua Equipe</h3>
+                            </div>
+                            <p className="text-sm text-neutral-400 max-w-xl">
+                                Envie este link exclusivo para seus funcionários. Eles poderão criar a própria conta (e-mail e senha) e acessarão apenas a própria agenda e comissões.
+                            </p>
+                        </div>
+                        <div className="w-full md:w-auto flex-shrink-0">
+                            <button
+                                onClick={() => {
+                                    const inviteLink = `${window.location.origin}/register?company=${user?.id}`;
+                                    navigator.clipboard.writeText(inviteLink);
+                                    setCopiedLink(true);
+                                    setTimeout(() => setCopiedLink(false), 2000);
+                                }}
+                                className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-mono text-sm uppercase transition-all
+                                    ${copiedLink
+                                        ? 'bg-green-500/10 text-green-500 border border-green-500/50'
+                                        : `bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-${accentColor}/50`
+                                    }`}
+                            >
+                                {copiedLink ? (
+                                    <>
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        <span>Link Copiado!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <LinkIcon className="w-4 h-4" />
+                                        <span>Copiar Link de Convite</span>
+                                        <Copy className="w-3 h-3 ml-1 opacity-50" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </BrutalCard>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">

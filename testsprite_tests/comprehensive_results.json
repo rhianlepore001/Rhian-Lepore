@@ -1,0 +1,279 @@
+{
+  "project": "Beauty OS / Barber OS",
+  "run_at": "2026-03-07T11:53:27.001091",
+  "base_url": "http://localhost:3000",
+  "summary": {
+    "total": 53,
+    "passed": 44,
+    "failed": 9,
+    "skipped": 0,
+    "pass_rate_pct": 83
+  },
+  "results": [
+    {
+      "name": "TC_AUTH_01 — Login gateway screen loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_02 — Login with valid credentials",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_03 — Login with invalid credentials",
+      "status": "FAILED",
+      "note": "Locator.wait_for: Timeout 8000ms exceeded.\nCall log:\n  - waiting for locator(\"input[type=\\\"email\\\"]\").first to be visible\n | Call log:   - waiting for locator(\"input[type=\\\"email\\\"]\").first to be visible "
+    },
+    {
+      "name": "TC_AUTH_04 — Forgot password page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_05 — Forgot password submit",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_06 — Register page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_07 — Register form validation",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_08 — Dashboard redirects to login",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_09 — Agenda redirects to login",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AUTH_10 — Update password page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_DASH_01 — Dashboard loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_DASH_02 — Dashboard KPI cards",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_DASH_03 — Navigation sidebar",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AGENDA_01 — Agenda page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AGENDA_02 — New appointment button",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_AGENDA_03 — Date navigation elements",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_FILA_01 — Queue management page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_FILA_02 — Queue status columns",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_QUEUE_01 — Invalid queue slug error",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_QUEUE_02 — Queue status page renders",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_QUEUE_03 — Queue join page renders",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_BOOK_01 — Booking invalid slug",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_BOOK_02 — Booking page structure",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_BOOK_03 — Portfolio page renders",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_CRM_01 — Clients list loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_CRM_02 — Client search input exists",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_CRM_03 — Add client button exists",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_FIN_01 — Finance page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_FIN_02 — Transaction list area",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_FIN_03 — Add transaction button",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_REP_01 — Reports/Insights page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_REP_02 — Charts present on reports",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_MKT_01 — Marketing page loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_01 — General settings loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_02 — Team settings loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_03 — Services settings loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_04 — Commissions settings loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_05 — Subscription settings loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_06 — Security settings loads",
+      "status": "FAILED",
+      "note": "Security settings page did not load"
+    },
+    {
+      "name": "TC_SET_07 — Audit logs loads",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SET_08 — Recycle bin loads",
+      "status": "FAILED",
+      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+    },
+    {
+      "name": "TC_SET_09 — Booking settings loads",
+      "status": "FAILED",
+      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+    },
+    {
+      "name": "TC_SET_10 — System logs loads",
+      "status": "FAILED",
+      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+    },
+    {
+      "name": "TC_THEME_01 — Barber/Beauty theme visible",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_THEME_02 — App renders styled",
+      "status": "FAILED",
+      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+    },
+    {
+      "name": "TC_MOB_01 — Login on mobile viewport",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_MOB_02 — Dashboard on mobile viewport",
+      "status": "FAILED",
+      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+    },
+    {
+      "name": "TC_SEC_01 — Settings requires auth",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SEC_02 — Finance requires auth",
+      "status": "FAILED",
+      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/financeiro\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/financeiro\", waiting until \"networkidle\" "
+    },
+    {
+      "name": "TC_SEC_03 — Clients requires auth",
+      "status": "FAILED",
+      "note": "Clients accessible without auth: http://localhost:3000/#/clientes"
+    },
+    {
+      "name": "TC_SEC_04 — Public login route open",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_SEC_05 — Forgot password is public",
+      "status": "PASSED",
+      "note": ""
+    },
+    {
+      "name": "TC_CLIENT_AREA_01 — Client area renders",
+      "status": "PASSED",
+      "note": ""
+    }
+  ]
+}

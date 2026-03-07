@@ -1,7 +1,44 @@
 # PROJECT_MEMORY.md
 
-## 2026-03-02 (Parte 2)
-- **Evento**: Criação do Plano de Sessões de Relatórios Profissionais (Dev).
-- **O que foi feito**: Definimos a estrutura (`implementation_plan.md`) para futuras agendas. Dividimos a reunião em: **Resumo Executivo, Visão Dev, Análise de Blocker e Insights (Modo IA)**.
-- **Status**: Plano aprovado. Agendado para uso sob demanda a partir da próxima iteração.
-- **Arquivos Chave**: `.aios-core/development/agents/dev/MEMORY.md`, `implementation_plan.md`.
+## 2026-03-06 — Fix RPCs Públicas (Public Booking)
+- **Evento**: Correção de 3 RPCs quebrando o fluxo de agendamento público
+- **O que foi feito**:
+  1. GRANT `anon` para `get_public_client_by_phone(UUID, TEXT)` — resolvia 404
+  2. GRANT `anon` para `get_active_booking_by_phone(TEXT, UUID)` — resolvia 404
+  3. Recriação de `get_client_bookings_history` com cast `p_business_id::TEXT` — resolvia 400 (coluna `business_id` em `public_bookings` é TEXT, não UUID)
+- **Descoberta importante**: `public_bookings.business_id` é TEXT, `public_bookings.service_ids` é UUID[].
+- **Status**: Migrações aplicadas e GRANTs verificados via Supabase MCP.
+- **Próximo Foco**: Teste manual no navegador para validar o fluxo completo.
+- **Arquivos Chave**: `supabase/migrations/20260306_fix_public_rpc_grants.sql`
+
+## 2026-03-04 — Refatoração Área Pública e Área de Membros
+- **Evento**: Conclusão da US-014 (Melhorias no Public Booking e Client Area)
+- **O que foi feito**:
+  1. Execução manual automatizada via Supabase MCP da RPC `get_client_bookings_history` para popular o histórico do cliente.
+  2. Implementação do CTA de WhatsApp no agendamento (`ClientBookingCard.tsx`) para status "pending".
+  3. Transformação do link "Ver Minha Área" em um CTA destacado na finalização do agendamento de chat (`PublicBooking.tsx`).
+  4. Melhoria UX Geral do Contact Form: Movido de dentro da bolha do chat para um Bottom Sheet Fixo Overlay.
+  5. Correção do erro "Estabelecimento não encontrado" (filtragem `business_slug`).
+  6. Correção de falha silenciosa no `PublicBooking.tsx` onde a ausência de retorno da query de agendamento não lançava erro e resultava em tela branca.
+  7. Correção de URLs de CTA na área do cliente (de `/book/:slug` para `/booking/:slug`) e a adição do botão de "Novo Agendamento" global na dashboard.
+- **Status**: Concluído e testado. Type-check com erro residual pré-existente (BrutalCard).
+- **Próximo Foco**: Ficar à disposição para novas tarefas de agendamento ou financeiro.
+## 2026-03-04 — Insights Avançados (Reports.tsx)
+- **Evento**: Finalização da página de Insights/Relatórios
+- **O que foi feito**:
+  1. Criada migração `supabase/migrations/20260304_client_insights_rpc.sql` com RPC `get_client_insights`
+  2. `pages/Reports.tsx` atualizado: 4º KPI (Taxa de Retenção), gráfico de Crescimento de Clientes (AreaChart 6 meses), lista Top Clientes do Mês
+  3. Chamadas paralelas via `Promise.all([get_dashboard_insights, get_client_insights])`
+  4. Story US-015 marcada como `deleted` (era AIOS session report, não frontend)
+- **Status**: Completo. Lint PASS. TypeScript error pré-existente em BrutalCard.test.tsx (não relacionado)
+- **Próximo Foco**: Rodar migração no Supabase e testar visualmente
+
+## 2026-03-02 (Parte 3)
+- **Evento**: Relatório de Sessão Inicial (Análise + IA).
+- **O que foi feito**: 
+  1. Identificação de débito técnico e sujeira de versão (54 arquivos untracked, repositórios de agentes redundantes). 
+  2. Commita-se a limpeza de higiene (`chore: repository hygiene and agent consolidation`).
+  3. Migração dos scripts de debug e diagnóstico do BD feitos em PowerShell (`fase1_diagnostico.ps1`, `fase2_*.ps1`) para scripts Node.js (`diagnose-db.js`, `debug-finance-data.js`, `debug-test-months.js`) dentro de `.aios-core/scripts/`.
+- **Status**: Insights #1 e #2 do Relatório de Sessão Aplicados (Limpeza do Git e padronização da Automação Node). 
+- **Próximo Foco**: (Insight #3) Pareamento do desenvolvimento das lógicas de finanças com Testes QA (TestSprite).
+- **Arquivos Chave**: `.aios-core/scripts/diagnose-db.js`, `scripts/*`.

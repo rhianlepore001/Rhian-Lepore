@@ -142,7 +142,8 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
         campaignsSent,
         dataMaturity,
         financialDoctor,
-        completedThisMonth
+        completedThisMonth,
+        isBeauty
     });
 
     const [expanded, setExpanded] = useState(true);
@@ -220,7 +221,7 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
                         <div className="flex flex-col items-center gap-2 py-6 text-center">
                             <Stethoscope className="w-8 h-8 text-text-secondary/30" />
                             <p className="text-sm text-text-secondary/60 max-w-xs">
-                                O Doutor precisa de dados para te ajudar. Complete pelo menos 5 agendamentos para ativar os insights.
+                                O Doutor precisa de dados consistentes para te ajudar. Continue usando o sistema para desbloquear os insights avançados.
                             </p>
                         </div>
                     ) : insights.length === 0 ? (

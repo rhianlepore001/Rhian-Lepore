@@ -1,0 +1,138 @@
+name: "Squad Backend & Dados"
+version: "0.1.0"
+description: "Time responsável por APIs, Supabase, RLS, migrations e data layer"
+author: "Beauty OS Team"
+license: "MIT"
+
+aios:
+  minVersion: "2.1.0"
+  type: "squad"
+
+lead_agent: "backend-specialist"
+
+members:
+  - agent: "backend-specialist"
+    role: "Tech Lead"
+    focus: "API design, database architecture, data integrity"
+
+  - agent: "database-architect"
+    role: "Database Lead"
+    focus: "Schema design, optimization, migrations, RLS policies"
+
+  - agent: "debugger"
+    role: "Debugging & Troubleshooting"
+    focus: "Performance issues, query optimization"
+
+  - agent: "devops-engineer"
+    role: "Infrastructure"
+    focus: "Supabase operations, backups, monitoring"
+
+components:
+  agents:
+    - ./agents/*.yaml
+  tasks:
+    - ./tasks/*.yaml
+  workflows:
+    - ./workflows/*.yaml
+
+responsibilities:
+  - "Arquitetura e design de APIs"
+  - "Gerenciar schema do Supabase (PostgreSQL)"
+  - "Implementar e manter RLS policies"
+  - "Database migrations e versioning"
+  - "Query optimization e performance"
+  - "Audit logs e data integrity"
+  - "Backup e disaster recovery"
+  - "Multi-tenant data isolation"
+
+technology_stack:
+  - name: "Supabase"
+    version: "latest"
+  - name: "PostgreSQL"
+    version: "15+"
+  - name: "Node.js"
+    version: "18+"
+  - name: "TypeScript"
+    version: "5.8"
+  - name: "Vitest"
+    version: "latest"
+
+directories:
+  - path: "lib/supabase.ts"
+    description: "Supabase client initialization"
+  - path: "supabase/migrations/"
+    description: "SQL migration files"
+  - path: "supabase/policies/"
+    description: "RLS policies"
+  - path: "utils/"
+    description: "Helper functions, data utilities"
+  - path: "contexts/AuthContext.tsx"
+    description: "Authentication context with Supabase"
+
+key_tables:
+  - name: "companies"
+    description: "Tenant/organization data"
+    isolation: "company_id"
+
+  - name: "users"
+    description: "User accounts linked to companies"
+    isolation: "company_id"
+
+  - name: "appointments"
+    description: "Scheduling data"
+    isolation: "company_id"
+
+  - name: "services"
+    description: "Service offerings per company"
+    isolation: "company_id"
+
+  - name: "transactions"
+    description: "Financial records"
+    isolation: "company_id"
+
+  - name: "audit_logs"
+    description: "Change tracking for compliance"
+    isolation: "company_id"
+
+metrics:
+  - name: "Query Performance"
+    target: "100ms"
+    unit: "milliseconds"
+
+  - name: "RLS Policy Coverage"
+    target: "100%"
+    unit: "percent"
+
+  - name: "Data Integrity Tests"
+    target: "95%"
+    unit: "percent"
+
+  - name: "Migration Success Rate"
+    target: "100%"
+    unit: "percent"
+
+critical_rules:
+  - "All queries MUST filter by company_id from session"
+  - "Never accept company_id from URL or form input"
+  - "RLS must be ENABLED on all tenant-accessible tables"
+  - "Service role key only for admin operations"
+  - "Always test migrations in staging before production"
+  - "Maintain audit log for all data changes"
+
+dependencies: []
+
+keywords:
+  - "aios"
+  - "squad"
+  - "backend"
+  - "supabase"
+  - "postgresql"
+  - "rls"
+  - "multi-tenant"
+  - "beauty-os"
+
+tags:
+  - "database-design"
+  - "api-development"
+  - "data-security"
+  - "multi-tenant-isolation"

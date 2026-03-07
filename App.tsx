@@ -33,6 +33,7 @@ const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortf
 const QueueJoin = React.lazy(() => import('./pages/QueueJoin').then(module => ({ default: module.QueueJoin })));
 const QueueStatus = React.lazy(() => import('./pages/QueueStatus').then(module => ({ default: module.QueueStatus })));
 const QueueManagement = React.lazy(() => import('./pages/QueueManagement').then(module => ({ default: module.QueueManagement })));
+const ClientArea = React.lazy(() => import('./pages/ClientArea').then(module => ({ default: module.ClientArea })));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
@@ -105,6 +106,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />
         <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
+        <Route path="/minha-area/:slug" element={<ClientArea />} />
         <Route path="/onboarding" element={
           <RequireAuth>
             <OnboardingWizard />

@@ -15,6 +15,9 @@ import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { GoalHistory } from '../components/GoalHistory';
 import { GoalSettingsModal } from '../components/dashboard/GoalSettingsModal';
 import { DashboardHero } from '../components/dashboard/DashboardHero';
+import { AllAppointmentsModal } from '../components/dashboard/AllAppointmentsModal';
+import { MonthlyProfitModal } from '../components/dashboard/MonthlyProfitModal';
+import { GoalHistoryModal } from '../components/dashboard/GoalHistoryModal';
 
 import { formatCurrency } from '../utils/formatters';
 import { useAppTour } from '../hooks/useAppTour';
@@ -38,10 +41,14 @@ export const Dashboard: React.FC = () => {
     profitMetrics,
     dataMaturity,
     financialDoctor,
-    actionItems
+    actionItems,
+    fetchAllAppointments
   } = useDashboardData();
 
   const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [showAllAppointments, setShowAllAppointments] = useState(false);
+  const [showProfitHistory, setShowProfitHistory] = useState(false);
+  const [showGoalHistory, setShowGoalHistory] = useState(false);
   const [newGoal, setNewGoal] = useState(monthlyGoal.toString());
 
   const isBeauty = userType === 'beauty';
@@ -101,6 +108,15 @@ export const Dashboard: React.FC = () => {
           currencyRegion={currencyRegion}
           isBeauty={isBeauty}
         />
+        {/* Botão Ver Mais — histórico de lucros mensais */}
+        <div className="mt-3 flex justify-end">
+          <button
+            onClick={() => setShowProfitHistory(true)}
+            className={`text-[11px] font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity flex items-center gap-1`}
+          >
+            Ver histórico de lucros →
+          </button>
+        </div>
       </div>
 
       {/* Doutor Financeiro */}
@@ -176,7 +192,7 @@ export const Dashboard: React.FC = () => {
             )}
             <div className="p-4 border-t border-white/5">
               <button
-                onClick={() => navigate('/agenda')}
+                onClick={() => setShowAllAppointments(true)}
                 className={`w-full py-2 text-center text-[10px] md:text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-[0.2em] transition-colors bg-white/5 rounded-lg`}
               >
                 Ver Agenda Completa →
@@ -217,6 +233,14 @@ export const Dashboard: React.FC = () => {
                   </p>
                 </div>
 
+                {/* Botão Histórico de Metas */}
+                <button
+                  onClick={() => setShowGoalHistory(true)}
+                  className={`mt-3 text-[11px] font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity`}
+                >
+                  Ver histórico →
+                </button>
+
                 <button
                   onClick={() => setIsEditingGoal(true)}
                   className="absolute inset-0 z-0 sm:hidden"
@@ -253,6 +277,25 @@ export const Dashboard: React.FC = () => {
         currentGoal={monthlyGoal}
         onSave={updateGoal}
         isBeauty={isBeauty}
+      />
+      <AllAppointmentsModal
+        isOpen={showAllAppointments}
+        onClose={() => setShowAllAppointments(false)}
+        fetchAllAppointments={fetchAllAppointments}
+        isBeauty={isBeauty}
+      />
+      <MonthlyProfitModal
+        isOpen={showProfitHistory}
+        onClose={() => setShowProfitHistory(false)}
+        isBeauty={isBeauty}
+        currencyRegion={currencyRegion}
+      />
+      <GoalHistoryModal
+        isOpen={showGoalHistory}
+        onClose={() => setShowGoalHistory(false)}
+        history={goalHistory}
+        isBeauty={isBeauty}
+        currencyRegion={currencyRegion}
       />
     </div >
   );

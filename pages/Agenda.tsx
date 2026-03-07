@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
+import { AllAppointmentsModal } from '../components/dashboard/AllAppointmentsModal';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
@@ -83,6 +84,7 @@ export const Agenda: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
     const [historyMonth, setHistoryMonth] = useState(new Date());
     const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState<string | null>(null);
@@ -172,6 +174,35 @@ export const Agenda: React.FC = () => {
             fetchHistoryAppointments();
         }
     }, [historyMonth, showHistoryModal]);
+
+    const fetchAllFutureAppointments = async () => {
+        if (!user) return [];
+        const now = new Date().toISOString();
+
+        const { data } = await supabase
+            .from('appointments')
+            .select('*, clients(name)')
+            .eq('user_id', user.id)
+            .gte('appointment_time', now)
+            .in('status', ['Confirmed', 'Pending'])
+            .order('appointment_time', { ascending: true });
+
+        if (!data) return [];
+
+        // Formatar dados igual ao AllAppointmentsModal espera
+        return data.map((apt: any) => ({
+            id: apt.id,
+            clientName: apt.clients?.name || 'Cliente Desconhecido',
+            service: apt.service,
+            time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            rawDate: new Date(apt.appointment_time).toISOString().split('T')[0],
+            status: apt.status,
+            price: apt.price,
+            appointment_time: apt.appointment_time
+        }));
+    };
+
 
     // Price Calculation & Sync Effect
     const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
@@ -996,6 +1027,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         Histórico
                     </BrutalButton>
                     <BrutalButton
+                        variant="secondary"
+                        icon={<Calendar />}
+                        onClick={() => setShowAllAppointmentsModal(true)}
+                        className="flex-1 md:flex-none"
+                    >
+                        Todos Agendamentos
+                    </BrutalButton>
+                    <BrutalButton
                         variant="primary"
                         icon={<Plus />}
                         onClick={() => navigate('?new=true')}
@@ -1669,6 +1708,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     </div>
                 </div>
             )}
+
+            {/* All Future Appointments Modal */}
+            <AllAppointmentsModal
+                isOpen={showAllAppointmentsModal}
+                onClose={() => setShowAllAppointmentsModal(false)}
+                fetchAllAppointments={fetchAllFutureAppointments}
+                isBeauty={isBeauty}
+            />
 
             {/* History Modal */}
             {showHistoryModal && (

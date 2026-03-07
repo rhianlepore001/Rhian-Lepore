@@ -2,6 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ProfitMetrics } from '../../components/dashboard/ProfitMetrics';
 import React from 'react';
+import { vi } from 'vitest';
+
+// Mocks para os contextos exigidos pelo BrutalCard (usado dentro do ProfitMetrics)
+vi.mock('../../contexts/AuthContext', () => ({
+    useAuth: () => ({ userType: 'barber' })
+}));
+
+vi.mock('../../contexts/UIContext', () => ({
+    useUI: () => ({ isMobile: false })
+}));
 
 describe('ProfitMetrics Component', () => {
     const mockMetrics = {

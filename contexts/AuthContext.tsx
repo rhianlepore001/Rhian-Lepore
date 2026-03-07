@@ -18,6 +18,8 @@ interface AuthContextType {
   subscriptionStatus: 'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber';
   trialEndsAt: string | null;
   isSubscriptionActive: boolean;
+  role: 'owner' | 'staff';
+  companyId: string | null;
   isDev: boolean;
   aiosEnabled: boolean;
   setDevUserType: (type: UserType) => void;
@@ -33,6 +35,7 @@ interface AuthContextType {
     userType: UserType;
     region: Region;
     phone: string;
+    companyId?: string;
   }) => Promise<{ error: any }>;
 }
 
@@ -48,6 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [tutorialCompleted, setTutorialCompleted] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber'>('trial');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [role, setRole] = useState<'owner' | 'staff'>('owner');
+  const [companyId, setCompanyId] = useState<string | null>(null);
   const [aiosEnabled, setAiosEnabled] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [devUserType, setDevUserTypeState] = useState<UserType | null>(() => {
@@ -60,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('user_type, region, business_name, full_name, photo_url, tutorial_completed, subscription_status, trial_ends_at, aios_enabled')
+        .select('*')
         .eq('id', userId)
         .single();
 
@@ -75,6 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTutorialCompleted(profile.tutorial_completed ?? true);
         setSubscriptionStatus((profile.subscription_status as any) || 'trial');
         setTrialEndsAt(profile.trial_ends_at || null);
+        setRole(profile.role === 'staff' ? 'staff' : 'owner');
+        setCompanyId(profile.company_id || null);
         setAiosEnabled(profile.aios_enabled ?? false);
       }
     } catch (error) {
@@ -126,6 +133,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTutorialCompleted(true);
         setSubscriptionStatus('trial');
         setTrialEndsAt(null);
+        setRole('owner');
+        setCompanyId(null);
         setAiosEnabled(false);
         setLoading(false);
       }
@@ -165,6 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTutorialCompleted(true);
     setSubscriptionStatus('trial');
     setTrialEndsAt(null);
+    setRole('owner');
+    setCompanyId(null);
   };
 
   const markTutorialCompleted = async () => {
@@ -188,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userType: UserType;
     region: Region;
     phone: string;
+    companyId?: string;
   }) => {
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -217,6 +229,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               tutorial_completed: false,
               subscription_status: 'trial',
               trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days trial
+              role: data.companyId ? 'staff' : 'owner',
+              company_id: data.companyId || authData.user.id,
               aios_enabled: true
             }
           ]);
@@ -256,6 +270,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return end ? new Date() < end : false;
       })()
     ),
+    role,
+    companyId,
     isDev,
     aiosEnabled,
     setDevUserType,
@@ -274,6 +290,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tutorialCompleted,
     subscriptionStatus,
     trialEndsAt,
+    role,
+    companyId,
     isDev,
     aiosEnabled,
     devUserType,

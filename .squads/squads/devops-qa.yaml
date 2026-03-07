@@ -1,0 +1,245 @@
+name: "Squad DevOps & QA"
+version: "0.1.0"
+description: "Time responsável por CI/CD, deploy, testes, monitoring e infraestrutura"
+author: "Beauty OS Team"
+license: "MIT"
+
+aios:
+  minVersion: "2.1.0"
+  type: "squad"
+
+lead_agent: "devops-engineer"
+
+members:
+  - agent: "devops-engineer"
+    role: "DevOps Lead"
+    focus: "CI/CD, deployment, infrastructure"
+
+  - agent: "qa-automation-engineer"
+    role: "QA Lead"
+    focus: "Test automation, quality assurance"
+
+  - agent: "test-engineer"
+    role: "Testing Specialist"
+    focus: "Test strategy, coverage, E2E testing"
+
+  - agent: "performance-optimizer"
+    role: "Performance Lead"
+    focus: "Performance monitoring, optimization"
+
+components:
+  agents:
+    - ./agents/*.yaml
+  tasks:
+    - ./tasks/*.yaml
+  workflows:
+    - ./workflows/*.yaml
+
+responsibilities:
+  - "CI/CD pipeline (GitHub Actions)"
+  - "Deployment em Vercel"
+  - "Monitoramento e alertas"
+  - "Performance monitoring"
+  - "Testes unitários (Vitest)"
+  - "Testes de integração"
+  - "Testes E2E (Playwright)"
+  - "Cobertura de código"
+  - "PWA support e offline mode"
+  - "Rollback e disaster recovery"
+
+deployment_strategy:
+  - name: "Development"
+    target: "main branch"
+    environment: "dev.beautyos.app"
+    auto_deploy: true
+
+  - name: "Staging"
+    target: "staging branch"
+    environment: "staging.beautyos.app"
+    requires_approval: true
+
+  - name: "Production"
+    target: "main branch (tagged)"
+    environment: "beautyos.app"
+    requires_approval: true
+    canary: true
+
+ci_cd_pipeline:
+  - stage: "Lint"
+    command: "npm run lint"
+    failure: "block"
+
+  - stage: "Type Check"
+    command: "npm run typecheck"
+    failure: "block"
+
+  - stage: "Unit Tests"
+    command: "npm test -- --run"
+    failure: "block"
+    coverage_target: "80%"
+
+  - stage: "Build"
+    command: "npm run build"
+    failure: "block"
+
+  - stage: "E2E Tests"
+    command: "npm run test:e2e"
+    failure: "warn"
+    parallel: true
+
+  - stage: "Security Scan"
+    command: "npm audit"
+    failure: "block"
+
+  - stage: "Performance Test"
+    command: "npm run lighthouse"
+    failure: "warn"
+    targets:
+      - metric: "LCP"
+        target: "2.5s"
+      - metric: "CLS"
+        target: "0.1"
+
+testing_pyramid:
+  - level: "Unit Tests"
+    percentage: "70%"
+    tools: ["Vitest"]
+    coverage_target: "85%"
+
+  - level: "Integration Tests"
+    percentage: "20%"
+    tools: ["Vitest", "React Testing Library"]
+    coverage_target: "70%"
+
+  - level: "E2E Tests"
+    percentage: "10%"
+    tools: ["Playwright"]
+    coverage_target: "50%"
+
+active_initiatives:
+  - name: "E2E Test Suite"
+    status: "in_progress"
+    story: "US-017"
+    quarter: "Q1 2026"
+    description: "Implementar suite completa de testes E2E"
+
+  - name: "Performance Optimization"
+    status: "planned"
+    story: "US-018"
+    quarter: "Q2 2026"
+    description: "Otimizações de performance (Core Web Vitals)"
+
+  - name: "PWA Offline Mode"
+    status: "planned"
+    story: "US-019"
+    quarter: "Q3 2026"
+    description: "Suporte a PWA com offline-first architecture"
+
+technology_stack:
+  - name: "Vercel"
+    version: "latest"
+    purpose: "Deployment & hosting"
+
+  - name: "GitHub Actions"
+    version: "latest"
+    purpose: "CI/CD automation"
+
+  - name: "Vitest"
+    version: "latest"
+    purpose: "Unit & integration testing"
+
+  - name: "Playwright"
+    version: "latest"
+    purpose: "E2E testing"
+
+  - name: "React Testing Library"
+    version: "latest"
+    purpose: "Component testing"
+
+  - name: "Lighthouse"
+    version: "latest"
+    purpose: "Performance auditing"
+
+  - name: "Sentry"
+    version: "latest"
+    purpose: "Error tracking"
+
+  - name: "DataDog"
+    version: "latest"
+    purpose: "Monitoring & observability"
+
+testing_commands:
+  - name: "Run all tests"
+    command: "npm test"
+
+  - name: "Run specific test file"
+    command: "npm test -- src/components/Dashboard.test.tsx"
+
+  - name: "Run tests with UI"
+    command: "npm run test:ui"
+
+  - name: "Generate coverage"
+    command: "npm run test:coverage"
+
+  - name: "Run E2E tests"
+    command: "npm run test:e2e"
+
+  - name: "Performance audit"
+    command: "npm run lighthouse"
+
+pwa_features:
+  - "Installable web app"
+  - "Service worker support"
+  - "Offline functionality"
+  - "Push notifications"
+  - "Background sync"
+  - "Responsive design"
+
+monitoring_metrics:
+  - name: "Deployment Frequency"
+    target: "daily"
+
+  - name: "Lead Time for Changes"
+    target: "< 1 hour"
+
+  - name: "Mean Time to Recovery"
+    target: "< 15 minutes"
+
+  - name: "Change Failure Rate"
+    target: "< 5%"
+
+  - name: "Test Coverage"
+    target: "> 80%"
+
+  - name: "Build Success Rate"
+    target: "> 98%"
+
+  - name: "Performance Score (Lighthouse)"
+    target: "> 90"
+
+quality_gates:
+  - "Lint must pass with no warnings"
+  - "TypeScript must have 0 errors"
+  - "Unit test coverage >= 80%"
+  - "All E2E tests must pass"
+  - "Security audit must pass"
+  - "Performance score >= 90"
+
+dependencies: []
+
+keywords:
+  - "aios"
+  - "squad"
+  - "devops"
+  - "qa"
+  - "ci-cd"
+  - "testing"
+  - "deployment"
+  - "beauty-os"
+
+tags:
+  - "infrastructure"
+  - "testing"
+  - "quality-assurance"
+  - "deployment"
+  - "monitoring"

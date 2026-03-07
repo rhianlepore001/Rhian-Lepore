@@ -1,0 +1,194 @@
+name: "Squad Segurança"
+version: "0.1.0"
+description: "Time responsável por multi-tenant isolation, RLS, autenticação, compliance e segurança"
+author: "Beauty OS Team"
+license: "MIT"
+
+aios:
+  minVersion: "2.1.0"
+  type: "squad"
+
+lead_agent: "security-auditor"
+
+members:
+  - agent: "security-auditor"
+    role: "Security Lead"
+    focus: "Vulnerability scanning, audit, compliance"
+
+  - agent: "backend-specialist"
+    role: "Backend Security"
+    focus: "API security, RLS implementation"
+
+  - agent: "database-architect"
+    role: "Database Security"
+    focus: "RLS policies, data isolation"
+
+  - agent: "penetration-tester"
+    role: "Security Testing"
+    focus: "Penetration testing, threat modeling"
+
+components:
+  agents:
+    - ./agents/*.yaml
+  tasks:
+    - ./tasks/*.yaml
+  workflows:
+    - ./workflows/*.yaml
+
+responsibilities:
+  - "Multi-tenant data isolation"
+  - "Row Level Security (RLS) policies"
+  - "Autenticação e autorização"
+  - "2FA e rate limiting"
+  - "Criptografia de dados sensíveis"
+  - "Audit logs e compliance"
+  - "Vulnerability scanning"
+  - "Penetration testing"
+  - "Security training para equipe"
+  - "Incident response"
+
+security_principles:
+  - "Zero Trust Architecture"
+  - "Defense in Depth"
+  - "Principle of Least Privilege"
+  - "Secure by Design"
+  - "Audit Everything"
+
+multi_tenant_architecture:
+  - "All queries MUST filter by company_id"
+  - "Extract company_id from Supabase session (auth.jwt())"
+  - "Never accept company_id from URL or form input"
+  - "RLS ENABLED on all tenant-accessible tables"
+  - "Service role key only for admin operations"
+  - "Secondary enforcement at application level"
+
+rls_implementation:
+  - "Companies table: isolated by company_id"
+  - "Users table: filtered by company_id"
+  - "Appointments: filtered by company_id"
+  - "Services: filtered by company_id"
+  - "Transactions: filtered by company_id"
+  - "Audit logs: filtered by company_id"
+
+authentication_flow:
+  - step: 1
+    description: "User logs in via Clerk"
+  - step: 2
+    description: "Clerk provides session token"
+  - step: 3
+    description: "AuthContext maintains auth state"
+  - step: 4
+    description: "Protected routes check isAuthenticated"
+  - step: 5
+    description: "Supabase queries use Clerk tokens via RLS"
+
+active_initiatives:
+  - name: "2FA Implementation"
+    status: "planned"
+    story: "US-014"
+    quarter: "Q1 2026"
+    description: "Two-factor authentication (TOTP/SMS)"
+
+  - name: "Rate Limiting & DDoS"
+    status: "planned"
+    story: "US-015"
+    quarter: "Q2 2026"
+    description: "Rate limiting e proteção contra DDoS"
+
+  - name: "GDPR Compliance"
+    status: "planned"
+    story: "US-016"
+    quarter: "Q3 2026"
+    description: "Implementar GDPR compliance features"
+
+technology_stack:
+  - name: "Clerk"
+    version: "latest"
+    purpose: "Authentication"
+  - name: "Supabase"
+    version: "latest"
+    purpose: "RLS enforcement"
+  - name: "PostgreSQL"
+    version: "15+"
+    purpose: "Database security"
+  - name: "Node.js"
+    version: "18+"
+  - name: "TypeScript"
+    version: "5.8"
+
+security_tools:
+  - name: "OWASP ZAP"
+    purpose: "Vulnerability scanning"
+  - name: "Snyk"
+    purpose: "Dependency scanning"
+  - name: "Checkmarx"
+    purpose: "SAST scanning"
+  - name: "Burp Suite"
+    purpose: "Manual penetration testing"
+
+compliance_standards:
+  - "OWASP Top 10"
+  - "PCI DSS (Payment security)"
+  - "GDPR (Data privacy)"
+  - "LGPD (Brazilian data law)"
+  - "SOC 2 Type II (Service organization control)"
+
+critical_security_rules:
+  - "[P0] Never log sensitive data (passwords, tokens, PII)"
+  - "[P0] Always use HTTPS in production"
+  - "[P0] Validate all input (XSS prevention)"
+  - "[P0] Use parameterized queries (SQL injection prevention)"
+  - "[P1] Implement CORS properly"
+  - "[P1] Use security headers (CSP, HSTS, X-Frame-Options)"
+  - "[P1] Secure cookie settings (httpOnly, secure, sameSite)"
+  - "[P2] Implement request signing for critical operations"
+  - "[P2] Rate limit sensitive endpoints"
+
+incident_response:
+  - step: 1
+    action: "Detectar incidente"
+  - step: 2
+    action: "Isolar sistema afetado"
+  - step: 3
+    action: "Coletar evidências"
+  - step: 4
+    action: "Notificar usuários (se necessário)"
+  - step: 5
+    action: "Remediar vulnerabilidade"
+  - step: 6
+    action: "Comunicado pós-incidente (retrospectiva)"
+
+metrics:
+  - name: "Vulnerabilities Found & Fixed"
+    target: "100%"
+    unit: "percent"
+
+  - name: "Security Test Coverage"
+    target: "90%"
+    unit: "percent"
+
+  - name: "Mean Time to Remediation"
+    target: "24"
+    unit: "hours"
+
+  - name: "Audit Compliance"
+    target: "100%"
+    unit: "percent"
+
+dependencies: []
+
+keywords:
+  - "aios"
+  - "squad"
+  - "security"
+  - "multi-tenant"
+  - "rls"
+  - "auth"
+  - "compliance"
+  - "beauty-os"
+
+tags:
+  - "security"
+  - "compliance"
+  - "data-protection"
+  - "vulnerability-management"

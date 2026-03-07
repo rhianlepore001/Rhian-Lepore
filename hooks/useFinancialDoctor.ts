@@ -23,7 +23,7 @@ function calculateHealthScore(params: {
 }): number {
     const { weeklyGrowth, churnRiskCount, repeatClientRate, completedThisMonth, currentMonthRevenue, monthlyGoal, dataMaturityScore } = params;
 
-    if (dataMaturityScore < 10) return 0; // sem dados suficientes
+    if (dataMaturityScore < 30) return 0; // sem dados suficientes
 
     let score = 50; // base neutra
 
@@ -68,13 +68,17 @@ function generateInsights(params: {
     monthlyGoal: number;
     campaignsSent: number;
     dataMaturity: DataMaturity;
+    isBeauty?: boolean;
 }): FinancialInsight[] {
     const insights: FinancialInsight[] = [];
     const {
         weeklyGrowth, churnRiskCount, repeatClientRate, avgTicket,
         topService, completedThisMonth, currentMonthRevenue,
-        monthlyGoal, campaignsSent, dataMaturity
+        monthlyGoal, campaignsSent, dataMaturity, isBeauty
     } = params;
+
+    const businessType = isBeauty ? 'salões' : 'barbearias';
+    const businessTypeSingular = isBeauty ? 'salão' : 'barbearia';
 
     const goalProgress = monthlyGoal > 0 ? (currentMonthRevenue / monthlyGoal) * 100 : 0;
     const currFmt = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`;
@@ -85,7 +89,7 @@ function generateInsights(params: {
             id: 'churn-risk',
             category: 'risk',
             title: `${churnRiskCount} clientes sumidos`,
-            description: `${churnRiskCount} clientes frequentes não voltam há mais de 30 dias. Em barbeiros, isso representa alta rotatividade. Reconquistá-los custa 5x menos que captar novos.`,
+            description: `${churnRiskCount} clientes frequentes não voltam há mais de 30 dias. Em ${businessType}, isso representa alta rotatividade. Reconquistá-los custa 5x menos que captar novos.`,
             action: 'Criar campanha de reativação no CRM',
             impact: 'high',
             value: `${churnRiskCount} clientes`
@@ -153,7 +157,7 @@ function generateInsights(params: {
             id: 'low-repeat-rate',
             category: 'opportunity',
             title: 'Poucos clientes voltando',
-            description: `Apenas ${repeatClientRate}% dos seus clientes retornam. A média saudável para barbearias é 40%+. Campanhas de retenção podem dobrar essa taxa.`,
+            description: `Apenas ${repeatClientRate}% dos seus clientes retornam. A média saudável para ${businessType} é 40%+. Campanhas de retenção podem dobrar essa taxa.`,
             action: 'Criar campanha de fidelidade',
             impact: 'high',
             value: `${repeatClientRate}%`
@@ -220,8 +224,9 @@ export function useFinancialDoctor(params: {
     dataMaturity: DataMaturity;
     financialDoctor: FinancialDoctorData;
     completedThisMonth: number;
+    isBeauty?: boolean;
 }) {
-    const { weeklyGrowth, currentMonthRevenue, monthlyGoal, campaignsSent, dataMaturity, financialDoctor, completedThisMonth } = params;
+    const { weeklyGrowth, currentMonthRevenue, monthlyGoal, campaignsSent, dataMaturity, financialDoctor, completedThisMonth, isBeauty } = params;
 
     const healthScore = useMemo(() => calculateHealthScore({
         weeklyGrowth,
@@ -243,16 +248,17 @@ export function useFinancialDoctor(params: {
         currentMonthRevenue,
         monthlyGoal,
         campaignsSent,
-        dataMaturity
-    }), [weeklyGrowth, financialDoctor, completedThisMonth, currentMonthRevenue, monthlyGoal, campaignsSent, dataMaturity]);
+        dataMaturity,
+        isBeauty
+    }), [weeklyGrowth, financialDoctor, completedThisMonth, currentMonthRevenue, monthlyGoal, campaignsSent, dataMaturity, isBeauty]);
 
     const healthLabel = useMemo(() => {
-        if (dataMaturity.score < 10) return { label: 'Aguardando dados', color: 'text-text-secondary' };
+        if (dataMaturity.score < 30) return { label: 'Aguardando dados', color: 'text-text-secondary' };
         if (healthScore >= 80) return { label: 'Saúde Excelente', color: 'text-green-400' };
         if (healthScore >= 60) return { label: 'Saúde Boa', color: 'text-blue-400' };
         if (healthScore >= 40) return { label: 'Atenção Necessária', color: 'text-yellow-400' };
         return { label: 'Intervenção Urgente', color: 'text-red-400' };
     }, [healthScore, dataMaturity.score]);
 
-    return { healthScore, insights, healthLabel, hasData: dataMaturity.score >= 10 };
+    return { healthScore, insights, healthLabel, hasData: dataMaturity.score >= 30 };
 }

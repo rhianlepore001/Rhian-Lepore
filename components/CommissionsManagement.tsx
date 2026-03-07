@@ -62,7 +62,8 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                 total_paid: Number(item.total_paid) || 0,
                 commission_rate: Number(item.commission_rate) || 0,
                 total_pending_records: Number(item.total_pending_records) || 0
-            }));
+            }))
+                .filter((item: any) => !item.is_owner); // Filtra os donos da exibição de comissão
 
             setCommissionsDue(formattedData);
         } catch (error) {

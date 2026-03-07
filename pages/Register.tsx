@@ -26,6 +26,9 @@ export const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const companyIdFromUrl = searchParams.get('company');
+  const isInvitedStaff = !!companyIdFromUrl;
+
   const isBeauty = userType === 'beauty';
 
   useEffect(() => {
@@ -60,7 +63,8 @@ export const Register: React.FC = () => {
       businessName,
       userType,
       region,
-      phone
+      phone,
+      companyId: companyIdFromUrl || undefined
     });
 
     if (error) {
@@ -112,9 +116,11 @@ export const Register: React.FC = () => {
           )}
 
           <div className="mb-10 text-center">
-            <h1 className={`font-heading text-3xl uppercase mb-2 ${isBeauty ? 'text-white' : 'text-white'}`}>Criar sua Conta</h1>
+            <h1 className={`font-heading text-3xl uppercase mb-2 ${isBeauty ? 'text-white' : 'text-white'}`}>
+              {isInvitedStaff ? 'Aceitar Convite' : 'Criar sua Conta'}
+            </h1>
             <p className={`text-sm ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>
-              Junte-se à elite da gestão inteligente.
+              {isInvitedStaff ? 'Finalize seu cadastro para acessar a agenda' : 'Junte-se à elite da gestão inteligente.'}
             </p>
           </div>
 
@@ -206,19 +212,21 @@ export const Register: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="space-y-1">
-                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Nome do Negócio</label>
-                <input
-                  type="text"
-                  required
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                  `}
-                  placeholder="EX: STUDIO GLOW"
-                />
-              </div>
+              {!isInvitedStaff && (
+                <div className="space-y-1">
+                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Nome do Negócio</label>
+                  <input
+                    type="text"
+                    required
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className={`w-full p-4 text-sm text-white focus:outline-none transition-all
+                        ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
+                      `}
+                    placeholder="EX: STUDIO GLOW"
+                  />
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>WhatsApp</label>

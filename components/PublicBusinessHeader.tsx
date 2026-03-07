@@ -13,6 +13,8 @@ interface PublicBusinessHeaderProps {
     isBeauty?: boolean;
     userType?: string;
     gallery?: { id: string; image_url: string }[];
+    clientSession?: { name: string; photo_url?: string | null } | null;
+    businessSlug?: string;
 }
 
 export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
@@ -27,6 +29,8 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     isBeauty,
     userType,
     gallery = [],
+    clientSession,
+    businessSlug,
 }) => {
     const galleryRef = useRef<HTMLDivElement>(null);
     const borderRadius = isBeauty ? 'rounded-2xl' : 'rounded-none';
@@ -97,6 +101,29 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         {segmentLabel}
                     </div>
                 </div>
+
+                {/* Sessão do Cliente (Canto Superior Direito) */}
+                {clientSession && businessSlug && (
+                    <div className="fixed top-5 right-5 z-50">
+                        <a href={`/#/minha-area/${businessSlug}`}
+                            className={`group flex items-center gap-3 px-4 py-2 backdrop-blur-xl rounded-full border transition-all shadow-lg ${isBeauty
+                                ? 'bg-white/90 border-stone-200 hover:bg-white cursor-pointer'
+                                : 'bg-black/90 border-white/20 hover:bg-black cursor-pointer'
+                                }`}>
+                            <div className="flex flex-col items-end">
+                                <span className={`text-[9px] uppercase font-black tracking-widest ${isBeauty ? 'text-stone-400' : 'text-neutral-500'}`}>Sessão Ativa</span>
+                                <span className={`text-xs font-bold truncate max-w-[100px] ${isBeauty ? 'text-stone-700' : 'text-white'}`}>{clientSession.name.split(' ')[0]}</span>
+                            </div>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border ${isBeauty ? 'bg-stone-100 border-stone-200 text-stone-500' : 'bg-neutral-800 border-white/10 text-white'}`}>
+                                {clientSession.photo_url ? (
+                                    <img src={clientSession.photo_url} alt="User" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="font-bold text-sm tracking-tighter">{clientSession.name.charAt(0).toUpperCase()}</span>
+                                )}
+                            </div>
+                        </a>
+                    </div>
+                )}
             </div>
 
             {/* Info Section */}

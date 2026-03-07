@@ -87,6 +87,11 @@ export const ClientCRM: React.FC = () => {
             : 'Nunca';
           const nextPrediction = calculateNextVisitPrediction(appointmentsData || []);
 
+          // Calculate LTV
+          const ltv = (appointmentsData || []).reduce((acc: number, apt: any) => {
+            return acc + (Number(apt.price) || 0);
+          }, 0);
+
           // Fetch hair records
           const { data: historyData, error: historyError } = await supabase
             .from('hair_records')
@@ -102,6 +107,7 @@ export const ClientCRM: React.FC = () => {
             lastVisit,
             totalVisits,
             nextPrediction,
+            ltv,
             appointmentsHistory: appointmentsData?.map((apt: any) => ({
               ...apt,
               professional_name: apt.team_members?.name,
@@ -401,7 +407,7 @@ export const ClientCRM: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <div className="bg-neutral-900 p-3 border border-neutral-800">
                 <p className="text-[10px] md:text-xs text-text-secondary uppercase">Última Visita</p>
                 <p className="text-base md:text-lg font-bold text-white">{client.lastVisit}</p>
@@ -409,6 +415,12 @@ export const ClientCRM: React.FC = () => {
               <div className="bg-neutral-900 p-3 border border-neutral-800">
                 <p className="text-[10px] md:text-xs text-text-secondary uppercase">Total Visitas</p>
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
+              </div>
+              <div className="bg-neutral-900 p-3 border border-neutral-800">
+                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Lifetime Value (Total Gasto)">LTV Total</p>
+                <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
+                  {formatCurrency(client.ltv || 0, region)}
+                </p>
               </div>
               <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 ${isBeauty ? 'border-l-beauty-neon' : 'border-l-yellow-500'}`}>
                 <p className={`text-[10px] md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>

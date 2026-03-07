@@ -22,6 +22,7 @@ export const Clients: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+    const [origin, setOrigin] = useState<'Novo' | 'Recente' | 'Antigo'>('Novo');
     const [photo, setPhoto] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
 
@@ -132,9 +133,10 @@ export const Clients: React.FC = () => {
                 email,
                 phone,
                 photo_url: photoUrl,
-                loyalty_tier: 'Bronze',
-                total_visits: 0,
-                rating: 0
+                loyalty_tier: origin === 'Antigo' ? 'Prata' : 'Bronze',
+                total_visits: origin === 'Antigo' ? 1 : 0, // Inicia com 1 visita se for antigo pra nao cair nas regras de virgem
+                rating: 0,
+                notes: origin === 'Antigo' ? 'Cliente migrado de outro sistema.' : ''
             });
 
             if (error) throw error;
@@ -145,6 +147,7 @@ export const Clients: React.FC = () => {
             setName('');
             setEmail('');
             setPhone('');
+            setOrigin('Novo');
             setPhoto(null);
         } catch (error: any) {
             logger.error('Error creating client', error);
@@ -154,10 +157,21 @@ export const Clients: React.FC = () => {
         }
     };
 
+    const [filterType, setFilterType] = useState<'Todos' | 'VIP' | 'Inativo' | 'Novos'>('Todos');
+
     const filteredClients = clients.filter(client => {
         const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             client.phone?.includes(searchTerm);
-        return matchesSearch;
+
+        // Regras de negócio da classificação (VIP = 5+ agendamentos, Inativo = Lógica complexa simplificada por enquanto para visitas, Novos = 0-1)
+        const totalV = client.actual_visits ?? client.total_visits ?? 0;
+
+        let matchesFilter = true;
+        if (filterType === 'VIP') matchesFilter = totalV >= 5;
+        if (filterType === 'Inativo') matchesFilter = totalV === 0;
+        if (filterType === 'Novos') matchesFilter = totalV > 0 && totalV < 5;
+
+        return matchesSearch && matchesFilter;
     });
 
     return (
@@ -169,22 +183,39 @@ export const Clients: React.FC = () => {
 
 
 
-            {/* Search Bar */}
-            <div className="relative">
-                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`} />
-                <input
-                    type="text"
-                    placeholder="Buscar por nome ou telefone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`
-                        w-full p-4 pl-12 text-white font-mono text-sm outline-none transition-all duration-300
-                        ${isBeauty
-                            ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                            : 'bg-black/40 border-2 border-neutral-800 focus:border-accent-gold focus:shadow-heavy-sm'
-                        }
-                    `}
-                />
+            {/* Search Bar and Filters */}
+            <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`} />
+                    <input
+                        type="text"
+                        placeholder="Buscar por nome ou telefone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className={`
+                            w-full p-4 pl-12 text-white font-mono text-sm outline-none transition-all duration-300
+                            ${isBeauty
+                                ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
+                                : 'bg-black/40 border-2 border-neutral-800 focus:border-accent-gold focus:shadow-heavy-sm'
+                            }
+                        `}
+                    />
+                </div>
+                <div className="flex gap-2 self-start md:self-stretch overflow-x-auto pb-2 md:pb-0 hide-scrollbar w-full md:w-auto">
+                    {['Todos', 'VIP', 'Novos', 'Inativo'].map(type => (
+                        <button
+                            key={type}
+                            onClick={() => setFilterType(type as any)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap
+                                ${filterType === type
+                                    ? (isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black')
+                                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}
+                            `}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -210,6 +241,11 @@ export const Clients: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
+                                            {totalVisits >= 5 && (
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'}`}>
+                                                    VIP
+                                                </span>
+                                            )}
                                             <span className="text-xs font-mono text-neutral-400">
                                                 {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
                                             </span>
@@ -299,6 +335,30 @@ export const Clients: React.FC = () => {
                                     defaultRegion={region as 'BR' | 'PT'}
                                     className="w-full"
                                 />
+                            </div>
+
+                            <div>
+                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Origem do Cliente</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['Novo', 'Recente', 'Antigo'].map(opt => (
+                                        <button
+                                            key={opt}
+                                            type="button"
+                                            onClick={() => setOrigin(opt as any)}
+                                            className={`p-2 rounded-xl text-xs font-bold uppercase transition-all
+                                                ${origin === opt
+                                                    ? (isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-beauty-neon text-black' : 'bg-accent-gold/20 border-accent-gold text-accent-gold')
+                                                    : 'bg-black border-neutral-800 text-neutral-500'} border-2`}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                                {origin === 'Antigo' && (
+                                    <p className="text-[10px] text-neutral-400 mt-2 font-mono">
+                                        * Clientes antigos já começam com o status Prata para não serem tratados como 1º agendamento.
+                                    </p>
+                                )}
                             </div>
 
                             <div>

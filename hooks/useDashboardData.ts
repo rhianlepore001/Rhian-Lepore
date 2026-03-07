@@ -19,6 +19,7 @@ export interface ProfitMetricsData {
     filledSlots: number;
     weeklyGrowth: number;
     campaignsSent: number;
+    currentMonthRevenue?: number;
 }
 
 export interface FinancialDoctorData {
@@ -121,7 +122,8 @@ export function useDashboardData() {
                 ]);
 
                 if (statsRes.error) throw statsRes.error;
-                if (actionsRes.error) throw actionsRes.error;
+                // Erro em get_dashboard_actions é não-fatal: dashboard continua carregando
+                if (actionsRes.error) logger.warn('get_dashboard_actions indisponível (não-fatal):', actionsRes.error);
 
                 const s = statsRes.data;
 
@@ -132,6 +134,7 @@ export function useDashboardData() {
 
                     setProfitMetrics({
                         totalProfit: s.total_profit || 0,
+                        currentMonthRevenue: s.current_month_revenue || 0,
                         recoveredRevenue: s.recovered_revenue || 0,
                         avoidedNoShows: s.avoided_no_shows || 0,
                         filledSlots: s.filled_slots || 0,
@@ -252,8 +255,40 @@ export function useDashboardData() {
         return { error };
     }
 
+    const fetchAllAppointments = async () => {
+        if (!user) return [];
+        try {
+            const nowIso = new Date().toISOString();
+            const { data, error } = await supabase
+                .from('appointments')
+                .select('*, clients(name)')
+                .eq('user_id', user.id)
+                .eq('status', 'Confirmed')
+                .gte('appointment_time', nowIso)
+                .order('appointment_time', { ascending: true });
+
+            if (error) throw error;
+
+            return data?.map((apt: any) => ({
+                id: apt.id,
+                clientName: apt.clients?.name || 'Cliente Desconhecido',
+                service: apt.service,
+                time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                rawDate: new Date(apt.appointment_time).toISOString().split('T')[0],
+                status: apt.status,
+                price: apt.price,
+                appointment_time: apt.appointment_time
+            })) || [];
+        } catch (error) {
+            logger.error('Error fetching all appointments:', error);
+            return [];
+        }
+    };
+
     return {
         appointments,
+        fetchAllAppointments,
         profit,
         currentMonthRevenue,
         weeklyGrowth,

@@ -97,7 +97,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 bio: bio.trim(),
                 active,
                 photo_url: photoUrl,
-                commission_rate: commissionRate === '' ? 0 : Number(commissionRate),
+                commission_rate: (isOwner || commissionRate === '') ? 0 : Number(commissionRate),
                 is_owner: isOwner,
                 specialties: specialties.split(',').map(s => s.trim()).filter(Boolean)
             };
@@ -228,7 +228,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className={`grid ${isOwner ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                         <div>
                             <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Cargo</label>
                             <input
@@ -243,21 +243,24 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 placeholder="Ex: Barbeiro"
                             />
                         </div>
-                        <div>
-                            <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Comissão (%)</label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                max="100"
-                                value={commissionRate}
-                                onChange={e => setCommissionRate(e.target.value)}
-                                className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                    ${isBeauty
-                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                            />
-                        </div>
+
+                        {!isOwner && (
+                            <div>
+                                <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Comissão (%)</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    max="100"
+                                    value={commissionRate}
+                                    onChange={e => setCommissionRate(e.target.value)}
+                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                                        ${isBeauty
+                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
+                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div>

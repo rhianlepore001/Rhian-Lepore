@@ -128,6 +128,8 @@ export interface Profile {
   subscription_status: 'trial' | 'active' | 'past_due' | 'canceled';
   trial_ends_at?: string;
   monthly_goal?: number;
+  role?: 'owner' | 'staff';
+  company_id?: string;
   created_at: string;
   updated_at?: string;
 }

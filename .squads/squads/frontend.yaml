@@ -1,0 +1,101 @@
+name: "Squad Frontend"
+version: "0.1.0"
+description: "Time responsável por UI/UX, React 19, Tailwind CSS e componentes da aplicação Beauty OS"
+author: "Beauty OS Team"
+license: "MIT"
+
+aios:
+  minVersion: "2.1.0"
+  type: "squad"
+
+lead_agent: "frontend-specialist"
+
+members:
+  - agent: "frontend-specialist"
+    role: "Tech Lead"
+    focus: "UI/UX, React patterns, component architecture"
+
+  - agent: "debugger"
+    role: "Performance QA"
+    focus: "Component rendering, performance profiling"
+
+  - agent: "documentation-writer"
+    role: "Documentation Lead"
+    focus: "Component documentation, storybook"
+
+components:
+  agents:
+    - ./agents/*.yaml
+  tasks:
+    - ./tasks/*.yaml
+  workflows:
+    - ./workflows/*.yaml
+
+responsibilities:
+  - "Desenvolver e manter componentes React 19"
+  - "Implementar design system (Brutal & Beauty themes)"
+  - "Otimizar performance de renderização"
+  - "Garantir responsividade mobile-first"
+  - "Testes de componentes (Vitest + RTL)"
+  - "Code review de UI/UX changes"
+
+technology_stack:
+  - name: "React"
+    version: "19"
+  - name: "TypeScript"
+    version: "5.8"
+  - name: "Tailwind CSS"
+    version: "latest"
+  - name: "Vite"
+    version: "6"
+  - name: "Vitest"
+    version: "latest"
+  - name: "React Testing Library"
+    version: "latest"
+  - name: "Lucide React"
+    version: "latest"
+
+directories:
+  - path: "pages/"
+    description: "Page components (Dashboard, Agenda, Finance, etc.)"
+  - path: "components/"
+    description: "Reusable UI components (~50+ files)"
+  - path: "components/modals/"
+    description: "Modal components"
+  - path: "components/styled/"
+    description: "Themed components (Brutal, Beauty)"
+  - path: "contexts/"
+    description: "React Context for UI state"
+  - path: "styles/"
+    description: "CSS custom properties, themes"
+
+metrics:
+  - name: "Component Test Coverage"
+    target: "85%"
+    unit: "percent"
+
+  - name: "Bundle Size"
+    target: "500"
+    unit: "kb"
+
+  - name: "LCP (Largest Contentful Paint)"
+    target: "2.5"
+    unit: "seconds"
+
+dependencies: []
+
+keywords:
+  - "aios"
+  - "squad"
+  - "frontend"
+  - "react"
+  - "ui-ux"
+  - "tailwind"
+  - "beauty-os"
+
+tags:
+  - "ui-development"
+  - "component-design"
+  - "react-19"
+  - "typography-design"
+  - "theme-system"

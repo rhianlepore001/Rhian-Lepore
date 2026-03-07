@@ -1,93 +1,98 @@
 version: "2"
 type: frontend
 tech_stack:
-  - react
-  - react-router-dom
-  - vite
-  - tailwindcss
+  - TypeScript
+  - React
+  - Vite
+  - Tailwind CSS
+  - Supabase
+  - Lucide-React
+  - Recharts
+  - React Router (HashRouter)
 routes:
-  - path: /register
-    file: src/pages/Register.tsx
+  - path: /#/login
+    file: pages/Login.tsx
     auth_required: false
-    description: User registration page
-  - path: /login
-    file: src/pages/Login.tsx
+    description: Página de login com seleção de categoria (Barbeiro/Beleza)
+  - path: /#/register
+    file: pages/Register.tsx
     auth_required: false
-    description: User login page
-  - path: /forgot-password
-    file: src/pages/ForgotPassword.tsx
+    description: Página de registro de novo negócio
+  - path: /#/forgot-password
+    file: pages/ForgotPassword.tsx
     auth_required: false
-    description: Forgot password page
-  - path: /update-password
-    file: src/pages/UpdatePassword.tsx
+    description: Recuperação de senha
+  - path: /#/update-password
+    file: pages/UpdatePassword.tsx
     auth_required: false
-    description: Update password page
-  - path: /book/:slug
-    file: src/pages/PublicBooking.tsx
+    description: Redefinição de senha via token
+  - path: /#/
+    file: pages/Dashboard.tsx
+    auth_required: true
+    description: Dashboard principal com métricas e KPIs
+  - path: /#/agenda
+    file: pages/Agenda.tsx
+    auth_required: true
+    description: Agenda de compromissos e calendário
+  - path: /#/fila
+    file: pages/QueueManagement.tsx
+    auth_required: true
+    description: Gerenciamento de fila digital (Dono)
+  - path: /#/clientes
+    file: pages/Clients.tsx
+    auth_required: true
+    description: Listagem e busca de clientes
+  - path: /#/financeiro
+    file: pages/Finance.tsx
+    auth_required: true
+    description: Gestão financeira e fluxo de caixa
+  - path: /#/marketing
+    file: pages/Marketing.tsx
+    auth_required: true
+    description: Copiloto de marketing e ações proativas
+  - path: /#/insights
+    file: pages/Reports.tsx
+    auth_required: true
+    description: Relatórios e análises gráficas
+  - path: /#/book/:slug
+    file: pages/PublicBooking.tsx
     auth_required: false
-    description: Public booking page for a specific professional
-  - path: /queue/:slug
-    file: src/pages/QueueJoin.tsx
+    description: Agendamento público para clientes
+  - path: /#/queue/:slug
+    file: pages/QueueJoin.tsx
     auth_required: false
-    description: Public queue join page
-  - path: /queue-status/:id
-    file: src/pages/QueueStatus.tsx
+    description: Entrada na fila digital por clientes
+  - path: /#/queue-status/:id
+    file: pages/QueueStatus.tsx
     auth_required: false
-    description: Public queue status page
-  - path: /pro/:slug
-    file: src/pages/ProfessionalPortfolio.tsx
-    auth_required: false
-    description: Professional portfolio page
-  - path: /onboarding
-    file: src/pages/OnboardingWizard.tsx
-    auth_required: true
-    description: Onboarding wizard
-  - path: /
-    file: src/pages/Dashboard.tsx
-    auth_required: true
-    description: Dashboard page
-  - path: /agenda
-    file: src/pages/Agenda.tsx
-    auth_required: true
-    description: Agenda page
-  - path: /fila
-    file: src/pages/QueueManagement.tsx
-    auth_required: true
-    description: Queue management page
-  - path: /clientes
-    file: src/pages/Clients.tsx
-    auth_required: true
-    description: Clients list page
-  - path: /clientes/:id
-    file: src/pages/ClientCRM.tsx
-    auth_required: true
-    description: Client CRM details page
-  - path: /financeiro
-    file: src/pages/Finance.tsx
-    auth_required: true
-    description: Finance page
-  - path: /marketing
-    file: src/pages/Marketing.tsx
-    auth_required: true
-    description: Marketing page
-  - path: /insights
-    file: src/pages/Reports.tsx
-    auth_required: true
-    description: Reports page
+    description: Status da posição na fila para o cliente
 features:
-  - name: User Login
-    description: Login with email and password credentials
+  - name: Autenticação
+    description: Login, registro e recuperação de senha. Requer passar pelo gateway inicial.
     files:
-      - src/pages/Login.tsx
-      - src/contexts/AuthContext.tsx
-    entry_route: /login
+      - pages/Login.tsx
+      - pages/Register.tsx
+      - contexts/AuthContext.tsx
+    entry_route: /#/login
     user_interactions:
-      - Fill email input field
-      - Fill password input field
-      - Click Login button to submit
-      - See error message on invalid credentials
-    api_calls:
-      - method: POST
-        endpoint: /api/auth/login
+      - Navigate to /#/login
+      - Wait until the text "BARBEARIA" is visible on the screen
+      - Click on the button or card that contains the text "BARBEARIA" (this selects the theme and reveals the login form)
+      - Wait for the email input field to be visible
+      - Fill email with "rleporesilva@gmail.com"
+      - Fill password with "rhianlepore789"
+      - Click on the button with text "ENTRAR"
     auth_required: false
-known_limitations: []
+  - name: Dashboard
+    description: Visualização de métricas de negócio
+    files:
+      - pages/Dashboard.tsx
+    entry_route: /#/
+    auth_required: true
+known_limitations:
+  - issue: HashRouter navigation
+    location: App.tsx
+    impact: Todas as rotas devem incluir "/#/" na URL (ex: /#/login)
+  - issue: Gateway Selection
+    location: pages/Login.tsx
+    impact: Antes do login, é necessário selecionar uma categoria (Barbearia ou Salão) clicando no card correspondente.

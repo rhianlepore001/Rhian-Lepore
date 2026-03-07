@@ -11,7 +11,7 @@ import { AgenXLogo } from './AgenXLogo';
 
 export const Header: React.FC = () => {
   const { toggleSidebar } = useUI();
-  const { businessName, fullName, userType, logout, avatarUrl, isDev, setDevUserType } = useAuth();
+  const { businessName, fullName, userType, logout, avatarUrl, isDev, setDevUserType, role } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -219,12 +219,14 @@ export const Header: React.FC = () => {
                   >
                     <UserIcon className="w-4 h-4" /> Meu Perfil
                   </button>
-                  <button
-                    onClick={() => { navigate('/configuracoes/geral'); setShowProfileMenu(false); }}
-                    className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 flex items-center gap-2"
-                  >
-                    <Settings className="w-4 h-4" /> Configurações
-                  </button>
+                  {role !== 'staff' && (
+                    <button
+                      onClick={() => { navigate('/configuracoes/geral'); setShowProfileMenu(false); }}
+                      className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/10 flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" /> Configurações
+                    </button>
+                  )}
                   <div className="border-t border-neutral-800 my-1"></div>
                   <button
                     onClick={logout}

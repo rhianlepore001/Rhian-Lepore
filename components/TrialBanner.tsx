@@ -6,9 +6,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const TrialBanner: React.FC = () => {
     const { trialDaysRemaining, isTrial, isExpired, subscriptionStatus } = useSubscription();
-    const { userType } = useAuth();
+    const { userType, role } = useAuth();
     const navigate = useNavigate();
 
+    // Staff não vê banner de trial (herda plano do dono)
+    if (role === 'staff') return null;
     if (!isTrial && !isExpired) return null;
 
     const isBeauty = userType === 'beauty';

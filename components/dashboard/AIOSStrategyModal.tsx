@@ -18,7 +18,7 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
     const playbooks = [
         {
             icon: <Trophy className={`w-5 h-5 ${accentText}`} />,
-            title: "O Radar de Oportunidades",
+            title: "O Painel de Oportunidades",
             description: "Identifique quem não aparece há 30 dias. Recuperar 2 clientes por semana paga o sistema e sobra lucro neto.",
             tag: "LUCRO RÁPIDO"
         },

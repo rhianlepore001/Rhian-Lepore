@@ -4,10 +4,12 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { OnboardingLayout } from '../components/OnboardingLayout';
 import { StepBusinessInfo } from '../components/onboarding/StepBusinessInfo';
-import { StepBusinessHours } from '../components/onboarding/StepBusinessHours';
-import { StepTeam } from '../components/onboarding/StepTeam';
 import { StepServices } from '../components/onboarding/StepServices';
+import { StepTeam } from '../components/onboarding/StepTeam';
+import { StepMonthlyGoal } from '../components/onboarding/StepMonthlyGoal';
 import { StepSuccess } from '../components/onboarding/StepSuccess';
+
+const TOTAL_STEPS = 5; // 4 etapas + success
 
 export const OnboardingWizard: React.FC = () => {
     const { user, userType } = useAuth();
@@ -37,11 +39,23 @@ export const OnboardingWizard: React.FC = () => {
         }
 
         if (data?.onboarding_step) {
-            // Garantir que o passo esteja dentro dos limites suportados (1.2)
-            const validStep = Math.min(Math.max(data.onboarding_step, 1), 2);
+            const validStep = Math.min(Math.max(data.onboarding_step, 1), TOTAL_STEPS);
             setStep(validStep);
         }
         setLoading(false);
+    };
+
+    const goToStep = async (nextStep: number) => {
+        if (!user) return;
+        try {
+            await supabase.rpc('update_onboarding_step', {
+                p_user_id: user.id,
+                p_step: nextStep
+            });
+        } catch (e) {
+            console.error('Error saving step:', e);
+        }
+        setStep(nextStep);
     };
 
     if (loading) {
@@ -53,7 +67,7 @@ export const OnboardingWizard: React.FC = () => {
                         : "w-16 h-16 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"
                     }></div>
                     <p className="text-white text-lg font-mono">Carregando...</p>
-                    <p className="text-neutral-500 text-sm mt-2">Preparando seu onboarding</p>
+                    <p className="text-neutral-500 text-sm mt-2">Preparando seu setup</p>
                 </div>
             </div>
         );
@@ -62,21 +76,51 @@ export const OnboardingWizard: React.FC = () => {
     const steps = [
         {
             title: isBeauty ? 'Bem-vindo ao AgenX Beauty' : 'Bem-vindo ao AgenX Barber',
-            description: 'Vamos começar com o básico. O resto? A nossa IA cuida para você.',
-            component: <StepBusinessInfo onNext={async () => {
-                if (!user) return;
-                // Pula direto para o sucesso e marca como concluído
-                await supabase.rpc('update_onboarding_step', {
-                    p_user_id: user.id,
-                    p_step: 2,
-                    p_completed: true
-                });
-                setStep(2);
-            }} accentColor={accentColor} />
+            description: 'Primeiro, conte-nos sobre o seu negócio.',
+            component: (
+                <StepBusinessInfo
+                    onNext={() => goToStep(2)}
+                    accentColor={accentColor}
+                />
+            )
         },
         {
-            title: 'Tudo pronto!',
-            description: 'Seu sistema já está inteligente. Vamos ao trabalho?',
+            title: 'Seus Serviços',
+            description: 'Cadastre pelo menos um serviço com preço para ativar seu financeiro.',
+            component: (
+                <StepServices
+                    onNext={() => goToStep(3)}
+                    onBack={() => goToStep(1)}
+                    accentColor={accentColor}
+                />
+            )
+        },
+        {
+            title: 'Sua Equipe',
+            description: 'Quem faz os atendimentos? Adicione pelo menos um profissional.',
+            component: (
+                <StepTeam
+                    onNext={() => goToStep(4)}
+                    onBack={() => goToStep(2)}
+                    accentColor={accentColor}
+                />
+            )
+        },
+        {
+            title: 'Sua Meta',
+            description: 'Defina quanto quer faturar este mês — acompanhe seu progresso no dashboard.',
+            component: (
+                <StepMonthlyGoal
+                    onNext={() => goToStep(5)}
+                    onBack={() => goToStep(3)}
+                    onSkip={() => goToStep(5)}
+                    accentColor={accentColor}
+                />
+            )
+        },
+        {
+            title: 'Tudo Pronto!',
+            description: 'Seu sistema está configurado e inteligente. Vamos ao trabalho?',
             component: <StepSuccess accentColor={accentColor} />
         }
     ];
@@ -86,7 +130,7 @@ export const OnboardingWizard: React.FC = () => {
     return (
         <OnboardingLayout
             currentStep={step}
-            totalSteps={2}
+            totalSteps={TOTAL_STEPS}
             title={currentStepData.title}
             description={currentStepData.description}
         >

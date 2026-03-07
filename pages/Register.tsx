@@ -71,7 +71,11 @@ export const Register: React.FC = () => {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate('/onboarding');
+      if (isInvitedStaff) {
+        navigate('/');
+      } else {
+        navigate('/onboarding');
+      }
     }
   };
 

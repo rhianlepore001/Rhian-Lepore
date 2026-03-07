@@ -89,7 +89,7 @@ export const TeamSettings: React.FC = () => {
                         <div className="w-full md:w-auto flex-shrink-0">
                             <button
                                 onClick={() => {
-                                    const inviteLink = `${window.location.origin}/register?company=${user?.id}`;
+                                    const inviteLink = `${window.location.origin}/#/register?company=${user?.id}`;
                                     navigator.clipboard.writeText(inviteLink);
                                     setCopiedLink(true);
                                     setTimeout(() => setCopiedLink(false), 2000);

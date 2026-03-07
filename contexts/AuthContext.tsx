@@ -20,6 +20,7 @@ interface AuthContextType {
   isSubscriptionActive: boolean;
   role: 'owner' | 'staff';
   companyId: string | null;
+  teamMemberId: string | null;
   isDev: boolean;
   aiosEnabled: boolean;
   setDevUserType: (type: UserType) => void;
@@ -53,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [role, setRole] = useState<'owner' | 'staff'>('owner');
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [teamMemberId, setTeamMemberId] = useState<string | null>(null);
   const [aiosEnabled, setAiosEnabled] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [devUserType, setDevUserTypeState] = useState<UserType | null>(() => {
@@ -78,11 +80,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setFullName(profile.full_name || '');
         setAvatarUrl(profile.photo_url || null);
         setTutorialCompleted(profile.tutorial_completed ?? true);
-        setSubscriptionStatus((profile.subscription_status as any) || 'trial');
-        setTrialEndsAt(profile.trial_ends_at || null);
         setRole(profile.role === 'staff' ? 'staff' : 'owner');
         setCompanyId(profile.company_id || null);
         setAiosEnabled(profile.aios_enabled ?? false);
+
+        // Se for staff, herda o plano de assinatura do dono
+        if (profile.role === 'staff' && profile.company_id) {
+          const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('subscription_status, trial_ends_at, user_type, business_name')
+            .eq('id', profile.company_id)
+            .single();
+
+          if (ownerProfile) {
+            setSubscriptionStatus((ownerProfile.subscription_status as any) || 'trial');
+            setTrialEndsAt(ownerProfile.trial_ends_at || null);
+            // Herda o userType e businessName do dono para manter a UI consistente
+            setUserType(ownerProfile.user_type as UserType || 'barber');
+            setBusinessName(ownerProfile.business_name || '');
+          } else {
+            // Fallback: manter como subscriber para não bloquear o staff
+            setSubscriptionStatus('subscriber');
+            setTrialEndsAt(null);
+          }
+
+          // Busca o ID do registro de profissional vinculado ao staff
+          const { data: teamMember } = await supabase
+            .from('team_members')
+            .select('id')
+            .eq('staff_user_id', userId)
+            .eq('user_id', profile.company_id)
+            .maybeSingle();
+
+          setTeamMemberId(teamMember?.id || null);
+        } else {
+          setSubscriptionStatus((profile.subscription_status as any) || 'trial');
+          setTrialEndsAt(profile.trial_ends_at || null);
+          setTeamMemberId(null);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -135,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTrialEndsAt(null);
         setRole('owner');
         setCompanyId(null);
+        setTeamMemberId(null);
         setAiosEnabled(false);
         setLoading(false);
       }
@@ -176,6 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTrialEndsAt(null);
     setRole('owner');
     setCompanyId(null);
+    setTeamMemberId(null);
   };
 
   const markTutorialCompleted = async () => {
@@ -236,6 +273,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ]);
 
         if (profileError) return { error: profileError };
+
+        // Se for um registro de equipe (tem companyId), cria também o registro em team_members
+        if (data.companyId) {
+          const { error: teamError } = await supabase
+            .from('team_members')
+            .insert([
+              {
+                user_id: data.companyId, // ID do dono
+                staff_user_id: authData.user.id, // ID real do profissional
+                name: data.fullName,
+                role: 'Profissional',
+                active: true,
+                is_owner: false,
+                commission_rate: 0,
+                slug: data.fullName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
+              }
+            ]);
+
+          if (teamError) {
+            console.error('Erro ao adicionar membro à listagem de equipe:', teamError);
+            // Não retornamos erro de forma ríspida pois a conta em si já foi criada
+          }
+        }
       }
 
       return { error: null };
@@ -272,6 +332,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ),
     role,
     companyId,
+    teamMemberId,
     isDev,
     aiosEnabled,
     setDevUserType,
@@ -292,6 +353,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     trialEndsAt,
     role,
     companyId,
+    teamMemberId,
     isDev,
     aiosEnabled,
     devUserType,

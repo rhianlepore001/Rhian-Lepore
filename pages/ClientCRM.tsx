@@ -200,7 +200,7 @@ export const ClientCRM: React.FC = () => {
       );
 
       const message = generateReactivationMessage({
-        clientName: client.name,
+        name: client.name,
         businessName: businessName || 'nossa unidade',
         userType: userType,
         daysMissing: isAtRisk.days_since_last_visit
@@ -417,7 +417,7 @@ export const ClientCRM: React.FC = () => {
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
               </div>
               <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Lifetime Value (Total Gasto)">LTV Total</p>
+                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Lifetime Value (Total Gasto)">Total Investido</p>
                 <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
@@ -543,14 +543,14 @@ export const ClientCRM: React.FC = () => {
               <div className="flex items-center gap-2 mb-3">
                 <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
                   <Sparkles className="w-5 h-5 animate-pulse" />
-                  <h3 className="font-heading text-lg uppercase tracking-wider">Radar de Reativação</h3>
+                  <h3 className="font-heading text-lg uppercase tracking-wider">Clientes para Recuperar</h3>
                 </div>
                 <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase tracking-widest`}>AIOS 2.0</span>
               </div>
 
               <div className="space-y-4">
                 <p className="text-sm text-text-secondary leading-relaxed border-l-2 border-white/10 pl-3">
-                  Detectamos que o ticket médio de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${themeColor} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
+                  Detectamos que o valor médio por atendimento de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${themeColor} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
                 </p>
 
                 <div className="bg-white/5 p-3 rounded border border-white/5">
@@ -565,7 +565,7 @@ export const ClientCRM: React.FC = () => {
                   onClick={handleWhatsAppClick}
                   icon={<MessageCircle className="w-4 h-4" />}
                 >
-                  Enviar Reativação
+                  Mandar Mensagem
                 </BrutalButton>
               </div>
             </div>

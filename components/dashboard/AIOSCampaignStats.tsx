@@ -33,7 +33,7 @@ export const AIOSCampaignStats = React.memo(({
                         <div className="flex items-center gap-2">
                             <h3 className="text-white font-heading text-lg uppercase leading-tight">Métricas de Campanha</h3>
                             <div className="mb-1">
-                                <InfoButton text="Acompanhe o desempenho real das suas campanhas de reativação. O ROI Direto é calculado apenas quando um agendamento concluído possui uma mensagem enviada ao cliente nos últimos 30 dias, garantindo atribuição precisa e 100% honesta." />
+                                <InfoButton text="Acompanhe o desempenho real das suas campanhas de reativação. O Retorno Direto é calculado apenas quando um agendamento concluído possui uma mensagem enviada ao cliente nos últimos 30 dias, garantindo atribuição precisa e 100% honesta." />
                             </div>
                         </div>
                         <p className="text-xs text-text-secondary font-mono uppercase tracking-wider">Desempenho do AIOS 2.0</p>
@@ -52,7 +52,7 @@ export const AIOSCampaignStats = React.memo(({
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
                             <TrendingUp className="w-3 h-3 text-green-500" />
-                            <span className="text-[10px] uppercase font-mono text-text-secondary">ROI Direto</span>
+                            <span className="text-[10px] uppercase font-mono text-text-secondary">Retorno Direto</span>
                         </div>
                         <p className={`text-2xl font-bold ${accentColor} leading-none`}>
                             {currencySymbol} {recoveredRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

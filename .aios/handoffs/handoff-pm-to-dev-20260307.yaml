@@ -1,0 +1,21 @@
+handoff:
+  from_agent: "pm"
+  to_agent: "dev"
+  last_command: "*create-epic"
+  consumed: true
+  story_context:
+    story_id: "EPIC-001"
+    story_path: "docs/stories/2026-03-07-EPIC-001-transformacao-ux-ai.md"
+    story_status: "Draft"
+    current_task: "Epic criado, pronto para implementação"
+    branch: "main"
+  decisions:
+    - "Onboarding: Wizard 4 etapas bloqueantes (nome+tipo, serviço, profissional, meta)"
+    - "IA: Chat simples e direto, ícone flutuante, dados reais do Supabase"
+    - "Conteúdo: Calendário 30 posts/mês com template visual editável (Canva-style)"
+    - "ChurnRadar: Substituir por notificações inteligentes (push/banner)"
+    - "Diferenciação: Marketing automatizado sem esforço (vs Trinks/Booksy)"
+  files_modified:
+    - "docs/stories/2026-03-07-EPIC-001-transformacao-ux-ai.md"
+  blockers: []
+  next_action: "*develop EPIC-001 — iniciar pela Wave 1 (US-A Onboarding + US-E Audit)"

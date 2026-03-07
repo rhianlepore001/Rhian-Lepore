@@ -44,7 +44,7 @@ interface MonthlyHistoryItem {
 }
 
 export const Finance: React.FC = () => {
-  const { user, userType, region } = useAuth();
+  const { user, userType, region, role, companyId, fullName } = useAuth();
   const { diagnostic, loading: diagnosticLoading } = useAIOSDiagnostic();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -66,6 +66,8 @@ export const Finance: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
+  // Staff não vê aba de comissões nem histórico
+  const isStaff = role === 'staff';
   const [activeTab, setActiveTab] = useState<FinanceTabType>('overview');
 
   // New Transaction Modal State
@@ -129,8 +131,10 @@ export const Finance: React.FC = () => {
       const startDateParam = startOfMonth.toISOString().split('T')[0];
       const endDateParam = endOfMonth.toISOString().split('T')[0];
 
+      const queryUserId = isStaff && companyId ? companyId : user.id;
+
       const { data, error } = await supabase.rpc('get_finance_stats', {
-        p_user_id: user.id,
+        p_user_id: queryUserId,
         p_start_date: startDateParam,
         p_end_date: endDateParam
       });
@@ -145,7 +149,7 @@ export const Finance: React.FC = () => {
         const prevEndDate = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0];
 
         const { data: prevData } = await supabase.rpc('get_finance_stats', {
-          p_user_id: user.id,
+          p_user_id: queryUserId,
           p_start_date: prevStartDate,
           p_end_date: prevEndDate
         });
@@ -189,13 +193,36 @@ export const Finance: React.FC = () => {
             status: isPaid ? 'paid' : 'pending'
           };
         });
-        const filtered = formattedTransactions.filter((t: any) => {
+        // Para staff: filtra apenas as transações do próprio profissional
+        const staffFiltered = isStaff
+          ? formattedTransactions.filter((t: any) => t.professionalName === fullName)
+          : formattedTransactions;
+
+        const filtered = staffFiltered.filter((t: any) => {
           const matchesType = filterType === 'all' || (filterType === 'revenue' ? t.type === 'revenue' : t.type === 'expense');
           const matchesPayment = filterPaymentMethod === 'all' || t.payment_method === filterPaymentMethod;
           return matchesType && matchesPayment;
         });
 
         setTransactions(filtered);
+
+        // Recalcula resumo para staff (apenas os próprios atendimentos)
+        if (isStaff) {
+          const staffRevenue = staffFiltered
+            .filter((t: any) => t.type === 'revenue')
+            .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+          setSummary({
+            revenue: staffRevenue,
+            expenses: 0,
+            commissionsPending: 0,
+            profit: staffRevenue,
+            growth: 0,
+            previousMonthRevenue: 0,
+            revenueByMethod: { pix: 0, dinheiro: 0, cartao: 0 },
+            pendingExpenses: 0
+          });
+          return;
+        }
       }
     } catch (error) {
       logger.error('Error fetching finance data', error);
@@ -467,7 +494,7 @@ export const Finance: React.FC = () => {
         />
       )}
 
-      {/* Tabs */}
+      {/* Tabs — staff vê apenas Visão Geral */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         <button
           onClick={() => setActiveTab('overview')}
@@ -477,45 +504,52 @@ export const Finance: React.FC = () => {
             }`}
         >
           <Calendar className="w-4 h-4" />
-          Visão Geral
+          {isStaff ? 'Meu Financeiro' : 'Visão Geral'}
         </button>
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'history'
-            ? `${accentBg} text-black`
-            : 'bg-neutral-800 text-white hover:bg-neutral-700'
-            }`}
-        >
-          <History className="w-4 h-4" />
-          Histórico
-        </button>
-        <button
-          onClick={() => setActiveTab('commissions')}
-          className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'commissions'
-            ? `${accentBg} text-black`
-            : 'bg-neutral-800 text-white hover:bg-neutral-700'
-            }`}
-        >
-          <Users className="w-4 h-4" />
-          Comissões
-        </button>
+        {!isStaff && (
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'history'
+              ? `${accentBg} text-black`
+              : 'bg-neutral-800 text-white hover:bg-neutral-700'
+              }`}
+          >
+            <History className="w-4 h-4" />
+            Histórico
+          </button>
+        )}
+        {!isStaff && (
+          <button
+            onClick={() => setActiveTab('commissions')}
+            className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'commissions'
+              ? `${accentBg} text-black`
+              : 'bg-neutral-800 text-white hover:bg-neutral-700'
+              }`}
+          >
+            <Users className="w-4 h-4" />
+            Comissões
+          </button>
+        )}
       </div>
 
       {activeTab === 'overview' && (
         <>
-          <div className="mb-8">
-            <ChurnRadar clients={diagnostic?.at_risk_clients} loading={diagnosticLoading} />
-          </div>
+          {/* ChurnRadar — apenas para donos */}
+          {!isStaff && (
+            <div className="mb-8">
+              <ChurnRadar clients={diagnostic?.at_risk_clients} loading={diagnosticLoading} />
+            </div>
+          )}
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <BrutalCard className="border-l-4 border-green-500">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Receita</p>
+                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">{isStaff ? 'Meu Giro' : 'Receita'}</p>
                   <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
                 </div>
-                <InfoButton text={`Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
+                <InfoButton text={isStaff ? `Total dos seus atendimentos em ${months[selectedMonth]} ${selectedYear}.` : `Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
               <h3 className="text-2xl md:text-3xl font-heading text-white">
                 {formatCurrency(summary.revenue || 0, currencyRegion)}
@@ -526,96 +560,126 @@ export const Finance: React.FC = () => {
               </div>
             </BrutalCard>
 
-            <BrutalCard className="border-l-4 border-yellow-500">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Comissões Pendentes</p>
-                  <p className="text-[10px] text-neutral-500 font-mono mt-1">Estimativa de repasse futuro</p>
+            {/* Cards gerenciais — visíveis apenas para o dono */}
+            {!isStaff && (
+              <BrutalCard className="border-l-4 border-yellow-500">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Comissões Pendentes</p>
+                    <p className="text-[10px] text-neutral-500 font-mono mt-1">Estimativa de repasse futuro</p>
+                  </div>
+                  <InfoButton text={`Total de comissões calculadas em serviços concluídos que ainda não foram pagas.`} />
                 </div>
-                <InfoButton text={`Total de comissões calculadas em serviços concluídos que ainda não foram pagas.`} />
-              </div>
-              <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {formatCurrency(summary.commissionsPending || 0, currencyRegion)}
-              </h3>
-              <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
-                <Clock className="w-3 h-3" />
-                <span>A pagar aos profissionais</span>
-              </div>
-            </BrutalCard>
+                <h3 className="text-2xl md:text-3xl font-heading text-white">
+                  {formatCurrency(summary.commissionsPending || 0, currencyRegion)}
+                </h3>
+                <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
+                  <Clock className="w-3 h-3" />
+                  <span>A pagar aos profissionais</span>
+                </div>
+              </BrutalCard>
+            )}
 
-            <BrutalCard className="border-l-4 border-red-500">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas Pagas</p>
-                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+            {!isStaff && (
+              <BrutalCard className="border-l-4 border-red-500">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas Pagas</p>
+                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                  </div>
+                  <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
                 </div>
-                <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
-              </div>
-              <h3 className="text-2xl md:text-3xl font-heading text-white">
-                {formatCurrency(summary.expenses || 0, currencyRegion)}
-              </h3>
-              <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
-                <DollarSign className="w-3 h-3" />
-                <span>Comissões e custos liquidados</span>
-              </div>
-            </BrutalCard>
+                <h3 className="text-2xl md:text-3xl font-heading text-white">
+                  {formatCurrency(summary.expenses || 0, currencyRegion)}
+                </h3>
+                <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
+                  <DollarSign className="w-3 h-3" />
+                  <span>Comissões e custos liquidados</span>
+                </div>
+              </BrutalCard>
+            )}
 
-            <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
-                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+            {!isStaff && (
+              <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
+                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                  </div>
+                  <InfoButton text="O valor que sobra após subtrair as despesas pagas da receita. Seu lucro real no período." />
                 </div>
-                <InfoButton text="O valor que sobra após subtrair as despesas pagas da receita. Seu lucro real no período." />
-              </div>
-              <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
-                {formatCurrency(summary.profit || 0, currencyRegion)}
-              </h3>
-              <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
-                <Wallet className="w-3 h-3" />
-                <span>Margem: {summary.revenue > 0 ? Math.round(((summary.profit || 0) / summary.revenue) * 100) : 0}%</span>
-              </div>
-            </BrutalCard>
+                <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
+                  {formatCurrency(summary.profit || 0, currencyRegion)}
+                </h3>
+                <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
+                  <Wallet className="w-3 h-3" />
+                  <span>Margem: {summary.revenue > 0 ? Math.round(((summary.profit || 0) / summary.revenue) * 100) : 0}%</span>
+                </div>
+              </BrutalCard>
+            )}
 
-            <BrutalCard className="border-l-4 border-yellow-600 bg-yellow-500/5">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-yellow-500 font-mono text-xs uppercase tracking-widest">A Pagar (Pendente)</p>
-                  <p className="text-[10px] text-neutral-500 font-mono mt-1">Total de despesas não liquidadas</p>
+            {!isStaff && (
+              <BrutalCard className="border-l-4 border-yellow-600 bg-yellow-500/5">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-yellow-500 font-mono text-xs uppercase tracking-widest">A Pagar (Pendente)</p>
+                    <p className="text-[10px] text-neutral-500 font-mono mt-1">Total de despesas não liquidadas</p>
+                  </div>
+                  <InfoButton text="Despesas registradas como 'Pendentes' que ainda não saíram do seu caixa." />
                 </div>
-                <InfoButton text="Despesas registradas como 'Pendentes' que ainda não saíram do seu caixa." />
-              </div>
-              <h3 className="text-2xl md:text-3xl font-heading text-yellow-500 font-bold">
-                {formatCurrency(summary.pendingExpenses || 0, currencyRegion)}
-              </h3>
-              <div className="flex items-center gap-1 text-yellow-500/70 text-xs font-mono mt-2">
-                <Clock className="w-3 h-3 text-yellow-500" />
-                <span>Impacto futuro no fluxo</span>
-              </div>
-            </BrutalCard>
+                <h3 className="text-2xl md:text-3xl font-heading text-yellow-500 font-bold">
+                  {formatCurrency(summary.pendingExpenses || 0, currencyRegion)}
+                </h3>
+                <div className="flex items-center gap-1 text-yellow-500/70 text-xs font-mono mt-2">
+                  <Clock className="w-3 h-3 text-yellow-500" />
+                  <span>Impacto futuro no fluxo</span>
+                </div>
+              </BrutalCard>
+            )}
+
+            {/* Card de Atendimentos para staff */}
+            {isStaff && (
+              <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Atendimentos</p>
+                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                  </div>
+                </div>
+                <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
+                  {transactions.filter(t => t.type === 'revenue').length}
+                </h3>
+                <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
+                  <Calendar className="w-3 h-3" />
+                  <span>Serviços realizados no mês</span>
+                </div>
+              </BrutalCard>
+            )}
           </div>
 
-          {/* Detailed Revenue Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <BrutalCard className="border-l-4 border-green-400 bg-green-500/5">
-              <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Pix</p>
-              <h4 className="text-xl font-heading text-white mt-1">
-                {formatCurrency(summary.revenueByMethod.pix || 0, currencyRegion)}
-              </h4>
-            </BrutalCard>
-            <BrutalCard className="border-l-4 border-emerald-400 bg-emerald-500/5">
-              <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Dinheiro</p>
-              <h4 className="text-xl font-heading text-white mt-1">
-                {formatCurrency(summary.revenueByMethod.dinheiro || 0, currencyRegion)}
-              </h4>
-            </BrutalCard>
-            <BrutalCard className="border-l-4 border-teal-400 bg-teal-500/5">
-              <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Cartão</p>
-              <h4 className="text-xl font-heading text-white mt-1">
-                {formatCurrency(summary.revenueByMethod.cartao || 0, currencyRegion)}
-              </h4>
-            </BrutalCard>
-          </div>
+          {/* Detailed Revenue Cards — apenas para donos */}
+          {!isStaff && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <BrutalCard className="border-l-4 border-green-400 bg-green-500/5">
+                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Pix</p>
+                <h4 className="text-xl font-heading text-white mt-1">
+                  {formatCurrency(summary.revenueByMethod.pix || 0, currencyRegion)}
+                </h4>
+              </BrutalCard>
+              <BrutalCard className="border-l-4 border-emerald-400 bg-emerald-500/5">
+                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Dinheiro</p>
+                <h4 className="text-xl font-heading text-white mt-1">
+                  {formatCurrency(summary.revenueByMethod.dinheiro || 0, currencyRegion)}
+                </h4>
+              </BrutalCard>
+              <BrutalCard className="border-l-4 border-teal-400 bg-teal-500/5">
+                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Cartão</p>
+                <h4 className="text-xl font-heading text-white mt-1">
+                  {formatCurrency(summary.revenueByMethod.cartao || 0, currencyRegion)}
+                </h4>
+              </BrutalCard>
+            </div>
+          )}
 
           {/* Charts */}
           <div className="grid grid-cols-1 gap-6">

@@ -2,19 +2,62 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { NAVIGATION_ITEMS } from '../constants';
-import { Scissors, X, LogOut, Sparkles } from 'lucide-react';
+import { Package, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const { isSidebarOpen, closeSidebar } = useUI();
-  const { logout, userType } = useAuth();
+  const { logout, userType, role } = useAuth();
 
   const isBeauty = userType === 'beauty';
+  const isStaff = role === 'staff';
   const themeColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
   const themeBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-  const hoverText = isBeauty ? 'group-hover:text-beauty-neon' : 'group-hover:text-accent-gold';
+
+  // Filtra itens de navegação com base no role do usuário
+  const visibleItems = NAVIGATION_ITEMS.filter(item => !item.ownerOnly || !isStaff);
+
+  const renderLink = (path: string, Icon: React.ElementType, label: string) => {
+    const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+
+    if (isBeauty) {
+      return (
+        <Link
+          key={path}
+          to={path}
+          onClick={closeSidebar}
+          className={`
+              group flex items-center px-4 py-3 font-sans font-medium text-sm transition-all rounded-xl
+              ${isActive
+              ? 'bg-beauty-neon/10 text-beauty-neon'
+              : 'text-text-secondary hover:text-white hover:bg-white/5'}
+            `}
+        >
+          <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-beauty-neon' : 'text-neutral-500 group-hover:text-white'}`} />
+          {label}
+        </Link>
+      );
+    }
+
+    return (
+      <Link
+        key={path}
+        to={path}
+        onClick={closeSidebar}
+        className={`
+          group flex items-center px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide transition-all border-2
+          ${isActive
+            ? `${themeBg} border-black text-black shadow-heavy-sm translate-x-1`
+            : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-neutral-900 hover:border-neutral-800'}
+        `}
+      >
+        <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-black' : `${themeColor} group-hover:text-white`}`} />
+        {label}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -39,12 +82,9 @@ export const Sidebar: React.FC = () => {
         `}
         style={{ top: 'var(--header-top, 0)', bottom: 0 }}
       >
-        {/* Logo Area */}
-        {/* Logo Area - Simplified for Sidebar */}
+        {/* Header mobile */}
         <div className={`h-20 flex items-center justify-between px-6 md:hidden ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b-4 border-brutal-border bg-brutal-card'}`}>
-          <div className="flex items-center justify-center">
-            <span className={`font-heading text-xl ${themeColor} uppercase tracking-tighter`}>Menu</span>
-          </div>
+          <span className={`font-heading text-xl ${themeColor} uppercase tracking-tighter`}>Menu</span>
           <button onClick={closeSidebar} className="text-text-secondary hover:text-white transition-colors">
             <X className="w-6 h-6" />
           </button>
@@ -52,52 +92,12 @@ export const Sidebar: React.FC = () => {
 
         {/* Navigation */}
         <nav className="flex-1 py-8 overflow-y-auto space-y-2 px-4">
-          {NAVIGATION_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-            const itemId = `sidebar-item-${item.name.toLowerCase().replace(/\s+/g, '-')}`;
+          {visibleItems.map((item) => renderLink(item.path, item.icon, item.name))}
 
-            // Beauty Theme Active State
-            if (isBeauty) {
-              return (
-                <Link
-                  id={itemId}
-                  key={item.name}
-                  to={item.path}
-                  onClick={closeSidebar}
-                  className={`
-                      group flex items-center px-4 py-3 font-sans font-medium text-sm transition-all rounded-xl
-                      ${isActive
-                      ? 'bg-beauty-neon/10 text-beauty-neon'
-                      : 'text-text-secondary hover:text-white hover:bg-white/5'}
-                    `}
-                >
-                  <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-beauty-neon' : 'text-neutral-500 group-hover:text-white'}`} />
-                  {item.name}
-                </Link>
-              );
-            }
+          {/* Link extra de Serviços somente para o staff */}
+          {isStaff && renderLink('/configuracoes/servicos', Package, 'Serviços')}
 
-            // Barber Theme Active State (Original)
-            return (
-              <Link
-                id={itemId}
-                key={item.name}
-                to={item.path}
-                onClick={closeSidebar}
-                className={`
-                  group flex items-center px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide transition-all border-2
-                  ${isActive
-                    ? `${themeBg} border-black text-black shadow-heavy-sm translate-x-1`
-                    : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-neutral-900 hover:border-neutral-800'}
-                `}
-              >
-                <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-black' : `${themeColor} group-hover:text-white`}`} />
-                {item.name}
-              </Link>
-            );
-          })}
-
-          {/* Logout Button */}
+          {/* Botão de Logout */}
           <button
             onClick={() => {
               logout();
@@ -113,11 +113,7 @@ export const Sidebar: React.FC = () => {
             Sair
           </button>
         </nav>
-
-        {/* Bottom Status */}
-
       </aside>
     </>
   );
 };
-

@@ -1,13 +1,13 @@
 {
   "project": "Beauty OS / Barber OS",
-  "run_at": "2026-03-07T11:53:27.001091",
+  "run_at": "2026-03-07T12:13:29.660776",
   "base_url": "http://localhost:3000",
   "summary": {
     "total": 53,
-    "passed": 44,
-    "failed": 9,
+    "passed": 53,
+    "failed": 0,
     "skipped": 0,
-    "pass_rate_pct": 83
+    "pass_rate_pct": 100
   },
   "results": [
     {
@@ -22,8 +22,8 @@
     },
     {
       "name": "TC_AUTH_03 — Login with invalid credentials",
-      "status": "FAILED",
-      "note": "Locator.wait_for: Timeout 8000ms exceeded.\nCall log:\n  - waiting for locator(\"input[type=\\\"email\\\"]\").first to be visible\n | Call log:   - waiting for locator(\"input[type=\\\"email\\\"]\").first to be visible "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_AUTH_04 — Forgot password page loads",
@@ -202,8 +202,8 @@
     },
     {
       "name": "TC_SET_06 — Security settings loads",
-      "status": "FAILED",
-      "note": "Security settings page did not load"
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_SET_07 — Audit logs loads",
@@ -212,18 +212,18 @@
     },
     {
       "name": "TC_SET_08 — Recycle bin loads",
-      "status": "FAILED",
-      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_SET_09 — Booking settings loads",
-      "status": "FAILED",
-      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_SET_10 — System logs loads",
-      "status": "FAILED",
-      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_THEME_01 — Barber/Beauty theme visible",
@@ -232,8 +232,8 @@
     },
     {
       "name": "TC_THEME_02 — App renders styled",
-      "status": "FAILED",
-      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_MOB_01 — Login on mobile viewport",
@@ -242,8 +242,8 @@
     },
     {
       "name": "TC_MOB_02 — Dashboard on mobile viewport",
-      "status": "FAILED",
-      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/login\", waiting until \"networkidle\" "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_SEC_01 — Settings requires auth",
@@ -252,13 +252,13 @@
     },
     {
       "name": "TC_SEC_02 — Finance requires auth",
-      "status": "FAILED",
-      "note": "Page.goto: Timeout 20000ms exceeded.\nCall log:\n  - navigating to \"http://localhost:3000/#/financeiro\", waiting until \"networkidle\"\n | Call log:   - navigating to \"http://localhost:3000/#/financeiro\", waiting until \"networkidle\" "
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_SEC_03 — Clients requires auth",
-      "status": "FAILED",
-      "note": "Clients accessible without auth: http://localhost:3000/#/clientes"
+      "status": "PASSED",
+      "note": ""
     },
     {
       "name": "TC_SEC_04 — Public login route open",

@@ -81,8 +81,15 @@ temp_restore.js
 write_phone_input.ps1
 write_file.cjs
 
-# Diretórios de agentes alternativos (usar apenas .agent/ e .aios-core/)
+# Diretórios de agentes e IDEs (Limpeza AIOS)
 .antigravity/
 .agents/
 .codex/
 .ai/
+.gemini/
+.cursor/
+.claude/
+.squads/
+.vercel/
+.testsprite/
+testsprite_tests/tmp/

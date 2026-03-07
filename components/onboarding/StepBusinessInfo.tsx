@@ -63,10 +63,10 @@ export const StepBusinessInfo: React.FC<StepBusinessInfoProps> = ({ onNext, acce
                 }
             });
 
-            // Update step
+            // Avança para o próximo step (serviços)
             await supabase.rpc('update_onboarding_step', {
                 p_user_id: user.id,
-                p_step: 2
+                p_step: 2,
             });
 
             onNext();

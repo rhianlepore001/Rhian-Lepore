@@ -144,7 +144,7 @@ export const PublicBookingSettings: React.FC = () => {
                     >
                         <div className="space-y-4">
                             <p className="text-neutral-400 text-xs leading-relaxed">
-                                Sugere serviços complementares para aumentar o ticket médio automaticamente.
+                                Sugere serviços complementares para aumentar o valor médio por atendimento automaticamente.
                             </p>
                             <div className={`inline-flex items-center px-3 py-1.5 rounded-xl bg-${accentColor}/5 border border-${accentColor}/10 text-${accentColor} text-[10px] font-bold uppercase tracking-wider`}>
                                 💰 +R$ 1.200/mês méd.

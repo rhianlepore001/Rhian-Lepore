@@ -35,7 +35,7 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
 
                     <div className="flex-1 text-center md:text-left">
                         <h3 className="text-xl md:text-2xl font-heading text-white mb-1 flex items-center justify-center md:justify-start gap-2">
-                            Radar de Lucro Ativado
+                            Oportunidades Ativas
                             <span className="text-[10px] font-mono px-2 py-0.5 bg-white/10 rounded uppercase tracking-widest opacity-70">AIOS 2.0</span>
                         </h3>
                         <p className="text-text-secondary text-sm md:text-base max-w-xl">
@@ -60,7 +60,7 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-tighter text-text-secondary">
                         <TrendingUp className="w-3 h-3" />
-                        <span>Ticket Médio: {formatCurrency(diagnostic.recoverable_revenue / diagnostic.at_risk_clients.length, region)}</span>
+                        <span>Valor Médio: {formatCurrency(diagnostic.recoverable_revenue / diagnostic.at_risk_clients.length, region)}</span>
                     </div>
                 </div>
             </BrutalCard>

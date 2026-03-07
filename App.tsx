@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
 import { DynamicBranding } from './components/DynamicBranding';
+import { AIAssistantChat } from './components/AIAssistantChat';
 
 
 // Lazy Load Pages
@@ -46,7 +47,7 @@ const LoadingFull = () => (
 
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, tutorialCompleted } = useAuth();
 
   if (loading) {
     return <LoadingFull />;
@@ -59,11 +60,17 @@ const ProtectedLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Redireciona para onboarding se não completou o setup inicial
+  if (!tutorialCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   return (
     <Layout>
       <Suspense fallback={<LoadingFull />}>
         <Outlet />
       </Suspense>
+      <AIAssistantChat />
     </Layout>
   );
 };
@@ -79,6 +86,17 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  return children;
+};
+
+// Guard para rotas exclusivas do dono: redireciona staff para /
+const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
+  const { isAuthenticated, loading, role } = useAuth();
+
+  if (loading) return <LoadingFull />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (role === 'staff') return <Navigate to="/" replace />;
 
   return children;
 };
@@ -117,26 +135,26 @@ const AppRoutes: React.FC = () => {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
-          <Route path="/fila" element={<QueueManagement />} />
+          <Route path="/fila" element={<OwnerRouteGuard><QueueManagement /></OwnerRouteGuard>} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientCRM />} />
           <Route path="/financeiro" element={<Finance />} />
-          <Route path="/marketing" element={<Marketing />} />
-          <Route path="/insights" element={<Reports />} />
+          <Route path="/marketing" element={<OwnerRouteGuard><Marketing /></OwnerRouteGuard>} />
+          <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
 
           {/* Settings Routes */}
-          <Route path="/configuracoes" element={<Navigate to="/configuracoes/geral" replace />} />
-          <Route path="/configuracoes/geral" element={<GeneralSettings />} />
-          <Route path="/configuracoes/agendamento" element={<PublicBookingSettings />} />
-          <Route path="/configuracoes/equipe" element={<TeamSettings />} />
+          <Route path="/configuracoes" element={<OwnerRouteGuard><Navigate to="/configuracoes/geral" replace /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/geral" element={<OwnerRouteGuard><GeneralSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/agendamento" element={<OwnerRouteGuard><PublicBookingSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/equipe" element={<OwnerRouteGuard><TeamSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/servicos" element={<ServiceSettings />} />
-          <Route path="/configuracoes/comissoes" element={<CommissionsSettings />} />
-          <Route path="/configuracoes/assinatura" element={<SubscriptionSettings />} />
-          <Route path="/configuracoes/auditoria" element={<AuditLogs />} />
-          <Route path="/configuracoes/lixeira" element={<RecycleBin />} />
-          <Route path="/configuracoes/seguranca" element={<SecuritySettings />} />
-          <Route path="/configuracoes/erros" element={<SystemLogs />} />
-          <Route path="/configuracoes/notificacoes" element={<Placeholder title="Notificações" />} />
+          <Route path="/configuracoes/comissoes" element={<OwnerRouteGuard><CommissionsSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/auditoria" element={<OwnerRouteGuard><AuditLogs /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/lixeira" element={<OwnerRouteGuard><RecycleBin /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/seguranca" element={<OwnerRouteGuard><SecuritySettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/erros" element={<OwnerRouteGuard><SystemLogs /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/notificacoes" element={<OwnerRouteGuard><Placeholder title="Notificações" /></OwnerRouteGuard>} />
         </Route>
 
         {/* Fallback */}

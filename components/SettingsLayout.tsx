@@ -10,15 +10,18 @@ interface SettingsLayoutProps {
 }
 
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
-    const { userType } = useAuth();
+    const { userType, role } = useAuth();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    useAppTour(); // Instancia para detectar continuação do tour
+    useAppTour();
 
     const isBeauty = userType === 'beauty';
     const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950';
 
-    const menuItems = SETTINGS_ITEMS;
+    // Staff vê apenas o item "Serviços" no menu de ajustes
+    const menuItems = role === 'staff'
+        ? SETTINGS_ITEMS.filter(item => item.path === '/configuracoes/servicos')
+        : SETTINGS_ITEMS;
 
     // Get current page title for mobile header
     const currentPage = menuItems.find(item => item.path === location.pathname);

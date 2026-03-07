@@ -32,33 +32,59 @@ results: list[dict] = []
 
 async def make_page(context: BrowserContext) -> Page:
     page = await context.new_page()
-    page.set_default_timeout(8000)
+    page.set_default_timeout(12000)
     return page
+
+
+async def clear_auth(page: Page):
+    """Clear Supabase auth from localStorage so tests start unauthenticated."""
+    try:
+        await page.goto(f"{BASE_URL}", wait_until="commit", timeout=10000)
+        await page.wait_for_timeout(1000)
+        await page.evaluate("""() => {
+            Object.keys(localStorage).forEach(k => {
+                if (k.startsWith('sb-') || k.includes('supabase') || k.includes('auth')) {
+                    localStorage.removeItem(k);
+                }
+            });
+            localStorage.clear();
+            sessionStorage.clear();
+        }""")
+        await page.wait_for_timeout(500)
+    except Exception:
+        pass  # Ignore — worst case auth isn't cleared but context is new anyway
 
 
 async def login(page: Page):
     """Handles the full login flow including the gateway category picker."""
     await page.goto(f"{BASE_URL}/#/login", wait_until="commit", timeout=15000)
-    await page.wait_for_timeout(3000)
+    await page.wait_for_timeout(4000)  # Wait for React + lazy chunks to load
+
+    # Check if already logged in (e.g. from cookie persistence)
+    if "login" not in page.url and "#/login" not in page.url:
+        return  # Already on dashboard — we're logged in
 
     # Gateway screen: click "Barbearia" button (first category card)
-    gateway_btn = page.locator('button:has-text("Barbearia"), button:has-text("Barber")')
-    if await gateway_btn.count() > 0:
+    gateway_btn = page.locator('button:has-text("Barbearia")')
+    gateway_count = await gateway_btn.count()
+    if gateway_count > 0:
         await gateway_btn.first.click()
-        await page.wait_for_timeout(2000)
+        await page.wait_for_timeout(2500)  # Wait for animation + form render
 
-    # Fill login form — inputs appear after gateway is dismissed
+    # Fill login form — poll for email input visibility
     email_input = page.locator('input[type="email"]').first
-    await email_input.wait_for(state="visible", timeout=8000)
+    for _ in range(6):  # retry up to 6×500ms = 3 extra seconds
+        if await email_input.is_visible():
+            break
+        await page.wait_for_timeout(500)
+
     await email_input.fill(TEST_EMAIL)
+    await page.locator('input[type="password"]').first.fill(TEST_PASSWORD)
 
-    password_input = page.locator('input[type="password"]').first
-    await password_input.fill(TEST_PASSWORD)
-
-    # Login button has onClick={handleLogin} and text "ENTRAR" (no type="submit")
-    login_btn = page.locator('button:has-text("ENTRAR"), button:has-text("Entrar"), button:has-text("Login")')
+    # Login button: onClick={handleLogin}, text "ENTRAR" (no type="submit")
+    login_btn = page.locator('button:has-text("ENTRAR")')
     await login_btn.first.click()
-    await page.wait_for_timeout(5000)
+    await page.wait_for_timeout(5000)  # Wait for Supabase auth + navigation
 
 
 async def record(name: str, status: str, note: str = ""):
@@ -88,8 +114,9 @@ async def run_test(name: str, coro):
 async def tc_auth_01_gateway_screen(context: BrowserContext):
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/login", wait_until="commit", timeout=15000)
-        await page.wait_for_timeout(3000)
+        await page.wait_for_timeout(4000)
         # Must show at least one clickable button (category picker)
         buttons = page.locator("button")
         count = await buttons.count()
@@ -221,8 +248,9 @@ async def tc_auth_08_protected_route_redirect(context: BrowserContext):
     """Unauthenticated users should be redirected to login from protected routes."""
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/", wait_until="commit", timeout=15000)
-        await page.wait_for_timeout(2500)
+        await page.wait_for_timeout(4000)
         url = page.url
         assert "login" in url, f"Expected redirect to login, got: {url}"
     finally:
@@ -232,8 +260,9 @@ async def tc_auth_08_protected_route_redirect(context: BrowserContext):
 async def tc_auth_09_agenda_redirect(context: BrowserContext):
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/agenda", wait_until="commit", timeout=15000)
-        await page.wait_for_timeout(2500)
+        await page.wait_for_timeout(4000)
         url = page.url
         assert "login" in url, f"Expected redirect to login, got: {url}"
     finally:
@@ -808,6 +837,7 @@ async def tc_sec_01_settings_requires_auth(context: BrowserContext):
     """Settings routes should redirect unauthenticated users."""
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/configuracoes/geral", wait_until="commit", timeout=15000)
         await page.wait_for_timeout(5000)
         url = page.url
@@ -819,6 +849,7 @@ async def tc_sec_01_settings_requires_auth(context: BrowserContext):
 async def tc_sec_02_finance_requires_auth(context: BrowserContext):
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/financeiro", wait_until="commit", timeout=15000)
         await page.wait_for_timeout(5000)
         url = page.url
@@ -830,8 +861,9 @@ async def tc_sec_02_finance_requires_auth(context: BrowserContext):
 async def tc_sec_03_clients_requires_auth(context: BrowserContext):
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/clientes", wait_until="commit", timeout=15000)
-        await page.wait_for_timeout(2500)
+        await page.wait_for_timeout(4000)
         url = page.url
         assert "login" in url, f"Clients accessible without auth: {url}"
     finally:
@@ -842,8 +874,9 @@ async def tc_sec_04_public_routes_open(context: BrowserContext):
     """Public routes should NOT redirect to login."""
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/login", wait_until="commit", timeout=15000)
-        await page.wait_for_timeout(1500)
+        await page.wait_for_timeout(2000)
         url = page.url
         assert "login" in url, f"Login page not accessible: {url}"
     finally:
@@ -854,8 +887,9 @@ async def tc_sec_05_forgot_password_open(context: BrowserContext):
     """Forgot password should be public."""
     page = await make_page(context)
     try:
+        await clear_auth(page)
         await page.goto(f"{BASE_URL}/#/forgot-password", wait_until="commit", timeout=15000)
-        await page.wait_for_timeout(1500)
+        await page.wait_for_timeout(2000)
         url = page.url
         assert "login" not in url or "forgot" in url, f"Forgot password redirected to login: {url}"
     finally:

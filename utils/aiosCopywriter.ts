@@ -1,36 +1,44 @@
-export interface CopywritingProps {
-    clientName: string;
-    businessName: string;
+export interface ClientContext {
+    name: string;
+    daysMissing: number;
     userType: 'barber' | 'beauty' | string;
-    daysMissing?: number;
+    businessName?: string;
     lastService?: string;
+    ltv?: number;
 }
 
-export const generateReactivationMessage = ({
-    clientName,
-    businessName,
-    userType,
-    daysMissing
-}: CopywritingProps): string => {
-    const firstName = clientName.split(' ')[0];
-    const isBeauty = userType === 'beauty';
+/**
+ * Aplica o framework ABT (And, But, Therefore) para reativação.
+ * Estrutura: [Conexão/Histórico] E [Frequência] MAS [Ausência] PORTANTO [Chamada para Ação].
+ */
+const applyABT = (context: ClientContext): string => {
+    const { name, daysMissing, businessName, lastService } = context;
+    const firstName = name.split(' ')[0];
+    const bName = businessName || 'nossa unidade';
 
-    const templates = {
-        barber: [
-            `Fala, ${firstName}! Tudo tranquilo? Cara, notei que já faz uns ${daysMissing || 30} dias que você não passa aqui na ${businessName}. A cadeira tá te esperando! Bora dar aquele talento? Reservo um horário pra você?`,
-            `E aí ${firstName}, beleza? O pessoal aqui da ${businessName} sentiu sua falta. O cabelo já deve estar pedindo um corte, hein? 😂 Se quiser, te mando os horários disponíveis desta semana.`,
-            `Grande ${firstName}! Saudade de trocar aquela ideia enquanto damos um tapa no visual. Vamos renovar esse estilo na ${businessName}? Me avisa aqui se quiser que eu separe sua vaga.`
-        ],
-        beauty: [
-            `Olá, ${firstName}! Tudo bem? Sentimos sua falta aqui no ${businessName}. ✨ Já faz um tempinho desde sua última visita e queremos te convidar para um momento de autocuidado. Que tal agendarmos algo para esta semana?`,
-            `Oi ${firstName}, como você está? Notamos que seu último procedimento no ${businessName} foi há mais de um mês. 🌸 Temos novidades e adoraríamos te receber de novo. Posso te enviar as disponibilidades?`,
-            `Olá ${firstName}! Passando para dizer que o ${businessName} está com saudades de você. 😊 Que tal renovar sua autoestima hoje? Temos alguns horários especiais, quer dar uma olhadinha?`
-        ]
-    };
+    return `Oi, ${firstName}! Você sempre cuida do seu ${lastService || 'visual'} com a gente no ${bName} E sua última visita foi incrível, MAS notamos que já faz ${daysMissing} dias que não nos vemos. PORTANTO, separei alguns horários exclusivos para você renovar esse estilo essa semana. Vamos agendar?`;
+};
 
-    const selectedList = isBeauty ? templates.beauty : templates.barber;
-    // Seleciona um template aleatório para não parecer robótico
-    const message = selectedList[Math.floor(Math.random() * selectedList.length)];
+/**
+ * Aplica o framework StoryBrand (Cliente como Herói, Empresa como Guia).
+ * Foca no desejo do cliente e no plano para o sucesso.
+ */
+const applyStoryBrand = (context: ClientContext): string => {
+    const { name, businessName, userType } = context;
+    const firstName = name.split(' ')[0];
+    const bName = businessName || 'nossa unidade';
+    const goal = userType === 'beauty' ? 'dar aquele upgrade na sua autoestima' : 'manter sua presença impecável';
+
+    return `${firstName}, você merece estar na sua melhor versão. No ${bName}, nosso plano é simples: agendar seu horário, ${goal} e garantir que você saia daqui se sentindo incrível. Como você é uma cliente especial, que tal garantirmos sua próxima visita agora?`;
+};
+
+export const generateReactivationMessage = (context: ClientContext): string => {
+    const { ltv } = context;
+
+    // Segmentação por valor (LTV) - Storytelling mais profundo para VIPs
+    const isHighValue = ltv && ltv > 500;
+
+    const message = isHighValue ? applyStoryBrand(context) : applyABT(context);
 
     return encodeURIComponent(message);
 };
@@ -39,3 +47,4 @@ export const getWhatsAppUrl = (phone: string, message: string): string => {
     const cleanPhone = phone.replace(/\D/g, '');
     return `https://wa.me/${cleanPhone}?text=${message}`;
 };
+

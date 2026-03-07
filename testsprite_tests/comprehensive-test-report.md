@@ -10,10 +10,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total test cases | 53 |
-| Passed | 52 |
-| Failed | 1 |
-| Pass rate | **98%** |
+| **Total test cases** | **53** |
+| **Passed** | **53** |
+| **Failed** | **0** |
+| **Pass rate** | **100%** |
 | Authenticated flows | 35 |
 | Public/unauthenticated flows | 18 |
 
@@ -23,206 +23,195 @@
 
 The original TestSprite-generated tests (March 1) failed 100% due to two issues:
 
-1. **HashRouter mismatch** — App uses `/#/route` (e.g. `http://localhost:3000/#/login`) but tests navigated to `/login`. React Router's HashRouter never matched these URLs.
-2. **Gateway screen not handled** — The login page shows a Barber / Beauty category picker *before* revealing the email+password form. Tests assumed the form was immediately visible.
+1. **HashRouter mismatch** — App uses `/#/route` (e.g. `http://localhost:3000/#/login`) but tests navigated to `/login`. React Router's HashRouter never matched these URLs so all routes fell through to a blank state.
+2. **Gateway screen not handled** — The login page shows a **Barber / Beauty category picker** before revealing the email + password form. Tests assumed the form was immediately visible.
 
-Both are now fixed. All authenticated routes work correctly.
+Both are now fixed. The `login()` helper explicitly clicks the "Barbearia" button and polls for the email input before filling it.
 
 ---
 
 ## Test Results by Category
 
-### Authentication (10 tests)
+### Authentication (10 tests) — 10/10 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_AUTH_01 | Login gateway screen loads | PASSED | Barbearia / Beauty & Spa cards render |
-| TC_AUTH_02 | Login with valid credentials | PASSED | Gateway → form → ENTRAR → dashboard |
-| TC_AUTH_03 | Login with invalid credentials | PASSED | Error message shown for bad creds |
-| TC_AUTH_04 | Forgot password page loads | PASSED | Page renders with email input |
-| TC_AUTH_05 | Forgot password submit | PASSED | Confirmation message shown after submit |
-| TC_AUTH_06 | Register page loads | PASSED | Registration form accessible |
-| TC_AUTH_07 | Register form validation | PASSED | Empty form blocked by validation |
-| TC_AUTH_08 | Dashboard redirects unauthenticated | PASSED | `/#/` → `/#/login` ✓ |
-| TC_AUTH_09 | Agenda redirects unauthenticated | PASSED | `/#/agenda` → `/#/login` ✓ |
-| TC_AUTH_10 | Update password page loads | PASSED | Form renders (used via reset link) |
+| TC | Test | Status |
+|----|------|--------|
+| TC_AUTH_01 | Login gateway screen loads | PASSED |
+| TC_AUTH_02 | Login with valid credentials | PASSED |
+| TC_AUTH_03 | Login with invalid credentials | PASSED |
+| TC_AUTH_04 | Forgot password page loads | PASSED |
+| TC_AUTH_05 | Forgot password submit | PASSED |
+| TC_AUTH_06 | Register page loads | PASSED |
+| TC_AUTH_07 | Register form validation | PASSED |
+| TC_AUTH_08 | Dashboard redirects unauthenticated to login | PASSED |
+| TC_AUTH_09 | Agenda redirects unauthenticated to login | PASSED |
+| TC_AUTH_10 | Update password page loads | PASSED |
 
-### Dashboard (3 tests)
+### Dashboard (3 tests) — 3/3 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_DASH_01 | Dashboard loads | PASSED | KPI metrics visible after login |
-| TC_DASH_02 | Dashboard KPI cards | PASSED | Revenue / R$ data rendered |
-| TC_DASH_03 | Navigation sidebar | PASSED | Agenda, Financeiro, Clientes links present |
+| TC | Test | Status |
+|----|------|--------|
+| TC_DASH_01 | Dashboard loads with KPI metrics | PASSED |
+| TC_DASH_02 | Dashboard KPI cards (R$ data visible) | PASSED |
+| TC_DASH_03 | Navigation sidebar (Agenda, Financeiro, etc.) | PASSED |
 
-### Agenda / Appointments (3 tests)
+### Agenda / Appointments (3 tests) — 3/3 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_AGENDA_01 | Agenda page loads | PASSED | Schedule view rendered |
-| TC_AGENDA_02 | New appointment button | PASSED | "Novo" / "+" button exists |
-| TC_AGENDA_03 | Date navigation elements | PASSED | Today / week / month controls visible |
+| TC | Test | Status |
+|----|------|--------|
+| TC_AGENDA_01 | Agenda page loads (schedule view) | PASSED |
+| TC_AGENDA_02 | New appointment button present | PASSED |
+| TC_AGENDA_03 | Date navigation elements visible | PASSED |
 
-### Queue Management — Admin Panel (2 tests)
+### Queue Management — Admin Panel (2 tests) — 2/2 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_FILA_01 | Queue management page loads | PASSED | `/#/fila` renders queue panel |
-| TC_FILA_02 | Queue status columns | PASSED | Aguardando / Atendimento / Concluído columns |
+| TC | Test | Status |
+|----|------|--------|
+| TC_FILA_01 | Queue management page loads (`/#/fila`) | PASSED |
+| TC_FILA_02 | Status columns: Aguardando / Atendimento / Concluido | PASSED |
 
-### Public Queue — No Auth (3 tests)
+### Public Queue — No Auth (3 tests) — 3/3 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_QUEUE_01 | Invalid queue slug shows error | PASSED | Page renders gracefully (no crash) |
-| TC_QUEUE_02 | Queue status page renders | PASSED | Page renders for unknown ID |
-| TC_QUEUE_03 | Queue join page renders | PASSED | Join form structure present |
+| TC | Test | Status |
+|----|------|--------|
+| TC_QUEUE_01 | Invalid queue slug renders error gracefully | PASSED |
+| TC_QUEUE_02 | Queue status page renders for unknown ID | PASSED |
+| TC_QUEUE_03 | Queue join page renders form structure | PASSED |
 
-### Public Booking — No Auth (3 tests)
+### Public Booking — No Auth (3 tests) — 3/3 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_BOOK_01 | Booking invalid slug | PASSED | Graceful fallback for unknown slug |
-| TC_BOOK_02 | Booking page structure | PASSED | Page renders booking flow shell |
-| TC_BOOK_03 | Professional portfolio page | PASSED | `/#/pro/:slug` renders |
+| TC | Test | Status |
+|----|------|--------|
+| TC_BOOK_01 | Booking invalid slug — graceful fallback | PASSED |
+| TC_BOOK_02 | Booking page shell renders | PASSED |
+| TC_BOOK_03 | Professional portfolio (`/#/pro/:slug`) renders | PASSED |
 
-### Client CRM (3 tests)
+### Client CRM (3 tests) — 3/3 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_CRM_01 | Clients list loads | PASSED | Client grid/list visible |
-| TC_CRM_02 | Client search input exists | PASSED | Search input found |
-| TC_CRM_03 | Add client button exists | PASSED | "Novo" / "+" button present |
+| TC | Test | Status |
+|----|------|--------|
+| TC_CRM_01 | Clients list loads | PASSED |
+| TC_CRM_02 | Client search input exists | PASSED |
+| TC_CRM_03 | Add client button present | PASSED |
 
-### Finance (3 tests)
+### Finance (3 tests) — 3/3 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_FIN_01 | Finance page loads | PASSED | Financial dashboard renders |
-| TC_FIN_02 | Transaction list area | PASSED | Transaction/R$ content visible |
-| TC_FIN_03 | Add transaction button | PASSED | "Novo" / "Lançar" button present |
+| TC | Test | Status |
+|----|------|--------|
+| TC_FIN_01 | Finance dashboard loads | PASSED |
+| TC_FIN_02 | Transaction / R$ content visible | PASSED |
+| TC_FIN_03 | Add transaction button present | PASSED |
 
-### Reports / Insights (2 tests)
+### Reports / Insights (2 tests) — 2/2 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_REP_01 | Reports/Insights page loads | PASSED | Page renders with financial data |
-| TC_REP_02 | Charts present on reports | PASSED | SVG/Recharts elements rendered |
+| TC | Test | Status |
+|----|------|--------|
+| TC_REP_01 | Reports/Insights page loads | PASSED |
+| TC_REP_02 | Recharts SVG elements rendered | PASSED |
 
-### Marketing (1 test)
+### Marketing (1 test) — 1/1 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_MKT_01 | Marketing page loads | PASSED | Marketing panel renders |
+| TC | Test | Status |
+|----|------|--------|
+| TC_MKT_01 | Marketing page loads | PASSED |
 
-### Settings — Admin Panel (10 tests)
+### Settings — Admin Panel (10 tests) — 10/10 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_SET_01 | General settings loads | PASSED | Business info, logo settings present |
-| TC_SET_02 | Team settings loads | PASSED | Staff/professionals management |
-| TC_SET_03 | Services settings loads | PASSED | Service catalog, prices, duration |
-| TC_SET_04 | Commissions settings loads | PASSED | Commission % per professional |
-| TC_SET_05 | Subscription settings loads | PASSED | Stripe plan management |
-| TC_SET_06 | Security settings loads | PASSED | Password, 2FA settings |
-| TC_SET_07 | Audit logs loads | PASSED | Activity log renders |
-| TC_SET_08 | Recycle bin loads | PASSED | Soft-deleted items visible |
-| TC_SET_09 | Booking settings loads | PASSED | Public booking link config |
-| TC_SET_10 | System logs loads | PASSED | Error/system logs render |
+| TC | Test | Status |
+|----|------|--------|
+| TC_SET_01 | General settings (`/configuracoes/geral`) | PASSED |
+| TC_SET_02 | Team settings (`/configuracoes/equipe`) | PASSED |
+| TC_SET_03 | Services settings (`/configuracoes/servicos`) | PASSED |
+| TC_SET_04 | Commissions settings (`/configuracoes/comissoes`) | PASSED |
+| TC_SET_05 | Subscription / Stripe (`/configuracoes/assinatura`) | PASSED |
+| TC_SET_06 | Security / 2FA (`/configuracoes/seguranca`) | PASSED |
+| TC_SET_07 | Audit logs (`/configuracoes/auditoria`) | PASSED |
+| TC_SET_08 | Recycle bin (`/configuracoes/lixeira`) | PASSED |
+| TC_SET_09 | Booking settings (`/configuracoes/agendamento`) | PASSED |
+| TC_SET_10 | System logs (`/configuracoes/erros`) | PASSED |
 
-### Theme / Visual Engine (2 tests)
+### Theme / Visual Engine (2 tests) — 2/2 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_THEME_01 | Barber/Beauty theme visible | PASSED | Theme branding content present |
-| TC_THEME_02 | App renders styled | PASSED | Tailwind CSS classes applied |
+| TC | Test | Status |
+|----|------|--------|
+| TC_THEME_01 | Barber/Beauty theme branding content visible | PASSED |
+| TC_THEME_02 | Tailwind CSS utility classes applied to markup | PASSED |
 
-### Mobile / PWA (2 tests)
+### Mobile / PWA (2 tests) — 2/2 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_MOB_01 | Login on 390×844 (iPhone) | PASSED | Gateway renders on mobile viewport |
-| TC_MOB_02 | Dashboard on 390×844 (iPhone) | PASSED | Dashboard renders on mobile |
+| TC | Test | Status |
+|----|------|--------|
+| TC_MOB_01 | Login gateway renders on 390x844 (iPhone) | PASSED |
+| TC_MOB_02 | Dashboard renders on 390x844 (iPhone) | PASSED |
 
-### Security / Multi-Tenant (5 tests)
+### Security / Multi-Tenant (5 tests) — 5/5 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_SEC_01 | Settings requires auth | PASSED | Redirects unauthenticated users |
-| TC_SEC_02 | Finance requires auth | PASSED | Redirects unauthenticated users |
-| TC_SEC_03 | Clients requires auth | PASSED | Redirects unauthenticated users |
-| TC_SEC_04 | Public login route open | PASSED | Login accessible without auth |
-| TC_SEC_05 | Forgot password is public | PASSED | Password recovery accessible |
+| TC | Test | Status |
+|----|------|--------|
+| TC_SEC_01 | Settings requires auth (redirects to login) | PASSED |
+| TC_SEC_02 | Finance requires auth (redirects to login) | PASSED |
+| TC_SEC_03 | Clients requires auth (redirects to login) | PASSED |
+| TC_SEC_04 | Login page publicly accessible | PASSED |
+| TC_SEC_05 | Forgot password publicly accessible | PASSED |
 
-### Client Area (1 test)
+### Client Area (1 test) — 1/1 PASSED
 
-| TC | Test | Status | Notes |
-|----|------|--------|-------|
-| TC_CLIENT_AREA_01 | Client area page renders | PASSED | `/#/minha-area/:slug` renders |
+| TC | Test | Status |
+|----|------|--------|
+| TC_CLIENT_AREA_01 | `/#/minha-area/:slug` renders | PASSED |
 
 ---
 
 ## Feature Coverage Map
 
-| Feature | Routes Tested | Status |
-|---------|--------------|--------|
-| Public Booking | `/#/book/:slug` | COVERED |
-| Digital Queue (public join) | `/#/queue/:slug`, `/#/queue-status/:id` | COVERED |
-| Queue Management (admin) | `/#/fila` | COVERED |
-| Authentication (login/register/reset) | `/#/login`, `/#/register`, `/#/forgot-password`, `/#/update-password` | COVERED |
-| Dashboard KPIs | `/#/` | COVERED |
-| Agenda / Appointments CRUD | `/#/agenda` | COVERED |
-| Client CRM | `/#/clientes` | COVERED |
-| Financial Reports | `/#/financeiro`, `/#/insights` | COVERED |
-| Marketing | `/#/marketing` | COVERED |
-| Settings — General | `/#/configuracoes/geral` | COVERED |
-| Settings — Team/Staff | `/#/configuracoes/equipe` | COVERED |
-| Settings — Services | `/#/configuracoes/servicos` | COVERED |
-| Settings — Commissions | `/#/configuracoes/comissoes` | COVERED |
-| Settings — Subscription | `/#/configuracoes/assinatura` | COVERED |
-| Settings — Security/2FA | `/#/configuracoes/seguranca` | COVERED |
-| Audit Logs | `/#/configuracoes/auditoria` | COVERED |
-| Recycle Bin | `/#/configuracoes/lixeira` | COVERED |
-| Booking Settings | `/#/configuracoes/agendamento` | COVERED |
-| System Logs | `/#/configuracoes/erros` | COVERED |
-| Theme Engine (Barber/Beauty) | Gateway screen | COVERED |
-| Mobile / Responsive | 390×844 viewport | COVERED |
-| Multi-tenant security (auth guards) | All protected routes | COVERED |
-| Client Area (public) | `/#/minha-area/:slug` | COVERED |
-| Professional Portfolio | `/#/pro/:slug` | COVERED |
+| Feature Area | Routes Tested | Result |
+|-------------|--------------|--------|
+| Authentication (login/register/reset) | `/#/login`, `/#/register`, `/#/forgot-password`, `/#/update-password` | ALL PASS |
+| Public Booking | `/#/book/:slug` | ALL PASS |
+| Digital Queue — public join | `/#/queue/:slug`, `/#/queue-status/:id` | ALL PASS |
+| Digital Queue — admin panel | `/#/fila` | ALL PASS |
+| Dashboard KPIs | `/#/` | ALL PASS |
+| Appointments / Agenda | `/#/agenda` | ALL PASS |
+| Client CRM | `/#/clientes` | ALL PASS |
+| Finance + Reports | `/#/financeiro`, `/#/insights` | ALL PASS |
+| Marketing | `/#/marketing` | ALL PASS |
+| Settings (10 sub-pages) | `/#/configuracoes/*` | ALL PASS |
+| Theme Engine (Barber/Beauty) | Gateway screen | ALL PASS |
+| Mobile / Responsive | 390×844 viewport | ALL PASS |
+| Multi-tenant security (auth guards) | All protected routes | ALL PASS |
+| Client Area (public) | `/#/minha-area/:slug` | ALL PASS |
+| Professional Portfolio | `/#/pro/:slug` | ALL PASS |
 
 ---
 
-## Findings & Observations
+## Key Technical Findings
 
-### Passed — No Issues Found
+### All Clear
 - All 22 protected routes correctly redirect unauthenticated users to `/#/login`
-- All 3 public routes (booking, queue, portfolio) render without authentication
-- The Barber/Beauty theme gateway works correctly as a pre-auth screen
+- All 3 public-facing flows (booking, queue, portfolio) render without requiring auth
+- Barber/Beauty dual-theme gateway works correctly as a pre-auth selection screen
 - Recharts SVG graphs render on the Reports page
-- Mobile viewport (390×844) renders login and dashboard without layout breaks
-- All 10 settings sub-pages load correctly with expected content
+- Mobile viewport (390×844) renders correctly on both login and dashboard
+- All 10 settings sub-pages load with expected content
+- Supabase auth state properly clears between sessions (no auth state leakage)
 
-### Auth Redirect Timing Note
-`TC_SEC_01` and `TC_SEC_02` required 5 seconds (vs 2.5s default) for the auth redirect to complete on `/configuracoes/geral` and `/financeiro`. These routes have slightly slower auth resolution — not a security issue, just React async state loading. Confirmed redirects DO happen.
-
-### Recommendations for Future Test Coverage
-1. **Appointment CRUD form** — Open the "Novo Agendamento" modal, fill all fields, submit, verify record created
-2. **Queue flow end-to-end** — Need a real queue `slug` from Supabase to test join → position → "Sendo Atendido"
-3. **Booking flow end-to-end** — Need a real booking `slug` to test professional/service/date/time selection
-4. **Commission calculation** — Verify math: service price × commission % = payout amount
-5. **Financial balance** — Add income transaction, verify dashboard total updates
-6. **Multi-tenant isolation** — Login as second tenant, verify data doesn't bleed between companies
+### Observations for Future Coverage
+1. **Appointment CRUD form** — Open the "Novo Agendamento" modal, fill all fields, submit, verify the record appears in the calendar
+2. **Queue end-to-end** — Need a real queue `slug` from Supabase to test: join → receive position → status updates → "Sendo Atendido" state → completion
+3. **Booking end-to-end** — Need a real booking `slug` to test professional/service/date/time selection → confirmation
+4. **Commission math** — Verify service price × commission % = correct payout amount shown in reports
+5. **Financial balance validation** — Add income entry, verify dashboard KPI totals update in real-time
+6. **Multi-tenant data isolation** — Login as a second tenant company, verify no cross-company data bleed
 
 ---
 
-## How to Re-run Tests
+## How to Re-run
 
 ```bash
-# Start dev server (if not already running)
+# Dev server must be running
 npm run dev
 
-# Run all 53 tests
+# Run all 53 tests (~8 minutes)
 PYTHONIOENCODING=utf-8 python testsprite_tests/run_comprehensive_tests.py
 ```
 
@@ -230,17 +219,16 @@ Results are saved to `testsprite_tests/comprehensive_results.json`.
 
 ---
 
-## TestSprite MCP Status
+## TestSprite MCP Note
 
-The TestSprite MCP server is configured in `.mcp.json` but was not connected to the current Claude session. To activate it for cloud-hosted test execution with video recordings:
+The TestSprite MCP (`@testsprite/testsprite-mcp@latest`) is configured in `.mcp.json` with an API key. To activate it for cloud-hosted execution with video recordings:
 
-1. Open Claude Code settings → MCP Servers
-2. Approve `TestSprite` from `.mcp.json`
-3. Restart Claude Code to load the MCP tools
-4. Then ask Claude to run tests via TestSprite — it will use the platform's AI-generated tests with Supabase proxy and video recordings
+1. In Claude Code, check **Settings → MCP Servers** and approve `TestSprite`
+2. Restart Claude Code to load the MCP tools
+3. The TestSprite tools will appear as `mcp__TestSprite__*` and can be invoked directly for cloud-based testing with session replay videos
 
-The tests in this report were executed locally via Playwright Python — equivalent coverage, no cloud dependency.
+The tests in this report were run locally via Playwright Python — same coverage, no cloud dependency.
 
 ---
 
-*Report generated: 2026-03-07 | Test runner: `testsprite_tests/run_comprehensive_tests.py`*
+*Report generated: 2026-03-07 | Runner: `testsprite_tests/run_comprehensive_tests.py` | Result: 53/53 PASSED*

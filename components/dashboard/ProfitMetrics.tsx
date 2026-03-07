@@ -135,7 +135,7 @@ export const ProfitMetrics = React.memo(({
                         <LearningCard
                             title="Recuperado"
                             color="text-green-400"
-                            message="Ative quando enviar sua 1ª campanha de reativação pelo CRM."
+                            message="Ative quando enviar sua 1ª campanha para trazer clientes de volta pelo CRM."
                         />
                     )}
                 </div>

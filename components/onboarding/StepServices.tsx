@@ -52,8 +52,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
         try {
             await supabase.rpc('update_onboarding_step', {
                 p_user_id: user.id,
-                p_step: 5,
-                p_completed: true
+                p_step: 3
             });
             onNext();
         } catch (error) {
@@ -116,7 +115,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                     disabled={submitting || services.length === 0}
                     className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
                 >
-                    {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Finalizar Setup'}
+                    {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
                 </button>
             </div>
 

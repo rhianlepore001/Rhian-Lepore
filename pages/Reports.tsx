@@ -1,12 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { useAuth } from '../contexts/AuthContext';
+import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabase';
-import { Users, UserPlus, Calendar, TrendingUp, DollarSign } from 'lucide-react';
+import {
+    Users,
+    UserPlus,
+    Calendar,
+    TrendingUp,
+    DollarSign,
+    Target,
+    Zap,
+    ShieldCheck,
+    AlertCircle,
+    ArrowUpRight,
+    Brain
+} from 'lucide-react';
 import { MonthYearSelector } from '../components/MonthYearSelector';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
+import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, BarChart, Bar } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+
+interface DashboardStats {
+    total_profit: number;
+    current_month_revenue: number;
+    weekly_growth: number;
+    monthly_goal: number;
+    recovered_revenue: number;
+    avoided_no_shows: number;
+    filled_slots: number;
+    campaigns_sent: number;
+    appointments_total: number;
+    appointments_this_month: number;
+    completed_this_month: number;
+    has_public_bookings: boolean;
+    account_days_old: number;
+    data_maturity_score: number;
+    avg_ticket: number;
+    churn_risk_count: number;
+    top_service: string;
+    repeat_client_rate: number;
+}
 
 interface ClientGrowthEntry {
     month: string;
@@ -28,21 +62,13 @@ interface ClientInsights {
 
 export const Reports: React.FC = () => {
     const { user, userType, region } = useAuth();
+    const { isMobile } = useUI();
     const [loading, setLoading] = useState(true);
     const currentDate = new Date();
     const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
     const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-    // Insights Data
-    const [insights, setInsights] = useState({
-        total_appointments: 0,
-        new_clients: 0,
-        active_clients: 0,
-        top_professionals: [],
-        top_services: [],
-        appointments_by_day: []
-    });
-
+    const [stats, setStats] = useState<DashboardStats | null>(null);
     const [clientInsights, setClientInsights] = useState<ClientInsights>({
         client_growth_by_month: [],
         top_clients: [],
@@ -56,42 +82,25 @@ export const Reports: React.FC = () => {
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     useEffect(() => {
-        fetchInsights();
+        fetchData();
     }, [selectedMonth, selectedYear, user]);
 
-    const fetchInsights = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            const startOfMonth = new Date(selectedYear, selectedMonth, 1).toISOString().split('T')[0];
-            const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0).toISOString().split('T')[0];
 
-            const [dashboardResult, clientResult] = await Promise.all([
-                supabase.rpc('get_dashboard_insights', {
-                    p_user_id: user.id,
-                    p_start_date: startOfMonth,
-                    p_end_date: endOfMonth
-                }),
-                supabase.rpc('get_client_insights', {
-                    p_user_id: user.id,
-                    p_months: 6
-                })
+            const [statsResult, clientResult] = await Promise.all([
+                supabase.rpc('get_dashboard_stats', { p_user_id: user.id }),
+                supabase.rpc('get_client_insights', { p_user_id: user.id, p_months: 6 })
             ]);
 
-            if (dashboardResult.error) {
-                logger.error('Error fetching dashboard insights RPC', dashboardResult.error);
-            }
-            if (clientResult.error) {
-                logger.error('Error fetching client insights RPC', clientResult.error);
-            }
+            if (statsResult.error) logger.error('Error fetching dashboard stats', statsResult.error);
+            if (clientResult.error) logger.error('Error fetching client insights', clientResult.error);
 
-            if (dashboardResult.data) {
-                setInsights(dashboardResult.data);
-            }
-            if (clientResult.data) {
-                setClientInsights(clientResult.data);
-            }
+            if (statsResult.data) setStats(statsResult.data);
+            if (clientResult.data) setClientInsights(clientResult.data);
         } catch (error) {
-            logger.error('Unexpected error fetching insights', error);
+            logger.error('Unexpected error fetching report data', error);
         } finally {
             setLoading(false);
         }
@@ -102,19 +111,23 @@ export const Reports: React.FC = () => {
         setSelectedYear(year);
     };
 
-    const months = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
+    if (loading && !stats) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-6 md:space-y-8 pb-20">
-            {/* Header */}
-            <div className="flex flex-col gap-4 border-b-4 border-white/10 pb-4">
+        <div className="space-y-6 md:space-y-10 pb-24">
+            {/* Header Strategist */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-white/5 pb-6">
                 <div>
-                    <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Insights</h2>
-                    <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
-                        Análise de desempenho e métricas operacionais
+                    <h1 className="text-3xl md:text-5xl font-heading text-white uppercase tracking-tighter">Insights do Negócio</h1>
+                    <p className="text-text-secondary font-mono mt-2 text-sm md:text-base flex items-center gap-2">
+                        <Brain className={`w-4 h-4 ${accentText}`} />
+                        Sócio Virtual: Analisando performance e crescimento
                     </p>
                 </div>
 
@@ -126,195 +139,214 @@ export const Reports: React.FC = () => {
                 />
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-neutral-500'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon' : 'bg-neutral-800 text-white'}`}>
-                            <UserPlus className="w-5 h-5" />
+            {/* AIOS Growth Engine Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Profit Radar Card */}
+                <BrutalCard accent glow className="lg:col-span-2">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Zap className="w-5 h-5 text-yellow-400" />
+                                <span className="text-white font-heading uppercase tracking-wider">Painel de Oportunidades</span>
+                            </div>
+                            <p className="text-neutral-400 text-sm">Receita recuperada e vagas otimizadas por IA</p>
                         </div>
-                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Novos Clientes</span>
+                        <div className="text-right">
+                            <p className="text-2xl font-heading text-white">
+                                {formatCurrency((stats?.recovered_revenue || 0) + (stats?.filled_slots || 0), currencyRegion)}
+                            </p>
+                            <p className="text-xs text-green-400 flex items-center justify-end gap-1">
+                                <ArrowUpRight className="w-3 h-3" /> Impacto Real
+                            </p>
+                        </div>
                     </div>
-                    <h3 className="text-3xl font-heading text-white">{insights.new_clients}</h3>
-                    <p className="text-xs text-neutral-500 mt-1">Cadastrados este mês</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                            <p className="text-xs text-neutral-500 uppercase mb-1">Receita Recuperada</p>
+                            <p className={`text-xl font-heading ${accentText}`}>{formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}</p>
+                        </div>
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                            <p className="text-xs text-neutral-500 uppercase mb-1">Vagas Preenchidas</p>
+                            <p className="text-xl font-heading text-white">{stats?.filled_slots || 0}</p>
+                        </div>
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                            <p className="text-xs text-neutral-500 uppercase mb-1">Campanhas Enviadas</p>
+                            <p className="text-xl font-heading text-white">{stats?.filled_slots || 0}</p>
+                        </div>
+                    </div>
                 </BrutalCard>
 
-                <BrutalCard className={`border-l-4 ${isBeauty ? 'border-purple-500' : 'border-accent-gold'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon' : 'bg-accent-gold/10 text-yellow-600'}`}>
-                            <DollarSign className="w-6 h-6" />
+                {/* Data Maturity Score */}
+                <BrutalCard className="flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <ShieldCheck className={`w-5 h-5 ${accentText}`} />
+                            <span className="text-white font-heading uppercase tracking-wider">Maturidade de Dados</span>
                         </div>
-                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Clientes Ativos</span>
+                        <p className="text-neutral-400 text-sm">Saúde operacional do seu sistema</p>
                     </div>
-                    <h3 className="text-3xl font-heading text-white">{insights.active_clients}</h3>
-                    <p className="text-xs text-neutral-500 mt-1">Visitaram este mês</p>
-                </BrutalCard>
 
-                <BrutalCard className="border-l-4 border-blue-500">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                            <Calendar className="w-5 h-5" />
+                    <div className="my-6 flex flex-col items-center">
+                        <div className="relative w-32 h-32 flex items-center justify-center">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle
+                                    cx="64" cy="64" r="58"
+                                    stroke="currentColor" strokeWidth="8"
+                                    fill="transparent" className="text-white/5"
+                                />
+                                <circle
+                                    cx="64" cy="64" r="58"
+                                    stroke="currentColor" strokeWidth="8"
+                                    fill="transparent"
+                                    strokeDasharray={364}
+                                    strokeDashoffset={364 - (364 * (stats?.data_maturity_score || 0)) / 100}
+                                    className={`${accentText} transition-all duration-1000 ease-out`}
+                                />
+                            </svg>
+                            <span className="absolute text-3xl font-heading text-white">{stats?.data_maturity_score}%</span>
                         </div>
-                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Agendamentos</span>
                     </div>
-                    <h3 className="text-3xl font-heading text-white">{insights.total_appointments}</h3>
-                    <p className="text-xs text-neutral-500 mt-1">Concluídos este mês</p>
-                </BrutalCard>
 
-                <BrutalCard className="border-l-4 border-green-500">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
-                            <TrendingUp className="w-5 h-5" />
-                        </div>
-                        <span className="text-text-secondary font-mono text-xs uppercase tracking-widest">Taxa de Retenção</span>
-                    </div>
-                    <h3 className="text-3xl font-heading text-white">{clientInsights.retention_rate}%</h3>
-                    <p className="text-xs text-neutral-500 mt-1">Clientes que voltaram</p>
+                    <p className="text-xs text-center text-neutral-500">
+                        {stats?.data_maturity_score && stats.data_maturity_score > 80
+                            ? 'Excelente! Seu banco de dados está pronto para IA avançada.'
+                            : 'Dica: Use mais o agendamento público para subir sua maturidade.'}
+                    </p>
                 </BrutalCard>
             </div>
 
-            {/* Gráfico: Volume Diário de Atendimentos */}
-            <BrutalCard title={`Volume de Atendimentos - ${months[selectedMonth]}`}>
-                <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={insights.appointments_by_day}>
-                            <defs>
-                                <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                            <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
-                            <YAxis stroke="#666" style={{ fontSize: '12px' }} />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
-                                labelStyle={{ color: '#fff' }}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="count"
-                                stroke={isBeauty ? '#A78BFA' : '#EAB308'}
-                                fillOpacity={1}
-                                fill="url(#colorVisits)"
-                                name="Agendamentos"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </BrutalCard>
-
-            {/* Gráfico: Crescimento de Clientes (últimos 6 meses) */}
-            <BrutalCard title="Crescimento de Clientes — Últimos 6 Meses">
-                <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={clientInsights.client_growth_by_month}>
-                            <defs>
-                                <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                            <XAxis dataKey="month" stroke="#666" style={{ fontSize: '12px' }} />
-                            <YAxis stroke="#666" style={{ fontSize: '12px' }} allowDecimals={false} />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
-                                labelStyle={{ color: '#fff' }}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="new_clients"
-                                stroke="#22C55E"
-                                fillOpacity={1}
-                                fill="url(#colorGrowth)"
-                                name="Novos Clientes"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-            </BrutalCard>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Desempenho da Equipe */}
-                <BrutalCard title="Desempenho da Equipe">
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                        {insights.top_professionals.length === 0 ? (
-                            <p className="text-neutral-500 text-sm">Sem dados de equipe.</p>
-                        ) : (
-                            insights.top_professionals.map((prof: any, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-black ${accentBg}`}>
-                                            {idx + 1}
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-bold">{prof.name}</p>
-                                            <p className="text-xs text-neutral-400">{prof.count} atendimentos</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={`font-mono font-bold ${accentText}`}>
-                                            {formatCurrency(prof.revenue, currencyRegion)}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
+            {/* Main Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <BrutalCard>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2 rounded-xl ${accentBg}`}>
+                            <DollarSign className="w-5 h-5" />
+                        </div>
+                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Valor Médio</span>
                     </div>
+                    <h3 className="text-3xl font-heading text-white">{formatCurrency(stats?.avg_ticket || 0, currencyRegion)}</h3>
+                    <p className="text-xs text-neutral-500 mt-2">Últimos 90 dias</p>
                 </BrutalCard>
 
-                {/* Serviços Mais Populares */}
-                <BrutalCard title="Serviços Mais Populares">
-                    <div className="h-[300px] w-full">
+                <BrutalCard>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
+                            <AlertCircle className="w-5 h-5" />
+                        </div>
+                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Clientes que não voltaram</span>
+                    </div>
+                    <h3 className="text-3xl font-heading text-white">{stats?.churn_risk_count || 0}</h3>
+                    <p className="text-xs text-neutral-500 mt-2">Clientes há 45+ dias sem vir</p>
+                </BrutalCard>
+
+                <BrutalCard>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                            <Target className="w-5 h-5" />
+                        </div>
+                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Recorrência</span>
+                    </div>
+                    <h3 className="text-3xl font-heading text-white">{stats?.repeat_client_rate || 0}%</h3>
+                    <p className="text-xs text-neutral-500 mt-2">Clientes fiéis (2+ visitas)</p>
+                </BrutalCard>
+
+                <BrutalCard>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-xl bg-green-500/10 text-green-400">
+                            <TrendingUp className="w-5 h-5" />
+                        </div>
+                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Crescimento</span>
+                    </div>
+                    <h3 className="text-3xl font-heading text-white">{stats?.weekly_growth || 0}%</h3>
+                    <p className="text-xs text-neutral-500 mt-2">Vs. semana anterior</p>
+                </BrutalCard>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <BrutalCard title="Evolução de Clientes (6 Meses)">
+                    <div className="h-[300px] w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={insights.top_services} layout="vertical" margin={{ left: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
-                                <XAxis type="number" stroke="#666" style={{ fontSize: '12px' }} />
-                                <YAxis dataKey="name" type="category" stroke="#fff" tick={{ fontSize: 11, fill: '#fff' }} width={100} />
+                            <AreaChart data={clientInsights.client_growth_by_month}>
+                                <defs>
+                                    <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                                <XAxis dataKey="month" stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
                                 <Tooltip
-                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                    contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
+                                    contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #222', borderRadius: '12px' }}
+                                    itemStyle={{ color: '#fff' }}
                                 />
-                                <Bar dataKey="count" fill={isBeauty ? '#A78BFA' : '#fff'} name="Agendamentos" radius={[0, 4, 4, 0]} />
-                            </BarChart>
+                                <Area
+                                    type="monotone"
+                                    dataKey="new_clients"
+                                    stroke={isBeauty ? '#A78BFA' : '#EAB308'}
+                                    fillOpacity={1}
+                                    fill="url(#colorGrowth)"
+                                    strokeWidth={3}
+                                />
+                            </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </BrutalCard>
-            </div>
 
-            {/* Top Clientes do Mês */}
-            <BrutalCard title={`Top Clientes — ${months[selectedMonth]}`}>
-                <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
-                    {clientInsights.top_clients.length === 0 ? (
-                        <p className="text-neutral-500 text-sm">Nenhum cliente com agendamentos concluídos este mês.</p>
-                    ) : (
-                        clientInsights.top_clients.map((client, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                                        idx === 0 ? 'bg-yellow-500/20 text-yellow-400' :
-                                        idx === 1 ? 'bg-neutral-400/20 text-neutral-300' :
-                                        idx === 2 ? 'bg-orange-700/20 text-orange-400' :
-                                        'bg-neutral-700/50 text-neutral-400'
-                                    }`}>
-                                        #{idx + 1}
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold">{client.name}</p>
-                                        <p className="text-xs text-neutral-400">
-                                            {client.visits} {client.visits === 1 ? 'visita' : 'visitas'} · última em {client.last_visit}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className={`font-mono font-bold ${accentText}`}>
-                                        {formatCurrency(client.revenue, currencyRegion)}
-                                    </p>
+                <BrutalCard title="Serviço Campeão">
+                    <div className="flex items-center justify-center h-[300px]">
+                        <div className="text-center">
+                            <p className="text-neutral-500 uppercase font-mono text-xs tracking-widest mb-2">Serviço mais vendido</p>
+                            <h2 className={`text-4xl md:text-5xl font-heading ${accentText} uppercase`}>{stats?.top_service || 'N/A'}</h2>
+                            <div className="mt-6 flex justify-center gap-4">
+                                <div className="px-4 py-2 bg-white/5 rounded-full border border-white/10 text-xs text-neutral-400">
+                                    Foco em Retorno: ALTO
                                 </div>
                             </div>
-                        ))
-                    )}
+                        </div>
+                    </div>
+                </BrutalCard>
+            </div>
+
+            {/* Top Clients Table */}
+            <BrutalCard title="Elite de Clientes (Mês Atual)">
+                <div className="overflow-x-auto -mx-4 md:mx-0">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-white/5">
+                                <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase">Cliente</th>
+                                <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase text-center">Visitas</th>
+                                <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase text-right">Total Gasto</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {clientInsights.top_clients.length === 0 ? (
+                                <tr>
+                                    <td colSpan={3} className="px-4 py-8 text-center text-neutral-600">Nenhum dado disponível para este período.</td>
+                                </tr>
+                            ) : (
+                                clientInsights.top_clients.map((client, idx) => (
+                                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${accentBg}`}>
+                                                    {client.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-bold group-hover:text-white">{client.name}</p>
+                                                    <p className="text-xs text-neutral-500">Última em {client.last_visit}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-center font-mono text-white">{client.visits}</td>
+                                        <td className={`px-4 py-4 text-right font-bold ${accentText}`}>{formatCurrency(client.revenue, currencyRegion)}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </BrutalCard>
         </div>

@@ -8,8 +8,9 @@ import { MoreOptionsDrawer } from './MoreOptionsDrawer';
 export const BottomMobileNav: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { userType } = useAuth();
+    const { userType, role } = useAuth();
     const isBeauty = userType === 'beauty';
+    const isStaff = role === 'staff';
 
     const [showQuickActions, setShowQuickActions] = useState(false);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -89,16 +90,18 @@ export const BottomMobileNav: React.FC = () => {
                     <span className="text-[10px] font-bold tracking-tight">Financeiro</span>
                 </button>
 
-                {/* 5. Mais */}
-                <button
-                    onClick={() => setShowMoreMenu(true)}
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${showMoreMenu ? activeColor : inactiveColor}`}
-                >
-                    <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-white/5' : ''}`}>
-                        <Menu className="w-6 h-6" strokeWidth={2} />
-                    </div>
-                    <span className="text-[10px] font-bold tracking-tight">Mais</span>
-                </button>
+                {/* 5. Mais — visível somente para o dono */}
+                {!isStaff && (
+                    <button
+                        onClick={() => setShowMoreMenu(true)}
+                        className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${showMoreMenu ? activeColor : inactiveColor}`}
+                    >
+                        <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-white/5' : ''}`}>
+                            <Menu className="w-6 h-6" strokeWidth={2} />
+                        </div>
+                        <span className="text-[10px] font-bold tracking-tight">Mais</span>
+                    </button>
+                )}
             </div>
 
             {/* Convert to simple boolean flags so we don't need prop drilling for now if complex, 

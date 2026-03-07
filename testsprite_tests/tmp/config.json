@@ -8,17 +8,13 @@
   "executionArgs": {
     "projectName": "Rhian-Lepore-main",
     "projectPath": "c:\\Users\\User\\Downloads\\Rhian-Lepore-main",
-    "testIds": [
-      "TC001",
-      "TC002",
-      "TC009"
-    ],
-    "additionalInstruction": "Foque nos testes de Registro (TC001, TC002) e Recuperação de Senha (TC009). Certifique-se de que a aplicação carregou completamente antes das asserções. O servidor está rodando em http://localhost:3000.",
-    "serverMode": "development",
+    "testIds": [],
+    "additionalInstruction": "SERVIDOR: http://localhost:4173 (producao - sem limitacao de testes)\n\nCRITICO - FLUXO DE LOGIN EM 2 ETAPAS:\n1. Navegar para http://localhost:4173/#/login\n2. Ver gateway com cartoes 'Barbearia' e 'Beauty & Spa' - SEMPRE clicar no cartao 'Barbearia' (texto 'Barbearia' no h2, fundo escuro)\n3. Aguardar o formulario de login aparecer com campos Email e Senha\n4. Digitar email: rleporesilva@gmail.com\n5. Digitar senha: rhianlepore789\n6. Clicar no botao 'ENTRAR' (aguardar carregamento completo antes de prosseguir)\n\nURLS: SEMPRE usar http://localhost:4173/#/ como base. Ex: /#/agenda, /#/fila, /#/clientes, /#/financeiro, /#/marketing, /#/insights, /#/configuracoes/geral\n\nAGUARDAR: Apos login, aguardar a pagina carregar completamente antes de interagir. O app usa lazy loading e pode demorar 1-2 segundos.\n\nCOBERTURA: Testar TODOS os 57 casos de teste do plano, incluindo Dashboard, Agenda, Fila, Clientes, Financeiro, Marketing, Insights e Configuracoes.",
+    "serverMode": "production",
     "envs": {
-      "API_KEY": "sk-user-EhsG18rIB-yp8s7IWIPhIFhvZ4wpcU62kVksDDYWBMrvyfvJOBbwN9dCCJ6aOzc_glznzJcCazBHkjKnswAZQKrbZLylcp24iZ8kjM8fa6aY0zj0Hzb4rmJxhLOhcnVXVqA"
+      "API_KEY": "sk-user-soOopvi5ouFho2CgNwTCYfhAi4sxn3aJBHajsZKUhQijSWTnVWxSqXWhARmGzUHOvlkROU5mbg3J0ZCSUbEyom6RIV5WqLjQeVXXa2nANoksor3PtIXPT_oZWL64iGydp3w"
     }
   },
-  "serverPort": 56275,
-  "proxy": "http://843618fc-c3bb-4516-8309-ffe70815311b:g7S8hJVAK4ilWyRRzjg6AUFdF9Bzzi5O@tun.testsprite.com:8080"
+  "serverPort": 59593,
+  "proxy": "http://fc82015c-1bfa-4ebb-a578-d54238238a90:M2YfD89IVIfT3z6zO8Ooo97sK7zJILOX@tun.testsprite.com:8080"
 }

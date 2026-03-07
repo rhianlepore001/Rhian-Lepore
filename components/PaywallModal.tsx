@@ -8,9 +8,11 @@ import { Lock, Sparkles, LogOut, ArrowRight } from 'lucide-react';
 
 export const PaywallModal: React.FC = () => {
     const { isExpired, isLoading } = useSubscription();
-    const { userType, logout } = useAuth();
+    const { userType, logout, role } = useAuth();
     const navigate = useNavigate();
 
+    // Staff não vê paywall (herda plano do dono)
+    if (role === 'staff') return null;
     // Se estiver carregando ou não estiver expirado, não mostra nada
     if (isLoading || !isExpired) return null;
 

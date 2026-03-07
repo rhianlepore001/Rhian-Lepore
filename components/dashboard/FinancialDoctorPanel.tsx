@@ -189,7 +189,7 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
                         />
                         <div className="flex-1 grid grid-cols-2 gap-3">
                             <div>
-                                <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-0.5">Ticket Médio</p>
+                                <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-0.5">Valor Médio</p>
                                 <p className="text-base font-bold font-heading text-white">
                                     {hasData ? `R$ ${financialDoctor.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}` : '—'}
                                 </p>

@@ -10,9 +10,10 @@ interface ChurnRadarProps {
     clients?: any[];
     loading?: boolean;
     onReactivateSuccess?: () => void;
+    onReactivate?: (client: any) => void;
 }
 
-export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReactivateSuccess }) => {
+export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReactivateSuccess, onReactivate }) => {
     const { userType, businessName } = useAuth();
     const { logCampaignActivity, refetch } = useAIOSDiagnostic();
     const [sendingId, setSendingId] = useState<string | null>(null);
@@ -21,12 +22,17 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
     const handleReactivate = async (client: any) => {
+        if (onReactivate) {
+            onReactivate(client);
+            return;
+        }
+
         if (sendingId) return;
         setSendingId(client.id);
 
         try {
             const message = generateReactivationMessage({
-                clientName: client.name,
+                name: client.name,
                 businessName: businessName || 'nosso estabelecimento',
                 userType: userType || 'barber',
                 daysMissing: (client.days_since_last_visit && typeof client.days_since_last_visit === 'object')
@@ -55,7 +61,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-heading text-white uppercase italic">Radar de Reativação</h3>
+                    <h3 className="text-xl font-heading text-white uppercase italic">Clientes para Recuperar</h3>
                     <div className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse">
                         Oportunidades Reais
                     </div>
@@ -93,7 +99,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
 
                             <div className="flex items-center justify-between mt-auto">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase font-mono text-text-secondary">Ticket Médio</span>
+                                    <span className="text-[10px] uppercase font-mono text-text-secondary">Valor Médio</span>
                                     <span className={`text-sm font-bold ${accentText}`}>R$ {client.avg_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
 

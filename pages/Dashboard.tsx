@@ -25,6 +25,7 @@ import { useAppTour } from '../hooks/useAppTour';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { logger } from '../utils/Logger';
 import { Skeleton } from '../components/SkeletonLoader';
+import { SmartNotificationsBanner } from '../components/SmartNotifications';
 
 export const Dashboard: React.FC = () => {
   const { userType, region, businessName, role } = useAuth();
@@ -82,6 +83,9 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6 md:space-y-10">
       <DashboardHero isBeauty={isBeauty} />
+
+      {/* Smart Notifications — substituição do ChurnRadar fixo */}
+      <SmartNotificationsBanner />
 
       {isStaff ? (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">

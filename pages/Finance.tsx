@@ -689,23 +689,27 @@ export const Finance: React.FC = () => {
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#34d399" stopOpacity={0.4} />
+                        <stop offset="50%" stopColor="#10B981" stopOpacity={0.15} />
+                        <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#f87171" stopOpacity={0.3} />
+                        <stop offset="50%" stopColor="#EF4444" stopOpacity={0.1} />
+                        <stop offset="100%" stopColor="#EF4444" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="name" stroke="#666" style={{ fontSize: '12px' }} />
-                    <YAxis stroke="#666" style={{ fontSize: '12px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                    <XAxis dataKey="name" stroke="#555" style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#555" style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#171717', border: '1px solid #333', borderRadius: '8px' }}
-                      labelStyle={{ color: '#fff' }}
+                      contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', padding: '12px 16px' }}
+                      labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
+                      itemStyle={{ fontSize: '13px', padding: '2px 0' }}
+                      formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, undefined]}
                     />
-                    <Area type="monotone" dataKey="receita" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" name="Receita" />
-                    <Area type="monotone" dataKey="despesas" stroke="#EF4444" fillOpacity={1} fill="url(#colorExpense)" name="Despesas" />
+                    <Area type="natural" dataKey="receita" stroke="#34d399" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" name="Entradas" animationDuration={1200} />
+                    <Area type="natural" dataKey="despesas" stroke="#f87171" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" name="Saídas" animationDuration={1200} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

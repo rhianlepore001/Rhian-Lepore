@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBusinessName(profile.business_name || '');
         setFullName(profile.full_name || '');
         setAvatarUrl(profile.photo_url || null);
-        setTutorialCompleted(profile.tutorial_completed ?? true);
+        setTutorialCompleted(profile.tutorial_completed ?? false);
         setRole(profile.role === 'staff' ? 'staff' : 'owner');
         setCompanyId(profile.company_id || null);
         setAiosEnabled(profile.aios_enabled ?? false);
@@ -165,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBusinessName('');
         setFullName('');
         setAvatarUrl(null);
-        setTutorialCompleted(true);
+        setTutorialCompleted(false);
         setSubscriptionStatus('trial');
         setTrialEndsAt(null);
         setRole('owner');
@@ -207,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setBusinessName('');
     setFullName('');
     setAvatarUrl(null);
-    setTutorialCompleted(true);
+    setTutorialCompleted(false);
     setSubscriptionStatus('trial');
     setTrialEndsAt(null);
     setRole('owner');

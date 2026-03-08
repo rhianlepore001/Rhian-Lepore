@@ -12,7 +12,7 @@ import { StepSuccess } from '../components/onboarding/StepSuccess';
 const TOTAL_STEPS = 5; // 4 etapas + success
 
 export const OnboardingWizard: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user, userType, tutorialCompleted, markTutorialCompleted } = useAuth();
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -27,22 +27,35 @@ export const OnboardingWizard: React.FC = () => {
     const checkProgress = async () => {
         if (!user) return;
 
-        const { data } = await supabase
-            .from('business_settings')
-            .select('onboarding_step, onboarding_completed')
-            .eq('user_id', user.id)
-            .single();
+        try {
+            const { data, error } = await supabase
+                .from('business_settings')
+                .select('onboarding_step, onboarding_completed')
+                .eq('user_id', user.id)
+                .single();
 
-        if (data?.onboarding_completed) {
-            navigate('/');
-            return;
-        }
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching onboarding progress:', error);
+            }
 
-        if (data?.onboarding_step) {
-            const validStep = Math.min(Math.max(data.onboarding_step, 1), TOTAL_STEPS);
-            setStep(validStep);
+            if (data?.onboarding_completed) {
+                // Sincroniza a flag no profiles se necessário para evitar loop com o ProtectedLayout
+                if (!tutorialCompleted) {
+                    await markTutorialCompleted();
+                }
+                navigate('/');
+                return;
+            }
+
+            if (data?.onboarding_step) {
+                const validStep = Math.min(Math.max(data.onboarding_step, 1), TOTAL_STEPS);
+                setStep(validStep);
+            }
+        } catch (err) {
+            console.error('Unexpected error in checkProgress:', err);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const goToStep = async (nextStep: number) => {

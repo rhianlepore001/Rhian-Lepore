@@ -1,6 +1,6 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowRight } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface StepSuccessProps {
     accentColor: string;
@@ -8,6 +8,12 @@ interface StepSuccessProps {
 
 export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor }) => {
     const navigate = useNavigate();
+    const { markTutorialCompleted } = useAuth();
+
+    const handleFinish = async () => {
+        await markTutorialCompleted();
+        navigate('/');
+    };
 
     return (
         <div className="text-center py-8">
@@ -26,7 +32,7 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor }) => {
             </p>
 
             <button
-                onClick={() => navigate('/')}
+                onClick={handleFinish}
                 className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 text-lg' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 text-lg'}
             >
                 Ir para o Dashboard

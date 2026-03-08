@@ -247,7 +247,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                             <p className={`text-sm md:text-lg font-mono font-bold leading-none ${accentColor}`}>{currencySymbol} {totalCommission.toFixed(2)}</p>
                         </div>
                         <div className="bg-black/40 border border-neutral-800 md:rounded-2xl rounded-xl p-2.5 md:p-4">
-                            <p className="text-[9px] md:text-[10px] text-neutral-600 uppercase font-mono mb-0.5 md:mb-1">Valor Médio</p>
+                            <p className="text-[9px] md:text-[10px] text-neutral-600 uppercase font-mono mb-0.5 md:mb-1">Média por serviço</p>
                             <p className="text-white text-sm md:text-lg font-mono font-bold leading-none">
                                 {currencySymbol} {filteredServices.length > 0 ? (totalRevenue / filteredServices.length).toFixed(2) : '0.00'}
                             </p>

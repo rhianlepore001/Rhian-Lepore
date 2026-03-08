@@ -417,7 +417,7 @@ export const ClientCRM: React.FC = () => {
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
               </div>
               <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Lifetime Value (Total Gasto)">Total Investido</p>
+                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Quanto o cliente já gastou no total">Total Gasto</p>
                 <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>

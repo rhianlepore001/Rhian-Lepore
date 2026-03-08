@@ -424,7 +424,7 @@ export const CommissionsSettings: React.FC = () => {
                                 <li>Configure a taxa de comissão (%) para cada profissional</li>
                                 <li>Quando você marca um agendamento como &quot;Concluído&quot;, a comissão é calculada automaticamente</li>
                                 <li>Veja todas as comissões pendentes na aba &quot;Comissões&quot; do Financeiro</li>
-                                <li>Registre os pagamentos para manter seu fluxo de caixa atualizado</li>
+                                <li>Registre os pagamentos para manter suas entradas e saídas atualizadas</li>
                             </ul>
                         </div>
                     </div>

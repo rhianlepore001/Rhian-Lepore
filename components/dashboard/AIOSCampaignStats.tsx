@@ -31,9 +31,9 @@ export const AIOSCampaignStats = React.memo(({
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-white font-heading text-lg uppercase leading-tight">Métricas de Campanha</h3>
+                            <h3 className="text-white font-heading text-lg uppercase leading-tight">Resultado das Campanhas</h3>
                             <div className="mb-1">
-                                <InfoButton text="Acompanhe o desempenho real das suas campanhas de reativação. O Retorno Direto é calculado apenas quando um agendamento concluído possui uma mensagem enviada ao cliente nos últimos 30 dias, garantindo atribuição precisa e 100% honesta." />
+                                <InfoButton text="Acompanhe quanto suas mensagens de WhatsApp estão trazendo de resultado. O Retorno Direto mostra o valor dos agendamentos feitos por clientes que receberam uma mensagem sua nos últimos 30 dias." />
                             </div>
                         </div>
                         <p className="text-xs text-text-secondary font-mono uppercase tracking-wider">Desempenho do AIOS 2.0</p>
@@ -52,7 +52,7 @@ export const AIOSCampaignStats = React.memo(({
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
                             <TrendingUp className="w-3 h-3 text-green-500" />
-                            <span className="text-[10px] uppercase font-mono text-text-secondary">Retorno Direto</span>
+                            <span className="text-[10px] uppercase font-mono text-text-secondary">Faturou de volta</span>
                         </div>
                         <p className={`text-2xl font-bold ${accentColor} leading-none`}>
                             {currencySymbol} {recoveredRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -63,7 +63,7 @@ export const AIOSCampaignStats = React.memo(({
                 <div className={`hidden md:flex flex-col items-center justify-center border-l border-white/10 pl-6 h-12`}>
                     <div className="flex items-center gap-2 text-xs font-mono text-text-secondary uppercase">
                         <Users className="w-4 h-4" />
-                        <span>Conversão Real</span>
+                        <span>Clientes que voltaram</span>
                     </div>
                 </div>
             </div>

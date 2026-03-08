@@ -99,7 +99,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
 
                             <div className="flex items-center justify-between mt-auto">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase font-mono text-text-secondary">Valor Médio</span>
+                                    <span className="text-[10px] uppercase font-mono text-text-secondary">Gasto por visita</span>
                                     <span className={`text-sm font-bold ${accentText}`}>R$ {client.avg_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
 
@@ -114,7 +114,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
                                         <Loader2 className="w-3 h-3 animate-spin" />
                                     ) : (
                                         <div className="flex items-center gap-1">
-                                            <span>Reativar</span>
+                                            <span>Chamar de volta</span>
                                             <MessageSquare className="w-3 h-3" />
                                         </div>
                                     )}
@@ -126,9 +126,9 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
             ) : (
                 <BrutalCard className="text-center py-12 border-dashed border-white/10">
                     <Users className="w-12 h-12 text-neutral-800 mx-auto mb-4" />
-                    <h4 className="text-white font-heading text-lg uppercase">Nenhum cliente em risco iminente</h4>
+                    <h4 className="text-white font-heading text-lg uppercase">Todos os clientes estão voltando</h4>
                     <p className="text-neutral-500 text-sm max-w-sm mx-auto">
-                        Parabéns! Sua taxa de retenção está ótima ou ainda não temos dados suficientes para identificar padrões de abandono.
+                        Parabéns! Seus clientes estão retornando normalmente ou ainda não temos atendimentos suficientes para identificar quem sumiu.
                     </p>
                 </BrutalCard>
             )}

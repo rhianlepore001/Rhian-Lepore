@@ -149,7 +149,7 @@ export const Reports: React.FC = () => {
                                 <Zap className="w-5 h-5 text-yellow-400" />
                                 <span className="text-white font-heading uppercase tracking-wider">Painel de Oportunidades</span>
                             </div>
-                            <p className="text-neutral-400 text-sm">Receita recuperada e vagas otimizadas por IA</p>
+                            <p className="text-neutral-400 text-sm">Dinheiro recuperado e horários preenchidos pela IA</p>
                         </div>
                         <div className="text-right">
                             <p className="text-2xl font-heading text-white">
@@ -163,7 +163,7 @@ export const Reports: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                            <p className="text-xs text-neutral-500 uppercase mb-1">Receita Recuperada</p>
+                            <p className="text-xs text-neutral-500 uppercase mb-1">Dinheiro Recuperado</p>
                             <p className={`text-xl font-heading ${accentText}`}>{formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}</p>
                         </div>
                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
@@ -182,7 +182,7 @@ export const Reports: React.FC = () => {
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <ShieldCheck className={`w-5 h-5 ${accentText}`} />
-                            <span className="text-white font-heading uppercase tracking-wider">Maturidade de Dados</span>
+                            <span className="text-white font-heading uppercase tracking-wider">Qualidade dos Dados</span>
                         </div>
                         <p className="text-neutral-400 text-sm">Saúde operacional do seu sistema</p>
                     </div>
@@ -223,7 +223,7 @@ export const Reports: React.FC = () => {
                         <div className={`p-2 rounded-xl ${accentBg}`}>
                             <DollarSign className="w-5 h-5" />
                         </div>
-                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Valor Médio</span>
+                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Média por atendimento</span>
                     </div>
                     <h3 className="text-3xl font-heading text-white">{formatCurrency(stats?.avg_ticket || 0, currencyRegion)}</h3>
                     <p className="text-xs text-neutral-500 mt-2">Últimos 90 dias</p>

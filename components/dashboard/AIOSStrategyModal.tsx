@@ -26,7 +26,7 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
             icon: <MessageSquare className={`w-5 h-5 ${accentText}`} />,
             title: "Script que Converte",
             description: "Use o link de WhatsApp no CRM. Dica: 'Notei que faz tempo que não damos aquele trato. Tenho uma vaga pra quinta!'",
-            tag: "CONVERSÃO"
+            tag: "RESULTADO"
         },
         {
             icon: <Target className={`w-5 h-5 ${accentText}`} />,

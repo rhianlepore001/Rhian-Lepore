@@ -107,7 +107,7 @@ export const Marketing: React.FC = () => {
                         >
                             Disparar IA Turbo
                         </BrutalButton>
-                        <span className="text-[9px] font-mono text-center text-text-secondary uppercase">Conversão Média: 24.8%</span>
+                        <span className="text-[9px] font-mono text-center text-text-secondary uppercase">Clientes que voltaram: 24.8%</span>
                     </div>
                 </div>
             </div>
@@ -178,7 +178,7 @@ export const Marketing: React.FC = () => {
                                         title={`Resgatar VIP: ${client.name}`}
                                         description={`${client.name} (Total R$ ${client.total_spent.toFixed(0)}) não aparece há ${client.days_missing} dias.`}
                                         badge="Prioridade"
-                                        impact={`Valor Médio: R$ ${(client.total_spent / 5).toFixed(0)}`}
+                                        impact={`Gasto por visita: R$ ${(client.total_spent / 5).toFixed(0)}`}
                                         actionLabel="Enviar Convite VIP"
                                         onAction={() => handleAISuggest(client)}
                                     />
@@ -200,7 +200,7 @@ export const Marketing: React.FC = () => {
                             {/* Radar Secundário (Histórico) */}
                             <div className="pt-8 border-t border-white/10">
                                 <h3 className="text-xl font-heading text-white uppercase mb-4 flex items-center gap-2">
-                                    <Target className="w-5 h-5 text-neutral-500" /> Fluxo de Retenção
+                                    <Target className="w-5 h-5 text-neutral-500" /> Clientes que não voltaram
                                 </h3>
                                 <ChurnRadar
                                     clients={diagnostic?.at_risk_clients}
@@ -241,7 +241,7 @@ export const Marketing: React.FC = () => {
                                 </h3>
                                 <p className="text-[11px] text-text-secondary leading-relaxed font-mono italic">
                                     {isBeauty
-                                        ? "Imagine sua cliente VIP recebendo um convite exclusivo agora. Historicamente, clientes de Estética que não voltam em 30 dias têm 60% de chance de churn. Vamos mudar essa história hoje?"
+                                        ? "Imagine sua cliente VIP recebendo um convite exclusivo agora. Historicamente, clientes de Estética que não voltam em 30 dias têm 60% de chance de nunca mais voltar. Vamos mudar essa história hoje?"
                                         : "Seu cliente mais fiel está a um passo de esquecer a rotina de cuidados. Um simples 'E aí, vamos renovar?' entre 09:00 e 10:30 aumenta em 35% suas chances de preencher a agenda. Bora agir?"
                                     }
                                 </p>

@@ -465,10 +465,10 @@ export const Finance: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Financeiro</h2>
-            <AIAssistantButton context="suas finanças, fluxo de caixa e relatórios" />
+            <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
           </div>
           <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
-            Gestão completa do seu fluxo de caixa
+            Controle completo das suas entradas e saídas
           </p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
@@ -683,7 +683,7 @@ export const Finance: React.FC = () => {
 
           {/* Charts */}
           <div className="grid grid-cols-1 gap-6">
-            <BrutalCard title={`Fluxo de Caixa - ${months[selectedMonth]} ${selectedYear}`}>
+            <BrutalCard title={`Entradas e Saídas - ${months[selectedMonth]} ${selectedYear}`}>
               <div className="h-[350px] min-h-[300px] w-full mt-4">
                 <ResponsiveContainer width="99%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>

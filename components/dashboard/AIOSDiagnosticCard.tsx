@@ -56,11 +56,11 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                 <div className="bg-white/5 p-3 flex justify-around border-t border-white/5">
                     <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-tighter text-text-secondary">
                         <Users className="w-3 h-3" />
-                        <span>{diagnostic.at_risk_clients.length} Reativações Pendentes</span>
+                        <span>{diagnostic.at_risk_clients.length} clientes para chamar de volta</span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-tighter text-text-secondary">
                         <TrendingUp className="w-3 h-3" />
-                        <span>Valor Médio: {formatCurrency(diagnostic.recoverable_revenue / diagnostic.at_risk_clients.length, region)}</span>
+                        <span>Gasto por visita: {formatCurrency(diagnostic.recoverable_revenue / diagnostic.at_risk_clients.length, region)}</span>
                     </div>
                 </div>
             </BrutalCard>

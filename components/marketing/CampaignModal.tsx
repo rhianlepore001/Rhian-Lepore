@@ -98,8 +98,8 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
                     <div>
                         <p className="text-sm text-white font-medium">Análise de IA Concluída</p>
                         <p className="text-xs text-text-secondary font-mono mt-1">
-                            Sugerindo campanha de **Reativação** para {clientData?.name || 'Cliente Selecionado'}.
-                            Status: {clientData?.daysMissing || 30} dias sem retorno detectados no clientes que não voltaram.
+                            Sugerindo mensagem para trazer de volta {clientData?.name || 'Cliente Selecionado'}.
+                            Esse cliente não aparece há {clientData?.daysMissing || 30} dias.
                         </p>
                     </div>
                 </div>

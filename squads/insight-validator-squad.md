@@ -247,8 +247,45 @@ data_checks:
   AIOSCampaignStats_tsx:
     metrics:
       - "Taxa de abertura WhatsApp = mensagens_abertas / mensagens_enviadas × 100"
-      - "0 campanhas enviadas → todos os stats em 0 (não divisão por zero)"
+      - "0 campanhas enviadas → componente NÃO renderiza (condicional: campaignsSent > 0)"
       - "Campanhas do período selecionado = apenas as dentro do range de data"
+    conditional_rendering:
+      - "campaignsSent = 0 → componente ausente do DOM (não apenas oculto com opacity)"
+      - "campaignsSent > 0 → componente renderiza com dados reais"
+      - "Reports.tsx com 0 campanhas → exibe CTA para enviar primeira campanha"
+
+  DataMaturity_system:
+    thresholds:
+      score_0_to_29:
+        behavior: "FinancialDoctorPanel exibe 'Aguardando dados suficientes'"
+        validate: "Nenhum insight gerado com score < 30 — não importa quantos dados parciais existem"
+        bad: "Insight gerado com 2 agendamentos (amostra insuficiente = insight enganoso)"
+      score_30_to_74:
+        behavior: "Insights disponíveis + DataMaturityBadge visível"
+        validate: "Badge exibe ação concreta: 'X agendamentos para desbloquear IA completa'"
+        bad: "Badge mostra percentual sem instrução de como aumentar"
+      score_75_plus:
+        behavior: "DataMaturityBadge desaparece (conditional rendering)"
+        validate: "Badge some quando score >= 75 — não fica preso em tela"
+    data_sources_that_build_score:
+      - "appointmentsTotal: cada agendamento incrementa score"
+      - "hasPublicBookings: link de booking público ativo = bônus"
+      - "accountDaysOld: conta mesmo sem dados (tempo de uso)"
+      - "completedThisMonth: agendamentos concluídos (não só criados)"
+
+  AISemanticInsights_tsx:
+    similarity_threshold:
+      value: 0.4
+      validate: "Memórias com similaridade < 0.4 NÃO aparecem — filtro de relevância"
+      edge_case_zero: "0 memórias acima do threshold → empty state 'Sem memórias ainda'"
+      bad: "Memória irrelevante (sim 0.2) aparece por ausência de threshold"
+    max_displayed:
+      value: 3
+      validate: "Exibe no máximo 3 memórias mesmo com 10+ disponíveis"
+      validate_order: "As 3 memórias exibidas são as de maior similaridade (não as mais antigas)"
+    rpc_dependency:
+      function: "match_client_memories"
+      validate: "RPC retorna array vazio → componente renderiza empty state (sem crash)"
 
   MonthlyProfitModal_tsx:
     chart_data:
@@ -258,9 +295,11 @@ data_checks:
 
   GoalHistoryModal_tsx:
     progress:
-      - "% de meta atingida = valor_realizado / meta × 100"
-      - "Valor realizado > meta → exibe > 100% (não clampa em 100%)"
-      - "Meta = R$0 configurada → não exibe divisão por zero"
+      - "% de meta atingida = Math.min((currentMonthRevenue / monthlyGoal) * 100, 100)"
+      - "Valor realizado > meta → progress bar em 100% (clamped) + badge 'Meta atingida!'"
+      - "Valor absoluto realizado é exibido mesmo quando meta superada (ex: R$8.500 de meta R$5.000)"
+      - "Meta = R$0 configurada → não exibe divisão por zero (guard obrigatório)"
+      - "Meta não configurada (monthlyGoal = null) → oculta componente de progresso"
 ```
 
 **Checklist de Formatação Monetária (Brasil):**
@@ -339,6 +378,52 @@ insight_checks:
       bad_insight: "Seu faturamento está crescendo consistentemente — parabéns!"
       why_bad: "3 meses iguais não é crescimento — é estabilidade"
       good_insight: "Seu faturamento está estável em R$2.000/mês. Para crescer, considere..."
+
+    useFinancialDoctor_hook_dimensions:
+      description: >
+        O hook useFinancialDoctor() gera insights baseado em exatamente 8 dimensões.
+        Cada insight deve ser validado contra a dimensão que o gerou.
+      dimension_1_weekly_growth:
+        threshold_positive: "weeklyGrowth > 10% → +20 pts → insight de conquista 'Crescimento semanal ótimo'"
+        threshold_negative: "weeklyGrowth < -10% → -20 pts → insight de risco 'Queda semanal'"
+        validate: "Insight de crescimento só aparece se weeklyGrowth > 10% — não em crescimento de 2%"
+        bad: "Insight 'Crescimento consistente' com weeklyGrowth = 3%"
+      dimension_2_repeat_client_rate:
+        threshold_good: "repeatRate >= 50% → +15 pts → insight de achievement"
+        threshold_bad: "repeatRate < 10% → -5 pts → insight de risco"
+        validate: "repeatRate = clientes que voltaram / total clientes × 100"
+      dimension_3_churn_risk:
+        threshold: "churnRiskCount >= 5 clientes → -15 pts → insight crítico"
+        validate: "Número de clientes em risco bate com o que ChurnRadar exibe"
+        bad: "Insight diz '3 em risco' mas ChurnRadar mostra 7"
+      dimension_4_goal_progress:
+        threshold_hit: "goalProgress >= 100% → +15 pts → insight de achievement"
+        threshold_low: "goalProgress < 25% → -5 pts → insight de atenção"
+        validate: "goalProgress = Math.min(currentMonthRevenue / monthlyGoal × 100, 100)"
+        bad: "Insight de meta atingida quando monthlyGoal não está configurado"
+      dimension_5_completions:
+        threshold: "completedThisMonth >= 30 → +5 pts → insight positivo"
+        validate: "Contagem de completions bate com o que Finance.tsx exibe"
+      dimension_6_avg_ticket:
+        insight_trigger: "avgTicket < R$50 → opportunity insight de upsell"
+        validate: "avgTicket calculado como receita_total / numero_atendimentos_concluidos"
+        bad: "Insight de upsell quando avgTicket já é R$120"
+      dimension_7_top_service:
+        insight_trigger: "topService.completions >= 10 este mês → insight de destaque"
+        validate: "Nome do serviço no insight bate com o serviço real do tenant"
+        bad: "Insight cita 'Escova progressiva' em barbearia sem esse serviço"
+      dimension_8_campaign_activity:
+        insight_trigger: "campaignsSent = 0 → high-impact opportunity insight"
+        validate: "Insight desaparece quando primeira campanha é enviada"
+        bad: "Insight permanece após tenant enviar campanhas"
+
+    insight_sorting:
+      rule: "Insights ordenados: high impact → medium → low (máximo 5 exibidos)"
+      validate: "O insight de maior impacto para o negócio aparece primeiro na lista"
+      bad: "5 insights com impact=medium em ordem aleatória"
+    insight_categories:
+      valid: [growth, risk, opportunity, achievement]
+      validate: "Cada insight tem category definida — nunca undefined ou string livre"
 
   ChurnRadar_tsx:
     validates:
@@ -540,6 +625,23 @@ empty_state_scenarios:
         - "Análise semântica diz 'Sem histórico ainda' não interpreta dados vazios"
       bad:
         - "AISemanticInsights tenta analisar dados que não existem"
+
+  role_split_Dashboard_tsx:
+    description: "Dashboard renderiza componentes diferentes para staff e owner — ambos devem ter empty states corretos"
+    staff_role:
+      components_shown: [MeuDiaWidget]
+      components_hidden: [AIOSCampaignStats, DataMaturityBadge, FinancialDoctorPanel, ActionCenter]
+      empty_state_staff_no_appointments:
+        expected: "MeuDiaWidget: 'Você está livre! Aproveite para organizar...' — tom positivo"
+        bad: "MeuDiaWidget renderiza componentes de owner (FinancialDoctor vaza para staff)"
+    owner_role:
+      components_shown: [AIOSCampaignStats (se campaignsSent>0), DataMaturityBadge (se score<75),
+                         FinancialDoctorPanel, ActionCenter]
+      components_hidden: [MeuDiaWidget]
+      empty_state_owner_no_data:
+        expected: "DataMaturityBadge com score baixo + instrução de próximo passo"
+        bad: "Owner vê MeuDiaWidget (componente exclusivo de staff)"
+    critical_validation: "userType check correto — bug aqui expõe dados financeiros para staff"
 
   Agenda_tsx:
     no_appointments_today:
@@ -799,6 +901,69 @@ workflow:
 | **GitHub Issues** | Cria issues para bugs de dados encontrados | ✅ Ativo |
 | **UX Audit Squad** | Recebe contexto de problemas visuais que podem mascarar bugs de dados | 📋 Opcional |
 | **Build Validation Squad** | Alimenta com critérios de aceite de precisão de dados | ✅ Ativo |
+
+---
+
+## Validação: Maximizar Uso para o Usuário
+
+Esta seção transversal valida se o sistema de insights **ensina e motiva o usuário a usar mais o app**.
+O problema não é só "os dados estão certos" — é "os insights convertem em ações reais do dono de salão".
+
+```yaml
+usage_maximization_checks:
+
+  data_maturity_progression:
+    check: "DataMaturityBadge exibe ação concreta para aumentar score — não só percentual"
+    validate_good: "'Adicione mais 5 agendamentos para desbloquear análise completa de IA'"
+    validate_bad: "Badge mostra '45%' sem instrução de o que falta"
+    impact: "Usuário que entende o que falta → alimenta dados → ativa IA → vê mais valor"
+
+  insight_cta_effectiveness:
+    check: "Todo insight com diagnóstico tem action string definida (campo obrigatório)"
+    validate: "CTA navega para a seção correta: churn insight → ClientCRM com filtro"
+    bad: "Insight sem CTA — usuário sabe o problema mas não sabe o que fazer"
+    test_each_insight_category:
+      risk: "Toda insight de risco tem CTA de mitigação"
+      opportunity: "Toda insight de oportunidade tem CTA de ativação"
+      achievement: "Insights de achievement podem ser sem CTA (celebração)"
+      growth: "Insights de crescimento têm CTA para ampliar o que está funcionando"
+
+  empty_state_motivation:
+    check: "Empty states de insights motivam próxima ação — não são neutros"
+    examples_good:
+      - "AISemanticInsights: 'Anote preferências nas notas do cliente para ativar a IA'"
+      - "MeuDiaWidget sem agendamentos: 'Compartilhe seu link de booking para receber mais clientes'"
+      - "FinancialDoctor com score baixo: 'Complete X agendamentos para ver sua análise financeira'"
+    examples_bad:
+      - "AISemanticInsights: 'Sem memórias profundas ainda' — sem CTA"
+      - "Dashboard owner sem dados: tela em branco ou zeros sem contexto"
+    validate: "Cada empty state de insight tem pelo menos 1 CTA de próximo passo"
+
+  health_score_communication:
+    check: "healthScore (0-100) sempre acompanhado de healthLabel — nunca número solto"
+    healthLabel_values: "'Ótimo' | 'Bom' | 'Atenção' | 'Crítico'"
+    validate_scale: "Usuário entende que 75 = 'Bom' sem precisar consultar documentação"
+    bad: "Score 45 sem label — o que é bom? O que é ruim? Usuário não sabe"
+
+  insight_impact_ordering:
+    check: "Insights ordenados por impact field: high → medium → low (máx 5)"
+    validate: "O insight de maior impacto para o negócio aparece PRIMEIRO — sem exceção"
+    edge_case: "Todos os 5 insights com impact=high → ordenar por categoria (risk > opportunity > achievement)"
+    bad: "Insights em ordem de inserção no array (aleatório) — usuário lê o menos importante primeiro"
+
+  insight_personalization_rate:
+    check: "Cada insight cita dado real do tenant — não texto genérico"
+    validate_examples:
+      personalized: "Seu serviço mais popular este mês é 'Corte + Barba' com 23 atendimentos"
+      generic: "Seus serviços estão performando bem este mês" # RUIM — serve para qualquer salão
+    threshold: "< 20% de insights genéricos em qualquer sessão"
+
+  financial_doctor_health_score_trust:
+    check: "HealthScore flutua de forma coerente com mudanças reais"
+    validate: "Score aumenta quando weeklyGrowth melhora (> 10%)"
+    validate: "Score não flutua aleatoriamente entre recargas sem mudança de dados"
+    bad: "Score 75 → F5 → Score 60 (sem mudança de dados) — usuário perde confiança"
+```
 
 ---
 

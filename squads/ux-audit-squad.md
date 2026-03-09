@@ -57,6 +57,12 @@ sections:
   core:
     pages: [Dashboard, Agenda, Clients, ClientCRM, Finance, Marketing, Reports]
     priority: high
+  insights:
+    pages: [Reports, Dashboard (FinancialDoctorPanel section), ClientCRM (AISemanticInsights)]
+    components: [FinancialDoctorPanel, ChurnRadar, AISemanticInsights, AIOSCampaignStats,
+                 MeuDiaWidget, DataMaturityBadge, ProfitMetrics, GoalHistoryModal]
+    priority: high  # Owner toma decisões de negócio baseadas nesta seção — erro aqui = decisão errada
+    note: "Seção de maior risco silencioso — usuário confia nos dados e age em cima deles"
   queue:
     pages: [QueueManagement, QueueJoin, QueueStatus]
     priority: medium
@@ -130,6 +136,31 @@ navigation_checks:
     - step_progress_visibility         # Usuário sabe em qual step está?
     - step_skip_option                 # Pode pular steps opcionais?
     - completion_clarity               # Tela de sucesso comunica o que fazer agora?
+
+  insights_navigation:
+    financial_doctor_cta_flow:
+      check: "Cada insight com action string navega para a seção correta"
+      example: "Insight 'clientes inativos' → CTA 'Ver no CRM' → abre ClientCRM com filtro"
+      validate: "0 CTAs quebrados (link morto ou navigação errada)"
+    churn_radar_reactivation_tap:
+      check: "Tap em cliente em risco abre WhatsApp com mensagem pré-preenchida"
+      validate: "Número de telefone formatado corretamente no link WhatsApp"
+      bad: "Tap não faz nada / erro de formatação no link"
+    reports_page_drill_down:
+      check: "Reports.tsx tem navegação interna clara entre seções"
+      validate: "Top clients, revenue chart e filtros de período são acessíveis em ≤ 2 taps"
+    data_maturity_badge_cta:
+      check: "DataMaturityBadge (score < 75) exibe ação concreta ao clicar"
+      validate: "Badge explica O QUE falta para aumentar score, não só o percentual"
+      bad: "Badge mostra '45%' sem dizer o que fazer para chegar em 100%"
+    insight_to_action_depth:
+      check: "Do insight até a ação corretiva: máximo 2 taps"
+      validate: "Insight de churn → CRM → cliente específico em ≤ 2 taps"
+      bad: "> 3 taps para completar a ação recomendada pelo insight"
+    role_navigation_isolation:
+      check: "Staff (isStaff=true) não vê FinancialDoctorPanel nem AIOSCampaignStats"
+      validate: "Owner não vê MeuDiaWidget (componente exclusivo de staff)"
+      bad: "Componente do role errado renderiza (bug de condicional)"
 ```
 
 **Prompt Template:**
@@ -250,6 +281,26 @@ mobile_checks:
     - churn_radar_chart_mobile         # Recharts legível em tela pequena?
     - action_center_tap_targets        # Botões de ação atingíveis com polegar?
 
+  insight_components_mobile:
+    financial_doctor_panel_375px:
+      check: "FinancialDoctorPanel.tsx legível e utilizável em 375×667"
+      validate: "healthScore, healthLabel e até 5 insights visíveis sem scroll horizontal"
+      bad: "Painel truncado, texto cortado, healthScore ilegível"
+    insight_card_touch_targets:
+      check: "Cada insight card com CTA tem área de toque ≥ 44px"
+      validate: "Botão de ação (ex: 'Ver no CRM') atingível com polegar em 375px"
+      bad: "CTA é um link inline de 12px — inacessível no mobile"
+    data_maturity_badge_mobile:
+      check: "DataMaturityBadge visível e legível acima do fold em mobile"
+      validate: "Badge não fica oculto atrás de outros widgets na versão mobile"
+    reports_charts_mobile:
+      check: "Gráficos Recharts em Reports.tsx responsivos em 375px"
+      validate: "ResponsiveContainer aplicado em todos os charts da página Reports"
+      bad: "Gráfico com width fixo em px vaza do viewport"
+    campaign_stats_mobile:
+      check: "AIOSCampaignStats.tsx legível quando campaignsSent > 0"
+      validate: "Métricas de campanha legíveis em 375px — números não truncados"
+
   public_booking:
     - form_keyboard_behavior           # Campos não ficam atrás do teclado?
     - calendar_picker_touch            # CalendarPicker.tsx usável em mobile?
@@ -346,6 +397,30 @@ benchmark_references:
     dimensions:
       - chart_readability          # Gráficos Recharts fáceis de interpretar?
       - transaction_list_ux        # Lista de transações escaneável?
+
+  reports_and_insights:
+    primary: fresha      # Fresha tem seção de analytics nativa para salões
+    secondary: linear    # Referência em apresentação de dados e métricas SaaS
+    dimensions:
+      - insight_actionability:
+          check: "Cada insight leva a uma ação concreta (não só informação)"
+          fresha_reference: "Fresha mostra 'Enviar mensagem de reativação' direto no painel"
+          linear_reference: "Linear insights têm links diretos para issues relacionadas"
+      - data_maturity_onboarding:
+          check: "App ensina o usuário a ter dados suficientes para ativar IA"
+          fresha_reference: "Fresha exibe checklist de setup no primeiro acesso"
+          linear_reference: "Linear mostra preview de features desbloqueadas com mais dados"
+          validate: "DataMaturityBadge é mais que um número — é uma instrução"
+      - chart_readability_mobile:
+          check: "Gráficos de insights legíveis em mobile sem zoom"
+          fresha_reference: "Fresha prioriza números grandes acima dos gráficos em mobile"
+      - health_score_clarity:
+          check: "healthScore (0-100) tem contexto claro — o que é 'bom'?"
+          validate: "healthLabel ('Ótimo', 'Atenção', 'Crítico') sempre acompanha o score"
+          bad: "Score 55 exibido sem referência de escala"
+      - insight_personalization:
+          check: "Insights são específicos ao tenant (citam serviço real, valor real)"
+          validate: "Nenhum insight genérico que serviria para qualquer salão"
 
   onboarding_wizard:
     primary: notion      # Onboarding com progresso claro
@@ -491,6 +566,18 @@ tasks:
     section: public
     priority: all
     estimated_duration: "1h"
+
+  - id: section-audit-insights
+    name: "Auditoria UX — Insights e Relatórios"
+    agent: ux-orchestrator
+    trigger: manual | post_insight_feature_change | monthly
+    scope: section
+    section: insights
+    priority: all
+    theme: both
+    user_roles: [owner, staff]   # Valida ambos os roles (split de componentes)
+    estimated_duration: "1h30min"
+    note: "Incluir Navigation Agent com foco em CTAs de insight + Mobile Agent com foco em Recharts"
 
   - id: navigation-spot-check
     name: "Spot Check de Navegação"

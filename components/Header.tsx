@@ -88,7 +88,7 @@ export const Header: React.FC = () => {
                   {businessName || 'GESTÃO'}
                 </h1>
                 <p className="text-[9px] text-text-secondary font-mono mt-0.5 opacity-60 uppercase tracking-widest">
-                  Powered by AgenX AIOS
+                  Powered by AgenX
                 </p>
               </div>
             </Link>

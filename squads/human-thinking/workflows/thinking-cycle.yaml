@@ -1,0 +1,65 @@
+workflow:
+  id: thinking-cycle
+  name: "Ciclo de Pensamento Humano"
+  description: >
+    Workflow que orquestra os 5 agentes cognitivos em sequência,
+    cada um adicionando sua perspectiva única ao mesmo alvo.
+  version: "1.0.0"
+
+  trigger: manual
+  elicit: true
+
+  phases:
+    - id: analyze
+      name: "Análise Crítica"
+      agent: thinker
+      task: deep-analysis
+      output: analysis_report
+      description: "Sophia questiona premissas e identifica falhas"
+
+    - id: review
+      name: "Review de UX"
+      agent: reviewer
+      task: ux-review
+      depends_on: [analyze]
+      input: analysis_report
+      output: ux_report
+      description: "Luna avalia com olhos de usuário"
+
+    - id: ideate
+      name: "Brainstorm"
+      agent: ideator
+      task: brainstorm
+      depends_on: [review]
+      input: [analysis_report, ux_report]
+      output: ideas_list
+      description: "Spark gera possibilidades criativas"
+
+    - id: reformulate
+      name: "Reformulação"
+      agent: reformulator
+      task: reformulate
+      depends_on: [ideate]
+      input: [analysis_report, ux_report, ideas_list]
+      output: reformulation_plan
+      description: "Rex propõe simplificações concretas"
+
+    - id: optimize
+      name: "Otimização"
+      agent: optimizer
+      task: optimize
+      depends_on: [reformulate]
+      input: [analysis_report, reformulation_plan]
+      output: optimization_plan
+      description: "Edge prioriza e mede impacto"
+
+  output:
+    type: comprehensive_report
+    includes:
+      - analysis_report
+      - ux_report
+      - ideas_list
+      - reformulation_plan
+      - optimization_plan
+    format: markdown
+    save_to: "docs/thinking-cycles/"

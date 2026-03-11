@@ -160,9 +160,9 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
                         <Stethoscope className="w-4 h-4 text-accent-gold" />
                     </div>
                     <div className="text-left">
-                        <h3 className="text-sm font-bold font-heading text-white">Doutor Financeiro</h3>
+                        <h3 className="text-sm font-bold font-heading text-white">Como está seu mês</h3>
                         <p className="text-[11px] text-text-secondary font-mono">
-                            {hasData ? `${insights.length} insights • Atualizado agora` : 'Aguardando dados suficientes'}
+                            {hasData ? `${insights.length} dicas para você • Atualizado agora` : 'Use o sistema para desbloquear dicas'}
                         </p>
                     </div>
                 </div>
@@ -221,7 +221,7 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
                         <div className="flex flex-col items-center gap-2 py-6 text-center">
                             <Stethoscope className="w-8 h-8 text-text-secondary/30" />
                             <p className="text-sm text-text-secondary/60 max-w-xs">
-                                O Doutor precisa de dados consistentes para te ajudar. Continue usando o sistema para desbloquear os insights avançados.
+                                Continue usando o sistema para desbloquear dicas personalizadas sobre seu negócio.
                             </p>
                         </div>
                     ) : insights.length === 0 ? (

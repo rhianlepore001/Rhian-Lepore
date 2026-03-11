@@ -124,7 +124,7 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
 
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                     <p className="text-[10px] font-mono text-blue-400 leading-relaxed uppercase">
-                        PRO TIP: Personalize o texto acima. O AIOS aprende com seu tom de voz para as próximas sugestões de copywriting.
+                        DICA: Personalize o texto acima com o seu jeito de falar. Quanto mais você usar, melhores ficam as sugestões.
                     </p>
                 </div>
             </div>

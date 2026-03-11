@@ -161,7 +161,7 @@ export const Dashboard: React.FC = () => {
                 id="dashboard-appointments-list"
                 title={
                   <div className="flex items-center gap-2">
-                    <span>Próximos Atendimentos</span>
+                    <span>Agenda de hoje</span>
                     <InfoButton text="Seus próximos compromissos para hoje." />
                   </div>
                 }

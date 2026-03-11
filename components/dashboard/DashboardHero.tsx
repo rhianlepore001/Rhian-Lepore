@@ -68,7 +68,7 @@ export const DashboardHero = React.memo(({ isBeauty }: DashboardHeroProps) => {
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-mono text-white/40 uppercase tracking-[0.2em] flex items-center gap-1.5">
                                 <Zap size={10} className={accentText} />
-                                AIOS Command
+                                Seu Painel
                             </span>
                         </div>
                     </div>
@@ -95,7 +95,7 @@ export const DashboardHero = React.memo(({ isBeauty }: DashboardHeroProps) => {
                     ) : (
                         <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/20 border border-white/5">
                             <div className={`w-1.5 h-1.5 rounded-full ${accentBg} opacity-50 shadow-[0_0_8px_rgba(255,255,255,0.5)]`} />
-                            <span className="text-[9px] font-mono text-white/40 tracking-widest uppercase">System Operational</span>
+                            <span className="text-[9px] font-mono text-white/40 tracking-widest uppercase">Tudo funcionando</span>
                         </div>
                     )}
                 </div>

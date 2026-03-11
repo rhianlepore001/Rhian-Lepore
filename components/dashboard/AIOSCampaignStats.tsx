@@ -36,7 +36,7 @@ export const AIOSCampaignStats = React.memo(({
                                 <InfoButton text="Acompanhe quanto suas mensagens de WhatsApp estão trazendo de resultado. O Retorno Direto mostra o valor dos agendamentos feitos por clientes que receberam uma mensagem sua nos últimos 30 dias." />
                             </div>
                         </div>
-                        <p className="text-xs text-text-secondary font-mono uppercase tracking-wider">Desempenho do AIOS 2.0</p>
+                        <p className="text-xs text-text-secondary font-mono uppercase tracking-wider">Resultado das suas mensagens</p>
                     </div>
                 </div>
 

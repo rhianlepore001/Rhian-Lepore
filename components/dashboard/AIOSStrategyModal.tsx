@@ -59,7 +59,7 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
                                 <Zap className={`w-4 h-4 ${accentText} animate-pulse`} />
                                 <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${accentText}`}>AgenX Success Playbook</span>
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-heading text-white">Guia de Mestre AIOS</h2>
+                            <h2 className="text-2xl md:text-3xl font-heading text-white">Guia para Faturar Mais</h2>
                         </div>
                         <button
                             onClick={onClose}

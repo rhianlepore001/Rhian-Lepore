@@ -82,7 +82,7 @@ export const Marketing: React.FC = () => {
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <span className="text-[10px] font-mono bg-red-500 text-white px-2 py-0.5 font-bold uppercase animate-pulse">Live Insight</span>
-                            <span className="text-[10px] font-mono text-text-secondary uppercase">Copiloto AIOS v3.0</span>
+                            <span className="text-[10px] font-mono text-text-secondary uppercase">Seu assistente inteligente</span>
                         </div>
                         <h2 className="text-3xl md:text-5xl font-heading text-white uppercase leading-none">
                             {totalRiskRevenue > 0

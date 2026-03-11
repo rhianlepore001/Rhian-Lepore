@@ -545,7 +545,7 @@ export const ClientCRM: React.FC = () => {
                   <Sparkles className="w-5 h-5 animate-pulse" />
                   <h3 className="font-heading text-lg uppercase tracking-wider">Clientes para Recuperar</h3>
                 </div>
-                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase tracking-widest`}>AIOS 2.0</span>
+                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase tracking-widest`}>Inteligência AgenX</span>
               </div>
 
               <div className="space-y-4">

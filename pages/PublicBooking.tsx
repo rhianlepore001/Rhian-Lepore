@@ -99,6 +99,7 @@ export const PublicBooking: React.FC = () => {
     const [availableSlots, setAvailableSlots] = useState<string[]>([]);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+    const [acceptedMarketing, setAcceptedMarketing] = useState(false);
     const [isDataReady, setIsDataReady] = useState(false);
     const [activeBooking, setActiveBooking] = useState<any>(null);
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
@@ -553,7 +554,7 @@ export const PublicBooking: React.FC = () => {
                 setActiveBooking(updatedBooking);
             } else {
                 const { data: newBooking, error: insertError } = await supabase.from('public_bookings')
-                    .insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration })
+                    .insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration, marketing_optin: acceptedMarketing })
                     .select()
                     .single();
                 if (insertError) throw insertError;
@@ -1143,6 +1144,14 @@ export const PublicBooking: React.FC = () => {
                                     className={`mt-1 w-5 h-5 ${isBeauty ? 'rounded text-stone-800 focus:ring-stone-800' : 'rounded-none text-obsidian-accent focus:ring-obsidian-accent bg-black border-white/20'} cursor-pointer`} />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${isBeauty ? 'text-stone-600' : 'text-neutral-400'} leading-snug`}>
                                     Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${isBeauty ? 'text-stone-800 hover:text-stone-600' : 'text-obsidian-accent hover:text-white'}`}>diretrizes de cancelamento</button>.
+                                </label>
+                            </div>
+
+                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${isBeauty ? 'bg-stone-50 border-stone-100' : 'bg-black/20 border-white/5'}`}>
+                                <input type="checkbox" id="marketing-optin" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
+                                    className={`mt-1 w-5 h-5 ${isBeauty ? 'rounded text-stone-800 focus:ring-stone-800' : 'rounded-none text-obsidian-accent focus:ring-obsidian-accent bg-black border-white/20'} cursor-pointer`} />
+                                <label htmlFor="marketing-optin" className={`text-sm cursor-pointer ${isBeauty ? 'text-stone-600' : 'text-neutral-400'} leading-snug`}>
+                                    Aceito receber lembretes de agendamento e promoções por WhatsApp. Posso cancelar a qualquer momento.
                                 </label>
                             </div>
 

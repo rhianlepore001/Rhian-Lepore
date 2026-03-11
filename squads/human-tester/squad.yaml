@@ -1,0 +1,68 @@
+squad:
+  id: human-tester-v1
+  name: "Human Tester Squad"
+  description: >
+    Squad de testes com mentalidade humana. 5 agentes com personalidades
+    distintas navegam pelo app real no browser (Playwright), testando
+    cada função como pessoas reais fariam — desde o usuário curioso
+    até o destruidor que tenta quebrar tudo.
+  version: "1.0.0"
+  domain: quality-assurance
+  created_at: "2026-03-08"
+  status: active
+  author: squad-creator-agent
+  tags:
+    - testing
+    - browser
+    - playwright
+    - e2e
+    - human-behavior
+    - ux-testing
+
+  agents:
+    - id: explorer
+      file: agents/explorer.yaml
+    - id: destroyer
+      file: agents/destroyer.yaml
+    - id: meticulous
+      file: agents/meticulous.yaml
+    - id: speedster
+      file: agents/speedster.yaml
+    - id: guardian
+      file: agents/guardian.yaml
+
+  tasks:
+    - id: explore-flow
+      file: tasks/explore-flow.md
+    - id: break-flow
+      file: tasks/break-flow.md
+    - id: inspect-flow
+      file: tasks/inspect-flow.md
+    - id: stress-flow
+      file: tasks/stress-flow.md
+    - id: guard-flow
+      file: tasks/guard-flow.md
+    - id: full-test-cycle
+      file: tasks/full-test-cycle.md
+
+  workflows:
+    - id: complete-test-run
+      file: workflows/complete-test-run.yaml
+
+  checklists:
+    - id: test-quality-gate
+      file: checklists/test-quality-gate.md
+
+  test-plans:
+    - id: route-map
+      file: test-plans/route-map.md
+    - id: flow-coverage
+      file: test-plans/flow-coverage.md
+
+  config:
+    tech-stack: config/tech-stack.md
+    browser-setup: config/browser-setup.md
+
+  tools_required:
+    - playwright  # Browser automation via MCP
+    - bash        # Dev server management

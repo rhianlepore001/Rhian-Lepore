@@ -58,11 +58,15 @@ sections:
     pages: [Dashboard, Agenda, Clients, ClientCRM, Finance, Marketing, Reports]
     priority: high
   insights:
-    pages: [Reports, Dashboard (FinancialDoctorPanel section), ClientCRM (AISemanticInsights)]
-    components: [FinancialDoctorPanel, ChurnRadar, AISemanticInsights, AIOSCampaignStats,
-                 MeuDiaWidget, DataMaturityBadge, ProfitMetrics, GoalHistoryModal]
+    pages: [Reports, Dashboard (FinancialDoctorPanel + SmartNotifications section), ClientCRM (AISemanticInsights)]
+    components: [FinancialDoctorPanel, SmartNotificationsBanner, ChurnRadar (ClientCRM),
+                 AISemanticInsights, AIOSCampaignStats, MeuDiaWidget, DataMaturityBadge,
+                 ProfitMetrics, GoalHistoryModal]
     priority: high  # Owner toma decisões de negócio baseadas nesta seção — erro aqui = decisão errada
-    note: "Seção de maior risco silencioso — usuário confia nos dados e age em cima deles"
+    note: >
+      Seção de maior risco silencioso — usuário confia nos dados e age em cima deles.
+      ATENÇÃO: SmartNotificationsBanner substitui ChurnRadar no Dashboard desde
+      feat(dashboard): integrate SmartNotifications banner. ChurnRadar ainda existe em ClientCRM.
   queue:
     pages: [QueueManagement, QueueJoin, QueueStatus]
     priority: medium
@@ -142,10 +146,14 @@ navigation_checks:
       check: "Cada insight com action string navega para a seção correta"
       example: "Insight 'clientes inativos' → CTA 'Ver no CRM' → abre ClientCRM com filtro"
       validate: "0 CTAs quebrados (link morto ou navigação errada)"
-    churn_radar_reactivation_tap:
-      check: "Tap em cliente em risco abre WhatsApp com mensagem pré-preenchida"
-      validate: "Número de telefone formatado corretamente no link WhatsApp"
-      bad: "Tap não faz nada / erro de formatação no link"
+    smart_notifications_reactivation_tap:
+      check: "Tap em notificação tipo 'reactivation' no SmartNotificationsBanner abre WhatsApp"
+      validate: "Número de telefone formatado corretamente no link WhatsApp (via aiosCopywriter)"
+      validate_types: "5 tipos de notificação renderizam corretamente: reactivation | gap | vip | upsell | tip"
+      bad: "Tap não faz nada / link WhatsApp com número malformado"
+      note: >
+        SmartNotificationsBanner substituiu ChurnRadar no Dashboard. ChurnRadar ainda existe
+        em ClientCRM — validar reactivation tap em ambos os contextos.
     reports_page_drill_down:
       check: "Reports.tsx tem navegação interna clara entre seções"
       validate: "Top clients, revenue chart e filtros de período são acessíveis em ≤ 2 taps"
@@ -278,10 +286,16 @@ mobile_checks:
 
   dashboard:
     - widget_stacking_mobile           # Widgets empilham corretamente?
-    - churn_radar_chart_mobile         # Recharts legível em tela pequena?
+    - smart_notifications_banner_mobile # SmartNotificationsBanner (substitui ChurnRadar no Dashboard)
     - action_center_tap_targets        # Botões de ação atingíveis com polegar?
 
   insight_components_mobile:
+    smart_notifications_banner_mobile:
+      check: "SmartNotificationsBanner renderiza corretamente em 375×667 (substitui ChurnRadar no Dashboard)"
+      validate: "Até 2 notificações visíveis no estado recolhido — expand button ≥ 44px"
+      validate_empty: "hasNotifications=false → componente não renderiza (return null)"
+      validate_types: "Ícones dos 5 tipos (reactivation/gap/vip/upsell/tip) visíveis sem truncamento"
+      bad: "Banner ocupa toda a viewport em mobile / botão 'Limpar' inacessível"
     financial_doctor_panel_375px:
       check: "FinancialDoctorPanel.tsx legível e utilizável em 375×667"
       validate: "healthScore, healthLabel e até 5 insights visíveis sem scroll horizontal"

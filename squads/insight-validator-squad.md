@@ -29,7 +29,8 @@ squad:
     - Dashboard.tsx        # Métricas de home (profit, churn, revenue diário)
     - ClientCRM.tsx        # Histórico e análise por cliente
   scope_components:
-    - ChurnRadar.tsx
+    - SmartNotificationsBanner.tsx  # Substitui ChurnRadar no Dashboard (reactivation|gap|vip|upsell|tip)
+    - ChurnRadar.tsx                # Ainda ativo em ClientCRM — removido do Dashboard
     - FinancialDoctorPanel.tsx
     - ProfitMetrics.tsx
     - AIOSCampaignStats.tsx
@@ -37,6 +38,12 @@ squad:
     - MeuDiaWidget.tsx
     - GoalHistoryModal.tsx
     - MonthlyProfitModal.tsx
+  component_evolution:
+    smart_notifications_replaces_churn_radar:
+      status: "SmartNotificationsBanner é o componente de oportunidades no Dashboard desde main@22753cb"
+      churn_radar_location: "ChurnRadar.tsx existe mas é renderizado em ClientCRM, não no Dashboard"
+      smart_notifications_types: [reactivation, gap, vip, upsell, tip]
+      hook: "useSmartNotifications — lê de useAIOSDiagnostic, filtra clientes por days_since_last_visit"
 ```
 
 ---
@@ -425,7 +432,40 @@ insight_checks:
       valid: [growth, risk, opportunity, achievement]
       validate: "Cada insight tem category definida — nunca undefined ou string livre"
 
+  SmartNotificationsBanner_tsx:
+    context: "Substituiu ChurnRadar no Dashboard — componente de oportunidades inteligentes"
+    hook: "useSmartNotifications — alimentado por useAIOSDiagnostic"
+    notification_types:
+      reactivation:
+        trigger: "days_since_last_visit > threshold → cliente em risco de churn"
+        validate: "Prioridade 'high' se days > 60, 'medium' se days <= 60"
+        validate: "Mensagem gerada via aiosCopywriter com nome real do cliente"
+        bad: "Notificação de reativação para cliente com agendamento futuro"
+      gap:
+        trigger: "Horário disponível na agenda do dia"
+        validate: "Gap existe realmente na agenda — não é notificação inventada"
+      vip:
+        trigger: "Cliente de alto valor (totalSpent elevado) que merece atenção especial"
+        validate: "totalSpent do cliente bate com dados do banco"
+      upsell:
+        trigger: "Oportunidade de serviço adicional para cliente frequente"
+        validate: "Serviço sugerido existe no catálogo do tenant"
+        bad: "Sugestão de serviço que o salão não oferece"
+      tip:
+        trigger: "Dica semanal baseada em dados (recovered_revenue, gaps)"
+        validate: "Dica muda a cada dia (id baseado em data: tip-recoverable-{date})"
+        bad: "Mesma dica repetida por dias sem mudança"
+    empty_state:
+      validate: "hasNotifications=false → return null (sem banner vazio)"
+      bad: "Banner renderiza sem nenhuma notificação — confunde usuário"
+    dismiss_behavior:
+      validate: "Notificação dismissed persiste por 24h no localStorage"
+      validate: "Após 24h, notificação volta a aparecer se condição ainda existe"
+    multi_dismiss:
+      validate: "'Limpar' (dismissAll) remove todas as notificações visualmente"
+
   ChurnRadar_tsx:
+    context: "Ainda ativo em ClientCRM — não renderizado no Dashboard (substituído por SmartNotifications)"
     validates:
       - "Cliente marcado como risco realmente está sem agendamento há N dias?"
       - "Threshold de risco é coerente com o tipo de serviço? (cabelo: 45 dias, barba: 15 dias)"
@@ -552,9 +592,11 @@ empty_state_scenarios:
           expected: "R$0,00 com mensagem contextual 'Nenhum agendamento ainda'"
           bad: "NaN | undefined | vazio | tela em branco"
 
-        ChurnRadar:
-          expected: "Empty state explicando que aparecerá após primeiro mês"
-          bad: "0% de churn como se fosse informação real | gráfico vazio sem contexto"
+        SmartNotificationsBanner:
+          expected: "hasNotifications=false → componente não renderiza (return null)"
+          expected_2: "Novo tenant sem dados → sem notificações = sem banner (correto)"
+          bad: "Banner vazio renderiza com placeholder '0 oportunidades'"
+          note: "SmartNotifications substituiu ChurnRadar no Dashboard. ChurnRadar está em ClientCRM."
 
         MeuDiaWidget:
           expected: "Sugestão de próximo passo (configurar serviços, compartilhar link)"
@@ -628,20 +670,31 @@ empty_state_scenarios:
 
   role_split_Dashboard_tsx:
     description: "Dashboard renderiza componentes diferentes para staff e owner — ambos devem ter empty states corretos"
+    architecture_note: >
+      SmartNotificationsBanner (linha 87 do Dashboard.tsx) é renderizado ANTES do split staff/owner.
+      Ambos os roles podem ver SmartNotifications se houver oportunidades (hasNotifications=true).
+    smart_notifications_empty:
+      scenario: "hasNotifications = false (sem oportunidades)"
+      expected: "Componente retorna null — nenhum banner visível"
+      bad: "Banner vazio renderiza com 0 oportunidades (placeholder confuso)"
+    smart_notifications_with_data:
+      scenario: "hasNotifications = true — notificações geradas"
+      expected: "Banner exibe até 2 notificações recolhidas com expand para ver mais"
+      validate_types: "reactivation → cliente sem visita há N dias | gap → horário disponível | tip → dica semanal"
     staff_role:
-      components_shown: [MeuDiaWidget]
+      components_shown: [SmartNotificationsBanner (se hasNotifications), MeuDiaWidget]
       components_hidden: [AIOSCampaignStats, DataMaturityBadge, FinancialDoctorPanel, ActionCenter]
       empty_state_staff_no_appointments:
         expected: "MeuDiaWidget: 'Você está livre! Aproveite para organizar...' — tom positivo"
         bad: "MeuDiaWidget renderiza componentes de owner (FinancialDoctor vaza para staff)"
     owner_role:
-      components_shown: [AIOSCampaignStats (se campaignsSent>0), DataMaturityBadge (se score<75),
-                         FinancialDoctorPanel, ActionCenter]
+      components_shown: [SmartNotificationsBanner (se hasNotifications), AIOSCampaignStats (se campaignsSent>0),
+                         DataMaturityBadge (se score<75), FinancialDoctorPanel, ActionCenter]
       components_hidden: [MeuDiaWidget]
       empty_state_owner_no_data:
         expected: "DataMaturityBadge com score baixo + instrução de próximo passo"
         bad: "Owner vê MeuDiaWidget (componente exclusivo de staff)"
-    critical_validation: "userType check correto — bug aqui expõe dados financeiros para staff"
+    critical_validation: "isStaff check (role === 'staff') correto — bug aqui expõe dados financeiros para staff"
 
   Agenda_tsx:
     no_appointments_today:

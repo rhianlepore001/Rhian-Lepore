@@ -58,8 +58,10 @@ export const ActionCenter = React.memo(({
         >
             <div className="divide-y divide-neutral-800">
                 {actions.length === 0 ? (
-                    <div className="p-4 md:p-6 text-center text-text-secondary">
-                        <p className="text-xs md:text-sm">Nenhuma ação pendente hoje. Bom trabalho! 🎉</p>
+                    <div className="p-6 md:p-8 text-center">
+                        <TrendingUp className="w-8 h-8 text-text-secondary/20 mx-auto mb-3" />
+                        <p className="text-sm text-text-secondary mb-1">Tudo em dia por aqui!</p>
+                        <p className="text-xs text-text-secondary/50">Continue usando o sistema — novas oportunidades aparecem conforme seus clientes interagem.</p>
                     </div>
                 ) : (
                     actions.map((action) => (

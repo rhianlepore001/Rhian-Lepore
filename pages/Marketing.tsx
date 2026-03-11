@@ -19,6 +19,8 @@ import { InstagramIdeas } from '../components/marketing/InstagramIdeas';
 import { PhotoStudio } from '../components/marketing/PhotoStudio';
 import { WhatsAppCampaign } from '../components/marketing/WhatsAppCampaign';
 import { ContentCalendar } from '../components/marketing/ContentCalendar';
+import { CampaignHistory } from '../components/marketing/CampaignHistory';
+import { InstagramPostComposer } from '../components/marketing/InstagramPostComposer';
 
 type MarketingTab = 'insights' | 'campaigns' | 'studio' | 'calendar';
 
@@ -251,15 +253,21 @@ export const Marketing: React.FC = () => {
                 )}
 
                 {activeTab === 'campaigns' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <WhatsAppCampaign />
-                        <InstagramIdeas />
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <CampaignHistory />
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <WhatsAppCampaign />
+                            <InstagramIdeas />
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'studio' && (
-                    <div className="max-w-4xl mx-auto w-full animate-in zoom-in-95 duration-500">
-                        <PhotoStudio />
+                    <div className="space-y-6 animate-in zoom-in-95 duration-500">
+                        <InstagramPostComposer />
+                        <div className="max-w-4xl mx-auto w-full">
+                            <PhotoStudio />
+                        </div>
                     </div>
                 )}
 

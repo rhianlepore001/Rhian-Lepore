@@ -26,9 +26,12 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { logger } from '../utils/Logger';
 import { Skeleton } from '../components/SkeletonLoader';
 import { SmartNotificationsBanner } from '../components/SmartNotifications';
+import { ComandoDoDia } from '../components/dashboard/ComandoDoDia';
+import { SetupCopilot } from '../components/dashboard/SetupCopilot';
+import { SmartRebooking } from '../components/dashboard/SmartRebooking';
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, businessName, role } = useAuth();
+  const { userType, region, businessName, role, fullName } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const { startTour } = useAppTour();
@@ -82,6 +85,25 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 md:space-y-10">
+      {/* Comando do Dia — briefing diário personalizado */}
+      <ComandoDoDia
+        firstName={fullName?.split(' ')[0] || 'Profissional'}
+        appointmentsToday={appointments.filter(a => {
+          const aptDate = new Date(a.appointment_time).toDateString();
+          return aptDate === new Date().toDateString();
+        }).length}
+        expectedRevenue={appointments.filter(a => {
+          const aptDate = new Date(a.appointment_time).toDateString();
+          return aptDate === new Date().toDateString();
+        }).reduce((sum, a) => sum + (a.price || 0), 0)}
+        monthlyGoal={monthlyGoal}
+        currentMonthRevenue={currentMonthRevenue}
+        churnRiskCount={financialDoctor.churnRiskCount}
+        isBeauty={isBeauty}
+        currencyRegion={region === 'PT' ? 'PT' : 'BR'}
+        onNavigate={navigate}
+      />
+
       <DashboardHero isBeauty={isBeauty} />
 
       {/* Smart Notifications — substituição do ChurnRadar fixo */}
@@ -93,6 +115,18 @@ export const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
+          {/* Setup Copilot — checklist pós-onboarding */}
+          {dataMaturity.score < 75 && (
+            <SetupCopilot
+              isBeauty={isBeauty}
+              servicesCount={dataMaturity.appointmentsTotal > 0 ? 1 : 0}
+              teamCount={1}
+              hasBusinessHours={dataMaturity.hasPublicBookings}
+              hasBookingSlug={dataMaturity.hasPublicBookings}
+              appointmentsTotal={dataMaturity.appointmentsTotal}
+            />
+          )}
+
           {/* Seção: AIOS Stats — só exibida se há campanhas */}
           {profitMetrics.campaignsSent > 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
@@ -147,6 +181,11 @@ export const Dashboard: React.FC = () => {
             />
           </div>
 
+          {/* Smart Rebooking — cadência preditiva de retorno */}
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-250">
+            <SmartRebooking isBeauty={isBeauty} />
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
             <div className="lg:col-span-1 h-full">
               <ActionCenter
@@ -199,7 +238,13 @@ export const Dashboard: React.FC = () => {
                       </li>
                     ))}
                     {appointments.length === 0 && (
-                      <li className="p-4 text-center text-text-secondary">Nenhum agendamento encontrado.</li>
+                      <li className="p-6 text-center">
+                        <Clock className="w-8 h-8 text-text-secondary/30 mx-auto mb-2" />
+                        <p className="text-text-secondary text-sm mb-3">Sua agenda está livre hoje.</p>
+                        <BrutalButton size="sm" onClick={() => navigate('/agenda')}>
+                          Criar primeiro agendamento
+                        </BrutalButton>
+                      </li>
                     )}
                   </ul>
                 )}

@@ -135,8 +135,9 @@ export const MeuDiaWidget: React.FC = () => {
                         </ul>
                     ) : (
                         <div className="text-center py-8 bg-neutral-900/50 rounded-lg border border-white/5 border-dashed">
-                            <p className="text-text-secondary font-mono text-sm">Nenhum agendamento para hoje.</p>
-                            <p className="text-[10px] mt-2 opacity-50">Você está livre! Aproveite para organizar seus materiais.</p>
+                            <Calendar className="w-8 h-8 text-text-secondary/30 mx-auto mb-2" />
+                            <p className="text-text-secondary font-mono text-sm">Dia tranquilo — nenhum agendamento.</p>
+                            <p className="text-[10px] mt-2 opacity-50">Aproveite para chamar clientes que não aparecem há tempo!</p>
                         </div>
                     )}
                 </div>

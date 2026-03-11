@@ -5,7 +5,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { logger } from '../utils/Logger';
 import { PhoneInput } from '../components/PhoneInput';
-import { Plus, Search, User, Star, ChevronRight, MessageCircle } from 'lucide-react';
+import { Plus, Search, User, Users, Star, ChevronRight, MessageCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { formatPhone } from '../utils/formatters';
@@ -222,7 +222,11 @@ export const Clients: React.FC = () => {
                 {loading ? (
                     <div className="col-span-full text-center text-text-secondary p-10">Carregando clientes...</div>
                 ) : filteredClients.length === 0 ? (
-                    <div className="col-span-full text-center text-text-secondary p-10">Nenhum cliente encontrado.</div>
+                    <div className="col-span-full text-center p-10">
+                        <Users className="w-10 h-10 text-text-secondary/30 mx-auto mb-3" />
+                        <p className="text-text-secondary text-sm mb-1">Nenhum cliente ainda.</p>
+                        <p className="text-text-secondary/60 text-xs mb-4">Seus clientes aparecerão aqui conforme fizerem agendamentos.</p>
+                    </div>
                 ) : (
                     filteredClients.map(client => {
                         const rating = client.rating || 0;

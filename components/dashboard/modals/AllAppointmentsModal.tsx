@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, X, Clock, User, Scissors } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Modal } from '../Modal';
-import { BrutalButton } from '../BrutalButton';
-import { Skeleton } from '../SkeletonLoader';
+import { Modal } from '../../Modal';
+import { BrutalButton } from '../../BrutalButton';
+import { Skeleton } from '../../SkeletonLoader';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../contexts/AuthContext';
+import { formatCurrency } from '../../../utils/formatters';
+import { logger } from '../../../utils/Logger';
+import { Scissors, Clock, User, Calendar, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface AllAppointmentsModalProps {
     isOpen: boolean;

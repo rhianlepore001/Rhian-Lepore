@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Target, Check, TrendingUp } from 'lucide-react';
-import { BrutalButton } from '../BrutalButton';
-import { Modal } from '../Modal';
+import { Modal } from '../../Modal';
+import { BrutalButton } from '../../BrutalButton';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/Logger';
 
 interface GoalSettingsModalProps {
     isOpen: boolean;

@@ -1,6 +1,6 @@
-import React from 'react';
-import { X, Trophy, Rocket, Target, Zap, MessageSquare } from 'lucide-react';
-import { BrutalButton } from '../BrutalButton';
+import { Modal } from '../../Modal';
+import { BrutalButton } from '../../BrutalButton';
+import { BrainCircuit, Target, Sparkles, TrendingUp, Users, Send, X, Trophy, Rocket, Zap, MessageSquare } from 'lucide-react';
 
 interface AIOSStrategyModalProps {
     isOpen: boolean;

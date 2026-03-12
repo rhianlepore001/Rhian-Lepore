@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, BarChart2 } from 'lucide-react';
-import { Modal } from '../Modal';
-import { BrutalButton } from '../BrutalButton';
-import { Skeleton } from '../SkeletonLoader';
-import { formatCurrency } from '../../utils/formatters';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
-import { logger } from '../../utils/Logger';
+import { Modal } from '../../Modal';
+import { BrutalButton } from '../../BrutalButton';
+import { Skeleton } from '../../SkeletonLoader';
+import { formatCurrency } from '../../../utils/formatters';
+import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../contexts/AuthContext';
+import { logger } from '../../../utils/Logger';
 
 interface MonthlyProfitItem {
     month: string;

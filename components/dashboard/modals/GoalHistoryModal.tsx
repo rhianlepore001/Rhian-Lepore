@@ -1,8 +1,8 @@
 import React from 'react';
 import { Trophy, Target, CheckCircle2, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
-import { Modal } from '../Modal';
-import { BrutalButton } from '../BrutalButton';
-import { formatCurrency } from '../../utils/formatters';
+import { Modal } from '../../Modal';
+import { BrutalButton } from '../../BrutalButton';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface GoalHistoryItem {
     month: string;
@@ -85,10 +85,10 @@ export const GoalHistoryModal: React.FC<GoalHistoryModalProps> = ({
                                 <div
                                     key={`${item.month}-${item.year}`}
                                     className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${idx === 0
-                                            ? 'bg-white/8 border-white/20 ring-1 ring-white/20'
-                                            : item.success
-                                                ? 'bg-green-900/10 border-green-500/20 hover:bg-green-900/15'
-                                                : 'bg-red-900/10 border-red-500/20 hover:bg-red-900/15'
+                                        ? 'bg-white/8 border-white/20 ring-1 ring-white/20'
+                                        : item.success
+                                            ? 'bg-green-900/10 border-green-500/20 hover:bg-green-900/15'
+                                            : 'bg-red-900/10 border-red-500/20 hover:bg-red-900/15'
                                         }`}
                                 >
                                     {/* Badge de status */}

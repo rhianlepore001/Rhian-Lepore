@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
-import { AllAppointmentsModal } from '../components/dashboard/AllAppointmentsModal';
+import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';

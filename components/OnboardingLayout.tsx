@@ -1,5 +1,4 @@
-import React from 'react';
-import { Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface OnboardingLayoutProps {
@@ -21,6 +20,13 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 }) => {
     const { userType } = useAuth();
     const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        setVisible(false);
+        const t = setTimeout(() => setVisible(true), 120);
+        return () => clearTimeout(t);
+    }, [currentStep]);
 
     return (
         <div className={isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col overflow-hidden' : 'min-h-screen bg-brutal-main flex flex-col overflow-hidden'}>
@@ -51,7 +57,13 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 
             {/* Content */}
             <main className="flex-1 overflow-y-auto p-4 md:p-8">
-                <div className="w-full max-w-2xl mx-auto py-8">
+                <div
+                    className="w-full max-w-2xl mx-auto py-8 transition-all duration-300"
+                    style={{
+                        opacity: visible ? 1 : 0,
+                        transform: visible ? 'translateY(0)' : 'translateY(12px)',
+                    }}
+                >
                     <div className="text-center mb-8 md:mb-12">
                         <h1 className="text-2xl md:text-4xl font-heading text-white uppercase mb-3">
                             {title}
@@ -64,8 +76,8 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                     <div className={`
                         ${isBeauty
                             ? 'bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl shadow-[0_0_30px_rgba(167,139,250,0.15)]'
-                            : 'bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl'} 
-                        p-6 md:p-8 transition-all duration-300
+                            : 'bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl'}
+                        p-6 md:p-8
                     `}>
                         {children}
                     </div>

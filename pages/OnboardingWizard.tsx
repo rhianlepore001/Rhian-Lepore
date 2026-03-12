@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useOnboardingState, OnboardingStep } from '../hooks/useOnboardingState';
 import { OnboardingLayout } from '../components/OnboardingLayout';
 import { StepBusinessInfo } from '../components/onboarding/StepBusinessInfo';
 import { StepServices } from '../components/onboarding/StepServices';
@@ -9,76 +9,25 @@ import { StepTeam } from '../components/onboarding/StepTeam';
 import { StepMonthlyGoal } from '../components/onboarding/StepMonthlyGoal';
 import { StepSuccess } from '../components/onboarding/StepSuccess';
 
-const TOTAL_STEPS = 5; // 4 etapas + success
+const TOTAL_STEPS = 5; // 4 etapas + tela de sucesso
 
 export const OnboardingWizard: React.FC = () => {
-    const { user, userType, tutorialCompleted, markTutorialCompleted } = useAuth();
+    const { userType } = useAuth();
     const navigate = useNavigate();
-    const [step, setStep] = useState(1);
-    const [loading, setLoading] = useState(true);
+    const { step, loading, completed, goToStep } = useOnboardingState();
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-
-    useEffect(() => {
-        checkProgress();
-    }, [user]);
-
-    const checkProgress = async () => {
-        if (!user) return;
-
-        try {
-            const { data, error } = await supabase
-                .from('business_settings')
-                .select('onboarding_step, onboarding_completed')
-                .eq('user_id', user.id)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error fetching onboarding progress:', error);
-            }
-
-            if (data?.onboarding_completed) {
-                // Sincroniza a flag no profiles se necessário para evitar loop com o ProtectedLayout
-                if (!tutorialCompleted) {
-                    await markTutorialCompleted();
-                }
-                navigate('/');
-                return;
-            }
-
-            if (data?.onboarding_step) {
-                const validStep = Math.min(Math.max(data.onboarding_step, 1), TOTAL_STEPS);
-                setStep(validStep);
-            }
-        } catch (err) {
-            console.error('Unexpected error in checkProgress:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const goToStep = async (nextStep: number) => {
-        if (!user) return;
-        try {
-            await supabase.rpc('update_onboarding_step', {
-                p_user_id: user.id,
-                p_step: nextStep
-            });
-        } catch (e) {
-            console.error('Error saving step:', e);
-        }
-        setStep(nextStep);
-    };
 
     if (loading) {
         return (
             <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
                 <div className="text-center">
-                    <div className={isBeauty
-                        ? "w-16 h-16 border-4 border-beauty-neon border-t-transparent rounded-full animate-spin mx-auto mb-4"
-                        : "w-16 h-16 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"
-                    }></div>
+                    <div className={
+                        isBeauty
+                            ? 'w-16 h-16 border-4 border-beauty-neon border-t-transparent rounded-full animate-spin mx-auto mb-4'
+                            : 'w-16 h-16 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto mb-4'
+                    } />
                     <p className="text-white text-lg font-mono">Carregando...</p>
                     <p className="text-neutral-500 text-sm mt-2">Preparando seu setup</p>
                 </div>
@@ -86,56 +35,61 @@ export const OnboardingWizard: React.FC = () => {
         );
     }
 
-    const steps = [
+    if (completed) {
+        navigate('/');
+        return null;
+    }
+
+    const steps: Array<{ title: string; description: string; component: React.ReactNode }> = [
         {
             title: isBeauty ? 'Bem-vindo ao AgenX Beauty' : 'Bem-vindo ao AgenX Barber',
             description: 'Primeiro, conte-nos sobre o seu negócio.',
             component: (
                 <StepBusinessInfo
-                    onNext={() => goToStep(2)}
+                    onNext={() => goToStep(2 as OnboardingStep)}
                     accentColor={accentColor}
                 />
-            )
+            ),
         },
         {
             title: 'Seus Serviços',
             description: 'Cadastre pelo menos um serviço com preço para ativar seu financeiro.',
             component: (
                 <StepServices
-                    onNext={() => goToStep(3)}
-                    onBack={() => goToStep(1)}
+                    onNext={() => goToStep(3 as OnboardingStep)}
+                    onBack={() => goToStep(1 as OnboardingStep)}
                     accentColor={accentColor}
                 />
-            )
+            ),
         },
         {
             title: 'Sua Equipe',
             description: 'Quem faz os atendimentos? Adicione pelo menos um profissional.',
             component: (
                 <StepTeam
-                    onNext={() => goToStep(4)}
-                    onBack={() => goToStep(2)}
+                    onNext={() => goToStep(4 as OnboardingStep)}
+                    onBack={() => goToStep(2 as OnboardingStep)}
                     accentColor={accentColor}
                 />
-            )
+            ),
         },
         {
             title: 'Sua Meta',
-            description: 'Defina quanto quer faturar este mês — acompanhe seu progresso no dashboard.',
+            description: 'Defina quanto quer faturar este mês — acompanhe seu progresso no painel.',
             component: (
                 <StepMonthlyGoal
-                    onNext={() => goToStep(5)}
-                    onBack={() => goToStep(3)}
-                    onSkip={() => goToStep(5)}
+                    onNext={() => goToStep(5 as OnboardingStep)}
+                    onBack={() => goToStep(3 as OnboardingStep)}
+                    onSkip={() => goToStep(5 as OnboardingStep)}
                     accentColor={accentColor}
                 />
-            )
+            ),
         },
         {
             title: 'Tudo Pronto!',
-            description: 'Seu sistema está configurado e inteligente. Vamos ao trabalho?',
-            component: <StepSuccess accentColor={accentColor} />
-        }
+            description: 'Seu sistema está configurado e pronto para trabalhar.',
+            component: <StepSuccess accentColor={accentColor} />,
+        },
     ];
 
     const currentStepData = steps[step - 1];

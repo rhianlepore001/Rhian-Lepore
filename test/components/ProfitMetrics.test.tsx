@@ -16,6 +16,7 @@ vi.mock('../../contexts/UIContext', () => ({
 describe('ProfitMetrics Component', () => {
     const mockMetrics = {
         totalProfit: 1000,
+        currentMonthRevenue: 1000,
         recoveredRevenue: 500,
         avoidedNoShows: 200,
         filledSlots: 300,
@@ -44,7 +45,7 @@ describe('ProfitMetrics Component', () => {
         );
 
         // Verifica labels principais (conforme refatorado)
-        expect(screen.getByText('Lucro')).toBeInTheDocument();
+        expect(screen.getByText('Receita do Mês')).toBeInTheDocument();
         expect(screen.getByText('Recuperado')).toBeInTheDocument();
         expect(screen.getByText('Economia')).toBeInTheDocument();
         expect(screen.getByText('Vagas')).toBeInTheDocument();

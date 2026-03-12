@@ -71,7 +71,7 @@ export const DataMaturityBadge: React.FC<DataMaturityBadgeProps> = ({ maturity, 
                 </div>
                 <div className={`flex items-center gap-1 text-[10px] font-mono ${maturity.appointmentsTotal >= 5 ? 'text-green-400' : 'text-text-secondary/30'}`}>
                     <CheckCircle className="w-3 h-3" />
-                    <span>No-Shows</span>
+                    <span>Faltas</span>
                 </div>
                 <div className={`flex items-center gap-1 text-[10px] font-mono ${maturity.hasPublicBookings ? 'text-green-400' : 'text-text-secondary/30'}`}>
                     <CheckCircle className="w-3 h-3" />

@@ -417,14 +417,14 @@ export const ClientCRM: React.FC = () => {
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
               </div>
               <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Quanto o cliente já gastou no total">Total Gasto</p>
+                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Total gasto neste estabelecimento">Total Gasto</p>
                 <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
               </div>
               <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 ${isBeauty ? 'border-l-beauty-neon' : 'border-l-yellow-500'}`}>
                 <p className={`text-[10px] md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
-                  <Sparkles className="w-3 h-3" /> Previsão Retorno
+                  <Sparkles className="w-3 h-3" /> Próxima Visita
                 </p>
                 <p className="text-base md:text-lg font-bold text-white">{client.nextPrediction}</p>
               </div>
@@ -527,7 +527,7 @@ export const ClientCRM: React.FC = () => {
                 onClick={handleSaveSemanticNote}
                 disabled={savingNotes}
               >
-                {savingNotes ? 'Processando IA...' : 'Salvar com Memória IA'}
+                {savingNotes ? 'Salvando...' : 'Salvar Observação'}
               </BrutalButton>
             </div>
           </BrutalCard>
@@ -543,9 +543,9 @@ export const ClientCRM: React.FC = () => {
               <div className="flex items-center gap-2 mb-3">
                 <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
                   <Sparkles className="w-5 h-5 animate-pulse" />
-                  <h3 className="font-heading text-lg uppercase tracking-wider">Clientes para Recuperar</h3>
+                  <h3 className="font-heading text-lg uppercase tracking-wider">Cliente Inativo</h3>
                 </div>
-                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase tracking-widest`}>Inteligência AgenX</span>
+                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-[8px] font-bold border uppercase tracking-widest`}>Sugestão de IA</span>
               </div>
 
               <div className="space-y-4">

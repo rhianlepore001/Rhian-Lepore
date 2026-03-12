@@ -204,7 +204,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <h4 className="text-lg md:text-3xl font-mono font-bold text-blue-400 truncate">
                             {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
                         </h4>
-                        <p className="text-[9px] text-neutral-600 mt-1 font-mono uppercase tracking-widest">Top Performance</p>
+                        <p className="text-[9px] text-neutral-600 mt-1 font-mono uppercase tracking-widest">Melhor Desempenho</p>
                     </div>
                 </div>
             )}
@@ -266,8 +266,8 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                 </div>
                                                 <p className="text-neutral-500 text-[9px] md:text-[10px] font-mono mt-1 uppercase tracking-tight flex items-center gap-1 group-hover:text-neutral-400 transition-colors">
                                                     {professional.is_owner
-                                                        ? 'Pro-labore Configurado'
-                                                        : 'Escala de Comissionamento'}
+                                                        ? 'Salário Fixo Configurado'
+                                                        : 'Comissão por Serviço'}
                                                     <TrendingUp className="w-2.5 h-2.5" />
                                                 </p>
                                             </div>
@@ -462,7 +462,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div className="mt-8 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex gap-3">
                             <InfoIcon className="w-5 h-5 text-blue-500 shrink-0" />
                             <p className="text-blue-400 text-[11px] leading-snug">
-                                <strong>Aviso:</strong> Este registro gerará uma saída no caixa (Despesa) e marcará as comissões do período como liquidadas.
+                                <strong>Aviso:</strong> Este pagamento será registrado como despesa e as comissões do período serão marcadas como pagas.
                             </p>
                         </div>
 

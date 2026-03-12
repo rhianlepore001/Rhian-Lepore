@@ -58,7 +58,7 @@ export const DataMaturityBadge: React.FC<DataMaturityBadgeProps> = ({ maturity, 
                         ? `${5 - maturity.appointmentsTotal} agendamentos para desbloquear métricas avançadas.`
                         : maturity.accountDaysOld < 14
                             ? `${14 - maturity.accountDaysOld} dias para comparativos semanais.`
-                            : 'Continue usando para refinar os insights.'
+                            : 'Quase lá — seus dados estão amadurecendo.'
                     }
                 </p>
             </div>
@@ -67,7 +67,7 @@ export const DataMaturityBadge: React.FC<DataMaturityBadgeProps> = ({ maturity, 
             <div className="hidden md:flex flex-col gap-1 flex-shrink-0">
                 <div className={`flex items-center gap-1 text-[10px] font-mono ${maturity.appointmentsTotal > 0 ? 'text-green-400' : 'text-text-secondary/30'}`}>
                     <CheckCircle className="w-3 h-3" />
-                    <span>Lucro</span>
+                    <span>Receita</span>
                 </div>
                 <div className={`flex items-center gap-1 text-[10px] font-mono ${maturity.appointmentsTotal >= 5 ? 'text-green-400' : 'text-text-secondary/30'}`}>
                     <CheckCircle className="w-3 h-3" />

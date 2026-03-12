@@ -127,7 +127,7 @@ export const Reports: React.FC = () => {
                     <h1 className="text-3xl md:text-5xl font-heading text-white uppercase tracking-tighter">Insights do Negócio</h1>
                     <p className="text-text-secondary font-mono mt-2 text-sm md:text-base flex items-center gap-2">
                         <Brain className={`w-4 h-4 ${accentText}`} />
-                        Sócio Virtual: Analisando performance e crescimento
+                        Assistente de Negócios: analisando seus resultados
                     </p>
                 </div>
 
@@ -147,9 +147,9 @@ export const Reports: React.FC = () => {
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <Zap className="w-5 h-5 text-yellow-400" />
-                                <span className="text-white font-heading uppercase tracking-wider">Painel de Oportunidades</span>
+                                <span className="text-white font-heading uppercase tracking-wider">Resultados da IA</span>
                             </div>
-                            <p className="text-neutral-400 text-sm">Dinheiro recuperado e horários preenchidos pela IA</p>
+                            <p className="text-neutral-400 text-sm">Receita recuperada e agendamentos criados automaticamente</p>
                         </div>
                         <div className="text-right">
                             <p className="text-2xl font-heading text-white">
@@ -163,11 +163,11 @@ export const Reports: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                            <p className="text-xs text-neutral-500 uppercase mb-1">Dinheiro Recuperado</p>
+                            <p className="text-xs text-neutral-500 uppercase mb-1">Receita Recuperada</p>
                             <p className={`text-xl font-heading ${accentText}`}>{formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}</p>
                         </div>
                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                            <p className="text-xs text-neutral-500 uppercase mb-1">Vagas Preenchidas</p>
+                            <p className="text-xs text-neutral-500 uppercase mb-1">Agendamentos pela IA</p>
                             <p className="text-xl font-heading text-white">{stats?.filled_slots || 0}</p>
                         </div>
                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
@@ -182,9 +182,9 @@ export const Reports: React.FC = () => {
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <ShieldCheck className={`w-5 h-5 ${accentText}`} />
-                            <span className="text-white font-heading uppercase tracking-wider">Qualidade dos Dados</span>
+                            <span className="text-white font-heading uppercase tracking-wider">Dados Configurados</span>
                         </div>
-                        <p className="text-neutral-400 text-sm">Saúde operacional do seu sistema</p>
+                        <p className="text-neutral-400 text-sm">Quanto seu sistema está pronto para gerar análises</p>
                     </div>
 
                     <div className="my-6 flex flex-col items-center">
@@ -211,7 +211,7 @@ export const Reports: React.FC = () => {
                     <p className="text-xs text-center text-neutral-500">
                         {stats?.data_maturity_score && stats.data_maturity_score > 80
                             ? 'Excelente! Seu banco de dados está pronto para IA avançada.'
-                            : 'Dica: Use mais o agendamento público para subir sua maturidade.'}
+                            : 'Dica: Habilite o agendamento público para melhorar suas análises.'}
                     </p>
                 </BrutalCard>
             </div>

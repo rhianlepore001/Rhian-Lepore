@@ -83,19 +83,19 @@ export const Marketing: React.FC = () => {
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-mono bg-red-500 text-white px-2 py-0.5 font-bold uppercase animate-pulse">Live Insight</span>
-                            <span className="text-[10px] font-mono text-text-secondary uppercase">Seu assistente inteligente</span>
+                            <span className="text-[10px] font-mono bg-accent-gold/20 text-accent-gold px-2 py-0.5 font-bold uppercase border border-accent-gold/30">Oportunidade</span>
+                            <span className="text-[10px] font-mono text-text-secondary uppercase">Assistente de marketing</span>
                         </div>
                         <h2 className="text-3xl md:text-5xl font-heading text-white uppercase leading-none">
                             {totalRiskRevenue > 0
                                 ? `R$ ${totalRiskRevenue.toLocaleString()} em risco`
-                                : "Motor de Lucro Otimizado"
+                                : "Agenda em dia"
                             }
                         </h2>
                         <p className="text-text-secondary font-mono mt-2 text-sm max-w-xl">
                             {totalRiskRevenue > 0
                                 ? `Identifiquei clientes VIP e horários vagos que podem gerar receita hoje. Vamos agir?`
-                                : `Sua retenção está excelente. O que acha de focarmos em novos clientes ou upsells agora?`
+                                : `Sua retenção está excelente. Que tal aproveitar para atrair novos clientes agora?`
                             }
                         </p>
                     </div>
@@ -107,9 +107,8 @@ export const Marketing: React.FC = () => {
                             onClick={() => handleAISuggest()}
                             icon={<Zap className="w-5 h-5 fill-black" />}
                         >
-                            Disparar IA Turbo
+                            Criar Campanha
                         </BrutalButton>
-                        <span className="text-[9px] font-mono text-center text-text-secondary uppercase">Clientes que voltaram: 24.8%</span>
                     </div>
                 </div>
             </div>

@@ -172,7 +172,7 @@ export const Reports: React.FC = () => {
                         </div>
                         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                             <p className="text-xs text-neutral-500 uppercase mb-1">Campanhas Enviadas</p>
-                            <p className="text-xl font-heading text-white">{stats?.filled_slots || 0}</p>
+                            <p className="text-xl font-heading text-white">{stats?.campaigns_sent || 0}</p>
                         </div>
                     </div>
                 </BrutalCard>
@@ -210,7 +210,7 @@ export const Reports: React.FC = () => {
 
                     <p className="text-xs text-center text-neutral-500">
                         {stats?.data_maturity_score && stats.data_maturity_score > 80
-                            ? 'Excelente! Seu banco de dados está pronto para IA avançada.'
+                            ? 'Excelente! Seus dados estão completos e prontos para análise.'
                             : 'Dica: Habilite o agendamento público para melhorar suas análises.'}
                     </p>
                 </BrutalCard>
@@ -302,7 +302,7 @@ export const Reports: React.FC = () => {
                             <h2 className={`text-4xl md:text-5xl font-heading ${accentText} uppercase`}>{stats?.top_service || 'N/A'}</h2>
                             <div className="mt-6 flex justify-center gap-4">
                                 <div className="px-4 py-2 bg-white/5 rounded-full border border-white/10 text-xs text-neutral-400">
-                                    Foco em Retorno: ALTO
+                                    Mais popular do período
                                 </div>
                             </div>
                         </div>
@@ -311,7 +311,7 @@ export const Reports: React.FC = () => {
             </div>
 
             {/* Top Clients Table */}
-            <BrutalCard title="Elite de Clientes (Mês Atual)">
+            <BrutalCard title="Clientes que Mais Visitaram">
                 <div className="overflow-x-auto -mx-4 md:mx-0">
                     <table className="w-full text-left">
                         <thead>

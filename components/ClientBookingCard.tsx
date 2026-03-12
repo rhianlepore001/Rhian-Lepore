@@ -235,7 +235,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             </button>
                         )}
                         <button
-                            onClick={() => navigate(`/book/${businessSlug}`)}
+                            onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}`)}
                             className={`
                                 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
                                 ${isBeauty

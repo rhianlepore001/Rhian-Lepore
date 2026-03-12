@@ -71,6 +71,7 @@ export const PublicBooking: React.FC = () => {
     const [searchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
     const rebookParam = searchParams.get('rebook');
+    const editParam = searchParams.get('edit');
 
     const [business, setBusiness] = useState<BusinessProfile | null>(null);
     const [businessId, setBusinessId] = useState<string | null>(null);
@@ -143,15 +144,47 @@ export const PublicBooking: React.FC = () => {
                         if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
                     }
 
-                    const { data: booking } = await supabase.rpc('get_active_booking_by_phone', {
-                        p_phone: customerPhone,
-                        p_business_id: businessId
-                    });
+                    let loadedBooking = null;
 
-                    if (booking && booking[0]) {
-                        if (booking[0].status === 'pending') {
-                            setActiveBooking(booking[0]);
-                            setStep('success');
+                    if (editParam) {
+                        console.log('Fetching explicit booking:', editParam, 'phone:', customerPhone);
+                        const { data: explicitBooking, error: rpcErr } = await supabase.rpc('get_booking_by_id', {
+                            p_booking_id: editParam,
+                            p_phone: customerPhone
+                        });
+                        console.log('Result from explicitBooking:', explicitBooking, 'Error:', rpcErr);
+
+                        if (explicitBooking && explicitBooking[0]) {
+                            loadedBooking = explicitBooking[0];
+                        }
+                    } else {
+                        const { data: activeBookingData } = await supabase.rpc('get_active_booking_by_phone', {
+                            p_phone: customerPhone,
+                            p_business_id: businessId
+                        });
+                        if (activeBookingData && activeBookingData[0]) {
+                            loadedBooking = activeBookingData[0];
+                        }
+                    }
+
+                    console.log('Loaded booking:', loadedBooking);
+                    if (loadedBooking) {
+                        if (['pending', 'confirmed'].includes(loadedBooking.status)) {
+                            if (editParam === loadedBooking.id) {
+                                // Emulate handleEditBooking context
+                                setEditingBookingId(loadedBooking.id);
+                                if (loadedBooking.service_ids) setSelectedServices(loadedBooking.service_ids);
+                                setSelectedProfessional(loadedBooking.professional_id || 'any');
+                                const bDate = new Date(loadedBooking.appointment_time);
+                                if (!isNaN(bDate.getTime())) {
+                                    setSelectedDate(bDate);
+                                    setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+                                }
+                                setStep('services');
+                            } else {
+                                setActiveBooking(loadedBooking);
+                                setStep('success');
+                            }
                         }
                     }
                 } catch (error) {
@@ -162,7 +195,7 @@ export const PublicBooking: React.FC = () => {
             }
         };
         fetchExistingClient();
-    }, [customerPhone, businessId]);
+    }, [customerPhone, businessId, editParam]);
 
     const fetchFreshActiveBooking = async (bookingId: string) => {
         try {
@@ -397,29 +430,49 @@ export const PublicBooking: React.FC = () => {
             const addWelcome = async () => {
                 setIsTyping(true);
                 setTimeout(() => {
-                    const welcomeText = client
-                        ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
-                        : `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`;
+                    if (editParam) {
+                        const editWelcome = client
+                            ? `Olá ${client.name.split(' ')[0]}! Você está no modo de edição do seu agendamento na ${business.business_name}.`
+                            : `Olá! Você está no modo de edição do seu agendamento na ${business.business_name}.`;
 
-                    setMessages([
-                        {
-                            id: 'welcome',
-                            text: welcomeText,
-                            isAssistant: true
-                        },
-                        {
-                            id: 'services-ask',
-                            text: "Qual serviço você gostaria de realizar hoje?",
-                            isAssistant: true,
-                            type: 'services'
-                        }
-                    ]);
+                        setMessages([
+                            {
+                                id: 'welcome-edit',
+                                text: editWelcome,
+                                isAssistant: true
+                            },
+                            {
+                                id: 'services-ask-edit',
+                                text: "Seus serviços atuais já estão selecionados abaixo. Você pode adicionar ou remover serviços, e então clicar em Avançar para alterar a data ou confirmar.",
+                                isAssistant: true,
+                                type: 'services'
+                            }
+                        ]);
+                    } else {
+                        const welcomeText = client
+                            ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
+                            : `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`;
+
+                        setMessages([
+                            {
+                                id: 'welcome',
+                                text: welcomeText,
+                                isAssistant: true
+                            },
+                            {
+                                id: 'services-ask',
+                                text: "Qual serviço você gostaria de realizar hoje?",
+                                isAssistant: true,
+                                type: 'services'
+                            }
+                        ]);
+                    }
                     setIsTyping(false);
                 }, 1000);
             };
             addWelcome();
         }
-    }, [business, isDataReady, client]);
+    }, [business, isDataReady, client, editParam]);
 
     // Pre-select services when coming from client area rebook link
     useEffect(() => {

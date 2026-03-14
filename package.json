@@ -12,6 +12,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:rag": "pytest .agent/skills/rag-archivist/tests/ -v",
+    "test:rag:coverage": "pytest .agent/skills/rag-archivist/tests/ --cov=.agent/skills/rag-archivist/scripts --cov-report=html",
     "sync:ide": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync",
     "sync:ide:antigravity": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync --ide antigravity",
     "aios:doctor": "npx aios-core doctor",

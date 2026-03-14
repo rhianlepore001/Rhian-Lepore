@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import FocusTrap from 'focus-trap-react';
 import { X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
@@ -115,20 +116,24 @@ export const Modal: React.FC<ModalProps> = ({
             />
 
             {/* Modal */}
-            <div
-                className={`
+            <FocusTrap active={isOpen}>
+                <div
+                    className={`
           relative w-full ${sizeClasses[size]}
           ${getModalStyles()}
           transform transition-all duration-300
           animate-in fade-in zoom-in-95
           max-h-[90vh] flex flex-col
         `.replace(/\s+/g, ' ').trim()}
-            >
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby={title ? 'modal-title' : undefined}
+                >
                 {/* Header */}
                 {(title || showCloseButton) && (
                     <div className={`flex items-center justify-between ${getHeaderStyles()}`}>
                         {title && (
-                            <h3 className={`
+                            <h3 id="modal-title" className={`
                 font-heading text-lg md:text-xl
                 ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}
               `}>
@@ -182,7 +187,8 @@ export const Modal: React.FC<ModalProps> = ({
                 {isBeauty && (
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-beauty-neon/5 via-transparent to-beauty-acid/5 pointer-events-none" />
                 )}
-            </div>
+                </div>
+            </FocusTrap>
         </div>
     );
 

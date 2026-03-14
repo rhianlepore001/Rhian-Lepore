@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import FocusTrap from 'focus-trap-react';
 import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -243,10 +244,15 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const modalContent = (
         <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-[100] p-4 backdrop-blur-sm`}>
             <div className="absolute inset-0" onClick={onClose} />
-            <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300 shadow-2xl z-10 modal-enter`}>
+            <FocusTrap active={true}>
+                <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300 shadow-2xl z-10 modal-enter`}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="service-modal-title"
+                >
                 {/* Header */}
                 <div className={`flex items-center justify-between ${headerStyles} sticky top-0 z-10`}>
-                    <h3 className={`font-heading text-lg md:text-xl ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}`}>
+                    <h3 id="service-modal-title" className={`font-heading text-lg md:text-xl ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}`}>
                         {service ? 'Editar Serviço' : 'Novo Serviço'}
                     </h3>
                     <button
@@ -394,7 +400,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         </button>
                     </div>
                 </form>
-            </div>
+                </div>
+            </FocusTrap>
         </div>
     );
 

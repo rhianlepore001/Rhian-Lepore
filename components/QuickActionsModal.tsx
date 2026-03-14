@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import FocusTrap from 'focus-trap-react';
 import { Calendar, DollarSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,11 +32,16 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                 className="absolute inset-0"
                 onClick={onClose}
             />
-            <div className={`relative w-full max-w-sm mx-4 mb-24 sm:mb-0 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300
+            <FocusTrap active={true}>
+                <div className={`relative w-full max-w-sm mx-4 mb-24 sm:mb-0 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300
         ${isBeauty ? 'bg-beauty-card border border-white/10' : 'bg-neutral-900 border-2 border-accent-gold/50 shadow-heavy brutal-card-enhanced'}
-      `}>
+      `}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="quick-actions-title"
+                >
                 <div className={`p-4 flex justify-between items-center ${isBeauty ? 'border-b border-white/10 bg-white/5' : 'border-b-2 border-accent-gold/20 bg-black/40'}`}>
-                    <h3 className={`font-heading font-bold ${isBeauty ? 'text-white' : 'text-accent-gold'}`}>Ações Rápidas</h3>
+                    <h3 id="quick-actions-title" className={`font-heading font-bold ${isBeauty ? 'text-white' : 'text-accent-gold'}`}>Ações Rápidas</h3>
                     <button onClick={onClose} className={`p-2 -mr-2 rounded-full transition-colors ${isBeauty ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-accent-gold/60 hover:text-accent-gold hover:bg-accent-gold/10'}`}>
                         <X className="w-5 h-5" />
                     </button>
@@ -70,7 +76,8 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                         <span className={`font-bold text-sm ${isBeauty ? 'text-white' : 'text-white'}`}>Nova Transação</span>
                     </button>
                 </div>
-            </div>
+                </div>
+            </FocusTrap>
         </div>
     );
 

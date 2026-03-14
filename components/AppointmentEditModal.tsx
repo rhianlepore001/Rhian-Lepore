@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import FocusTrap from 'focus-trap-react';
 import { X, Loader2, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -253,9 +254,15 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     return createPortal(
         <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center z-[999] md:left-64 p-4`}>
-            <div className={`${modalStyles} w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}>
+            <FocusTrap active={true}>
+                <div
+                    className={`${modalStyles} w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="appointment-modal-title"
+                >
                 <div className={`flex items-center justify-between p-6 ${headerStyles}`}>
-                    <h3 className={`font-heading text-xl uppercase ${isBeauty ? 'text-white' : 'text-white'}`}>Editar Agendamento</h3>
+                    <h3 id="appointment-modal-title" className={`font-heading text-xl uppercase ${isBeauty ? 'text-white' : 'text-white'}`}>Editar Agendamento</h3>
                     <button
                         onClick={onClose}
                         className={closeButtonStyles}
@@ -437,7 +444,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         </BrutalButton>
                     </div>
                 </div>
-            </div>
+                </div>
+            </FocusTrap>
         </div>,
         document.body
     );

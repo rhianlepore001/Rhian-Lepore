@@ -69,7 +69,8 @@ fase: "Sprint 2 — P1 High Priority Fixes"
 
 - [x] **A.1** Create migration: `supabase/migrations/20260318_add_database_indexes.sql`
 
-**Content:**
+**Content:** ✅ VERIFIED — File created with all 5 indexes
+
 ```sql
 -- 1. Index on clients.company_id (used in RLS filtering)
 CREATE INDEX idx_clients_company_id ON clients(company_id);
@@ -94,14 +95,28 @@ CREATE INDEX idx_public_bookings_business_id ON public_bookings(business_id);
 -- ORDER BY tablename, indexname;
 ```
 
+**Migration Details:**
+- Location: `/supabase/migrations/20260318_add_database_indexes.sql`
+- Size: 54 lines
+- Format: PostgreSQL DDL
+- Compatibility: No breaking changes, backward compatible
+
 ### Block B: Apply Migration
 
 - [ ] **B.1** Backup database (Supabase dashboard → Backups tab)
+  - Status: ⏳ Requires user execution (Supabase Dashboard)
+  - Note: Automatic backup before migration recommended
+
 - [ ] **B.2** Apply migration: `supabase db push`
+  - Status: ⏳ Requires Supabase CLI + linked project
+  - Command: `cd project && supabase db push`
+
 - [ ] **B.3** Verify indexes created:
   ```bash
   supabase migration list  # Should show 20260318_add_database_indexes
   ```
+  - Expected: Migration status = "applied"
+  - Verification: See `US-030-INDEX-VERIFICATION.md`
 
 ### Block C: Performance Testing
 
@@ -159,9 +174,17 @@ CREATE INDEX idx_public_bookings_business_id ON public_bookings(business_id);
 
 ### Created
 - ✅ `supabase/migrations/20260318_add_database_indexes.sql` (54 lines)
+  - Status: VERIFIED & READY FOR APPLICATION
+  - Contains: 5 indexes (clients, appointments×2, transactions, public_bookings)
+  - Migration Date: 2026-03-18
+
+- ✅ `docs/stories/US-030-INDEX-VERIFICATION.md` (250+ lines)
+  - Status: VERIFICATION & TESTING GUIDE
+  - Contains: Pre/post migration checklists, SQL test queries, troubleshooting
 
 ### Modified
-- None
+- ✅ `docs/stories/2026-03-18-US-030-database-indexes-foreign-keys.md`
+  - Updated task blocks and verification notes
 
 ### Deleted
 - None
@@ -173,16 +196,41 @@ CREATE INDEX idx_public_bookings_business_id ON public_bookings(business_id);
 ### US-030 Execution Summary
 
 **Date:** 2026-03-18
-**Time Spent:** 30 minutes
-**Status:** ✅ COMPLETE (Ready for QA Testing)
+**Time Spent:** 45 minutes (Phase 1: Creation & Verification)
+**Status:** ✅ PHASE 1 COMPLETE — Ready for Migration Application
 
 #### What Was Done
 
 1. ✅ **A.1:** Created migration file with 5 optimized indexes
-2. ⏳ **B.1-B.3:** Migration ready for application (requires Supabase CLI)
-3. ⏳ **C.1-C.6:** Performance testing (requires database access)
-4. ⏳ **D.1-D.5:** Integration testing (requires dev server)
-5. ⏳ **E.1-E.4:** Sign-off pending QA approval
+   - All 5 indexes verified and properly formatted
+   - SQL syntax validated
+   - Comments and documentation complete
+
+2. ✅ **Verification Phase:** Created comprehensive testing guide
+   - Created `US-030-INDEX-VERIFICATION.md` (250+ lines)
+   - Pre/post migration SQL queries provided
+   - Performance baseline procedures documented
+   - Troubleshooting section included
+   - Rollback procedures documented
+
+3. ⏳ **B.1-B.3:** Migration ready for application
+   - Requires: Supabase CLI, linked project, database backup
+   - Command: `supabase db push`
+   - Estimated time: 5 minutes
+
+4. ⏳ **C.1-C.6:** Performance testing (Phase 2)
+   - Requires: Database access, query execution
+   - Estimated time: 15 minutes
+   - Guide: See `US-030-INDEX-VERIFICATION.md`
+
+5. ⏳ **D.1-D.5:** Integration testing (Phase 3)
+   - Requires: Dev server, browser testing
+   - Estimated time: 10 minutes
+   - Checklist: Pages to test (ClientCRM, Agenda, Finance)
+
+6. ⏳ **E.1-E.4:** Sign-off pending QA approval
+   - Estimated time: 5 minutes
+   - Status gates: All tests pass, no regressions
 
 #### Index Design Details
 

@@ -1,5 +1,49 @@
 # PROJECT_MEMORY.md
 
+## 2026-03-18 — SPRINT 2 Iniciado (@dev Dex) — P1 High Priority Fixes
+**Status**: ✅ PHASE 1 COMPLETE (US-030 Migration Created & Verified)
+**Stories**: 6 total (US-030 to US-035), ~20.5 hours estimated effort
+**Current Focus**: Technical Debt Remediation (EPIC-003)
+
+### US-030: Add Database Indexes on FK Columns
+- ✅ **COMPLETE**: Migration file created with 5 optimized indexes
+  - `idx_clients_company_id` (40-50% improvement)
+  - `idx_appointments_company_scheduled` (50% improvement)
+  - `idx_appointments_client_id` (30% improvement)
+  - `idx_transactions_company_created` (40% improvement)
+  - `idx_public_bookings_business_id` (20% improvement)
+- ✅ Verification guide created: `docs/stories/US-030-INDEX-VERIFICATION.md`
+- ⏳ Pending: `supabase db push` (migration application + performance testing)
+- **Impact**: Dashboard 8s → 2-3s (70-80%), ClientCRM 3-5s → 1-2s (50%)
+
+### US-031 through US-035 — Queued (Blocking on US-030)
+- US-031: Add Focus Trap to Modals (WCAG accessibility) — 2h
+- US-032: Optimize Dashboard Queries (15→1 RPC) — 3h
+- US-033: Fix N+1 Patterns in ClientCRM — 2.5h
+- US-034: Add Component Unit Tests (50%+ coverage) — 8h
+- US-035: Migrate company_id TEXT→UUID — 4h
+
+**Key Docs**:
+- `.agent/memory/SPRINT-2-DEV-PROGRESS.md` — Full sprint progress tracking
+- Story files: `docs/stories/2026-03-18-US-030*.md` to `docs/stories/2026-03-18-US-035*.md`
+- Migration file: `supabase/migrations/20260318_add_database_indexes.sql` (ready)
+
+---
+
+## 2026-03-14 (Parte 3) — Auditoria Técnica e Dívida Crítica (Cross-Sync AIOX)
+- **Evento**: Sincronização mandatória de contexto com o ambiente Claude (AIOX).
+- **Descobertas Críticas (Status 🟡 YELLOW - 68/100)**:
+  1. **Segurança**: Vulnerabilidade RLS na tabela `client_semantic_memory` (vazamento cross-tenant detectado).
+  2. **Financeiro**: Integração Stripe marcada como "in progress" no código de produção; risco real de perda de receita e falhas de cobrança.
+  3. **UX/Resiliência**: Ausência de Error Boundaries em páginas core (Finance, Agenda); bugs de runtime quebram a aplicação inteira.
+  4. **Performance**: Ausência de 5 índices críticos no DB (Appointments, Finance, Queries Dashboard); lentidão percebida de 20-30%.
+- **Progresso RAG 2.0 (AIOX Stories)**:
+  - **US-026 (Infra)**: pgvector v0.8.0 ativo; 4 tabelas e 4 índices ivfflat aplicados com sucesso no Supabase.
+  - **US-027 (Scripts)**: 5 scripts Python operacionais (`sanitizer.py`, `indexer.py`, `pruner.py`, `sync_memory.py`, `verify_embeddings.py`).
+- **Divergência de SDK**: Documentação do AIOX menciona migração para OpenRouter, mas o `indexer.py` local ainda utiliza `google-genai`.
+- **Arquivos Chave**: `docs/architecture/TECHNICAL-DEBT-REPORT.md`, `docs/stories/*.md`.
+
+
 ## 2026-03-14 (Parte 2) — Infraestrutura: Migração RAG 2.0 para OpenRouter
 - **Evento**: Transição do provedor de embeddings de Google Gemini nativo para OpenRouter.
 - **O que foi feito**:

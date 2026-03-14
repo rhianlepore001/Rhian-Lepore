@@ -27,7 +27,7 @@ Implementação de um protocolo padronizado chamado **"Sessão de Relatório Pro
   - A recomendação deve ser baseada em padrões do AIOS Core e do `CLAUDE.md`.
 
 - [x] **CA3 - Evocação Contínua**
-  - O protocolo deve ser documentado na memória do projeto (`PROJECT_MEMORY.md` e `.aios-core/development/agents/dev/MEMORY.md`).
+  - O protocolo deve ser documentado na memória do projeto (`PROJECT_MEMORY.md` e `.aiox-core/development/agents/dev/MEMORY.md`).
   - Formato estipulado deve gerar um entregável (ex: `session_report_01.md`).
 
 ## Notas de Desenvolvimento

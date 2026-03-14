@@ -9,7 +9,7 @@ trigger: always_on
 ## 🧠 Protocolos AIOS Quare
 
 1. **Fonte da Verdade (Contexto):**
-   - SEMPRE verifique o arquivo `project-status.yaml` e o diretório `.aios-core/` antes de propor qualquer mudança.
+   - SEMPRE verifique o arquivo `project-status.yaml` e o diretório `.aiox-core/` antes de propor qualquer mudança.
    - O status do projeto no framework AIOS tem precedência sobre deduções locais.
 
 2. **Planejamento Agêntico:**
@@ -21,7 +21,7 @@ trigger: always_on
    - Proibido "clever code" (código excessivamente complexo ou "mágico"). Priorize legibilidade e modularidade (SOLID/DRY).
 
 4. **Self-Healing AIOS:**
-   - Em caso de erro no terminal, analise os logs contextualmente utilizando o histórico do `.aios-core/logs` se disponível.
+   - Em caso de erro no terminal, analise os logs contextualmente utilizando o histórico do `.aiox-core/logs` se disponível.
 
 ## 🛠️ Mapeamento de Comandos (CLI -> Antigravity)
 
@@ -29,12 +29,12 @@ Substitua mentalmente (ou via slash command) os comandos originais do AIOS pelos
 
 | Comando AIOS (CLI) | Comando Antigravity | Função |
 | :--- | :--- | :--- |
-| `*status` | `/status` | Exibe o progresso atual baseado no `.aios-core` |
+| `*status` | `/status` | Exibe o progresso atual baseado no `.aiox-core` |
 | `*create-next-story` | `/develop-story` | Implementa a próxima história de usuário |
 | `*audit-arch` | `/audit-arch` | Realiza auditoria arquitetural (@architect) |
 | `*ids check` | `/sync-squad` | Verifica integridade do Squad |
 
 ## 🚫 Restrições Críticas
 
-- **No Overwrite Policy:** Nunca sobrescreva arquivos de configuração do core (`.aios-core/`) sem autorização explícita do usuário.
+- **No Overwrite Policy:** Nunca sobrescreva arquivos de configuração do core (`.aiox-core/`) sem autorização explícita do usuário.
 - **Ambiente:** Verifique sempre se o `npm run dev` está rodando antes de testar mudanças de UI.

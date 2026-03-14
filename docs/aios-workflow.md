@@ -1,6 +1,6 @@
 # Workflow AIOS: Story-Driven Development (Brownfield)
 
-Este documento define o processo de desenvolvimento para o AgenX, utilizando o framework `.aios-core`.
+Este documento define o processo de desenvolvimento para o AgenX, utilizando o framework `.aiox-core`.
 
 ## 🛡️ Princípios Fundamentais (Constitution)
 1. **Agent Authority**: Nenhuma alteração de código sem autorização de um agente especialista.
@@ -31,7 +31,7 @@ Este documento define o processo de desenvolvimento para o AgenX, utilizando o f
 - **Saída**: Aprovação para merge ou solicitação de ajustes.
 
 ## 📁 Estrutura de Diretórios
-- `.aios-core/`: Governança e ferramentas do framework.
+- `.aiox-core/`: Governança e ferramentas do framework.
 - `.agent/`: Motores de execução agêntica (Antigravity).
 - `docs/stories/`: Histórias de usuário ativas e concluídas.
 - `supabase/migrations/`: Evolução de banco de dados.

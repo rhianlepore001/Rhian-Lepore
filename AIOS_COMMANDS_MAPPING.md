@@ -47,7 +47,7 @@
 | Comando Antigo | Comando AIOS | Tipo | Descrição |
 |---|---|---|---|
 | "Debugar issue X" | `/debug` | 🔄 Novo | Usa @debugger para análise estruturada |
-| "Analisar logs" | `cat .aios-core/logs` | ✅ Mantém | Histórico de execuções AIOS |
+| "Analisar logs" | `cat .aiox-core/logs` | ✅ Mantém | Histórico de execuções AIOS |
 | "Verificar squad" | `/sync-squad` | 🔄 Novo | Valida integridade de squad |
 
 ---

@@ -440,6 +440,42 @@ Duas fases: (1) Audit de linguagem e empty states em Wave 1, (2) Implementação
 
 ---
 
+## Dívida Técnica — Bugs Encontrados (Reports.tsx Audit — 2026-03-12)
+
+Auditoria profissional executada durante UX Wave 2. Bugs que requerem SQL estão pendentes de migration.
+
+### 🔴 CRÍTICO — Requer SQL
+
+| # | Bug | Arquivo | Detalhes |
+|---|-----|---------|---------|
+| B1 | MonthYearSelector não conectado aos RPCs | `pages/Reports.tsx:86,92-95` | `selectedMonth`/`selectedYear` no estado mas nunca passados para `get_dashboard_stats` ou `get_client_insights`. Selector é decorativo. |
+| B5 | `get_client_insights` ignora seleção de data | `supabase/migrations/20260304_client_insights_rpc.sql:22-23,67` | RPC hardcoda `CURRENT_DATE`. Tabela "Clientes que Mais Visitaram" sempre mostra mês atual. |
+
+**Fix necessário:** Adicionar parâmetros `p_month INT, p_year INT` aos dois RPCs e atualizar as queries internas.
+
+### 🟡 MÉDIO — Requer SQL
+
+| # | Bug | Arquivo | Detalhes |
+|---|-----|---------|---------|
+| B7 | Data Maturity Score: último CASE sem teto | `20260306_goal_settings_v4.sql:214-219` | Contas com >20 dias podem gerar score >100 antes do `LEAST()`. |
+| B8 | `filled_slots` EXISTS clause não faz join | `20260222_data_maturity_guard.sql:200-213` | Soma TODOS os agendamentos do mês se QUALQUER public_booking existir — não filtra os vindos do link público. |
+| B9 | `churn_risk_count` inclui clientes de 1ª visita | `20260306_goal_settings_v4.sql:242-249` | Clientes que vieram apenas 1x há 45 dias entram no risco. Adicionar `HAVING COUNT(*) >= 2`. |
+| B10 | `avg_ticket` usa histórico completo, não 90 dias | `20260222_data_maturity_guard.sql:123-125` | UI exibe "Últimos 90 dias" mas SQL usa lifetime. Adicionar `AND appointment_time >= NOW() - INTERVAL '90 days'`. |
+
+### 🟢 BAIXO — Requer SQL
+
+| # | Bug | Arquivo | Detalhes |
+|---|-----|---------|---------|
+| B6 | Meta mensal hardcoded R$ 5.000 | `20260306_goal_settings_v4.sql:52,124-125` | Novos usuários sem meta definida veem R$ 5.000 arbitrário. UI deveria mostrar "Sem meta definida". |
+
+### ✅ JÁ CORRIGIDO (frontend)
+
+| # | Bug | Commit | Fix |
+|---|-----|--------|-----|
+| B3 | `recovered_revenue + filled_slots` como moeda | `4704a17` | `filled_slots` (contagem) somado a currency. Agora exibe só `recovered_revenue`. |
+
+---
+
 ## Riscos e Mitigação
 
 | Risco | Impacto | Mitigação |

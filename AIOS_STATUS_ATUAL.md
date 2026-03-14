@@ -16,11 +16,11 @@ Total: 4426 problemas
 
 **Origem:**
 - ✅ Código da aplicação (src/, pages/, components/) — LIMPO
-- ❌ `.aios-core/workflow-intelligence/` — Código gerado com require() antigos
-- ❌ ESLint configuração espera ES modules, mas .aios-core/ usa CommonJS
+- ❌ `.aiox-core/workflow-intelligence/` — Código gerado com require() antigos
+- ❌ ESLint configuração espera ES modules, mas .aiox-core/ usa CommonJS
 
 **Ação:**
-- [ ] Adicionar `.aios-core/` ao `.eslintignore`
+- [ ] Adicionar `.aiox-core/` ao `.eslintignore`
 - [ ] Deixar para revisar depois quando tiver tempo
 
 ### ⚠️ TypeScript (npm run typecheck)
@@ -79,12 +79,12 @@ Logger.log({ context: 'publicBooking', clientId }) // ✅ CERTO
 
 ---
 
-### 2. Ignorar Lint Errors do .aios-core/
+### 2. Ignorar Lint Errors do .aiox-core/
 
 **Arquivo:** `.eslintignore`
 **Ação:** Adicionar
 ```
-.aios-core/**
+.aiox-core/**
 .antigravity/**
 node_modules/**
 ```
@@ -159,7 +159,7 @@ Projeto escalável pra 3-5 devs
 
 ### DEPOIS (5 min)
 1. Editar `.eslintignore`
-2. Adicionar `.aios-core/**`
+2. Adicionar `.aiox-core/**`
 3. Rodar `npm run lint` (deve passar)
 
 ### DEPOIS (5 min)
@@ -172,7 +172,7 @@ Projeto escalável pra 3-5 devs
 feat: conformidade AIOS — corrigir lint/typecheck
 
 - Corrigir Logger.log() em PublicBooking.tsx
-- Configurar .eslintignore pra ignorar .aios-core/
+- Configurar .eslintignore pra ignorar .aiox-core/
 - Criar AIOS_COMMANDS_MAPPING.md
 - Criar AIOS_INTEGRATION_PLAN.md
 - Criar CHECKLIST_PRE_PUSH.md
@@ -188,7 +188,7 @@ Story: US-005
 | Métrica | Status | Target |
 |---------|--------|--------|
 | Stories em formato AIOS | 3 criadas | 6+ até 7 Mar |
-| npm run lint | ❌ FAIL (ignorar .aios-core) | ✅ PASS |
+| npm run lint | ❌ FAIL (ignorar .aiox-core) | ✅ PASS |
 | npm run typecheck | ❌ 2 erros (PublicBooking) | ✅ PASS |
 | npm test | ⏳ Não rodado | ✅ PASS |
 | npm run build | ⏳ Não rodado | ✅ PASS |
@@ -221,7 +221,7 @@ GO LIVE AIOS (7 Março)
 ## 🆘 Precisa de Ajuda?
 
 **Q: Por que tantos erros de lint?**
-A: `.aios-core/` é código gerado (framework AIOS). Vamos ignorar com `.eslintignore`.
+A: `.aiox-core/` é código gerado (framework AIOS). Vamos ignorar com `.eslintignore`.
 
 **Q: Como corrigir o TypeScript error?**
 A: `Logger.log()` espera um objeto contexto, não um número. Mude pra `Logger.log({ context: 'publicBooking' })`.

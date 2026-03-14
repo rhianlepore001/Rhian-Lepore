@@ -153,10 +153,10 @@ export const Reports: React.FC = () => {
                         </div>
                         <div className="text-right">
                             <p className="text-2xl font-heading text-white">
-                                {formatCurrency((stats?.recovered_revenue || 0) + (stats?.filled_slots || 0), currencyRegion)}
+                                {formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}
                             </p>
                             <p className="text-xs text-green-400 flex items-center justify-end gap-1">
-                                <ArrowUpRight className="w-3 h-3" /> Impacto Real
+                                <ArrowUpRight className="w-3 h-3" /> Receita recuperada
                             </p>
                         </div>
                     </div>

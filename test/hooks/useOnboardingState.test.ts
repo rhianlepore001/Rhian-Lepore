@@ -17,7 +17,7 @@ const setupAuthMock = (profileData?: object) => {
         error: null,
     });
     (supabase.auth.onAuthStateChange as any).mockImplementation(
-        (callback: Function) => {
+        (callback: (event: string, session: any) => void) => {
             callback('SIGNED_IN', mockSession);
             return { data: { subscription: { unsubscribe: vi.fn() } } };
         }

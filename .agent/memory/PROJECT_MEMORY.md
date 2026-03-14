@@ -1,5 +1,16 @@
 # PROJECT_MEMORY.md
 
+## 2026-03-12 — Refactoring: Edição de Agendamentos Online
+- **Evento**: Conclusão da melhoria do fluxo de edição de agendamentos pelo cliente na plataforma pública.
+- **O que foi feito**:
+  1. Suporte completo para edição de data, serviço ou ambos na `PublicBooking.tsx`.
+  2. Implementação das etapas de diálogo `edit_options` e `edit_confirm`.
+  3. Adição da configuração `allow_client_rescheduling` lida do backend que controla o botão Editar na `ClientArea.tsx`.
+  4. Adaptação fluída do `handleSubmit` não gerando mais IDs novos.
+- **Status**: Concluído e testado. Type-check e Lint (PASS).
+- **Próximo Foco**: UX review / Marketing (depende do request do usuário).
+- **Arquivos Chave**: `pages/PublicBooking.tsx`, `pages/ClientArea.tsx`, `components/ClientBookingCard.tsx`
+
 ## 2026-03-06 — Fix RPCs Públicas (Public Booking)
 - **Evento**: Correção de 3 RPCs quebrando o fluxo de agendamento público
 - **O que foi feito**:
@@ -38,7 +49,7 @@
 - **O que foi feito**: 
   1. Identificação de débito técnico e sujeira de versão (54 arquivos untracked, repositórios de agentes redundantes). 
   2. Commita-se a limpeza de higiene (`chore: repository hygiene and agent consolidation`).
-  3. Migração dos scripts de debug e diagnóstico do BD feitos em PowerShell (`fase1_diagnostico.ps1`, `fase2_*.ps1`) para scripts Node.js (`diagnose-db.js`, `debug-finance-data.js`, `debug-test-months.js`) dentro de `.aios-core/scripts/`.
+  3. Migração dos scripts de debug e diagnóstico do BD feitos em PowerShell (`fase1_diagnostico.ps1`, `fase2_*.ps1`) para scripts Node.js (`diagnose-db.js`, `debug-finance-data.js`, `debug-test-months.js`) dentro de `.aiox-core/scripts/`.
 - **Status**: Insights #1 e #2 do Relatório de Sessão Aplicados (Limpeza do Git e padronização da Automação Node). 
 - **Próximo Foco**: (Insight #3) Pareamento do desenvolvimento das lógicas de finanças com Testes QA (TestSprite).
-- **Arquivos Chave**: `.aios-core/scripts/diagnose-db.js`, `scripts/*`.
+- **Arquivos Chave**: `.aiox-core/scripts/diagnose-db.js`, `scripts/*`.

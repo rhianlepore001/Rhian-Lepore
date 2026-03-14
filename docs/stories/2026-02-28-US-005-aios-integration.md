@@ -13,7 +13,7 @@ blockedBy: []
 
 ## Por Quê
 
-O projeto tem `.aios-core/` e `.agent/` montados, mas os workflows e comandos AIOS não estão sendo utilizados no fluxo de desenvolvimento diário. Isso significa:
+O projeto tem `.aiox-core/` e `.agent/` montados, mas os workflows e comandos AIOS não estão sendo utilizados no fluxo de desenvolvimento diário. Isso significa:
 - Falta rastreabilidade de features
 - Novos devs não têm guidance automático
 - Quality gates não são enforçados

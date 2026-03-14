@@ -93,3 +93,7 @@ write_file.cjs
 .vercel/
 .testsprite/
 testsprite_tests/tmp/
+
+# AIOX Local (AIOX)
+.aiox-core/local/
+.aiox/install-log.txt

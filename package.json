@@ -12,8 +12,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "sync:ide": "node .aios-core/infrastructure/scripts/ide-sync/index.js sync",
-    "sync:ide:antigravity": "node .aios-core/infrastructure/scripts/ide-sync/index.js sync --ide antigravity",
+    "sync:ide": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync",
+    "sync:ide:antigravity": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync --ide antigravity",
     "aios:doctor": "npx aios-core doctor",
     "backup": "node scripts/backup-supabase.js"
   },

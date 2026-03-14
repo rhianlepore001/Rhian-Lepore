@@ -117,16 +117,9 @@ export const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Setup Copilot — checklist pós-onboarding */}
+          {/* Setup Copilot — checklist pós-onboarding com detecção própria de progresso */}
           {dataMaturity.score < 75 && (
-            <SetupCopilot
-              isBeauty={isBeauty}
-              servicesCount={dataMaturity.appointmentsTotal > 0 ? 1 : 0}
-              teamCount={1}
-              hasBusinessHours={dataMaturity.hasPublicBookings}
-              hasBookingSlug={dataMaturity.hasPublicBookings}
-              appointmentsTotal={dataMaturity.appointmentsTotal}
-            />
+            <SetupCopilot isBeauty={isBeauty} />
           )}
 
           {/* Seção: AIOS Stats — só exibida se há campanhas */}

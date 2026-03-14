@@ -220,7 +220,7 @@ Cada squad deve rastrear:
 
 ## 📌 Referências
 
-- **AIOS Core**: `.aios-core/` (Framework)
+- **AIOS Core**: `.aiox-core/` (Framework)
 - **Agents**: `.agent/agents/` (Especialistas)
 - **Rules**: `.agent/rules/GEMINI.md` (P0 priorities)
 - **Memory**: `.claude/projects/.../memory/MEMORY.md` (Contexto)

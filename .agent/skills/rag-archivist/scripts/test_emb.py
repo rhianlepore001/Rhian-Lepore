@@ -25,4 +25,4 @@ res = client.models.embed_content(
     contents='teste de embedding',
     config=types.EmbedContentConfig(output_dimensionality=768)
 )
-print(f'✅ gemini-embedding-2-preview dimensões: {len(res.embeddings[0].values)}')
+print(f'[OK] gemini-embedding-2-preview dimensoes: {len(res.embeddings[0].values)}')

@@ -1,7 +1,7 @@
 ---
 id: US-029
 título: RAG 2.0 — Fase Final: Testes E2E e Validação Dual-Environment
-status: in-progress
+status: ready-for-review
 estimativa: 2h
 prioridade: high
 agente: dev

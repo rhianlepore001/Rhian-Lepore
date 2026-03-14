@@ -73,13 +73,33 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 ### 1. Leitura Inicial (Input)
 **Sempre que iniciar uma nova sessão ou tarefa complexa:**
 - ✅ O Agente DEVE ler `.agent/memory/PROJECT_MEMORY.md`.
-- ❌ O Agente NÃO deve assumir conhecimento prévio sem ler este arquivo.
+- ✅ O Agente DEVE **consultar RAG 2.0** para contexto vetorial relevante (embeddings de decisões anteriores).
+  - Comando: `python .agent/skills/rag-archivist/scripts/verify_embeddings.py` para validar disponibilidade
+  - Usar: `@archivist *sync --path PLAN-rag-2-0.md` para consultar memória sobre o plano atual
+- ❌ O Agente NÃO deve assumir conhecimento prévio sem ler este arquivo e consultar o RAG.
 
 ### 2. Escrita Final (Output)
 **Sempre que concluir uma tarefa significativa (Feature, Refactor, Bugfix):**
 - ✅ O Agente DEVE adicionar uma entrada no `.agent/memory/PROJECT_MEMORY.md`.
 - **Formato:** Data, O que foi feito, Por que, Arquivos chave.
 - **Não inclua:** Pequenas correções de typos ou mudanças triviais.
+
+### 3. Sincronização Automática (RAG 2.0)
+**Ao encerrar a sessão Antigravity:**
+- ✅ `session_manager.py` aciona automaticamente `@archivist` para sincronizar:
+  - Todos os `docs/stories/` criados/modificados
+  - Todos os `.agent/memory/` atualizados
+  - Resumo e decisões da sessão
+- ✅ Sincronização é **não-bloqueante** — nunca atrasa o encerramento da sessão
+- ✅ Se falhar (sem credenciais), **falha silenciosamente** — não interrompe o workflow
+
+### 4. Comando Manual: `/sync-memory`
+**Disponível em qualquer momento para sincronizar conhecimento:**
+```bash
+@archivist *sync --path PLAN-rag-2-0.md        # Sincronizar plan específico
+@archivist *sync --dir docs/stories/            # Sincronizar stories
+@archivist *sync                                # Sincronizar tudo (docs/ + .agent/memory/)
+```
 
 ---
 
@@ -325,7 +345,8 @@ Quando a solicitação do usuário estiver em outro idioma que não PT-BR:
 ### Agents & Skills
 
 - **Masters**: `orchestrator`, `project-planner`, `security-auditor` (Cyber/Audit), `backend-specialist` (API/DB), `frontend-specialist` (UI/UX), `mobile-developer`, `debugger`, `game-developer`
-- **Key Skills**: `clean-code`, `brainstorming`, `app-builder`, `frontend-design`, `mobile-design`, `plan-writing`, `behavioral-modes`
+- **Memory & Context**: `@archivist` (Vera) — Indexação de conhecimento via RAG 2.0, sincronização dual-environment
+- **Key Skills**: `clean-code`, `brainstorming`, `app-builder`, `frontend-design`, `mobile-design`, `plan-writing`, `behavioral-modes`, `rag-archivist`
 
 ### Key Scripts
 

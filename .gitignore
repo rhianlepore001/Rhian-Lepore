@@ -94,6 +94,9 @@ write_file.cjs
 .testsprite/
 testsprite_tests/tmp/
 
+# RAG 2.0 Archivist (AIOX)
+.archivist/
+
 # AIOX Local (AIOX)
 .aiox-core/local/
 .aiox/install-log.txt

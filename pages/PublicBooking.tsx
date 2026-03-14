@@ -154,7 +154,6 @@ export const PublicBooking: React.FC = () => {
         };
 
         fetchEditBooking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editParam, businessId, client?.phone]);
 
     // Detecta clientes existentes pelo telefone e busca agendamento ativo (fluxo normal, sem edição)

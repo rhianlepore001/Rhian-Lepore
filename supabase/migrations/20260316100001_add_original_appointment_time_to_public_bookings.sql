@@ -1,0 +1,1 @@
+ALTER TABLE public.public_bookings ADD COLUMN IF NOT EXISTS original_appointment_time TIMESTAMP WITH TIME ZONE;

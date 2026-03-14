@@ -12,11 +12,44 @@ import os
 from pathlib import Path
 from typing import List, Dict
 
-import google.generativeai as genai
+
 
 from indexer import index_file, detect_table
 from pruner import check_duplicate, mark_obsolete
 from sanitizer import sanitize, log_redactions
+
+
+def load_env_files():
+    """
+    Carrega variáveis de ambiente de .env e .env.local na raiz do projeto.
+    Busca subindo diretórios até encontrar a raiz (onde package.json ou .git existe).
+    """
+    current_dir = Path(__file__).resolve().parent
+    root_dir = None
+    
+    # Busca a raiz do projeto (Rhian-Lepore-main)
+    for parent in [current_dir] + list(current_dir.parents):
+        if (parent / 'package.json').exists() or (parent / '.git').exists():
+            root_dir = parent
+            break
+    
+    if not root_dir:
+        return
+
+    env_files = ['.env', '.env.local']
+    for env_file in env_files:
+        env_path = root_dir / env_file
+        if env_path.exists():
+            with open(env_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        # Remove aspas se existirem
+                        value = value.strip().strip('"').strip("'")
+                        os.environ[key.strip()] = value
 
 
 def collect_markdown_files(directory: str) -> List[Path]:
@@ -86,6 +119,7 @@ def sync_file(
 
 
 def main():
+    load_env_files()
     parser = argparse.ArgumentParser(
         description='RAG 2.0 — Sincroniza conhecimento para vetorização'
     )
@@ -131,12 +165,11 @@ def main():
         print("\n❌ Erro: use --path ou --dir")
         return 1
 
-    # Inicializar Gemini
+    # Validar GEMINI API Key (agora o padrão nativo)
     gemini_key = os.getenv('GEMINI_API_KEY')
     if not gemini_key:
         print("❌ GEMINI_API_KEY não configurada")
         return 1
-    genai.configure(api_key=gemini_key)
 
     # Coletar arquivos
     files_to_process = []

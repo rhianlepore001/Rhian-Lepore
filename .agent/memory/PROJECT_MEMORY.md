@@ -1,5 +1,27 @@
 # PROJECT_MEMORY.md
 
+## 2026-03-14 (Parte 2) — Infraestrutura: Migração RAG 2.0 para OpenRouter
+- **Evento**: Transição do provedor de embeddings de Google Gemini nativo para OpenRouter.
+- **O que foi feito**:
+  1. Modificação do `indexer.py` para utilizar a API do OpenRouter (`google/gemini-embedding-001`).
+  2. Substituição do SDK `google.generativeai` por chamadas HTTP `requests` para maior flexibilidade.
+  3. Manutenção da compatibilidade de 768 dimensões para preservar a integridade do banco de dados vetorial no Supabase.
+  4. Atualização de requisitos e variáveis de ambiente no `SKILL.md` (uso de `OPENROUTER_API_KEY`).
+- **Motivo**: Permitir o uso de chaves do OpenRouter conforme solicitado pelo usuário, mantendo a estrutura robusta do sistema.
+- **Status**: Implementado e configurado.
+- **Próximo Foco**: Validar sincronização manual `/sync-memory` com a nova chave.
+
+## 2026-03-14 — Fix: Integridade e Fuso Horário na Edição de Agendamentos
+- **Evento**: Correção de bugs no fluxo de edição ("pulo" de horário e duplicação).
+- **O que foi feito**:
+  1. Implementação da RPC `get_booking_by_id` para busca segura de reservas pendentes/confirmadas.
+  2. Adição da coluna `original_appointment_time` na tabela `public_bookings` para servir como âncora de edição.
+  3. **Identidade do Problema de Fuso Horário**: Identificado desvio de +3h entre usuários em Portugal e estabelecimentos no Brasil.
+  4. **Decisão do Usuário**: A pedido do usuário, a correção de fuso horário via parsing manual foi **descartada** e revertida. O sistema mantém o fuso horário geográfico real (comportamento padrão do navegador `new Date()`) para o ambiente de testes.
+  5. **Integridade de Dados**: O Agenda.tsx agora usa `original_appointment_time` para atualizar o agendamento correto, prevenindo duplicatas ao salvar edições.
+- **Status**: Concluído e Sincronizado.
+- **Arquivos Chave**: `pages/PublicBooking.tsx`, `pages/Agenda.tsx`, `utils/date.ts` (revertido).
+
 ## 2026-03-12 — Refactoring: Edição de Agendamentos Online
 - **Evento**: Conclusão da melhoria do fluxo de edição de agendamentos pelo cliente na plataforma pública.
 - **O que foi feito**:

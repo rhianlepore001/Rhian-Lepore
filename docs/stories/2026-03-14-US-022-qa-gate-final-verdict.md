@@ -1,13 +1,15 @@
 ---
 id: US-022
 título: QA Gate — Validação e Verdict Final
-status: pending
+status: done
 estimativa: 1h
 prioridade: high
 agente: qa
 assignee: "@qa"
 blockedBy: [US-020, US-021]
 epic: EPIC-002
+completedAt: 2026-03-14
+verdict: APPROVED
 ---
 
 # US-022: QA Gate — Validação e Verdict Final
@@ -60,16 +62,17 @@ Verdict: APPROVED (prosseguir para US-023) ou NEEDS WORK (voltar para US-019).
 
 ## Critérios de Aceitação
 
-- [ ] `docs/architecture/qa-review.md` criado
-- [ ] Checklist de 7 pontos completado (todos ✅ ou ❌ com justificativa)
-- [ ] VERDICT documentado: **APPROVED** ou **NEEDS WORK**
-- [ ] Se NEEDS WORK: motivos específicos e plano para remedy
-- [ ] Approval assinado por @qa (Quinn)
+- [x] `docs/architecture/qa-review.md` criado
+- [x] Checklist de 7 pontos completado (todos ✅ ou ❌ com justificativa)
+- [x] VERDICT documentado: **APPROVED**
+- [x] Se NEEDS WORK: motivos específicos e plano para remedy — N/A (APPROVED)
+- [x] Approval assinado por @qa (Quinn)
 
 ## Arquivos Impactados
 
 **Novos:**
-- `docs/architecture/qa-review.md` (criar)
+- `docs/qa/US-022-qa-gate-report.md` (criado)
+- `docs/architecture/qa-review.md` (criado — alias para o report)
 
 **Referenciados:**
 - `docs/architecture/technical-debt-DRAFT.md` (US-019)
@@ -78,13 +81,13 @@ Verdict: APPROVED (prosseguir para US-023) ou NEEDS WORK (voltar para US-019).
 
 ## Progresso Atual
 
-- [ ] 0% — Bloqueado por US-020, US-021
+- [x] 100% — US-022 CONCLUÍDA. Verdict: APPROVED
 
 ## Definição de Pronto
 
-- [ ] `qa-review.md` criado com verdict clara
-- [ ] Se APPROVED: pode seguir para US-023
-- [ ] Se NEEDS WORK: motivos estão documentados para remedy em US-019
+- [x] `qa-review.md` criado com verdict clara
+- [x] Se APPROVED: pode seguir para US-023 — APROVADO, US-023 desbloqueada
+- [ ] Se NEEDS WORK: motivos estão documentados para remedy em US-019 — N/A
 
 ## Notas
 

@@ -104,11 +104,13 @@ export const PublicBooking: React.FC = () => {
     const [isDataReady, setIsDataReady] = useState(false);
     const [activeBooking, setActiveBooking] = useState<any>(null);
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+    const [originalTimeISO, setOriginalTimeISO] = useState<string | null>(null);
     const [editMode, setEditMode] = useState<'time' | 'service' | 'both' | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
 
     const { client, register } = usePublicClient();
 
+    // Sincroniza dados do cliente logado com os campos do formulário
     useEffect(() => {
         if (client) {
             setCustomerName(client.name);
@@ -116,6 +118,46 @@ export const PublicBooking: React.FC = () => {
         }
     }, [client]);
 
+    // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
+    // Evita depender do customerPhone para iniciar o fluxo de edição
+    useEffect(() => {
+        if (!editParam || !businessId) return;
+        // Aguarda o cliente ser carregado pelo contexto antes de buscar
+        const phone = client?.phone || customerPhone;
+        if (!phone) return;
+
+        const fetchEditBooking = async () => {
+            try {
+                logger.info('Buscando agendamento para edição:', { editParam, phone });
+                const { data, error } = await supabase
+                    .from('public_bookings')
+                    .select('*')
+                    .eq('id', editParam)
+                    .eq('business_id', businessId)
+                    .in('status', ['pending', 'confirmed'])
+                    .maybeSingle();
+
+                if (error) {
+                    logger.error('Erro ao buscar agendamento para edição:', error);
+                    return;
+                }
+
+                if (data) {
+                    logger.info('Agendamento encontrado para edição:', data);
+                    handleEditBooking(data);
+                } else {
+                    logger.warn('Agendamento não encontrado ou não editável:', { editParam });
+                }
+            } catch (err) {
+                logger.error('Exceção ao buscar agendamento para edição:', err);
+            }
+        };
+
+        fetchEditBooking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editParam, businessId, client?.phone]);
+
+    // Detecta clientes existentes pelo telefone e busca agendamento ativo (fluxo normal, sem edição)
     useEffect(() => {
         const fetchExistingClient = async () => {
             if (customerPhone.length >= 12 && businessId) {
@@ -145,51 +187,22 @@ export const PublicBooking: React.FC = () => {
                         if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
                     }
 
-                    let loadedBooking = null;
-
-                    if (editParam) {
-                        logger.info('Fetching explicit booking:', { editParam, phone: customerPhone });
-                        const { data: explicitBooking, error: rpcErr } = await supabase.rpc('get_booking_by_id', {
-                            p_booking_id: editParam,
-                            p_phone: customerPhone
-                        });
-                        logger.info('Result from explicitBooking:', { explicitBooking, error: rpcErr });
-
-                        if (explicitBooking && explicitBooking[0]) {
-                            loadedBooking = explicitBooking[0];
-                        }
-                    } else {
+                    // Fluxo normal (sem edição): busca agendamento ativo pelo telefone
+                    if (!editParam) {
                         const { data: activeBookingData } = await supabase.rpc('get_active_booking_by_phone', {
                             p_phone: customerPhone,
                             p_business_id: businessId
                         });
                         if (activeBookingData && activeBookingData[0]) {
-                            loadedBooking = activeBookingData[0];
-                        }
-                    }
-
-                    logger.info('Loaded booking:', { loadedBooking });
-                    if (loadedBooking) {
-                        if (['pending', 'confirmed'].includes(loadedBooking.status)) {
-                            if (editParam === loadedBooking.id) {
-                                // Emulate handleEditBooking context
-                                setEditingBookingId(loadedBooking.id);
-                                if (loadedBooking.service_ids) setSelectedServices(loadedBooking.service_ids);
-                                setSelectedProfessional(loadedBooking.professional_id || 'any');
-                                const bDate = new Date(loadedBooking.appointment_time);
-                                if (!isNaN(bDate.getTime())) {
-                                    setSelectedDate(bDate);
-                                    setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-                                }
-                                setStep('edit_options');
-                            } else {
+                            const loadedBooking = activeBookingData[0];
+                            if (['pending', 'confirmed'].includes(loadedBooking.status)) {
                                 setActiveBooking(loadedBooking);
                                 setStep('success');
                             }
                         }
                     }
                 } catch (error) {
-                    logger.error('Error fetching existing client', error);
+                    logger.error('Erro ao buscar cliente existente', error);
                 }
             } else if (customerPhone.length < 9) {
                 setExistingPhotoUrl(null);
@@ -547,27 +560,32 @@ export const PublicBooking: React.FC = () => {
     };
 
     const handleEditBooking = (booking: any) => {
-        setMessages(prev => [...prev,
-        { id: Date.now().toString(), text: "Quero remarcar/editar meu agendamento.", isAssistant: false },
-        ]);
+        // Popula estado com os dados do agendamento existente
         setEditingBookingId(booking.id);
+        setOriginalTimeISO(booking.appointment_time); // Registra o tempo original
+        const bDate = new Date(booking.appointment_time);
+        setSelectedDate(bDate);
+        setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+
         if (booking.service_ids) setSelectedServices(booking.service_ids);
         setSelectedProfessional(booking.professional_id || 'any');
-        const bDate = new Date(booking.appointment_time);
-        if (!isNaN(bDate.getTime())) {
-            setSelectedDate(bDate);
-            setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-        }
-        setCustomerName(booking.customer_name);
-        if (booking.customer_phone) {
-            setCustomerPhone(booking.customer_phone);
-        } else if (client?.phone) {
-            setCustomerPhone(client.phone);
-        }
         
-        // Já vamos setar as politicas e mkt options como true (ou manter os originais caso existissem booleanos, mas aqui estamos reutilizando form flags pra evitar block)
+        if (booking.customer_name) setCustomerName(booking.customer_name);
+        const phone = booking.customer_phone || booking.phone || client?.phone || '';
+        if (phone) setCustomerPhone(phone);
         setAcceptedPolicy(true);
 
+        // Adiciona mensagens com type correto para renderizar os botões de edição
+        setMessages(prev => [
+            ...prev,
+            { id: Date.now().toString(), text: "Quero remarcar/editar meu agendamento.", isAssistant: false },
+            {
+                id: (Date.now() + 1).toString(),
+                text: "O que você gostaria de alterar no seu agendamento?",
+                isAssistant: true,
+                type: 'edit_options' as const
+            }
+        ]);
         setStep('edit_options');
     };
 
@@ -622,11 +640,13 @@ export const PublicBooking: React.FC = () => {
                         service_ids: selectedServices,
                         professional_id: finalProfessionalId,
                         appointment_time: appointmentTimeISO,
+                        original_appointment_time: originalTimeISO, // Coluna nova para o painel saber qual editar!
                         updated_at: new Date().toISOString(),
-                        customer_name: customerName, // Keep customer_name update
-                        total_price: totalPrice, // Keep total_price update
-                        status: 'pending', // Keep status update
-                        duration_minutes: duration // Keep duration_minutes update
+                        customer_name: customerName,
+                        total_price: totalPrice,
+                        status: 'pending',
+                        duration_minutes: duration,
+                        is_edit: true // Marca como edição para o painel diferenciar
                     })
                     .eq('id', editingBookingId);
 
@@ -1368,15 +1388,24 @@ export const PublicBooking: React.FC = () => {
                             onClick={() => {
                                 const serviceNames = services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ');
                                 if (editMode === 'service') {
+                                    // Só mudou serviços: vai direto para confirmação
                                     setMessages(prev => [...prev,
-                                    { id: Date.now().toString(), text: `Quero confirmar os novos serviços: ${serviceNames}`, isAssistant: false },
-                                    { id: (Date.now() + 1).toString(), text: "Perfeito. As alterações estão prontas para serem salvas.", isAssistant: true, type: 'edit_confirm' }
+                                        { id: Date.now().toString(), text: `Quero confirmar os novos serviços: ${serviceNames}`, isAssistant: false },
+                                        { id: (Date.now() + 1).toString(), text: "Perfeito. As alterações estão prontas para serem salvas.", isAssistant: true, type: 'edit_confirm' }
                                     ]);
                                     setStep('edit_confirm');
-                                } else {
+                                } else if (editMode === 'both') {
+                                    // Mudou serviços + horário: pula seleção de profissional e vai direto para o calendário
                                     setMessages(prev => [...prev,
-                                    { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false },
-                                    { id: (Date.now() + 1).toString(), text: "Com qual profissional você gostaria de realizar esses serviços? Nossa equipe está pronta para te atender.", isAssistant: true, type: 'professionals' }
+                                        { id: Date.now().toString(), text: `Confirmado os serviços: ${serviceNames}. Agora quero mudar o horário.`, isAssistant: false },
+                                        { id: (Date.now() + 1).toString(), text: "Ótimo! Agora escolha a nova data e horário para o seu agendamento.", isAssistant: true, type: 'datetime' }
+                                    ]);
+                                    setStep('datetime');
+                                } else {
+                                    // Novo agendamento: pede profissional normalmente
+                                    setMessages(prev => [...prev,
+                                        { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false },
+                                        { id: (Date.now() + 1).toString(), text: "Com qual profissional você gostaria de realizar esses serviços? Nossa equipe está pronta para te atender.", isAssistant: true, type: 'professionals' }
                                     ]);
                                     setStep('datetime');
                                 }

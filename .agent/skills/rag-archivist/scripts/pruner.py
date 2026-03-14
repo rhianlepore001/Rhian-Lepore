@@ -9,8 +9,39 @@ import os
 import hashlib
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from supabase import create_client
+
+
+def _load_env_files() -> None:
+    """Carrega variáveis de .env e .env.local a partir da raiz do projeto."""
+    current_dir = Path(__file__).resolve().parent
+    root_dir: Optional[Path] = None
+    for parent in [current_dir] + list(current_dir.parents):
+        if (parent / 'package.json').exists() or (parent / '.git').exists():
+            root_dir = parent
+            break
+    if not root_dir:
+        return
+    for env_file in ['.env', '.env.local']:
+        env_path = root_dir / env_file
+        if not env_path.exists():
+            continue
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+
+
+# Chamar carregamento de env vars na inicialização do módulo
+_load_env_files()
 
 
 def compute_hash(source_path: str, content: str) -> str:
@@ -45,9 +76,12 @@ def check_duplicate(
     content_hash = compute_hash(source_path, content)
 
     try:
-        # Buscar por source_path e hash no metadata
-        response = supabase.table(table).select('id').eq(
-            'source_path', source_path
+        # Definir a coluna correta de busca
+        search_col = 'session_id' if table == 'rag_context_conversational' else 'source_path'
+
+        # Buscar por source_path/session_id e hash no metadata
+        response = supabase.table(table).select('id, metadata').eq(
+            search_col, source_path
         ).execute()
 
         for record in response.data:
@@ -86,9 +120,12 @@ def mark_obsolete(
     supabase = create_client(supabase_url, supabase_key)
 
     try:
+        # Definir a coluna correta de busca
+        search_col = 'session_id' if table == 'rag_context_conversational' else 'source_path'
+
         # Buscar todos os registros do arquivo
         response = supabase.table(table).select('*').eq(
-            'source_path', source_path
+            search_col, source_path
         ).execute()
 
         marked_count = 0

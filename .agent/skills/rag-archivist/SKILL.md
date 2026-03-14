@@ -4,16 +4,16 @@ version: 1.0.0
 description: Skill que indexa conhecimento do projeto no RAG 2.0 via embeddings vetoriais
 scripts:
   - sanitizer.py: Remoção de segredos (API keys, JWTs, env vars) antes de indexar
-  - indexer.py: Geração de embeddings via text-embedding-004 + upsert no Supabase
+  - indexer.py: Geração de embeddings via Google Gemini SDK (text-embedding-004, 768 dims)
   - pruner.py: Deduplicação por hash SHA-256 + detecção de conteúdo obsoleto
   - sync_memory.py: CLI de entrada única (--path, --dir, --dry-run, --table)
   - verify_embeddings.py: Validação de integridade vetorial + contagem por tabela
 requires:
-  - google-generativeai>=0.3.0
+  - requests>=2.31.0
   - supabase>=2.0.0
   - python>=3.10
 environment_variables:
-  - GEMINI_API_KEY: Necessária para text-embedding-004
+  - GEMINI_API_KEY: Google AI Studio key para embeddings (text-embedding-004, 768 dims). Gratuito em aistudio.google.com/apikey
   - SUPABASE_URL: URL do projeto Supabase
   - SUPABASE_SERVICE_ROLE_KEY: Service role key (escrita autorizada)
 ---
@@ -84,12 +84,18 @@ output: {created: N, updated: M, skipped: K}
 
 ## Configuração Mínima
 
-```bash
-export GEMINI_API_KEY="your-key"
-export SUPABASE_URL="https://xxxx.supabase.co"
-export SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+Adicione no arquivo `.env` na raiz do projeto:
 
-python sync_memory.py --path docs/
+```bash
+GEMINI_API_KEY=your-key-from-aistudio
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+Os scripts carregam `.env` automaticamente. Não é necessário exportar variáveis manualmente.
+
+```bash
+python .agent/skills/rag-archivist/scripts/sync_memory.py --path docs/
 ```
 
 ## Tabelas Alvo (Auto-Detect)

@@ -1,13 +1,14 @@
 ---
 id: US-019
 título: Rascunho de Technical Debt Consolidado
-status: pending
+status: done
 estimativa: 1.5h
 prioridade: high
 agente: architect
 assignee: "@architect"
-blockedBy: [US-016, US-017, US-018]
+blockedBy: []
 epic: EPIC-002
+completedAt: 2026-03-14
 ---
 
 # US-019: Rascunho de Technical Debt Consolidado
@@ -55,14 +56,14 @@ Consolidar findings de 016-018 em categorias de debt:
 
 ## Critérios de Aceitação
 
-- [ ] `docs/architecture/technical-debt-DRAFT.md` criado (500+ linhas)
-- [ ] Consolidação clara de 016-018 findings
-- [ ] Cada item de debt tem: [ID] [Category] [Impact] [Effort] [Description]
-- [ ] P0 items priorizados (< 6h)
-- [ ] P1 items mapeados (< 40h)
-- [ ] Total debt estimado em horas
-- [ ] Roadmap esqueleto (12 semanas)
-- [ ] Arquivo pronto para ser consumido por reviews
+- [x] `docs/architecture/technical-debt-DRAFT.md` criado (600+ linhas)
+- [x] Consolidação clara de 016-018 findings
+- [x] Cada item de debt tem: [ID] [Category] [Impact] [Effort] [Description]
+- [x] P0 items priorizados (4 items, ~12h total)
+- [x] P1 items mapeados (8 items, ~36h total)
+- [x] Total debt estimado em horas (~92h total)
+- [x] Roadmap esqueleto (12 semanas, 6 sprints)
+- [x] Arquivo pronto para ser consumido por reviews
 
 ## Arquivos Impactados
 
@@ -77,14 +78,14 @@ Consolidar findings de 016-018 em categorias de debt:
 
 ## Progresso Atual
 
-- [ ] 0% — Bloqueado por US-016, US-017, US-018
+- [x] 100% — Completo (14 Mar 2026)
 
 ## Definição de Pronto
 
-- [ ] `technical-debt-DRAFT.md` criado
-- [ ] Consolidação é clara e legível
-- [ ] P0/P1/P2 items estão priorizados
-- [ ] Próximas reviews (US-020, US-021) conseguem ler e criticar
+- [x] `technical-debt-DRAFT.md` criado (600+ linhas)
+- [x] Consolidação é clara e legível
+- [x] P0/P1/P2/P3 items estão priorizados (28 issues totais)
+- [x] Próximas reviews (US-020, US-021) conseguem ler e criticar
 
 ## Notas
 

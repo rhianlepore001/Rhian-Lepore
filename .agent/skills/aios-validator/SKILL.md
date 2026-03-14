@@ -3,12 +3,12 @@
 **Description:** Permite validar a integridade do framework AIOS e diagnosticar problemas de ambiente.
 
 ## Goal
-Garantir que todos os componentes do `.aios-core` e binários da CLI estejam operacionais para o desenvolvimento agent-first.
+Garantir que todos os componentes do `.aiox-core` e binários da CLI estejam operacionais para o desenvolvimento agent-first.
 
 ## Instructions
 
 1. **Diagnóstico de Ambiente:**
-   - Execute `npx aios-core doctor` para verificar dependências do framework.
+   - Execute `npx aiox-core doctor` para verificar dependências do framework.
    - Analise a saída para identificar permissões de arquivos ou configurações de ambiente (`.env`) faltantes.
 
 2. **Conserto Automático:**
@@ -17,7 +17,7 @@ Garantir que todos os componentes do `.aios-core` e binários da CLI estejam ope
 
 
 ## Constraints
-- NÃO altere arquivos dentro de `.aios-core/` sem emitir um alerta `[!WARNING]`.
+- NÃO altere arquivos dentro de `.aiox-core/` sem emitir um alerta `[!WARNING]`.
 - Nao tente "fixar" erros de rede/API do Supabase sem consultar o usuário.
 
 ## Scripts

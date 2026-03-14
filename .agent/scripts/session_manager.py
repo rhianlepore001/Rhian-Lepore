@@ -11,10 +11,13 @@ Usage:
 """
 
 import os
+import sys
 import json
 import argparse
+import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from datetime import datetime
 
 def get_project_root(path: str) -> Path:
     return Path(path).resolve()
@@ -83,25 +86,78 @@ def print_status(root: Path):
     info = analyze_package_json(root)
     stats = count_files(root)
     features = detect_features(root)
-    
+
     print("\n=== Project Status ===")
     print(f"\n📁 Project: {info.get('name', root.name)}")
     print(f"📂 Path: {root}")
     print(f"🏷️  Type: {', '.join(info.get('stack', ['Generic']))}")
     print(f"📊 Status: Active")
-    
+
     print("\n🔧 Tech Stack:")
     for tech in info.get('stack', []):
         print(f"   • {tech}")
-        
+
     print(f"\n✅ Detected Modules/Features ({len(features)}):")
     for feat in features:
         print(f"   • {feat}")
     if not features:
         print("   (No distinct feature modules detected)")
-        
+
     print(f"\n📄 Files: {stats['total']} total files tracked")
     print("\n====================\n")
+
+def on_session_end(root: Path, session_id: Optional[str] = None):
+    """
+    RAG 2.0: Sincronizar memória ao encerrar sessão Antigravity
+
+    Executa sync_memory.py em background para indexar decisões e resumo da sessão
+    sem bloquear o encerramento da sessão.
+    """
+    if session_id is None:
+        session_id = datetime.now().isoformat()
+
+    try:
+        script = root / '.agent' / 'skills' / 'rag-archivist' / 'scripts' / 'sync_memory.py'
+
+        if not script.exists():
+            # RAG 2.0 ainda não implementado — falha silenciosa
+            return
+
+        # Sincronizar stories e memory files em background (não-bloqueante)
+        try:
+            # Tentar sincronizar com Popen (background, não-bloqueante)
+            if sys.platform == 'win32':
+                # Windows: usar CREATE_NEW_PROCESS_GROUP para background
+                subprocess.Popen(
+                    [sys.executable, str(script),
+                     '--dir', 'docs/stories/',
+                     '--dir', '.agent/memory/',
+                     '--env', 'antigravity',
+                     '--event', 'session_end'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=0x00000008  # CREATE_NEW_PROCESS_GROUP
+                )
+            else:
+                # Unix: usar start_new_session para background
+                subprocess.Popen(
+                    [sys.executable, str(script),
+                     '--dir', 'docs/stories/',
+                     '--dir', '.agent/memory/',
+                     '--env', 'antigravity',
+                     '--event', 'session_end'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
+        except Exception:
+            # Sincronização falhou silenciosamente — development flow não é bloqueado
+            pass
+
+    except Exception as e:
+        # Qualquer erro neste hook é capturado e ignorado
+        # RAG é opcional — nunca bloqueia a sessão
+        pass
 
 def main():
     parser = argparse.ArgumentParser(description="Session Manager")

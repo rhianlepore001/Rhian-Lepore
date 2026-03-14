@@ -19,6 +19,7 @@ interface BusinessProfile {
     logo_url: string | null;
     cover_photo_url: string | null;
     region?: string;
+    allow_client_rescheduling?: boolean;
 }
 
 type Tab = 'upcoming' | 'history' | 'profile';
@@ -73,7 +74,18 @@ export const ClientArea: React.FC = () => {
             if (error || !data) {
                 setBusinessError(true);
             } else {
-                setBusiness(data);
+                let allowRescheduling = true;
+                const { data: settings } = await supabase
+                    .from('business_settings')
+                    .select('enable_self_rescheduling')
+                    .eq('user_id', data.id)
+                    .maybeSingle();
+
+                if (settings && settings.enable_self_rescheduling !== null) {
+                    allowRescheduling = settings.enable_self_rescheduling;
+                }
+
+                setBusiness({ ...data, allow_client_rescheduling: allowRescheduling });
             }
             setBusinessLoading(false);
         };
@@ -101,6 +113,39 @@ export const ClientArea: React.FC = () => {
     useEffect(() => {
         fetchBookings();
     }, [fetchBookings]);
+
+    // Realtime subscriptions for status updates
+    useEffect(() => {
+        if (!client || !business) return;
+
+        const channel = supabase
+            .channel(`public_bookings_${client.phone}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'public_bookings',
+                    filter: `customer_phone=eq.${client.phone}`,
+                },
+                (payload) => {
+                    const updated = payload.new;
+                    // Because public_bookings doesn't have the rich joined data, we just update what matters:
+                    // status, appointment_time, etc.
+                    setBookings(prev =>
+                        prev.map(b => b.id === updated.id 
+                            ? { ...b, status: updated.status, appointment_time: updated.appointment_time } 
+                            : b
+                        )
+                    );
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [client, business]);
 
     // Handle booking cancelled in-page
     const handleBookingCancelled = (id: string) => {
@@ -492,6 +537,7 @@ export const ClientArea: React.FC = () => {
                                             clientName={client.name}
                                             region={region}
                                             onCancelled={handleBookingCancelled}
+                                            allowEdit={business?.allow_client_rescheduling ?? true}
                                         />
                                     ))
                                 )}

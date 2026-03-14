@@ -93,3 +93,10 @@ write_file.cjs
 .vercel/
 .testsprite/
 testsprite_tests/tmp/
+
+# RAG 2.0 Archivist (AIOX)
+.archivist/
+
+# AIOX Local (AIOX)
+.aiox-core/local/
+.aiox/install-log.txt

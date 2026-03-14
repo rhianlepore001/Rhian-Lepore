@@ -4,8 +4,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAIOSDiagnostic } from '../../hooks/useAIOSDiagnostic';
 import { formatCurrency } from '../../utils/formatters';
 import { useNavigate } from 'react-router-dom';
-import { AIOSStrategyModal } from './AIOSStrategyModal';
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
+
+const AIOSStrategyModal = lazy(() => import('./modals/AIOSStrategyModal').then(m => ({ default: m.AIOSStrategyModal })));
 
 interface DashboardHeroProps {
     isBeauty: boolean;
@@ -105,7 +106,7 @@ export const DashboardHero = React.memo(({ isBeauty }: DashboardHeroProps) => {
                     <button
                         onClick={() => setIsStrategyOpen(true)}
                         className={`
-                            px-4 py-3 rounded-xl font-heading text-[10px] tracking-[0.15em]
+                            px-4 py-3 rounded-xl font-heading text-xs tracking-[0.15em]
                             bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all duration-300
                             flex items-center gap-2 group/strat
                         `}
@@ -133,11 +134,13 @@ export const DashboardHero = React.memo(({ isBeauty }: DashboardHeroProps) => {
                 </div>
             </div>
 
-            <AIOSStrategyModal
-                isOpen={isStrategyOpen}
-                onClose={() => setIsStrategyOpen(false)}
-                isBeauty={isBeauty}
-            />
+            <Suspense fallback={null}>
+                <AIOSStrategyModal
+                    isOpen={isStrategyOpen}
+                    onClose={() => setIsStrategyOpen(false)}
+                    isBeauty={isBeauty}
+                />
+            </Suspense>
 
             {/* Decorative Blur Orbs - Disabled on mobile for performance */}
             <div className={`absolute top-1/2 left-0 -translate-y-1/2 w-64 h-24 blur-[80px] rounded-full opacity-[0.05] pointer-events-none hidden md:block ${accentBg}`} />

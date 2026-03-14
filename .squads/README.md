@@ -312,7 +312,7 @@ cat .squads/squads/frontend.yaml
 - **Dúvidas sobre estrutura?** → Leia `SQUADS.md`
 - **Primeiros passos?** → Leia `SETUP.md`
 - **Dúvidas técnicas?** → Ask squad lead
-- **Problemas no AIOS?** → Check `.aios-core/`
+- **Problemas no AIOS?** → Check `.aiox-core/`
 
 ---
 

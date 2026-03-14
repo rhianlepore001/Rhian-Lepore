@@ -1,0 +1,1 @@
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS public_booking_id UUID REFERENCES public.public_bookings(id);

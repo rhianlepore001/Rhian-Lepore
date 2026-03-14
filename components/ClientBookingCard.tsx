@@ -27,6 +27,7 @@ interface ClientBookingCardProps {
     businessSlug: string;
     clientName: string;
     region?: Region;
+    allowEdit?: boolean;
     onCancelled: (bookingId: string) => void;
 }
 
@@ -64,6 +65,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     businessSlug,
     clientName,
     region = 'BR',
+    allowEdit = true,
     onCancelled,
 }) => {
     const navigate = useNavigate();
@@ -234,19 +236,21 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                                 Cobrar Confirmação
                             </button>
                         )}
-                        <button
-                            onClick={() => navigate(`/book/${businessSlug}`)}
-                            className={`
-                                flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
-                                ${isBeauty
-                                    ? 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                                    : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
-                                }
-                            `}
-                        >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            Editar
-                        </button>
+                        {allowEdit && (
+                            <button
+                                onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}`)}
+                                className={`
+                                    flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
+                                    ${isBeauty
+                                        ? 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                                        : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700'
+                                    }
+                                `}
+                            >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                Editar
+                            </button>
+                        )}
                         <button
                             onClick={() => setShowConfirm(true)}
                             className={`

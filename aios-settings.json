@@ -3,7 +3,7 @@
     "framework_version": "4.0.0",
     "operating_mode": "BROWNFIELD",
     "governance": {
-        "constitution_path": ".aios-core/constitution.md",
+        "constitution_path": ".aiox-core/constitution.md",
         "workflow_path": "docs/aios-workflow.md",
         "stories_dir": "docs/stories"
     },

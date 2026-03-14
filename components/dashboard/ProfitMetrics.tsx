@@ -148,7 +148,7 @@ export const ProfitMetrics = React.memo(({
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-1">
                                         <span className="text-xs md:text-sm font-mono uppercase text-blue-400 tracking-wider">Economia</span>
-                                        <InfoButton text="Valor estimado de no-shows evitados graças às confirmações automáticas." />
+                                        <InfoButton text="Faltas evitadas pelas confirmações automáticas de agendamento." />
                                     </div>
                                     <UserCheck className="w-3 h-3 md:w-4 md:h-4 text-blue-400" />
                                 </div>
@@ -156,13 +156,13 @@ export const ProfitMetrics = React.memo(({
                                     <span className="text-2xl md:text-3xl font-bold font-heading text-white">
                                         {formatCurrency(metrics.avoidedNoShows, currencyRegion)}
                                     </span>
-                                    <p className="text-xs md:text-sm text-text-secondary mt-1 font-mono">Em no-shows evitados</p>
+                                    <p className="text-xs md:text-sm text-text-secondary mt-1 font-mono">Em faltas evitadas</p>
                                 </div>
                             </div>
                         </BrutalCard>
                     ) : (
                         <LearningCard
-                            title="No-Shows"
+                            title="Faltas"
                             color="text-blue-400"
                             message={!hasBasicData
                                 ? `Visível após ${5 - dataMaturity.appointmentsTotal} agendamentos.`

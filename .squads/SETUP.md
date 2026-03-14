@@ -15,7 +15,7 @@ ls -la
 
 Você deve ver:
 - `.agent/` (agent system)
-- `.aios-core/` (AIOS framework)
+- `.aiox-core/` (AIOS framework)
 - `.squads/` (squad configurations) ← NOVO
 - `package.json`
 - `CLAUDE.md`
@@ -312,7 +312,7 @@ npm run sync:ide    # Sincronizar AIOS
 - **Dúvidas sobre projeto?** → Leia `CLAUDE.md`
 - **Dúvidas sobre AI rules?** → Leia `.agent/rules/GEMINI.md`
 - **Dúvidas técnicas?** → Ask squad lead
-- **Bugs no AIOS?** → Report em `.aios-core/`
+- **Bugs no AIOS?** → Report em `.aiox-core/`
 
 ---
 

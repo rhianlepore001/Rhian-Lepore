@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { Clock, AlertTriangle, ArrowRight, Target } from 'lucide-react';
@@ -13,12 +13,14 @@ import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { GoalHistory } from '../components/GoalHistory';
-import { GoalSettingsModal } from '../components/dashboard/GoalSettingsModal';
 import { DashboardHero } from '../components/dashboard/DashboardHero';
-import { AllAppointmentsModal } from '../components/dashboard/AllAppointmentsModal';
-import { MonthlyProfitModal } from '../components/dashboard/MonthlyProfitModal';
-import { GoalHistoryModal } from '../components/dashboard/GoalHistoryModal';
 import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
+
+// Lazy loading para modais pesados
+const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
+const AllAppointmentsModal = lazy(() => import('../components/dashboard/modals/AllAppointmentsModal').then(m => ({ default: m.AllAppointmentsModal })));
+const MonthlyProfitModal = lazy(() => import('../components/dashboard/modals/MonthlyProfitModal').then(m => ({ default: m.MonthlyProfitModal })));
+const GoalHistoryModal = lazy(() => import('../components/dashboard/modals/GoalHistoryModal').then(m => ({ default: m.GoalHistoryModal })));
 
 import { formatCurrency } from '../utils/formatters';
 import { useAppTour } from '../hooks/useAppTour';
@@ -115,16 +117,9 @@ export const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Setup Copilot — checklist pós-onboarding */}
+          {/* Setup Copilot — checklist pós-onboarding com detecção própria de progresso */}
           {dataMaturity.score < 75 && (
-            <SetupCopilot
-              isBeauty={isBeauty}
-              servicesCount={dataMaturity.appointmentsTotal > 0 ? 1 : 0}
-              teamCount={1}
-              hasBusinessHours={dataMaturity.hasPublicBookings}
-              hasBookingSlug={dataMaturity.hasPublicBookings}
-              appointmentsTotal={dataMaturity.appointmentsTotal}
-            />
+            <SetupCopilot isBeauty={isBeauty} />
           )}
 
           {/* Seção: AIOS Stats — só exibida se há campanhas */}
@@ -159,7 +154,7 @@ export const Dashboard: React.FC = () => {
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => setShowProfitHistory(true)}
-                className={`text-[11px] font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity flex items-center gap-1`}
+                className={`py-3 px-2 -mr-2 text-xs font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity flex items-center gap-1 min-h-[44px]`}
               >
                 Ver histórico de lucros →
               </button>
@@ -251,7 +246,7 @@ export const Dashboard: React.FC = () => {
                 <div className="p-4 border-t border-white/5">
                   <button
                     onClick={() => setShowAllAppointments(true)}
-                    className={`w-full py-2 text-center text-[10px] md:text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-[0.2em] transition-colors bg-white/5 rounded-lg`}
+                    className={`w-full py-3 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-[0.2em] transition-colors bg-white/5 rounded-lg min-h-[44px] flex items-center justify-center`}
                   >
                     Ver Agenda Completa →
                   </button>
@@ -294,7 +289,7 @@ export const Dashboard: React.FC = () => {
                     {/* Botão Histórico de Metas */}
                     <button
                       onClick={() => setShowGoalHistory(true)}
-                      className={`mt-3 text-[11px] font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity relative z-10`}
+                      className={`mt-3 py-3 px-2 -ml-2 text-xs font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity relative z-10 min-h-[44px] flex items-center`}
                     >
                       Ver histórico →
                     </button>
@@ -331,32 +326,34 @@ export const Dashboard: React.FC = () => {
           </div>
         </>
       )}
-      <GoalSettingsModal
-        isOpen={isEditingGoal}
-        onClose={() => setIsEditingGoal(false)}
-        currentGoal={monthlyGoal}
-        onSave={updateGoal}
-        isBeauty={isBeauty}
-      />
-      <AllAppointmentsModal
-        isOpen={showAllAppointments}
-        onClose={() => setShowAllAppointments(false)}
-        fetchAllAppointments={fetchAllAppointments}
-        isBeauty={isBeauty}
-      />
-      <MonthlyProfitModal
-        isOpen={showProfitHistory}
-        onClose={() => setShowProfitHistory(false)}
-        isBeauty={isBeauty}
-        currencyRegion={currencyRegion}
-      />
-      <GoalHistoryModal
-        isOpen={showGoalHistory}
-        onClose={() => setShowGoalHistory(false)}
-        history={goalHistory}
-        isBeauty={isBeauty}
-        currencyRegion={currencyRegion}
-      />
+      <Suspense fallback={null}>
+        <GoalSettingsModal
+          isOpen={isEditingGoal}
+          onClose={() => setIsEditingGoal(false)}
+          currentGoal={monthlyGoal}
+          onSave={updateGoal}
+          isBeauty={isBeauty}
+        />
+        <AllAppointmentsModal
+          isOpen={showAllAppointments}
+          onClose={() => setShowAllAppointments(false)}
+          fetchAllAppointments={fetchAllAppointments}
+          isBeauty={isBeauty}
+        />
+        <MonthlyProfitModal
+          isOpen={showProfitHistory}
+          onClose={() => setShowProfitHistory(false)}
+          isBeauty={isBeauty}
+          currencyRegion={currencyRegion}
+        />
+        <GoalHistoryModal
+          isOpen={showGoalHistory}
+          onClose={() => setShowGoalHistory(false)}
+          history={goalHistory}
+          isBeauty={isBeauty}
+          currencyRegion={currencyRegion}
+        />
+      </Suspense>
     </div>
   );
 };

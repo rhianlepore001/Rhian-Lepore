@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
-import { AllAppointmentsModal } from '../components/dashboard/AllAppointmentsModal';
+import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
@@ -600,20 +600,75 @@ export const Agenda: React.FC = () => {
                 }
             }
 
-            const { error: aptError } = await supabase
-                .from('appointments')
-                .insert({
-                    user_id: user.id,
-                    client_id: clientId,
-                    professional_id: finalProfessionalId,
-                    service: serviceNames,
-                    appointment_time: booking.appointment_time,
-                    price: booking.total_price,
-                    status: 'Confirmed',
-                    duration_minutes: booking.duration_minutes || 30
-                });
+            if (booking.is_edit) {
+                // Edição: atualiza o appointment com base no horário original da reserva (âncora absoluta)
+                let existingAptQuery = supabase
+                    .from('appointments')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('client_id', clientId);
 
-            if (aptError) throw aptError;
+                if (booking.original_appointment_time) {
+                    existingAptQuery = existingAptQuery.eq('appointment_time', booking.original_appointment_time);
+                } else {
+                    // Fallback para agendamentos antigos: busca o próximo agendamento futuro
+                    existingAptQuery = existingAptQuery
+                        .in('status', ['Confirmed', 'pending'])
+                        .order('appointment_time', { ascending: true });
+                }
+
+                const { data: existingApt } = await existingAptQuery.limit(1).maybeSingle();
+
+                if (existingApt) {
+                    // Atualiza o appointment existente com os novos dados
+                    const { error: updateAptError } = await supabase
+                        .from('appointments')
+                        .update({
+                            professional_id: finalProfessionalId,
+                            service: serviceNames,
+                            appointment_time: booking.appointment_time,
+                            price: booking.total_price,
+                            status: 'Confirmed',
+                            duration_minutes: booking.duration_minutes || 30
+                        })
+                        .eq('id', existingApt.id);
+
+                    if (updateAptError) throw updateAptError;
+                } else {
+                    // Fallback: se não encontrou o appointment original, cria um novo
+                    const { error: aptError } = await supabase
+                        .from('appointments')
+                        .insert({
+                            user_id: user.id,
+                            client_id: clientId,
+                            professional_id: finalProfessionalId,
+                            service: serviceNames,
+                            appointment_time: booking.appointment_time,
+                            price: booking.total_price,
+                            status: 'Confirmed',
+                            duration_minutes: booking.duration_minutes || 30
+                        });
+
+                    if (aptError) throw aptError;
+                }
+            } else {
+                // Novo agendamento: cria normalmente
+                const { error: aptError } = await supabase
+                    .from('appointments')
+                    .insert({
+                        user_id: user.id,
+                        client_id: clientId,
+                        professional_id: finalProfessionalId,
+                        service: serviceNames,
+                        appointment_time: booking.appointment_time,
+                        price: booking.total_price,
+                        status: 'Confirmed',
+                        duration_minutes: booking.duration_minutes || 30
+                    });
+
+                if (aptError) throw aptError;
+            }
+
 
             await supabase
                 .from('public_bookings')
@@ -1179,7 +1234,13 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     📌 {publicBookings.length} Solicitação(ões) Pendente(s)
                                 </h3>
                                 <p className="text-neutral-400 text-sm">
-                                    Os agendamentos abaixo foram feitos online e aguardam sua aprovação:
+                                    {(() => {
+                                        const edits = publicBookings.filter((b: any) => b.is_edit).length;
+                                        const newOnes = publicBookings.length - edits;
+                                        if (edits > 0 && newOnes > 0) return `${newOnes} novo(s) e ${edits} alteração(ões) aguardando aprovação.`;
+                                        if (edits > 0) return `${edits} cliente(s) alteraram seu agendamento e aguardam aprovação.`;
+                                        return 'Os agendamentos abaixo foram feitos online e aguardam sua aprovação:';
+                                    })()}
                                 </p>
                             </div>
                         </div>
@@ -1194,11 +1255,25 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             return (
                                 <div key={booking.id} className={`
                                     relative p-5 transition-all duration-300 group
-                                    ${isBeauty
-                                        ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/30 rounded-2xl hover:border-beauty-neon shadow-neon-sm hover:shadow-neon'
-                                        : 'bg-neutral-900 border-2 border-accent-gold/50 rounded-xl hover:border-accent-gold shadow-heavy-sm'
+                                    ${(booking as any).is_edit
+                                        ? (isBeauty
+                                            ? 'bg-beauty-card/40 backdrop-blur-md border border-blue-400/40 rounded-2xl hover:border-blue-400'
+                                            : 'bg-neutral-900 border-2 border-blue-400/50 rounded-xl hover:border-blue-400 shadow-heavy-sm'
+                                        )
+                                        : (isBeauty
+                                            ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/30 rounded-2xl hover:border-beauty-neon shadow-neon-sm hover:shadow-neon'
+                                            : 'bg-neutral-900 border-2 border-accent-gold/50 rounded-xl hover:border-accent-gold shadow-heavy-sm'
+                                        )
                                     }
                                 `}>
+                                    {/* Badge de tipo */}
+                                    {(booking as any).is_edit && (
+                                        <div className="mb-3">
+                                            <span className="text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded">
+                                                ✏️ ALTERAÇÃO DE AGENDAMENTO
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
                                             <span className={`
@@ -1400,11 +1475,20 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     {memberPendingBookings.map(booking => (
                                         <div
                                             key={booking.id}
-                                            className="bg-accent-gold/10 border-2 border-accent-gold rounded-lg p-3"
+                                            className={`border-2 rounded-lg p-3 ${
+                                                (booking as any).is_edit
+                                                    ? 'bg-blue-500/10 border-blue-400/60'
+                                                    : 'bg-accent-gold/10 border-accent-gold'
+                                            }`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
-                                                <span className="text-xs font-mono text-accent-gold font-bold">
-                                                    📌 SOLICITAÇÃO ONLINE
+                                                <span className={`text-xs font-mono font-bold ${
+                                                    (booking as any).is_edit ? 'text-blue-400' : 'text-accent-gold'
+                                                }`}>
+                                                    {(booking as any).is_edit
+                                                        ? `✏️ ${booking.customer_name} alterou o agendamento`
+                                                        : '📌 SOLICITAÇÃO ONLINE'
+                                                    }
                                                 </span>
                                             </div>
                                             <p className="text-white font-bold text-sm mb-1">{booking.customer_name}</p>

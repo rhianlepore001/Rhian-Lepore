@@ -86,7 +86,7 @@ npm run aios:doctor    # Run AIOS diagnostic tool
 - **`.agent/`** - Agent rules and configurations
   - `rules/`: Security, performance, and architectural rules (GEMINI.md is master rule file)
   - `agents/`: Agent profiles for different specializations
-- **`.aios-core/`** - AIOS infrastructure (pre-integrated AI system framework)
+- **`.aiox-core/`** - AIOS infrastructure (pre-integrated AI system framework)
 - **`public/`** - Static assets (PWA icons, favicons, etc.)
 - **`supabase/`** - Database migrations (SQL files)
 - **`test/`** - Test setup and configuration

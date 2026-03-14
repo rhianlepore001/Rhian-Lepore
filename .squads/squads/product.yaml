@@ -51,27 +51,27 @@ responsibilities:
 product_artifacts:
   - name: "PRD (Product Requirements Document)"
     format: ".ai/prd/{feature-slug}.md"
-    template: ".aios-core/product/templates/prd.hbs"
+    template: ".aiox-core/product/templates/prd.hbs"
     approval_required: true
 
   - name: "ADR (Architecture Decision Record)"
     format: ".ai/adr/ADR-{number}-{slug}.md"
-    template: ".aios-core/product/templates/adr.hbs"
+    template: ".aiox-core/product/templates/adr.hbs"
     approval_required: true
 
   - name: "Epic"
     format: ".ai/epics/{epic-slug}.md"
-    template: ".aios-core/product/templates/epic.hbs"
+    template: ".aiox-core/product/templates/epic.hbs"
     approval_required: true
 
   - name: "Story"
     format: ".ai/stories/US-{number}-{slug}.md"
-    template: ".aios-core/product/templates/story.hbs"
+    template: ".aiox-core/product/templates/story.hbs"
     approval_required: false
 
   - name: "Task"
     format: ".ai/tasks/TASK-{number}-{slug}.md"
-    template: ".aios-core/product/templates/task.hbs"
+    template: ".aiox-core/product/templates/task.hbs"
     approval_required: false
 
 roadmap:

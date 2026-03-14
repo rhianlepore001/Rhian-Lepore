@@ -11,7 +11,7 @@
 O AIOS framework deste projeto combina dois sistemas:
 
 - **Antigravity Kit** (`.agent/`) — 20 agentes especialistas, 36 skills, 11 workflows slash command
-- **Synkra AIOS Core** (`.aios-core/`) — constituição, story-driven development, project status, squads
+- **Synkra AIOS Core** (`.aiox-core/`) — constituição, story-driven development, project status, squads
 
 Cada squad abaixo mapeia **agentes + skills + workflows + comandos concretos** para uma frente estratégica do AgenX.
 
@@ -614,7 +614,7 @@ python .agent/scripts/verify_all.py . --url http://localhost:5173  # Pre-deploy
 ✅ Agent Authority    → Apenas @devops faz git push e cria PRs
 ✅ Story-Driven       → Nenhum código sem story associada
 ✅ No Invention       → Specs derivam apenas dos requisitos (PRD.md)
-✅ No Overwrite       → Nunca sobrescrever .aios-core/ sem autorização
+✅ No Overwrite       → Nunca sobrescrever .aiox-core/ sem autorização
 ```
 
 ### Hierarquia de Autoridade por Squad
@@ -642,8 +642,8 @@ Squad Epsilon (Quality)
 
 - [ARCHITECTURE.md](.agent/ARCHITECTURE.md) — Antigravity Kit (agentes, skills, workflows)
 - [AIOS.md](.agent/rules/AIOS.md) — Protocolo de compatibilidade AIOS ↔ Antigravity
-- [constitution.md](.aios-core/constitution.md) — Princípios inegociáveis do Synkra AIOS
-- [core-config.yaml](.aios-core/core-config.yaml) — Configurações do projeto (squadsLocation, devStoryLocation)
+- [constitution.md](.aiox-core/constitution.md) — Princípios inegociáveis do Synkra AIOS
+- [core-config.yaml](.aiox-core/core-config.yaml) — Configurações do projeto (squadsLocation, devStoryLocation)
 - [PRD.md](PRD.md) — Product Requirements Document v3.0 (fonte da verdade de requisitos)
 - [orchestrate.md](.agent/workflows/orchestrate.md) — Protocolo de orquestração multi-agente
 - [build-saas.md](.agent/workflows/build-saas.md) — Workflow de construção SaaS end-to-end

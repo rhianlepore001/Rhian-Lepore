@@ -1,7 +1,7 @@
 ---
 paths:
   - "docs/stories/**"
-  - ".aios-core/development/**"
+  - ".aiox-core/development/**"
 ---
 
 # Story Lifecycle — Detailed Rules
@@ -98,7 +98,7 @@ if CRITICAL persist after 2 iterations:
 
 | Decision | Score | Action |
 |----------|-------|--------|
-| PASS | All checks OK | Approve, proceed to @devops push |
+| PASS | All checks OK | **→ Trigger @archivist** (sync-memory), then proceed to @devops push |
 | CONCERNS | Minor issues | Approve with observations documented |
 | FAIL | HIGH/CRITICAL issues | Return to @dev with feedback |
 | WAIVED | Issues accepted | Approve with waiver documented (rare) |
@@ -114,6 +114,25 @@ issues:
     description: "..."
     recommendation: "..."
 ```
+
+## Phase 4b: Memory Sync (@archivist) — After QA Gate PASS
+
+**Trigger:** QA Gate returns `PASS`
+**Task:** `sync-memory.md` (AIOX)
+
+Após o QA Gate retornar PASS, `@archivist` é acionado automaticamente para sincronizar a story ao RAG 2.0:
+
+1. **Execução:** `python .agent/skills/rag-archivist/scripts/sync_memory.py --path {story-file}`
+2. **Sanitização:** Remove segredos (API keys, tokens, variáveis de ambiente)
+3. **Deduplicação:** Verifica SHA-256 hash para evitar duplicatas
+4. **Tabela:** Auto-detecta baseado no conteúdo (estratégico, arquitetura, operacional, conversacional)
+5. **Logging:** Registra em `.archivist/sync-log.jsonl` (não commitado)
+
+**Graceful Degradation:** Se falhar (sem GEMINI_API_KEY, sem Supabase), a failure é silenciosa — development flow **NÃO é bloqueado**.
+
+**Próximo:** @devops prepara para push
+
+---
 
 ## QA Loop (Iterative Review-Fix)
 

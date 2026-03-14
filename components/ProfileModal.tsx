@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -103,7 +104,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
     return createPortal(
         <div className="fixed inset-0 bg-black/80 z-[100] md:left-64 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className={`w-full max-w-md p-6 relative transition-all ${modalStyles}`}>
+            <FocusTrap active={true}>
+                <div className={`w-full max-w-md p-6 relative transition-all ${modalStyles}`}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="profile-modal-title"
+                >
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
@@ -111,7 +117,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     <span className="sr-only">Fechar</span>
                     X
                 </button>
-                <h3 className={`text-xl font-heading text-white mb-6 uppercase ${isBeauty ? 'tracking-normal' : 'tracking-wider'}`}>Meu Perfil</h3>
+                <h3 id="profile-modal-title" className={`text-xl font-heading text-white mb-6 uppercase ${isBeauty ? 'tracking-normal' : 'tracking-wider'}`}>Meu Perfil</h3>
 
                 <div className="flex justify-center mb-6">
                     <div
@@ -209,7 +215,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                         Configurações Avançadas
                     </button>
                 </div>
-            </div>
+                </div>
+            </FocusTrap>
         </div>,
         document.body
     );

@@ -21,7 +21,7 @@ interface Message {
     id: string;
     text: string | React.ReactNode;
     isAssistant: boolean;
-    type?: 'text' | 'services' | 'professionals' | 'datetime' | 'contact' | 'success';
+    type?: 'text' | 'services' | 'professionals' | 'datetime' | 'contact' | 'success' | 'edit_options' | 'edit_confirm';
 }
 
 interface Service {
@@ -71,6 +71,7 @@ export const PublicBooking: React.FC = () => {
     const [searchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
     const rebookParam = searchParams.get('rebook');
+    const editParam = searchParams.get('edit');
 
     const [business, setBusiness] = useState<BusinessProfile | null>(null);
     const [businessId, setBusinessId] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export const PublicBooking: React.FC = () => {
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [gallery, setGallery] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [step, setStep] = useState<'services' | 'datetime' | 'contact' | 'success'>('services');
+    const [step, setStep] = useState<'edit_options' | 'services' | 'datetime' | 'contact' | 'edit_confirm' | 'success'>('services');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
     const [showPolicyModal, setShowPolicyModal] = useState(false);
@@ -103,10 +104,13 @@ export const PublicBooking: React.FC = () => {
     const [isDataReady, setIsDataReady] = useState(false);
     const [activeBooking, setActiveBooking] = useState<any>(null);
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+    const [originalTimeISO, setOriginalTimeISO] = useState<string | null>(null);
+    const [editMode, setEditMode] = useState<'time' | 'service' | 'both' | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
 
     const { client, register } = usePublicClient();
 
+    // Sincroniza dados do cliente logado com os campos do formulário
     useEffect(() => {
         if (client) {
             setCustomerName(client.name);
@@ -114,6 +118,45 @@ export const PublicBooking: React.FC = () => {
         }
     }, [client]);
 
+    // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
+    // Evita depender do customerPhone para iniciar o fluxo de edição
+    useEffect(() => {
+        if (!editParam || !businessId) return;
+        // Aguarda o cliente ser carregado pelo contexto antes de buscar
+        const phone = client?.phone || customerPhone;
+        if (!phone) return;
+
+        const fetchEditBooking = async () => {
+            try {
+                logger.info('Buscando agendamento para edição:', { editParam, phone });
+                const { data, error } = await supabase
+                    .from('public_bookings')
+                    .select('*')
+                    .eq('id', editParam)
+                    .eq('business_id', businessId)
+                    .in('status', ['pending', 'confirmed'])
+                    .maybeSingle();
+
+                if (error) {
+                    logger.error('Erro ao buscar agendamento para edição:', error);
+                    return;
+                }
+
+                if (data) {
+                    logger.info('Agendamento encontrado para edição:', data);
+                    handleEditBooking(data);
+                } else {
+                    logger.warn('Agendamento não encontrado ou não editável:', { editParam });
+                }
+            } catch (err) {
+                logger.error('Exceção ao buscar agendamento para edição:', err);
+            }
+        };
+
+        fetchEditBooking();
+    }, [editParam, businessId, client?.phone]);
+
+    // Detecta clientes existentes pelo telefone e busca agendamento ativo (fluxo normal, sem edição)
     useEffect(() => {
         const fetchExistingClient = async () => {
             if (customerPhone.length >= 12 && businessId) {
@@ -143,26 +186,29 @@ export const PublicBooking: React.FC = () => {
                         if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
                     }
 
-                    const { data: booking } = await supabase.rpc('get_active_booking_by_phone', {
-                        p_phone: customerPhone,
-                        p_business_id: businessId
-                    });
-
-                    if (booking && booking[0]) {
-                        if (booking[0].status === 'pending') {
-                            setActiveBooking(booking[0]);
-                            setStep('success');
+                    // Fluxo normal (sem edição): busca agendamento ativo pelo telefone
+                    if (!editParam) {
+                        const { data: activeBookingData } = await supabase.rpc('get_active_booking_by_phone', {
+                            p_phone: customerPhone,
+                            p_business_id: businessId
+                        });
+                        if (activeBookingData && activeBookingData[0]) {
+                            const loadedBooking = activeBookingData[0];
+                            if (['pending', 'confirmed'].includes(loadedBooking.status)) {
+                                setActiveBooking(loadedBooking);
+                                setStep('success');
+                            }
                         }
                     }
                 } catch (error) {
-                    logger.error('Error fetching existing client', error);
+                    logger.error('Erro ao buscar cliente existente', error);
                 }
             } else if (customerPhone.length < 9) {
                 setExistingPhotoUrl(null);
             }
         };
         fetchExistingClient();
-    }, [customerPhone, businessId]);
+    }, [customerPhone, businessId, editParam]);
 
     const fetchFreshActiveBooking = async (bookingId: string) => {
         try {
@@ -397,29 +443,51 @@ export const PublicBooking: React.FC = () => {
             const addWelcome = async () => {
                 setIsTyping(true);
                 setTimeout(() => {
-                    const welcomeText = client
-                        ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
-                        : `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`;
+                    if (editParam) {
+                        const editWelcome = client
+                            ? `Olá ${client.name.split(' ')[0]}! Você está no modo de edição do seu agendamento na ${business.business_name}.`
+                            : `Olá! Você está no modo de edição do seu agendamento na ${business.business_name}.`;
 
-                    setMessages([
-                        {
-                            id: 'welcome',
-                            text: welcomeText,
-                            isAssistant: true
-                        },
-                        {
-                            id: 'services-ask',
-                            text: "Qual serviço você gostaria de realizar hoje?",
-                            isAssistant: true,
-                            type: 'services'
-                        }
-                    ]);
+                        setMessages([
+                            {
+                                id: 'welcome-edit',
+                                text: editWelcome,
+                                isAssistant: true
+                            },
+                            {
+                                id: 'edit-options-ask',
+                                text: "O que você gostaria de alterar no seu agendamento?",
+                                isAssistant: true,
+                                type: 'edit_options'
+                            }
+                        ]);
+                    } else {
+                        const welcomeText = client
+                            ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
+                            : `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`;
+
+                        setMessages([
+                            {
+                                id: 'welcome',
+                                text: welcomeText,
+                                isAssistant: true
+                            },
+                            {
+                                id: 'services-ask',
+                                text: editingBookingId 
+                                    ? "Notei que você deseja alterar seu agendamento. Quais serviços gostaria de manter ou adicionar?" 
+                                    : "Qual serviço você gostaria de realizar hoje?",
+                                isAssistant: true,
+                                type: 'services'
+                            }
+                        ]);
+                    }
                     setIsTyping(false);
                 }, 1000);
             };
             addWelcome();
         }
-    }, [business, isDataReady, client]);
+    }, [business, isDataReady, client, editParam]);
 
     // Pre-select services when coming from client area rebook link
     useEffect(() => {
@@ -491,16 +559,33 @@ export const PublicBooking: React.FC = () => {
     };
 
     const handleEditBooking = (booking: any) => {
+        // Popula estado com os dados do agendamento existente
         setEditingBookingId(booking.id);
+        setOriginalTimeISO(booking.appointment_time); // Registra o tempo original
+        const bDate = new Date(booking.appointment_time);
+        setSelectedDate(bDate);
+        setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+
         if (booking.service_ids) setSelectedServices(booking.service_ids);
         setSelectedProfessional(booking.professional_id || 'any');
-        const bDate = new Date(booking.appointment_time);
-        if (!isNaN(bDate.getTime())) {
-            setSelectedDate(bDate);
-            setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-        }
-        setCustomerName(booking.customer_name);
-        setStep('services');
+        
+        if (booking.customer_name) setCustomerName(booking.customer_name);
+        const phone = booking.customer_phone || booking.phone || client?.phone || '';
+        if (phone) setCustomerPhone(phone);
+        setAcceptedPolicy(true);
+
+        // Adiciona mensagens com type correto para renderizar os botões de edição
+        setMessages(prev => [
+            ...prev,
+            { id: Date.now().toString(), text: "Quero remarcar/editar meu agendamento.", isAssistant: false },
+            {
+                id: (Date.now() + 1).toString(),
+                text: "O que você gostaria de alterar no seu agendamento?",
+                isAssistant: true,
+                type: 'edit_options' as const
+            }
+        ]);
+        setStep('edit_options');
     };
 
     const handleSubmit = async () => {
@@ -530,12 +615,15 @@ export const PublicBooking: React.FC = () => {
             const offset = business?.region === 'PT' ? '+00:00' : '-03:00';
             const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
 
-            const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
-            if (existingBooking && existingBooking[0]) {
-                setActiveBooking(existingBooking[0]);
-                setStep('success');
-                setIsSubmitting(false);
-                return;
+            // Se não estiver editando, verificar se já existe agendamento ativo para evitar duplicatas
+            if (!editingBookingId) {
+                const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
+                if (existingBooking && existingBooking[0] && existingBooking[0].id !== editingBookingId) {
+                    setActiveBooking(existingBooking[0]);
+                    setStep('success');
+                    setIsSubmitting(false);
+                    return;
+                }
             }
 
             let finalProfessionalId = selectedProfessional === 'any' ? null : selectedProfessional;
@@ -545,12 +633,30 @@ export const PublicBooking: React.FC = () => {
             }
 
             if (editingBookingId) {
-                const { data: updatedBooking, error: updateError } = await supabase.from('public_bookings')
-                    .update({ customer_name: customerName, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration })
-                    .eq('id', editingBookingId)
-                    .select()
-                    .single();
+                const { error: updateError } = await supabase
+                    .from('public_bookings')
+                    .update({
+                        service_ids: selectedServices,
+                        professional_id: finalProfessionalId,
+                        appointment_time: appointmentTimeISO,
+                        original_appointment_time: originalTimeISO, // Coluna nova para o painel saber qual editar!
+                        updated_at: new Date().toISOString(),
+                        customer_name: customerName,
+                        total_price: totalPrice,
+                        status: 'pending',
+                        duration_minutes: duration,
+                        is_edit: true // Marca como edição para o painel diferenciar
+                    })
+                    .eq('id', editingBookingId);
+
                 if (updateError) throw updateError;
+                // Re-fetch the updated booking to set it as active, as the update no longer returns it directly
+                const { data: updatedBooking, error: fetchError } = await supabase
+                    .from('public_bookings')
+                    .select('*')
+                    .eq('id', editingBookingId)
+                    .single();
+                if (fetchError) throw fetchError;
                 setActiveBooking(updatedBooking);
             } else {
                 const { data: newBooking, error: insertError } = await supabase.from('public_bookings')
@@ -700,6 +806,70 @@ export const PublicBooking: React.FC = () => {
                         >
                             {msg.isAssistant && idx === messages.length - 1 && !isSubmitting && (
                                 <div className="mt-8 animate-reveal-fragment duration-700">
+
+                                    {msg.type === 'edit_options' && step === 'edit_options' && (
+                                        <div className="w-full space-y-4">
+                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditMode('time');
+                                                        setMessages(prev => [...prev,
+                                                            { id: Date.now().toString(), text: "Gostaria de mudar apenas o horário.", isAssistant: false },
+                                                            { id: (Date.now() + 1).toString(), text: "Certo. Escolha sua nova data e horário abaixo:", isAssistant: true, type: 'datetime' }
+                                                        ]);
+                                                        setStep('datetime');
+                                                    }}
+                                                    className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 ${isBeauty ? 'bg-white text-stone-800 shadow-sm hover:shadow-silk-shadow rounded-2xl border border-stone-100' : 'bg-obsidian-card text-white hover:text-accent-gold border border-white/10 hover:border-accent-gold shadow-heavy rounded-none'}`}
+                                                >
+                                                    <Clock className="w-6 h-6" /> Mudar Horário
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setEditMode('service');
+                                                        setMessages(prev => [...prev,
+                                                            { id: Date.now().toString(), text: "Gostaria de alterar meus serviços.", isAssistant: false },
+                                                            { id: (Date.now() + 1).toString(), text: "Quais serviços você gostaria que fossem realizados?", isAssistant: true, type: 'services' }
+                                                        ]);
+                                                        setStep('services');
+                                                    }}
+                                                    className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 ${isBeauty ? 'bg-white text-stone-800 shadow-sm hover:shadow-silk-shadow rounded-2xl border border-stone-100' : 'bg-obsidian-card text-white hover:text-accent-gold border border-white/10 hover:border-accent-gold shadow-heavy rounded-none'}`}
+                                                >
+                                                    <Scissors className="w-6 h-6" /> Editar Serviços
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setEditMode('both');
+                                                        setMessages(prev => [...prev,
+                                                            { id: Date.now().toString(), text: "Gostaria de mudar serviços e horário.", isAssistant: false },
+                                                            { id: (Date.now() + 1).toString(), text: "Ok. Primeiro, vamos revisar seus serviços.", isAssistant: true, type: 'services' }
+                                                        ]);
+                                                        setStep('services');
+                                                    }}
+                                                    className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 ${isBeauty ? 'bg-white text-stone-800 shadow-sm hover:shadow-silk-shadow rounded-2xl border border-stone-100' : 'bg-obsidian-card text-white hover:text-accent-gold border border-white/10 hover:border-accent-gold shadow-heavy rounded-none'}`}
+                                                >
+                                                    <Calendar className="w-6 h-6" /> Mudar Ambos
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {msg.type === 'edit_confirm' && step === 'edit_confirm' && (
+                                        <div className="w-full">
+                                            <div className={`p-6 text-center ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl' : 'bg-obsidian-card shadow-heavy-lg border-2 border-black rounded-none'}`}>
+                                                <AlertTriangle className={`w-8 h-8 mx-auto mb-4 ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`} />
+                                                <h3 className={`text-xl font-bold mb-2 ${isBeauty ? 'text-stone-800' : 'text-white'}`}>Deseja confirmar edição?</h3>
+                                                <p className={`text-sm mb-6 ${isBeauty ? 'text-stone-500' : 'text-neutral-400'}`}>As alterações serão aplicadas ao seu agendamento e o profissional será notificado caso necessário.</p>
+                                                
+                                                <div className="flex gap-4 max-w-sm mx-auto">
+                                                    <button onClick={() => setStep('edit_options')} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${isBeauty ? 'bg-stone-100 text-stone-500 rounded-xl hover:bg-stone-200' : 'bg-white/5 text-neutral-400 hover:bg-white/10'}`}>Cancelar</button>
+                                                    <button onClick={handleSubmit} disabled={isSubmitting} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${isBeauty ? 'bg-stone-800 text-white rounded-xl' : 'bg-accent-gold text-black border-2 border-black hover:bg-white flex items-center justify-center gap-2'}`}>
+                                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {msg.type === 'services' && step === 'services' && (
                                         <div className="w-full space-y-8 md:space-y-12">
                                             {/* Luxury Filters - Staggered Slide Animation */}
@@ -856,7 +1026,7 @@ export const PublicBooking: React.FC = () => {
                                                         setSelectedProfessional('any');
                                                         setMessages(prev => [...prev,
                                                         { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false },
-                                                        { id: (Date.now() + 1).toString(), text: "Perfeito escolha. Qual dia e horário ficam melhores para você explorar nossa agenda?", isAssistant: true, type: 'datetime' }
+                                                        { id: (Date.now() + 1).toString(), text: "Perfeita escolha. Qual dia e horário ficam melhores para você?", isAssistant: true, type: 'datetime' }
                                                         ]);
                                                     }}
                                                     className={`
@@ -877,7 +1047,7 @@ export const PublicBooking: React.FC = () => {
                                                             setSelectedProfessional(pro.id);
                                                             setMessages(prev => [...prev,
                                                             { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para sua visita?`, isAssistant: true, type: 'datetime' }
+                                                            { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para a sua visita?`, isAssistant: true, type: 'datetime' }
                                                             ]);
                                                         }}
                                                         className={`
@@ -915,11 +1085,19 @@ export const PublicBooking: React.FC = () => {
                                                         onTimeSelect={(time) => {
                                                             setSelectedTime(time);
                                                             const isLogged = !!client;
-                                                            setMessages(prev => [...prev,
-                                                            { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme a sua reserva." : "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }
-                                                            ]);
-                                                            setStep('contact');
+                                                            if (editingBookingId) {
+                                                                setMessages(prev => [...prev,
+                                                                { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
+                                                                { id: (Date.now() + 1).toString(), text: "Quase pronto. Verifique o resumo da edição abaixo.", isAssistant: true, type: 'edit_confirm' }
+                                                                ]);
+                                                                setStep('edit_confirm');
+                                                            } else {
+                                                                setMessages(prev => [...prev,
+                                                                { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
+                                                                { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme a sua reserva." : "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }
+                                                                ]);
+                                                                setStep('contact');
+                                                            }
                                                         }}
                                                         availableSlots={availableSlots}
                                                         isBeauty={isBeauty}
@@ -965,10 +1143,15 @@ export const PublicBooking: React.FC = () => {
                             </h2>
 
                             <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${isBeauty ? 'text-stone-500 italic' : 'text-white/40 font-mono uppercase tracking-widest'}`}>
-                                {isBeauty
-                                    ? "Prepare-se para um momento único de auto-cuidado e transformação."
-                                    : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA."
-                                }
+                                {editingBookingId ? (
+                                    isBeauty
+                                        ? "Edição feita com sucesso! Acesse sua área de membros."
+                                        : "EDIÇÃO CONCLUÍDA. ACESSE SUA ÁREA DE MEMBROS."
+                                ) : (
+                                    isBeauty
+                                        ? "Prepare-se para um momento único de auto-cuidado e transformação."
+                                        : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA."
+                                )}
                             </p>
 
                             {/* Summary Card - Premium Detail */}
@@ -1180,7 +1363,7 @@ export const PublicBooking: React.FC = () => {
             )}
 
 
-            {/* Bot?o Flutuante "Avancar" ? aparece ao selecionar servi?os com anima??o slide-up */}
+            {/* Botão Flutuante "Avançar" — aparece ao selecionar serviços com animação slide-up */}
             {step === 'services' && (
                 <div
                     className={`
@@ -1203,11 +1386,28 @@ export const PublicBooking: React.FC = () => {
                             id="next-button"
                             onClick={() => {
                                 const serviceNames = services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ');
-                                setMessages(prev => [...prev,
-                                { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false },
-                                { id: (Date.now() + 1).toString(), text: "Com qual profissional voc? gostaria de realizar esses servi?os? Nossa equipe de elite est? pronta para te atender.", isAssistant: true, type: 'professionals' }
-                                ]);
-                                setStep('datetime');
+                                if (editMode === 'service') {
+                                    // Só mudou serviços: vai direto para confirmação
+                                    setMessages(prev => [...prev,
+                                        { id: Date.now().toString(), text: `Quero confirmar os novos serviços: ${serviceNames}`, isAssistant: false },
+                                        { id: (Date.now() + 1).toString(), text: "Perfeito. As alterações estão prontas para serem salvas.", isAssistant: true, type: 'edit_confirm' }
+                                    ]);
+                                    setStep('edit_confirm');
+                                } else if (editMode === 'both') {
+                                    // Mudou serviços + horário: pula seleção de profissional e vai direto para o calendário
+                                    setMessages(prev => [...prev,
+                                        { id: Date.now().toString(), text: `Confirmado os serviços: ${serviceNames}. Agora quero mudar o horário.`, isAssistant: false },
+                                        { id: (Date.now() + 1).toString(), text: "Ótimo! Agora escolha a nova data e horário para o seu agendamento.", isAssistant: true, type: 'datetime' }
+                                    ]);
+                                    setStep('datetime');
+                                } else {
+                                    // Novo agendamento: pede profissional normalmente
+                                    setMessages(prev => [...prev,
+                                        { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false },
+                                        { id: (Date.now() + 1).toString(), text: "Com qual profissional você gostaria de realizar esses serviços? Nossa equipe está pronta para te atender.", isAssistant: true, type: 'professionals' }
+                                    ]);
+                                    setStep('datetime');
+                                }
                             }}
                             className={`
                                 w-full flex items-center justify-between overflow-hidden group relative
@@ -1231,7 +1431,9 @@ export const PublicBooking: React.FC = () => {
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 sm:gap-3 z-10">
-                                <span className="font-black text-xs uppercase tracking-widest">Avancar</span>
+                                <span className="font-black text-xs uppercase tracking-widest">
+                                    {editingBookingId ? 'Continuar Edição' : 'Avançar'}
+                                </span>
                                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1.5 transition-transform duration-300" />
                             </div>
                             {/* Shine effect no hover */}

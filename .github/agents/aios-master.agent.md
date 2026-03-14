@@ -41,4 +41,4 @@ Use `*` prefix for commands:
 **I orchestrate:**
 
 ---
-*AIOS Agent - Synced from .aios-core/development/agents/aios-master.md*
+*AIOS Agent - Synced from .aiox-core/development/agents/aios-master.md*

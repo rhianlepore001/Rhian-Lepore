@@ -1,8 +1,8 @@
 ---
 id: US-036
 título: Onboarding Guiado — Tour do Primeiro Agendamento
-status: Draft
-estimativa: 4h
+status: approved
+estimativa: 6h
 prioridade: critical
 agente: dev
 assignee: "@dev"
@@ -26,13 +26,50 @@ Dashboard overview → Agenda overview → Configurações overview → FIM
 
 **Fluxo correto (valor imediato):**
 ```
-Dashboard → Clientes → [criar cliente] → Agenda → [criar agendamento] → VALOR PERCEBIDO ✅
+Dashboard → Clientes → [criar cliente] → Agenda → [criar agendamento] → CELEBRAÇÃO ✅
 ```
 
 **Impacto no negócio:**
 - Usuários que não percebem valor nos primeiros 5 minutos fazem churn imediato
-- O primeiro agendamento criado é o "momento aha" do produto
+- O primeiro agendamento **confirmado e visível na agenda** é o "momento aha" do produto
 - Sem cliente cadastrado, o AppointmentWizard não funciona — frustração garantida
+
+---
+
+## Análise do Público-Alvo (Critérios Humanos)
+
+> Validação @po — perspectiva do dono de salão/barbearia brasileiro
+
+**Perfil real do usuário:**
+- Dono de salão ou barbearia, 25-45 anos
+- Dispositivo primário: smartphone Android (mobile-first é obrigatório)
+- Nível técnico: baixo-médio — usa WhatsApp intensamente, mas software de gestão é novo
+- Contexto de uso: ambiente barulhento, múltiplas interrupções, sempre com pressa
+- Estado emocional ao entrar no Dashboard pela primeira vez: **animado mas impaciente** — acabou de preencher 4 telas de wizard, quer ver o produto funcionando
+
+**Problemas humanos identificados e como esta story os trata:**
+
+### 1. Fadiga de onboarding (risco alto)
+O usuário acabou de fazer 4 passos no wizard. **Não podemos mostrar o tour imediatamente.** O tour deve ser acionado com um botão explícito na tela de sucesso do wizard ("Quero fazer meu primeiro agendamento agora →"), não automaticamente. A ativação automática existe como fallback no próximo login.
+
+**Impacto no AC:** tour automático no Dashboard só dispara se `tour_first_appointment_${userId}` não existir E o usuário **não** acabou de completar o wizard na mesma sessão.
+
+### 2. Interrupção é inevitável (risco médio)
+Dono de salão vai ser interrompido no meio do tour — cliente chega, telefone toca. O estado de retomada via localStorage deve ser robusto. Ao retomar em `/clientes`, verificar `clients.length === 0` novamente — se o usuário criou o cliente manualmente durante a interrupção, o tour pula para a etapa de agendamento.
+
+### 3. O "momento aha" está errado na versão anterior (risco alto)
+O tour não pode terminar em "clique aqui para abrir o wizard de agendamento". Isso é abandono. O **verdadeiro aha moment** é ver o agendamento **aparecendo na agenda** — cor, horário, nome do cliente. O tour deve guiar até a confirmação e mostrar o resultado na agenda.
+
+### 4. Máximo de 5 passos visíveis por segmento (mobile)
+Em telas de 390px com popover do driver.js, 8 passos contínuos são inaceitáveis. A divisão em 3 segmentos (Dashboard → Clientes → Agenda) com no máximo 5 passos cada é o limite. Progresso deve ser visível ("Passo 2 de 5").
+
+### 5. Tom de voz: amigo, não manual
+Textos do tour devem ser informais, encorajadores, em português brasileiro coloquial. Exemplo:
+- ❌ *"Navegue até a seção de clientes para cadastrar um novo registro"*
+- ✅ *"Primeiro, vamos cadastrar um cliente. Clica ali em Clientes 👇"*
+
+### 6. Seletores DOM: app é mobile-first com BottomMobileNav
+O link "Clientes" **não está em uma sidebar** — está no `BottomMobileNav.tsx` (nav inferior). Em desktop pode haver sidebar. Os seletores devem ser condicionais por `isMobile`, exatamente como o tour existente já faz.
 
 ---
 
@@ -51,18 +88,33 @@ O tour existente (dashboard/agenda/settings overview) é mantido como está — 
 
 ## Acceptance Criteria
 
-- [ ] Novo contexto `'first-appointment'` adicionado ao `useAppTour.ts`
-- [ ] Tour verifica `clients.length === 0` antes de iniciar (via prop/parâmetro passado pelo componente pai)
-- [ ] Passo 1: Spotlight no menu/link "Clientes" com tooltip explicando o porquê
-- [ ] Passo 2: Navega para `/clientes`, spotlight no botão "Novo Cliente"
-- [ ] Passo 3 (onNextClick): aguarda navegação para `/clientes`, spotlight no formulário de criação
-- [ ] Passo 4: Spotlight no botão "Salvar" do formulário de cliente
-- [ ] Passo 5 (onNextClick): navega para `/agenda`, spotlight no botão "+" ou "Novo Agendamento"
-- [ ] Passo 6: Tooltip explicando que o cliente recém criado já aparece na seleção do AppointmentWizard
-- [ ] Tour é acionado automaticamente no Dashboard quando `clients.length === 0` E `onboarding_completed === true` E `tour_first_appointment_${userId}` não está no localStorage
-- [ ] Tour é skipável a qualquer momento (botão "Pular Tour" no popover)
-- [ ] Ao completar ou pular, persiste `tour_first_appointment_${userId} = 'done'` no localStorage
-- [ ] Se o usuário já tem clientes (`clients.length > 0`), o tour `first-appointment` **não** é exibido
+### Disparo do Tour
+- [ ] Tour **não** dispara automaticamente imediatamente após o wizard de onboarding (mesma sessão)
+- [ ] Tela de sucesso do wizard (`StepSuccess`) exibe botão CTA: *"Fazer meu primeiro agendamento →"* que inicia o tour ativamente
+- [ ] Como fallback: tour dispara automaticamente no Dashboard no **próximo login** se `clients.length === 0` E `tour_first_appointment_${userId}` ausente no localStorage
+- [ ] Se `clients.length > 0`, tour `first-appointment` **nunca** é exibido
+
+### Segmento 1 — Dashboard (máx. 2 passos)
+- [ ] Passo 1: Popover centralizado (`#root`) — boas-vindas informal + explica que vai criar o primeiro cliente
+- [ ] Passo 2: Spotlight no ícone "Clientes" do `BottomMobileNav` (mobile) ou link sidebar (desktop), com seletor condicional `isMobile`
+
+### Segmento 2 — Página Clientes (máx. 2 passos, retomado via localStorage)
+- [ ] `onNextClick` do Passo 2: navega para `/clientes` + salva `tour_first_appointment_step_${userId} = 'clients_pending'` + destroy
+- [ ] Passo 3 (retomado em `/clientes`): spotlight no botão "Novo Cliente" — elemento `BrutalButton` com `id="btn-novo-cliente"` (novo id a ser adicionado no componente)
+- [ ] Passo 4: spotlight no primeiro input do formulário de cliente (nome), texto encoraja preencher nome + telefone
+
+### Segmento 3 — Agenda (máx. 3 passos, retomado via localStorage)
+- [ ] `onNextClick` do Passo 4: navega para `/agenda` + salva `tour_first_appointment_step_${userId} = 'agenda_pending'` + destroy
+- [ ] Ao retomar em `/agenda`: verificar `clients.length === 0` novamente — se já tem clientes (criou manualmente durante interrupção), pular Segmento 2 e retomar aqui direto
+- [ ] Passo 5 (retomado em `/agenda`): spotlight no botão "Novo Agendamento" com `id="btn-novo-agendamento"` (novo id a ser adicionado)
+- [ ] Passo 6: popover explica que o cliente cadastrado já aparece na lista — tom: *"Seleciona ele ali e escolhe o horário!"*
+- [ ] Passo 7: após agendamento confirmado (`onSuccess` do AppointmentWizard), exibir popover de celebração no calendário mostrando o agendamento criado — *"🎉 Tá na agenda! Esse é o seu primeiro cliente confirmado."*
+
+### Comportamento Geral
+- [ ] Tour skipável a qualquer momento via botão X nativo do driver.js (`allowClose: true`) — sem botão "Pular Tour" adicional
+- [ ] Ao completar **ou** fechar: persistir `tour_first_appointment_${userId} = 'done'` no localStorage
+- [ ] Textos do tour em português brasileiro informal (ver tom de voz na seção de Análise)
+- [ ] `showProgress: true` visível em todos os passos de cada segmento
 - [ ] `npm run lint` passa sem erros
 - [ ] `npm run typecheck` passa sem erros
 
@@ -112,50 +164,93 @@ O bloco `useEffect` no final do hook já gerencia `tour_step_${user.id}` para o 
 
 ## Tasks
 
-### Bloco A: Preparação e leitura do DOM
+### Bloco A: Adicionar IDs estáveis nos elementos-alvo
 
-- [ ] **A.1** Abrir `hooks/useAppTour.ts` e entender a estrutura atual completa
-- [ ] **A.2** Abrir `pages/Clients.tsx` — identificar seletor do botão "Novo Cliente" (id ou className único)
-- [ ] **A.3** Abrir `pages/Agenda.tsx` — identificar seletor do botão "Novo Agendamento" / "+"
-- [ ] **A.4** Abrir `components/Layout.tsx` ou `components/Header.tsx` — identificar seletor do link "Clientes" no sidebar/nav
-- [ ] **A.5** Documentar os seletores encontrados (anotar no Debug Log abaixo)
+> Seletores já mapeados pelo @po durante validação:
+> - "Clientes" mobile: `BottomMobileNav.tsx` — botão com `onClick={() => navigate('/clientes')}`
+> - "Novo Cliente": `Clients.tsx` linha 181 — `BrutalButton` sem id (adicionar)
+> - "Novo Agendamento": `Agenda.tsx` linha 1098 — sem id (adicionar)
+
+- [ ] **A.1** Em `components/BottomMobileNav.tsx`: adicionar `id="nav-clientes"` no botão de navegação para /clientes
+- [ ] **A.2** Em `pages/Clients.tsx` linha ~181: adicionar `id="btn-novo-cliente"` no `BrutalButton` de novo cliente
+- [ ] **A.3** Em `pages/Agenda.tsx` linha ~1098: adicionar `id="btn-novo-agendamento"` no botão/elemento de novo agendamento
+- [ ] **A.4** Em `pages/onboarding/StepSuccess.tsx`: adicionar botão CTA *"Fazer meu primeiro agendamento →"* que chama `startTour('first-appointment')`
 
 ### Bloco B: Modificar useAppTour.ts
 
 - [ ] **B.1** Adicionar `'first-appointment'` ao tipo `TourContext`
-- [ ] **B.2** Alterar assinatura do `startTour` para aceitar `options?: { hasClients?: boolean }`
-- [ ] **B.3** Implementar steps do contexto `'first-appointment'`:
-  - Step 1: Boas-vindas + explicação de que precisa criar cliente primeiro (`#root`, sem elemento destacado)
-  - Step 2: Spotlight no link "Clientes" no menu lateral/nav
-  - Step 3: `onNextClick` → `navigate('/clientes')` + salvar `tour_first_appointment_step_${user.id} = 'clients_pending'` + destroy
-  - Step 4 (resumido em `/clientes`): Spotlight no botão "Novo Cliente"
-  - Step 5: Spotlight no formulário de criação (primeiro input de nome)
-  - Step 6: `onNextClick` → `navigate('/agenda')` + salvar `tour_first_appointment_step_${user.id} = 'agenda_pending'` + destroy
-  - Step 7 (resumido em `/agenda`): Spotlight no botão "+" / "Novo Agendamento"
-  - Step 8: Tooltip final — "Selecione o cliente que você acabou de criar e agende!"
-- [ ] **B.4** Adicionar no `useEffect` a detecção dos pending steps de `tour_first_appointment`:
+- [ ] **B.2** Implementar steps do contexto `'first-appointment'` — Segmento 1 (Dashboard):
+  ```
+  Step 1: element='#root', título="Bora fazer seu primeiro agendamento! 🚀",
+          desc="É rapidinho. Primeiro, a gente cadastra um cliente — pode ser qualquer um que você já atende."
+  Step 2: element=isMobile ? '#nav-clientes' : 'a[href="/clientes"]',
+          título="Toca em Clientes 👇",
+          desc="É aqui que ficam todos os seus clientes. Vamos adicionar o primeiro agora.",
+          onNextClick: navigate('/clientes') + localStorage('clients_pending') + destroy
+  ```
+- [ ] **B.3** Implementar Segmento 2 (Clientes — retomado via localStorage):
+  ```
+  Step 3: element='#btn-novo-cliente',
+          título="Clica em Novo Cliente ➕",
+          desc="Coloca o nome e o telefone. Só isso já basta pra começar."
+  Step 4: element='input[name="name"]' (ou primeiro input do form),
+          título="Preenche os dados 📝",
+          desc="Nome e telefone são o essencial. Pode adicionar mais depois.",
+          onNextClick: navigate('/agenda') + localStorage('agenda_pending') + destroy
+  ```
+- [ ] **B.4** Implementar Segmento 3 (Agenda — retomado via localStorage):
+  - Antes de iniciar: verificar `clients.length` — se `> 0` (cliente criado manualmente), pular direto para Step 5
+  ```
+  Step 5: element='#btn-novo-agendamento',
+          título="Agora clica em Novo Agendamento ⚡",
+          desc="Aqui você marca o horário. O cliente que você acabou de cadastrar já vai aparecer na lista."
+  Step 6: element='#root',
+          título="Seleciona o cliente e o horário 🗓️",
+          desc="Escolhe o cliente, o serviço e confirma. Vai aparecer direto na sua agenda!"
+  Step 7 (acionado pelo onSuccess do AppointmentWizard, não pelo driver):
+          Popover customizado de celebração com confete ou destaque visual
+          Texto: "🎉 Primeiro agendamento feito! Olha ele aí na agenda."
+  ```
+- [ ] **B.5** Adicionar no `useEffect` detecção de pending steps com chave separada:
   ```ts
   const faStep = localStorage.getItem(`tour_first_appointment_step_${user.id}`);
-  if (location.pathname === '/clientes' && faStep === 'clients_pending') { ... }
-  if (location.pathname === '/agenda' && faStep === 'agenda_pending') { ... }
+  if (location.pathname === '/clientes' && faStep === 'clients_pending') {
+    startTour('first-appointment-clients');
+    localStorage.setItem(`tour_first_appointment_step_${user.id}`, 'in_progress');
+  }
+  if (location.pathname === '/agenda' && faStep === 'agenda_pending') {
+    startTour('first-appointment-agenda');
+    localStorage.setItem(`tour_first_appointment_step_${user.id}`, 'in_progress');
+  }
   ```
-- [ ] **B.5** No `onDestroyed` do driver `first-appointment`: persistir `tour_first_appointment_${user.id} = 'done'` no localStorage
+- [ ] **B.6** No `onDestroyed` de qualquer segmento do tour `first-appointment`: persistir `tour_first_appointment_${user.id} = 'done'` e limpar `tour_first_appointment_step_${user.id}`
 
-### Bloco C: Modificar Dashboard.tsx
+### Bloco C: Modificar StepSuccess.tsx e Dashboard.tsx
 
-- [ ] **C.1** Adicionar query para buscar count de clientes:
+- [ ] **C.1** Em `pages/onboarding/StepSuccess.tsx`: adicionar botão CTA principal:
+  ```tsx
+  <BrutalButton variant="primary" onClick={() => { startTour('first-appointment'); navigate('/'); }}>
+    Fazer meu primeiro agendamento →
+  </BrutalButton>
+  ```
+  E link secundário: *"Explorar por conta própria"* (pula o tour, vai pro Dashboard)
+- [ ] **C.2** Em `pages/Dashboard.tsx`: adicionar query de count de clientes (fallback para próximo login):
   ```ts
   const { count } = await supabase
     .from('clients')
     .select('id', { count: 'exact', head: true })
     .eq('company_id', companyId);
   ```
-- [ ] **C.2** Adicionar lógica de disparo do tour com condições:
-  - `onboarding_completed === true`
-  - `localStorage.getItem(`tour_first_appointment_${user.id}`)` é null
-  - `count === 0`
-- [ ] **C.3** Disparo com delay de 2000ms (dar tempo para a UI renderizar)
-- [ ] **C.4** Verificar que não colide com o disparo do tour `dashboard` existente
+- [ ] **C.3** Lógica de disparo automático (fallback — próximo login):
+  ```ts
+  const tourDone = localStorage.getItem(`tour_first_appointment_${user.id}`);
+  const justFinishedWizard = sessionStorage.getItem('wizard_just_completed');
+  if (onboarding_completed && !tourDone && count === 0 && !justFinishedWizard) {
+    setTimeout(() => startTour('first-appointment'), 2000);
+  }
+  ```
+- [ ] **C.4** Em `StepSuccess.tsx`, ao redirecionar: `sessionStorage.setItem('wizard_just_completed', 'true')` para evitar tour automático imediato
+- [ ] **C.5** Verificar que não colide com o disparo do tour `dashboard` existente (usar `else if`)
 
 ### Bloco D: Qualidade
 
@@ -186,8 +281,12 @@ O bloco `useEffect` no final do hook já gerencia `tour_step_${user.id}` para o 
 - (Nenhum)
 
 ### Modificados
-- `hooks/useAppTour.ts` — Novo contexto `first-appointment` + nova assinatura de `startTour`
-- `pages/Dashboard.tsx` — Query de count de clientes + lógica de disparo do tour
+- `hooks/useAppTour.ts` — Novos contextos `first-appointment`, `first-appointment-clients`, `first-appointment-agenda`
+- `pages/Dashboard.tsx` — Query de count de clientes + lógica de disparo fallback
+- `pages/onboarding/StepSuccess.tsx` — Botão CTA de tour + sessionStorage flag
+- `components/BottomMobileNav.tsx` — id `nav-clientes` adicionado
+- `pages/Clients.tsx` — id `btn-novo-cliente` adicionado
+- `pages/Agenda.tsx` — id `btn-novo-agendamento` adicionado
 
 ### Deletados
 - (Nenhum)
@@ -212,6 +311,7 @@ Seletores DOM a verificar:
 
 ### Change Log
 - 2026-03-19: Story criada por @dev (Dex)
+- 2026-03-19: Validada e corrigida por @po (Pax) — AC reescrito, análise de público-alvo adicionada, estimativa ajustada para 6h, status → approved
 
 ---
 

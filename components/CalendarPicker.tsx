@@ -143,6 +143,8 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                     type="button" // FIX: Prevent accidental form submission
                     onClick={goToPreviousMonth}
                     className={`p-2 ${hoverBg} rounded-lg transition-all`}
+                    aria-label="Mês anterior"
+                    title="Mês anterior"
                 >
                     <ChevronLeft className={`w-5 h-5 ${isBeauty ? 'text-stone-700' : 'text-white'}`} />
                 </button>
@@ -155,6 +157,8 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                     type="button" // FIX: Prevent accidental form submission
                     onClick={goToNextMonth}
                     className={`p-2 ${hoverBg} rounded-lg transition-all`}
+                    aria-label="Próximo mês"
+                    title="Próximo mês"
                 >
                     <ChevronRight className={`w-5 h-5 ${isBeauty ? 'text-stone-700' : 'text-white'}`} />
                 </button>

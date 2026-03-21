@@ -260,6 +260,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         className={isBeauty
                             ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all'
                             : 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1 transition-colors'}
+                        aria-label="Fechar modal de serviço"
+                        title="Fechar"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -317,13 +319,13 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
 
                             <div>
-                                <label className="text-white font-mono text-xs mb-1 block">Nome do Serviço</label>
-                                <input type="text" required value={name} onChange={e => setName(e.target.value)} className={inputStyles} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
+                                <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-name">Nome do Serviço</label>
+                                <input id="service-name" type="text" required value={name} onChange={e => setName(e.target.value)} className={inputStyles} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-white font-mono text-xs block">Categoria</label>
+                                    <label className="text-white font-mono text-xs block" htmlFor="service-category">Categoria</label>
                                     {!isCreatingCategory && (
                                         <button type="button" onClick={() => setIsCreatingCategory(true)} className={`text-${accentColor} hover:text-${accentColor}/80 text-xs font-bold flex items-center gap-1 transition-colors`}>
                                             <Plus className="w-3 h-3" /> Nova Categoria
@@ -343,7 +345,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                         </div>
                                     </div>
                                 ) : (
-                                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputStyles}>
+                                    <select id="service-category" value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputStyles}>
                                         <option value="" disabled>Selecione uma categoria</option>
                                         {localCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                                     </select>
@@ -354,12 +356,12 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-white font-mono text-xs mb-1 block">Preço ({currencySymbol})</label>
-                                    <input type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={inputStyles} placeholder="0.00" />
+                                    <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-price">Preço ({currencySymbol})</label>
+                                    <input id="service-price" type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={inputStyles} placeholder="0.00" />
                                 </div>
                                 <div>
-                                    <label className="text-white font-mono text-xs mb-1 block">Duração</label>
-                                    <select value={duration} onChange={e => setDuration(e.target.value)} className={inputStyles}>
+                                    <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-duration">Duração</label>
+                                    <select id="service-duration" value={duration} onChange={e => setDuration(e.target.value)} className={inputStyles}>
                                         <option value="15">15 min</option>
                                         <option value="30">30 min</option>
                                         <option value="45">45 min</option>
@@ -370,8 +372,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                             </div>
 
                             <div>
-                                <label className="text-white font-mono text-xs mb-1 block">Descrição</label>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${inputStyles} resize-none`} placeholder="Detalhes do serviço..." />
+                                <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-description">Descrição</label>
+                                <textarea id="service-description" value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${inputStyles} resize-none`} placeholder="Detalhes do serviço..." />
                             </div>
 
                             <div className="border-t border-neutral-800 pt-4">

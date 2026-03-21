@@ -57,73 +57,45 @@ export const ClientCRM: React.FC = () => {
     const fetchClient = async () => {
       if (!id || !user) return;
       try {
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('id', id)
-          .eq('user_id', user.id)
+        // US-0309: 3 queries sequenciais → 1 RPC (get_client_profile)
+        const { data, error } = await supabase
+          .rpc('get_client_profile', { p_client_id: id })
           .single();
 
-        if (clientError) throw clientError;
+        if (error) throw error;
+        if (!data) return;
 
-        if (clientData) {
-          setNotes(clientData.notes || '');
+        const { client: clientData, ltv, appointments_history, hair_history } = data as any;
 
-          // Fetch appointments for visit history
-          // Note: price is stored directly in appointments table, no need to join with services
-          const { data: appointmentsData, error: appointmentsError } = await supabase
-            .from('appointments')
-            .select('*, team_members(name)')
-            .eq('client_id', clientData.id)
-            .eq('user_id', user.id)
-            .eq('status', 'Completed')
-            .order('appointment_time', { ascending: false });
+        setNotes(clientData.notes || '');
 
-          if (appointmentsError) throw appointmentsError;
+        const appointmentsData = appointments_history || [];
+        const totalVisits = appointmentsData.length;
+        const lastVisit = appointmentsData[0]?.appointment_time
+          ? new Date(appointmentsData[0].appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+          : 'Nunca';
+        const nextPrediction = calculateNextVisitPrediction(appointmentsData);
 
-          const totalVisits = appointmentsData?.length || 0;
-          const lastVisit = appointmentsData?.[0]?.appointment_time
-            ? new Date(appointmentsData[0].appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-            : 'Nunca';
-          const nextPrediction = calculateNextVisitPrediction(appointmentsData || []);
+        setClient({
+          ...clientData,
+          lastVisit,
+          totalVisits,
+          nextPrediction,
+          ltv,
+          appointmentsHistory: appointmentsData.map((apt: any) => ({
+            ...apt,
+            professional_name: apt.professional_name,
+            basePrice: apt.price
+          })),
+          hairHistory: (hair_history || []).map((h: any) => ({
+            ...h,
+            imageUrl: h.image_url,
+          }))
+        });
 
-          // Calculate LTV
-          const ltv = (appointmentsData || []).reduce((acc: number, apt: any) => {
-            return acc + (Number(apt.price) || 0);
-          }, 0);
-
-          // Fetch hair records
-          const { data: historyData, error: historyError } = await supabase
-            .from('hair_records')
-            .select('*')
-            .eq('client_id', clientData.id)
-            .eq('user_id', user.id)
-            .order('date', { ascending: false });
-
-          if (historyError) throw historyError;
-
-          setClient({
-            ...clientData,
-            lastVisit,
-            totalVisits,
-            nextPrediction,
-            ltv,
-            appointmentsHistory: appointmentsData?.map((apt: any) => ({
-              ...apt,
-              professional_name: apt.team_members?.name,
-              basePrice: apt.services?.price || apt.price
-            })) || [],
-            hairHistory: historyData?.map((h: any) => ({
-              ...h,
-              imageUrl: h.image_url,
-            })) || []
-          });
-
-          // Initialize edit form
-          setEditName(clientData.name);
-          setEditPhone(clientData.phone || '');
-          setEditEmail(clientData.email || '');
-        }
+        setEditName(clientData.name);
+        setEditPhone(clientData.phone || '');
+        setEditEmail(clientData.email || '');
       } catch (error) {
         console.error('Error fetching client:', error);
       } finally {

@@ -42,7 +42,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                 >
                 <div className={`p-4 flex justify-between items-center ${isBeauty ? 'border-b border-white/10 bg-white/5' : 'border-b-2 border-accent-gold/20 bg-black/40'}`}>
                     <h3 id="quick-actions-title" className={`font-heading font-bold ${isBeauty ? 'text-white' : 'text-accent-gold'}`}>Ações Rápidas</h3>
-                    <button onClick={onClose} className={`p-2 -mr-2 rounded-full transition-colors ${isBeauty ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-accent-gold/60 hover:text-accent-gold hover:bg-accent-gold/10'}`}>
+                    <button onClick={onClose} className={`p-2 -mr-2 rounded-full transition-colors ${isBeauty ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-accent-gold/60 hover:text-accent-gold hover:bg-accent-gold/10'}`} aria-label="Fechar ações rápidas" title="Fechar">
                         <X className="w-5 h-5" />
                     </button>
                 </div>

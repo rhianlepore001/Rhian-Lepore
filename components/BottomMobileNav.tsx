@@ -71,6 +71,8 @@ export const BottomMobileNav: React.FC = () => {
                                 ? 'bg-beauty-neon text-white'
                                 : 'bg-accent-gold text-black'
                             }`}
+                        aria-label="Ações rápidas"
+                        title="Ações rápidas"
                     >
                         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <Plus className="w-10 h-10 relative z-10" strokeWidth={3} />

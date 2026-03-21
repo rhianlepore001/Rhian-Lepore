@@ -605,7 +605,12 @@ export const PublicBooking: React.FC = () => {
                     photoUrl = publicUrl;
                 }
             }
-            await register({ name: customerName, phone: customerPhone, photo_url: photoUrl, business_id: businessId });
+            try {
+                await register({ name: customerName, phone: customerPhone, photo_url: photoUrl, business_id: businessId });
+            } catch (registerError) {
+                // Registro de cliente público é best-effort — não bloqueia o agendamento
+                logger.warn('register() falhou mas continuando com o agendamento:', registerError);
+            }
             const year = selectedDate.getFullYear();
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const day = String(selectedDate.getDate()).padStart(2, '0');
@@ -660,7 +665,7 @@ export const PublicBooking: React.FC = () => {
                 setActiveBooking(updatedBooking);
             } else {
                 const { data: newBooking, error: insertError } = await supabase.from('public_bookings')
-                    .insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration, marketing_optin: acceptedMarketing })
+                    .insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration })
                     .select()
                     .single();
                 if (insertError) throw insertError;

@@ -1,0 +1,160 @@
+id: onboarding-wizard-squad
+version: '1.0.0'
+name: Onboarding Wizard Squad
+description: >
+  Squad multi-agente para implementação do sistema completo de onboarding guiado
+  para donos de salão/barbearia no Beauty OS. Wizard em 5 etapas com overlay
+  customizado (sem libs externas) e ponteiros visuais interativos.
+
+author:
+  name: Craft (Squad Creator)
+  agent: squad-creator
+  created: '2026-03-20'
+
+target:
+  project: Beauty OS / AgenX AIOS
+  feature: Onboarding Wizard Guiado
+  persona: Dono de salão/barbearia (primeira impressão)
+  branch: ux-teste
+
+scope:
+  in:
+    - Overlay engine customizado (sem Driver.js ou lib externa)
+    - Wizard com 5 steps sequenciais
+    - Persistência de progresso no Supabase
+    - Componente de ponteiro/seta visual
+    - Animações e transições entre steps
+    - RLS policies para dados de onboarding
+    - Testes por step
+  out:
+    - Pós-onboarding chat/AI (story futura)
+    - Onboarding de profissionais/colaboradores
+    - Onboarding de clientes do salão
+
+wizard_steps:
+  - step: 1
+    title: Configurar Perfil do Negócio
+    fields: [nome, logo, horários de funcionamento]
+  - step: 2
+    title: Cadastrar Primeiro Serviço
+    fields: [nome, duração, preço, categoria]
+  - step: 3
+    title: Adicionar Primeiro Profissional
+    fields: [nome, especialidade, foto]
+  - step: 4
+    title: Criar Primeiro Agendamento
+    fields: [cliente, serviço, profissional, data/hora]
+  - step: 5
+    title: Configurar Link de Agendamento Público
+    fields: [slug, configurações de visibilidade]
+
+tech_decisions:
+  overlay: custom React component (sem lib externa)
+  pointer: SVG arrow + CSS animations
+  state: React Context + Supabase persistence
+  framework: React 19 + TypeScript + Tailwind CSS
+  database: Supabase (PostgreSQL + RLS)
+
+agents:
+  - id: ux-wizard-designer
+    file: agents/ux-wizard-designer.md
+    role: UX/UI lead do wizard e sistema de overlay
+  - id: core-developer
+    file: agents/core-developer.md
+    role: Implementação do engine e steps
+  - id: data-engineer
+    file: agents/data-engineer.md
+    role: Schema, persistência e RLS
+  - id: qa-validator
+    file: agents/qa-validator.md
+    role: Validação e testes do fluxo
+
+tasks:
+  - id: design-overlay-engine
+    file: tasks/design-overlay-engine.md
+    agent: ux-wizard-designer
+    phase: 1
+  - id: design-wizard-flow
+    file: tasks/design-wizard-flow.md
+    agent: ux-wizard-designer
+    phase: 1
+  - id: schema-onboarding-state
+    file: tasks/schema-onboarding-state.md
+    agent: data-engineer
+    phase: 1
+  - id: implement-overlay-component
+    file: tasks/implement-overlay-component.md
+    agent: core-developer
+    phase: 2
+    depends_on: [design-overlay-engine, schema-onboarding-state]
+  - id: implement-wizard-engine
+    file: tasks/implement-wizard-engine.md
+    agent: core-developer
+    phase: 2
+    depends_on: [design-wizard-flow, implement-overlay-component]
+  - id: implement-step-1-profile
+    file: tasks/implement-step-1-profile.md
+    agent: core-developer
+    phase: 3
+    depends_on: [implement-wizard-engine]
+  - id: implement-step-2-service
+    file: tasks/implement-step-2-service.md
+    agent: core-developer
+    phase: 3
+    depends_on: [implement-wizard-engine]
+  - id: implement-step-3-professional
+    file: tasks/implement-step-3-professional.md
+    agent: core-developer
+    phase: 3
+    depends_on: [implement-wizard-engine]
+  - id: implement-step-4-appointment
+    file: tasks/implement-step-4-appointment.md
+    agent: core-developer
+    phase: 3
+    depends_on: [implement-wizard-engine]
+  - id: implement-step-5-booking
+    file: tasks/implement-step-5-booking.md
+    agent: core-developer
+    phase: 3
+    depends_on: [implement-wizard-engine]
+  - id: validate-wizard-flow
+    file: tasks/validate-wizard-flow.md
+    agent: qa-validator
+    phase: 4
+    depends_on:
+      - implement-step-1-profile
+      - implement-step-2-service
+      - implement-step-3-professional
+      - implement-step-4-appointment
+      - implement-step-5-booking
+
+execution_phases:
+  phase_1:
+    name: Design & Schema
+    parallel: true
+    tasks: [design-overlay-engine, design-wizard-flow, schema-onboarding-state]
+  phase_2:
+    name: Engine Core
+    parallel: false
+    tasks: [implement-overlay-component, implement-wizard-engine]
+  phase_3:
+    name: Steps Implementation
+    parallel: true
+    tasks:
+      - implement-step-1-profile
+      - implement-step-2-service
+      - implement-step-3-professional
+      - implement-step-4-appointment
+      - implement-step-5-booking
+  phase_4:
+    name: QA & Validation
+    parallel: false
+    tasks: [validate-wizard-flow]
+
+templates:
+  - file: templates/wizard-step-tmpl.tsx
+    description: Template base React para cada step do wizard
+
+config:
+  - file: config/tech-decisions.md
+    description: Decisões técnicas e padrões do squad

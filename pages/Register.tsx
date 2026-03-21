@@ -140,6 +140,8 @@ export const Register: React.FC = () => {
                 <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Domínio</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
+                    data-testid="category-barber"
+                    aria-label="Barbearia"
                     type="button"
                     onClick={() => setUserType('barber')}
                     className={`flex flex-col items-center justify-center p-6 transition-all border-2
@@ -154,6 +156,8 @@ export const Register: React.FC = () => {
                     <span className="font-heading font-bold tracking-tighter text-sm uppercase">Barber</span>
                   </button>
                   <button
+                    data-testid="category-beauty"
+                    aria-label="Salão de Beleza"
                     type="button"
                     onClick={() => setUserType('beauty')}
                     className={`flex flex-col items-center justify-center p-6 transition-all border-2

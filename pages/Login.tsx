@@ -61,6 +61,8 @@ export const Login: React.FC = () => {
 
                     {/* BARBER CARD */}
                     <button
+                        data-testid="category-barber"
+                        aria-label="Barbearia"
                         onClick={() => handleSelectSegment('barber')}
                         className="group relative h-64 md:h-96 bg-brutal-card border-4 border-neutral-800 hover:border-accent-gold transition-all duration-300 overflow-hidden text-left shadow-heavy hover:shadow-accent-gold/20"
                     >
@@ -84,6 +86,8 @@ export const Login: React.FC = () => {
 
                     {/* BEAUTY CARD */}
                     <button
+                        data-testid="category-beauty"
+                        aria-label="Salão de Beleza"
                         onClick={() => handleSelectSegment('beauty')}
                         className="group relative h-64 md:h-96 bg-neutral-900 rounded-3xl border border-white/10 hover:border-beauty-neon/50 transition-all duration-500 overflow-hidden text-left shadow-2xl hover:shadow-soft"
                     >

@@ -24,6 +24,7 @@ import { logger } from '../utils/Logger';
 interface DashboardStats {
     total_profit: number;
     current_month_revenue: number;
+    month_scheduled_value: number;
     weekly_growth: number;
     monthly_goal: number;
     recovered_revenue: number;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
@@ -175,17 +175,22 @@ export const Agenda: React.FC = () => {
         }
     }, [historyMonth, showHistoryModal]);
 
-    const fetchAllFutureAppointments = async () => {
+    const fetchAllFutureAppointments = useCallback(async () => {
         if (!user) return [];
         const now = new Date().toISOString();
 
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('appointments')
             .select('*, clients(name)')
             .eq('user_id', user.id)
             .gte('appointment_time', now)
             .in('status', ['Confirmed', 'Pending'])
             .order('appointment_time', { ascending: true });
+
+        if (error) {
+            logger.error('Erro ao buscar todos os agendamentos futuros:', error);
+            return [];
+        }
 
         if (!data) return [];
 
@@ -201,7 +206,7 @@ export const Agenda: React.FC = () => {
             price: apt.price,
             appointment_time: apt.appointment_time
         }));
-    };
+    }, [user]);
 
 
     // Price Calculation & Sync Effect

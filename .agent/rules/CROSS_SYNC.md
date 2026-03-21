@@ -10,10 +10,10 @@ trigger: always_on
 
 1. **Leitura de Contexto Externo (Start):**
    - SEMPRE verifique o arquivo `.aiox-core/development/agents/pm/MEMORY.md` (ou diretório equivalente do Claude) no início de tarefas estratégicas.
-   - Verifique o diretório `docs/stories/` em busca de novas stories marcadas como `done` que ainda não foram refletidas no `PROJECT_MEMORY.md`.
+   - Verifique o diretório `docs/stories/` em busca de novas stories marcadas como `done` que ainda não foram refletidas no `MEMORY.md`.
 
 2. **Unificação de Memória (End):**
-   - Ao concluir uma feature ou no final de uma sessão complexa, consolide as descobertas de ambos os ambientes no `.agent/memory/PROJECT_MEMORY.md`.
+   - Ao concluir uma feature ou no final de uma sessão complexa, consolide as descobertas de ambos os ambientes no `.agent/memory/MEMORY.md`.
    - Se houver discrepância entre o que o Antigravity fez e o que o Claude documentou, a versão mais recente em `docs/stories/` tem precedência técnica.
 
 3. **Alinhamento de Decisões:**

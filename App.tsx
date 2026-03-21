@@ -29,6 +29,7 @@ const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(m
 const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySettings').then(module => ({ default: module.SecuritySettings })));
 const SystemLogs = React.lazy(() => import('./pages/settings/SystemLogs').then(module => ({ default: module.SystemLogs })));
 const OnboardingWizard = React.lazy(() => import('./pages/OnboardingWizard').then(module => ({ default: module.OnboardingWizard })));
+const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 const Reports = React.lazy(() => import('./pages/Reports').then(module => ({ default: module.Reports })));
 const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortfolio').then(module => ({ default: module.ProfessionalPortfolio })));
 const QueueJoin = React.lazy(() => import('./pages/QueueJoin').then(module => ({ default: module.QueueJoin })));
@@ -125,9 +126,16 @@ const AppRoutes: React.FC = () => {
         <Route path="/queue-status/:id" element={<QueueStatus />} />
         <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
         <Route path="/minha-area/:slug" element={<ClientArea />} />
-        <Route path="/onboarding" element={
+        <Route path="/onboarding-wizard" element={
           <RequireAuth>
             <OnboardingWizard />
+          </RequireAuth>
+        } />
+        <Route path="/onboarding" element={
+          <RequireAuth>
+            <Suspense fallback={<LoadingFull />}>
+              <Onboarding />
+            </Suspense>
           </RequireAuth>
         } />
 

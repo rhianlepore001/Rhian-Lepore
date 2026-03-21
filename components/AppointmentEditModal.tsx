@@ -266,6 +266,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     <button
                         onClick={onClose}
                         className={closeButtonStyles}
+                        aria-label="Fechar janela de edição"
+                        title="Fechar"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -274,8 +276,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 <div className="p-6 space-y-4">
                     {/* Client */}
                     <div>
-                        <label className={labelStyles}>Cliente</label>
+                        <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select
+                            id="appt-client"
                             value={selectedClient}
                             onChange={(e) => setSelectedClient(e.target.value)}
                             className={inputStyles}
@@ -290,8 +293,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Professional */}
                     <div>
-                        <label className={labelStyles}>Profissional</label>
+                        <label className={labelStyles} htmlFor="appt-professional">Profissional</label>
                         <select
+                            id="appt-professional"
                             value={selectedProfessional}
                             onChange={(e) => setSelectedProfessional(e.target.value)}
                             className={inputStyles}
@@ -344,8 +348,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Notes / Observation */}
                     <div>
-                        <label className={labelStyles}>Observação</label>
+                        <label className={labelStyles} htmlFor="appt-notes">Observação</label>
                         <textarea
+                            id="appt-notes"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             className={`${inputStyles} min-h-[80px] resize-y`}
@@ -357,8 +362,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     {/* Date & Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className={labelStyles}>Data</label>
+                            <label className={labelStyles} htmlFor="appt-date">Data</label>
                             <input
+                                id="appt-date"
                                 type="date"
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
@@ -367,8 +373,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             />
                         </div>
                         <div>
-                            <label className={labelStyles}>Horário</label>
+                            <label className={labelStyles} htmlFor="appt-time">Horário</label>
                             <select
+                                id="appt-time"
                                 value={selectedTime}
                                 onChange={(e) => setSelectedTime(e.target.value)}
                                 className={inputStyles}
@@ -385,9 +392,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     {/* Price and Discount */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className={labelStyles}>Preço Final ({currencySymbol})</label>
+                            <label className={labelStyles} htmlFor="appt-final-price">Preço Final ({currencySymbol})</label>
                             <div className="relative">
                                 <input
+                                    id="appt-final-price"
                                     type="number"
                                     min="0"
                                     step="0.01"
@@ -404,9 +412,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             </p>
                         </div>
                         <div>
-                            <label className={labelStyles}>Desconto (%)</label>
+                            <label className={labelStyles} htmlFor="appt-discount">Desconto (%)</label>
                             <div className="relative">
                                 <input
+                                    id="appt-discount"
                                     type="number"
                                     min="0"
                                     max="100"

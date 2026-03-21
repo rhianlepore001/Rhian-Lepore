@@ -83,6 +83,7 @@ export const AIAssistantChat: React.FC = () => {
                                 onClick={clearMessages}
                                 className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
                                 title="Limpar conversa"
+                                aria-label="Limpar conversa"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -157,6 +158,8 @@ export const AIAssistantChat: React.FC = () => {
                                 onClick={handleSend}
                                 disabled={!input.trim() || loading}
                                 className={`${accentBg} text-black p-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
+                                aria-label="Enviar mensagem"
+                                title="Enviar"
                             >
                                 <Send className="w-4 h-4" />
                             </button>

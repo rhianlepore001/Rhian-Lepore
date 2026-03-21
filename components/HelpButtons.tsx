@@ -152,6 +152,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                 onClick={() => setIsOpen(true)}
                 className={`ml-2 p-1 rounded-full ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon hover:bg-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20'} transition-colors`}
                 title="Assistente IA"
+                aria-label="Abrir assistente IA"
             >
                 <Bot className="w-4 h-4" />
             </button>
@@ -165,7 +166,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                                 <Bot className={`w-5 h-5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                                 <h3 className="font-bold text-white">Assistente BarberOS</h3>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-white">
+                            <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-white" aria-label="Fechar assistente" title="Fechar">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>

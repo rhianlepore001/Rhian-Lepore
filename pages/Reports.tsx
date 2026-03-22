@@ -5,8 +5,6 @@ import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabase';
 import {
     Users,
-    UserPlus,
-    Calendar,
     TrendingUp,
     DollarSign,
     Target,
@@ -14,7 +12,9 @@ import {
     ShieldCheck,
     AlertCircle,
     ArrowUpRight,
-    Brain
+    Brain,
+    ChevronDown,
+    BarChart2
 } from 'lucide-react';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, BarChart, Bar } from 'recharts';
@@ -64,6 +64,7 @@ export const Reports: React.FC = () => {
     const { user, userType, region } = useAuth();
     const { isMobile } = useUI();
     const [loading, setLoading] = useState(true);
+    const [advancedMode, setAdvancedMode] = useState(false);
     const currentDate = new Date();
     const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
     const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -127,20 +128,36 @@ export const Reports: React.FC = () => {
                     <h1 className="text-3xl md:text-5xl font-heading text-white uppercase tracking-tighter">Insights do Negócio</h1>
                     <p className="text-text-secondary font-mono mt-2 text-sm md:text-base flex items-center gap-2">
                         <Brain className={`w-4 h-4 ${accentText}`} />
-                        Assistente de Negócios: analisando seus resultados
+                        Análise estratégica do seu negócio
                     </p>
                 </div>
 
-                <MonthYearSelector
-                    selectedMonth={selectedMonth}
-                    selectedYear={selectedYear}
-                    onChange={handleMonthChange}
-                    accentColor={accentColor}
-                />
+                <div className="flex items-center gap-4">
+                    {advancedMode && (
+                        <MonthYearSelector
+                            selectedMonth={selectedMonth}
+                            selectedYear={selectedYear}
+                            onChange={handleMonthChange}
+                            accentColor={accentColor}
+                        />
+                    )}
+                    <button
+                        onClick={() => setAdvancedMode(prev => !prev)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border font-mono text-xs uppercase tracking-widest transition-all ${
+                            advancedMode
+                                ? `border-${accentColor} ${accentText} bg-white/5`
+                                : 'border-white/10 text-text-secondary hover:text-white hover:border-white/30'
+                        }`}
+                    >
+                        <BarChart2 className="w-3.5 h-3.5" />
+                        {advancedMode ? 'Modo Avançado' : 'Ativar Modo Avançado'}
+                        <ChevronDown className={`w-3 h-3 transition-transform ${advancedMode ? 'rotate-180' : ''}`} />
+                    </button>
+                </div>
             </div>
 
-            {/* AIOS Growth Engine Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* AIOS Growth Engine Section — apenas no Modo Avançado */}
+            {advancedMode && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Profit Radar Card */}
                 <BrutalCard accent glow className="lg:col-span-2">
                     <div className="flex justify-between items-start mb-6">
@@ -214,9 +231,9 @@ export const Reports: React.FC = () => {
                             : 'Dica: Habilite o agendamento público para melhorar suas análises.'}
                     </p>
                 </BrutalCard>
-            </div>
+            </div>}
 
-            {/* Main Stats Grid */}
+            {/* Main Stats Grid — sempre visível */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <BrutalCard>
                     <div className="flex items-center gap-3 mb-3">
@@ -263,8 +280,8 @@ export const Reports: React.FC = () => {
                 </BrutalCard>
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Charts + Top Clients — apenas no Modo Avançado */}
+            {advancedMode && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <BrutalCard title="Evolução de Clientes (6 Meses)">
                     <div className="h-[300px] w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
@@ -308,10 +325,10 @@ export const Reports: React.FC = () => {
                         </div>
                     </div>
                 </BrutalCard>
-            </div>
+            </div>}
 
-            {/* Top Clients Table */}
-            <BrutalCard title="Clientes que Mais Visitaram">
+            {/* Top Clients Table — apenas no Modo Avançado */}
+            {advancedMode && <BrutalCard title="Clientes que Mais Visitaram">
                 <div className="overflow-x-auto -mx-4 md:mx-0">
                     <table className="w-full text-left">
                         <thead>
@@ -348,7 +365,7 @@ export const Reports: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-            </BrutalCard>
+            </BrutalCard>}
         </div>
     );
 };

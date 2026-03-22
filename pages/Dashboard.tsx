@@ -31,6 +31,7 @@ import { SmartNotificationsBanner } from '../components/SmartNotifications';
 import { ComandoDoDia } from '../components/dashboard/ComandoDoDia';
 import { SetupCopilot } from '../components/dashboard/SetupCopilot';
 import { SmartRebooking } from '../components/dashboard/SmartRebooking';
+import { InsightStrategico } from '../components/dashboard/InsightStrategico';
 
 export const Dashboard: React.FC = () => {
   const { userType, region, businessName, role, fullName } = useAuth();
@@ -105,6 +106,23 @@ export const Dashboard: React.FC = () => {
         currencyRegion={region === 'PT' ? 'PT' : 'BR'}
         onNavigate={navigate}
       />
+
+      {/* Insight Estratégico — visão geral de primeira olhada */}
+      {!loading && !isStaff && (
+        <InsightStrategico
+          currentMonthRevenue={currentMonthRevenue}
+          monthlyGoal={monthlyGoal}
+          appointmentsToday={appointments.filter(a => {
+            const aptDate = new Date(a.appointment_time).toDateString();
+            return aptDate === new Date().toDateString();
+          }).length}
+          repeatClientRate={financialDoctor.repeatClientRate}
+          topService={financialDoctor.topService}
+          weeklyGrowth={profitMetrics.weeklyGrowth}
+          isBeauty={isBeauty}
+          currencyRegion={currencyRegion}
+        />
+      )}
 
       <DashboardHero isBeauty={isBeauty} />
 

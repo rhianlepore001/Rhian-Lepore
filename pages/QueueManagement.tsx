@@ -20,6 +20,13 @@ export const QueueManagement: React.FC = () => {
     const [teamMembers, setTeamMembers] = useState<{ id: string, name: string, commission_rate?: number }[]>([]);
     const [selectedQrPro, setSelectedQrPro] = useState<string | null>(null);
 
+    // Manual Add Modal State
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [addClientName, setAddClientName] = useState('');
+    const [addClientPhone, setAddClientPhone] = useState('');
+    const [addServiceName, setAddServiceName] = useState('');
+    const [isAdding, setIsAdding] = useState(false);
+
     // Finish Modal State
     const [showFinishModal, setShowFinishModal] = useState(false);
     const [finishingEntry, setFinishingEntry] = useState<QueueEntry | null>(null);
@@ -92,6 +99,32 @@ export const QueueManagement: React.FC = () => {
             supabase.removeChannel(channel);
         }
     }, [user]);
+
+    const handleManualAdd = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user || !addClientName.trim()) return;
+        setIsAdding(true);
+        try {
+            const { error } = await supabase.from('queue_entries').insert({
+                business_id: user.id,
+                client_name: addClientName.trim(),
+                client_phone: addClientPhone.trim() || '0000000000',
+                status: 'waiting',
+                joined_at: new Date().toISOString(),
+            });
+            if (error) throw error;
+            setShowAddModal(false);
+            setAddClientName('');
+            setAddClientPhone('');
+            setAddServiceName('');
+            fetchQueue();
+        } catch (err: any) {
+            logger.error('Error adding to queue', err);
+            alert('Erro ao adicionar na fila: ' + err.message);
+        } finally {
+            setIsAdding(false);
+        }
+    };
 
     const updateStatus = async (id: string, newStatus: string) => {
         try {
@@ -325,13 +358,22 @@ export const QueueManagement: React.FC = () => {
                     </h1>
                     <p className="text-neutral-400 text-sm font-mono">Gerencie atendimentos em tempo real</p>
                 </div>
-                <BrutalButton onClick={() => setShowQrModal(true)} size="sm" className="hidden md:flex">
-                    <QrCode className="w-4 h-4 mr-2" />
-                    Gerar QR Code
-                </BrutalButton>
-                <button onClick={() => setShowQrModal(true)} className="md:hidden p-3 bg-neutral-800 rounded-xl text-white shadow-lg">
-                    <QrCode className="w-6 h-6" />
-                </button>
+                <div className="flex gap-2">
+                    <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" className="hidden md:flex">
+                        <User className="w-4 h-4 mr-2" />
+                        Adicionar
+                    </BrutalButton>
+                    <button onClick={() => setShowAddModal(true)} className="md:hidden p-3 bg-accent-gold rounded-xl text-black shadow-lg font-bold">
+                        <User className="w-5 h-5" />
+                    </button>
+                    <BrutalButton onClick={() => setShowQrModal(true)} size="sm" className="hidden md:flex">
+                        <QrCode className="w-4 h-4 mr-2" />
+                        Gerar QR Code
+                    </BrutalButton>
+                    <button onClick={() => setShowQrModal(true)} className="md:hidden p-3 bg-neutral-800 rounded-xl text-white shadow-lg">
+                        <QrCode className="w-6 h-6" />
+                    </button>
+                </div>
             </div>
 
             {/* Metrics */}
@@ -480,6 +522,57 @@ export const QueueManagement: React.FC = () => {
                     </div>
                 )
             }
+
+            {/* MANUAL ADD MODAL */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className={`bg-neutral-900 border ${isBeauty ? 'border-beauty-neon/30' : 'border-neutral-700'} rounded-3xl p-6 max-w-sm w-full relative shadow-2xl`}>
+                        <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
+                            <X className="w-5 h-5" />
+                        </button>
+                        <h3 className="text-xl font-bold text-white mb-6 font-heading uppercase flex items-center gap-2">
+                            <User className={`w-5 h-5 ${accentColor}`} />
+                            Adicionar na Fila
+                        </h3>
+                        <form onSubmit={handleManualAdd} className="space-y-4">
+                            <div>
+                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Nome do Cliente *</label>
+                                <input
+                                    type="text"
+                                    value={addClientName}
+                                    onChange={e => setAddClientName(e.target.value)}
+                                    required
+                                    placeholder="Nome completo"
+                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Telefone (opcional)</label>
+                                <input
+                                    type="text"
+                                    value={addClientPhone}
+                                    onChange={e => setAddClientPhone(e.target.value)}
+                                    placeholder="(00) 00000-0000"
+                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-mono"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Serviço (opcional)</label>
+                                <input
+                                    type="text"
+                                    value={addServiceName}
+                                    onChange={e => setAddServiceName(e.target.value)}
+                                    placeholder="Ex: Corte de cabelo"
+                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
+                                />
+                            </div>
+                            <BrutalButton type="submit" variant="primary" fullWidth loading={isAdding}>
+                                {isAdding ? 'Adicionando...' : 'Adicionar na Fila'}
+                            </BrutalButton>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* FINISH MODAL */}
             {

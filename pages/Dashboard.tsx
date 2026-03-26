@@ -11,6 +11,7 @@ import { InfoButton } from '../components/HelpButtons';
 import { DashboardHero } from '../components/dashboard/DashboardHero';
 import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
 import { SetupCopilot } from '../components/dashboard/SetupCopilot';
+import { BusinessHealthCard } from '../components/dashboard/BusinessHealthCard';
 
 // Lazy loading para modais pesados
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -40,9 +41,11 @@ export const Dashboard: React.FC = () => {
     updateGoal,
     profitMetrics,
     dataMaturity,
+    financialDoctor,
     actionItems,
     fetchAllAppointments
   } = useDashboardData();
+
 
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [showAllAppointments, setShowAllAppointments] = useState(false);
@@ -162,6 +165,13 @@ export const Dashboard: React.FC = () => {
               </BrutalCard>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Card de Saúde do Negócio — oculto automaticamente sem dados */}
+                <BusinessHealthCard
+                  data={financialDoctor}
+                  isBeauty={isBeauty}
+                  currencySymbol={currencySymbol}
+                />
+
                 <BrutalCard className="h-full brutal-card-enhanced gold-accent-border group" noPadding>
                   <div className="p-4 relative">
                     <div className="flex items-center justify-between mb-2">

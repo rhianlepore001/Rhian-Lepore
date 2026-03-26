@@ -1,5 +1,6 @@
 // components/onboarding/WizardEngine.tsx
 import React, { Suspense, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WizardOverlay } from '@/components/onboarding/WizardOverlay';
 import { WizardPointer } from '@/components/onboarding/WizardPointer';
 import { WizardProgress } from '@/components/onboarding/WizardProgress';
@@ -7,21 +8,12 @@ import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveOnboardingStep, completeOnboarding } from '@/lib/onboarding';
 
-// Lazy imports dos componentes de step
-const StepBusinessInfo = React.lazy(
-  () => import('@/components/onboarding/StepBusinessInfo').then((m) => ({ default: m.StepBusinessInfo }))
+// Fluxo simplificado: apenas boas-vindas + cadastro de serviço
+const StepWelcome = React.lazy(
+  () => import('@/components/onboarding/StepBusinessInfo').then((m) => ({ default: m.StepWelcome }))
 );
 const StepServices = React.lazy(
   () => import('@/components/onboarding/StepServices').then((m) => ({ default: m.StepServices }))
-);
-const StepTeam = React.lazy(
-  () => import('@/components/onboarding/StepTeam').then((m) => ({ default: m.StepTeam }))
-);
-const StepMonthlyGoal = React.lazy(
-  () => import('@/components/onboarding/StepMonthlyGoal').then((m) => ({ default: m.StepMonthlyGoal }))
-);
-const StepSuccess = React.lazy(
-  () => import('@/components/onboarding/StepSuccess').then((m) => ({ default: m.StepSuccess }))
 );
 
 interface WizardStepConfig {
@@ -36,47 +28,23 @@ interface WizardStepConfig {
 const WIZARD_STEPS: WizardStepConfig[] = [
   {
     step: 1,
-    title: 'Informações do Negócio',
-    icon: '🏢',
-    elementId: 'wizard-step-1',
+    title: 'Boas-vindas',
+    icon: '👋',
+    elementId: 'wizard-welcome-next',
     position: 'bottom',
-    message: 'Preencha os dados do seu negócio',
+    message: 'Vamos configurar seu primeiro serviço',
   },
   {
     step: 2,
     title: 'Seus Serviços',
     icon: '✂️',
-    elementId: 'wizard-step-2',
-    position: 'bottom',
+    elementId: 'wizard-add-service',
+    position: 'top',
     message: 'Cadastre os serviços que você oferece',
-  },
-  {
-    step: 3,
-    title: 'Sua Equipe',
-    icon: '👥',
-    elementId: 'wizard-step-3',
-    position: 'bottom',
-    message: 'Adicione os profissionais da sua equipe',
-  },
-  {
-    step: 4,
-    title: 'Meta Mensal',
-    icon: '🎯',
-    elementId: 'wizard-step-4',
-    position: 'bottom',
-    message: 'Defina sua meta de faturamento mensal',
-  },
-  {
-    step: 5,
-    title: 'Tudo Pronto!',
-    icon: '🎉',
-    elementId: 'wizard-step-5',
-    position: 'bottom',
-    message: 'Seu sistema está configurado',
   },
 ];
 
-const TOTAL_STEPS = WIZARD_STEPS.length;
+const TOTAL_STEPS = WIZARD_STEPS.length; // 2
 
 function StepLoadingFallback() {
   return (
@@ -89,6 +57,7 @@ function StepLoadingFallback() {
 export function WizardEngine() {
   const { state, dispatch } = useWizard();
   const { userType, companyId } = useAuth();
+  const navigate = useNavigate();
 
   const isBeauty = userType === 'beauty';
   const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -113,64 +82,31 @@ export function WizardEngine() {
       if (step === TOTAL_STEPS) {
         await completeOnboarding(companyId);
         dispatch({ type: 'COMPLETE_WIZARD' });
+        navigate('/', { replace: true });
       } else {
         await saveOnboardingStep(companyId, nextStep, newCompleted);
       }
     } catch (err) {
       console.error('[WizardEngine] Erro ao persistir progresso:', err);
     }
-  }, [companyId, completedSteps, dispatch]);
+  }, [companyId, completedSteps, dispatch, navigate]);
 
-  function renderCurrentStep() {
+  function renderCurrentStepContent() {
     switch (currentStep) {
       case 1:
         return (
-          <div id="wizard-step-1">
-            <StepBusinessInfo
-              onNext={() => void completeStep(1)}
-              accentColor={accentColor}
-            />
-          </div>
+          <StepWelcome
+            onNext={() => void completeStep(1)}
+            accentColor={accentColor}
+          />
         );
       case 2:
         return (
-          <div id="wizard-step-2">
-            <StepServices
-              onNext={() => void completeStep(2)}
-              onBack={() => goToStep(1)}
-              accentColor={accentColor}
-            />
-          </div>
-        );
-      case 3:
-        return (
-          <div id="wizard-step-3">
-            <StepTeam
-              onNext={() => void completeStep(3)}
-              onBack={() => goToStep(2)}
-              accentColor={accentColor}
-            />
-          </div>
-        );
-      case 4:
-        return (
-          <div id="wizard-step-4">
-            <StepMonthlyGoal
-              onNext={() => void completeStep(4)}
-              onBack={() => goToStep(3)}
-              onSkip={() => void completeStep(4)}
-              accentColor={accentColor}
-            />
-          </div>
-        );
-      case 5:
-        return (
-          <div id="wizard-step-5">
-            <StepSuccess
-              accentColor={accentColor}
-              onComplete={() => void completeStep(5)}
-            />
-          </div>
+          <StepServices
+            onNext={() => void completeStep(2)}
+            onBack={() => goToStep(1)}
+            accentColor={accentColor}
+          />
         );
       default:
         return null;
@@ -193,10 +129,14 @@ export function WizardEngine() {
           <h2 className="text-white text-xl font-bold mt-1">{currentStepConfig.title}</h2>
         </div>
 
-        {/* Step content */}
-        <div className="w-full max-w-lg">
+        {/* Step content — ID fora do Suspense para WizardPointer encontrar imediatamente */}
+        <div
+          key={currentStep}
+          id={`wizard-step-${currentStep}`}
+          className="w-full max-w-lg animate-slide-up"
+        >
           <Suspense fallback={<StepLoadingFallback />}>
-            {renderCurrentStep()}
+            {renderCurrentStepContent()}
           </Suspense>
         </div>
       </div>

@@ -55,11 +55,14 @@ export async function saveOnboardingStep(
 export async function completeOnboarding(companyId: string): Promise<void> {
   const { error } = await supabase
     .from('onboarding_progress')
-    .update({
-      is_completed: true,
-      completed_at: new Date().toISOString(),
-    })
-    .eq('company_id', companyId);
+    .upsert(
+      {
+        company_id: companyId,
+        is_completed: true,
+        completed_at: new Date().toISOString(),
+      },
+      { onConflict: 'company_id' }
+    );
 
   if (error) throw error;
 }

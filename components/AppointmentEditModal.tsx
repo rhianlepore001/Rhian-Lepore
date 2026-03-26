@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { BrutalButton } from './BrutalButton';
-import { formatDateForInput } from '../utils/date';
+import { formatDateForInput, combineDateAndTime } from '../utils/date';
+
 import { SearchableSelect } from './SearchableSelect';
 
 interface Appointment {
@@ -217,9 +218,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
             const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
-            const dateTime = new Date(selectedDate);
-            const [hours, minutes] = selectedTime.split(':');
-            dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            const dateTime = combineDateAndTime(selectedDate, selectedTime);
+
 
             const { error } = await supabase
                 .from('appointments')

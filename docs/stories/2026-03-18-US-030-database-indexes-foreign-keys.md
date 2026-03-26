@@ -1,7 +1,9 @@
 ---
 id: US-030
 título: Adicionar Índices em Colunas de Chave Estrangeira (FK)
-status: ready-for-review
+status: done
+completedAt: "2026-03-26"
+verdict: "DONE — todos os 5 indexes confirmados no banco via MCP Supabase"
 estimativa: 1.5h
 prioridade: high
 agente: dev

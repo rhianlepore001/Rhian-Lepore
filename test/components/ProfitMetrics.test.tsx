@@ -45,7 +45,7 @@ describe('ProfitMetrics Component', () => {
         );
 
         // Verifica labels principais (conforme refatorado)
-        expect(screen.getByText('Receita do Mês')).toBeInTheDocument();
+        expect(screen.getByText('Receita Realizada')).toBeInTheDocument();
         expect(screen.getByText('Recuperado')).toBeInTheDocument();
         expect(screen.getByText('Economia')).toBeInTheDocument();
         expect(screen.getByText('Vagas')).toBeInTheDocument();

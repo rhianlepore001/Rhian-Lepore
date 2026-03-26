@@ -6,7 +6,7 @@ import { BrutalButton } from '../BrutalButton';
 
 interface StepSuccessProps {
     accentColor: string;
-    onComplete?: () => void;
+    onComplete?: () => Promise<void> | void;
 }
 
 export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplete }) => {
@@ -19,7 +19,7 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
 
     const handleFinish = async (path: string) => {
         await markTutorialCompleted();
-        onComplete?.();
+        await onComplete?.();
         navigate(path);
     };
 

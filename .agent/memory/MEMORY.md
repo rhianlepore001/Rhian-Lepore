@@ -1,9 +1,9 @@
 # MEMORY.md (Project Heartbeat)
 
 ## 🚀 ESTADO ATUAL (HANDOFF)
-- **Contexto**: Finalizada a migração da arquitetura de embeddings para OpenRouter (US-026/US-027). Sprint 2 em andamento com foco em Performance e Higiene Técnica.
-- **Última Tarefa**: Padronização da memória do projeto para um único arquivo `MEMORY.md`.
-- **Próximo Passo**: Aplicar migrações de índices de banco de dados (`US-030`) e validar performance.
+- **Contexto**: Refatoração da página de Insights concluída (US-004) e Deploy em Produção realizado com sucesso.
+- **Última Tarefa**: Implantação na Vercel com migrações de índices de banco de dados (US-030) aplicadas.
+- **Próximo Passo**: Monitorar logs de performance em produção e coletar feedback do usuário final.
 
 ## 🧠 PADRÕES DE OURO (ACTIVE RULES)
 1. **Memória de Estado**: Toda sessão deve ser encerrada com o update desta seção `ESTADO ATUAL`.
@@ -18,6 +18,8 @@
 - Lentidão de 20-30% em dashboards por falta de indexes em FKs.
 
 ## 📜 HISTÓRICO RECENTE
+- **2026-03-26**: Deploy em Produção concluído (Vercel). Migrações US-030 (índices de performance) validadas e aplicadas. URL: https://www.promptdeelite.com
+- **2026-03-23**: Refatoração da página de Insights (US-004) concluída. Adicionado Empty State inteligente em `Reports.tsx` e lógica de visualização atualizada.
 - **2026-03-20**: Limpeza completa da suite antiga de testes e preparação para nova análise End-to-End (TestSprite) abrangendo todas as features (Agendamento Online, QR Code, CRM, etc).
 - **2026-03-20**: Ajuste nos seletores do TestSprite (Gateway) utilizando data-testids e atualização do `standard_prd.json` preservando o branding original.
 - **2026-03-18**: Início da Sprint 2; implementação de 5 índices críticos (US-030).

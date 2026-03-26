@@ -20,7 +20,7 @@ const POINTER_SVGS: Record<PointerTarget['position'], React.ReactElement> = {
   bottom: (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path
-        d="M16 4 L16 24 M16 24 L8 16 M16 24 L24 16"
+        d="M16 28 L16 8 M16 8 L8 16 M16 8 L24 16"
         stroke="#F59E0B"
         strokeWidth="3"
         strokeLinecap="round"
@@ -31,7 +31,7 @@ const POINTER_SVGS: Record<PointerTarget['position'], React.ReactElement> = {
   top: (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path
-        d="M16 28 L16 8 M16 8 L8 16 M16 8 L24 16"
+        d="M16 4 L16 24 M16 24 L8 16 M16 24 L24 16"
         stroke="#F59E0B"
         strokeWidth="3"
         strokeLinecap="round"
@@ -42,7 +42,7 @@ const POINTER_SVGS: Record<PointerTarget['position'], React.ReactElement> = {
   right: (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path
-        d="M4 16 L24 16 M24 16 L16 8 M24 16 L16 24"
+        d="M28 16 L8 16 M8 16 L16 8 M8 16 L16 24"
         stroke="#F59E0B"
         strokeWidth="3"
         strokeLinecap="round"
@@ -53,7 +53,7 @@ const POINTER_SVGS: Record<PointerTarget['position'], React.ReactElement> = {
   left: (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path
-        d="M28 16 L8 16 M8 16 L16 8 M8 16 L16 24"
+        d="M4 16 L24 16 M24 16 L16 8 M24 16 L16 24"
         stroke="#F59E0B"
         strokeWidth="3"
         strokeLinecap="round"
@@ -72,33 +72,22 @@ export function WizardPointer({ target }: WizardPointerProps) {
     const POINTER_SIZE = 32;
     const GAP = 12;
 
-    function calculate() {
+    function calculate(): boolean {
       const isMobileViewport = window.innerWidth < 768;
       setIsMobile(isMobileViewport);
 
       const el = document.getElementById(target.elementId);
       if (!el) {
-        console.warn(`[WizardPointer] Elemento não encontrado: #${target.elementId}`);
-        // Graceful degradation: centralizar na viewport
-        setCoords({
-          top: window.innerHeight / 2,
-          left: window.innerWidth / 2,
-        });
+        setCoords({ top: window.innerHeight / 2, left: window.innerWidth / 2 });
         setRect(null);
-        return;
+        return false;
       }
 
       const elRect = el.getBoundingClientRect();
-
-      // Verificar se o rect é válido (elemento visível)
       if (elRect.width === 0 && elRect.height === 0) {
-        console.warn(`[WizardPointer] Elemento oculto ou sem dimensões: #${target.elementId}`);
-        setCoords({
-          top: window.innerHeight / 2,
-          left: window.innerWidth / 2,
-        });
+        setCoords({ top: window.innerHeight / 2, left: window.innerWidth / 2 });
         setRect(null);
-        return;
+        return false;
       }
 
       setRect(elRect);
@@ -123,15 +112,13 @@ export function WizardPointer({ target }: WizardPointerProps) {
       };
 
       setCoords(positionMap[target.position]);
+      return true;
     }
 
-    // Calcular imediatamente
-    calculate();
+    function applySpotlight() {
+      const el = document.getElementById(target.elementId);
+      if (!el) return;
 
-    // Aplicar spotlight no elemento alvo
-    const el = document.getElementById(target.elementId);
-    if (el) {
-      // Remover spotlight anterior (outros elementos)
       const previous = document.querySelector('[data-wizard-spotlight]');
       if (previous && previous !== el) {
         previous.removeAttribute('data-wizard-spotlight');
@@ -142,7 +129,6 @@ export function WizardPointer({ target }: WizardPointerProps) {
         (previous as HTMLElement).style.transition = '';
       }
 
-      // Aplicar spotlight no elemento atual
       el.setAttribute('data-wizard-spotlight', 'true');
       el.style.position = 'relative';
       el.style.zIndex = '9998';
@@ -152,13 +138,32 @@ export function WizardPointer({ target }: WizardPointerProps) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // Recalcular no resize (ex: rotação de tela no mobile)
+    // Tentar imediatamente
+    const found = calculate();
+    if (found) {
+      applySpotlight();
+    }
+
+    // Se o elemento ainda não existe (Suspense carregando), observar o DOM
+    let observer: MutationObserver | null = null;
+    if (!found) {
+      observer = new MutationObserver(() => {
+        const success = calculate();
+        if (success) {
+          applySpotlight();
+          observer?.disconnect();
+          observer = null;
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+
     window.addEventListener('resize', calculate);
 
     return () => {
       window.removeEventListener('resize', calculate);
+      observer?.disconnect();
 
-      // Cleanup do spotlight ao trocar de step
       const spotlightEl = document.getElementById(target.elementId);
       if (spotlightEl) {
         spotlightEl.removeAttribute('data-wizard-spotlight');
@@ -173,7 +178,6 @@ export function WizardPointer({ target }: WizardPointerProps) {
 
   const isVertical = target.position === 'top' || target.position === 'bottom';
 
-  // Mobile: pulsing circle no centro do elemento
   if (isMobile && rect) {
     return (
       <div
@@ -188,7 +192,6 @@ export function WizardPointer({ target }: WizardPointerProps) {
     );
   }
 
-  // Desktop: SVG arrow direcional com bounce
   return (
     <div
       className={`fixed z-[9999] flex flex-col items-center gap-1 pointer-events-none ${

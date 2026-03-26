@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, User, Loader2, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,6 +37,14 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo_url || null);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Bloqueia Scroll do Body e evita background scrolling atrás do modal
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, []);
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -128,8 +137,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
     const isBeauty = accentColor === 'beauty-neon';
 
-    return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
+    return createPortal(
+        <div className={`fixed inset-0 z-[10000] flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
             <div className={`w-full max-w-md overflow-hidden transition-all shadow-2xl
                 ${isBeauty
                     ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
@@ -319,6 +328,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     </BrutalButton>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

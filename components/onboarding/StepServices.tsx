@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Package } from 'lucide-react';
+import { Plus, Package } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { ServiceModal } from '../ServiceModal';
@@ -16,8 +16,6 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-
     const currencySymbol = region === 'BR' ? 'R$' : '€';
 
     useEffect(() => {
@@ -46,20 +44,8 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
         setLoading(false);
     };
 
-    const handleContinue = async () => {
-        if (!user) return;
-        setSubmitting(true);
-        try {
-            await supabase.rpc('update_onboarding_step', {
-                p_user_id: user.id,
-                p_step: 3
-            });
-            onNext();
-        } catch (error) {
-            console.error('Error updating step:', error);
-        } finally {
-            setSubmitting(false);
-        }
+    const handleContinue = () => {
+        onNext();
     };
 
     return (
@@ -77,6 +63,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                         <p className="text-neutral-500 mb-4">Nenhum serviço cadastrado</p>
                         <button
                             onClick={() => setIsModalOpen(true)}
+                            id="wizard-add-service"
                             className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors'}
                         >
                             Adicionar Serviço
@@ -94,6 +81,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                         ))}
                         <button
                             onClick={() => setIsModalOpen(true)}
+                            id="wizard-add-service"
                             className={accentColor === 'beauty-neon' ? 'w-full py-3 border border-beauty-neon text-beauty-neon font-bold rounded-lg hover:bg-beauty-neon/10 transition-colors flex items-center justify-center gap-2' : 'w-full py-3 border border-accent-gold text-accent-gold font-bold rounded-lg hover:bg-accent-gold/10 transition-colors flex items-center justify-center gap-2'}
                         >
                             <Plus className="w-4 h-4" />
@@ -112,10 +100,10 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                 </button>
                 <button
                     onClick={handleContinue}
-                    disabled={submitting || services.length === 0}
+                    disabled={services.length === 0}
                     className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
                 >
-                    {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
+                    Continuar
                 </button>
             </div>
 

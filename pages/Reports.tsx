@@ -112,6 +112,8 @@ export const Reports: React.FC = () => {
         setSelectedYear(year);
     };
 
+    const hasSufficientData = stats && (stats.appointments_total > 5 || stats.total_profit > 0 || clientInsights.top_clients.length > 0);
+
     if (loading && !stats) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
@@ -140,216 +142,210 @@ export const Reports: React.FC = () => {
                 />
             </div>
 
-            {/* AIOS Growth Engine Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Profit Radar Card */}
-                <BrutalCard accent glow className="lg:col-span-2">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <Zap className="w-5 h-5 text-yellow-400" />
-                                <span className="text-white font-heading uppercase tracking-wider">Resultados da IA</span>
-                            </div>
-                            <p className="text-neutral-400 text-sm">Receita recuperada e agendamentos criados automaticamente</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-heading text-white">
-                                {formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}
-                            </p>
-                            <p className="text-xs text-green-400 flex items-center justify-end gap-1">
-                                <ArrowUpRight className="w-3 h-3" /> Receita recuperada
-                            </p>
-                        </div>
+            {!hasSufficientData ? (
+                <div className="flex flex-col items-center justify-center my-16 text-center px-4 fade-in">
+                    <div className={`w-24 h-24 rounded-full ${accentBg} flex items-center justify-center mb-6`}>
+                        <TrendingUp className={`w-12 h-12 ${accentText}`} />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                            <p className="text-xs text-neutral-500 uppercase mb-1">Receita Recuperada</p>
-                            <p className={`text-xl font-heading ${accentText}`}>{formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}</p>
-                        </div>
-                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                            <p className="text-xs text-neutral-500 uppercase mb-1">Agendamentos pela IA</p>
-                            <p className="text-xl font-heading text-white">{stats?.filled_slots || 0}</p>
-                        </div>
-                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                            <p className="text-xs text-neutral-500 uppercase mb-1">Campanhas Enviadas</p>
-                            <p className="text-xl font-heading text-white">{stats?.campaigns_sent || 0}</p>
-                        </div>
-                    </div>
-                </BrutalCard>
-
-                {/* Data Maturity Score */}
-                <BrutalCard className="flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <ShieldCheck className={`w-5 h-5 ${accentText}`} />
-                            <span className="text-white font-heading uppercase tracking-wider">Dados Configurados</span>
-                        </div>
-                        <p className="text-neutral-400 text-sm">Quanto seu sistema está pronto para gerar análises</p>
-                    </div>
-
-                    <div className="my-6 flex flex-col items-center">
-                        <div className="relative w-32 h-32 flex items-center justify-center">
-                            <svg className="w-full h-full transform -rotate-90">
-                                <circle
-                                    cx="64" cy="64" r="58"
-                                    stroke="currentColor" strokeWidth="8"
-                                    fill="transparent" className="text-white/5"
-                                />
-                                <circle
-                                    cx="64" cy="64" r="58"
-                                    stroke="currentColor" strokeWidth="8"
-                                    fill="transparent"
-                                    strokeDasharray={364}
-                                    strokeDashoffset={364 - (364 * (stats?.data_maturity_score || 0)) / 100}
-                                    className={`${accentText} transition-all duration-1000 ease-out`}
-                                />
-                            </svg>
-                            <span className="absolute text-3xl font-heading text-white">{stats?.data_maturity_score}%</span>
-                        </div>
-                    </div>
-
-                    <p className="text-xs text-center text-neutral-500">
-                        {stats?.data_maturity_score && stats.data_maturity_score > 80
-                            ? 'Excelente! Seus dados estão completos e prontos para análise.'
-                            : 'Dica: Habilite o agendamento público para melhorar suas análises.'}
+                    <h2 className="text-3xl font-heading text-white uppercase mb-4">Coletando Dados...</h2>
+                    <p className="text-neutral-400 max-w-xl mx-auto leading-relaxed">
+                        Nossa IA está acompanhando seus agendamentos diários. Para que o Assistente de Negócios gere relatórios precisos sobre clientes fiéis, serviços campeões e receitas recuperadas, precisamos de mais histórico do seu negócio.
                     </p>
-                </BrutalCard>
-            </div>
+                    <p className="text-neutral-500 text-sm mt-4">
+                        Continue controlando sua agenda por aqui e logo seus insights estarão disponíveis.
+                    </p>
+                    <div className="mt-8 p-6 bg-white/5 rounded-xl border border-white/10 max-w-md w-full text-left">
+                        <p className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                            <Brain className={`w-4 h-4 ${accentText}`} /> O que você verá aqui em breve:
+                        </p>
+                        <ul className="text-sm text-neutral-400 space-y-3">
+                            <li className="flex gap-2"><DollarSign className="w-4 h-4 text-neutral-500" /> Faturamento médio real por atendimento</li>
+                            <li className="flex gap-2"><AlertCircle className="w-4 h-4 text-neutral-500" /> Alertas de clientes prestes a sumir</li>
+                            <li className="flex gap-2"><Zap className="w-4 h-4 text-neutral-500" /> Receita salva pelas campanhas automáticas</li>
+                            <li className="flex gap-2"><Target className="w-4 h-4 text-neutral-500" /> Quais serviços atraem os clientes mais fiéis</li>
+                        </ul>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-8 fade-in">
+                    {/* Visão Geral Rápida */}
+                    <div>
+                        <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider">Visão Geral</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                            <BrutalCard>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className={`p-2 rounded-xl ${accentBg}`}>
+                                        <DollarSign className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Média por atendimento</span>
+                                </div>
+                                <h3 className="text-3xl font-heading text-white">{formatCurrency(stats?.avg_ticket || 0, currencyRegion)}</h3>
+                                <p className="text-xs text-neutral-500 mt-2">Últimos 90 dias</p>
+                            </BrutalCard>
 
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                <BrutalCard>
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className={`p-2 rounded-xl ${accentBg}`}>
-                            <DollarSign className="w-5 h-5" />
+                            <BrutalCard>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 rounded-xl bg-green-500/10 text-green-400">
+                                        <TrendingUp className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Crescimento</span>
+                                </div>
+                                <h3 className="text-3xl font-heading text-white">{stats?.weekly_growth || 0}%</h3>
+                                <p className="text-xs text-neutral-500 mt-2">Vs. semana anterior</p>
+                            </BrutalCard>
+
+                            <BrutalCard>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                                        <Target className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Recorrência</span>
+                                </div>
+                                <h3 className="text-3xl font-heading text-white">{stats?.repeat_client_rate || 0}%</h3>
+                                <p className="text-xs text-neutral-500 mt-2">Clientes que voltaram</p>
+                            </BrutalCard>
+
+                            <BrutalCard>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
+                                        <AlertCircle className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Clientes em Risco</span>
+                                </div>
+                                <h3 className="text-3xl font-heading text-white">{stats?.churn_risk_count || 0}</h3>
+                                <p className="text-xs text-neutral-500 mt-2">Há mais de 45 dias sem vir</p>
+                            </BrutalCard>
                         </div>
-                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Média por atendimento</span>
                     </div>
-                    <h3 className="text-3xl font-heading text-white">{formatCurrency(stats?.avg_ticket || 0, currencyRegion)}</h3>
-                    <p className="text-xs text-neutral-500 mt-2">Últimos 90 dias</p>
-                </BrutalCard>
 
-                <BrutalCard>
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
-                            <AlertCircle className="w-5 h-5" />
-                        </div>
-                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Clientes que não voltaram</span>
-                    </div>
-                    <h3 className="text-3xl font-heading text-white">{stats?.churn_risk_count || 0}</h3>
-                    <p className="text-xs text-neutral-500 mt-2">Clientes há 45+ dias sem vir</p>
-                </BrutalCard>
-
-                <BrutalCard>
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
-                            <Target className="w-5 h-5" />
-                        </div>
-                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Recorrência</span>
-                    </div>
-                    <h3 className="text-3xl font-heading text-white">{stats?.repeat_client_rate || 0}%</h3>
-                    <p className="text-xs text-neutral-500 mt-2">Clientes fiéis (2+ visitas)</p>
-                </BrutalCard>
-
-                <BrutalCard>
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 rounded-xl bg-green-500/10 text-green-400">
-                            <TrendingUp className="w-5 h-5" />
-                        </div>
-                        <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Crescimento</span>
-                    </div>
-                    <h3 className="text-3xl font-heading text-white">{stats?.weekly_growth || 0}%</h3>
-                    <p className="text-xs text-neutral-500 mt-2">Vs. semana anterior</p>
-                </BrutalCard>
-            </div>
-
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <BrutalCard title="Evolução de Clientes (6 Meses)">
-                    <div className="h-[300px] w-full mt-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={clientInsights.client_growth_by_month}>
-                                <defs>
-                                    <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                                <XAxis dataKey="month" stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #222', borderRadius: '12px' }}
-                                    itemStyle={{ color: '#fff' }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="new_clients"
-                                    stroke={isBeauty ? '#A78BFA' : '#EAB308'}
-                                    fillOpacity={1}
-                                    fill="url(#colorGrowth)"
-                                    strokeWidth={3}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </BrutalCard>
-
-                <BrutalCard title="Serviço Campeão">
-                    <div className="flex items-center justify-center h-[300px]">
-                        <div className="text-center">
-                            <p className="text-neutral-500 uppercase font-mono text-xs tracking-widest mb-2">Serviço mais vendido</p>
-                            <h2 className={`text-4xl md:text-5xl font-heading ${accentText} uppercase`}>{stats?.top_service || 'N/A'}</h2>
-                            <div className="mt-6 flex justify-center gap-4">
-                                <div className="px-4 py-2 bg-white/5 rounded-full border border-white/10 text-xs text-neutral-400">
-                                    Mais popular do período
+                    {/* Impacto da Inteligência Artificial */}
+                    <div>
+                        <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider flex items-center gap-2">
+                            <Zap className="w-5 h-5 text-yellow-400" /> Impacto do Assistente Virtual
+                        </h2>
+                        <BrutalCard accent glow className="w-full">
+                            <div className="flex flex-col md:flex-row justify-between md:items-start mb-6 gap-4">
+                                <div>
+                                    <p className="text-neutral-400 text-sm">Receita recuperada e ações realizadas via campanhas e reagendamentos no WhatsApp</p>
+                                </div>
+                                <div className="text-left md:text-right">
+                                    <p className="text-3xl md:text-4xl font-heading text-white">
+                                        {formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}
+                                    </p>
+                                    <p className="text-sm font-bold text-green-400 flex items-center md:justify-end gap-1 mt-1">
+                                        <ArrowUpRight className="w-4 h-4" /> Total de Receita Salva
+                                    </p>
                                 </div>
                             </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 mt-6 pt-6 border-t border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                        <Calendar className={`w-5 h-5 ${accentText}`} />
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-heading text-white">{stats?.filled_slots || 0}</p>
+                                        <p className="text-xs text-neutral-500 uppercase font-mono">Agendamentos pela IA</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4 border-t sm:border-t-0 sm:border-l border-white/5 pt-4 sm:pt-0 sm:pl-4">
+                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                        <Users className="w-5 h-5 text-blue-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-2xl font-heading text-white">{stats?.campaigns_sent || 0}</p>
+                                        <p className="text-xs text-neutral-500 uppercase font-mono">Mensagens Enviadas</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </BrutalCard>
+                    </div>
+
+                    {/* Evolução e Performance */}
+                    <div>
+                        <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider">Performance e Crescimento</h2>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <BrutalCard title="Evolução de Clientes (6 Meses)" className="lg:col-span-2">
+                                <div className="h-[250px] w-full mt-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={clientInsights.client_growth_by_month}>
+                                            <defs>
+                                                <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
+                                            <XAxis dataKey="month" stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #222', borderRadius: '12px' }}
+                                                itemStyle={{ color: '#fff' }}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="new_clients"
+                                                stroke={isBeauty ? '#A78BFA' : '#EAB308'}
+                                                fillOpacity={1}
+                                                fill="url(#colorGrowth)"
+                                                strokeWidth={3}
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </BrutalCard>
+
+                            <BrutalCard title="Serviço Campeão" className="flex flex-col justify-center items-center text-center">
+                                <div className={`w-16 h-16 rounded-full ${accentBg} flex items-center justify-center mb-4`}>
+                                    <TrendingUp className={`w-8 h-8 ${accentText}`} />
+                                </div>
+                                <h2 className={`text-3xl md:text-4xl font-heading ${accentText} uppercase mb-2`}>{stats?.top_service || 'N/A'}</h2>
+                                <p className="text-neutral-500 text-sm">Serviço mais vendido do período recente</p>
+                            </BrutalCard>
                         </div>
                     </div>
-                </BrutalCard>
-            </div>
 
-            {/* Top Clients Table */}
-            <BrutalCard title="Clientes que Mais Visitaram">
-                <div className="overflow-x-auto -mx-4 md:mx-0">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-white/5">
-                                <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase">Cliente</th>
-                                <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase text-center">Visitas</th>
-                                <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase text-right">Total Gasto</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {clientInsights.top_clients.length === 0 ? (
-                                <tr>
-                                    <td colSpan={3} className="px-4 py-8 text-center text-neutral-600">Nenhum dado disponível para este período.</td>
-                                </tr>
-                            ) : (
-                                clientInsights.top_clients.map((client, idx) => (
-                                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
-                                        <td className="px-4 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${accentBg}`}>
-                                                    {client.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className="text-white font-bold group-hover:text-white">{client.name}</p>
-                                                    <p className="text-xs text-neutral-500">Última em {client.last_visit}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-4 text-center font-mono text-white">{client.visits}</td>
-                                        <td className={`px-4 py-4 text-right font-bold ${accentText}`}>{formatCurrency(client.revenue, currencyRegion)}</td>
+                    {/* Top Clients Table */}
+                    <BrutalCard title="Nossos Melhores Clientes">
+                        <div className="overflow-x-auto -mx-4 md:mx-0">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-white/5">
+                                        <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase">Cliente</th>
+                                        <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase text-center">Visitas</th>
+                                        <th className="px-4 py-4 text-xs font-mono text-neutral-500 uppercase text-right">Total Gasto</th>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {clientInsights.top_clients.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={3} className="px-4 py-8 text-center text-neutral-600">Ainda gerando histórico...</td>
+                                        </tr>
+                                    ) : (
+                                        clientInsights.top_clients.map((client, idx) => (
+                                            <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${accentBg}`}>
+                                                            {client.name.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-white font-bold group-hover:text-white transition-colors">{client.name}</p>
+                                                            <p className="text-xs text-neutral-500 mt-0.5">Última em {client.last_visit}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-4 text-center font-mono text-white text-lg">{client.visits}</td>
+                                                <td className={`px-4 py-4 text-right font-bold text-lg ${accentText}`}>{formatCurrency(client.revenue, currencyRegion)}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </BrutalCard>
                 </div>
-            </BrutalCard>
+            )}
         </div>
     );
 };

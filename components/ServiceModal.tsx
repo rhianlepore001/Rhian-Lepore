@@ -241,8 +241,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
     const backdropStyles = isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85';
 
-    const modalContent = (
-        <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-[100] p-4 backdrop-blur-sm`}>
+    return createPortal(
+        <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-[10000] p-4 backdrop-blur-sm`}>
             <div className="absolute inset-0" onClick={onClose} />
             <FocusTrap active={true}>
                 <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300 shadow-2xl z-10 modal-enter`}
@@ -404,8 +404,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 </form>
                 </div>
             </FocusTrap>
-        </div>
+        </div>,
+        document.body
     );
-
-    return createPortal(modalContent, document.body);
 };

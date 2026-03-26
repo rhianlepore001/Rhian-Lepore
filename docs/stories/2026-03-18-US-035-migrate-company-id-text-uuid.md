@@ -1,12 +1,14 @@
 ---
 id: US-035
 título: Migrate company_id from TEXT to UUID (Type Safety)
-status: draft
+status: wont-do
 estimativa: 4h
-prioridade: high
+prioridade: descoped
+closedAt: "2026-03-26"
+verdict: "DESCOPED — get_auth_company_id() retorna TEXT e faz COALESCE(company_id, id). Mudar company_id para UUID quebra a função e 5 RLS policies em cascata. Risco > benefício. profiles.id também é TEXT por design (auth.uid()::text). Requeriria refatoração completa do sistema de auth — fora do escopo do Sprint 2."
 agente: dev
 assignee: "@dev"
-blockedBy: ["US-030"]
+blockedBy: []
 epic: EPIC-003
 fase: "Sprint 2 — P1 High Priority Fixes"
 ---

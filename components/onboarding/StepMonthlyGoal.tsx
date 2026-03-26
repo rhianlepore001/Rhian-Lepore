@@ -37,11 +37,6 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                     }, { onConflict: 'user_id,month' });
             }
 
-            await supabase.rpc('update_onboarding_step', {
-                p_user_id: user.id,
-                p_step: 5,
-                p_completed: true
-            });
             onNext();
         } catch (error) {
             console.error('Error saving goal:', error);
@@ -50,21 +45,8 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
         }
     };
 
-    const handleSkip = async () => {
-        if (!user) return;
-        setSubmitting(true);
-        try {
-            await supabase.rpc('update_onboarding_step', {
-                p_user_id: user.id,
-                p_step: 5,
-                p_completed: true
-            });
-            onSkip();
-        } catch (error) {
-            console.error('Error skipping step:', error);
-        } finally {
-            setSubmitting(false);
-        }
+    const handleSkip = () => {
+        onSkip();
     };
 
     return (
@@ -91,6 +73,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                         value={goal}
                         onChange={e => setGoal(e.target.value)}
                         placeholder="0,00"
+                        id="wizard-monthly-goal"
                         className={`w-full p-4 pl-14 bg-neutral-800 border border-neutral-700 text-white focus:outline-none text-2xl font-bold font-mono transition-all
                             ${isBeauty ? 'rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]' : 'rounded-lg focus:border-accent-gold'}`}
                         autoFocus

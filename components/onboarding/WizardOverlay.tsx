@@ -13,7 +13,7 @@ export function WizardOverlay({ isActive, children }: WizardOverlayProps) {
   return (
     <FocusTrap
       focusTrapOptions={{
-        allowOutsideClick: false,
+        allowOutsideClick: true,
         escapeDeactivates: false,
         fallbackFocus: '[data-wizard-panel]',
       }}

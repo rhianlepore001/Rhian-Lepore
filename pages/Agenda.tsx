@@ -13,6 +13,8 @@ import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
+import { combineDateAndTime } from '../utils/date';
+
 
 interface Appointment {
     id: string;
@@ -899,10 +901,10 @@ export const Agenda: React.FC = () => {
 
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
-            const dateTime = new Date(selectedAppointmentDate);
             const timeToUse = selectedTime === 'custom' ? customTime : selectedTime;
-            const [hours, minutes] = timeToUse.split(':');
-            dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            const dateTime = combineDateAndTime(selectedAppointmentDate, timeToUse);
+
 
             const { error } = await supabase
                 .from('appointments')

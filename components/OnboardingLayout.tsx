@@ -29,7 +29,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
     }, [currentStep]);
 
     return (
-        <div className={isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col overflow-hidden' : 'min-h-screen bg-brutal-main flex flex-col overflow-hidden'}>
+        <div className={isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col' : 'min-h-screen bg-brutal-main flex flex-col'}>
             {/* Header */}
             <header className="border-b border-neutral-800 bg-neutral-900/50 backdrop-blur-sm z-50 flex-shrink-0">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">

@@ -4,8 +4,11 @@ import { Layout } from './components/Layout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
+import { GuidedModeProvider } from './contexts/GuidedModeContext';
+import { StandaloneWizardPointer } from './components/onboarding/StandaloneWizardPointer';
 import { DynamicBranding } from './components/DynamicBranding';
 import { AIAssistantChat } from './components/AIAssistantChat';
+import { ActivationBanner } from './components/onboarding/ActivationBanner';
 
 
 // Lazy Load Pages
@@ -29,6 +32,7 @@ const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(m
 const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySettings').then(module => ({ default: module.SecuritySettings })));
 const SystemLogs = React.lazy(() => import('./pages/settings/SystemLogs').then(module => ({ default: module.SystemLogs })));
 const OnboardingWizard = React.lazy(() => import('./pages/OnboardingWizard').then(module => ({ default: module.OnboardingWizard })));
+const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 const Reports = React.lazy(() => import('./pages/Reports').then(module => ({ default: module.Reports })));
 const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortfolio').then(module => ({ default: module.ProfessionalPortfolio })));
 const QueueJoin = React.lazy(() => import('./pages/QueueJoin').then(module => ({ default: module.QueueJoin })));
@@ -125,9 +129,16 @@ const AppRoutes: React.FC = () => {
         <Route path="/queue-status/:id" element={<QueueStatus />} />
         <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
         <Route path="/minha-area/:slug" element={<ClientArea />} />
-        <Route path="/onboarding" element={
+        <Route path="/onboarding-wizard" element={
           <RequireAuth>
             <OnboardingWizard />
+          </RequireAuth>
+        } />
+        <Route path="/onboarding" element={
+          <RequireAuth>
+            <Suspense fallback={<LoadingFull />}>
+              <Onboarding />
+            </Suspense>
           </RequireAuth>
         } />
 
@@ -165,13 +176,26 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  React.useEffect(() => {
+    // Detectar hardware limitado e desativar animações infinitas
+    const isLowEndDevice = navigator.hardwareConcurrency <= 4;
+    // Aplicar classe no root para override de animações
+    if (isLowEndDevice) {
+      document.documentElement.classList.add('low-end-device');
+    }
+  }, []);
+
   return (
     <HashRouter>
       <AuthProvider>
         <DynamicBranding />
         <PublicClientProvider>
           <AlertsProvider>
-            <AppRoutes />
+            <GuidedModeProvider>
+              <AppRoutes />
+              <StandaloneWizardPointer />
+              <ActivationBanner />
+            </GuidedModeProvider>
           </AlertsProvider>
         </PublicClientProvider>
       </AuthProvider>

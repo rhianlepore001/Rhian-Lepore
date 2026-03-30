@@ -1,20 +1,17 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Clock, AlertTriangle, ArrowRight, Target } from 'lucide-react';
+import { Clock, AlertTriangle, Target } from 'lucide-react';
 import { ProfitMetrics } from '../components/dashboard/ProfitMetrics';
 import { ActionCenter } from '../components/dashboard/ActionCenter';
-import { AIOSDiagnosticCard } from '../components/dashboard/AIOSDiagnosticCard';
-import { AIOSCampaignStats } from '../components/dashboard/AIOSCampaignStats';
-import { DataMaturityBadge } from '../components/dashboard/DataMaturityBadge';
-import { FinancialDoctorPanel } from '../components/dashboard/FinancialDoctorPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
-import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
-import { GoalHistory } from '../components/GoalHistory';
+import { InfoButton } from '../components/HelpButtons';
 import { DashboardHero } from '../components/dashboard/DashboardHero';
 import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
+import { SetupCopilot } from '../components/dashboard/SetupCopilot';
+import { BusinessHealthCard } from '../components/dashboard/BusinessHealthCard';
 
 // Lazy loading para modais pesados
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -23,20 +20,15 @@ const MonthlyProfitModal = lazy(() => import('../components/dashboard/modals/Mon
 const GoalHistoryModal = lazy(() => import('../components/dashboard/modals/GoalHistoryModal').then(m => ({ default: m.GoalHistoryModal })));
 
 import { formatCurrency } from '../utils/formatters';
-import { useAppTour } from '../hooks/useAppTour';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { logger } from '../utils/Logger';
 import { Skeleton } from '../components/SkeletonLoader';
 import { SmartNotificationsBanner } from '../components/SmartNotifications';
-import { ComandoDoDia } from '../components/dashboard/ComandoDoDia';
-import { SetupCopilot } from '../components/dashboard/SetupCopilot';
-import { SmartRebooking } from '../components/dashboard/SmartRebooking';
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, businessName, role, fullName } = useAuth();
+  const { userType, region, role } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
-  const { startTour } = useAppTour();
 
   const isStaff = role === 'staff';
 
@@ -54,61 +46,22 @@ export const Dashboard: React.FC = () => {
     fetchAllAppointments
   } = useDashboardData();
 
+
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [showAllAppointments, setShowAllAppointments] = useState(false);
   const [showProfitHistory, setShowProfitHistory] = useState(false);
   const [showGoalHistory, setShowGoalHistory] = useState(false);
-  const [newGoal, setNewGoal] = useState(monthlyGoal.toString());
 
   const isBeauty = userType === 'beauty';
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
   const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
-  const handleSaveGoal = async () => {
-    const goalValue = parseFloat(newGoal);
-    if (isNaN(goalValue)) return;
-
-    const { error } = await updateGoal(goalValue);
-
-    if (error) {
-      logger.error('Error updating goal', error);
-      alert("Erro ao atualizar a meta.");
-    } else {
-      setIsEditingGoal(false);
-    }
-  };
-
-  const handleDoctorAction = (action: string) => {
-    if (action.includes('CRM') || action.includes('campanha')) navigate('/crm');
-    else if (action.includes('Marketing') || action.includes('post') || action.includes('conteúdo')) navigate('/marketing');
-    else if (action.includes('agendamento') || action.includes('link')) navigate('/settings');
-  };
-
   return (
     <div className="space-y-6 md:space-y-10">
-      {/* Comando do Dia — briefing diário personalizado */}
-      <ComandoDoDia
-        firstName={fullName?.split(' ')[0] || 'Profissional'}
-        appointmentsToday={appointments.filter(a => {
-          const aptDate = new Date(a.appointment_time).toDateString();
-          return aptDate === new Date().toDateString();
-        }).length}
-        expectedRevenue={appointments.filter(a => {
-          const aptDate = new Date(a.appointment_time).toDateString();
-          return aptDate === new Date().toDateString();
-        }).reduce((sum, a) => sum + (a.price || 0), 0)}
-        monthlyGoal={monthlyGoal}
-        currentMonthRevenue={currentMonthRevenue}
-        churnRiskCount={financialDoctor.churnRiskCount}
-        isBeauty={isBeauty}
-        currencyRegion={region === 'PT' ? 'PT' : 'BR'}
-        onNavigate={navigate}
-      />
-
       <DashboardHero isBeauty={isBeauty} />
 
-      {/* Smart Notifications — substituição do ChurnRadar fixo */}
+      {/* Smart Notifications */}
       <SmartNotificationsBanner />
 
       {isStaff ? (
@@ -117,31 +70,10 @@ export const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Setup Copilot — checklist pós-onboarding com detecção própria de progresso */}
-          {dataMaturity.score < 75 && (
-            <SetupCopilot isBeauty={isBeauty} />
-          )}
+          {/* Setup Copilot — sempre visível, guia o usuário nos próximos passos */}
+          <SetupCopilot isBeauty={isBeauty} />
 
-          {/* Seção: AIOS Stats — só exibida se há campanhas */}
-          {profitMetrics.campaignsSent > 0 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-              <AIOSCampaignStats
-                campaignsSent={profitMetrics.campaignsSent}
-                recoveredRevenue={profitMetrics.recoveredRevenue}
-                isBeauty={isBeauty}
-                currencySymbol={currencySymbol}
-              />
-            </div>
-          )}
-
-          {/* Data Maturity Badge — só exibido enquanto score < 75 */}
-          {dataMaturity.score < 75 && (
-            <div className="animate-in fade-in duration-500 delay-100">
-              <DataMaturityBadge maturity={dataMaturity} isBeauty={isBeauty} />
-            </div>
-          )}
-
-          {/* Seção: Métricas de Lucro com guards de maturidade */}
+          {/* Métricas de Lucro */}
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
             <ProfitMetrics
               metrics={profitMetrics}
@@ -150,7 +82,6 @@ export const Dashboard: React.FC = () => {
               currencyRegion={currencyRegion}
               isBeauty={isBeauty}
             />
-            {/* Botão Ver Mais — histórico de lucros mensais */}
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => setShowProfitHistory(true)}
@@ -159,26 +90,6 @@ export const Dashboard: React.FC = () => {
                 Ver histórico de lucros →
               </button>
             </div>
-          </div>
-
-          {/* Doutor Financeiro */}
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <FinancialDoctorPanel
-              weeklyGrowth={profitMetrics.weeklyGrowth}
-              currentMonthRevenue={currentMonthRevenue}
-              monthlyGoal={monthlyGoal}
-              campaignsSent={profitMetrics.campaignsSent}
-              dataMaturity={dataMaturity}
-              financialDoctor={financialDoctor}
-              completedThisMonth={dataMaturity.completedThisMonth}
-              isBeauty={isBeauty}
-              onActionClick={handleDoctorAction}
-            />
-          </div>
-
-          {/* Smart Rebooking — cadência preditiva de retorno */}
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-250">
-            <SmartRebooking isBeauty={isBeauty} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
@@ -254,6 +165,13 @@ export const Dashboard: React.FC = () => {
               </BrutalCard>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Card de Saúde do Negócio — oculto automaticamente sem dados */}
+                <BusinessHealthCard
+                  data={financialDoctor}
+                  isBeauty={isBeauty}
+                  currencySymbol={currencySymbol}
+                />
+
                 <BrutalCard className="h-full brutal-card-enhanced gold-accent-border group" noPadding>
                   <div className="p-4 relative">
                     <div className="flex items-center justify-between mb-2">
@@ -286,7 +204,6 @@ export const Dashboard: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Botão Histórico de Metas */}
                     <button
                       onClick={() => setShowGoalHistory(true)}
                       className={`mt-3 py-3 px-2 -ml-2 text-xs font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity relative z-10 min-h-[44px] flex items-center`}
@@ -326,6 +243,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </>
       )}
+
       <Suspense fallback={null}>
         <GoalSettingsModal
           isOpen={isEditingGoal}

@@ -85,7 +85,7 @@ export const Sidebar: React.FC = () => {
         {/* Header mobile */}
         <div className={`h-20 flex items-center justify-between px-6 md:hidden ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b-4 border-brutal-border bg-brutal-card'}`}>
           <span className={`font-heading text-xl ${themeColor} uppercase tracking-tighter`}>Menu</span>
-          <button onClick={closeSidebar} className="text-text-secondary hover:text-white transition-colors">
+          <button onClick={closeSidebar} className="text-text-secondary hover:text-white transition-colors" aria-label="Fechar menu" title="Fechar menu">
             <X className="w-6 h-6" />
           </button>
         </div>

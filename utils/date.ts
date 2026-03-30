@@ -79,3 +79,23 @@ export const formatDateForInput = (date: Date | string | null | undefined): stri
         return '';
     }
 };
+/**
+ * Cria um objeto Date no fuso horário local combinando uma string de data (YYYY-MM-DD)
+ * e uma string de hora (HH:mm). Evita o bug de parsing UTC do construtor Date(string).
+ */
+export const combineDateAndTime = (dateStr: string, timeStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+};
+
+/**
+ * Retorna a data atual no formato YYYY-MM-DD respeitando o fuso local.
+ */
+export const getTodayDateString = (): string => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};

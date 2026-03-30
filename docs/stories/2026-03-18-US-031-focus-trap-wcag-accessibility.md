@@ -1,12 +1,14 @@
 ---
 id: US-031
 título: Add Focus Trap to Modals (WCAG 2.1 AA Accessibility)
-status: ready-for-review
+status: done
+completedAt: "2026-03-26"
+verdict: "DONE — focus-trap-react, role=dialog, aria-modal=true confirmados em Modal.tsx"
 estimativa: 2h
 prioridade: high
 agente: dev
 assignee: "@dev"
-blockedBy: ["US-030"]
+blockedBy: []
 epic: EPIC-003
 fase: "Sprint 2 — P1 High Priority Fixes"
 ---

@@ -1,13 +1,14 @@
 ---
 id: US-021
 título: Review Especializada de Frontend/UX
-status: pending
+status: done
 estimativa: 1h
 prioridade: high
 agente: ux-design-expert
 assignee: "@ux-design-expert"
 blockedBy: [US-019]
 epic: EPIC-002
+completedAt: 2026-03-18
 ---
 
 # US-021: Review Especializada de Frontend/UX
@@ -66,14 +67,14 @@ Review especializada focada em frontend/UX:
 
 ## Critérios de Aceitação
 
-- [ ] `docs/architecture/ux-specialist-review.md` criado (200+ linhas)
-- [ ] WCAG 2.1 compliance estimate documentado
-- [ ] Accessibility gaps listados (color, ARIA, alt text)
-- [ ] Performance bottlenecks identificados com solutions
-- [ ] Component duplication catalog
-- [ ] Design system coverage % estimado
-- [ ] Mobile responsiveness issues documentadas
-- [ ] UX pain points e solutions propostas
+- [x] `docs/architecture/ux-specialist-review.md` criado (200+ linhas)
+- [x] WCAG 2.1 compliance estimate documentado
+- [x] Accessibility gaps listados (color, ARIA, alt text)
+- [x] Performance bottlenecks identificados com solutions
+- [x] Component duplication catalog
+- [x] Design system coverage % estimado
+- [x] Mobile responsiveness issues documentadas
+- [x] UX pain points e solutions propostas
 
 ## Arquivos Impactados
 
@@ -86,14 +87,14 @@ Review especializada focada em frontend/UX:
 
 ## Progresso Atual
 
-- [ ] 0% — Bloqueado por US-019
+- [x] 100% — Completo (18 Mar 2026)
 
 ## Definição de Pronto
 
-- [ ] `ux-specialist-review.md` criado
-- [ ] Todas as recomendações têm propostas de solução
-- [ ] Priorização clara (P0/P1/P2)
-- [ ] Arquivo pode ser apresentado a @qa (US-022) como input para verdict
+- [x] `ux-specialist-review.md` criado
+- [x] Todas as recomendações têm propostas de solução
+- [x] Priorização clara (P0/P1/P2)
+- [x] Arquivo pode ser apresentado a @qa (US-022) como input para verdict
 
 ## Notas
 

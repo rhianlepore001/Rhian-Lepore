@@ -1,12 +1,14 @@
 ---
 id: US-033
 título: Fix N+1 Query Patterns in ClientCRM
-status: draft
+status: done
+completedAt: "2026-03-26"
+verdict: "DONE — get_client_profile RPC com CTE confirmado no banco via MCP Supabase"
 estimativa: 2.5h
 prioridade: high
 agente: dev
 assignee: "@dev"
-blockedBy: ["US-030"]
+blockedBy: []
 epic: EPIC-003
 fase: "Sprint 2 — P1 High Priority Fixes"
 ---

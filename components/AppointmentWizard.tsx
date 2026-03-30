@@ -17,6 +17,8 @@ import { ClientSelection } from './appointment/ClientSelection';
 import { ScheduleSelection } from './appointment/ScheduleSelection';
 import { AppointmentReview } from './appointment/AppointmentReview';
 import { logger } from '../utils/Logger';
+import { combineDateAndTime } from '../utils/date';
+
 
 export const AppointmentWizard: React.FC<WizardProps> = ({
     onClose,
@@ -108,9 +110,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         setLoading(true);
 
         try {
-            const dateTime = new Date(selectedDate);
-            const [hours, minutes] = selectedTime.split(':');
-            dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            const dateTime = combineDateAndTime(selectedDate.toISOString().split('T')[0], selectedTime);
+
 
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
@@ -169,6 +170,20 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                     window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
                 }
             }
+
+            // US-0409: Verificação se é o primeiro agendamento
+            if (user?.id) {
+                const { count } = await supabase
+                    .from('appointments')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id);
+                
+                if (count === 1) {
+                    window.dispatchEvent(new CustomEvent('system-activated'));
+                }
+            }
+
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'appointment' } }));
 
             onSuccess(dateTime);
             onClose();

@@ -134,6 +134,8 @@ export const Header: React.FC = () => {
                 id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 hover:bg-neutral-800 rounded border border-transparent hover:border-neutral-700 transition-colors"
+                aria-label="Abrir notificações"
+                title="Notificações"
               >
                 <Bell className="w-5 h-5 md:w-6 md:h-6 text-text-primary" />
                 {alertCount > 0 && (

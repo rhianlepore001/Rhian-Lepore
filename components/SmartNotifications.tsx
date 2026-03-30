@@ -45,6 +45,8 @@ export const SmartNotificationsBanner: React.FC = () => {
                         <button
                             onClick={() => setExpanded(!expanded)}
                             className="text-neutral-500 hover:text-white transition-colors p-1"
+                            aria-label={expanded ? "Recolher notificações" : "Expandir notificações"}
+                            title={expanded ? "Recolher" : "Expandir"}
                         >
                             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </button>
@@ -110,6 +112,8 @@ export const SmartNotificationsBanner: React.FC = () => {
                                 <button
                                     onClick={() => dismiss(notif.id)}
                                     className="text-neutral-600 hover:text-neutral-400 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                                    aria-label="Dispensar notificação"
+                                    title="Dispensar"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>

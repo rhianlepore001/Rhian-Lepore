@@ -4,6 +4,11 @@ project:
   installedAt: '2026-03-14T15:53:44.840Z'
   version: 2.1.0
 user_profile: bob
+language:
+  default: pt-BR
+  fallback: en-US
+  agentGreetings: true
+  systemOutputs: true
 ide:
   selected:
     - claude-code

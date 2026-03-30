@@ -90,6 +90,12 @@ export const Clients: React.FC = () => {
 
     const handleCreateClient = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!phone && !email) {
+            alert('Informe pelo menos um contato (telefone ou e-mail).');
+            return;
+        }
+
         setUploading(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -141,14 +147,13 @@ export const Clients: React.FC = () => {
 
             if (error) throw error;
 
-            alert('Cliente criado com sucesso!');
             setShowModal(false);
-            fetchClients();
             setName('');
             setEmail('');
             setPhone('');
             setOrigin('Novo');
             setPhoto(null);
+            await fetchClients();
         } catch (error: any) {
             logger.error('Error creating client', error);
             alert(`Erro ao criar cliente: ${error.message || JSON.stringify(error)}`);

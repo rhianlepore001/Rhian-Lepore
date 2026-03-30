@@ -166,9 +166,8 @@ export const GeneralSettings: React.FC = () => {
             setSaveStatus('saved');
             setHasChanges(false);
 
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'hours' } }));
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'profile' } }));
 
         } catch (error) {
             console.error('Error saving settings:', error);
@@ -194,6 +193,7 @@ export const GeneralSettings: React.FC = () => {
             <div className="max-w-4xl pb-20 md:pb-0">
                 {/* Header dinâmico no SettingsLayout */}
 
+                <div id="profile-logo-upload">
                 <BrandIdentitySection
                     logoPreview={logoPreview}
                     coverPreview={coverPreview}
@@ -203,6 +203,7 @@ export const GeneralSettings: React.FC = () => {
                     onCoverRemove={() => { setCoverFile(null); setCoverPreview(null); }}
                     accentColor={accentColor}
                 />
+                </div>
 
                 <BusinessGalleryManager accentColor={accentColor} />
 
@@ -287,6 +288,7 @@ export const GeneralSettings: React.FC = () => {
                     </div>
                 </BrutalCard>
 
+                <div id="business-hours-section">
                 <BrutalCard
                     title="Horário de Funcionamento"
                     className="mb-4 md:mb-6"
@@ -297,6 +299,7 @@ export const GeneralSettings: React.FC = () => {
                         isBeauty={isBeauty}
                     />
                 </BrutalCard>
+                </div>
 
                 <BrutalCard
                     title="Política de Cancelamento"

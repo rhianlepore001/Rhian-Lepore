@@ -144,8 +144,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
                 <form onSubmit={handleSave} className="space-y-4">
                     <div>
-                        <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`}>Nome do Negócio</label>
+                        <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`} htmlFor="profile-business-name">Nome do Negócio</label>
                         <input
+                            id="profile-business-name"
                             type="text"
                             value={newBusinessName}
                             onChange={(e) => setNewBusinessName(e.target.value)}
@@ -160,8 +161,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </div>
 
                     <div>
-                        <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`}>Seu Nome Completo</label>
+                        <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`} htmlFor="profile-full-name">Seu Nome Completo</label>
                         <input
+                            id="profile-full-name"
                             type="text"
                             value={newFullName}
                             onChange={(e) => setNewFullName(e.target.value)}

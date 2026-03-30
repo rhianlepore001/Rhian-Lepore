@@ -2,19 +2,34 @@
   "status": "commited",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:3000",
   "loginUser": "rleporesilva@gmail.com",
   "loginPassword": "rhianlepore789",
   "executionArgs": {
     "projectName": "Rhian-Lepore-main",
     "projectPath": "c:\\Users\\User\\Downloads\\Rhian-Lepore-main",
-    "testIds": [],
-    "additionalInstruction": "SERVIDOR: http://localhost:4173 (producao - sem limitacao de testes)\n\nCRITICO - FLUXO DE LOGIN EM 2 ETAPAS:\n1. Navegar para http://localhost:4173/#/login\n2. Ver gateway com cartoes 'Barbearia' e 'Beauty & Spa' - SEMPRE clicar no cartao 'Barbearia' (texto 'Barbearia' no h2, fundo escuro)\n3. Aguardar o formulario de login aparecer com campos Email e Senha\n4. Digitar email: rleporesilva@gmail.com\n5. Digitar senha: rhianlepore789\n6. Clicar no botao 'ENTRAR' (aguardar carregamento completo antes de prosseguir)\n\nURLS: SEMPRE usar http://localhost:4173/#/ como base. Ex: /#/agenda, /#/fila, /#/clientes, /#/financeiro, /#/marketing, /#/insights, /#/configuracoes/geral\n\nAGUARDAR: Apos login, aguardar a pagina carregar completamente antes de interagir. O app usa lazy loading e pode demorar 1-2 segundos.\n\nCOBERTURA: Testar TODOS os 57 casos de teste do plano, incluindo Dashboard, Agenda, Fila, Clientes, Financeiro, Marketing, Insights e Configuracoes.",
-    "serverMode": "production",
+    "testIds": [
+      "TC001",
+      "TC002",
+      "TC003",
+      "TC004",
+      "TC005",
+      "TC006",
+      "TC007",
+      "TC015",
+      "TC016",
+      "TC017",
+      "TC018",
+      "TC019",
+      "TC020",
+      "TC021",
+      "TC022"
+    ],
+    "additionalInstruction": "Focus on testing the onboarding wizard flow at /#/onboarding and /#/register. Test registration, login, and the onboarding wizard steps (Step 1: Business Info, Step 2: Services, Step 3: Team, Step 4: Monthly Goal, Step 5: Success). Capture all console errors, UI bugs, navigation issues, and broken functionality. The app uses HashRouter so all routes start with /#/",
+    "serverMode": "development",
     "envs": {
       "API_KEY": "sk-user-soOopvi5ouFho2CgNwTCYfhAi4sxn3aJBHajsZKUhQijSWTnVWxSqXWhARmGzUHOvlkROU5mbg3J0ZCSUbEyom6RIV5WqLjQeVXXa2nANoksor3PtIXPT_oZWL64iGydp3w"
     }
   },
-  "serverPort": 59593,
-  "proxy": "http://fc82015c-1bfa-4ebb-a578-d54238238a90:M2YfD89IVIfT3z6zO8Ooo97sK7zJILOX@tun.testsprite.com:8080"
+  "serverPort": 56084,
+  "proxy": "http://058eade1-111c-4fb9-a279-81199598132f:KLO1TnoeJj0SiU8y9jvx3JM7AhrQWkxO@tun.testsprite.com:8080"
 }

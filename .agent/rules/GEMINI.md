@@ -72,7 +72,7 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 
 ### 1. Leitura Inicial (Input)
 **Sempre que iniciar uma nova sessão ou tarefa complexa:**
-- ✅ O Agente DEVE ler `.agent/memory/PROJECT_MEMORY.md`.
+- ✅ O Agente DEVE ler `.agent/memory/MEMORY.md`.
 - ✅ O Agente DEVE ler `.agent/rules/CROSS_SYNC.md` e validar o contexto no Claude (AIOX).
 - ✅ O Agente DEVE **consultar RAG 2.0** para contexto vetorial relevante (embeddings de decisões anteriores).
   - Comando: `python .agent/skills/rag-archivist/scripts/verify_embeddings.py` para validar disponibilidade
@@ -82,7 +82,7 @@ Agent activated → Check frontmatter "skills:" → Read SKILL.md (INDEX) → Re
 ### 2. Escrita Final (Output)
 **Sempre que concluir uma tarefa significativa (Feature, Refactor, Bugfix):**
 - ✅ O Agente DEVE unificar memórias conforme `CROSS_SYNC.md`.
-- ✅ O Agente DEVE adicionar uma entrada no `.agent/memory/PROJECT_MEMORY.md`.
+- ✅ O Agente DEVE adicionar uma entrada no `.agent/memory/MEMORY.md`.
 - **Formato:** Data, O que foi feito, Por que, Arquivos chave.
 - **Não inclua:** Pequenas correções de typos ou mudanças triviais.
 

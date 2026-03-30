@@ -1,12 +1,12 @@
 ---
 id: US-020
 título: Review Especializada de Database
-status: pending
+status: in-review
 estimativa: 1h
 prioridade: high
 agente: data-engineer
 assignee: "@data-engineer"
-blockedBy: [US-019]
+blockedBy: []
 epic: EPIC-002
 ---
 
@@ -56,14 +56,14 @@ Review especializada focada em database:
 
 ## Critérios de Aceitação
 
-- [ ] `docs/architecture/db-specialist-review.md` criado (200+ linhas)
-- [ ] Schema normalization status documentado
-- [ ] Query optimization opportunities listadas (com SQL examples)
-- [ ] Missing indexes documentados com impact %
-- [ ] RLS policy gaps identificados
-- [ ] Migration order proposta (com dependencies)
-- [ ] Data integrity checks recomendados
-- [ ] Performance improvement estimates calculados
+- [x] `docs/architecture/db-specialist-review.md` criado (1014 linhas) ✅
+- [x] Schema normalization status documentado (3NF compliant assessment) ✅
+- [x] Query optimization opportunities listadas (5 anti-patterns com SQL examples) ✅
+- [x] Missing indexes documentados com impact % (5 indexes, 20-30% improvement) ✅
+- [x] RLS policy gaps identificados (3 P0 + 2 P1 issues) ✅
+- [x] Migration order proposta (8 migrations, safe execution order) ✅
+- [x] Data integrity checks recomendados (9 gaps mapeados) ✅
+- [x] Performance improvement estimates calculados (Dashboard: 62% faster, Finance: 50% faster) ✅
 
 ## Arquivos Impactados
 
@@ -77,14 +77,22 @@ Review especializada focada em database:
 
 ## Progresso Atual
 
-- [ ] 0% — Bloqueado por US-019
+- [x] 100% — Completado em 18 Mar 2026
+- [x] db-specialist-review.md criado (1014 linhas, 9 seções)
+- [x] Schema normalization assessment (3NF compliant ✅)
+- [x] Query optimization opportunities (5 anti-patterns identificados)
+- [x] RLS completeness & security gaps (3 P0 + 2 P1 issues)
+- [x] Missing indexes com impact analysis (5 indexes recomendados)
+- [x] Migration strategy com dependencies (8 migrations planejadas)
+- [x] Performance roadmap com ROI (60% improvement potential)
+- [x] Data integrity & constraints review (9 gaps identificados)
 
 ## Definição de Pronto
 
-- [ ] `db-specialist-review.md` criado
-- [ ] Todas as recomendações têm exemplos técnicos
-- [ ] Priorização clara (P0/P1/P2)
-- [ ] Arquivo pode ser apresentado a @qa (US-022) como input para verdict
+- [x] `db-specialist-review.md` criado (1014 linhas, 9 seções)
+- [x] Todas as recomendações têm exemplos técnicos (SQL migrations, indexes, RPCs)
+- [x] Priorização clara (P0/P1/P2 com effort estimates)
+- [x] Arquivo pronto para apresentação a @qa (US-022) como input para verdict
 
 ## Notas
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
@@ -13,6 +13,8 @@ import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
+import { combineDateAndTime } from '../utils/date';
+
 
 interface Appointment {
     id: string;
@@ -175,17 +177,22 @@ export const Agenda: React.FC = () => {
         }
     }, [historyMonth, showHistoryModal]);
 
-    const fetchAllFutureAppointments = async () => {
+    const fetchAllFutureAppointments = useCallback(async () => {
         if (!user) return [];
         const now = new Date().toISOString();
 
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('appointments')
             .select('*, clients(name)')
             .eq('user_id', user.id)
             .gte('appointment_time', now)
             .in('status', ['Confirmed', 'Pending'])
             .order('appointment_time', { ascending: true });
+
+        if (error) {
+            logger.error('Erro ao buscar todos os agendamentos futuros:', error);
+            return [];
+        }
 
         if (!data) return [];
 
@@ -201,7 +208,7 @@ export const Agenda: React.FC = () => {
             price: apt.price,
             appointment_time: apt.appointment_time
         }));
-    };
+    }, [user]);
 
 
     // Price Calculation & Sync Effect
@@ -894,10 +901,10 @@ export const Agenda: React.FC = () => {
 
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
-            const dateTime = new Date(selectedAppointmentDate);
             const timeToUse = selectedTime === 'custom' ? customTime : selectedTime;
-            const [hours, minutes] = timeToUse.split(':');
-            dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            const dateTime = combineDateAndTime(selectedAppointmentDate, timeToUse);
+
 
             const { error } = await supabase
                 .from('appointments')
@@ -1090,6 +1097,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         Todos Agendamentos
                     </BrutalButton>
                     <BrutalButton
+                        id="btn-new-appointment"
                         variant="primary"
                         icon={<Plus />}
                         onClick={() => navigate('?new=true')}

@@ -160,6 +160,7 @@ export interface GoalHistory {
 export interface DashboardStats {
   total_profit: number;
   current_month_revenue: number;
+  month_scheduled_value: number;
   weekly_growth: number;
   monthly_goal?: number;
   ai_insights?: ActionItem[];

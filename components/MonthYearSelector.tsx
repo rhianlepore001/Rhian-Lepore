@@ -58,6 +58,7 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
                 onClick={goToPreviousMonth}
                 className="p-2 hover:bg-neutral-800 rounded transition-colors text-white"
                 title="Mês anterior"
+                aria-label="Mês anterior"
             >
                 <ChevronLeft className="w-5 h-5" />
             </button>
@@ -90,6 +91,7 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
                     disabled={!canGoNext}
                     className={`p-2 rounded transition-colors ${canGoNext ? 'hover:bg-neutral-800 text-white' : 'text-neutral-700 cursor-not-allowed'}`}
                     title="Próximo mês"
+                    aria-label="Próximo mês"
                 >
                     <ChevronRight className="w-5 h-5" />
                 </button>

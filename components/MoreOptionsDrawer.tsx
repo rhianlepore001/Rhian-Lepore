@@ -70,6 +70,8 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
                                 ? 'bg-white/10 border-white/10 text-white/60 hover:text-white hover:bg-white/20'
                                 : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white'}
             `}
+                        aria-label="Fechar menu"
+                        title="Fechar"
                     >
                         <X className="w-5 h-5" />
                     </button>

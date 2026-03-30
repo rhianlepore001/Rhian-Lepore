@@ -12,6 +12,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
     "test:rag": "pytest .agent/skills/rag-archivist/tests/ -v",
     "test:rag:coverage": "pytest .agent/skills/rag-archivist/tests/ --cov=.agent/skills/rag-archivist/scripts --cov-report=html",
     "sync:ide": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync",
@@ -35,6 +39,7 @@
     "recharts": "^3.4.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",

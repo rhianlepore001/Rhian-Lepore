@@ -121,6 +121,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     }}
                     className="p-2.5 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20 active:scale-90"
                     title="Excluir"
+                    aria-label={`Excluir membro ${member.name}`}
                 >
                     <Trash2 className="w-4.5 h-4.5" />
                 </button>

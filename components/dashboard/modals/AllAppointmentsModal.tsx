@@ -23,18 +23,27 @@ export const AllAppointmentsModal: React.FC<AllAppointmentsModalProps> = ({
     isBeauty = false
 }) => {
     const [appointments, setAppointments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (isOpen) {
-            setLoading(true);
-            fetchAllAppointments().then(data => {
-                setAppointments(data);
+        if (!isOpen) return;
+
+        let cancelled = false;
+        setLoading(true);
+        setAppointments([]);
+
+        fetchAllAppointments().then(data => {
+            if (!cancelled) {
+                setAppointments(data ?? []);
                 setLoading(false);
-            });
-        }
+            }
+        }).catch(() => {
+            if (!cancelled) setLoading(false);
+        });
+
+        return () => { cancelled = true; };
     }, [isOpen, fetchAllAppointments]);
 
     const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';

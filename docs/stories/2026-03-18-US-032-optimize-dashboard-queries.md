@@ -6,7 +6,7 @@ estimativa: 3h
 prioridade: high
 agente: dev
 assignee: "@dev"
-blockedBy: ["US-030"]
+blockedBy: []
 epic: EPIC-003
 fase: "Sprint 2 — P1 High Priority Fixes"
 ---

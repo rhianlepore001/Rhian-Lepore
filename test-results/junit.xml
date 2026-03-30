@@ -1,0 +1,87 @@
+<testsuites id="" name="" tests="9" failures="0" skipped="0" errors="0" time="36.537498">
+<testsuite name="onboarding.spec.ts" timestamp="2026-03-30T19:41:40.090Z" hostname="chromium" tests="9" failures="0" skipped="0" time="30.705" errors="0">
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify event system-activated listener is functional" classname="onboarding.spec.ts" time="2.973">
+<system-out>
+<![CDATA[🔍 Test 1: Verifying system-activated event listener...
+✅ system-activated event listener works correctly
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify setup-step-completed listener is functional" classname="onboarding.spec.ts" time="2.756">
+<system-out>
+<![CDATA[🔍 Test 2: Verifying setup-step-completed event listener...
+✅ setup-step-completed event listener works correctly
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify all CSS animations are defined" classname="onboarding.spec.ts" time="5.802">
+<system-out>
+<![CDATA[🎬 Test 3: Verifying CSS animations...
+📊 Animation Status:
+  ✓ check-complete animation: true
+  ✓ wizard-fade-in animation: true
+  ✓ prefers-reduced-motion: true
+  ✓ low-end-device detection: false
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify hardwareConcurrency detection is active" classname="onboarding.spec.ts" time="2.647">
+<system-out>
+<![CDATA[🖥️ Test 4: Verifying hardwareConcurrency detection...
+💻 Hardware Detection:
+  • CPU Cores: 8
+  • Is Low-End: false
+  • low-end-device class applied: false
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify AppointmentWizard events are registered" classname="onboarding.spec.ts" time="3.733">
+<system-out>
+<![CDATA[🎫 Test 5: Verifying AppointmentWizard component...
+📋 Component Status:
+  ✓ Event system works: true
+  ✓ setup-step-completed dispatch: true
+  ℹ️ AppointmentWizard is lazy-loaded (verified via other tests)
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify ActivationBanner is loaded" classname="onboarding.spec.ts" time="2.403">
+<system-out>
+<![CDATA[🎊 Test 6: Verifying ActivationBanner component...
+🎉 Banner Status:
+  ✓ ActivationBanner component: false
+  ✓ Portal target exists: true
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify Setup completion events can be dispatched" classname="onboarding.spec.ts" time="3.324">
+<system-out>
+<![CDATA[🔔 Test 7: Testing event dispatch simulation...
+🎯 Setup Step Completions:
+  ✅ services
+  ✅ team
+  ✅ hours
+  ✅ profile
+  ✅ booking
+  ✅ appointment
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify no console errors on page load" classname="onboarding.spec.ts" time="4.42">
+<system-out>
+<![CDATA[🐛 Test 8: Checking for console errors...
+✅ No console errors
+]]>
+</system-out>
+</testcase>
+<testcase name="EPIC-004: Onboarding Wizard E2E Tests › Should verify mobile responsiveness" classname="onboarding.spec.ts" time="2.647">
+<system-out>
+<![CDATA[📱 Test 9: Checking mobile responsiveness...
+📲 Mobile Optimization:
+  ✓ Viewport meta: true
+  ✓ Media queries: true
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

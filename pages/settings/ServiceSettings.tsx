@@ -97,6 +97,7 @@ export const ServiceSettings: React.FC = () => {
                             <span>Categoria</span>
                         </BrutalButton>
                         <BrutalButton
+                            id="btn-add-service"
                             onClick={() => {
                                 if (categories.length === 0) {
                                     alert('Crie uma categoria primeiro!');

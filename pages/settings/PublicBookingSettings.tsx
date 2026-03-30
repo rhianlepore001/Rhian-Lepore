@@ -81,6 +81,9 @@ export const PublicBookingSettings: React.FC = () => {
                 });
 
             if (error) throw error;
+            
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
+            
             alert('Configurações salvas com sucesso!');
         } catch (error) {
             console.error('Error saving settings:', error);
@@ -114,7 +117,7 @@ export const PublicBookingSettings: React.FC = () => {
                                 Seus clientes podem marcar horário através do seu link de reserva personalizado.
                             </p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                        <label id="toggle-public-booking" className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
                             <input
                                 type="checkbox"
                                 checked={publicBookingEnabled}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { logger } from '../utils/Logger';
@@ -20,6 +20,7 @@ export interface ProfitMetricsData {
     weeklyGrowth: number;
     campaignsSent: number;
     currentMonthRevenue?: number;
+    monthScheduledValue?: number;
 }
 
 export interface FinancialDoctorData {
@@ -135,6 +136,7 @@ export function useDashboardData() {
                     setProfitMetrics({
                         totalProfit: s.total_profit || 0,
                         currentMonthRevenue: s.current_month_revenue || 0,
+                        monthScheduledValue: s.month_scheduled_value || 0,
                         recoveredRevenue: s.recovered_revenue || 0,
                         avoidedNoShows: s.avoided_no_shows || 0,
                         filledSlots: s.filled_slots || 0,
@@ -255,7 +257,7 @@ export function useDashboardData() {
         return { error };
     }
 
-    const fetchAllAppointments = async () => {
+    const fetchAllAppointments = useCallback(async () => {
         if (!user) return [];
         try {
             const nowIso = new Date().toISOString();
@@ -263,7 +265,7 @@ export function useDashboardData() {
                 .from('appointments')
                 .select('*, clients(name)')
                 .eq('user_id', user.id)
-                .eq('status', 'Confirmed')
+                .in('status', ['Confirmed', 'Pending'])
                 .gte('appointment_time', nowIso)
                 .order('appointment_time', { ascending: true });
 
@@ -284,7 +286,7 @@ export function useDashboardData() {
             logger.error('Error fetching all appointments:', error);
             return [];
         }
-    };
+    }, [user]);
 
     return {
         appointments,

@@ -2,7 +2,6 @@
 import React, { Suspense, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WizardOverlay } from '@/components/onboarding/WizardOverlay';
-import { WizardPointer } from '@/components/onboarding/WizardPointer';
 import { WizardProgress } from '@/components/onboarding/WizardProgress';
 import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,28 +19,11 @@ interface WizardStepConfig {
   step: WizardStep;
   title: string;
   icon: string;
-  elementId: string;
-  position: 'top' | 'bottom' | 'left' | 'right';
-  message: string;
 }
 
 const WIZARD_STEPS: WizardStepConfig[] = [
-  {
-    step: 1,
-    title: 'Boas-vindas',
-    icon: '👋',
-    elementId: 'wizard-welcome-next',
-    position: 'bottom',
-    message: 'Vamos configurar seu primeiro serviço',
-  },
-  {
-    step: 2,
-    title: 'Seus Serviços',
-    icon: '✂️',
-    elementId: 'wizard-add-service',
-    position: 'top',
-    message: 'Cadastre os serviços que você oferece',
-  },
+  { step: 1, title: 'Boas-vindas', icon: '👋' },
+  { step: 2, title: 'Seus Serviços', icon: '✂️' },
 ];
 
 const TOTAL_STEPS = WIZARD_STEPS.length; // 2
@@ -56,7 +38,7 @@ function StepLoadingFallback() {
 
 export function WizardEngine() {
   const { state, dispatch } = useWizard();
-  const { userType, companyId } = useAuth();
+  const { userType, companyId, markTutorialCompleted } = useAuth();
   const navigate = useNavigate();
 
   const isBeauty = userType === 'beauty';
@@ -81,6 +63,7 @@ export function WizardEngine() {
     try {
       if (step === TOTAL_STEPS) {
         await completeOnboarding(companyId);
+        await markTutorialCompleted();
         dispatch({ type: 'COMPLETE_WIZARD' });
         navigate('/', { replace: true });
       } else {
@@ -141,14 +124,6 @@ export function WizardEngine() {
         </div>
       </div>
 
-      {/* Pointer apontando para o elemento do step atual */}
-      <WizardPointer
-        target={{
-          elementId: currentStepConfig.elementId,
-          position: currentStepConfig.position,
-          message: currentStepConfig.message,
-        }}
-      />
     </WizardOverlay>
   );
 }

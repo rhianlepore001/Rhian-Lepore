@@ -64,6 +64,7 @@ export const TeamSettings: React.FC = () => {
                 {/* Header dinâmico no SettingsLayout */}
                 <div className="flex justify-end mb-6">
                     <BrutalButton
+                        id="btn-add-team-member"
                         onClick={() => {
                             setEditingMember(null);
                             setIsModalOpen(true);

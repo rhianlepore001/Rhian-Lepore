@@ -1097,6 +1097,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         Todos Agendamentos
                     </BrutalButton>
                     <BrutalButton
+                        id="btn-new-appointment"
                         variant="primary"
                         icon={<Plus />}
                         onClick={() => navigate('?new=true')}

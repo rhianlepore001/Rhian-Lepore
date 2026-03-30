@@ -164,6 +164,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 }
             }
 
+            // Report setup step completed
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'services' } }));
+
             onSave();
             onClose();
         } catch (error) {

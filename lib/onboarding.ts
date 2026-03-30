@@ -66,3 +66,38 @@ export async function completeOnboarding(companyId: string): Promise<void> {
 
   if (error) throw error;
 }
+
+/**
+ * Busca o status de configuração do SetupCopilot e do Wizard
+ */
+export async function getSetupStatus(userId: string) {
+  const [
+    servicesRes,
+    teamRes,
+    clientsRes,
+    settingsRes,
+    profileRes,
+    appointmentsRes,
+  ] = await Promise.all([
+    supabase.from('services').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('clients').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('business_settings').select('business_hours, public_booking_enabled').eq('user_id', userId).maybeSingle(),
+    supabase.from('profiles').select('business_slug, activation_completed').eq('id', userId).single(),
+    supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+  ]);
+
+  const businessHours = settingsRes.data?.business_hours;
+  const hasBusinessHours = !!businessHours && Object.keys(businessHours).length > 0;
+  const hasBookingSlug = !!profileRes.data?.business_slug && (settingsRes.data?.public_booking_enabled === true);
+
+  return {
+    hasServices: (servicesRes.count ?? 0) > 0,
+    hasTeam: (teamRes.count ?? 0) > 0,
+    hasClients: (clientsRes.count ?? 0) > 0,
+    hasBusinessHours,
+    hasBookingSlug,
+    hasAppointments: (appointmentsRes.count ?? 0) > 0,
+    isActivated: profileRes.data?.activation_completed === true,
+  };
+}

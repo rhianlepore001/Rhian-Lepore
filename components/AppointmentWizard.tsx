@@ -171,6 +171,20 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 }
             }
 
+            // US-0409: Verificação se é o primeiro agendamento
+            if (user?.id) {
+                const { count } = await supabase
+                    .from('appointments')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id);
+                
+                if (count === 1) {
+                    window.dispatchEvent(new CustomEvent('system-activated'));
+                }
+            }
+
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'appointment' } }));
+
             onSuccess(dateTime);
             onClose();
         } catch (error) {

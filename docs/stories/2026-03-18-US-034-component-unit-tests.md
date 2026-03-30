@@ -1,7 +1,9 @@
 ---
 id: US-034
 título: Add Component Unit Tests (Increase Coverage to 50%)
-status: draft
+status: done
+completedAt: "2026-03-29"
+verdict: "DONE — 5 arquivos, 33 testes passando (BrutalCard, BrutalButton, Modal, ProfitMetrics, AuthContext). Fix: label ProfitMetrics 'Receita do Mês' → 'Receita Realizada'."
 estimativa: 8h
 prioridade: high
 agente: dev

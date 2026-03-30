@@ -125,6 +125,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 if (insertError) throw insertError;
             }
 
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
+
             onSave();
             onClose();
         } catch (error: any) {

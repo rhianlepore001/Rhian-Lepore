@@ -9,6 +9,7 @@ interface PointerTarget {
 
 interface WizardPointerProps {
   target: PointerTarget;
+  isExiting?: boolean;
 }
 
 interface PointerCoords {
@@ -63,7 +64,7 @@ const POINTER_SVGS: Record<PointerTarget['position'], React.ReactElement> = {
   ),
 };
 
-export function WizardPointer({ target }: WizardPointerProps) {
+export function WizardPointer({ target, isExiting = false }: WizardPointerProps) {
   const [coords, setCoords] = useState<PointerCoords>({ top: 0, left: 0 });
   const [isMobile, setIsMobile] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -181,8 +182,9 @@ export function WizardPointer({ target }: WizardPointerProps) {
   if (isMobile && rect) {
     return (
       <div
-        className="fixed z-[9999] w-8 h-8 rounded-full border-2 border-amber-400
-                   animate-[wizard-pulse_1.5s_ease-in-out_infinite]"
+        className={`fixed z-[9999] w-8 h-8 rounded-full border-2 border-amber-400
+                   animate-[wizard-pulse_1.5s_ease-in-out_infinite] will-change-transform
+                   ${isExiting ? 'opacity-0 scale-75 transition-all duration-150 ease-in' : 'animate-in fade-in zoom-in-75 duration-200 ease-out'}`}
         style={{
           top: rect.top + rect.height / 2 - 16,
           left: rect.left + rect.width / 2 - 16,
@@ -194,7 +196,9 @@ export function WizardPointer({ target }: WizardPointerProps) {
 
   return (
     <div
-      className={`fixed z-[9999] flex flex-col items-center gap-1 pointer-events-none ${
+      className={`fixed z-[9999] flex flex-col items-center gap-1 pointer-events-none will-change-transform
+        ${isExiting ? 'opacity-0 scale-75 transition-all duration-150 ease-in' : 'animate-in fade-in zoom-in-75 duration-200 ease-out'}
+        ${
         isVertical
           ? 'animate-[wizard-pointer-bounce_1s_ease-in-out_infinite]'
           : 'animate-[wizard-pointer-bounce-x_1s_ease-in-out_infinite]'

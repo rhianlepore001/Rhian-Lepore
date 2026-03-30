@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 function OnboardingInner() {
   const navigate = useNavigate();
-  const { companyId } = useAuth();
+  const { companyId, markTutorialCompleted } = useAuth();
   const { dispatch } = useWizard();
 
   useEffect(() => {
@@ -17,10 +17,13 @@ function OnboardingInner() {
     let cancelled = false;
 
     getOnboardingProgress(companyId)
-      .then((progress) => {
+      .then(async (progress) => {
         if (cancelled) return;
 
         if (progress?.is_completed) {
+          // Garante profiles.tutorial_completed = true antes de navegar
+          // Evita redirect loop entre ProtectedLayout e Onboarding
+          await markTutorialCompleted();
           navigate('/', { replace: true });
           return;
         }
@@ -37,7 +40,7 @@ function OnboardingInner() {
     return () => {
       cancelled = true;
     };
-  }, [companyId, navigate, dispatch]);
+  }, [companyId, navigate, dispatch, markTutorialCompleted]);
 
   return <WizardEngine />;
 }

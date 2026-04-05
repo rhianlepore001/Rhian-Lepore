@@ -4,8 +4,6 @@ import { Layout } from './components/Layout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
-import { GuidedModeProvider } from './contexts/GuidedModeContext';
-import { StandaloneWizardPointer } from './components/onboarding/StandaloneWizardPointer';
 import { DynamicBranding } from './components/DynamicBranding';
 import { AIAssistantChat } from './components/AIAssistantChat';
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
@@ -191,11 +189,8 @@ const App: React.FC = () => {
         <DynamicBranding />
         <PublicClientProvider>
           <AlertsProvider>
-            <GuidedModeProvider>
               <AppRoutes />
-              <StandaloneWizardPointer />
               <ActivationBanner />
-            </GuidedModeProvider>
           </AlertsProvider>
         </PublicClientProvider>
       </AuthProvider>

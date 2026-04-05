@@ -6,7 +6,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { getSetupStatus } from '../../lib/onboarding';
 import { useAuth } from '../../contexts/AuthContext';
 import { WIZARD_TARGETS, WizardStepId } from '../../constants/WIZARD_TARGETS';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const STEP_PRIORITY: WizardStepId[] = ['services', 'team', 'hours', 'profile', 'booking', 'appointment'];
 
@@ -14,11 +14,24 @@ export function StandaloneWizardPointer() {
   const { isGuideActive, targetElementId, position, message, endGuide, activeStep } = useGuidedMode();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [toastData, setToastData] = useState<{ stepId: string; nextStepId: WizardStepId | null } | null>(null);
 
   const [renderState, setRenderState] = useState<{ active: boolean; exiting: boolean }>({ active: false, exiting: false });
+
+  // Encerra o guide automaticamente se o usuário navegar para uma página diferente
+  // da esperada pelo step ativo — evita tooltip fantasma flutuando no dashboard
+  useEffect(() => {
+    if (!isGuideActive || !activeStep) return;
+    const expectedPath = WIZARD_TARGETS[activeStep]?.path;
+    if (!expectedPath) return;
+    const currentPath = location.pathname;
+    if (!currentPath.endsWith(expectedPath) && currentPath !== expectedPath) {
+      endGuide();
+    }
+  }, [location.pathname, isGuideActive, activeStep, endGuide]);
 
   useEffect(() => {
     if (isGuideActive) {

@@ -179,6 +179,9 @@ export function WizardPointer({ target, isExiting = false }: WizardPointerProps)
 
   const isVertical = target.position === 'top' || target.position === 'bottom';
 
+  // Não renderiza se o elemento alvo não foi encontrado na página atual
+  if (!rect) return null;
+
   if (isMobile && rect) {
     return (
       <div

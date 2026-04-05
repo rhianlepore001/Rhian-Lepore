@@ -28,35 +28,33 @@ dist-ssr
 access_token.txt
 token.json
 
-# Environment & Secrets (AIOS)
+# Environment & Secrets
 .env.local
 .env.*.local
 *.key
 *.pem
 
-# Dependencies (AIOS)
+# Dependencies
 node_modules/
 
-# Build & Logs (AIOS)
+# Build & Logs
 dist/
 build/
 logs/
 
-# IDE & OS (AIOS)
+# IDE & OS
 Thumbs.db
 .idea/
 *.swp
 
-# AIOS Local (AIOS)
-.aios-core/local/
+# Claude Code local settings
 .claude/settings.local.json
-.aios/install-log.txt
 
 .vercel
 .env*.local
 .env.backup.*
 
-# Lixo de sessões de debug (nunca commitar)
+# Debug session artifacts
 lint_report*.json
 lint_report*.txt
 lint_errors.txt
@@ -74,29 +72,21 @@ audit_report.txt
 *.timestamp-*.mjs
 debug_*.sql
 
-# Scripts pontuais de fix (nunca commitar)
+# One-off fix scripts
 check_encoding.ps1
 fix_encoding.ps1
 temp_restore.js
 write_phone_input.ps1
 write_file.cjs
 
-# Diretórios de agentes e IDEs (Limpeza AIOS)
+# IDE agent directories
 .antigravity/
 .agents/
 .codex/
 .ai/
 .gemini/
 .cursor/
-.claude/
 .squads/
 .vercel/
 .testsprite/
 testsprite_tests/tmp/
-
-# RAG 2.0 Archivist (AIOX)
-.archivist/
-
-# AIOX Local (AIOX)
-.aiox-core/local/
-.aiox/install-log.txt

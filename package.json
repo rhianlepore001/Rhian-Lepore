@@ -16,11 +16,6 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:rag": "pytest .agent/skills/rag-archivist/tests/ -v",
-    "test:rag:coverage": "pytest .agent/skills/rag-archivist/tests/ --cov=.agent/skills/rag-archivist/scripts --cov-report=html",
-    "sync:ide": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync",
-    "sync:ide:antigravity": "node .aiox-core/infrastructure/scripts/ide-sync/index.js sync --ide antigravity",
-    "aios:doctor": "npx aios-core doctor",
     "backup": "node scripts/backup-supabase.js"
   },
   "dependencies": {

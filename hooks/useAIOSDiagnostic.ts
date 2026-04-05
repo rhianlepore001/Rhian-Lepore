@@ -28,7 +28,8 @@ export const useAIOSDiagnostic = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchDiagnostic = async () => {
-        if (!user || !aiosEnabled) {
+        // Só executa quando aiosEnabled é explicitamente true
+        if (!user || aiosEnabled !== true) {
             setLoading(false);
             return;
         }
@@ -41,7 +42,11 @@ export const useAIOSDiagnostic = () => {
             if (error) throw error;
             setDiagnostic(data as AIOSDiagnostic);
         } catch (err: any) {
-            console.error('Error fetching AIOS diagnostic:', err);
+            // Usar warn em vez de error: o estado já é atualizado via setError,
+            // evita spam no console em dev (React StrictMode) e para RPCs ainda não disponíveis
+            if (import.meta.env.DEV) {
+                console.warn('[useAIOSDiagnostic] RPC indisponível (non-fatal):', err?.message ?? err);
+            }
             setError(err.message);
         } finally {
             setLoading(false);

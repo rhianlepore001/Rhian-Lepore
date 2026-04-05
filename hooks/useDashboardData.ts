@@ -124,7 +124,9 @@ export function useDashboardData() {
 
                 if (statsRes.error) throw statsRes.error;
                 // Erro em get_dashboard_actions é não-fatal: dashboard continua carregando
-                if (actionsRes.error) logger.warn('get_dashboard_actions indisponível (não-fatal):', actionsRes.error);
+                if (actionsRes.error && import.meta.env.DEV) {
+                    logger.warn('get_dashboard_actions indisponível (non-fatal):', { message: actionsRes.error?.message });
+                }
 
                 const s = statsRes.data;
 
@@ -170,12 +172,18 @@ export function useDashboardData() {
                     })));
                 }
 
-            } catch (error) {
-                logger.error('Error fetching dashboard data:', error);
+            } catch (error: any) {
+                // Downgraded para warn em dev: evita spam no console com React StrictMode.
+                // Em produção, silencioso — o dashboard mostra estado vazio graciosamente.
+                if (import.meta.env.DEV) {
+                    logger.warn('Dashboard data indisponível (non-fatal):', error?.message ?? error);
+                }
             } finally {
                 setLoading(false);
             }
         };
+
+        const effectiveGoalValue = monthlyGoal;
 
         const fetchGoalHistory = async () => {
             if (!user) return;
@@ -224,8 +232,6 @@ export function useDashboardData() {
                 logger.error('Error fetching goal history:', error);
             }
         };
-
-        const effectiveGoalValue = monthlyGoal;
 
         fetchData();
         fetchGoalHistory();

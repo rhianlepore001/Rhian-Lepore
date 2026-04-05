@@ -13,11 +13,10 @@ export default defineConfig({
         css: true,
         exclude: [
             '**/node_modules/**',
-            '**/temp_aios_core/**',
             '**/testsprite_tests/**',
-            '**/.aios-core/**',
             '**/dist/**',
             '**/cypress/**',
+            '**/e2e/**',
             '**/.{idea,git,cache,output,temp}/**',
             '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*'
         ],
@@ -32,7 +31,6 @@ export default defineConfig({
                 'dist/',
                 'clerk-migration/',
                 'testsprite_tests/',
-                'temp_aios_core/',
                 'scripts/',
                 '*.config.ts',
                 '*.config.js',

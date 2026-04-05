@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Beauty OS / AgenX AIOS** - A premium SaaS system for salon and barbershop management. This is a React 19 + TypeScript + Vite frontend application with multi-tenant support, advanced theming (Brutal for barbershops, Beauty for salons), and AI-powered features.
+**Beauty OS** - A premium SaaS system for salon and barbershop management. This is a React 19 + TypeScript + Vite frontend application with multi-tenant support, advanced theming (Brutal for barbershops, Beauty for salons), and AI-powered features.
 
 **Key Tech Stack:**
 - Frontend: React 19, TypeScript 5.8, Vite 6
@@ -28,7 +28,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm install              # Install dependencies
 npm run dev            # Start dev server (http://localhost:3000 with --host flag)
-npm run sync:ide       # Sync AIOS infrastructure
 ```
 
 ### Production
@@ -50,11 +49,6 @@ npm test               # Run all Vitest tests
 npm test -- <file>     # Run specific test file
 npm run test:ui        # Run tests with UI dashboard
 npm run test:coverage  # Generate coverage report
-```
-
-### Special Commands
-```bash
-npm run aios:doctor    # Run AIOS diagnostic tool
 ```
 
 ---
@@ -83,10 +77,6 @@ npm run aios:doctor    # Run AIOS diagnostic tool
   - `formatters.ts`: Currency and data formatters
   - `Logger.ts`: Custom logging utility
   - `tierSystem.ts`: Subscription tier logic
-- **`.agent/`** - Agent rules and configurations
-  - `rules/`: Security, performance, and architectural rules (GEMINI.md is master rule file)
-  - `agents/`: Agent profiles for different specializations
-- **`.aiox-core/`** - AIOS infrastructure (pre-integrated AI system framework)
 - **`public/`** - Static assets (PWA icons, favicons, etc.)
 - **`supabase/`** - Database migrations (SQL files)
 - **`test/`** - Test setup and configuration
@@ -119,7 +109,7 @@ npm run aios:doctor    # Run AIOS diagnostic tool
 - **Company/Tenant Isolation**: All data queries must include `company_id` filter
 - **Supabase RLS (Row Level Security)**: Enforced at database level via policies
 - User's `company_id` extracted from Supabase auth session (never from URL/form input)
-- Critical: See `.agent/rules/rule-03-multi-tenant-shield.md` for security requirements
+- Critical: always enforce company_id filtering in all queries
 
 ### Component Pattern
 - Functional components with hooks (React 19)
@@ -145,7 +135,7 @@ npm run aios:doctor    # Run AIOS diagnostic tool
 
 ## Important Architectural Rules
 
-### Security (See `.agent/rules/` for detailed rules)
+### Security
 
 **Multi-Tenant Isolation:**
 - All database queries MUST filter by `company_id` from session
@@ -159,7 +149,6 @@ npm run aios:doctor    # Run AIOS diagnostic tool
 - Use `.env.example` as template for local setup
 
 **Vite Client Auth Security:**
-- See `rule-01-vite-client-auth.md` and `rule-02-vite-env-security.md`
 - API keys exposed in Vite build are intentionally frontend-safe (Gemini key is frontend-only)
 
 ### Code Organization
@@ -276,8 +265,6 @@ describe('Dashboard', () => {
 5. **TypeScript Paths**: `@/` alias points to root directory (configured in tsconfig.json)
 6. **Mobile First**: Components optimized for mobile first (check responsive behavior)
 7. **PWA Support**: App is installable on mobile - test in PWA mode for offline support
-8. **Agent System**: `.agent/` directory contains special rules - read GEMINI.md for priorities
-
 ---
 
 ## Performance Considerations
@@ -304,7 +291,5 @@ describe('Dashboard', () => {
 
 ## Important Notes
 
-- **Portuguese Language Rule**: Project enforces Portuguese (Brazilian) for all documentation, comments, and communication - see `.agent/rules/GEMINI.md` (P0 priority rule)
-- **Agent System Active**: This codebase uses AIOS (AI Operating System) framework with specialized agents - check `.agent/rules/` directory for active constraints
 - **Security Audit Completed**: See `SECURITY_AUDIT.md` for known issues and audit trail
 - **Temporary Files Ignore**: `temp_*`, `*_tests/`, `.antigravity/` directories are temporary - generally safe to delete if not in active use

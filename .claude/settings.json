@@ -1,9 +1,120 @@
 {
-  "language": "english",
+  "sandbox": {
+    "enabled": false
+  },
+  "env_inactive": {
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_AUTH_TOKEN": "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",
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai",
+    "ANTHROPIC_MODEL": "",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
   "permissions": {
     "allow": [
       "Bash(git rm:*)",
-      "Bash(rm -f .claude/CLAUDE.md .claude/CLAUDE.md.backup.2026-03-14T15-52-40-381Z)"
+      "Bash(rm -f .claude/CLAUDE.md .claude/CLAUDE.md.backup.2026-03-14T15-52-40-381Z)",
+      "Read(//c/Users/User/.claude/skills/agent-orchestration-multi-agent-optimize/**)",
+      "Read(//c/Users/User/.claude/skills/agent-orchestrator/**)"
     ]
+  },
+  "language": "portuguese",
+  "mcpServers": {
+    "TestSprite": {
+      "command": "npx",
+      "args": [
+        "@testsprite/testsprite-mcp@latest"
+      ],
+      "env": {
+        "API_KEY": "sk-user-Cg86N-_OikwKw6UqKtGbf1KXj591TgTGPAsNaISTuqRwDNr0RCA4VPb-ely2yDHePfOwblfOAfzhc89hmg3SBO4Zf3Ohjcyo2tmQZnJ0tP5kk8lryWshZZv1_256ywZ0Zro"
+      }
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-check-update.js"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/gsd-session-state.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit|Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-context-monitor.js",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/gsd-phase-boundary.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-prompt-guard.js",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-read-guard.js",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-workflow-guard.js",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/gsd-validate-commit.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/hooks/gsd-statusline.js"
   }
 }

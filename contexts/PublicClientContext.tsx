@@ -85,6 +85,23 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 if (updateError) throw updateError;
 
                 if (updatedClient) {
+                    // Espelhar atualização para a tabela 'clients' (CRM do dono)
+                    // Usa SECURITY DEFINER RPC para contornar RLS da tabela clients (anon não tem uid())
+                    try {
+                        const { error: mirrorError } = await supabase.rpc('mirror_public_client_to_crm', {
+                            p_user_id: data.business_id,
+                            p_name: data.name,
+                            p_phone: data.phone,
+                            p_email: data.email ?? null,
+                            p_photo_url: data.photo_url ?? null,
+                        });
+                        if (mirrorError) {
+                            console.warn('Falha ao espelhar cliente para CRM:', mirrorError);
+                        }
+                    } catch (err) {
+                        console.warn('Falha ao espelhar cliente para CRM:', err);
+                    }
+
                     setClient(updatedClient);
                     localStorage.setItem('rhian_public_client', JSON.stringify(updatedClient));
                     return updatedClient;
@@ -120,6 +137,24 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
 
             if (newClient) {
+                // Espelhar cliente para a tabela 'clients' (CRM do dono do negócio)
+                // Usa SECURITY DEFINER RPC para contornar RLS da tabela clients (anon não tem uid())
+                try {
+                    const { error: mirrorError } = await supabase.rpc('mirror_public_client_to_crm', {
+                        p_user_id: data.business_id,
+                        p_name: data.name,
+                        p_phone: data.phone,
+                        p_email: data.email ?? null,
+                        p_photo_url: data.photo_url ?? null,
+                    });
+                    if (mirrorError) {
+                        console.warn('Falha ao espelhar cliente para CRM:', mirrorError);
+                    }
+                } catch (err) {
+                    // Log erro mas não falha o fluxo principal
+                    console.warn('Falha ao espelhar cliente para CRM:', err);
+                }
+
                 setClient(newClient);
                 localStorage.setItem('rhian_public_client', JSON.stringify(newClient));
                 return newClient;

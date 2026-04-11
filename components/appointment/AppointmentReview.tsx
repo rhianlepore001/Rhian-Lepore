@@ -30,6 +30,7 @@ interface AppointmentReviewProps {
     currencySymbol: string;
     paymentMethod: string;
     setPaymentMethod: (v: string) => void;
+    region: Region;
 }
 
 export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
@@ -58,13 +59,20 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
     setNotes,
     currencySymbol,
     paymentMethod,
-    setPaymentMethod
+    setPaymentMethod,
+    region
 }) => {
-    const paymentOptions = [
-        { id: 'Dinheiro', label: 'Dinheiro', icon: '💵' },
-        { id: 'Pix', label: 'Pix', icon: '💎' },
-        { id: 'Cartão', label: 'Cartão', icon: '💳' },
-    ];
+    const paymentOptions = region === 'PT'
+        ? [
+            { id: 'Dinheiro', label: 'Dinheiro', icon: '💵' },
+            { id: 'MBWay', label: 'MBWay', icon: '📱' },
+            { id: 'Cartão', label: 'Cartão', icon: '💳' },
+        ]
+        : [
+            { id: 'Dinheiro', label: 'Dinheiro', icon: '💵' },
+            { id: 'Pix', label: 'Pix', icon: '💎' },
+            { id: 'Cartão', label: 'Cartão', icon: '💳' },
+        ];
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-6">

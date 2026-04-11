@@ -185,13 +185,20 @@ export const ClientArea: React.FC = () => {
         }
         setGateSubmitting(true);
         try {
-            await register({
+            const newClient = await register({
                 name: gateName,
                 email: gateEmail,
                 phone,
                 photo_url: null,
                 business_id: business.id,
             });
+            // Se o register() retornar null sem lançar exceção,
+            // significa que houve uma falha silenciosa — informar o usuário.
+            if (!newClient) {
+                setGateError('Não foi possível criar o cadastro. Tente novamente.');
+            }
+            // Caso bem-sucedido: o contexto já faz setClient(newClient),
+            // o que aciona o re-render e remove automaticamente este gate.
         } catch {
             setGateError('Erro ao cadastrar. Tente novamente.');
         } finally {

@@ -56,7 +56,7 @@ export const Finance: React.FC = () => {
     profit: 0,
     growth: 0,
     previousMonthRevenue: 0,
-    revenueByMethod: { pix: 0, dinheiro: 0, cartao: 0 },
+    revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
     pendingExpenses: 0
   });
   const [chartData, setChartData] = useState<any[]>([]);
@@ -165,7 +165,7 @@ export const Finance: React.FC = () => {
           profit: data.profit || 0,
           growth: growth || 0,
           previousMonthRevenue: prevData?.revenue || 0,
-          revenueByMethod: data.revenue_by_method || { pix: 0, dinheiro: 0, cartao: 0 },
+          revenueByMethod: data.revenue_by_method || { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
           pendingExpenses: data.pendingExpenses || 0
         });
 
@@ -218,7 +218,7 @@ export const Finance: React.FC = () => {
             profit: staffRevenue,
             growth: 0,
             previousMonthRevenue: 0,
-            revenueByMethod: { pix: 0, dinheiro: 0, cartao: 0 },
+            revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
             pendingExpenses: 0
           });
           return;
@@ -661,9 +661,11 @@ export const Finance: React.FC = () => {
           {!isStaff && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <BrutalCard className="border-l-4 border-green-400 bg-green-500/5">
-                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Pix</p>
+                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">
+                  {region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix'}
+                </p>
                 <h4 className="text-xl font-heading text-white mt-1">
-                  {formatCurrency(summary.revenueByMethod.pix || 0, currencyRegion)}
+                  {formatCurrency(region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0), currencyRegion)}
                 </h4>
               </BrutalCard>
               <BrutalCard className="border-l-4 border-emerald-400 bg-emerald-500/5">
@@ -1216,7 +1218,7 @@ export const Finance: React.FC = () => {
               <div>
                 <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Forma de Pagamento</label>
                 <div className="flex flex-wrap gap-2">
-                  {['all', 'Dinheiro', 'Pix', 'Cartão'].map((method) => (
+                  {['all', 'Dinheiro', ...(region === 'PT' ? ['MBWay'] : ['Pix']), 'Cartão'].map((method) => (
                     <button
                       key={method}
                       onClick={() => setFilterPaymentMethod(method)}

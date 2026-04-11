@@ -337,6 +337,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                             currencySymbol={currencySymbol}
                             paymentMethod={paymentMethod}
                             setPaymentMethod={setPaymentMethod}
+                            region={currencyRegion}
                         />
                     )}
 

@@ -501,5 +501,3 @@ Planilha de acompanhamento:
 3. **Você:** Fazer commit: `chore: clean repo`
 4. **Você:** Testar fluxo E2E completo
 5. **Você:** Reportar problemas encontrados
-
-Quer começar com qual?

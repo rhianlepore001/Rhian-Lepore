@@ -1,2 +1,0 @@
-﻿[dotenv@17.3.1] injecting env (3) from .env.local -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
---- Testing Custom Service Booking ---

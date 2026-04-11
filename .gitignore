@@ -90,3 +90,9 @@ write_file.cjs
 .vercel/
 .testsprite/
 testsprite_tests/tmp/
+
+# Lixo gerado / Artefatos de teste
+*.backup
+*.tmp
+test-results/
+playwright-report/

@@ -1,7 +1,7 @@
 import { logger } from '../utils/Logger';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
 const MODEL_NAME = 'google/gemini-2.0-flash-lite-001'; // Nano/Flash level for fast editing
 
 export interface ImageEditPrompt {

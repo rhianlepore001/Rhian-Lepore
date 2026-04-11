@@ -1,20 +1,40 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# AGENX
 
-# Run and deploy your AI Studio app
+SaaS para gestão de barbearias e salões de beleza. Agenda, financeiro, colaboradores e relatórios — tudo em um lugar.
 
-This contains everything you need to run your app locally.
+## Começando
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Qn2FyoqfFbhjdi2y8JhQh5P4P2bLsRJW
+**Pré-requisitos:** Node.js 18+
 
-## Run Locally
+```bash
+npm install
+cp .env.example .env.local   # preencha com suas credenciais
+npm run dev                  # http://localhost:3000
+```
 
-**Prerequisites:**  Node.js
+## Variáveis de ambiente obrigatórias
 
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_OPENROUTER_API_KEY=
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Comandos
+
+```bash
+npm run dev          # desenvolvimento
+npm run build        # produção (saída em dist/)
+npm run lint         # ESLint (falha em warnings)
+npm run typecheck    # TypeScript check
+npm test             # testes com Vitest
+```
+
+## Stack
+
+- React 19 + TypeScript + Vite
+- Supabase (PostgreSQL + RLS + Auth)
+- Tailwind CSS
+- OpenRouter (IA via Gemini Flash)
+- Stripe (pagamentos)
+- Vercel (deploy)

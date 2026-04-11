@@ -1,295 +1,100 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Instruções para agentes de IA que trabalham neste repositório.
 
 ---
 
-## Project Overview
+## Projeto
 
-**Beauty OS** - A premium SaaS system for salon and barbershop management. This is a React 19 + TypeScript + Vite frontend application with multi-tenant support, advanced theming (Brutal for barbershops, Beauty for salons), and AI-powered features.
+**AGENX** — SaaS de gestão para barbearias e salões de beleza (Brasil e Portugal).
+React 19 + TypeScript + Supabase. Multi-tenant com isolamento por `company_id`.
 
-**Key Tech Stack:**
-- Frontend: React 19, TypeScript 5.8, Vite 6
-- Styling: Tailwind CSS (glassmorphism design patterns)
-- Database: Supabase (PostgreSQL with RLS for multi-tenant isolation)
-- Authentication: Clerk (migrated from Supabase Auth)
-- AI: Google Generative AI (Gemini API)
-- Payments: Stripe
-- Testing: Vitest + React Testing Library
-- Routing: React Router 7 (HashRouter pattern)
-- Charts: Recharts
-- UI Components: Lucide React icons, custom components
+Stack: React 19, TypeScript 5.8, Vite 6, Tailwind CSS, Supabase (auth + banco), OpenRouter (IA), Stripe, Vercel.
 
 ---
 
-## Build and Run Commands
+## Comandos essenciais
 
-### Development
 ```bash
-npm install              # Install dependencies
-npm run dev            # Start dev server (http://localhost:3000 with --host flag)
-```
-
-### Production
-```bash
-npm run build          # Build for production (outputs to dist/)
-npm run preview        # Preview production build locally
-```
-
-### Code Quality
-```bash
-npm run lint           # Run ESLint (strict, fails on any warnings)
-npm run typecheck      # Run TypeScript compiler check
-npm run lint --fix     # Fix ESLint issues automatically
-```
-
-### Testing
-```bash
-npm test               # Run all Vitest tests
-npm test -- <file>     # Run specific test file
-npm run test:ui        # Run tests with UI dashboard
-npm run test:coverage  # Generate coverage report
+npm run dev          # dev server → localhost:3000
+npm run build        # build produção
+npm run lint         # ESLint (strict — falha em warnings)
+npm run typecheck    # TypeScript check
+npm test             # Vitest
 ```
 
 ---
 
-## Project Structure
+## Estrutura de pastas
 
-### Core Directories
-- **`pages/`** - Page components (Dashboard, Agenda, Finance, Marketing, ClientCRM, etc.)
-  - Settings pages in `pages/settings/` (Team, Services, Subscriptions, Security, Audit Logs, etc.)
-  - Public pages: PublicBooking, QueueJoin, QueueStatus, ProfessionalPortfolio
-- **`components/`** - Reusable UI components (~50+ files)
-  - Modal components: AppointmentEditModal, ClientAuthModal, etc.
-  - Feature components: CommissionsManagement, BusinessHoursEditor, etc.
-  - Styled components: BrutalCard, BrutalButton, BrutalBackground
-- **`contexts/`** - React Context for global state
-  - AuthContext: Authentication state and user session
-  - AlertsContext: Toast notifications and alerts
-  - PublicClientContext: Public booking client data
-  - UIContext: UI theme preferences
-- **`lib/`** - Utility libraries
-  - `supabase.ts`: Database client initialization
-  - `gemini.ts`: Google Generative AI integration
-  - `auditLogs.ts`: Audit logging utilities
-- **`utils/`** - Helper functions
-  - `date.ts`: Date formatting and calculations
-  - `formatters.ts`: Currency and data formatters
-  - `Logger.ts`: Custom logging utility
-  - `tierSystem.ts`: Subscription tier logic
-- **`public/`** - Static assets (PWA icons, favicons, etc.)
-- **`supabase/`** - Database migrations (SQL files)
-- **`test/`** - Test setup and configuration
-
-### Configuration Files
-- `vite.config.ts` - Vite config (port 3000, path aliases with `@/`)
-- `tsconfig.json` - TypeScript config (ES2022 target, strict settings)
-- `vitest.config.ts` - Vitest config (jsdom environment, coverage setup)
-- `.eslintrc.json` - ESLint config (React + TypeScript rules)
-- `.env.example` - Environment variables template
-- `package.json` - Dependencies and scripts
-
----
-
-## Architecture & Patterns
-
-### Routing Architecture
-- **HashRouter**: Application uses `#` based routing (not traditional URL paths)
-- Route structure in `App.tsx` with lazy-loaded page components
-- Protected routes via ProtectedLayout wrapper that checks authentication
-- Public routes for unauthenticated users (PublicBooking, QueueJoin, etc.)
-
-### State Management
-- **React Context API** for global state (no Redux/Zustand)
-- AuthContext provides `useAuth()` hook for authentication state
-- AlertsContext for toast notifications via `useAlerts()` hook
-- Components access context via custom hooks
-
-### Multi-Tenant Architecture
-- **Company/Tenant Isolation**: All data queries must include `company_id` filter
-- **Supabase RLS (Row Level Security)**: Enforced at database level via policies
-- User's `company_id` extracted from Supabase auth session (never from URL/form input)
-- Critical: always enforce company_id filtering in all queries
-
-### Component Pattern
-- Functional components with hooks (React 19)
-- TypeScript interfaces for props and data types
-- Tailwind CSS for styling (custom "Brutal" theme classes)
-- Modal components use state-based visibility management
-- Forms use controlled components with React state
-
-### Data Fetching
-- Direct Supabase client calls from components (not centralized API layer)
-- Supabase client initialized in `lib/supabase.ts`
-- Error handling via try/catch blocks
-- Loading states managed with component-level state
-
-### Authentication Flow
-1. User logs in via Clerk
-2. Clerk provides session tokens
-3. AuthContext wraps app and maintains auth state
-4. Protected routes check `isAuthenticated` before rendering
-5. Supabase queries use Clerk's auth tokens via RLS policies
-
----
-
-## Important Architectural Rules
-
-### Security
-
-**Multi-Tenant Isolation:**
-- All database queries MUST filter by `company_id` from session
-- Supabase RLS enabled on all tenant-accessible tables
-- Never accept `company_id` from URL params or form input
-- Extract from `auth.jwt()` in database policies or Supabase client session
-
-**Environment Variables:**
-- `GEMINI_API_KEY` required in `.env.local` for AI features
-- Never commit `.env` or `.env.local` files
-- Use `.env.example` as template for local setup
-
-**Vite Client Auth Security:**
-- API keys exposed in Vite build are intentionally frontend-safe (Gemini key is frontend-only)
-
-### Code Organization
-
-**Component Responsibilities:**
-- One component per file (or related compound components)
-- Keep components focused on UI and user interaction
-- Extract complex logic to utility functions
-- Use TypeScript interfaces for all props
-
-**File Naming:**
-- Components: PascalCase (Dashboard.tsx, ClientCRM.tsx)
-- Utilities: camelCase (formatters.ts, date.ts)
-- Config files: kebab-case or camelCase (vite.config.ts)
-
-**Styling Approach:**
-- Tailwind CSS utility classes
-- Custom theme colors in CSS (--color-* variables)
-- "Brutal" theme for barbershops (dark, bold aesthetic)
-- "Beauty" theme for salons (elegant, clean aesthetic)
-- Glassmorphism effects for premium feel
-
----
-
-## Testing Strategy
-
-### Test Setup
-- **Test Runner:** Vitest (compatible with Jest syntax)
-- **Environment:** jsdom (DOM simulation)
-- **Assertion Library:** Jest/Vitest built-in (no separate library needed)
-- **Component Testing:** React Testing Library patterns
-- **Setup File:** `test/setup.ts` (runs before tests)
-
-### Test File Location
-- Test files alongside source files: `ComponentName.test.tsx`
-- Test configuration in `test/setup.ts`
-
-### Testing Patterns
-```typescript
-// Example test pattern
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Dashboard } from './Dashboard';
-
-describe('Dashboard', () => {
-  it('should render dashboard title', () => {
-    render(<Dashboard />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-  });
-});
+```
+pages/          → páginas (Dashboard, Agenda, Finance, ClientCRM, etc.)
+  settings/     → configurações (Team, Services, Subscriptions...)
+components/     → componentes reutilizáveis
+contexts/       → estado global (AuthContext, AlertsContext, UIContext)
+lib/            → integrações (supabase.ts, openrouter.ts)
+hooks/          → custom hooks
+utils/          → helpers (date.ts, formatters.ts, Logger.ts)
+supabase/
+  migrations/   → schema do banco (SQL)
+specs/
+  active/       → specs em andamento (SDD)
+  done/         → specs concluídas
 ```
 
-### Running Tests
-- `npm test` - Run all tests in watch mode
-- `npm test -- --run` - Run once and exit
-- `npm run test:ui` - Visual dashboard for test results
-- `npm run test:coverage` - Generate coverage report (HTML in `coverage/`)
+---
+
+## Arquitetura — regras críticas
+
+**Multi-tenant (NUNCA violar):**
+- Todo query no banco DEVE filtrar por `company_id`
+- `company_id` vem SEMPRE do session Supabase — nunca de URL param ou form input
+- RLS está ativo em todas as tabelas — não desabilitar sem entender o impacto
+
+**Auth:**
+- Supabase Auth (não Clerk — ignore qualquer referência a Clerk no código legado)
+- `useAuth()` do `AuthContext` → acesso a `user`, `companyId`, `role`, `businessName`
+- Staff registra via link `/#/register?company={ownerUserId}` → role: 'staff'
+
+**IA:**
+- OpenRouter via `lib/openrouter.ts` e hooks `useAIAssistant`, `useContentCalendar`
+- Chave em `VITE_OPENROUTER_API_KEY` (variável de ambiente — nunca hardcode)
+- Features de IA são pós-MVP — não priorizar no momento
+
+**Roteamento:**
+- HashRouter: rotas usam `#` → `/#/dashboard`, `/#/agenda`
+- Pages com `React.lazy()` — sempre dentro de `<Suspense>`
+- Rotas protegidas via `ProtectedLayout`
+- Rotas públicas: `/#/booking/:id`, `/#/queue/:id`
 
 ---
 
-## Database Architecture
+## Padrões de código
 
-### Supabase Setup
-- PostgreSQL database with Row Level Security (RLS)
-- Migrations stored in `supabase/migrations/`
-- Service role key used for admin operations only
-- Anon key used for client-side queries
-
-### RLS Policies
-- Every table accessed by users has ENABLE ROW LEVEL SECURITY
-- Policies filter by `company_id` from JWT claims
-- Service role bypasses RLS (use cautiously)
-
-### Key Tables
-- `companies` - Tenant/organization data
-- `users` - User accounts linked to companies
-- `appointments` - Scheduling data with company isolation
-- `services` - Service offerings per company
-- `transactions` - Financial records per company
-- Audit tables for tracking changes
+- Componentes: PascalCase, um por arquivo, functional + hooks
+- TypeScript interfaces para todas as props e tipos de dados
+- `@/` → alias para raiz (configurado em tsconfig.json)
+- Supabase client: `import { supabase } from '@/lib/supabase'`
+- Alertas: `const { showAlert } = useAlerts()`
+- Temas: `barber` (dark/brutal) e `beauty` (claro/elegante) — via `UIContext`
 
 ---
 
-## Development Workflow
+## Tarefas comuns
 
-### Before Starting
-1. Check `.env.local` is configured with required keys (GEMINI_API_KEY, Supabase credentials)
-2. Run `npm install` if dependencies were updated
-3. Start dev server: `npm run dev`
-4. Open http://localhost:3000 in browser
-
-### Making Changes
-1. Create feature branches from `main`
-2. Run `npm run lint` and `npm run typecheck` frequently
-3. Add tests for new functionality
-4. Keep commits focused and descriptive
-
-### Common Tasks
-- **Add new page:** Create in `pages/`, add route to `App.tsx`, add to lazy-loaded imports
-- **Add new component:** Create in `components/`, import where needed
-- **Update database schema:** Create migration file in `supabase/migrations/`
-- **Add context state:** Extend relevant context in `contexts/`
-- **Debug authentication:** Check `AuthContext.tsx` and Clerk dashboard
-- **Style component:** Use Tailwind classes + custom CSS if needed
+- **Nova página:** criar em `pages/`, adicionar rota em `App.tsx` com `React.lazy()`
+- **Novo componente:** criar em `components/`, importar onde usar
+- **Mudança no banco:** criar migration em `supabase/migrations/`
+- **Nova spec de feature:** usar template em `specs/_template.md`
 
 ---
 
-## Key Gotchas & Things to Know
+## Gotchas (leia antes de mexer em qualquer coisa)
 
-1. **HashRouter**: Routes use `#` (e.g., `/#/dashboard` not `/dashboard`)
-2. **Lazy Loading**: Pages imported with `React.lazy()` - wrap in `<Suspense>` with fallback
-3. **Supabase Auth**: Migrated from custom auth to Clerk - some legacy code may reference old patterns
-4. **RLS is Critical**: Without proper RLS, multi-tenant isolation breaks - always check queries
-5. **TypeScript Paths**: `@/` alias points to root directory (configured in tsconfig.json)
-6. **Mobile First**: Components optimized for mobile first (check responsive behavior)
-7. **PWA Support**: App is installable on mobile - test in PWA mode for offline support
----
-
-## Performance Considerations
-
-- **Code Splitting**: Vite automatically splits lazy-loaded pages
-- **Renders**: Watch for unnecessary re-renders in context updates
-- **Database Queries**: Minimize number of queries per component
-- **Bundle Size**: Check imports - avoid importing entire libraries if only using one function
-- **Styling**: Tailwind purges unused classes in production build
-
----
-
-## Useful Resources
-
-- **Vite Docs**: https://vitejs.dev/
-- **React 19 Docs**: https://react.dev/
-- **TypeScript Handbook**: https://www.typescriptlang.org/docs/
-- **Supabase Docs**: https://supabase.com/docs
-- **Tailwind CSS**: https://tailwindcss.com/
-- **Vitest**: https://vitest.dev/
-- **React Router**: https://reactrouter.com/
-
----
-
-## Important Notes
-
-- **Security Audit Completed**: See `SECURITY_AUDIT.md` for known issues and audit trail
-- **Temporary Files Ignore**: `temp_*`, `*_tests/`, `.antigravity/` directories are temporary - generally safe to delete if not in active use
+1. **RLS quebra silenciosamente** — query sem `company_id` retorna vazio, não erro
+2. **HashRouter** — links devem usar `/#/rota`, não `/rota`
+3. **Lazy Loading** — `React.lazy()` sem `<Suspense>` causa crash
+4. **Staff vs Owner** — `OwnerRouteGuard` bloqueia rotas pra staff; checar antes de criar página nova
+5. **`@/` alias** — aponta pra raiz do projeto, não pra `src/`
+6. **Mobile first** — barbeiro usa celular; testar em Chrome Android antes de qualquer deploy
+7. **91 migrations** — histórico instável de RLS; ao criar policy nova, testar com usuário real

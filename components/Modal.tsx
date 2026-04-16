@@ -79,8 +79,8 @@ export const Modal: React.FC<ModalProps> = ({
         } else {
             return `
         bg-brutal-card
-        border-4 border-brutal-border
-        shadow-[8px_8px_0px_0px_#000000]
+        border border-white/10
+        shadow-promax-depth rounded-2xl
       `;
         }
     };
@@ -90,7 +90,7 @@ export const Modal: React.FC<ModalProps> = ({
         if (isBeauty) {
             return 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent px-6 py-4';
         } else {
-            return 'border-b-2 border-black border-dashed px-6 py-4 bg-neutral-900/50';
+            return 'border-b border-white/8 px-6 py-4';
         }
     };
 
@@ -135,7 +135,7 @@ export const Modal: React.FC<ModalProps> = ({
                         {title && (
                             <h3 id="modal-title" className={`
                 font-heading text-lg md:text-xl
-                ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}
+                ${isBeauty ? 'text-white' : 'text-white'}
               `}>
                                 {title}
                             </h3>
@@ -166,21 +166,11 @@ export const Modal: React.FC<ModalProps> = ({
             px-6 py-4
             ${isBeauty
                             ? 'border-t border-beauty-neon/20 bg-gradient-to-r from-transparent to-beauty-neon/5'
-                            : 'border-t-2 border-black border-dashed bg-neutral-900/50'
+                            : 'border-t border-white/8'
                         }
           `}>
                         {footer}
                     </div>
-                )}
-
-                {/* Decorative elements for Brutalist */}
-                {!isBeauty && (
-                    <>
-                        <div className="absolute top-2 left-2 w-2 h-2 bg-neutral-600 rounded-full" />
-                        <div className="absolute top-2 right-2 w-2 h-2 bg-neutral-600 rounded-full" />
-                        <div className="absolute bottom-2 left-2 w-2 h-2 bg-neutral-600 rounded-full" />
-                        <div className="absolute bottom-2 right-2 w-2 h-2 bg-neutral-600 rounded-full" />
-                    </>
                 )}
 
                 {/* Gradient overlay for Beauty */}

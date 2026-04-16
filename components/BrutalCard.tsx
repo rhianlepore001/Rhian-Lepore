@@ -1,5 +1,4 @@
 import React from 'react';
-import { Screw } from './Screw';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 
@@ -73,7 +72,7 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
     if (isBeauty) {
       return 'font-heading text-lg md:text-xl text-white tracking-normal';
     } else {
-      return 'font-heading text-lg md:text-xl text-text-primary uppercase tracking-wider';
+      return 'font-heading text-lg md:text-xl text-text-primary tracking-normal';
     }
   };
 
@@ -87,16 +86,6 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       }}
       tabIndex={-1} // Remove do fluxo de tabulação para evitar foco acidental
     >
-      {/* Decorative Screws (Only for Barber/Brutalismo) */}
-      {!isBeauty && (
-        <>
-          <Screw className="top-2 left-2" />
-          <Screw className="top-2 right-2" />
-          <Screw className="bottom-2 left-2" />
-          <Screw className="bottom-2 right-2" />
-        </>
-      )}
-
       {/* Glass & Noise Overlay */}
       <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-promax opacity-10 pointer-events-none" />

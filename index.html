@@ -304,12 +304,11 @@
 
     ::-webkit-scrollbar-track {
       background: #121212;
-      border-left: 2px solid #000;
     }
 
     ::-webkit-scrollbar-thumb {
       background: #333;
-      border: 2px solid #000;
+      border-radius: 2px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
@@ -397,7 +396,7 @@
     .input-brutal:focus {
       outline: none;
       border-color: #C29B40;
-      box-shadow: 2px 2px 0px 0px #000000;
+      box-shadow: 0 0 0 2px rgba(194,155,64,0.25);
     }
 
     .input-beauty:focus {
@@ -408,8 +407,8 @@
 
     /* Card Hover Effects */
     .card-brutal-hover:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0px 0px #000000;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
 
     .card-beauty-hover:hover {
@@ -451,10 +450,10 @@
     .brutal-card-enhanced {
       position: relative;
       background: linear-gradient(135deg, #1E1E1E 0%, #252525 100%);
-      border: 3px solid #000;
+      border: 1px solid rgba(255,255,255,0.08);
       box-shadow:
-        4px 4px 0px 0px #000000,
-        inset 0 1px 0 rgba(194, 155, 64, 0.1);
+        0 4px 24px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(194, 155, 64, 0.06);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -474,10 +473,10 @@
     }
 
     .brutal-card-enhanced:hover {
-      transform: translate(-2px, -2px);
+      transform: translateY(-2px);
       box-shadow:
-        6px 6px 0px 0px #000000,
-        inset 0 1px 0 rgba(194, 155, 64, 0.2);
+        0 8px 32px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(194, 155, 64, 0.12);
     }
 
     /* Gold Accent Borders */
@@ -501,10 +500,10 @@
     .brutal-button-premium {
       position: relative;
       background: linear-gradient(135deg, #C29B40 0%, #D4AF50 100%);
-      border: 3px solid #000;
+      border: none;
       box-shadow:
-        3px 3px 0px 0px #000000,
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 4px 16px rgba(194,155,64,0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
     }
@@ -525,23 +524,23 @@
     }
 
     .brutal-button-premium:hover {
-      transform: translate(-1px, -1px);
+      transform: none;
+      filter: brightness(1.08);
       box-shadow:
-        4px 4px 0px 0px #000000,
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        0 6px 20px rgba(194,155,64,0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .brutal-button-premium:active {
-      transform: translate(1px, 1px);
-      box-shadow:
-        2px 2px 0px 0px #000000,
-        inset 0 1px 0 rgba(0, 0, 0, 0.2);
+      transform: scale(0.97);
+      filter: brightness(1.0);
+      box-shadow: 0 2px 8px rgba(194,155,64,0.2);
     }
 
     /* Sidebar Enhancement */
     .brutal-sidebar {
       background: linear-gradient(180deg, #1E1E1E 0%, #121212 100%);
-      border-right: 3px solid #000;
+      border-right: 1px solid rgba(255,255,255,0.06);
       box-shadow:
         inset -1px 0 0 rgba(194, 155, 64, 0.1),
         4px 0 20px rgba(0, 0, 0, 0.5);
@@ -550,10 +549,9 @@
     /* Header Enhancement */
     .brutal-header {
       background: linear-gradient(90deg, #1E1E1E 0%, #252525 50%, #1E1E1E 100%);
-      border: 3px solid #000;
-      box-shadow:
-        0 3px 0 0 #000,
-        inset 0 -1px 0 rgba(194, 155, 64, 0.1);
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      box-shadow: none;
     }
 
     /* PRO-MAX FRAGMENTS */
@@ -601,8 +599,8 @@
     .stat-card-brutal {
       position: relative;
       background: #1E1E1E;
-      border: 3px solid #000;
-      box-shadow: 4px 4px 0px 0px #000000;
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
       overflow: hidden;
     }
 
@@ -649,7 +647,7 @@
       .brutal-card-enhanced,
       .brutal-card,
       .brutal-button-premium {
-        box-shadow: 2px 2px 0px 0px #000000 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
         /* Force simpler shadows */
       }
     }

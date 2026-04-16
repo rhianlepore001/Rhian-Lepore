@@ -42,14 +42,13 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
       `;
     } else {
       return `
-        font-mono font-bold uppercase tracking-tight 
-        border-2 border-black 
+        font-sans font-semibold
+        border border-white/10
+        rounded-xl
         transition-all duration-150
-        flex items-center justify-center gap-2 
-        transform active:translate-y-1 active:translate-x-1 active:shadow-none active:animate-haptic-click
-        hover:translate-x-[-2px] hover:translate-y-[-2px]
-        disabled:opacity-70 disabled:grayscale disabled:cursor-not-allowed
-        disabled:hover:translate-x-0 disabled:hover:translate-y-0
+        flex items-center justify-center gap-2
+        transform hover:brightness-110 active:scale-[0.97] active:animate-haptic-click
+        disabled:opacity-50 disabled:cursor-not-allowed
       `;
     }
   };
@@ -78,7 +77,7 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
 
       outline: isBeauty
         ? 'bg-transparent border border-white/20 text-white hover:bg-white/5'
-        : 'bg-transparent border-2 border-black text-black hover:bg-black/5'
+        : 'bg-transparent border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/5'
     };
     return variants[variant];
   };

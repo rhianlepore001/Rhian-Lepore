@@ -102,6 +102,25 @@ Plans:
 
 ---
 
+## Phase 6: UI Polish — Modernização Tema Barber
+
+**Goal:** Remover elementos visuais datados do tema Barber (parafusos, fontes monospace, sombras offset, bordas grossas) mantendo a identidade dark-gold e sem tocar no tema Beauty.
+
+**Status:** 🔴 Pending
+
+**Spec:** `specs/active/ui-modernizacao-tema-barber.md`
+
+**Scope:**
+- BrutalButton: fonte Inter, case normal, bordas sutis, hover com brightness
+- BrutalCard: remover parafusos decorativos, remover uppercase nos títulos
+- Modal: remover border-4/dashed/sombra offset/dots, aplicar sombra promax
+- CSS global: atualizar `.brutal-*` classes para padrão moderno
+- Resultado visual: dark premium industrial (referência: Squire, Boulevard)
+
+**Requirements:** REQ-060, REQ-061, REQ-062, REQ-063
+
+---
+
 ## Requirements Index
 
 | ID | Fase | Descrição |
@@ -126,3 +145,7 @@ Plans:
 | REQ-041 | 5 | Collaborator vê apenas dados próprios |
 | REQ-042 | 5 | Bloqueio de rotas para staff |
 | REQ-043 | 5 | RLS filtrado por collaborator_id para staff |
+| REQ-060 | 6 | BrutalButton sem fonte monospace/uppercase/border-black |
+| REQ-061 | 6 | BrutalCard sem parafusos e sem uppercase em títulos |
+| REQ-062 | 6 | Modal brutal sem border-4/dashed/sombra offset/dots |
+| REQ-063 | 6 | CSS global .brutal-* atualizado para padrão moderno |

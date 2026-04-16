@@ -33,6 +33,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             ? initialData.specialties.join(', ')
             : (initialData?.specialties || '')
     );
+    const [cpf, setCpf] = useState(initialData?.cpf || '');
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo_url || null);
     const [loading, setLoading] = useState(false);
@@ -108,7 +109,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 photo_url: photoUrl,
                 commission_rate: (isOwner || commissionRate === '') ? 0 : Number(commissionRate),
                 is_owner: isOwner,
-                specialties: specialties.split(',').map(s => s.trim()).filter(Boolean)
+                specialties: specialties.split(',').map(s => s.trim()).filter(Boolean),
+                cpf: cpf.trim() || null
             };
 
             if (initialData?.id) {
@@ -289,6 +291,21 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 placeholder="joao-silva"
                             />
                         </div>
+                    </div>
+
+                    <div>
+                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>CPF (Opcional)</label>
+                        <input
+                            type="text"
+                            value={cpf}
+                            onChange={e => setCpf(e.target.value)}
+                            className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                                ${isBeauty
+                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
+                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
+                            placeholder="000.000.000-00"
+                            maxLength={14}
+                        />
                     </div>
 
                     <div>

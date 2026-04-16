@@ -1,7 +1,8 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Clock, AlertTriangle, Target } from 'lucide-react';
+import { Clock, AlertTriangle, Target, Bell, Calendar } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { ProfitMetrics } from '../components/dashboard/ProfitMetrics';
 import { ActionCenter } from '../components/dashboard/ActionCenter';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,11 +27,53 @@ import { Skeleton } from '../components/SkeletonLoader';
 import { SmartNotificationsBanner } from '../components/SmartNotifications';
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, role } = useAuth();
+  const { userType, region, role, user } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
 
   const isStaff = role === 'staff';
+
+  const [commissionBanner, setCommissionBanner] = useState(false);
+  const [commissionBannerDismissed, setCommissionBannerDismissed] = useState(false);
+  const [unfinishedCount, setUnfinishedCount] = useState(0);
+  const [unfinishedBannerDismissed, setUnfinishedBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!user || commissionBannerDismissed) return;
+    const fetchCommissionBanner = async () => {
+      const { data } = await supabase
+        .from('business_settings')
+        .select('commission_settlement_day_of_month')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!data?.commission_settlement_day_of_month) return;
+      const today = new Date();
+      const settlementDay = data.commission_settlement_day_of_month;
+      if (today.getDate() === settlementDay - 1 || (settlementDay === 1 && today.getDate() === new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate())) {
+        setCommissionBanner(true);
+      }
+    };
+    if (!isStaff) fetchCommissionBanner();
+  }, [user, isStaff, commissionBannerDismissed]);
+
+  useEffect(() => {
+    if (!user || unfinishedBannerDismissed) return;
+    const now = new Date();
+    if (now.getHours() < 20) return;
+    const fetchUnfinished = async () => {
+      const todayStr = now.toISOString().split('T')[0];
+      const { count } = await supabase
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('appointment_time', todayStr + 'T00:00:00')
+        .lte('appointment_time', todayStr + 'T23:59:59')
+        .neq('status', 'Completed')
+        .neq('status', 'Cancelled');
+      if (count && count > 0) setUnfinishedCount(count);
+    };
+    fetchUnfinished();
+  }, [user, unfinishedBannerDismissed]);
 
   const {
     appointments,
@@ -63,6 +106,44 @@ export const Dashboard: React.FC = () => {
 
       {/* Smart Notifications */}
       <SmartNotificationsBanner />
+
+      {/* Banner: véspera de pagamento de comissões (apenas owner) */}
+      {!isStaff && commissionBanner && !commissionBannerDismissed && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-300">
+          <div className="flex items-center gap-2 text-sm">
+            <Bell className="w-4 h-4 shrink-0" />
+            <span>Amanhã é dia de pagar as comissões.</span>
+            <button
+              onClick={() => navigate('/finance')}
+              className="underline underline-offset-2 hover:text-yellow-100 transition-colors"
+            >
+              Ver equipe →
+            </button>
+          </div>
+          <button onClick={() => setCommissionBannerDismissed(true)} className="text-yellow-500/60 hover:text-yellow-300 transition-colors shrink-0">
+            <span className="sr-only">Fechar</span>✕
+          </button>
+        </div>
+      )}
+
+      {/* Banner: atendimentos não concluídos após 20h */}
+      {unfinishedCount > 0 && !unfinishedBannerDismissed && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-300">
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="w-4 h-4 shrink-0" />
+            <span>{unfinishedCount} atendimento{unfinishedCount > 1 ? 's' : ''} não {unfinishedCount > 1 ? 'foram confirmados' : 'foi confirmado'} hoje.</span>
+            <button
+              onClick={() => navigate('/agenda')}
+              className="underline underline-offset-2 hover:text-orange-100 transition-colors"
+            >
+              Ver agendamentos →
+            </button>
+          </div>
+          <button onClick={() => setUnfinishedBannerDismissed(true)} className="text-orange-500/60 hover:text-orange-300 transition-colors shrink-0">
+            <span className="sr-only">Fechar</span>✕
+          </button>
+        </div>
+      )}
 
       {isStaff ? (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">

@@ -8,6 +8,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
+import { CheckoutModal } from '../components/CheckoutModal';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
@@ -28,6 +29,7 @@ interface Appointment {
     basePrice?: number; // Base price for discount calculation
     clientPhone?: string;
     notes?: string;
+    payment_method?: string | null;
 }
 
 interface TeamMember {
@@ -72,7 +74,7 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 };
 
 export const Agenda: React.FC = () => {
-    const { user, userType, region } = useAuth();
+    const { user, userType, region, role, companyId } = useAuth();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     useAppTour(); // Instancia para detectar continuação do tour
@@ -96,6 +98,15 @@ export const Agenda: React.FC = () => {
 
     // State for editing
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+
+    // State for checkout (Fase 3)
+    const [checkoutAppointment, setCheckoutAppointment] = useState<import('../types').Appointment | null>(null);
+    const [checkoutTeamMembers, setCheckoutTeamMembers] = useState<Array<{ id: string; name: string; active: boolean }>>([]);
+    const [financialSettings, setFinancialSettings] = useState<{
+        machine_fee_enabled: boolean;
+        debit_fee_percent: number;
+        credit_fee_percent: number;
+    } | null>(null);
 
     // Form state (for new appointment modal)
     const [selectedClient, setSelectedClient] = useState('');
@@ -279,9 +290,30 @@ export const Agenda: React.FC = () => {
             fetchClients(),
             fetchServices(),
             fetchCategories(),
-            fetchBusinessProfile()
+            fetchBusinessProfile(),
+            fetchCheckoutData()
         ]);
         setLoading(false);
+    };
+
+    const fetchCheckoutData = async () => {
+        if (!user) return;
+        // Buscar team members para o dropdown "Recebido por" no CheckoutModal
+        const { data: membersData } = await supabase
+            .from('team_members')
+            .select('id, name, active')
+            .eq('user_id', companyId || user.id)
+            .eq('active', true)
+            .order('name');
+        setCheckoutTeamMembers(membersData || []);
+
+        // Buscar configurações financeiras para pré-preencher taxa
+        const { data: finSettings } = await supabase
+            .from('business_settings')
+            .select('machine_fee_enabled, debit_fee_percent, credit_fee_percent')
+            .eq('user_id', companyId || user.id)
+            .maybeSingle();
+        setFinancialSettings(finSettings);
     };
 
     const fetchTeamMembers = async () => {
@@ -318,7 +350,7 @@ export const Agenda: React.FC = () => {
             .eq('user_id', user.id)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
-            .in('status', ['Confirmed', 'Pending']) // Include pending for the day view
+            .in('status', ['Confirmed', 'Pending', 'Completed']) // Include Completed for badge (Fase 3)
             .order('appointment_time');
 
         if (data) {
@@ -336,7 +368,8 @@ export const Agenda: React.FC = () => {
                     status: apt.status,
                     professional_id: apt.professional_id,
                     basePrice: basePrice,
-                    notes: apt.notes
+                    notes: apt.notes,
+                    payment_method: apt.payment_method
                 };
             }));
         }
@@ -832,6 +865,13 @@ export const Agenda: React.FC = () => {
     };
 
     const handleCancelAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
+        // Guard: staff não pode cancelar agendamento já finalizado (D-07)
+        const apt = appointments.find((a) => a.id === appointmentId)
+            || overdueAppointments.find((a) => a.id === appointmentId);
+        if (apt?.status === 'Completed' && role === 'staff') {
+            alert('Este agendamento já foi finalizado. Fale com o dono.');
+            return;
+        }
         if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
         try {
             await supabase
@@ -1575,9 +1615,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                                 <button onClick={() => setEditingAppointment(apt)} className="p-1 hover:bg-white/10 rounded transition-colors" title="Editar">
                                                                     <Edit2 className="w-3.5 h-3.5 text-neutral-400 hover:text-white" />
                                                                 </button>
-                                                                <button onClick={() => handleCompleteAppointment(apt.id)} className="p-1 hover:bg-white/10 rounded transition-colors" title="Concluir">
-                                                                    <Check className="w-3.5 h-3.5 text-green-500" />
-                                                                </button>
+                                                                {!isCompleted && (
+                                                                    <button onClick={() => setCheckoutAppointment({ ...apt, time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: apt.status as 'Confirmed' | 'Pending' | 'Completed' })} className="p-1 hover:bg-white/10 rounded transition-colors" title="Concluir">
+                                                                        <Check className="w-3.5 h-3.5 text-green-500" />
+                                                                    </button>
+                                                                )}
                                                                 <button onClick={() => handleCancelAppointment(apt.id)} className="p-1 hover:bg-white/10 rounded transition-colors" title="Cancelar">
                                                                     <X className="w-3.5 h-3.5 text-red-500" />
                                                                 </button>
@@ -1596,6 +1638,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                             {apt.service}
                                                         </p>
                                                     </div>
+                                                    {isCompleted && apt.payment_method && (
+                                                        <span className="text-xs font-mono bg-green-500/10 text-green-400 px-2 py-0.5 rounded inline-block">
+                                                            Pago via {apt.payment_method.toUpperCase()}
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 <div className="pt-3 border-t border-white/5 flex items-center justify-between">
@@ -1983,6 +2030,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     currencySymbol={currencySymbol}
                 />
             )}
+
+            {/* CheckoutModal — Fase 3 */}
+            <CheckoutModal
+                appointment={checkoutAppointment}
+                teamMembers={checkoutTeamMembers}
+                financialSettings={financialSettings}
+                onClose={() => setCheckoutAppointment(null)}
+                onConfirm={() => {
+                    setCheckoutAppointment(null);
+                    fetchData();
+                }}
+            />
         </div>
     );
 };

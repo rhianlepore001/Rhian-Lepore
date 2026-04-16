@@ -37,6 +37,10 @@ export interface Appointment {
   professional_id?: string;
   notes?: string;
   user_id?: string;
+  payment_method?: string;        // 'pix' | 'cash' | 'debit' | 'credit' | null — já existe no banco (20260218)
+  received_by?: string | null;    // UUID → team_members.id — quem recebeu o pagamento
+  machine_fee_applied?: boolean;  // se taxa de maquininha foi aplicada
+  machine_fee_percent?: number | null; // percentual da taxa aplicada
 }
 
 export interface FinanceRecord {

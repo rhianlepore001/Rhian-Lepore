@@ -24,6 +24,7 @@ const PublicBookingSettings = React.lazy(() => import('./pages/settings/PublicBo
 const TeamSettings = React.lazy(() => import('./pages/settings/TeamSettings').then(module => ({ default: module.TeamSettings })));
 const ServiceSettings = React.lazy(() => import('./pages/settings/ServiceSettings').then(module => ({ default: module.ServiceSettings })));
 const CommissionsSettings = React.lazy(() => import('./pages/settings/CommissionsSettings').then(module => ({ default: module.CommissionsSettings })));
+const FinancialSettings = React.lazy(() => import('./pages/settings/FinancialSettings').then(module => ({ default: module.FinancialSettings })));
 const SubscriptionSettings = React.lazy(() => import('./pages/settings/SubscriptionSettings').then(module => ({ default: module.SubscriptionSettings })));
 const AuditLogs = React.lazy(() => import('./pages/settings/AuditLogs').then(module => ({ default: module.AuditLogs })));
 const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(module => ({ default: module.RecycleBin })));
@@ -158,6 +159,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/equipe" element={<OwnerRouteGuard><TeamSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/servicos" element={<ServiceSettings />} />
           <Route path="/configuracoes/comissoes" element={<OwnerRouteGuard><CommissionsSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/financeiro" element={<OwnerRouteGuard><FinancialSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/auditoria" element={<OwnerRouteGuard><AuditLogs /></OwnerRouteGuard>} />
           <Route path="/configuracoes/lixeira" element={<OwnerRouteGuard><RecycleBin /></OwnerRouteGuard>} />

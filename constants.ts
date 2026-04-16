@@ -19,6 +19,7 @@ export const SETTINGS_ITEMS = [
   { label: 'Equipe', path: '/configuracoes/equipe', icon: Users },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
   { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
+  { label: 'Financeiro', path: '/configuracoes/financeiro', icon: DollarSign },
   { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
   { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield },
   { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ClipboardList },

@@ -2004,9 +2004,8 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     }}
                     onSuccess={(date) => {
                         const newDateStr = date.toISOString().split('T')[0];
-                        navigate(`/agenda?date=${newDateStr}`, { replace: true });
-                        fetchData(); // Refresh data
                         setShowNewAppointmentModal(false);
+                        navigate(`/agenda?date=${newDateStr}`, { replace: true });
                     }}
                     initialDate={selectedDate}
                     teamMembers={teamMembers}

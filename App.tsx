@@ -7,6 +7,7 @@ import { PublicClientProvider } from './contexts/PublicClientContext';
 import { DynamicBranding } from './components/DynamicBranding';
 import { AIAssistantChat } from './components/AIAssistantChat';
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 
 // Lazy Load Pages
@@ -70,9 +71,11 @@ const ProtectedLayout = () => {
 
   return (
     <Layout>
-      <Suspense fallback={<LoadingFull />}>
-        <Outlet />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFull />}>
+          <Outlet />
+        </Suspense>
+      </ErrorBoundary>
       <AIAssistantChat />
     </Layout>
   );
@@ -93,13 +96,16 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
-// Guard para rotas exclusivas do dono: redireciona staff para /
+// Guard para rotas exclusivas do dono: redireciona staff para / com toast
 const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, loading, role } = useAuth();
 
   if (loading) return <LoadingFull />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (role === 'staff') return <Navigate to="/" replace />;
+  if (role === 'staff') {
+    sessionStorage.setItem('ownerRouteToast', 'Acesso restrito ao dono da barbearia');
+    return <Navigate to="/" replace />;
+  }
 
   return children;
 };
@@ -116,7 +122,8 @@ const AppRoutes: React.FC = () => {
   }, []);
 
   return (
-    <Suspense fallback={<LoadingFull />}>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
         <Route path="/register" element={<Register />} />
@@ -148,7 +155,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/fila" element={<OwnerRouteGuard><QueueManagement /></OwnerRouteGuard>} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientCRM />} />
-          <Route path="/financeiro" element={<Finance />} />
+          <Route path="/financeiro" element={<OwnerRouteGuard><Finance /></OwnerRouteGuard>} />
           <Route path="/marketing" element={<OwnerRouteGuard><Marketing /></OwnerRouteGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
 
@@ -171,7 +178,8 @@ const AppRoutes: React.FC = () => {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Suspense>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

@@ -108,6 +108,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                     <div>
                         <label className="text-sm text-neutral-400 block mb-1">Nome Completo</label>
                         <input
+                            autoFocus
                             value={newClientName}
                             onChange={e => setNewClientName(e.target.value)}
                             className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30"

@@ -104,6 +104,13 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const [inlineRate, setInlineRate] = useState('');
     const [savingRate, setSavingRate] = useState(false);
 
+    // Toast
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const showAlert = (message: string, type: 'success' | 'error' = 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     // Modals
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -141,7 +148,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             // Fetch CPF for each professional
             const ids = (data || []).filter((i: any) => !i.is_owner).map((i: any) => i.professional_id);
-            let cpfMap: Record<string, string | null> = {};
+            const cpfMap: Record<string, string | null> = {};
             if (ids.length > 0) {
                 const { data: members } = await supabase
                     .from('team_members')
@@ -250,7 +257,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             setPendingPayProfessional(null);
             openPayModal(updated);
         } catch (err: any) {
-            showAlert(`Erro ao salvar comissão: ${err.message}`, 'error');
+            showAlert(`Erro ao salvar comissão: ${err.message || 'Erro inesperado'}`, 'error');
         } finally {
             setSavingRate(false);
         }
@@ -302,7 +309,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             fetchCommissionsDue();
             if (onPaymentSuccess) onPaymentSuccess();
         } catch (error: any) {
-            showAlert(`Erro ao registrar pagamento: ${error.message || 'Tente novamente.'}`, 'error');
+            showAlert(`Erro ao registrar pagamento: ${error.message || 'Erro inesperado'}`, 'error');
         } finally {
             setPayingProfessionalId(null);
         }
@@ -378,7 +385,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     )}
 
                     {/* List */}
-                    <div className="bg-neutral-900/40 border-0 md:border-2 border-neutral-800 md:rounded-3xl p-0 md:p-8 backdrop-blur-sm overflow-hidden">
+                    <div className="bg-neutral-900/40 border-0 md:border-2 border-neutral-800 md:rounded-3xl p-0 md:p-8 backdrop-blur-sm overflow-y-auto">
                         {loading ? (
                             <div className="text-center py-24 text-neutral-500">
                                 <Loader2 className={`w-12 h-12 mx-auto animate-spin mb-4 ${accentTextClass}`} />
@@ -732,6 +739,16 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             )}
 
             {/* Commission Detail Report Modal */}
+            {/* Toast */}
+            {toast && (
+                <div className={`fixed bottom-4 right-4 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all ${toast.type === 'success' ? 'bg-green-900/90 border-green-700 text-green-100' : 'bg-red-900/90 border-red-700 text-red-100'}`}>
+                    <span className="text-sm font-medium">{toast.message}</span>
+                    <button onClick={() => setToast(null)} className="ml-1 opacity-70 hover:opacity-100 transition-opacity">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             {showReportModal && detailsProfessional && (
                 <CommissionDetailReport
                     professionalId={detailsProfessional.professional_id}

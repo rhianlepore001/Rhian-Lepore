@@ -59,7 +59,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [discount, setDiscount] = useState<string>('0');
     const [notes, setNotes] = useState<string>('');
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
-    const [paymentMethod, setPaymentMethod] = useState<string>('Dinheiro');
+    const [paymentMethod, setPaymentMethod] = useState<string>('');
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
@@ -135,7 +135,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 p_client_id: selectedClientId,
                 p_notes: notes || null,
                 p_custom_service_name: isCustomService ? (customServiceName || 'Serviço Personalizado') : null,
-                p_payment_method: paymentMethod
+                p_payment_method: paymentMethod || null
             });
 
             if (rpcError) throw rpcError;

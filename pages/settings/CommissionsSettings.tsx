@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { DollarSign, Calendar, Users, TrendingUp, Percent, AlertCircle, Loader2, Check } from 'lucide-react';
+import { DollarSign, Calendar, Users, TrendingUp, Percent, AlertCircle, Loader2, Check, CreditCard } from 'lucide-react';
 
 interface TeamMember {
     id: string;
@@ -24,6 +24,12 @@ export const CommissionsSettings: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [editingMember, setEditingMember] = useState<string | null>(null);
     const [tempRates, setTempRates] = useState<Record<string, string>>({});
+
+    // Taxa de maquininha
+    const [machineFeeEnabled, setMachineFeeEnabled] = useState(false);
+    const [debitFeePercent, setDebitFeePercent] = useState<string>('0');
+    const [creditFeePercent, setCreditFeePercent] = useState<string>('0');
+    const [savingMachineFee, setSavingMachineFee] = useState(false);
 
     const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -58,15 +64,20 @@ export const CommissionsSettings: React.FC = () => {
             });
             setTempRates(rates);
 
-            // Fetch business settings
+            // Fetch business settings (inclui taxa maquininha)
             const { data: settingsData, error: settingsError } = await supabase
                 .from('business_settings')
-                .select('commission_settlement_day_of_month')
+                .select('commission_settlement_day_of_month, machine_fee_enabled, debit_fee_percent, credit_fee_percent')
                 .eq('user_id', user.id)
                 .single();
 
-            if (!settingsError && settingsData?.commission_settlement_day_of_month) {
-                setSettlementDay(settingsData.commission_settlement_day_of_month);
+            if (!settingsError && settingsData) {
+                if (settingsData.commission_settlement_day_of_month) {
+                    setSettlementDay(settingsData.commission_settlement_day_of_month);
+                }
+                setMachineFeeEnabled(settingsData.machine_fee_enabled ?? false);
+                setDebitFeePercent(String(settingsData.debit_fee_percent ?? 0));
+                setCreditFeePercent(String(settingsData.credit_fee_percent ?? 0));
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -166,6 +177,43 @@ export const CommissionsSettings: React.FC = () => {
             }));
         }
         setEditingMember(null);
+    };
+
+    const handleSaveMachineFee = async () => {
+        if (!user) return;
+
+        const debit = parseFloat(debitFeePercent);
+        const credit = parseFloat(creditFeePercent);
+
+        if (isNaN(debit) || debit < 0 || debit > 100) {
+            alert('⚠️ Taxa débito deve ser entre 0% e 100%');
+            return;
+        }
+        if (isNaN(credit) || credit < 0 || credit > 100) {
+            alert('⚠️ Taxa crédito deve ser entre 0% e 100%');
+            return;
+        }
+
+        setSavingMachineFee(true);
+        try {
+            const { error } = await supabase
+                .from('business_settings')
+                .upsert({
+                    user_id: user.id,
+                    machine_fee_enabled: machineFeeEnabled,
+                    debit_fee_percent: debit,
+                    credit_fee_percent: credit,
+                    updated_at: new Date().toISOString(),
+                }, { onConflict: 'user_id' });
+
+            if (error) throw error;
+            alert('✅ Configurações de taxa salvas com sucesso!');
+        } catch (error) {
+            console.error('Erro ao salvar taxa maquininha:', error);
+            alert('❌ Erro ao salvar configurações de taxa.');
+        } finally {
+            setSavingMachineFee(false);
+        }
     };
 
     if (loading) {
@@ -412,6 +460,97 @@ export const CommissionsSettings: React.FC = () => {
                             })}
                         </div>
                     )}
+                </BrutalCard>
+
+                {/* Taxa de Maquininha */}
+                <BrutalCard title="💳 Taxa de Maquininha">
+                    <div className="space-y-4">
+                        <p className="text-neutral-400 text-sm">
+                            Configure se a taxa de maquininha é repassada ao colaborador no cálculo da comissão.
+                            Quando ativado, a comissão é calculada sobre o valor líquido (valor — taxa).
+                        </p>
+
+                        {/* Toggle */}
+                        <label className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${
+                            machineFeeEnabled
+                                ? (isBeauty ? 'bg-beauty-neon/10 border-beauty-neon/40' : 'bg-accent-gold/10 border-accent-gold/40')
+                                : 'bg-neutral-900 border-neutral-800'
+                        }`}>
+                            <div
+                                onClick={() => setMachineFeeEnabled(v => !v)}
+                                className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                    machineFeeEnabled ? (isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold') : 'bg-neutral-700'
+                                }`}
+                            >
+                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                    machineFeeEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                                }`} />
+                            </div>
+                            <div>
+                                <span className="text-white font-bold block">Repassar taxa ao colaborador?</span>
+                                <span className="text-neutral-400 text-xs">
+                                    {machineFeeEnabled ? 'Ativado — comissão calculada sobre valor líquido' : 'Desativado — comissão sobre valor bruto'}
+                                </span>
+                            </div>
+                        </label>
+
+                        {/* Percentuais */}
+                        <div className={`grid grid-cols-2 gap-4 transition-opacity ${machineFeeEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                            <div>
+                                <label className="block text-white font-mono text-sm mb-2">
+                                    Taxa Débito (%)
+                                </label>
+                                <div className="relative">
+                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        value={debitFeePercent}
+                                        onChange={e => setDebitFeePercent(e.target.value)}
+                                        disabled={!machineFeeEnabled}
+                                        className={`w-full pl-10 pr-4 py-2 rounded-lg text-white font-mono outline-none transition-all ${
+                                            isBeauty
+                                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-${accentColor}`
+                                        }`}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-white font-mono text-sm mb-2">
+                                    Taxa Crédito (%)
+                                </label>
+                                <div className="relative">
+                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        value={creditFeePercent}
+                                        onChange={e => setCreditFeePercent(e.target.value)}
+                                        disabled={!machineFeeEnabled}
+                                        className={`w-full pl-10 pr-4 py-2 rounded-lg text-white font-mono outline-none transition-all ${
+                                            isBeauty
+                                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-${accentColor}`
+                                        }`}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <BrutalButton
+                            variant="primary"
+                            onClick={handleSaveMachineFee}
+                            disabled={savingMachineFee}
+                            icon={savingMachineFee ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        >
+                            {savingMachineFee ? 'Salvando...' : 'Salvar Taxa'}
+                        </BrutalButton>
+                    </div>
                 </BrutalCard>
 
                 {/* Help Card */}

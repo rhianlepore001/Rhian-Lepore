@@ -64,14 +64,18 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
 }) => {
     const paymentOptions = region === 'PT'
         ? [
+            { id: '', label: 'Definir depois', icon: '⏳' },
             { id: 'Dinheiro', label: 'Dinheiro', icon: '💵' },
             { id: 'MBWay', label: 'MBWay', icon: '📱' },
-            { id: 'Cartão', label: 'Cartão', icon: '💳' },
+            { id: 'Débito', label: 'Débito', icon: '💳' },
+            { id: 'Crédito', label: 'Crédito', icon: '💳' },
         ]
         : [
+            { id: '', label: 'Definir depois', icon: '⏳' },
             { id: 'Dinheiro', label: 'Dinheiro', icon: '💵' },
             { id: 'Pix', label: 'Pix', icon: '💎' },
-            { id: 'Cartão', label: 'Cartão', icon: '💳' },
+            { id: 'Débito', label: 'Débito', icon: '💳' },
+            { id: 'Crédito', label: 'Crédito', icon: '💳' },
         ];
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -170,10 +174,10 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
 
                     <div className="pt-4 border-t border-white/10">
                         <label className="text-xs text-neutral-400 uppercase font-bold mb-3 block">Forma de Pagamento</label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {paymentOptions.map((opt) => (
                                 <button
-                                    key={opt.id}
+                                    key={opt.id === '' ? '__none__' : opt.id}
                                     onClick={() => setPaymentMethod(opt.id)}
                                     className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${paymentMethod === opt.id
                                         ? `${isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white' : 'bg-accent-gold border-accent-gold text-black'} scale-95 shadow-lg`

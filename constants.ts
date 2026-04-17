@@ -7,7 +7,7 @@ export const NAVIGATION_ITEMS = [
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false },
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: true },
   { name: 'Clientes CRM', icon: Users, path: '/clientes', ownerOnly: false },
-  { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: false },
+  { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
   { name: 'Marketing', icon: TrendingUp, path: '/marketing', ownerOnly: true },
   { name: 'Insights', icon: BarChart3, path: '/insights', ownerOnly: true },
   { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true },

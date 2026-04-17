@@ -13,6 +13,7 @@ import { DashboardHero } from '../components/dashboard/DashboardHero';
 import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
 import { SetupCopilot } from '../components/dashboard/SetupCopilot';
 import { BusinessHealthCard } from '../components/dashboard/BusinessHealthCard';
+import { StaffEarningsCard } from '../components/StaffEarningsCard';
 
 // Lazy loading para modais pesados
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -33,10 +34,20 @@ export const Dashboard: React.FC = () => {
 
   const isStaff = role === 'staff';
 
+  const [redirectToast, setRedirectToast] = useState<string | null>(null);
   const [commissionBanner, setCommissionBanner] = useState(false);
   const [commissionBannerDismissed, setCommissionBannerDismissed] = useState(false);
   const [unfinishedCount, setUnfinishedCount] = useState(0);
   const [unfinishedBannerDismissed, setUnfinishedBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    const msg = sessionStorage.getItem('ownerRouteToast');
+    if (msg) {
+      sessionStorage.removeItem('ownerRouteToast');
+      setRedirectToast(msg);
+      setTimeout(() => setRedirectToast(null), 4000);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user || commissionBannerDismissed) return;
@@ -104,6 +115,13 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-6 md:space-y-10">
       <DashboardHero isBeauty={isBeauty} />
 
+      {/* Toast: rota bloqueada para staff */}
+      {redirectToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border bg-red-900/90 border-red-700 text-red-100 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <span className="text-sm font-medium">{redirectToast}</span>
+        </div>
+      )}
+
       {/* Smart Notifications */}
       <SmartNotificationsBanner />
 
@@ -146,8 +164,12 @@ export const Dashboard: React.FC = () => {
       )}
 
       {isStaff ? (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+          <StaffEarningsCard />
           <MeuDiaWidget />
+          <BrutalButton onClick={() => navigate('/agenda')} className="w-full">
+            + Novo agendamento
+          </BrutalButton>
         </div>
       ) : (
         <>

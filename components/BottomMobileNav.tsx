@@ -81,16 +81,18 @@ export const BottomMobileNav: React.FC = () => {
                     <div className={`absolute -top-1 w-18 h-18 rounded-3xl blur-xl opacity-20 -z-10 ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></div>
                 </div>
 
-                {/* 4. Financeiro */}
-                <button
-                    onClick={() => navigate('/financeiro')}
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/financeiro') ? activeColor : inactiveColor}`}
-                >
-                    <div className={`p-2 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-white/5' : ''}`}>
-                        <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} />
-                    </div>
-                    <span className="text-[10px] font-bold tracking-tight">Financeiro</span>
-                </button>
+                {/* 4. Financeiro — apenas para dono */}
+                {!isStaff && (
+                    <button
+                        onClick={() => navigate('/financeiro')}
+                        className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/financeiro') ? activeColor : inactiveColor}`}
+                    >
+                        <div className={`p-2 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-white/5' : ''}`}>
+                            <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} />
+                        </div>
+                        <span className="text-[10px] font-bold tracking-tight">Financeiro</span>
+                    </button>
+                )}
 
                 {/* 5. Mais — visível somente para o dono */}
                 {!isStaff && (

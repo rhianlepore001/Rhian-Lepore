@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { X, MessageCircle, Download, Loader2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { X, MessageCircle, Download, Loader2, Copy, Check as CheckIcon } from 'lucide-react';
 import { BrutalButton } from './BrutalButton';
 
 interface CommissionShareModalProps {
@@ -21,7 +21,8 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     onClose,
     reportRef
 }) => {
-    const [downloading, setDownloading] = React.useState(false);
+    const [downloading, setDownloading] = useState(false);
+    const [copied, setCopied] = useState(false);
     const summaryRef = useRef<HTMLDivElement>(null);
 
     const fmtAmount = netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
@@ -41,6 +42,26 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     const handleWhatsApp = () => {
         const url = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
         window.open(url, '_blank');
+    };
+
+    const handleCopyText = async () => {
+        try {
+            await navigator.clipboard.writeText(whatsappText);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+        } catch {
+            // Fallback para ambientes sem clipboard API
+            const el = document.createElement('textarea');
+            el.value = whatsappText;
+            el.style.position = 'fixed';
+            el.style.opacity = '0';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+        }
     };
 
     const handlePDF = async () => {
@@ -102,6 +123,14 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
                         onClick={handleWhatsApp}
                     >
                         Compartilhar via WhatsApp
+                    </BrutalButton>
+                    <BrutalButton
+                        variant="secondary"
+                        className="w-full h-11"
+                        icon={copied ? <CheckIcon className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        onClick={handleCopyText}
+                    >
+                        {copied ? 'Copiado!' : 'Copiar texto'}
                     </BrutalButton>
                     <BrutalButton
                         variant="secondary"

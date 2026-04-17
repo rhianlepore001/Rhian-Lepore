@@ -37,10 +37,27 @@ export interface Appointment {
   professional_id?: string;
   notes?: string;
   user_id?: string;
-  payment_method?: string;        // 'pix' | 'cash' | 'debit' | 'credit' | null — já existe no banco (20260218)
-  received_by?: string | null;    // UUID → team_members.id — quem recebeu o pagamento
-  machine_fee_applied?: boolean;  // se taxa de maquininha foi aplicada
-  machine_fee_percent?: number | null; // percentual da taxa aplicada
+  payment_method?: string | null;        // 'pix' | 'cash' | 'debit' | 'credit' | null
+  received_by?: string | null;           // UUID → team_members.id — quem recebeu o pagamento
+  machine_fee_applied?: boolean;         // se taxa de maquininha foi aplicada
+  machine_fee_percent?: number | null;   // percentual da taxa aplicada
+  machine_fee_amount?: number;           // valor absoluto da taxa
+  completed_by?: string | null;          // UUID → team_members.id — quem concluiu
+  completed_at?: string | null;          // timestamp da conclusão
+}
+
+export interface CheckoutData {
+  paymentMethod: string;
+  receivedBy: string;
+  machineFeePercent: number;
+  machineFeeAmount: number;
+  customPrice?: number;
+}
+
+export interface BusinessMachineFeeSettings {
+  machine_fee_enabled: boolean;
+  debit_fee_percent: number;
+  credit_fee_percent: number;
 }
 
 export interface FinanceRecord {

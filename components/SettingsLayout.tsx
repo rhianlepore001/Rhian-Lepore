@@ -16,7 +16,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
     useAppTour();
 
     const isBeauty = userType === 'beauty';
-    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950';
+    const bgColor = isBeauty ? 'bg-beauty-dark/50' : 'bg-black/50';
 
     // Staff vê apenas o item "Serviços" no menu de ajustes
     const menuItems = role === 'staff'
@@ -37,9 +37,9 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                 p-6 flex flex-col h-full
                 ${isBeauty
-                    ? 'bg-beauty-dark/95 border-r border-white/5 shadow-promax-glass'
-                    : 'bg-brutal-main/95 border-r border-white/5 shadow-promax-depth'}
-                md:backdrop-blur-3xl
+                    ? 'bg-beauty-dark/80 border-r border-white/5 shadow-promax-glass'
+                    : 'bg-brutal-main/80 border-r border-white/5 shadow-promax-depth'}
+                md:backdrop-blur-xl
             `}>
                 <div className="flex items-center justify-between mb-8 flex-shrink-0">
                     <h2 className={`font-heading text-xl uppercase tracking-wider text-white`}>
@@ -101,7 +101,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col w-full max-w-[100vw]">
 
                 {/* Mobile Header + Sticky Nav - PRO MAX REVITALIZATION */}
-                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark border-white/5' : 'bg-neutral-900 border-white/5'} backdrop-blur-md`}>
+                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark/75 border-white/5' : 'bg-neutral-900/75 border-white/5'} backdrop-blur-md`}>
                     {/* Top Bar */}
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-4">

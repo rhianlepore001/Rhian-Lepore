@@ -94,7 +94,23 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         })
         .eq('id', appointment.id);
 
-      if (updateError) throw updateError;
+      // Fallback: se colunas de checkout não existirem no banco ainda, usa UPDATE mínimo
+      if (updateError) {
+        const isMissingColumn = updateError.message?.includes('column') || updateError.code === '42703';
+        if (!isMissingColumn) throw updateError;
+
+        logger.warn('Colunas de checkout ausentes, usando fallback mínimo', {
+          error: updateError.message,
+          appointmentId: appointment.id,
+        });
+
+        const { error: fallbackError } = await supabase
+          .from('appointments')
+          .update({ payment_method: paymentMethod, price: finalPrice })
+          .eq('id', appointment.id);
+
+        if (fallbackError) throw fallbackError;
+      }
 
       const { error: rpcError } = await supabase
         .rpc('complete_appointment', { p_appointment_id: appointment.id });
@@ -103,8 +119,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
       onConfirm();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      logger.error('Erro ao concluir atendimento via checkout', { error: errorMessage });
+      const errorMessage = err instanceof Error ? err.message
+        : (err as { message?: string })?.message ?? 'Erro desconhecido';
+      logger.error('Erro ao concluir atendimento via checkout', {
+        error: errorMessage,
+        appointmentId: appointment?.id,
+      });
       alert('Erro ao concluir atendimento. Tente novamente.');
     } finally {
       setLoading(false);

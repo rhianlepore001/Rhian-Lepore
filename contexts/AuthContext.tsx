@@ -74,18 +74,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error && error.code !== 'PGRST116') throw error;
 
       if (profile) {
-        setUserType(profile.user_type as UserType || 'barber');
+        // Para staff, userType será definido a partir do perfil do owner (evita flicker de tema)
+        const isStaffAccount = profile.role === 'staff';
+        if (!isStaffAccount) {
+          setUserType(profile.user_type as UserType || 'barber');
+        }
         setRegion(profile.region as Region || 'BR');
         setBusinessName(profile.business_name || '');
         setFullName(profile.full_name || '');
         setAvatarUrl(profile.photo_url || null);
         setTutorialCompleted(profile.tutorial_completed ?? false);
-        setRole(profile.role === 'staff' ? 'staff' : 'owner');
+        setRole(isStaffAccount ? 'staff' : 'owner');
         setCompanyId(profile.company_id || null);
         setAiosEnabled(profile.aios_enabled ?? false);
 
         // Se for staff, herda o plano de assinatura do dono
-        if (profile.role === 'staff' && profile.company_id) {
+        if (isStaffAccount && profile.company_id) {
           const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('subscription_status, trial_ends_at, user_type, business_name')
@@ -95,11 +99,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (ownerProfile) {
             setSubscriptionStatus((ownerProfile.subscription_status as any) || 'trial');
             setTrialEndsAt(ownerProfile.trial_ends_at || null);
-            // Herda o userType e businessName do dono para manter a UI consistente
+            // Herda o userType e businessName do dono — chamada única, sem flicker
             setUserType(ownerProfile.user_type as UserType || 'barber');
             setBusinessName(ownerProfile.business_name || '');
           } else {
-            // Fallback: manter como subscriber para não bloquear o staff
+            // Fallback: usar tipo do próprio staff e manter como subscriber
+            setUserType(profile.user_type as UserType || 'barber');
             setSubscriptionStatus('subscriber');
             setTrialEndsAt(null);
           }

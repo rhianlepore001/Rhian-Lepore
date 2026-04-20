@@ -4,17 +4,19 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock, Check } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock, Check, BarChart2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { Modal } from '../components/Modal';
+import { TabNav } from '../components/TabNav';
+import { FinanceInsights } from '../components/FinanceInsights';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 
-type FinanceTabType = 'overview' | 'commissions' | 'history';
+type FinanceTabType = 'overview' | 'commissions' | 'history' | 'insights';
 
 interface Transaction {
   id: string;
@@ -106,6 +108,9 @@ const [searchParams, setSearchParams] = useSearchParams();
       fetchFinanceData();
     } else if (activeTab === 'history') {
       fetchMonthlyHistory();
+    } else if (activeTab === 'insights') {
+      if (monthlyHistory.length === 0) fetchMonthlyHistory();
+      if (transactions.length === 0) fetchFinanceData();
     }
   }, [activeTab, selectedMonth, selectedYear, user]);
 
@@ -458,7 +463,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   return (
     <div className="space-y-6 md:space-y-8 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b-4 border-white/10 pb-4 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-5 gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Financeiro</h2>
@@ -492,42 +497,19 @@ const [searchParams, setSearchParams] = useSearchParams();
       )}
 
       {/* Tabs — staff vê apenas Visão Geral */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'overview'
-            ? `${accentBg} text-black`
-            : 'bg-neutral-800 text-white hover:bg-neutral-700'
-            }`}
-        >
-          <Calendar className="w-4 h-4" />
-          {isStaff ? 'Meu Financeiro' : 'Visão Geral'}
-        </button>
-        {!isStaff && (
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'history'
-              ? `${accentBg} text-black`
-              : 'bg-neutral-800 text-white hover:bg-neutral-700'
-              }`}
-          >
-            <History className="w-4 h-4" />
-            Histórico
-          </button>
-        )}
-        {!isStaff && (
-          <button
-            onClick={() => setActiveTab('commissions')}
-            className={`flex items-center gap-2 px-4 py-2 font-mono text-sm uppercase whitespace-nowrap transition-colors ${activeTab === 'commissions'
-              ? `${accentBg} text-black`
-              : 'bg-neutral-800 text-white hover:bg-neutral-700'
-              }`}
-          >
-            <Users className="w-4 h-4" />
-            Comissões
-          </button>
-        )}
-      </div>
+      <TabNav
+        tabs={[
+          { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
+          ...(!isStaff ? [
+            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
+            { id: 'commissions', label: 'Comissões', icon: <Users className="w-3.5 h-3.5" /> },
+            { id: 'insights', label: 'Insights', icon: <BarChart2 className="w-3.5 h-3.5" /> },
+          ] : []),
+        ]}
+        activeTab={activeTab}
+        onChange={(id) => setActiveTab(id as FinanceTabType)}
+        accentBg={accentBg}
+      />
 
       {activeTab === 'overview' && (
         <>
@@ -550,25 +532,6 @@ const [searchParams, setSearchParams] = useSearchParams();
               </div>
             </BrutalCard>
 
-            {/* Cards gerenciais — visíveis apenas para o dono */}
-            {!isStaff && (
-              <BrutalCard className="border-l-4 border-yellow-500">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Comissões Pendentes</p>
-                    <p className="text-[10px] text-neutral-500 font-mono mt-1">Estimativa de repasse futuro</p>
-                  </div>
-                  <InfoButton text={`Total de comissões calculadas em serviços concluídos que ainda não foram pagas.`} />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-heading text-white">
-                  {formatCurrency(summary.commissionsPending || 0, currencyRegion)}
-                </h3>
-                <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
-                  <Clock className="w-3 h-3" />
-                  <span>A pagar aos profissionais</span>
-                </div>
-              </BrutalCard>
-            )}
 
             {!isStaff && (
               <BrutalCard className="border-l-4 border-red-500">
@@ -950,6 +913,18 @@ const [searchParams, setSearchParams] = useSearchParams();
           />
         )
       }
+
+      {activeTab === 'insights' && !isStaff && (
+        <FinanceInsights
+          summary={summary}
+          monthlyHistory={monthlyHistory}
+          transactions={transactions}
+          currencyRegion={currencyRegion}
+          isBeauty={isBeauty}
+          accentBg={accentBg}
+          accentText={accentText}
+        />
+      )}
 
       {/* New Transaction Modal */}
       {

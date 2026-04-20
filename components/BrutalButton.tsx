@@ -26,28 +26,23 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
 
   // ===========================================
-  // BRUTALISMO: Sombras pesadas, bordas retas, movimento industrial
+  // BRUTALISMO: Industrial moderno com cantos suavizados
   // BEAUTY: Gradientes suaves, bordas arredondadas, efeitos neon
   // ===========================================
 
   const getBaseStyles = () => {
+    const common = "relative overflow-hidden font-sans font-bold flex items-center justify-center gap-2 rounded-2xl border transition-all duration-300 select-none touch-none";
     if (isBeauty) {
       return `
-        font-sans font-semibold tracking-wide 
-        transition-all duration-300 ease-out
-        flex items-center justify-center gap-2 
-        rounded-xl border
-        transform hover:scale-[1.02] active:scale-[0.98] active:animate-haptic-click
+        ${common}
+        tracking-wide
+        transform hover:scale-[1.02] active:scale-[0.98]
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
       `;
     } else {
       return `
-        font-sans font-semibold
-        border border-white/10
-        rounded-xl
-        transition-all duration-150
-        flex items-center justify-center gap-2
-        transform hover:brightness-110 active:scale-[0.97] active:animate-haptic-click
+        ${common}
+        transform hover:brightness-110 active:scale-[0.97]
         disabled:opacity-50 disabled:cursor-not-allowed
       `;
     }
@@ -56,15 +51,15 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   const getVariantStyles = () => {
     const variants = {
       primary: isBeauty
-        ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white font-bold hover:shadow-neon border-white/10'
-        : 'bg-gradient-to-r from-accent-gold to-accent-goldHover text-black hover:opacity-90 shadow-sm border-white/10',
+        ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white shadow-neon border-white/20'
+        : 'bg-gradient-to-r from-accent-gold to-accent-goldHover text-black shadow-gold border-white/10',
 
       secondary: isBeauty
         ? 'bg-white/10 text-white hover:bg-white/20 border-white/10 backdrop-blur-sm'
-        : 'bg-white/5 text-text-primary hover:bg-white/10 shadow-sm border-white/10',
+        : 'bg-white/5 text-text-primary hover:bg-white/10 border-white/10',
 
       danger: isBeauty
-        ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 hover:bg-red-500/30 border-red-500/20'
+        ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30 border-red-500/20'
         : 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20',
 
       ghost: isBeauty
@@ -72,21 +67,21 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
         : 'bg-transparent border-transparent text-accent-gold hover:bg-white/5',
 
       success: isBeauty
-        ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-white/5'
-        : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-white/5',
+        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/20'
+        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 
       outline: isBeauty
-        ? 'bg-transparent border border-white/20 text-white hover:bg-white/5'
-        : 'bg-transparent border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/5'
+        ? 'bg-transparent border-white/20 text-white hover:bg-white/5'
+        : 'bg-transparent border-accent-gold/30 text-accent-gold hover:bg-accent-gold/5'
     };
     return variants[variant];
   };
 
   const getSizeStyles = () => {
     const sizes = {
-      sm: 'text-xs px-3 py-1.5 h-8 min-w-[80px]',
-      md: 'text-sm px-5 py-2.5 h-11 min-w-[120px]',
-      lg: 'text-base px-7 py-3.5 h-14 min-w-[160px]'
+      sm: 'text-xs px-4 py-2 h-9 min-w-[80px]',
+      md: 'text-sm px-6 py-3 h-12 min-w-[120px]',
+      lg: 'text-base px-8 py-4 h-15 min-w-[160px]'
     };
     return sizes[size];
   };
@@ -130,8 +125,14 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
       disabled={disabled || loading}
       {...props}
     >
-      {renderIcon()}
-      {children}
+      {/* Camadas de Craft: Noise e Inner Glow */}
+      <div className="absolute inset-0 bg-noise opacity-[0.05] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.1] to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+      
+      <span className="relative z-10 flex items-center gap-2">
+        {renderIcon()}
+        {children}
+      </span>
     </button>
   );
 };

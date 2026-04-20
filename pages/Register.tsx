@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Screw } from '../components/Screw';
-import { Check, Eye, EyeOff, Zap, Sparkles } from 'lucide-react';
+import { Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
 import { PhoneInput } from '../components/PhoneInput';
 import { validatePassword } from '../utils/passwordValidation';
@@ -28,8 +28,8 @@ export const Register: React.FC = () => {
 
   const companyIdFromUrl = searchParams.get('company');
   const isInvitedStaff = !!companyIdFromUrl;
-
   const isBeauty = userType === 'beauty';
+  const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
 
   useEffect(() => {
     const typeFromUrl = searchParams.get('type') as UserType;
@@ -37,6 +37,22 @@ export const Register: React.FC = () => {
       setUserType(typeFromUrl);
     }
   }, [searchParams]);
+
+  // Busca tema e nome do estabelecimento que convidou o colaborador
+  useEffect(() => {
+    if (!companyIdFromUrl) return;
+    supabase
+      .rpc('get_company_for_invite', { p_company_id: companyIdFromUrl })
+      .then(({ data }) => {
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row?.user_type === 'barber' || row?.user_type === 'beauty') {
+          setUserType(row.user_type as UserType);
+        }
+        if (row?.business_name) {
+          setOwnerBusinessName(row.business_name);
+        }
+      });
+  }, [companyIdFromUrl]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,44 +88,228 @@ export const Register: React.FC = () => {
       setLoading(false);
     } else {
       if (isInvitedStaff) {
-        navigate('/');
+        navigate('/staff-onboarding');
       } else {
         navigate('/onboarding');
       }
     }
   };
 
-  return (
-    <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-700
-      ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
-    `}>
-      {/* Background Atmosphere */}
-      <div className="absolute inset-0 pointer-events-none">
-        {isBeauty ? (
-          <>
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-beauty-neon/5 rounded-full blur-[150px]"></div>
-            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-beauty-neon/5 rounded-full blur-[150px]"></div>
-          </>
-        ) : (
-          <>
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent-gold/5 rounded-full blur-[150px]"></div>
-            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent-gold/5 rounded-full blur-[150px]"></div>
-          </>
-        )}
-      </div>
+  // ─── Classes reutilizáveis ────────────────────────────────────────────────
+  const inputClass = isBeauty
+    ? 'w-full px-4 py-3 rounded-xl text-sm text-white focus:outline-none transition-all bg-white/5 border border-white/10 focus:border-beauty-neon/50 focus:bg-white/8 font-sans'
+    : 'w-full px-4 py-3 rounded-xl text-sm text-white focus:outline-none transition-all bg-black/30 border border-neutral-700/60 font-mono focus:border-accent-gold/60 focus:bg-black/50';
 
-      <div className={`w-full max-w-2xl relative z-10 transition-all duration-500
-        ${isBeauty ? 'bg-beauty-card/80 backdrop-blur-xl border border-white/10 shadow-soft rounded-3xl' : 'bg-brutal-card border-4 border-black shadow-heavy'}
-      `}>
+  const labelClass = `text-xs font-semibold uppercase tracking-wider ${isBeauty ? 'text-neutral-400' : 'text-neutral-500 font-mono'}`;
 
-        {/* Header Branding */}
-        <div className={`flex justify-center items-center py-6 border-b transition-all duration-500
-          ${isBeauty ? 'border-white/5 bg-transparent' : 'border-black bg-black'}
-        `}>
-          <AgenXLogo size={40} isBeauty={isBeauty} showText={true} />
+  const segmentBtnClass = (active: boolean, variant: 'barber' | 'beauty') => {
+    const base = 'flex flex-col items-center justify-center p-4 rounded-xl transition-all border cursor-pointer';
+    if (active) {
+      return variant === 'barber'
+        ? `${base} bg-accent-gold/10 border-accent-gold/80 text-accent-gold`
+        : `${base} bg-beauty-neon/10 border-beauty-neon/80 text-beauty-neon`;
+    }
+    return `${base} bg-white/[0.03] border-white/8 text-neutral-500 hover:border-white/15 hover:text-neutral-400`;
+  };
+
+  const regionBtnClass = (active: boolean) => {
+    const base = 'flex-1 py-3 text-xs font-semibold rounded-xl transition-all border cursor-pointer';
+    if (active) {
+      return isBeauty
+        ? `${base} bg-beauty-neon/10 border-beauty-neon/80 text-white`
+        : `${base} bg-accent-gold/10 border-accent-gold/80 text-accent-gold`;
+    }
+    return `${base} bg-white/[0.03] border-white/8 text-neutral-500 hover:border-white/15 hover:text-neutral-400`;
+  };
+
+  // ─── STAFF CONVIDADO ──────────────────────────────────────────────────────
+  if (isInvitedStaff) {
+    const inviteAccent = isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40';
+    const inviteBtnClass = isBeauty
+      ? 'bg-beauty-neon text-white hover:bg-beauty-neonHover shadow-[0_4px_20px_rgba(167,139,250,0.3)]'
+      : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-[0_4px_20px_rgba(194,155,64,0.25)]';
+    const inviteInputClass = isBeauty
+      ? 'w-full px-4 py-3 rounded-xl text-sm text-white focus:outline-none transition-all bg-white/5 border border-white/10 focus:border-beauty-neon/50 font-sans'
+      : 'w-full px-4 py-3 rounded-xl text-sm text-white focus:outline-none transition-all bg-black/30 border border-neutral-700/60 font-mono focus:border-accent-gold/60';
+
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}`}>
+        <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] ${isBeauty ? 'bg-beauty-neon/[0.04]' : 'bg-accent-gold/[0.04]'} rounded-full blur-[120px] pointer-events-none`} />
+
+        <div className={`w-full max-w-md relative z-10 bg-[#1C1C1C] rounded-2xl border border-white/5 shadow-[0_32px_80px_rgba(0,0,0,0.7)] overflow-hidden`}>
+          {!isBeauty && <Screw className="top-[-10px] left-[-10px] text-neutral-800" />}
+          {!isBeauty && <Screw className="top-[-10px] right-[-10px] text-neutral-800" />}
+          {!isBeauty && <Screw className="bottom-[-10px] left-[-10px] text-neutral-800" />}
+          {!isBeauty && <Screw className="bottom-[-10px] right-[-10px] text-neutral-800" />}
+
+          {/* Accent top */}
+          <div className={`h-[2px] ${inviteAccent} w-full`} />
+
+          <div className="p-8 space-y-5">
+            <div className="flex items-center gap-3 mb-6">
+              <AgenXLogo size={28} isBeauty={isBeauty} showText={true} />
+            </div>
+
+            <div>
+              <h1 className="font-heading text-2xl uppercase text-white tracking-tight">
+                Você foi convidado
+              </h1>
+              <p className="font-mono text-xs text-neutral-600 uppercase tracking-widest mt-1">
+                {ownerBusinessName ? `Junte-se à equipe de ${ownerBusinessName}` : 'Crie sua conta para acessar a agenda da equipe'}
+              </p>
+            </div>
+
+            {error && (
+              <div role="alert" className="p-3.5 text-xs rounded-xl bg-red-500/8 border border-red-500/30 text-red-400 font-mono">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="staff-name" className="text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono">
+                  Nome completo
+                </label>
+                <input
+                  id="staff-name"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className={inviteInputClass}
+                  placeholder="João Silva"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="staff-phone" className="text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono">
+                  WhatsApp
+                </label>
+                <PhoneInput
+                  value={phone}
+                  onChange={setPhone}
+                  className={inviteInputClass}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="staff-email" className="text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono">
+                  Email
+                </label>
+                <input
+                  id="staff-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inviteInputClass}
+                  placeholder="contato@email.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label htmlFor="staff-password" className="text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono">Senha</label>
+                  <div className="relative">
+                    <input
+                      id="staff-password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={inviteInputClass}
+                      placeholder="••••••••"
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors p-1">
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="staff-confirm" className="text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono">Confirmar</label>
+                  <div className="relative">
+                    <input
+                      id="staff-confirm"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={inviteInputClass}
+                      placeholder="••••••••"
+                    />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors p-1">
+                      {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full mt-2 h-12 rounded-xl font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-40 ${inviteBtnClass}`}
+              >
+                {loading
+                  ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  : <><Check size={15} /> Criar minha conta</>
+                }
+              </button>
+
+              <div className="text-center pt-4 border-t border-white/5 font-mono text-xs">
+                <span className="text-neutral-600 uppercase tracking-wider">Já tem conta? </span>
+                <Link to="/login" className="uppercase tracking-wider font-bold text-accent-gold/70 hover:text-accent-gold transition-colors">
+                  Fazer login
+                </Link>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <form onSubmit={handleRegister} className="p-8 md:p-12">
+        <div className="absolute bottom-5 font-mono text-xs text-white/15 uppercase tracking-[0.2em]">
+          AgenX • v2.0
+        </div>
+      </div>
+    );
+  }
+
+  // ─── REGISTRO COMPLETO ────────────────────────────────────────────────────
+  return (
+    <div className={`min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden
+      ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
+    `}>
+      {isBeauty
+        ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/[0.05] rounded-full blur-[120px] pointer-events-none" />
+        : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-gold/[0.04] rounded-full blur-[120px] pointer-events-none" />
+      }
+
+      <div className={`w-full max-w-3xl relative z-10 overflow-hidden
+        ${isBeauty
+          ? 'rounded-3xl border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.6)]'
+          : 'rounded-2xl border border-white/5 shadow-[0_32px_80px_rgba(0,0,0,0.7)]'}
+      `}>
+
+        {/* Accent top line */}
+        <div className={`h-[2px] w-full ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
+
+        {/* Header */}
+        <div className={`flex items-center justify-between px-8 py-5 border-b
+          ${isBeauty ? 'bg-beauty-card/90 backdrop-blur-xl border-white/5' : 'bg-[#161616] border-white/5'}
+        `}>
+          <AgenXLogo size={30} isBeauty={isBeauty} showText={true} />
+          <div className="text-right">
+            <p className="font-heading text-sm text-white uppercase tracking-tight">Criar conta</p>
+            <p className={`font-mono text-xs uppercase tracking-widest mt-0.5
+              ${isBeauty ? 'text-beauty-silver/30' : 'text-neutral-600'}
+            `}>
+              Configure seu espaço de trabalho
+            </p>
+          </div>
+        </div>
+
+        {/* Corpo do formulário */}
+        <form onSubmit={handleRegister} className={`p-8 md:p-10 relative
+          ${isBeauty ? 'bg-beauty-card/80 backdrop-blur-xl' : 'bg-[#1C1C1C]'}
+        `}>
           {!isBeauty && (
             <>
               <Screw className="top-[-10px] left-[-10px] text-neutral-800" />
@@ -119,226 +319,210 @@ export const Register: React.FC = () => {
             </>
           )}
 
-          <div className="mb-10 text-center">
-            <h1 className={`font-heading text-3xl uppercase mb-2 ${isBeauty ? 'text-white' : 'text-white'}`}>
-              {isInvitedStaff ? 'Aceitar Convite' : 'Criar sua Conta'}
-            </h1>
-            <p className={`text-sm ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>
-              {isInvitedStaff ? 'Finalize seu cadastro para acessar a agenda' : 'Junte-se à elite da gestão inteligente.'}
-            </p>
-          </div>
-
           {error && (
-            <div className={`mb-6 p-4 text-xs text-center border ${isBeauty ? 'bg-red-500/10 border-red-500/20 text-red-200 rounded-xl' : 'bg-red-500/10 border-red-500 text-red-500 font-mono'}`}>
+            <div role="alert" className={`mb-6 p-3.5 text-xs rounded-xl border
+              ${isBeauty
+                ? 'bg-red-500/10 border-red-500/20 text-red-300'
+                : 'bg-red-500/8 border-red-500/30 text-red-400 font-mono'}
+            `}>
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
+
+            {/* ── Coluna 1 ── */}
+            <div className="space-y-5">
+
+              {/* Segmento */}
               <div className="space-y-2">
-                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Domínio</label>
-                <div className="grid grid-cols-2 gap-4">
+                <label className={labelClass}>Segmento</label>
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     data-testid="category-barber"
                     aria-label="Barbearia"
+                    aria-pressed={userType === 'barber'}
                     type="button"
                     onClick={() => setUserType('barber')}
-                    className={`flex flex-col items-center justify-center p-6 transition-all border-2
-                      ${userType === 'barber'
-                        ? 'bg-accent-gold/10 border-accent-gold text-accent-gold shadow-glow'
-                        : 'bg-black/40 border-neutral-800 text-neutral-600 hover:border-neutral-700'}
-                      ${isBeauty ? 'rounded-2xl' : ''}
-                    `}
+                    className={segmentBtnClass(userType === 'barber', 'barber')}
                   >
-                    <AgenXLogo size={32} isBeauty={false} showText={false} className="mb-2" />
-                    <span className="text-[10px] font-mono opacity-50 mb-1">UNIFIED</span>
-                    <span className="font-heading font-bold tracking-tighter text-sm uppercase">Barber</span>
+                    <AgenXLogo size={26} isBeauty={false} showText={false} className="mb-2" />
+                    <span className="font-heading text-sm uppercase tracking-tight">Barber</span>
                   </button>
                   <button
                     data-testid="category-beauty"
                     aria-label="Salão de Beleza"
+                    aria-pressed={userType === 'beauty'}
                     type="button"
                     onClick={() => setUserType('beauty')}
-                    className={`flex flex-col items-center justify-center p-6 transition-all border-2
-                      ${userType === 'beauty'
-                        ? 'bg-beauty-neon/10 border-beauty-neon text-beauty-neon shadow-neon'
-                        : 'bg-black/40 border-neutral-800 text-neutral-600 hover:border-neutral-700'}
-                      ${isBeauty ? 'rounded-2xl' : ''}
-                    `}
+                    className={segmentBtnClass(userType === 'beauty', 'beauty')}
                   >
-                    <AgenXLogo size={32} isBeauty={true} showText={false} className="mb-2" />
-                    <span className="text-[10px] font-mono opacity-50 mb-1">UNIFIED</span>
-                    <span className="font-heading font-bold tracking-tighter text-sm uppercase">Beauty</span>
+                    <AgenXLogo size={26} isBeauty={true} showText={false} className="mb-2" />
+                    <span className="font-heading text-sm uppercase tracking-tight">Beauty</span>
                   </button>
                 </div>
               </div>
 
+              {/* Região */}
               <div className="space-y-2">
-                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Região & Moeda</label>
-                <div className="grid grid-cols-2 gap-4">
+                <label className={labelClass}>Região &amp; moeda</label>
+                <div className="flex gap-2.5">
                   <button
                     type="button"
+                    aria-pressed={region === 'BR'}
                     onClick={() => setRegion('BR')}
-                    className={`p-4 text-xs font-bold transition-all border-2
-                      ${region === 'BR'
-                        ? (isBeauty ? 'bg-beauty-neon/10 border-beauty-neon text-white' : 'bg-accent-gold/10 border-accent-gold text-accent-gold')
-                        : 'bg-black/20 border-neutral-800 text-neutral-600'}
-                      ${isBeauty ? 'rounded-xl' : ''}
-                    `}
+                    className={regionBtnClass(region === 'BR')}
                   >
-                    BR BRASIL (BRL)
+                    <span className="block font-mono text-xs tracking-widest opacity-40 mb-0.5">BR</span>
+                    Brasil · BRL
                   </button>
                   <button
                     type="button"
+                    aria-pressed={region === 'PT'}
                     onClick={() => setRegion('PT')}
-                    className={`p-4 text-xs font-bold transition-all border-2
-                      ${region === 'PT'
-                        ? (isBeauty ? 'bg-beauty-neon/10 border-beauty-neon text-white' : 'bg-accent-gold/10 border-accent-gold text-accent-gold')
-                        : 'bg-black/20 border-neutral-800 text-neutral-600'}
-                      ${isBeauty ? 'rounded-xl' : ''}
-                    `}
+                    className={regionBtnClass(region === 'PT')}
                   >
-                    PT PORTUGAL (EUR)
+                    <span className="block font-mono text-xs tracking-widest opacity-40 mb-0.5">PT</span>
+                    Portugal · EUR
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Seu Nome</label>
+              {/* Nome */}
+              <div className="space-y-1.5">
+                <label htmlFor="reg-name" className={labelClass}>Seu nome</label>
                 <input
+                  id="reg-name"
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                  `}
-                  placeholder="EX: JOÃO SILVA"
+                  className={inputClass}
+                  placeholder="João Silva"
                 />
               </div>
+
             </div>
 
-            <div className="space-y-6">
-              {!isInvitedStaff && (
-                <div className="space-y-1">
-                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Nome do Negócio</label>
-                  <input
-                    type="text"
-                    required
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                        ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                      `}
-                    placeholder="EX: STUDIO GLOW"
-                  />
-                </div>
-              )}
+            {/* ── Coluna 2 ── */}
+            <div className="space-y-5">
 
-              <div className="space-y-1">
-                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>WhatsApp</label>
+              <div className="space-y-1.5">
+                <label htmlFor="reg-business" className={labelClass}>Nome do negócio</label>
+                <input
+                  id="reg-business"
+                  type="text"
+                  required
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className={inputClass}
+                  placeholder="Barbearia Silva"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="reg-phone" className={labelClass}>WhatsApp</label>
                 <PhoneInput
                   value={phone}
                   onChange={setPhone}
-                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                  `}
+                  className={inputClass}
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Email Profissional</label>
+              <div className="space-y-1.5">
+                <label htmlFor="reg-email" className={labelClass}>Email profissional</label>
                 <input
+                  id="reg-email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                    ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                  `}
+                  className={inputClass}
                   placeholder="contato@empresa.com"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Senha</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-password" className={labelClass}>Senha</label>
                   <div className="relative">
                     <input
+                      id="reg-password"
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                        ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                      `}
+                      className={inputClass}
+                      placeholder="••••••••"
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500">
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors p-1">
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className={`text-[10px] uppercase font-bold tracking-widest ${isBeauty ? 'text-neutral-400 font-sans' : 'text-neutral-500 font-mono'}`}>Confirmar</label>
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-confirm" className={labelClass}>Confirmar</label>
                   <div className="relative">
                     <input
+                      id="reg-confirm"
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={`w-full p-4 text-sm text-white focus:outline-none transition-all
-                        ${isBeauty ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50' : 'bg-black/40 border-2 border-neutral-800 font-mono focus:border-accent-gold'}
-                      `}
+                      className={inputClass}
+                      placeholder="••••••••"
                     />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500">
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors p-1">
+                      {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
 
-          <div className="mt-12 space-y-4">
+          {/* CTA */}
+          <div className="mt-8 space-y-3">
             <button
               type="submit"
               disabled={loading}
-              className={`w-full p-5 font-heading text-xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50
+              className={`w-full h-12 rounded-xl font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-40
                 ${isBeauty
-                  ? 'bg-beauty-neon text-white hover:shadow-neon rounded-2xl'
-                  : 'bg-accent-gold text-black border-2 border-black shadow-heavy hover:translate-y-[-2px]'}
+                  ? 'bg-beauty-neon text-white hover:bg-beauty-neonHover shadow-[0_4px_20px_rgba(167,139,250,0.3)] hover:shadow-[0_6px_24px_rgba(167,139,250,0.45)]'
+                  : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-[0_4px_20px_rgba(194,155,64,0.25)] hover:shadow-[0_6px_24px_rgba(194,155,64,0.4)]'}
               `}
             >
-              {loading ? (
-                <div className="w-6 h-6 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  {isBeauty ? <Sparkles size={24} /> : <Zap size={24} fill="black" />}
-                  Finalizar Cadastro
-                </>
-              )}
+              {loading
+                ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                : <><Check size={15} /> Finalizar cadastro</>
+              }
             </button>
 
-            <p className="text-center text-[10px] text-neutral-500 uppercase font-mono tracking-widest">
-              Ao se cadastrar, você concorda com nossos <a href="#" className="underline">Termos</a> e <a href="#" className="underline">Privacidade</a>.
+            <p className="text-center font-mono text-xs text-neutral-600 uppercase tracking-widest">
+              Ao se cadastrar, você concorda com os{' '}
+              <a href="#" className="underline hover:text-neutral-300 transition-colors">Termos</a>
+              {' '}e{' '}
+              <a href="#" className="underline hover:text-neutral-300 transition-colors">Privacidade</a>
             </p>
           </div>
 
-          <div className="text-center mt-12 pt-8 border-t border-white/5 font-mono text-xs">
-            <span className="text-neutral-600 uppercase">Já possui uma conta? </span>
+          <div className="text-center mt-7 pt-6 border-t border-white/5 font-mono text-xs">
+            <span className="text-neutral-600 uppercase tracking-wider">Já tem conta? </span>
             <Link
               to="/login"
-              className={`uppercase font-bold transition-all ${isBeauty ? 'text-beauty-neon hover:text-white' : 'text-accent-gold hover:text-white'}`}
+              className={`uppercase tracking-wider font-bold transition-colors
+                ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon' : 'text-accent-gold/70 hover:text-accent-gold'}
+              `}
             >
-              Fazer Login
+              Fazer login
             </Link>
           </div>
         </form>
       </div>
 
-      <div className="absolute bottom-6 text-[10px] text-white/20 font-mono uppercase tracking-[0.2em]">
-        AgenX Management Flow • v2.0
+      <div className="absolute bottom-5 font-mono text-xs text-white/15 uppercase tracking-[0.2em]">
+        AgenX • v2.0
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ interface ProfileModalProps {
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
-    const { user, businessName, fullName, userType, region, avatarUrl } = useAuth();
+    const { user, businessName, fullName, userType, region, avatarUrl, role } = useAuth();
+    const isStaff = role === 'staff';
     const navigate = useNavigate();
     const [newBusinessName, setNewBusinessName] = useState(businessName);
     const [newFullName, setNewFullName] = useState(fullName);
@@ -53,23 +54,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 newPhotoUrl = data.publicUrl;
             }
 
-            const { error } = await supabase.auth.updateUser({
-                data: {
-                    business_name: newBusinessName,
-                    full_name: newFullName,
-                    avatar_url: newPhotoUrl,
-                }
-            });
+            const authUpdateData: Record<string, any> = {
+                full_name: newFullName,
+                avatar_url: newPhotoUrl,
+            };
+            if (!isStaff) {
+                authUpdateData.business_name = newBusinessName;
+            }
+
+            const { error } = await supabase.auth.updateUser({ data: authUpdateData });
 
             if (error) throw error;
 
+            const profilePayload: Record<string, any> = {
+                full_name: newFullName,
+                photo_url: newPhotoUrl
+            };
+            if (!isStaff) {
+                profilePayload.business_name = newBusinessName;
+            }
+
             const { error: profileError } = await supabase
                 .from('profiles')
-                .update({
-                    business_name: newBusinessName,
-                    full_name: newFullName,
-                    photo_url: newPhotoUrl
-                })
+                .update(profilePayload)
                 .eq('id', user?.id);
 
             if (profileError) console.error("Error updating public profile:", profileError);
@@ -143,6 +150,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 </div>
 
                 <form onSubmit={handleSave} className="space-y-4">
+                    {!isStaff && (
                     <div>
                         <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`} htmlFor="profile-business-name">Nome do Negócio</label>
                         <input
@@ -159,6 +167,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                             required
                         />
                     </div>
+                    )}
 
                     <div>
                         <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`} htmlFor="profile-full-name">Seu Nome Completo</label>
@@ -202,6 +211,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </button>
                 </form>
 
+                {!isStaff && (
                 <div className="mt-4 pt-4 border-t border-neutral-800">
                     <button
                         type="button"
@@ -217,6 +227,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                         Configurações Avançadas
                     </button>
                 </div>
+                )}
                 </div>
             </FocusTrap>
         </div>,

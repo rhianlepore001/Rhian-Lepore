@@ -2,7 +2,7 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { NAVIGATION_ITEMS } from '../constants';
-import { Package, TrendingUp, X, LogOut } from 'lucide-react';
+import { TrendingUp, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -95,7 +95,6 @@ export const Sidebar: React.FC = () => {
           {visibleItems.map((item) => renderLink(item.path, item.icon, item.name))}
 
           {/* Links extras somente para staff */}
-          {isStaff && renderLink('/configuracoes/servicos', Package, 'Serviços')}
           {isStaff && renderLink('/meus-insights', TrendingUp, 'Meus Insights')}
 
           {/* Botão de Logout */}

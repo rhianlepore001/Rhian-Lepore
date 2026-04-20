@@ -359,20 +359,18 @@ export const QueueManagement: React.FC = () => {
                     <p className="text-neutral-400 text-sm font-mono">Gerencie atendimentos em tempo real</p>
                 </div>
                 <div className="flex gap-2">
-                    <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" className="hidden md:flex">
-                        <User className="w-4 h-4 mr-2" />
+                    <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />} className="hidden md:flex">
                         Adicionar
                     </BrutalButton>
-                    <button onClick={() => setShowAddModal(true)} className="md:hidden p-3 bg-accent-gold rounded-xl text-black shadow-lg font-bold">
+                    <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" className="md:hidden !min-w-0 !px-3">
                         <User className="w-5 h-5" />
-                    </button>
-                    <BrutalButton onClick={() => setShowQrModal(true)} size="sm" className="hidden md:flex">
-                        <QrCode className="w-4 h-4 mr-2" />
+                    </BrutalButton>
+                    <BrutalButton onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />} className="hidden md:flex">
                         Gerar QR Code
                     </BrutalButton>
-                    <button onClick={() => setShowQrModal(true)} className="md:hidden p-3 bg-neutral-800 rounded-xl text-white shadow-lg">
-                        <QrCode className="w-6 h-6" />
-                    </button>
+                    <BrutalButton onClick={() => setShowQrModal(true)} size="sm" variant="secondary" className="md:hidden !min-w-0 !px-3">
+                        <QrCode className="w-5 h-5" />
+                    </BrutalButton>
                 </div>
             </div>
 

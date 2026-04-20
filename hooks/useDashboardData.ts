@@ -31,7 +31,8 @@ export interface FinancialDoctorData {
 }
 
 export function useDashboardData() {
-    const { user } = useAuth();
+    const { user, companyId } = useAuth();
+    const effectiveUserId = companyId ?? user?.id;
     const [appointments, setAppointments] = useState<any[]>([]);
     const [profit, setProfit] = useState(0);
     const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
@@ -95,7 +96,7 @@ export function useDashboardData() {
                 const { data: aptData, error: aptError } = await supabase
                     .from('appointments')
                     .select('*, clients(name)')
-                    .eq('user_id', user.id)
+                    .eq('user_id', effectiveUserId)
                     .eq('status', 'Confirmed')
                     .gte('appointment_time', nowIso)
                     .order('appointment_time', { ascending: true })
@@ -118,8 +119,8 @@ export function useDashboardData() {
                 }
 
                 const [statsRes, actionsRes] = await Promise.all([
-                    supabase.rpc('get_dashboard_stats', { p_user_id: user.id }),
-                    supabase.rpc('get_dashboard_actions', { p_user_id: user.id })
+                    supabase.rpc('get_dashboard_stats', { p_user_id: effectiveUserId }),
+                    supabase.rpc('get_dashboard_actions', { p_user_id: effectiveUserId })
                 ]);
 
                 if (statsRes.error) throw statsRes.error;
@@ -205,7 +206,7 @@ export function useDashboardData() {
                     const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
 
                     historyPromises.push(Promise.all([
-                        supabase.rpc('get_finance_stats', { p_user_id: user.id, p_start_date: startOfMonth, p_end_date: endOfMonth }),
+                        supabase.rpc('get_finance_stats', { p_user_id: effectiveUserId, p_start_date: startOfMonth, p_end_date: endOfMonth }),
                         supabase.from('goal_settings').select('monthly_goal').eq('user_id', user.id).eq('month', month).eq('year', year).maybeSingle(),
                         Promise.resolve({ month, year })
                     ]));
@@ -270,7 +271,7 @@ export function useDashboardData() {
             const { data, error } = await supabase
                 .from('appointments')
                 .select('*, clients(name)')
-                .eq('user_id', user.id)
+                .eq('user_id', effectiveUserId)
                 .in('status', ['Confirmed', 'Pending'])
                 .gte('appointment_time', nowIso)
                 .order('appointment_time', { ascending: true });

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
-import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
@@ -75,6 +75,7 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 
 export const Agenda: React.FC = () => {
     const { user, userType, region, role, companyId } = useAuth();
+    const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     useAppTour(); // Instancia para detectar continuação do tour
@@ -195,7 +196,7 @@ export const Agenda: React.FC = () => {
         const { data, error } = await supabase
             .from('appointments')
             .select('*, clients(name)')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .gte('appointment_time', now)
             .in('status', ['Confirmed', 'Pending'])
             .order('appointment_time', { ascending: true });
@@ -321,7 +322,7 @@ export const Agenda: React.FC = () => {
         const { data } = await supabase
             .from('team_members')
             .select('id, name, photo_url')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .eq('active', true)
             .order('name');
         if (data) setTeamMembers(data);
@@ -339,7 +340,7 @@ export const Agenda: React.FC = () => {
         const { data: allServices } = await supabase
             .from('services')
             .select('name, price')
-            .eq('user_id', user.id);
+            .eq('user_id', effectiveUserId);
 
         const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
@@ -347,7 +348,7 @@ export const Agenda: React.FC = () => {
         const { data } = await supabase
             .from('appointments')
             .select('*, clients(name, id, phone)')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
             .in('status', ['Confirmed', 'Pending', 'Completed']) // Include Completed for badge (Fase 3)
@@ -384,14 +385,14 @@ export const Agenda: React.FC = () => {
         const { data: allServices } = await supabase
             .from('services')
             .select('name, price')
-            .eq('user_id', user.id);
+            .eq('user_id', effectiveUserId);
 
         const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
         const { data } = await supabase
             .from('appointments')
             .select('*, clients(name, phone)')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .in('status', ['Confirmed', 'Pending'])
             .lt('appointment_time', now) // Agendamentos no passado
             .order('appointment_time', { ascending: false });
@@ -433,7 +434,7 @@ export const Agenda: React.FC = () => {
         const { data } = await supabase
             .from('clients')
             .select('id, name, phone') // Adicionando phone para subtext
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .order('name');
         if (data) setClients(data as Client[]);
     };
@@ -443,7 +444,7 @@ export const Agenda: React.FC = () => {
         const { data } = await supabase
             .from('services')
             .select('id, name, price, duration_minutes, category_id, description') // Adicionando details para wizard
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .eq('active', true)
             .order('name');
         if (data) setServices(data as Service[]);
@@ -454,7 +455,7 @@ export const Agenda: React.FC = () => {
         const { data } = await supabase
             .from('service_categories')
             .select('id, name')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .order('name');
         if (data) setCategories(data);
     };
@@ -464,7 +465,7 @@ export const Agenda: React.FC = () => {
         const { data } = await supabase
             .from('profiles')
             .select('business_name')
-            .eq('id', user.id)
+            .eq('id', effectiveUserId)
             .single();
         if (data) setBusinessName(data.business_name || 'Seu Estabelecimento');
     };
@@ -478,14 +479,14 @@ export const Agenda: React.FC = () => {
         const { data: allServices } = await supabase
             .from('services')
             .select('name, price')
-            .eq('user_id', user.id);
+            .eq('user_id', effectiveUserId);
 
         const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
 
         const { data } = await supabase
             .from('appointments')
             .select('*, clients(name)')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .gte('appointment_time', startOfMonth.toISOString())
             .lte('appointment_time', endOfMonth.toISOString())
             .in('status', ['Completed', 'Cancelled'])
@@ -1126,7 +1127,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         }}
                         className="flex-1 md:flex-none"
                     >
-                        Histórico
+                        <span className="hidden md:inline">Histórico</span>
                     </BrutalButton>
                     <BrutalButton
                         variant="secondary"
@@ -1134,14 +1135,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         onClick={() => setShowAllAppointmentsModal(true)}
                         className="flex-1 md:flex-none"
                     >
-                        Todos Agendamentos
+                        <span className="hidden md:inline">Todos Agendamentos</span>
                     </BrutalButton>
                     <BrutalButton
                         id="btn-new-appointment"
                         variant="primary"
                         icon={<Plus />}
                         onClick={() => navigate('?new=true')}
-                        className="flex-1 md:flex-none"
+                        className="hidden md:flex"
                     >
                         Novo Agendamento
                     </BrutalButton>
@@ -1699,21 +1700,24 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             : 'bg-neutral-900 border-2 border-white rounded-xl shadow-[8px_8px_0px_0px_#ffffff]'}
                     `}>
                         {/* Header */}
-                        <div className={`p-6 ${isBeauty ? 'bg-gradient-to-r from-beauty-neon/20 to-transparent' : 'bg-white text-black'}`}>
+                        <div className={`p-6 border-b ${isBeauty ? 'border-beauty-neon/20' : 'border-white/10'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className={`font-heading text-xl uppercase mb-1 ${isBeauty ? 'text-white' : 'text-black'}`}>
+                                    <h3 className="font-heading text-xl uppercase mb-1 text-white">
                                         Detalhes do Agendamento
                                     </h3>
-                                    <span className={`text-xs font-mono font-bold px-2 py-1 rounded inline-block ${showingDetailsAppointment.status === 'Completed' ? 'bg-green-500 text-black' :
-                                        (isBeauty ? 'bg-beauty-neon text-black' : 'bg-black text-white')
-                                        }`}>
-                                        {showingDetailsAppointment.status === 'Completed' ? '✓ CONCLUÍDO' : '● CONFIRMADO'}
+                                    <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block ${
+                                        showingDetailsAppointment.status === 'Completed' ? 'text-green-400 bg-green-500/10 border border-green-500/20' :
+                                        showingDetailsAppointment.status === 'Cancelled' ? 'text-red-400 bg-red-500/10 border border-red-500/20' :
+                                        'text-amber-400 bg-amber-500/10 border border-amber-500/20'
+                                    }`}>
+                                        {showingDetailsAppointment.status === 'Completed' ? '✓ Concluído' :
+                                         showingDetailsAppointment.status === 'Cancelled' ? '✕ Cancelado' : '● Confirmado'}
                                     </span>
                                 </div>
                                 <button
                                     onClick={() => setShowingDetailsAppointment(null)}
-                                    className={`p-1 rounded-full hover:bg-black/10 transition-colors ${isBeauty ? 'text-white hover:bg-white/10' : 'text-black'}`}
+                                    className="p-1 rounded-full text-white hover:bg-white/10 transition-colors"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -1724,16 +1728,17 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         <div className="p-6 space-y-6">
                             {/* Client Info */}
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold
-                                    ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/30' : 'bg-neutral-800 text-white border border-neutral-700'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ring-2
+                                    ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/30 ring-beauty-neon/40' : 'bg-neutral-800 text-white border border-neutral-700 ring-accent-gold/40'}`}>
                                     {showingDetailsAppointment.clientName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
                                     <p className="text-sm text-neutral-400 font-mono mb-0.5">Cliente</p>
                                     <h4 className="text-lg font-bold text-white">{showingDetailsAppointment.clientName}</h4>
                                     {showingDetailsAppointment.clientPhone && (
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs text-neutral-400 font-mono bg-neutral-800 px-2 py-0.5 rounded">
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <Phone className="w-3 h-3 text-neutral-400" />
+                                            <span className="text-xs text-neutral-400 font-mono">
                                                 {formatPhone(showingDetailsAppointment.clientPhone, currencyRegion)}
                                             </span>
                                         </div>

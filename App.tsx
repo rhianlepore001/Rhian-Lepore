@@ -25,7 +25,6 @@ const PublicBookingSettings = React.lazy(() => import('./pages/settings/PublicBo
 const TeamSettings = React.lazy(() => import('./pages/settings/TeamSettings').then(module => ({ default: module.TeamSettings })));
 const ServiceSettings = React.lazy(() => import('./pages/settings/ServiceSettings').then(module => ({ default: module.ServiceSettings })));
 const CommissionsSettings = React.lazy(() => import('./pages/settings/CommissionsSettings').then(module => ({ default: module.CommissionsSettings })));
-const FinancialSettings = React.lazy(() => import('./pages/settings/FinancialSettings').then(module => ({ default: module.FinancialSettings })));
 const SubscriptionSettings = React.lazy(() => import('./pages/settings/SubscriptionSettings').then(module => ({ default: module.SubscriptionSettings })));
 const AuditLogs = React.lazy(() => import('./pages/settings/AuditLogs').then(module => ({ default: module.AuditLogs })));
 const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(module => ({ default: module.RecycleBin })));
@@ -33,6 +32,7 @@ const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySetti
 const SystemLogs = React.lazy(() => import('./pages/settings/SystemLogs').then(module => ({ default: module.SystemLogs })));
 const OnboardingWizard = React.lazy(() => import('./pages/OnboardingWizard').then(module => ({ default: module.OnboardingWizard })));
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
+const StaffOnboarding = React.lazy(() => import('./pages/StaffOnboarding').then(module => ({ default: module.StaffOnboarding })));
 const Reports = React.lazy(() => import('./pages/Reports').then(module => ({ default: module.Reports })));
 const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortfolio').then(module => ({ default: module.ProfessionalPortfolio })));
 const QueueJoin = React.lazy(() => import('./pages/QueueJoin').then(module => ({ default: module.QueueJoin })));
@@ -42,6 +42,7 @@ const ClientArea = React.lazy(() => import('./pages/ClientArea').then(module => 
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
+const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
 
 const LoadingFull = () => (
   <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
@@ -51,7 +52,7 @@ const LoadingFull = () => (
 
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
-  const { isAuthenticated, loading, tutorialCompleted } = useAuth();
+  const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
 
   if (loading) {
     return <LoadingFull />;
@@ -66,6 +67,9 @@ const ProtectedLayout = () => {
 
   // Redireciona para onboarding se não completou o setup inicial
   if (!tutorialCompleted) {
+    if (role === 'staff') {
+      return <Navigate to="/staff-onboarding" replace />;
+    }
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -93,6 +97,15 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
     return <Navigate to="/login" replace />;
   }
 
+  return children;
+};
+
+// Guard para rotas exclusivas do dev
+const DevRouteGuard = ({ children }: { children: React.ReactElement }) => {
+  const { isDev, isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingFull />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isDev) return <Navigate to="/configuracoes" replace />;
   return children;
 };
 
@@ -147,6 +160,13 @@ const AppRoutes: React.FC = () => {
             </Suspense>
           </RequireAuth>
         } />
+        <Route path="/staff-onboarding" element={
+          <RequireAuth>
+            <Suspense fallback={<LoadingFull />}>
+              <StaffOnboarding />
+            </Suspense>
+          </RequireAuth>
+        } />
 
         {/* Authenticated Routes */}
         <Route element={<ProtectedLayout />}>
@@ -158,6 +178,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/financeiro" element={<OwnerRouteGuard><Finance /></OwnerRouteGuard>} />
           <Route path="/marketing" element={<OwnerRouteGuard><Marketing /></OwnerRouteGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
+          <Route path="/meus-insights" element={<StaffInsights />} />
 
           {/* Settings Routes */}
           <Route path="/configuracoes" element={<OwnerRouteGuard><Navigate to="/configuracoes/geral" replace /></OwnerRouteGuard>} />
@@ -166,12 +187,12 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/equipe" element={<OwnerRouteGuard><TeamSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/servicos" element={<ServiceSettings />} />
           <Route path="/configuracoes/comissoes" element={<OwnerRouteGuard><CommissionsSettings /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/financeiro" element={<OwnerRouteGuard><FinancialSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/financeiro" element={<Navigate to="/configuracoes/comissoes" replace />} />
           <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/auditoria" element={<OwnerRouteGuard><AuditLogs /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/lixeira" element={<OwnerRouteGuard><RecycleBin /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/auditoria" element={<DevRouteGuard><AuditLogs /></DevRouteGuard>} />
+          <Route path="/configuracoes/lixeira" element={<DevRouteGuard><RecycleBin /></DevRouteGuard>} />
           <Route path="/configuracoes/seguranca" element={<OwnerRouteGuard><SecuritySettings /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/erros" element={<OwnerRouteGuard><SystemLogs /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/erros" element={<DevRouteGuard><SystemLogs /></DevRouteGuard>} />
           <Route path="/configuracoes/notificacoes" element={<OwnerRouteGuard><Placeholder title="Notificações" /></OwnerRouteGuard>} />
         </Route>
 

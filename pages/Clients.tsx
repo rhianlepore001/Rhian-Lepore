@@ -11,7 +11,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { formatPhone } from '../utils/formatters';
 
 export const Clients: React.FC = () => {
-    const { user, userType, region } = useAuth();
+    const { user, userType, region, companyId } = useAuth();
+    const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,13 +37,13 @@ export const Clients: React.FC = () => {
                 const { data: publicClients } = await supabase
                     .from('public_clients')
                     .select('*')
-                    .eq('business_id', user.id);
+                    .eq('business_id', effectiveUserId);
 
                 if (publicClients && publicClients.length > 0) {
                     const { data: existingClients } = await supabase
                         .from('clients')
                         .select('phone')
-                        .eq('user_id', user.id)
+                        .eq('user_id', effectiveUserId)
                         .not('phone', 'is', null);
 
                     const existingPhonesRaw = existingClients?.map(c => c.phone?.replace(/\D/g, '')).filter(Boolean) || [];
@@ -65,7 +66,7 @@ export const Clients: React.FC = () => {
                             return true;
                         })
                         .map(pc => ({
-                            user_id: user.id,
+                            user_id: effectiveUserId,
                             name: pc.name,
                             phone: pc.phone,
                             email: pc.email || '',
@@ -86,7 +87,7 @@ export const Clients: React.FC = () => {
             const { data, error } = await supabase
                 .from('clients')
                 .select('*')
-                .eq('user_id', user.id)
+                .eq('user_id', effectiveUserId)
                 .neq('is_active', false) // Filter out inactive clients (soft deleted)
                 .order('name', { ascending: true });
 
@@ -101,7 +102,7 @@ export const Clients: React.FC = () => {
                     .select('client_id')
                     .in('client_id', clientIds)
                     .eq('status', 'Completed')
-                    .eq('user_id', user.id);
+                    .eq('user_id', effectiveUserId);
 
                 if (!countError && appointmentCounts) {
                     // Count visits per client

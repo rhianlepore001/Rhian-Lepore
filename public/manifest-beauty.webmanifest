@@ -1,7 +1,7 @@
 {
-    "name": "AgenX Beauty",
-    "short_name": "AgenX",
-    "description": "AgenX: Fluxo automático e gestão inteligente para salões de beleza",
+    "name": "AgendiX Beauty",
+    "short_name": "AgendiX",
+    "description": "AgendiX: Fluxo automático e gestão inteligente para salões de beleza",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#1F1B2E",
@@ -9,9 +9,9 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/icon-agenx.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
+            "src": "/logo-agendix-app.png",
+            "sizes": "512x512",
+            "type": "image/png",
             "purpose": "any maskable"
         }
     ],

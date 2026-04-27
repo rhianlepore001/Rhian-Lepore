@@ -1,0 +1,26 @@
+- generic [ref=e5]:
+  - generic [ref=e7]:
+    - img [ref=e8]
+    - generic "AgendiX" [ref=e9]: agendix
+  - generic [ref=e10]:
+    - paragraph [ref=e11]: O sistema que trabalha enquanto você atende.
+    - heading "Escolha o seu negócio" [level=1] [ref=e12]:
+      - text: Escolha o seu
+      - text: negócio
+  - generic [ref=e13]:
+    - button "Barbearia" [ref=e14] [cursor=pointer]:
+      - generic [ref=e19]:
+        - heading "Barbearias" [level=2] [ref=e20]
+        - generic [ref=e22]:
+          - generic [ref=e23]: Entrar
+          - img [ref=e24]
+    - button "Salão de Beleza" [ref=e26] [cursor=pointer]:
+      - generic [ref=e32]:
+        - heading "Studios" [level=2] [ref=e33]
+        - generic [ref=e35]:
+          - generic [ref=e36]: Entrar
+          - img [ref=e37]
+  - generic [ref=e40]:
+    - paragraph [ref=e41]: Primeira vez por aqui?
+    - link "Criar conta — 14 dias grátis" [ref=e42] [cursor=pointer]:
+      - /url: "#/register"

@@ -19,7 +19,7 @@ export function WizardOverlay({ isActive, children }: WizardOverlayProps) {
       }}
     >
       <div
-        className="fixed inset-0 z-[9996] bg-black/75 backdrop-blur-sm
+        className="fixed inset-0 z-[9996] bg-background text-foreground
                    transition-opacity duration-300 pointer-events-none"
         role="dialog"
         aria-modal="true"

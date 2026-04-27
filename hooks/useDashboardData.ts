@@ -21,6 +21,7 @@ export interface ProfitMetricsData {
     campaignsSent: number;
     currentMonthRevenue?: number;
     monthScheduledValue?: number;
+    todayRevenue?: number;
 }
 
 export interface FinancialDoctorData {
@@ -118,10 +119,17 @@ export function useDashboardData() {
                     })));
                 }
 
-                const [statsRes, actionsRes] = await Promise.all([
+                const todayStr = now.toISOString().split('T')[0];
+                const [statsRes, actionsRes, todayAptsRes] = await Promise.all([
                     supabase.rpc('get_dashboard_stats', { p_user_id: effectiveUserId }),
-                    supabase.rpc('get_dashboard_actions', { p_user_id: effectiveUserId })
+                    supabase.rpc('get_dashboard_actions', { p_user_id: effectiveUserId }),
+                    supabase.from('appointments').select('price')
+                        .eq('user_id', effectiveUserId)
+                        .eq('status', 'Completed')
+                        .gte('appointment_time', todayStr + 'T00:00:00')
+                        .lte('appointment_time', todayStr + 'T23:59:59')
                 ]);
+                const todayRev = todayAptsRes.data?.reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0) ?? 0;
 
                 if (statsRes.error) throw statsRes.error;
                 // Erro em get_dashboard_actions é não-fatal: dashboard continua carregando
@@ -144,7 +152,8 @@ export function useDashboardData() {
                         avoidedNoShows: s.avoided_no_shows || 0,
                         filledSlots: s.filled_slots || 0,
                         weeklyGrowth: s.weekly_growth || 0,
-                        campaignsSent: s.campaigns_sent || 0
+                        campaignsSent: s.campaigns_sent || 0,
+                        todayRevenue: todayRev
                     });
 
                     // Data Maturity Guard

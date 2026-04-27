@@ -89,7 +89,7 @@ export async function getSetupStatus(userId: string) {
 
   const businessHours = settingsRes.data?.business_hours;
   const hasBusinessHours = !!businessHours && Object.keys(businessHours).length > 0;
-  const hasBookingSlug = !!profileRes.data?.business_slug && (settingsRes.data?.public_booking_enabled === true);
+  const hasBookingSlug = !!profileRes.data?.business_slug;
 
   return {
     hasServices: (servicesRes.count ?? 0) > 0,

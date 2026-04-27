@@ -226,10 +226,10 @@ export const GeneralSettings: React.FC = () => {
                                 value={businessName}
                                 onChange={e => setBusinessName(e.target.value)}
                                 placeholder="Barbearia Premium"
-                                className={`w-full p-3 rounded-lg text-white outline-none transition-all
+                                className={`w-full p-3 rounded-xl text-white outline-none transition-all
                                     ${isBeauty
-                                        ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                        : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
+                                        ? 'bg-white/[0.04] border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                        : 'bg-white/[0.04] border border-white/10 focus:border-accent-gold'}
                                 `}
                             />
                         </div>
@@ -257,10 +257,10 @@ export const GeneralSettings: React.FC = () => {
                                     value={instagram}
                                     onChange={e => setInstagram(e.target.value)}
                                     placeholder="suabarbearia"
-                                    className={`w-full p-3 pl-8 rounded-lg text-white outline-none transition-all
+                                    className={`w-full p-3 pl-8 rounded-xl text-white outline-none transition-all
                                         ${isBeauty
-                                            ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                            : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
+                                            ? 'bg-white/[0.04] border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                            : 'bg-white/[0.04] border border-white/10 focus:border-accent-gold'}
                                     `}
                                 />
                             </div>
@@ -275,10 +275,10 @@ export const GeneralSettings: React.FC = () => {
                                 value={address}
                                 onChange={e => setAddress(e.target.value)}
                                 placeholder="Rua Exemplo, 123 - Bairro, Cidade - SP"
-                                className={`w-full p-3 rounded-lg text-white outline-none transition-all
+                                className={`w-full p-3 rounded-xl text-white outline-none transition-all
                                     ${isBeauty
-                                        ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                        : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
+                                        ? 'bg-white/[0.04] border border-white/10 focus:border-beauty-neon placeholder-white/20'
+                                        : 'bg-white/[0.04] border border-white/10 focus:border-accent-gold'}
                                 `}
                             />
                             <p className="text-neutral-500 text-xs mt-1">

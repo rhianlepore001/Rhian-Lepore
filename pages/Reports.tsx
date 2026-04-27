@@ -4,20 +4,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { supabase } from '../lib/supabase';
 import {
-    Users,
-    UserPlus,
-    Calendar,
     TrendingUp,
     DollarSign,
     Target,
-    Zap,
-    ShieldCheck,
     AlertCircle,
-    ArrowUpRight,
-    Brain
+    Brain,
+    Zap
 } from 'lucide-react';
 import { MonthYearSelector } from '../components/MonthYearSelector';
-import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 
@@ -218,48 +213,6 @@ export const Reports: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Impacto da Inteligência Artificial */}
-                    <div>
-                        <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider flex items-center gap-2">
-                            <Zap className="w-5 h-5 text-yellow-400" /> Impacto do Assistente Virtual
-                        </h2>
-                        <BrutalCard accent glow className="w-full">
-                            <div className="flex flex-col md:flex-row justify-between md:items-start mb-6 gap-4">
-                                <div>
-                                    <p className="text-neutral-400 text-sm">Receita recuperada e ações realizadas via campanhas e reagendamentos no WhatsApp</p>
-                                </div>
-                                <div className="text-left md:text-right">
-                                    <p className="text-3xl md:text-4xl font-heading text-white">
-                                        {formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}
-                                    </p>
-                                    <p className="text-sm font-bold text-green-400 flex items-center md:justify-end gap-1 mt-1">
-                                        <ArrowUpRight className="w-4 h-4" /> Total de Receita Salva
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 mt-6 pt-6 border-t border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                                        <Calendar className={`w-5 h-5 ${accentText}`} />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-heading text-white">{stats?.filled_slots || 0}</p>
-                                        <p className="text-xs text-neutral-500 uppercase font-mono">Agendamentos pela IA</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4 border-t sm:border-t-0 sm:border-l border-white/5 pt-4 sm:pt-0 sm:pl-4">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                                        <Users className="w-5 h-5 text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-heading text-white">{stats?.campaigns_sent || 0}</p>
-                                        <p className="text-xs text-neutral-500 uppercase font-mono">Mensagens Enviadas</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </BrutalCard>
-                    </div>
 
                     {/* Evolução e Performance */}
                     <div>

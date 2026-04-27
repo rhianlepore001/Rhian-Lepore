@@ -9,26 +9,26 @@
   <title>Sistema de Gestão</title>
   <meta name="description" content="Sistema profissional de gestão e agendamento">
   <meta name="theme-color" content="#121212">
-  <link rel="icon" href="/icon-agenx.svg" sizes="any">
-  <link rel="apple-touch-icon" href="/icon-agenx.svg">
+  <link rel="icon" href="/logo-agendix-app.png" type="image/png">
+  <link rel="apple-touch-icon" href="/logo-agendix-app.png">
   <link rel="manifest" href="/manifest-barber.webmanifest">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://agenx.app/">
-  <meta property="og:title" content="AgenX - O sistema que faz seu negócio crescer">
+  <meta property="og:url" content="https://agendix.app/">
+  <meta property="og:title" content="AgendiX - O sistema que faz seu negócio crescer">
   <meta property="og:description" content="Fluxo automático e gestão inteligente para seu negócio.">
-  <meta property="og:image" content="/icon-agenx.svg">
+  <meta property="og:image" content="/logo-agendix-app.png">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://agenx.app/">
-  <meta property="twitter:title" content="AgenX - O sistema que faz seu negócio crescer">
+  <meta property="twitter:url" content="https://agendix.app/">
+  <meta property="twitter:title" content="AgendiX - O sistema que faz seu negócio crescer">
   <meta property="twitter:description" content="Fluxo automático e gestão inteligente para seu negócio.">
-  <meta property="twitter:image" content="/icon-agenx.svg">
+  <meta property="twitter:image" content="/logo-agendix-app.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AgenX">
+  <meta name="apple-mobile-web-app-title" content="AgendiX">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -83,6 +83,17 @@
               primary: '#EAEAEA',
               secondary: '#A0A0A0',
               muted: '#525252'
+            },
+            theme: {
+              bg: 'var(--color-bg)',
+              card: 'var(--color-card)',
+              surface: 'var(--color-surface)',
+              accent: 'var(--color-accent)',
+              accentHover: 'var(--color-accent-hover)',
+              text: 'var(--color-text)',
+              textSecondary: 'var(--color-text-secondary)',
+              border: 'var(--color-border)',
+              input: 'var(--color-input-bg)',
             }
           },
           fontFamily: {
@@ -206,15 +217,203 @@
       /* Remove gray highlight */
     }
 
+    html {
+      background-color: var(--color-bg, #121212);
+      transition: background-color 0.4s ease;
+    }
+
     body {
-      background-color: #121212;
-      color: #EAEAEA;
+      background: var(--bg-gradient, #121212);
+      background-color: var(--color-bg, #121212);
+      color: var(--color-text, #EAEAEA);
       font-family: 'Inter', sans-serif;
       -webkit-overflow-scrolling: touch;
-      /* Momentum scrolling */
       overscroll-behavior-y: none;
-      /* Prevent bounce if needed, or leave usually fine */
       position: relative;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* ========================================================
+       THEME OVERRIDES BRIDGE (DUAL MODE)
+       Mapeia classes hardcoded de "Dark Mode" para as cores
+       "Light Mode" quando o data-mode="light" está ativo.
+       Evita refatorar 50+ arquivos.
+       ======================================================== */
+    html[data-mode="light"] .text-white { color: var(--color-text) !important; }
+    html[data-mode="light"] .text-neutral-400 { color: var(--color-text-muted) !important; }
+    html[data-mode="light"] .text-neutral-300 { color: var(--color-text) !important; }
+    html[data-mode="light"] .text-neutral-500 { color: rgba(0,0,0,0.4) !important; }
+    
+    html[data-mode="light"] .border-neutral-800,
+    html[data-mode="light"] .border-neutral-700,
+    html[data-mode="light"] .border-white\\/10,
+    html[data-mode="light"] .border-white\\/5 {
+      border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Cards e Superfícies Gerais */
+    html[data-mode="light"] .bg-neutral-900,
+    html[data-mode="light"] .bg-neutral-800 {
+      background-color: var(--color-card) !important;
+    }
+    
+    html[data-mode="light"] .hover\\:bg-neutral-800:hover,
+    html[data-mode="light"] .hover\\:bg-white\\/5:hover,
+    html[data-mode="light"] .hover\\:bg-white\\/10:hover {
+      background-color: rgba(0,0,0,0.05) !important;
+    }
+
+    /* Específicos Barber */
+    html[data-mode="light"][data-theme="barber"] .bg-brutal-card,
+    html[data-mode="light"][data-theme="barber"] .bg-brutal-main {
+      background-color: var(--color-card) !important;
+    }
+
+    /* Específicos Beauty */
+    html[data-mode="light"][data-theme="beauty"] .bg-beauty-card,
+    html[data-mode="light"][data-theme="beauty"] .bg-beauty-dark {
+      background-color: var(--color-card) !important;
+    }
+    
+    /* Inputs */
+    html[data-mode="light"] input.bg-neutral-800,
+    html[data-mode="light"] select.bg-neutral-800,
+    html[data-mode="light"] textarea.bg-neutral-800,
+    html[data-mode="light"] .bg-black\\/20 {
+      background-color: var(--color-bg) !important;
+      border-color: rgba(0,0,0,0.1) !important;
+      color: var(--color-text) !important;
+    }
+
+    /* Ajuste de placehoder para inputs light */
+    html[data-mode="light"] input::placeholder,
+    html[data-mode="light"] textarea::placeholder {
+      color: var(--color-text-muted) !important;
+    }
+
+    /* ====== BRIDGE ESTENDIDA — fase 2 (cobre cores não mapeadas) ====== */
+
+    /* Pretos chapados → superfície de card */
+    html[data-mode="light"] .bg-black,
+    html[data-mode="light"] .bg-neutral-950 {
+      background-color: var(--color-card) !important;
+    }
+
+    /* Classes customizadas de tema (beauty-dark, brutal-main, etc) → overlay/card no light */
+    html[data-mode="light"] .bg-beauty-dark,
+    html[data-mode="light"] .bg-beauty-dark\/5,
+    html[data-mode="light"] .bg-beauty-dark\/10,
+    html[data-mode="light"] .bg-beauty-dark\/20,
+    html[data-mode="light"] .bg-beauty-dark\/30,
+    html[data-mode="light"] .bg-beauty-dark\/40,
+    html[data-mode="light"] .bg-beauty-dark\/50,
+    html[data-mode="light"] .bg-beauty-dark\/60,
+    html[data-mode="light"] .bg-beauty-dark\/70,
+    html[data-mode="light"] .bg-beauty-dark\/80,
+    html[data-mode="light"] .bg-beauty-dark\/90,
+    html[data-mode="light"] .bg-beauty-dark\/95,
+    html[data-mode="light"] .bg-brutal-main,
+    html[data-mode="light"] .bg-brutal-main\/5,
+    html[data-mode="light"] .bg-brutal-main\/10,
+    html[data-mode="light"] .bg-brutal-main\/20,
+    html[data-mode="light"] .bg-brutal-main\/30,
+    html[data-mode="light"] .bg-brutal-main\/40,
+    html[data-mode="light"] .bg-brutal-main\/50,
+    html[data-mode="light"] .bg-brutal-main\/60,
+    html[data-mode="light"] .bg-brutal-main\/70,
+    html[data-mode="light"] .bg-brutal-main\/80,
+    html[data-mode="light"] .bg-brutal-main\/90,
+    html[data-mode="light"] .bg-brutal-card {
+      background-color: var(--color-overlay) !important;
+    }
+
+    /* Pretos translúcidos → tinta sutil */
+    html[data-mode="light"] .bg-black\/10,
+    html[data-mode="light"] .bg-black\/20,
+    html[data-mode="light"] .bg-black\/30,
+    html[data-mode="light"] .bg-black\/40,
+    html[data-mode="light"] .bg-black\/50,
+    html[data-mode="light"] .bg-black\/60,
+    html[data-mode="light"] .bg-black\/70,
+    html[data-mode="light"] .bg-black\/80,
+    html[data-mode="light"] .bg-black\/85,
+    html[data-mode="light"] .bg-black\/90 {
+      background-color: var(--color-overlay) !important;
+    }
+
+    /* Paleta antiga stone/zinc → mesmas regras */
+    html[data-mode="light"] .bg-stone-900,
+    html[data-mode="light"] .bg-stone-800,
+    html[data-mode="light"] .bg-stone-950,
+    html[data-mode="light"] .bg-zinc-900,
+    html[data-mode="light"] .bg-zinc-800,
+    html[data-mode="light"] .bg-zinc-950 {
+      background-color: var(--color-card) !important;
+    }
+
+    /* Hover states adicionais */
+    html[data-mode="light"] .hover\:bg-black\/5:hover,
+    html[data-mode="light"] .hover\:bg-black\/10:hover,
+    html[data-mode="light"] .hover\:bg-neutral-900:hover,
+    html[data-mode="light"] .hover\:bg-neutral-700:hover,
+    html[data-mode="light"] .hover\:bg-stone-900:hover,
+    html[data-mode="light"] .hover\:bg-zinc-900:hover {
+      background-color: var(--color-card-hover) !important;
+    }
+
+    /* Bordas pretas/escuras → divisor */
+    html[data-mode="light"] .border-black,
+    html[data-mode="light"] .border-black\/10,
+    html[data-mode="light"] .border-black\/20,
+    html[data-mode="light"] .border-stone-800,
+    html[data-mode="light"] .border-stone-900,
+    html[data-mode="light"] .border-zinc-800,
+    html[data-mode="light"] .border-zinc-900,
+    html[data-mode="light"] .border-neutral-900,
+    html[data-mode="light"] .border-neutral-950 {
+      border-color: var(--color-divider) !important;
+    }
+
+    /* Texto claro sobre superfícies escuras → texto principal escuro no light */
+    html[data-mode="light"] .text-neutral-100,
+    html[data-mode="light"] .text-neutral-200,
+    html[data-mode="light"] .text-stone-100,
+    html[data-mode="light"] .text-stone-200,
+    html[data-mode="light"] .text-zinc-100,
+    html[data-mode="light"] .text-zinc-200 {
+      color: var(--color-text) !important;
+    }
+
+    /* Cards elevados (cards dentro de cards) */
+    html[data-mode="light"] .bg-brutal-card-elevated,
+    html[data-mode="light"] .bg-beauty-elevated {
+      background-color: var(--color-card-elevated) !important;
+    }
+
+    /* Ringa de foco escuras → accent translúcido */
+    html[data-mode="light"] .ring-white\/10,
+    html[data-mode="light"] .ring-white\/5,
+    html[data-mode="light"] .ring-black\/10 {
+      --tw-ring-color: var(--color-divider) !important;
+    }
+
+    /* Gradientes "from-black", "from-neutral-9*" — neutralizar para card */
+    html[data-mode="light"] .from-black,
+    html[data-mode="light"] .from-neutral-900,
+    html[data-mode="light"] .from-neutral-950,
+    html[data-mode="light"] .from-stone-900,
+    html[data-mode="light"] .from-zinc-900 {
+      --tw-gradient-from: var(--color-card) var(--tw-gradient-from-position) !important;
+      --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position) !important;
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+    }
+
+    html[data-mode="light"] .to-black,
+    html[data-mode="light"] .to-neutral-900,
+    html[data-mode="light"] .to-neutral-950,
+    html[data-mode="light"] .to-stone-900,
+    html[data-mode="light"] .to-zinc-900 {
+      --tw-gradient-to: var(--color-card) var(--tw-gradient-to-position) !important;
     }
 
     /* Previne flash branco/escuro na rota pública — aplicado ANTES do React montar */
@@ -239,110 +438,193 @@
       color: #1D1D1F !important;
     }
 
-    /* Brutal Barber Background */
+    /* Theming Variables (Dual Mode) */
+    :root, html[data-theme="barber"][data-mode="dark"] {
+      --color-bg: #121212;
+      --color-card: #1E1E1E;
+      --color-card-elevated: #2A2A2A;
+      --color-card-hover: rgba(255, 255, 255, 0.04);
+      --color-surface: #252525;
+      --color-divider: rgba(255, 255, 255, 0.08);
+      --color-overlay: rgba(0, 0, 0, 0.7);
+      --color-accent: #C29B40;
+      --color-accent-hover: #D4AF50;
+      --color-text: #EAEAEA;
+      --color-text-muted: #A0A0A0;
+      --color-text-secondary: #A0A0A0;
+      --color-border: rgba(255, 255, 255, 0.05);
+      --color-input-bg: rgba(0, 0, 0, 0.3);
+      --shadow-brutal: 8px 8px 0 0 #000000;
+      --shadow-brutal-sm: 2px 2px 0 0 #000000;
+      --shadow-brutal-md: 4px 4px 0 0 #000000;
+      --bg-gradient: radial-gradient(circle at 10% 90%, rgba(194, 155, 64, 0.12) 0%, transparent 40%),
+                     radial-gradient(circle at 90% 10%, rgba(194, 155, 64, 0.10) 0%, transparent 30%),
+                     var(--color-bg);
+      --particle-color: rgba(194, 155, 64, 0.25);
+    }
+
+    html[data-theme="barber"][data-mode="light"] {
+      --color-bg: #F5F1E8;
+      --color-card: #FFFFFF;
+      --color-card-elevated: #FFFFFF;
+      --color-card-hover: rgba(0, 0, 0, 0.04);
+      --color-surface: #EDE9E0;
+      --color-divider: rgba(0, 0, 0, 0.08);
+      --color-overlay: rgba(31, 24, 10, 0.45);
+      --color-accent: #A07A2A;
+      --color-accent-hover: #B8892F;
+      --color-text: #1A1A1A;
+      --color-text-muted: #6B5E45;
+      --color-text-secondary: #5A5040;
+      --color-border: rgba(0, 0, 0, 0.08);
+      --color-input-bg: rgba(0, 0, 0, 0.04);
+      --shadow-brutal: 6px 6px 0 0 rgba(160, 122, 42, 0.35);
+      --shadow-brutal-sm: 2px 2px 0 0 rgba(160, 122, 42, 0.25);
+      --shadow-brutal-md: 4px 4px 0 0 rgba(160, 122, 42, 0.28);
+      --bg-gradient: radial-gradient(circle at 20% 80%, rgba(160, 122, 42, 0.03) 0%, transparent 40%),
+                     var(--color-bg);
+      --particle-color: rgba(160, 122, 42, 0.06);
+    }
+
+    html[data-theme="beauty"][data-mode="dark"] {
+      --color-bg: #1F1B2E;
+      --color-card: #2E2B3B;
+      --color-card-elevated: #3A3548;
+      --color-card-hover: rgba(255, 255, 255, 0.04);
+      --color-surface: #3D3A4D;
+      --color-divider: rgba(255, 255, 255, 0.08);
+      --color-overlay: rgba(0, 0, 0, 0.7);
+      --color-accent: #A78BFA;
+      --color-accent-hover: #C4B5FD;
+      --color-text: #EAEAEA;
+      --color-text-muted: #B8AED4;
+      --color-text-secondary: #A78BFA;
+      --color-border: rgba(255, 255, 255, 0.10);
+      --color-input-bg: rgba(255, 255, 255, 0.05);
+      --shadow-brutal: 8px 8px 0 0 #000000;
+      --shadow-brutal-sm: 2px 2px 0 0 #000000;
+      --shadow-brutal-md: 4px 4px 0 0 #000000;
+      --bg-gradient: radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.12) 0%, transparent 40%),
+                     radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.10) 0%, transparent 30%),
+                     var(--color-bg);
+      --particle-color: rgba(167, 139, 250, 0.25);
+    }
+
+    html[data-theme="beauty"][data-mode="light"] {
+      --color-bg: #F7F5FF;
+      --color-card: #FFFFFF;
+      --color-card-elevated: #FFFFFF;
+      --color-card-hover: rgba(124, 58, 237, 0.04);
+      --color-surface: #EDE8FF;
+      --color-divider: rgba(124, 58, 237, 0.10);
+      --color-overlay: rgba(31, 27, 46, 0.45);
+      --color-accent: #7C3AED;
+      --color-accent-hover: #6D28D9;
+      --color-text: #1A1225;
+      --color-text-muted: #6B5E85;
+      --color-text-secondary: #5B4D7A;
+      --color-border: rgba(124, 58, 237, 0.12);
+      --color-input-bg: rgba(124, 58, 237, 0.04);
+      --shadow-brutal: 6px 6px 0 0 rgba(124, 58, 237, 0.25);
+      --shadow-brutal-sm: 2px 2px 0 0 rgba(124, 58, 237, 0.18);
+      --shadow-brutal-md: 4px 4px 0 0 rgba(124, 58, 237, 0.22);
+      --bg-gradient: radial-gradient(circle at 15% 85%, rgba(124, 58, 237, 0.03) 0%, transparent 40%),
+                     var(--color-bg);
+      --particle-color: rgba(124, 58, 237, 0.05);
+    }
+
+    /* Utilitárias dual-mode (consomem tokens) */
+    .shadow-brutal { box-shadow: var(--shadow-brutal); }
+    .shadow-brutal-sm { box-shadow: var(--shadow-brutal-sm); }
+    .shadow-brutal-md { box-shadow: var(--shadow-brutal-md); }
+    .bg-card { background-color: var(--color-card); }
+    .bg-card-elevated { background-color: var(--color-card-elevated); }
+    .bg-overlay { background-color: var(--color-overlay); }
+    .border-divider { border-color: var(--color-divider); }
+    .text-muted { color: var(--color-text-muted); }
+
+    /* CSS Particles Background (Lightweight) */
     body::before {
       content: "";
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image:
-        linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(18, 18, 18, 0.85) 50%, rgba(18, 18, 18, 0.95) 100%),
-        url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gMTAwIDAgTCAwIDAgMCAxMDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyMDAsMTU1LDY0LDAuMDMpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=');
-      background-size: cover, 100px 100px;
-      background-position: center, center;
-      background-attachment: fixed;
-      opacity: 1;
+      top: 0; left: 0;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      pointer-events: none;
       z-index: -2;
-      pointer-events: none;
+      box-shadow:
+        15vw 25vh 1px var(--particle-color),
+        85vw 15vh 1px var(--particle-color),
+        45vw 65vh 1px var(--particle-color),
+        70vw 80vh 1px var(--particle-color),
+        10vw 85vh 1px var(--particle-color),
+        90vw 50vh 1px var(--particle-color),
+        30vw 30vh 1px var(--particle-color),
+        60vw 20vh 1px var(--particle-color),
+        25vw 75vh 1px var(--particle-color),
+        80vw 90vh 1px var(--particle-color),
+        50vw 10vh 1px var(--particle-color),
+        95vw 35vh 1px var(--particle-color),
+        5vw  55vh 1px var(--particle-color),
+        40vw 95vh 1px var(--particle-color),
+        75vw 45vh 1px var(--particle-color);
+      animation: floatParticles 25s ease-in-out infinite alternate;
     }
 
-    /* Animated Gold Accents */
-    body::after {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(194, 155, 64, 0.03) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(194, 155, 64, 0.02) 0%, transparent 40%);
-      z-index: -1;
-      pointer-events: none;
-      animation: pulseGold 8s ease-in-out infinite;
+    @keyframes floatParticles {
+      0% { transform: translateY(0) translateX(0); }
+      100% { transform: translateY(-30px) translateX(10px); }
     }
 
-    @media (max-width: 768px) {
-      body::after {
+    /* Removido media query que desabilitava partículas no mobile para garantir o efeito visual */
+    @media (prefers-reduced-motion) {
+      body::before {
         animation: none !important;
-        /* Disable expensive animations on mobile */
-        opacity: 0.1;
-        background: none;
-        /* Remove gradients complexos no mobile */
       }
     }
 
-    @keyframes pulseGold {
-
-      0%,
-      100% {
-        opacity: 0.5;
-      }
-
-      50% {
-        opacity: 0.8;
-      }
-    }
-
-    /* Custom Scrollbar - Brutalismo */
+    /* Custom Scrollbar - Elegante e Minimalista */
     ::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
+      width: 6px;
+      height: 6px;
     }
 
     ::-webkit-scrollbar-track {
-      background: #121212;
+      background: transparent;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #C29B40;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    html[data-mode="light"] ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+    }
+    
+    html[data-mode="light"] ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.3);
     }
 
     /* Scrollbar para Beauty Theme */
     .beauty-scrollbar::-webkit-scrollbar-thumb {
-      background: #A78BFA;
+      background: rgba(167, 139, 250, 0.5);
       border-radius: 10px;
-      border: 2px solid #1F1B2E;
     }
 
     .beauty-scrollbar::-webkit-scrollbar-track {
-      background: #1F1B2E;
+      background: transparent;
       border: none;
     }
 
-    /* Texture Overlay Class - DISABLED ON MOBILE to prevent GPU crash */
-    .texture-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 50;
-      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+');
-      opacity: 0.4;
-    }
-
     @media (max-width: 768px) {
-      .texture-overlay {
-        display: none !important;
+      ::-webkit-scrollbar {
+        width: 3px;
+        height: 3px;
       }
     }
 
@@ -721,16 +1003,25 @@
     }
   </style>
 
+  <!-- Anti-FOUC: aplica data-mode ANTES do React montar para evitar flash de cor errada -->
+  <script>
+    (function () {
+      var mode = localStorage.getItem('agendix_color_mode') || 'dark';
+      document.documentElement.setAttribute('data-mode', mode);
+    })();
+  </script>
+
   <!-- Detecção antecipada da rota de agendamento público: previne flash de fundo errado -->
   <script>
       (function () {
-        var path = window.location.pathname;
-        // Rotas públicas: /booking/, /b/, /p/
-        if (/^\/(booking|b|p)\//.test(path)) {
-          // Padrão: tema escuro (obsidian). O React vai refinar após carregar o perfil.
+        var hash = window.location.hash;
+        // Rotas públicas usam HashRouter: #/book/, #/queue/, #/pro/, #/minha-area/
+        if (/^#\/(book|queue|queue-status|pro|minha-area)\//.test(hash)) {
           document.documentElement.setAttribute('data-public-theme', 'obsidian');
           document.documentElement.style.backgroundColor = '#050505';
           document.body && (document.body.style.backgroundColor = '#050505');
+          // Em rotas públicas, não aplicar data-mode do usuário
+          document.documentElement.removeAttribute('data-mode');
         }
       })();
   </script>
@@ -739,7 +1030,6 @@
 
 <body>
   <div id="root"></div>
-  <div class="texture-overlay"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
 

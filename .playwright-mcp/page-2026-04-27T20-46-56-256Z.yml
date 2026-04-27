@@ -1,0 +1,180 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - link "AgendiX" [ref=e6] [cursor=pointer]:
+      - /url: "#/"
+      - img "AgendiX" [ref=e9]
+    - navigation [ref=e10]:
+      - link "Dashboard" [ref=e11] [cursor=pointer]:
+        - /url: "#/"
+        - img [ref=e12]
+        - text: Dashboard
+      - link "Agenda" [ref=e17] [cursor=pointer]:
+        - /url: "#/agenda"
+        - img [ref=e18]
+        - text: Agenda
+      - link "Fila Digital" [ref=e20] [cursor=pointer]:
+        - /url: "#/fila"
+        - img [ref=e21]
+        - text: Fila Digital
+      - link "Clientes CRM" [ref=e24] [cursor=pointer]:
+        - /url: "#/clientes"
+        - img [ref=e25]
+        - text: Clientes CRM
+      - link "Financeiro" [ref=e30] [cursor=pointer]:
+        - /url: "#/financeiro"
+        - img [ref=e31]
+        - text: Financeiro
+      - link "Ajustes" [ref=e33] [cursor=pointer]:
+        - /url: "#/configuracoes"
+        - img [ref=e34]
+        - text: Ajustes
+      - button "Sair" [ref=e38] [cursor=pointer]:
+        - img [ref=e39]
+        - text: Sair
+  - banner [ref=e42]:
+    - generic [ref=e43]:
+      - generic [ref=e46]:
+        - heading "Barbearia Silva Online" [level=1] [ref=e47]:
+          - text: Barbearia Silva
+          - generic "Online" [ref=e48]
+        - paragraph [ref=e49]: Salão de Beleza
+      - generic [ref=e50]:
+        - button "Trocar Estilo (Modo DEV)" [ref=e51] [cursor=pointer]:
+          - img [ref=e52]
+        - button "Ativar modo claro" [ref=e293] [cursor=pointer]:
+          - img [ref=e294]
+        - button "Abrir notificações" [ref=e67] [cursor=pointer]:
+          - img [ref=e68]
+          - generic [ref=e71]: "1"
+        - button "Rhian Lepore Beauty Professional User" [ref=e73] [cursor=pointer]:
+          - generic [ref=e74]:
+            - paragraph [ref=e75]: Rhian Lepore
+            - paragraph [ref=e76]: Beauty Professional
+          - img "User" [ref=e78]
+  - main [ref=e79]:
+    - generic [ref=e81]:
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - img "Rhian Lepore" [ref=e85]
+          - generic [ref=e88]:
+            - heading "Boa noite, Rhian" [level=1] [ref=e89]
+            - paragraph [ref=e90]: Operação ativa
+        - generic [ref=e91]:
+          - button "Estratégia" [ref=e92] [cursor=pointer]:
+            - img [ref=e93]
+            - generic [ref=e96]: Estratégia
+          - button "Agendar" [ref=e97] [cursor=pointer]:
+            - img [ref=e98]
+            - generic [ref=e101]: Agendar
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - img [ref=e108]
+            - generic [ref=e113]:
+              - heading "Configure seu espaço" [level=3] [ref=e114]
+              - paragraph [ref=e115]: 5 de 6 passos concluídos
+          - generic [ref=e116]:
+            - generic [ref=e117]: 83%
+            - button "Fechar" [ref=e118] [cursor=pointer]:
+              - img [ref=e119]
+        - generic [ref=e125]:
+          - button "Cadastrar serviços ✓ Feito" [disabled] [ref=e127]:
+            - img [ref=e129]
+            - generic [ref=e132]:
+              - paragraph [ref=e133]: Cadastrar serviços
+              - generic [ref=e134]: ✓ Feito
+          - button "Adicionar equipe ✓ Feito" [disabled] [ref=e136]:
+            - img [ref=e138]
+            - generic [ref=e141]:
+              - paragraph [ref=e142]: Adicionar equipe
+              - generic [ref=e143]: ✓ Feito
+          - button "Adicionar clientes ✓ Feito" [disabled] [ref=e145]:
+            - img [ref=e147]
+            - generic [ref=e150]:
+              - paragraph [ref=e151]: Adicionar clientes
+              - generic [ref=e152]: ✓ Feito
+          - button "Configurar horários ✓ Feito" [disabled] [ref=e154]:
+            - img [ref=e156]
+            - generic [ref=e159]:
+              - paragraph [ref=e160]: Configurar horários
+              - generic [ref=e161]: ✓ Feito
+          - button "Compartilhar link de agendamento Próximo Ative e envie o link para seus clientes agendarem online." [ref=e163] [cursor=pointer]:
+            - img [ref=e165]
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - paragraph [ref=e170]: Compartilhar link de agendamento
+                - generic [ref=e171]: Próximo
+              - paragraph [ref=e172]: Ative e envie o link para seus clientes agendarem online.
+            - img [ref=e173]
+          - button "Criar primeiro agendamento ✓ Feito" [disabled] [ref=e176]:
+            - img [ref=e178]
+            - generic [ref=e181]:
+              - paragraph [ref=e182]: Criar primeiro agendamento
+              - generic [ref=e183]: ✓ Feito
+      - generic [ref=e186]:
+        - generic [ref=e187]:
+          - img [ref=e188]
+          - generic [ref=e190]: Avisos do Sistema
+        - generic [ref=e192]: ⚠️ 22 agendamento(s) pendente(s) de conclusão/cancelamento.
+      - generic [ref=e193]:
+        - generic [ref=e197]:
+          - generic [ref=e198]:
+            - generic [ref=e199]:
+              - generic [ref=e200]: Receita do Dia
+              - button "Ajuda" [ref=e202] [cursor=pointer]:
+                - img [ref=e203]
+                - generic [ref=e205]: Ajuda
+            - img [ref=e207]
+          - generic [ref=e209]:
+            - paragraph [ref=e210]: Nenhum atendimento concluído hoje ainda.
+            - button "Registrar atendimento →" [ref=e211] [cursor=pointer]
+        - button "Ver histórico de lucros →" [ref=e213] [cursor=pointer]
+      - generic [ref=e215]:
+        - generic [ref=e219]:
+          - generic [ref=e220]: Agenda de hoje
+          - button "Ajuda" [ref=e222] [cursor=pointer]:
+            - img [ref=e223]
+            - generic [ref=e225]: Ajuda
+        - generic [ref=e226]:
+          - list [ref=e227]:
+            - listitem [ref=e228] [cursor=pointer]:
+              - generic [ref=e229]:
+                - generic [ref=e230]:
+                  - generic [ref=e231]: 10:30
+                  - generic [ref=e232]: 28/04
+                - generic [ref=e233]:
+                  - paragraph [ref=e234]: Paulo
+                  - paragraph [ref=e235]: Manicure
+              - button "Ver" [ref=e237]:
+                - generic [ref=e238]: Ver
+          - button "Ver Agenda Completa →" [ref=e240] [cursor=pointer]
+      - generic [ref=e242]:
+        - generic [ref=e246]:
+          - generic [ref=e247]: Oportunidades do Dia
+          - button "Ajuda" [ref=e249] [cursor=pointer]:
+            - img [ref=e250]
+            - generic [ref=e252]: Ajuda
+        - generic [ref=e253]:
+          - generic [ref=e255]:
+            - img [ref=e256]
+            - paragraph [ref=e259]: Operação Otimizada
+            - paragraph [ref=e260]: Novas oportunidades surgirão conforme a agenda se movimentar.
+          - paragraph [ref=e264]: 0 Oportunidades Ativas
+      - generic [ref=e265]:
+        - generic [ref=e268]:
+          - generic [ref=e269]:
+            - generic [ref=e271]: Meta Mensal
+            - generic [ref=e272]:
+              - generic [ref=e273]: 5000,00 €
+              - button "Editar Meta" [ref=e274] [cursor=pointer]:
+                - img [ref=e275]
+          - generic [ref=e280]:
+            - paragraph [ref=e281]: 0,00 €
+            - paragraph [ref=e282]: 0% atingido
+          - button "Ver histórico →" [ref=e283] [cursor=pointer]
+        - generic [ref=e285]:
+          - generic [ref=e286]:
+            - img [ref=e287]
+            - generic [ref=e290]: Saúde do negócio
+          - paragraph [ref=e291]: Seus indicadores aparecem após o primeiro mês.
+          - paragraph [ref=e292]: Continue registrando — os dados já estão sendo coletados.

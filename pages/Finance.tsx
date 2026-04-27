@@ -244,6 +244,16 @@ const [searchParams, setSearchParams] = useSearchParams();
       if (error) throw error;
 
       if (data) {
+        const translateMonth = (m: string) => {
+          const map: Record<string, string> = {
+            'January': 'Janeiro', 'February': 'Fevereiro', 'March': 'Março',
+            'April': 'Abril', 'May': 'Maio', 'June': 'Junho',
+            'July': 'Julho', 'August': 'Agosto', 'September': 'Setembro',
+            'October': 'Outubro', 'November': 'Novembro', 'December': 'Dezembro'
+          };
+          return map[m] || m;
+        };
+
         const history = data.map((item: any, index: number, arr: any[]) => {
           let growth = 0;
           if (index > 0) {
@@ -252,7 +262,7 @@ const [searchParams, setSearchParams] = useSearchParams();
           }
 
           return {
-            month: item.month_name.trim(),
+            month: translateMonth(item.month_name.trim()),
             year: item.year_num,
             revenue: parseFloat(item.revenue),
             expenses: parseFloat(item.expenses),
@@ -501,9 +511,9 @@ const [searchParams, setSearchParams] = useSearchParams();
         tabs={[
           { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
           ...(!isStaff ? [
-            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-            { id: 'commissions', label: 'Comissões', icon: <Users className="w-3.5 h-3.5" /> },
             { id: 'insights', label: 'Insights', icon: <BarChart2 className="w-3.5 h-3.5" /> },
+            { id: 'commissions', label: 'Comissões', icon: <Users className="w-3.5 h-3.5" /> },
+            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
           ] : []),
         ]}
         activeTab={activeTab}
@@ -514,8 +524,8 @@ const [searchParams, setSearchParams] = useSearchParams();
       {activeTab === 'overview' && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <BrutalCard className="border-l-4 border-green-500">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <BrutalCard>
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">{isStaff ? 'Meu Giro' : 'Receita'}</p>
@@ -523,7 +533,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                 </div>
                 <InfoButton text={isStaff ? `Total dos seus atendimentos em ${months[selectedMonth]} ${selectedYear}.` : `Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
-              <h3 className="text-2xl md:text-3xl font-heading text-white">
+              <h3 className="text-2xl md:text-3xl font-heading text-green-500">
                 {formatCurrency(summary.revenue || 0, currencyRegion)}
               </h3>
               <div className={`flex items-center gap-1 ${summary.growth >= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-mono mt-2`}>
@@ -532,9 +542,8 @@ const [searchParams, setSearchParams] = useSearchParams();
               </div>
             </BrutalCard>
 
-
             {!isStaff && (
-              <BrutalCard className="border-l-4 border-red-500">
+              <BrutalCard>
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas Pagas</p>
@@ -542,7 +551,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   </div>
                   <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-heading text-white">
+                <h3 className="text-2xl md:text-3xl font-heading text-red-500">
                   {formatCurrency(summary.expenses || 0, currencyRegion)}
                 </h3>
                 <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
@@ -553,7 +562,7 @@ const [searchParams, setSearchParams] = useSearchParams();
             )}
 
             {!isStaff && (
-              <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
+              <BrutalCard>
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
@@ -571,28 +580,29 @@ const [searchParams, setSearchParams] = useSearchParams();
               </BrutalCard>
             )}
 
+            {/* Atendimentos e Ticket Médio (Donos) */}
             {!isStaff && (
-              <BrutalCard className="border-l-4 border-yellow-600 bg-yellow-500/5">
+              <BrutalCard>
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-yellow-500 font-mono text-xs uppercase tracking-widest">A Pagar (Pendente)</p>
-                    <p className="text-[10px] text-neutral-500 font-mono mt-1">Total de despesas não liquidadas</p>
+                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Atendimentos</p>
+                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
                   </div>
-                  <InfoButton text="Despesas registradas como 'Pendentes' que ainda não saíram do seu caixa." />
+                  <InfoButton text="Total de serviços prestados e faturados." />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-heading text-yellow-500 font-bold">
-                  {formatCurrency(summary.pendingExpenses || 0, currencyRegion)}
+                <h3 className="text-2xl md:text-3xl font-heading text-white">
+                  {transactions.filter(t => t.type === 'revenue').length}
                 </h3>
-                <div className="flex items-center gap-1 text-yellow-500/70 text-xs font-mono mt-2">
-                  <Clock className="w-3 h-3 text-yellow-500" />
-                  <span>Impacto futuro no fluxo</span>
+                <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
+                  <Calendar className="w-3 h-3" />
+                  <span>Ticket Médio: {formatCurrency(transactions.filter(t => t.type === 'revenue').length > 0 ? (summary.revenue || 0) / transactions.filter(t => t.type === 'revenue').length : 0, currencyRegion)}</span>
                 </div>
               </BrutalCard>
             )}
 
             {/* Card de Atendimentos para staff */}
             {isStaff && (
-              <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}>
+              <BrutalCard>
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Atendimentos</p>
@@ -613,23 +623,23 @@ const [searchParams, setSearchParams] = useSearchParams();
           {/* Detailed Revenue Cards — apenas para donos */}
           {!isStaff && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <BrutalCard className="border-l-4 border-green-400 bg-green-500/5">
+              <BrutalCard>
                 <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">
                   {region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix'}
                 </p>
-                <h4 className="text-xl font-heading text-white mt-1">
+                <h4 className="text-xl font-heading text-green-400 mt-1">
                   {formatCurrency(region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0), currencyRegion)}
                 </h4>
               </BrutalCard>
-              <BrutalCard className="border-l-4 border-emerald-400 bg-emerald-500/5">
+              <BrutalCard>
                 <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Dinheiro</p>
-                <h4 className="text-xl font-heading text-white mt-1">
+                <h4 className="text-xl font-heading text-emerald-400 mt-1">
                   {formatCurrency(summary.revenueByMethod.dinheiro || 0, currencyRegion)}
                 </h4>
               </BrutalCard>
-              <BrutalCard className="border-l-4 border-teal-400 bg-teal-500/5">
+              <BrutalCard>
                 <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Cartão</p>
-                <h4 className="text-xl font-heading text-white mt-1">
+                <h4 className="text-xl font-heading text-teal-400 mt-1">
                   {formatCurrency(summary.revenueByMethod.cartao || 0, currencyRegion)}
                 </h4>
               </BrutalCard>

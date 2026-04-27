@@ -228,7 +228,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
     const modalStyles = isBeauty
         ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-        : 'bg-brutal-card border-4 border-brutal-border shadow-[8px_8px_0px_0px_#000000]';
+        : 'bg-brutal-card border-4 border-brutal-border shadow-brutal';
 
     const headerStyles = isBeauty
         ? 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent px-6 py-4'
@@ -236,11 +236,11 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
     const inputStyles = isBeauty
         ? 'w-full p-3 bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:outline-none focus:border-beauty-neon focus:bg-beauty-dark transition-all placeholder-beauty-neon/30'
-        : 'w-full p-3 bg-neutral-900 border-2 border-brutal-border text-white focus:outline-none focus:border-accent-gold placeholder-neutral-600 shadow-[2px_2px_0px_0px_#000000] focus:shadow-[3px_3px_0px_0px_#C29B40] transition-all';
+        : 'w-full p-3 bg-neutral-900 border-2 border-brutal-border text-white focus:outline-none focus:border-accent-gold placeholder-neutral-600 shadow-brutal-sm focus:shadow-[3px_3px_0px_0px_#C29B40] transition-all';
 
     const buttonAccentStyles = isBeauty
         ? 'bg-beauty-neon hover:bg-beauty-neon/90 text-black shadow-[0_0_15px_rgba(167,139,250,0.3)] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)]'
-        : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:shadow-[4px_4px_0px_0px_#000000]';
+        : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-brutal-md hover:shadow-brutal';
 
     const backdropStyles = isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85';
 
@@ -284,7 +284,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     onClick={() => handleApplySuggestion(s)}
                                     className={`whitespace-nowrap px-3 py-1.5 text-xs text-white transition-all flex items-center gap-2 ${isBeauty
                                         ? 'bg-beauty-card/50 border border-beauty-neon/30 rounded-full hover:bg-beauty-neon/20 hover:border-beauty-neon'
-                                        : 'bg-neutral-800 border-2 border-neutral-700 hover:bg-neutral-700 shadow-[2px_2px_0px_0px_#000000]'
+                                        : 'bg-neutral-800 border-2 border-neutral-700 hover:bg-neutral-700 shadow-brutal-sm'
                                         }`}
                                 >
                                     {s.name}

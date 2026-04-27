@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { BrutalButton } from './BrutalButton';
 import {
-    X, ChevronLeft, Loader2, Plus
+    X, ChevronLeft, Loader2, Plus, Check
 } from 'lucide-react';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
@@ -30,7 +30,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     clients,
     onRefreshClients
 }) => {
-    const { user, userType, region, businessName } = useAuth();
+    const { user, userType, region, businessName, companyId } = useAuth();
     const { setModalOpen } = useUI();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
@@ -69,9 +69,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     // Styles
     const modalBg = isBeauty
         ? 'bg-gradient-to-br from-beauty-card via-neutral-900 to-beauty-dark border border-beauty-neon/30'
-        : 'bg-neutral-900 border-2 border-neutral-800';
+        : 'bg-brutal-card border border-white/5';
 
-    const cardBg = isBeauty ? 'bg-white/5 border-white/10' : 'bg-neutral-800 border-neutral-700';
+    const cardBg = isBeauty ? 'bg-white/5 border-white/10' : 'bg-brutal-surface border-white/5';
     const activeCardBg = isBeauty ? 'bg-beauty-neon/20 border-beauty-neon' : 'bg-accent-gold text-black border-accent-gold';
 
     // --- STEP 2: SERVICES --- 
@@ -122,7 +122,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
             // Use the secure RPC to ensure no collisions
             const { data: result, error: rpcError } = await supabase.rpc('create_secure_booking', {
-                p_business_id: user?.id,
+                p_business_id: companyId ?? user?.id,
                 p_professional_id: selectedProId,
                 p_customer_name: client?.name || 'Cliente',
                 p_customer_phone: client?.phone || null,
@@ -197,29 +197,56 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
     return createPortal(
         <div className={`fixed inset-0 z-[999] md:left-64 flex items-center justify-center p-0 md:p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} backdrop-blur-sm`}>
-            <div className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-2xl transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
+            <div className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-promax-depth transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
 
                 {/* HEADER */}
-                <div className={`p-6 flex items-center justify-between border-b ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-neutral-800 bg-neutral-900'}`}>
+                <div className={`relative p-6 flex items-center justify-between border-b ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-white/5 bg-brutal-main/50'}`}>
                     <div>
                         <h2 className="text-2xl font-heading text-white uppercase tracking-wider">
                             Novo Atendimento
                         </h2>
-                        <div className="flex items-center gap-2 text-xs md:text-sm text-neutral-400 mt-1">
-                            <span className={step >= 1 ? accentColor : ''}>Cliente</span>
-                            <span>→</span>
-                            <span className={step >= 2 ? accentColor : ''}>Serviços</span>
-                            <span>→</span>
-                            <span className={`hidden md:inline ${step >= 3 ? accentColor : ''}`}>Horário</span>
-                            <span className="hidden md:inline">→</span>
-                            <span className={`hidden md:inline ${step >= 4 ? accentColor : ''}`}>Confirmar</span>
-                            {/* Mobile Steps Indicator */}
-                            <span className="md:hidden text-white font-bold ml-1">Passo {step}/4</span>
-                        </div>
+                        {(() => {
+                            const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
+                            const accentRing = isBeauty ? 'ring-beauty-neon ring-offset-beauty-dark' : 'ring-accent-gold ring-offset-brutal-main';
+                            const accentFill = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+                            return (
+                                <div className="flex items-center gap-0 mt-2 w-full max-w-xs">
+                                    {STEPS.map((label, idx) => {
+                                        const n = idx + 1;
+                                        const isDone = step > n;
+                                        const isCurrent = step === n;
+                                        return (
+                                            <React.Fragment key={n}>
+                                                <div className="flex flex-col items-center">
+                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                                                        isDone
+                                                            ? `${accentFill} border-0`
+                                                            : isCurrent
+                                                                ? `ring-2 ring-offset-2 ${accentRing} bg-transparent`
+                                                                : 'border border-white/20 bg-transparent'
+                                                    }`}>
+                                                        {isDone && <Check size={12} className="text-black" />}
+                                                        {isCurrent && <div className={`w-2 h-2 rounded-full ${accentFill}`} />}
+                                                    </div>
+                                                    <span className={`hidden md:block text-[9px] font-mono uppercase tracking-wider mt-1 ${
+                                                        isCurrent ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold')
+                                                        : isDone ? 'text-neutral-400' : 'text-neutral-600'
+                                                    }`}>{label}</span>
+                                                </div>
+                                                {idx < STEPS.length - 1 && (
+                                                    <div className={`flex-1 h-px mx-1 mb-3 md:mb-5 ${step > n ? (isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40') : 'bg-white/10'}`} />
+                                                )}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
                         <X className="w-6 h-6" />
                     </button>
+                    <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} aria-hidden="true" />
                 </div>
 
                 {/* CONTENT AREA */}
@@ -344,7 +371,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 </div>
 
                 {/* FOOTER */}
-                <div className={`p-4 border-t ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-neutral-800 bg-neutral-900'} flex justify-between items-center`}>
+                <div className={`p-4 border-t ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-white/5 bg-brutal-main/50'} flex justify-between items-center`}>
                     {step > 1 ? (
                         <button
                             onClick={() => setStep(prev => (prev - 1) as any)}

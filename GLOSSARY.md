@@ -1,6 +1,6 @@
-# GLOSSARY.md
+ GLOSSARY.md
 
-Glossário de domínio do AGENX — termos de negócio, entidades e conceitos.
+Glossário de domínio do AGENDIX — termos de negócio, entidades e conceitos.
 Use este arquivo para evitar ambiguidade ao discutir features e implementar código.
 
 ---

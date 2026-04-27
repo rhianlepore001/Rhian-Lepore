@@ -36,7 +36,7 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                     <div className="flex-1 text-center md:text-left">
                         <h3 className="text-xl md:text-2xl font-heading text-white mb-1 flex items-center justify-center md:justify-start gap-2">
                             Oportunidades Ativas
-                            <span className="text-[10px] font-mono px-2 py-0.5 bg-white/10 rounded uppercase tracking-widest opacity-70">Inteligência AgenX</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 bg-white/10 rounded uppercase tracking-widest opacity-70">Inteligência AgendiX</span>
                         </h3>
                         <p className="text-text-secondary text-sm md:text-base max-w-xl">
                             Detectamos <span className={`${accentText} font-bold`}>{diagnostic.at_risk_clients.length} clientes habituais</span> que não retornam há mais de 30 dias.

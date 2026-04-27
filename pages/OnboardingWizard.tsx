@@ -42,7 +42,7 @@ export const OnboardingWizard: React.FC = () => {
 
     const steps: Array<{ title: string; description: string; component: React.ReactNode }> = [
         {
-            title: isBeauty ? 'Bem-vindo ao AgenX Beauty' : 'Bem-vindo ao AgenX Barber',
+            title: isBeauty ? 'Bem-vindo ao AgendiX Beauty' : 'Bem-vindo ao AgendiX Barber',
             description: 'Primeiro, conte-nos sobre o seu negócio.',
             component: (
                 <StepBusinessInfo

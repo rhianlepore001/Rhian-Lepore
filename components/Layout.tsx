@@ -29,7 +29,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div
-      className="h-screen overflow-y-auto bg-brutal-main text-text-primary font-sans selection:bg-accent-gold selection:text-black font-medium relative"
+      className="h-[100dvh] overflow-y-auto bg-transparent text-theme-text font-sans selection:bg-theme-accent selection:text-black font-medium relative transition-colors duration-300"
       style={{ '--header-top': headerTop } as React.CSSProperties}
     >
       {/* Brutal Background - Only for Barber Theme */}

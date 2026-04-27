@@ -557,7 +557,7 @@ export const ClientCRM: React.FC = () => {
           <div className={`w-full max-w-md p-6 relative transition-all
               ${isBeauty
               ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]'}
+              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
           `}>
             <button
               onClick={() => setShowEditModal(false)}
@@ -632,7 +632,7 @@ export const ClientCRM: React.FC = () => {
                   className={`flex-1 py-3 font-bold uppercase tracking-wider transition-all disabled:opacity-50
                       ${isBeauty
                       ? 'bg-beauty-neon text-black hover:bg-beauty-neonHover rounded-xl shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_#000000]'}
+                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-brutal-sm'}
                   `}
                 >
                   {updating ? 'Salvando...' : 'Salvar'}

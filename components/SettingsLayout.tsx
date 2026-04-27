@@ -10,7 +10,7 @@ interface SettingsLayoutProps {
 }
 
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
-    const { userType, role } = useAuth();
+    const { userType, role, isDev } = useAuth();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     useAppTour();
@@ -18,29 +18,34 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
     const isBeauty = userType === 'beauty';
     const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950';
 
-    // Staff vê apenas o item "Serviços" no menu de ajustes
+    // Staff vê apenas o item "Serviços"; contas non-dev não veem itens devOnly
     const menuItems = role === 'staff'
         ? SETTINGS_ITEMS.filter(item => item.path === '/configuracoes/servicos')
-        : SETTINGS_ITEMS;
+        : SETTINGS_ITEMS.filter(item => isDev || !item.devOnly);
 
     // Get current page title for mobile header
     const currentPage = menuItems.find(item => item.path === location.pathname);
     const currentPageTitle = currentPage?.label || 'Configurações';
 
     return (
-        <div className={`min-h-screen flex relative ${bgColor} overflow-x-hidden w-full`}>
+        <div
+            className={`min-h-screen flex relative overflow-x-hidden w-full ${bgColor}`}
+        >
 
             {/* Sidebar (Desktop) / Drawer (Mobile) */}
-            <aside className={`
-                fixed inset-y-0 left-0 z-50 w-64 
+            <aside
+                className={`
+                fixed bottom-0 left-0 z-50 w-64
                 transform transition-transform duration-300 ease-in-out md:translate-x-0
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                p-6 flex flex-col h-full
+                p-6 flex flex-col
                 ${isBeauty
                     ? 'bg-beauty-dark/95 border-r border-white/5 shadow-promax-glass'
                     : 'bg-brutal-main/95 border-r border-white/5 shadow-promax-depth'}
                 md:backdrop-blur-3xl
-            `}>
+            `}
+                style={{ top: 'calc(var(--header-top, 0px) + 5rem)' }}
+            >
                 <div className="flex items-center justify-between mb-8 flex-shrink-0">
                     <h2 className={`font-heading text-xl uppercase tracking-wider text-white`}>
                         Configurações
@@ -101,18 +106,18 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col w-full max-w-[100vw]">
 
                 {/* Mobile Header + Sticky Nav - PRO MAX REVITALIZATION */}
-                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark border-white/5' : 'bg-neutral-900 border-white/5'} backdrop-blur-md`}>
+                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark/70 border-white/5' : 'bg-neutral-950/70 border-white/5'} backdrop-blur-xl`}>
                     {/* Top Bar */}
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click ${isBeauty ? 'bg-white/5 text-white' : 'bg-white/5 text-white shadow-sm'}`}
+                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click bg-white/5 text-white`}
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
                             <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold">Ajustes</span>
+                                <span className="text-xs uppercase tracking-widest text-neutral-500 font-bold">Ajustes</span>
                                 <h1 className="text-lg font-black text-white uppercase tracking-tight leading-none">
                                     {currentPageTitle}
                                 </h1>
@@ -121,29 +126,33 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                     </div>
 
                     {/* Horizontal Scrollable Nav (Mobile Only) - PRO MAX STYLE */}
-                    <div className="px-4 pb-4 overflow-x-auto hide-scrollbar">
-                        <div className="flex gap-3 min-w-max px-2">
-                            {menuItems.map(item => (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    className={({ isActive }) => `
-                                        flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
-                                        ${isActive
-                                            ? (isBeauty
-                                                ? 'bg-beauty-neon/20 border-beauty-neon/50 text-white shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                                                : 'bg-accent-gold text-black border-accent-gold shadow-promax-depth')
-                                            : 'bg-white/5 border-white/5 text-neutral-400 opacity-60'
-                                        }
-                                    `}
-                                >
-                                    <item.icon className="w-4 h-4" />
-                                    <span className="text-xs font-bold uppercase tracking-wide">
-                                        {item.label.split(' ')[0]}
-                                    </span>
-                                </NavLink>
-                            ))}
+                    <div className="relative">
+                        <div className="px-4 pb-4 overflow-x-auto hide-scrollbar">
+                            <div className="flex gap-3 min-w-max px-2">
+                                {menuItems.map(item => (
+                                    <NavLink
+                                        key={item.path}
+                                        to={item.path}
+                                        className={({ isActive }) => `
+                                            flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
+                                            ${isActive
+                                                ? (isBeauty
+                                                    ? 'bg-beauty-neon/20 border-beauty-neon/50 text-white shadow-[0_0_15px_rgba(167,139,250,0.3)]'
+                                                    : 'bg-accent-gold text-black border-accent-gold shadow-promax-depth')
+                                                : 'bg-white/5 border-white/5 text-neutral-400 opacity-80'
+                                            }
+                                        `}
+                                    >
+                                        <item.icon className="w-4 h-4" />
+                                        <span className="text-xs font-bold uppercase tracking-wide">
+                                            {item.label.split(' ')[0]}
+                                        </span>
+                                    </NavLink>
+                                ))}
+                            </div>
                         </div>
+                        {/* Gradient fade right */}
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-neutral-900 to-transparent md:hidden" />
                     </div>
                 </div>
 

@@ -203,10 +203,49 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
     // Existing link display
     const publicLink = `${window.location.origin}/#/book/${businessSlug}`;
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(publicLink);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = async () => {
+        // Se for mobile e suportar o share API, usa ele primeiro
+        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            try {
+                await navigator.share({
+                    title: 'Meu Link de Agendamento - AgendiX',
+                    text: 'Agende seu horário online:',
+                    url: publicLink
+                });
+                return;
+            } catch (error) {
+                // Erro ao compartilhar
+            }
+        }
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(publicLink);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } else {
+                throw new Error('Clipboard API unavailable');
+            }
+        } catch (err) {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = publicLink;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                }
+            } catch (fallbackErr) {
+                console.error('Fallback copy failed', fallbackErr);
+            }
+        }
     };
 
     // Show disabled state when public booking is off

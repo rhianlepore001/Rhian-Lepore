@@ -65,7 +65,7 @@ Responda APENAS em JSON: { "posts": [{ "day", "caption", "hashtags", "theme" }] 
                 headers: {
                     'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                     'HTTP-Referer': 'https://rhian-lepore.com',
-                    'X-Title': 'AgenX Content Calendar',
+                    'X-Title': 'AgendiX Content Calendar',
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({

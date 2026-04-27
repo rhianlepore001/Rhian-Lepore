@@ -56,7 +56,15 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
             if (!user) return;
             try {
                 const status = await getSetupStatus(user.id);
+                // Step "booking" concluído por clique — persiste em localStorage
+                if (!status.hasBookingSlug && localStorage.getItem(`booking_visited_${user.id}`) === 'true') {
+                    status.hasBookingSlug = true;
+                }
                 setChecks(status);
+                // Se já estava ativado antes (sessões futuras), oculta o card automaticamente
+                if (status.isActivated) {
+                    setDismissed(true);
+                }
 
                 // Detecta o último step visitado para oferecer retomada
                 if (companyId) {
@@ -109,7 +117,7 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
         {
             id: 'clients',
             label: 'Adicionar clientes',
-            description: 'Cadastre seus clientes no CRM para ativar a IA do AgenX.',
+            description: 'Cadastre seus clientes no CRM para ativar a IA do AgendiX.',
             icon: <UserPlus className="w-4 h-4" />,
             path: '/clientes',
             completed: checks.hasClients,
@@ -156,6 +164,12 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
     // Salva o step atual quando o usuário clica para navegar
     const handleStepClick = async (step: SetupStep) => {
         if (step.completed) return;
+
+        // Step "booking" conclui imediatamente ao clicar
+        if (step.id === 'booking' && user) {
+            localStorage.setItem(`booking_visited_${user.id}`, 'true');
+            setChecks(prev => ({ ...prev, hasBookingSlug: true }));
+        }
 
         // Persiste o último step visitado para oferecer retomada na volta ao dashboard
         if (companyId) {
@@ -271,13 +285,20 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                     </p>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => setDismissed(true)}
-                                className="p-1.5 rounded-full hover:bg-white/5 text-text-secondary hover:text-white transition-colors"
-                                title="Fechar"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {!isActivated && (
+                                    <span className={`font-mono text-xs font-bold ${accentText}`}>
+                                        {percentage}%
+                                    </span>
+                                )}
+                                <button
+                                    onClick={() => setDismissed(true)}
+                                    className="p-1.5 rounded-full hover:bg-white/5 text-text-secondary hover:text-white transition-colors"
+                                    title="Fechar"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Barra de progresso */}
@@ -303,8 +324,8 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                             ${step.completed
                                                 ? 'opacity-75 cursor-default bg-green-500/5'
                                                 : step.id === nextStep?.id
-                                                    ? `border ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-accent-gold/20 bg-accent-gold/5'} cursor-pointer`
-                                                    : 'hover:bg-white/3 cursor-pointer'
+                                                    ? `border-l-2 ${isBeauty ? 'border-beauty-neon bg-beauty-neon/5' : 'border-accent-gold bg-accent-gold/5'} cursor-pointer`
+                                                    : 'opacity-60 hover:opacity-100 hover:bg-white/3 cursor-pointer'
                                             }
                                         `}
                                     >
@@ -321,7 +342,7 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <p className={`text-sm font-medium ${step.completed ? 'text-green-400' : 'text-white'}`}>
+                                                <p className={`text-sm font-medium ${step.completed ? 'text-neutral-600 line-through' : 'text-white'}`}>
                                                     {step.label}
                                                 </p>
                                                 {step.id === 'team' && !step.completed && (

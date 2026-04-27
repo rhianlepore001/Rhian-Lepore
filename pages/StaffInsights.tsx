@@ -136,9 +136,9 @@ export const StaffInsights: React.FC = () => {
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
-                            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border-2 transition-all ${
+                            className={`px-3 py-1.5 min-h-[44px] text-xs font-mono uppercase tracking-wider border-2 rounded-lg transition-all ${
                                 period === p
-                                    ? 'bg-accent-gold text-black border-black shadow-heavy-sm'
+                                    ? 'bg-accent-gold text-black border-accent-gold shadow-gold'
                                     : 'border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-white'
                             }`}
                         >
@@ -152,7 +152,7 @@ export const StaffInsights: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <BrutalCard accent>
                     <div className="flex items-start gap-4">
-                        <div className="p-2 bg-accent-gold/10 rounded">
+                        <div className="p-2.5 bg-accent-gold/10 rounded-xl">
                             <Calendar className="w-5 h-5 text-accent-gold" />
                         </div>
                         <div>
@@ -167,7 +167,7 @@ export const StaffInsights: React.FC = () => {
 
                 <BrutalCard>
                     <div className="flex items-start gap-4">
-                        <div className="p-2 bg-white/5 rounded">
+                        <div className="p-2.5 bg-white/5 rounded-xl">
                             <Users className="w-5 h-5 text-neutral-400" />
                         </div>
                         <div>
@@ -180,14 +180,14 @@ export const StaffInsights: React.FC = () => {
                     </div>
                 </BrutalCard>
 
-                <BrutalCard>
+                <BrutalCard accent>
                     <div className="flex items-start gap-4">
-                        <div className="p-2 bg-white/5 rounded">
-                            <DollarSign className="w-5 h-5 text-neutral-400" />
+                        <div className="p-2.5 bg-accent-gold/10 rounded-xl">
+                            <DollarSign className="w-5 h-5 text-accent-gold" />
                         </div>
                         <div>
                             <p className="text-neutral-500 font-mono text-xs uppercase">Comissões</p>
-                            <p className="text-3xl font-heading text-white font-bold">
+                            <p className="text-3xl font-heading text-accent-gold font-bold">
                                 {loading ? '—' : formatCurrency(commissions)}
                             </p>
                             <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>

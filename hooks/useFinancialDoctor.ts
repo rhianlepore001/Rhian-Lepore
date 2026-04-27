@@ -192,7 +192,7 @@ function generateInsights(params: {
             id: 'no-campaigns',
             category: 'opportunity',
             title: 'IA ociosa por falta de campanhas',
-            description: 'O AgenX pode reativar clientes inativos automaticamente via WhatsApp, mas ainda nenhuma campanha foi enviada. Ative o piloto automático.',
+            description: 'O AgendiX pode reativar clientes inativos automaticamente via WhatsApp, mas ainda nenhuma campanha foi enviada. Ative o piloto automático.',
             action: 'Ir para Marketing → Nova Campanha',
             impact: 'high'
         });

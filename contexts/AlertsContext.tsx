@@ -19,7 +19,7 @@ interface AlertsContextType {
 const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -173,7 +173,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const refreshAlerts = async () => {
-        if (!user) {
+        if (!user || role === 'staff') {
             setAlerts([]);
             setLoading(false);
             return;
@@ -240,7 +240,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             supabase.removeChannel(subscription);
             supabase.removeChannel(updateSubscription);
         };
-    }, [user]);
+    }, [user, role]);
 
     return (
         <AlertsContext.Provider value={{ alerts, loading, refreshAlerts }}>

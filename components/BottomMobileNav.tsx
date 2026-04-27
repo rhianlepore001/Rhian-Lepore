@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, Users, DollarSign, Plus, Menu } from 'lucide-react'; // Icons
+import { Calendar, Users, DollarSign, Plus, Menu, TrendingUp } from 'lucide-react'; // Icons
 import { useAuth } from '../contexts/AuthContext';
 import { QuickActionsModal } from './QuickActionsModal';
 import { MoreOptionsDrawer } from './MoreOptionsDrawer';
@@ -23,14 +23,6 @@ export const BottomMobileNav: React.FC = () => {
     const isActive = (path: string) => {
         return location.pathname === path || location.pathname.startsWith(path);
     };
-
-    const navItems = [
-        { name: 'Agenda', icon: Calendar, path: '/agenda' },
-        { name: 'Clientes', icon: Users, path: '/clientes' },
-        // Middle item is special (+)
-        { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
-        // Last item is 'Mais'
-    ];
 
     return (
         <>
@@ -81,8 +73,8 @@ export const BottomMobileNav: React.FC = () => {
                     <div className={`absolute -top-1 w-18 h-18 rounded-3xl blur-xl opacity-20 -z-10 ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></div>
                 </div>
 
-                {/* 4. Financeiro — apenas para dono */}
-                {!isStaff && (
+                {/* 4. Financeiro / Insights */}
+                {!isStaff ? (
                     <button
                         onClick={() => navigate('/financeiro')}
                         className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/financeiro') ? activeColor : inactiveColor}`}
@@ -91,6 +83,16 @@ export const BottomMobileNav: React.FC = () => {
                             <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} />
                         </div>
                         <span className="text-[10px] font-bold tracking-tight">Financeiro</span>
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => navigate('/meus-insights')}
+                        className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:animate-haptic-click ${isActive('/meus-insights') ? activeColor : inactiveColor}`}
+                    >
+                        <div className={`p-2 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-white/5' : ''}`}>
+                            <TrendingUp className="w-6 h-6" strokeWidth={isActive('/meus-insights') ? 2.5 : 2} />
+                        </div>
+                        <span className="text-[10px] font-bold tracking-tight">Insights</span>
                     </button>
                 )}
 

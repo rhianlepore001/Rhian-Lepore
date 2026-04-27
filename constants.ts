@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LayoutDashboard, Calendar, Users, TrendingUp, FileText, Settings, DollarSign, LogOut, Package, CreditCard, Clock, BarChart3, Shield, Trash2, ClipboardList, ShieldAlert } from 'lucide-react';
+import { LucideIcon, LayoutDashboard, Calendar, Users, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/', ownerOnly: false },
@@ -8,23 +8,27 @@ export const NAVIGATION_ITEMS = [
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: true },
   { name: 'Clientes CRM', icon: Users, path: '/clientes', ownerOnly: false },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
-  { name: 'Marketing', icon: TrendingUp, path: '/marketing', ownerOnly: true },
-  { name: 'Insights', icon: BarChart3, path: '/insights', ownerOnly: true },
   { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true },
 ];
 
-export const SETTINGS_ITEMS = [
+export interface SettingsItem {
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  devOnly?: boolean;
+}
+
+export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Geral', path: '/configuracoes/geral', icon: Settings },
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar },
   { label: 'Equipe', path: '/configuracoes/equipe', icon: Users },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
   { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
-  { label: 'Financeiro', path: '/configuracoes/financeiro', icon: DollarSign },
   { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
   { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield },
-  { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ClipboardList },
-  { label: 'Erros', path: '/configuracoes/erros', icon: ShieldAlert },
-  { label: 'Lixeira', path: '/configuracoes/lixeira', icon: Trash2 },
+  { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ClipboardList, devOnly: true },
+  { label: 'Erros', path: '/configuracoes/erros', icon: ShieldAlert, devOnly: true },
+  { label: 'Lixeira', path: '/configuracoes/lixeira', icon: Trash2, devOnly: true },
 ];
 export const PREDEFINED_SERVICES = {
   barber: [

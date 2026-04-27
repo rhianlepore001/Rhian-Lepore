@@ -4,8 +4,9 @@ import { Layout } from './components/Layout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { DynamicBranding } from './components/DynamicBranding';
-import { AIAssistantChat } from './components/AIAssistantChat';
+
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -80,7 +81,7 @@ const ProtectedLayout = () => {
           <Outlet />
         </Suspense>
       </ErrorBoundary>
-      <AIAssistantChat />
+
     </Layout>
   );
 };
@@ -216,15 +217,17 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <AuthProvider>
-        <DynamicBranding />
-        <PublicClientProvider>
-          <AlertsProvider>
-              <AppRoutes />
-              <ActivationBanner />
-          </AlertsProvider>
-        </PublicClientProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <DynamicBranding />
+          <PublicClientProvider>
+            <AlertsProvider>
+                <AppRoutes />
+                <ActivationBanner />
+            </AlertsProvider>
+          </PublicClientProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </HashRouter>
   );
 };

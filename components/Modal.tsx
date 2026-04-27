@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { BrutalButton } from './BrutalButton';
 import { useUI } from '../contexts/UIContext';
+import { useLocation } from 'react-router-dom';
 
 interface ModalProps {
     isOpen: boolean;
@@ -31,7 +32,9 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
     const { userType } = useAuth();
     const { setModalOpen } = useUI();
+    const location = useLocation();
     const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
+    const isSettingsRoute = location.pathname.startsWith('/configuracoes');
 
     // Fecha ao pressionar ESC
     const handleEscape = useCallback((e: KeyboardEvent) => {
@@ -71,16 +74,17 @@ export const Modal: React.FC<ModalProps> = ({
     const getModalStyles = () => {
         if (isBeauty) {
             return `
-        bg-gradient-to-br from-beauty-card to-beauty-dark
-        border border-beauty-neon/30
+        bg-gradient-to-br from-beauty-card/95 via-beauty-card/90 to-beauty-dark/95
+        backdrop-blur-2xl
+        border border-white/10
         rounded-2xl
-        shadow-[0_0_20px_rgba(167,139,250,0.15)]
+        shadow-promax-glass
       `;
         } else {
             return `
-        bg-brutal-card
+        ${isSettingsRoute ? 'bg-brutal-card/75 backdrop-blur-2xl' : 'bg-gradient-brutal'}
         border border-white/10
-        shadow-promax-depth rounded-2xl
+        shadow-promax-glass rounded-2xl
       `;
         }
     };
@@ -90,7 +94,7 @@ export const Modal: React.FC<ModalProps> = ({
         if (isBeauty) {
             return 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent px-6 py-4';
         } else {
-            return 'border-b border-white/8 px-6 py-4';
+            return 'border-b border-white/5 bg-white/[0.02] px-6 py-4';
         }
     };
 
@@ -99,17 +103,17 @@ export const Modal: React.FC<ModalProps> = ({
         if (isBeauty) {
             return 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all';
         } else {
-            return 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1 transition-colors';
+            return 'text-neutral-500 hover:text-white hover:bg-white/10 rounded-full p-1.5 transition-colors';
         }
     };
 
     const modalContent = (
-        <div className="fixed inset-0 z-[999] md:left-64 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 md:p-4">
             {/* Backdrop */}
             <div
                 className={`
           absolute inset-0 
-          ${isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85'}
+          ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-md' : 'bg-black/80 backdrop-blur-md'}
           transition-opacity duration-300
         `}
                 onClick={() => !preventClose && onClose()}
@@ -123,7 +127,7 @@ export const Modal: React.FC<ModalProps> = ({
           ${getModalStyles()}
           transform transition-all duration-300
           animate-in fade-in zoom-in-95
-          max-h-[90vh] flex flex-col
+          max-h-[calc(100vh-1.5rem)] md:max-h-[90vh] flex flex-col
         `.replace(/\s+/g, ' ').trim()}
                     role="dialog"
                     aria-modal="true"
@@ -154,7 +158,7 @@ export const Modal: React.FC<ModalProps> = ({
 
                 {/* Content */}
                 <div className={`
-          flex-1 overflow-y-auto p-6
+          flex-1 overflow-y-auto p-5 md:p-6
           ${isBeauty ? 'scrollbar-thin scrollbar-thumb-beauty-neon/20' : ''}
         `}>
                     {children}

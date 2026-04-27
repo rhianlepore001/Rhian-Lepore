@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { X, Loader2, Tag } from 'lucide-react';
@@ -83,34 +83,49 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     // Theme Styles
     const modalStyles = isBeauty
         ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-        : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]';
+        : 'bg-brutal-card border border-white/5 rounded-2xl shadow-promax-depth';
 
     const headerStyles = isBeauty
         ? 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent'
-        : 'border-b-2 border-dashed border-neutral-800 bg-neutral-900/50';
+        : 'border-b border-white/5 bg-white/[0.02]';
 
     const inputStyles = isBeauty
-        ? 'w-full p-3 bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:outline-none focus:border-beauty-neon focus:bg-beauty-dark transition-all placeholder-beauty-neon/30'
-        : 'w-full p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold';
+        ? 'w-full px-4 py-3 rounded-xl text-sm text-white bg-white/5 border border-white/10 focus:outline-none focus:border-beauty-neon/50 focus:bg-white/8 transition-all font-sans placeholder:text-beauty-neon/30'
+        : 'w-full px-4 py-3 rounded-xl text-sm text-white bg-black/30 border border-neutral-700/60 focus:outline-none focus:border-accent-gold/60 focus:bg-black/50 transition-all font-mono placeholder:text-neutral-500';
 
     const labelStyles = isBeauty
-        ? 'text-beauty-neon/80 font-sans font-medium text-xs mb-1 block'
-        : 'text-white font-mono text-sm mb-2 block';
+        ? 'text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1 block'
+        : 'text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono mb-1 block';
 
     const closeButtonStyles = isBeauty
         ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all'
         : 'text-neutral-400 hover:text-white transition-colors';
 
     // Initial state setup
-    // Initial state setup
     const initialDate = formatDateForInput(appointment.appointment_time);
     const initialTime = new Date(appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
-    // Parse initial services (comma separated names -> IDs)
-    const initialServiceNames = appointment.service.split(',').map(s => s.trim());
-    const initialServiceIds = services
-        .filter(s => initialServiceNames.includes(s.name))
-        .map(s => s.id);
+    // Parse initial services ONLY ONCE using useMemo
+    const { initialServiceIds, initialCustomPart } = useMemo(() => {
+        const names = appointment.service.split(',').map(s => s.trim()).filter(Boolean);
+        const ids: string[] = [];
+        const unmatchedNames: string[] = [];
+        
+        names.forEach(name => {
+            // Case insensitive match
+            const matchedService = services.find(s => s.name.toLowerCase() === name.toLowerCase());
+            if (matchedService) {
+                ids.push(matchedService.id);
+            } else {
+                unmatchedNames.push(name);
+            }
+        });
+        
+        return {
+            initialServiceIds: ids,
+            initialCustomPart: unmatchedNames.join(', ')
+        };
+    }, [appointment.service, services]);
 
     // Calculate initial base price from current service prices
     const calculatedBasePrice = services
@@ -120,12 +135,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const initialBasePrice = calculatedBasePrice || appointment.price;
 
     // Calculate initial discount percentage based on stored price vs base price
-    // If appointment.price (final) < initialBasePrice, there IS a discount
     const initialDiscountRate = initialBasePrice > 0 ? ((initialBasePrice - appointment.price) / initialBasePrice) * 100 : 0;
     const initialDiscountPercentage = Math.max(0, Math.round(initialDiscountRate)).toString();
 
-    // Determine initial priceBeforeDiscount
-    // Usually this is the base price, but if the final price is actually HIGHER (custom price), we use that.
     const initialPriceBeforeDiscount = appointment.price > initialBasePrice ? appointment.price : initialBasePrice;
 
     // State for form fields
@@ -137,18 +149,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [notes, setNotes] = useState(appointment.notes || '');
 
     // Custom Service State
-    const [isCustomService, setIsCustomService] = useState(appointment.price > initialBasePrice || (appointment.service && initialServiceIds.length === 0));
-    const [customServiceName, setCustomServiceName] = useState('');
-
-    useEffect(() => {
-        // If there's a custom part in the string not matched by IDs
-        const matchedServiceNames = services.filter(s => initialServiceIds.includes(s.id)).map(s => s.name);
-        const customPart = initialServiceNames.filter(name => !matchedServiceNames.includes(name)).join(', ');
-        if (customPart) {
-            setCustomServiceName(customPart);
-            setIsCustomService(true);
-        }
-    }, [appointment.service, services, initialServiceNames, initialServiceIds]);
+    const [isCustomService, setIsCustomService] = useState(appointment.price > initialBasePrice || initialCustomPart.length > 0 || (appointment.service && initialServiceIds.length === 0));
+    const [customServiceName, setCustomServiceName] = useState(initialCustomPart);
 
     // Price states
     const [basePrice, setBasePrice] = useState(initialBasePrice);
@@ -219,16 +221,18 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
             const dateTime = combineDateAndTime(selectedDate, selectedTime);
-
+            
+            const customNameTrimmed = customServiceName.trim();
+            const finalServiceString = isCustomService && customNameTrimmed
+                ? (serviceNames ? serviceNames + ', ' + customNameTrimmed : customNameTrimmed)
+                : serviceNames;
 
             const { error } = await supabase
                 .from('appointments')
                 .update({
                     client_id: selectedClient,
                     professional_id: selectedProfessional,
-                    service: isCustomService && customServiceName
-                        ? (serviceNames ? serviceNames + ', ' + customServiceName : customServiceName)
-                        : serviceNames,
+                    service: finalServiceString,
                     appointment_time: dateTime.toISOString(),
                     price: finalPriceValue,
                     notes: notes
@@ -274,7 +278,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 </div>
 
                 <div className="p-6 space-y-4">
-                    {/* Client */}
+                    {/* Seção: Cliente */}
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Cliente</p>
                     <div>
                         <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select
@@ -308,6 +313,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         </select>
                     </div>
 
+                    {/* Seção: Serviços */}
+                    <div className="pt-4 border-t border-white/5">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-3">Serviços</p>
+                    </div>
                     {/* Service */}
                     <SearchableSelect
                         label="Serviços"
@@ -325,7 +334,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     />
 
                     {/* Custom Service Edit */}
-                    <div className={`p-4 rounded-xl border-2 transition-all ${isCustomService ? (isBeauty ? 'border-beauty-neon bg-beauty-card/30' : 'border-accent-gold bg-neutral-800') : 'border-neutral-800 bg-transparent'}`}>
+                    <div className={`p-4 rounded-xl border transition-all ${isCustomService ? (isBeauty ? 'border-beauty-neon/60 bg-beauty-card/30' : 'border-accent-gold/60 bg-brutal-surface') : 'border-white/5 bg-transparent'}`}>
                         <div className="flex items-center gap-3 mb-2">
                             <input
                                 type="checkbox"
@@ -359,8 +368,12 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         />
                     </div>
 
+                    {/* Seção: Horário */}
+                    <div className="pt-4 border-t border-white/5">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-3">Horário</p>
+                    </div>
                     {/* Date & Time */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className={labelStyles} htmlFor="appt-date">Data</label>
                             <input
@@ -389,8 +402,12 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         </div>
                     </div>
 
+                    {/* Seção: Preço */}
+                    <div className="pt-4 border-t border-white/5">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-3">Preço</p>
+                    </div>
                     {/* Price and Discount */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className={labelStyles} htmlFor="appt-final-price">Preço Final ({currencySymbol})</label>
                             <div className="relative">
@@ -428,9 +445,11 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                 />
                                 <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`}>%</span>
                             </div>
-                            <p className="text-xs text-neutral-500 mt-1">
-                                {discountAmount > 0 ? `-${currencySymbol} ${discountAmount.toFixed(2)}` : ''}
-                            </p>
+                            {discountAmount > 0 && (
+                                <p className="text-xs text-emerald-400 mt-1 font-mono">
+                                    -{currencySymbol} {discountAmount.toFixed(2)} · Final: {currencySymbol} {(parseFloat(finalPriceInput) || 0).toFixed(2)}
+                                </p>
+                            )}
                         </div>
                     </div>
 

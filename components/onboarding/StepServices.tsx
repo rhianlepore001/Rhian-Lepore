@@ -44,48 +44,45 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
         setLoading(false);
     };
 
-    const handleContinue = () => {
-        onNext();
-    };
-
     return (
         <div className="space-y-6">
-            <div className="bg-neutral-800/50 rounded-lg p-4 border border-neutral-800">
-                <p className="text-neutral-400 text-sm mb-4">
-                    Cadastre seus principais serviços. Você pode adicionar mais e organizar categorias depois.
+            <div className="bg-card rounded-xl p-5 border border-border shadow-sm">
+                <p className="text-muted-foreground text-sm mb-5 leading-relaxed">
+                    Cadastre seus principais serviços. Você poderá adicionar mais e organizar em categorias posteriormente.
                 </p>
 
                 {loading ? (
-                    <div className="text-center py-4 text-neutral-500">Carregando...</div>
+                    <div className="text-center py-8 text-muted-foreground animate-pulse">Carregando serviços...</div>
                 ) : services.length === 0 ? (
-                    <div className="text-center py-8 border-2 border-dashed border-neutral-700 rounded-lg">
-                        <Package className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
-                        <p className="text-neutral-500 mb-4">Nenhum serviço cadastrado</p>
+                    <div className="text-center py-10 border-2 border-dashed border-border rounded-xl bg-muted/30">
+                        <Package className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+                        <p className="text-muted-foreground mb-6 font-medium">Nenhum serviço cadastrado</p>
                         <button
                             onClick={() => setIsModalOpen(true)}
                             id="wizard-add-service"
-                            className={accentColor === 'beauty-neon' ? 'w-full py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors' : 'w-full py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors'}
+                            className="w-full max-w-xs mx-auto py-3 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
                         >
+                            <Plus className="w-4 h-4" />
                             Adicionar Serviço
                         </button>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {services.map(service => (
-                            <div key={service.id} className="bg-neutral-900 p-3 rounded-lg border border-neutral-800 flex justify-between items-center">
+                            <div key={service.id} className="bg-muted/30 p-4 rounded-xl border border-border flex justify-between items-center transition-colors hover:bg-muted/50">
                                 <div>
-                                    <h4 className="text-white font-bold">{service.name}</h4>
-                                    <p className="text-xs text-neutral-400">{currencySymbol} {service.price} • {service.duration_minutes} min</p>
+                                    <h4 className="text-foreground font-semibold">{service.name}</h4>
+                                    <p className="text-sm text-muted-foreground mt-0.5">{currencySymbol} {service.price} • {service.duration_minutes} min</p>
                                 </div>
                             </div>
                         ))}
                         <button
                             onClick={() => setIsModalOpen(true)}
                             id="wizard-add-service"
-                            className={accentColor === 'beauty-neon' ? 'w-full py-3 border border-beauty-neon text-beauty-neon font-bold rounded-lg hover:bg-beauty-neon/10 transition-colors flex items-center justify-center gap-2' : 'w-full py-3 border border-accent-gold text-accent-gold font-bold rounded-lg hover:bg-accent-gold/10 transition-colors flex items-center justify-center gap-2'}
+                            className="w-full py-4 border-2 border-dashed border-border text-muted-foreground font-bold rounded-xl hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 mt-4 bg-transparent"
                         >
-                            <Plus className="w-4 h-4" />
-                            Adicionar Outro
+                            <Plus className="w-5 h-5" />
+                            Adicionar Novo Serviço
                         </button>
                     </div>
                 )}
@@ -94,14 +91,14 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
             <div className="flex gap-4 pt-4">
                 <button
                     onClick={onBack}
-                    className="flex-1 py-4 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors"
+                    className="px-6 py-4 text-muted-foreground hover:text-foreground hover:bg-muted font-bold rounded-xl transition-colors"
                 >
                     Voltar
                 </button>
                 <button
-                    onClick={handleContinue}
+                    onClick={onNext}
                     disabled={services.length === 0}
-                    className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    className="flex-1 py-4 font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:opacity-90 hover:shadow-md"
                 >
                     Continuar
                 </button>

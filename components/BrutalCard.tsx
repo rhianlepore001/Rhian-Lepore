@@ -55,7 +55,9 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
       // Glass mode automático nas rotas de configurações
       const bg = isSettings
-        ? 'bg-brutal-card/30 backdrop-blur-2xl'
+        ? isMobile
+          ? 'bg-brutal-card/20 backdrop-blur-md'
+          : 'bg-brutal-card/30 backdrop-blur-2xl'
         : `bg-gradient-brutal ${blurClass}`;
       const baseBrutal = `relative ${bg} border border-white/10 rounded-2xl ${transitionClass} duration-500 select-none touch-pan-y ${shadowClass} overflow-hidden`;
       const accentBrutal = accent ? 'border-accent-gold/60 shadow-gold bg-accent-gold/5' : '';

@@ -45,22 +45,48 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     };
 
     const handleCopyText = async () => {
+        // Se for mobile e suportar share, tenta share primeiro
+        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            try {
+                await navigator.share({
+                    title: 'Resumo de Comissões - AgendiX',
+                    text: whatsappText
+                });
+                return;
+            } catch (err) {
+                // Share failed or cancelled
+            }
+        }
+
         try {
-            await navigator.clipboard.writeText(whatsappText);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2500);
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(whatsappText);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2500);
+            } else {
+                throw new Error('Clipboard API unavailable');
+            }
         } catch {
             // Fallback para ambientes sem clipboard API
-            const el = document.createElement('textarea');
-            el.value = whatsappText;
-            el.style.position = 'fixed';
-            el.style.opacity = '0';
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2500);
+            try {
+                const el = document.createElement('textarea');
+                el.value = whatsappText;
+                el.style.position = 'fixed';
+                el.style.left = '-9999px';
+                el.style.top = '0';
+                el.style.opacity = '0';
+                document.body.appendChild(el);
+                el.focus();
+                el.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(el);
+                if (successful) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2500);
+                }
+            } catch (fallbackErr) {
+                console.error('Fallback copy failed', fallbackErr);
+            }
         }
     };
 
@@ -71,7 +97,7 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
         try {
             const html2canvas = (await import('html2canvas')).default;
             const canvas = await html2canvas(target, {
-                backgroundColor: '#171717',
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card').trim() || '#171717',
                 scale: 2
             });
             const link = document.createElement('a');

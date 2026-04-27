@@ -45,10 +45,49 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
         }
     }, [isOpen, clientData]);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(message);
-        setIsCopying(true);
-        setTimeout(() => setIsCopying(false), 2000);
+    const handleCopy = async () => {
+        // Se for mobile e suportar share, tenta share primeiro
+        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            try {
+                await navigator.share({
+                    title: 'Campanha de Reativação - AgendiX',
+                    text: message
+                });
+                return;
+            } catch (err) {
+                // Share failed or cancelled
+            }
+        }
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(message);
+                setIsCopying(true);
+                setTimeout(() => setIsCopying(false), 2000);
+            } else {
+                throw new Error('Clipboard API unavailable');
+            }
+        } catch (err) {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = message;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) {
+                    setIsCopying(true);
+                    setTimeout(() => setIsCopying(false), 2000);
+                }
+            } catch (fallbackErr) {
+                console.error('Fallback copy failed', fallbackErr);
+            }
+        }
     };
 
     const handleSend = () => {

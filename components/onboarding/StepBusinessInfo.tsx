@@ -40,21 +40,22 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor })
     }
 
     return (
-        <div className="space-y-8 text-center">
-            <div>
-                <p className="text-white text-2xl font-bold">
-                    Bem-vindo ao AgenX{businessName ? ',' : '!'}{' '}
-                    {businessName && (
-                        <span className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}>
-                            {businessName}!
-                        </span>
+        <div className="space-y-8">
+            <div className="text-center lg:text-left space-y-4">
+                <p className="text-foreground text-3xl font-bold leading-tight font-heading tracking-tight">
+                    {businessName ? (
+                        <>
+                            <span className="text-primary block mb-1">
+                                {businessName}
+                            </span>
+                            está a um passo de decolar.
+                        </>
+                    ) : (
+                        'Seu negócio está a um passo de decolar.'
                     )}
                 </p>
-                <p className="text-neutral-400 text-base mt-3">
-                    Vamos configurar seu primeiro serviço para ativar o sistema de agendamento.
-                </p>
-                <p className="text-neutral-500 text-sm mt-2">
-                    Leva menos de 2 minutos.
+                <p className="text-muted-foreground text-lg leading-relaxed max-w-sm mx-auto lg:mx-0">
+                    Vamos cadastrar seus serviços principais e horários. O processo leva menos de 2 minutos e pode ser ajustado depois.
                 </p>
             </div>
 
@@ -62,12 +63,12 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor })
                 type="button"
                 onClick={onNext}
                 id="wizard-welcome-next"
-                className={`w-full py-4 text-black font-bold transition-all flex items-center justify-center gap-2 text-lg
-                    ${isBeauty
-                        ? 'bg-beauty-neon rounded-xl hover:bg-beauty-neon/90 shadow-neon hover:shadow-neonStrong'
-                        : 'bg-accent-gold rounded-lg hover:bg-accent-gold/90 shadow-heavy active:shadow-none active:translate-y-1'}`}
+                className="w-full py-4 bg-primary text-primary-foreground font-bold text-lg rounded-xl transition-all duration-200 
+                           flex items-center justify-center gap-2 shadow-[0_4px_14px_0_rgba(var(--primary),0.39)] 
+                           hover:shadow-[0_6px_20px_rgba(var(--primary),0.23)] hover:-translate-y-0.5 active:translate-y-0"
             >
-                Configurar meu primeiro serviço →
+                Começar configuração
+                <span className="font-normal">→</span>
             </button>
         </div>
     );

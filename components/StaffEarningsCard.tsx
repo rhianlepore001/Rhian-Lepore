@@ -45,16 +45,23 @@ export const StaffEarningsCard: React.FC = () => {
         fetchEarnings();
     }, [teamMemberId]);
 
+    const monthName = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+
     return (
         <BrutalCard className="brutal-card-enhanced gold-accent-border" noPadding>
             <div className="p-4 flex items-center gap-4">
-                <div className={`p-3 rounded-xl bg-neutral-900 border border-white/10`}>
+                <div className={`p-3 rounded-xl bg-neutral-900 border border-white/10 shrink-0`}>
                     <TrendingUp className={`w-5 h-5 ${accentText}`} />
                 </div>
-                <div>
-                    <p className="text-xs font-mono uppercase text-text-secondary tracking-widest">
-                        Seu faturamento líquido
-                    </p>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-mono uppercase text-text-secondary tracking-widest">
+                            Comissões a receber
+                        </p>
+                        <span className="text-[10px] font-mono text-neutral-600 capitalize shrink-0">
+                            {monthName}
+                        </span>
+                    </div>
                     {loading ? (
                         <Skeleton className="h-7 w-28 mt-1" />
                     ) : (
@@ -63,7 +70,7 @@ export const StaffEarningsCard: React.FC = () => {
                         </p>
                     )}
                     <p className="text-[10px] text-text-secondary mt-0.5">
-                        Comissões pendentes de recebimento
+                        Ainda não liquidadas pelo salão
                     </p>
                 </div>
             </div>

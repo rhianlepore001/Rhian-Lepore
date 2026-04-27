@@ -14,7 +14,6 @@ export const Sidebar: React.FC = () => {
   const isBeauty = userType === 'beauty';
   const isStaff = role === 'staff';
   const themeColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-  const themeBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
 
   // Filtra itens de navegação com base no role do usuário
   const visibleItems = NAVIGATION_ITEMS.filter(item => !item.ownerOnly || !isStaff);
@@ -29,9 +28,9 @@ export const Sidebar: React.FC = () => {
           to={path}
           onClick={closeSidebar}
           className={`
-              group flex items-center px-4 py-3 font-sans font-medium text-sm transition-all rounded-xl
+              group relative flex items-center px-4 py-3 font-sans font-medium text-sm transition-all duration-200 rounded-xl
               ${isActive
-              ? 'bg-beauty-neon/10 text-beauty-neon'
+              ? 'bg-beauty-neon/10 text-beauty-neon before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.5 before:rounded-full before:bg-beauty-neon'
               : 'text-text-secondary hover:text-white hover:bg-white/5'}
             `}
         >
@@ -47,13 +46,13 @@ export const Sidebar: React.FC = () => {
         to={path}
         onClick={closeSidebar}
         className={`
-          group flex items-center px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide transition-all border-2
+          group relative flex items-center px-4 py-3 font-sans font-medium text-sm tracking-wide transition-all duration-200 rounded-xl border
           ${isActive
-            ? `${themeBg} border-black text-black shadow-heavy-sm translate-x-1`
-            : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-neutral-900 hover:border-neutral-800'}
+            ? 'bg-accent-gold/10 text-accent-gold border-accent-gold/20 before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.5 before:rounded-full before:bg-accent-gold'
+            : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04] hover:border-white/5'}
         `}
       >
-        <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-black' : `${themeColor} group-hover:text-white`}`} />
+        <Icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-accent-gold' : `${themeColor} group-hover:text-white`}`} />
         {label}
       </Link>
     );
@@ -72,44 +71,65 @@ export const Sidebar: React.FC = () => {
       <aside
         id="sidebar-container"
         className={`
-          fixed left-0 z-50 w-64 flex flex-col
-          transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          fixed left-0 z-50 w-64 hidden md:flex flex-col
+          transition-transform duration-300 ease-in-out md:shadow-none
           md:translate-x-0
           ${isBeauty
             ? 'bg-beauty-dark/95 md:backdrop-blur-xl border-r border-white/5'
-            : 'bg-brutal-main border-r-4 border-brutal-border'}
+            : 'bg-brutal-main border-r border-white/5'}
         `}
         style={{ top: 'var(--header-top, 0)', bottom: 0 }}
       >
         {/* Header mobile */}
-        <div className={`h-20 flex items-center justify-between px-6 md:hidden ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b-4 border-brutal-border bg-brutal-card'}`}>
-          <span className={`font-heading text-xl ${themeColor} uppercase tracking-tighter`}>Menu</span>
+        <div className={`h-16 flex items-center justify-between px-6 md:hidden ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b border-white/5 bg-brutal-card'}`}>
+          <div className="relative group">
+            <div className={`absolute -inset-2 ${isBeauty ? 'bg-beauty-neon/20' : 'bg-accent-gold/20'} blur-xl rounded-full opacity-60`} />
+            <div className="relative">
+              <img
+                src="/logo icon.png"
+                alt="AgendiX"
+                style={{ height: 32, width: 'auto', objectFit: 'contain', display: 'block' }}
+              />
+            </div>
+          </div>
           <button onClick={closeSidebar} className="text-text-secondary hover:text-white transition-colors" aria-label="Fechar menu" title="Fechar menu">
             <X className="w-6 h-6" />
           </button>
         </div>
 
+        {/* Desktop: Header do menu com Logo */}
+        <div className={`hidden md:flex h-20 items-center justify-center border-b ${isBeauty ? 'border-white/5' : 'border-white/5'}`}>
+          <Link to="/" onClick={closeSidebar} className="relative flex items-center hover:opacity-80 transition-opacity group">
+            <div className={`absolute -inset-3 ${isBeauty ? 'bg-beauty-neon/20' : 'bg-accent-gold/30'} blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
+            <div className="relative">
+              <img
+                src="/logo icon.png"
+                alt="AgendiX"
+                style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }}
+              />
+            </div>
+          </Link>
+        </div>
+
         {/* Navigation */}
-        <nav className="flex-1 py-8 overflow-y-auto space-y-2 px-4">
+        <nav className="flex-1 py-6 overflow-y-auto space-y-1 px-3">
           {visibleItems.map((item) => renderLink(item.path, item.icon, item.name))}
 
           {/* Links extras somente para staff */}
           {isStaff && renderLink('/meus-insights', TrendingUp, 'Meus Insights')}
 
-          {/* Botão de Logout */}
+          {/* Separador */}
+          <div className="border-t border-white/5 pt-3 mt-3" />
+
+          {/* Botão de Logout — neutro em repouso, vermelho no hover */}
           <button
             onClick={() => {
               logout();
               closeSidebar();
             }}
-            className={`w-full group flex items-center px-4 py-3 text-sm transition-all mt-8
-                ${isBeauty
-                ? 'font-sans font-medium text-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-xl'
-                : 'font-mono font-bold uppercase tracking-wide border-2 border-transparent hover:text-red-500 hover:bg-red-900/10 hover:border-red-900/50'}
-            `}
+            className="w-full group flex items-center px-4 py-3 text-sm font-sans font-medium text-neutral-600 hover:text-red-400 hover:bg-red-500/5 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200"
           >
-            <LogOut className={`w-5 h-5 mr-3 transition-colors ${isBeauty ? 'text-neutral-500 group-hover:text-red-400' : 'text-neutral-600 group-hover:text-red-500'}`} />
+            <LogOut className="w-5 h-5 mr-3 transition-colors text-neutral-600 group-hover:text-red-400" />
             Sair
           </button>
         </nav>

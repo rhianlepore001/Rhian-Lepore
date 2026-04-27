@@ -350,7 +350,7 @@ export const QueueManagement: React.FC = () => {
     return (
         <div className="space-y-6 pb-20">
             {/* Header */}
-            <div className={`flex flex-col md:flex-row justify-between items-center ${isBeauty ? 'bg-beauty-card/50 border-beauty-neon/20' : 'bg-black/20 border-white/5'} p-6 rounded-2xl border backdrop-blur-sm sticky top-0 z-30 shadow-xl`}>
+            <div className={`flex flex-col md:flex-row justify-between items-center ${isBeauty ? 'bg-beauty-card/40 border-beauty-neon/20' : 'bg-white/[0.04] border-white/10'} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-xl`}>
                 <div className="mb-4 md:mb-0">
                     <h1 className={`text-2xl md:text-3xl font-heading font-bold text-white mb-1 flex items-center gap-2`}>
                         <Clock className={`w-8 h-8 ${accentColor}`} />
@@ -362,20 +362,20 @@ export const QueueManagement: React.FC = () => {
                     <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />} className="hidden md:flex">
                         Adicionar
                     </BrutalButton>
-                    <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" className="md:hidden !min-w-0 !px-3">
+                    <BrutalButton onClick={() => setShowAddModal(true)} size="sm" variant="primary" className="md:hidden !min-w-0 !px-3.5 !rounded-full">
                         <User className="w-5 h-5" />
                     </BrutalButton>
                     <BrutalButton onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />} className="hidden md:flex">
                         Gerar QR Code
                     </BrutalButton>
-                    <BrutalButton onClick={() => setShowQrModal(true)} size="sm" variant="secondary" className="md:hidden !min-w-0 !px-3">
+                    <BrutalButton onClick={() => setShowQrModal(true)} size="sm" variant="secondary" className="md:hidden !min-w-0 !px-3.5 !rounded-full">
                         <QrCode className="w-5 h-5" />
                     </BrutalButton>
                 </div>
             </div>
 
             {/* Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 <BrutalCard className="p-4 border-l-4 border-yellow-400">
                     <div className="text-xs uppercase text-neutral-500 font-bold mb-1 tracking-widest">Na Fila</div>
                     <div className="text-4xl font-heading text-yellow-400">{metrics.waiting}</div>
@@ -399,12 +399,12 @@ export const QueueManagement: React.FC = () => {
                     </h2>
 
                     {actionableList.length === 0 ? (
-                        <div className={`p-12 border-2 border-dashed ${isBeauty ? 'border-beauty-neon/20' : 'border-neutral-800'} rounded-2xl text-center text-neutral-500`}>
+                        <div className={`p-10 border border-dashed ${isBeauty ? 'border-beauty-neon/20' : 'border-white/10'} bg-white/[0.02] rounded-2xl text-center text-neutral-500`}>
                             <p className="font-mono text-sm">A fila está vazia.</p>
                         </div>
                     ) : (
                         actionableList.map(entry => (
-                            <div key={entry.id} className={`bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lg`}>
+                            <div key={entry.id} className={`bg-white/[0.03] backdrop-blur-lg border border-white/10 p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lg`}>
                                 <div>
                                     <h3 className="font-bold text-white text-lg flex items-center gap-2">
                                         <span className="font-heading">{entry.client_name}</span>
@@ -422,7 +422,7 @@ export const QueueManagement: React.FC = () => {
                                     {entry.status === 'waiting' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'calling')}
-                                            className="p-3 bg-green-500/10 text-green-500 rounded-xl hover:bg-green-500/20 border border-green-500/20 transition-all hover:scale-105"
+                                            className="p-3 bg-green-500/10 text-green-500 rounded-full hover:bg-green-500/20 border border-green-500/20 transition-all hover:scale-105"
                                             title="Chamar Cliente"
                                         >
                                             <Megaphone className="w-5 h-5" />
@@ -431,7 +431,7 @@ export const QueueManagement: React.FC = () => {
                                     {entry.status === 'calling' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'serving')}
-                                            className="p-3 bg-blue-500/10 text-blue-500 rounded-xl hover:bg-blue-500/20 border border-blue-500/20 transition-all hover:scale-105"
+                                            className="p-3 bg-blue-500/10 text-blue-500 rounded-full hover:bg-blue-500/20 border border-blue-500/20 transition-all hover:scale-105"
                                             title="Iniciar Atendimento"
                                         >
                                             <Play className="w-5 h-5 fill-current" />
@@ -441,7 +441,7 @@ export const QueueManagement: React.FC = () => {
                                         onClick={() => {
                                             if (confirm('Marcar como não compareceu?')) updateStatus(entry.id, 'no_show');
                                         }}
-                                        className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 border border-red-500/20 transition-all opacity-60 hover:opacity-100"
+                                        className="p-3 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 border border-red-500/20 transition-all opacity-60 hover:opacity-100"
                                         title="Não Compareceu"
                                     >
                                         <X className="w-5 h-5" />
@@ -460,12 +460,12 @@ export const QueueManagement: React.FC = () => {
                     </h2>
 
                     {servingList.length === 0 ? (
-                        <div className={`p-12 border-2 border-dashed ${isBeauty ? 'border-beauty-neon/20' : 'border-neutral-800'} rounded-2xl text-center text-neutral-500`}>
+                        <div className={`p-10 border border-dashed ${isBeauty ? 'border-beauty-neon/20' : 'border-white/10'} bg-white/[0.02] rounded-2xl text-center text-neutral-500`}>
                             <p className="font-mono text-sm">Nenhum atendimento em andamento.</p>
                         </div>
                     ) : (
                         servingList.map(entry => (
-                            <div key={entry.id} className={`bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lg`}>
+                            <div key={entry.id} className={`bg-white/[0.03] backdrop-blur-lg border border-white/10 p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lg`}>
                                 <div>
                                     <h3 className="font-bold text-white text-lg font-heading">{entry.client_name}</h3>
                                     <div className="text-sm text-neutral-400 flex flex-col gap-1 mt-1 font-mono">
@@ -502,7 +502,7 @@ export const QueueManagement: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {completedList.map(entry => (
-                                <div key={entry.id} className="bg-neutral-900/50 border border-neutral-800 p-4 rounded-xl flex justify-between items-center opacity-75 hover:opacity-100 transition-opacity">
+                                <div key={entry.id} className="bg-white/[0.03] border border-white/10 p-4 rounded-2xl flex justify-between items-center opacity-80 hover:opacity-100 transition-opacity">
                                     <div>
                                         <h3 className="font-bold text-neutral-300 text-base font-heading">{entry.client_name}</h3>
                                         <div className="text-xs text-neutral-500 flex items-center gap-2 mt-1">
@@ -523,8 +523,8 @@ export const QueueManagement: React.FC = () => {
 
             {/* MANUAL ADD MODAL */}
             {showAddModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className={`bg-neutral-900 border ${isBeauty ? 'border-beauty-neon/30' : 'border-neutral-700'} rounded-3xl p-6 max-w-sm w-full relative shadow-2xl`}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl">
+                    <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative shadow-2xl`}>
                         <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
                             <X className="w-5 h-5" />
                         </button>
@@ -541,7 +541,7 @@ export const QueueManagement: React.FC = () => {
                                     onChange={e => setAddClientName(e.target.value)}
                                     required
                                     placeholder="Nome completo"
-                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
                                 />
                             </div>
                             <div>
@@ -551,7 +551,7 @@ export const QueueManagement: React.FC = () => {
                                     value={addClientPhone}
                                     onChange={e => setAddClientPhone(e.target.value)}
                                     placeholder="(00) 00000-0000"
-                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-mono"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-mono"
                                 />
                             </div>
                             <div>
@@ -561,7 +561,7 @@ export const QueueManagement: React.FC = () => {
                                     value={addServiceName}
                                     onChange={e => setAddServiceName(e.target.value)}
                                     placeholder="Ex: Corte de cabelo"
-                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
                                 />
                             </div>
                             <BrutalButton type="submit" variant="primary" fullWidth loading={isAdding}>
@@ -575,8 +575,8 @@ export const QueueManagement: React.FC = () => {
             {/* FINISH MODAL */}
             {
                 showFinishModal && finishingEntry && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                        <div className={`bg-neutral-900 border ${isBeauty ? 'border-beauty-neon/30' : 'border-neutral-700'} rounded-3xl p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-2xl`}>
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in">
+                        <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-2xl`}>
                             <button onClick={() => setShowFinishModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
@@ -587,7 +587,7 @@ export const QueueManagement: React.FC = () => {
                             </h3>
 
                             <div className="space-y-4">
-                                <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800">
+                                <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10">
                                     <p className="text-xs uppercase text-neutral-500 font-bold mb-1">Cliente</p>
                                     <p className="text-white font-bold text-lg">{finishingEntry.client_name}</p>
                                     <p className="text-neutral-400 text-sm font-mono">{formatPhone(finishingEntry.client_phone, region === 'PT' ? 'PT' : 'BR')}</p>
@@ -599,7 +599,7 @@ export const QueueManagement: React.FC = () => {
                                         type="text"
                                         value={finishService}
                                         onChange={e => setFinishService(e.target.value)}
-                                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-medium"
+                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-medium"
                                     />
                                 </div>
 
@@ -610,14 +610,14 @@ export const QueueManagement: React.FC = () => {
                                         step="0.01"
                                         value={finishPrice}
                                         onChange={e => setFinishPrice(e.target.value)}
-                                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white text-xl font-mono focus:outline-none focus:border-green-500/50 transition-all"
+                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white text-xl font-mono focus:outline-none focus:border-green-500/50 transition-all"
                                     />
                                 </div>
 
                                 <div>
                                     <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Profissional</label>
                                     <select
-                                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
+                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
                                         value={finishPro}
                                         onChange={e => setFinishPro(e.target.value)}
                                     >
@@ -645,8 +645,8 @@ export const QueueManagement: React.FC = () => {
             {/* QR MODAL (Keep as is, just styled) */}
             {
                 showQrModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                        <div className={`bg-neutral-900 border ${isBeauty ? 'border-beauty-neon/30' : 'border-neutral-700'} rounded-3xl p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-2xl`}>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in">
+                        <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-2xl`}>
                             <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
                                 <X className="w-5 h-5" />
                             </button>
@@ -660,7 +660,7 @@ export const QueueManagement: React.FC = () => {
                                 <div>
                                     <label className="text-xs uppercase font-bold text-neutral-500 mb-2 block">Vincular a Profissional (Opcional)</label>
                                     <select
-                                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-white focus:outline-none focus:border-neutral-500"
+                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-neutral-500"
                                         value={selectedQrPro || ''}
                                         onChange={(e) => setSelectedQrPro(e.target.value || null)}
                                     >
@@ -671,7 +671,7 @@ export const QueueManagement: React.FC = () => {
                                     </select>
                                 </div>
 
-                                <div className="bg-white p-4 rounded-xl flex justify-center">
+                                <div className="bg-white p-4 rounded-2xl flex justify-center">
                                     {businessSlug ? (
                                         <img
                                             src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(getQrUrl())}`}
@@ -685,7 +685,7 @@ export const QueueManagement: React.FC = () => {
                                     )}
                                 </div>
 
-                                <div className="text-center p-2 bg-neutral-950 rounded-lg border border-neutral-800">
+                                <div className="text-center p-2.5 bg-white/[0.03] rounded-2xl border border-white/10">
                                     <p className="text-[10px] text-neutral-500 break-all font-mono opacity-60">
                                         {getQrUrl()}
                                     </p>

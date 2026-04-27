@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
@@ -1184,18 +1185,25 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 </div>
                                                 <div className="flex gap-2 flex-shrink-0">
                                                     <button
+                                                        onClick={() => setShowingDetailsAppointment(apt)}
+                                                        className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                        title="Informações"
+                                                    >
+                                                        <Info className="w-4 h-4" /> Info
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                        className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                                                        className="px-3 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                         title="Concluir e Faturar"
                                                     >
-                                                        <Check className="w-4 h-4" />
+                                                        <Check className="w-4 h-4" /> Faturar
                                                     </button>
                                                     <button
                                                         onClick={() => handleCancelAppointment(apt.id, true)}
-                                                        className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                                                        className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                         title="Cancelar"
                                                     >
-                                                        <X className="w-4 h-4" />
+                                                        <X className="w-4 h-4" /> Cancelar
                                                     </button>
                                                 </div>
                                             </div>
@@ -1338,17 +1346,17 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => handleAcceptBooking(booking)}
-                                                className={`p-2 rounded-lg transition-all shadow-lg hover:scale-110 active:scale-95 ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white' : 'bg-green-600 text-white hover:bg-green-500'}`}
+                                                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white shadow-[0_0_15px_rgba(167,139,250,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]' : 'bg-green-500/20 text-green-400 border border-green-500/40 hover:bg-green-500/30'}`}
                                                 title="Aceitar"
                                             >
-                                                <Check className="w-4 h-4" />
+                                                <Check className="w-3.5 h-3.5" /> Aceitar
                                             </button>
                                             <button
                                                 onClick={() => handleRejectBooking(booking.id)}
-                                                className="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-all shadow-lg hover:scale-110 active:scale-95"
+                                                className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
                                                 title="Recusar"
                                             >
-                                                <X className="w-4 h-4" />
+                                                <X className="w-3.5 h-3.5" /> Recusar
                                             </button>
                                         </div>
                                     </div>
@@ -1552,17 +1560,17 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 <button
                                                     onClick={() => handleAcceptBooking(booking)}
                                                     disabled={isProcessing}
-                                                    className={`flex-1 ${isProcessing ? 'bg-neutral-700 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1`}
+                                                    className={`flex-1 ${isProcessing ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700' : isBeauty ? 'bg-beauty-neon/20 border-beauty-neon/40 text-beauty-neon hover:bg-beauty-neon/30' : 'bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20'} border text-xs font-bold py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5`}
                                                 >
-                                                    {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                                                    {isProcessing ? '...' : 'Aceitar'}
+                                                    {isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                                    {isProcessing ? 'Aguarde...' : 'Confirmar'}
                                                 </button>
                                                 <button
                                                     onClick={() => handleRejectBooking(booking.id)}
                                                     disabled={isProcessing}
-                                                    className={`flex-1 ${isProcessing ? 'bg-neutral-700 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1`}
+                                                    className={`flex-1 ${isProcessing ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700' : 'bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20'} text-xs font-bold py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5`}
                                                 >
-                                                    <X className="w-3 h-3" />
+                                                    <X className="w-3.5 h-3.5" />
                                                     Recusar
                                                 </button>
                                             </div>
@@ -1585,91 +1593,106 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                             >
                                                 <div className="flex items-start justify-between mb-3">
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`text-sm font-mono font-bold ${isCompleted ? 'text-green-500 line-through decoration-2' : accentText}`}>
+                                                        <span className={`text-sm font-mono font-bold px-2.5 py-0.5 rounded-md ${isCompleted ? 'bg-green-500/10 text-green-500 line-through decoration-2 border border-green-500/20' : isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold border border-accent-gold/20'}`}>
                                                             {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
 
-                                                    {/* Action Buttons Row */}
-                                                    <div className="flex items-center gap-1 opacity-80 hover:opacity-100">
-                                                        {apt.status === 'Confirmed' && (
-                                                            <>
-                                                                {/* Notes and WhatsApp buttons remain similar but smaller */}
-                                                                <button onClick={() => setShowingDetailsAppointment(apt)} className="p-1 hover:bg-white/10 rounded transition-colors" title="Ver detalhes e observações">
-                                                                    <Info className={`w-3.5 h-3.5 ${apt.notes ? 'text-blue-400' : 'text-neutral-500'}`} />
-                                                                </button>
-                                                                {apt.clientPhone && (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const waPhone = apt.clientPhone!.replace(/\D/g, '');
-                                                                            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent('Seu agendamento foi confirmado')}`, '_blank');
-                                                                        }}
-                                                                        className="p-1 hover:bg-white/10 rounded transition-colors"
-                                                                        title="WhatsApp"
-                                                                    >
-                                                                        <MessageCircle className="w-3.5 h-3.5 text-green-500" />
-                                                                    </button>
-                                                                )}
-
-                                                                <div className="w-px h-3 bg-white/10 mx-1"></div>
-
-                                                                <button onClick={() => setEditingAppointment(apt)} className="p-1 hover:bg-white/10 rounded transition-colors" title="Editar">
-                                                                    <Edit2 className="w-3.5 h-3.5 text-neutral-400 hover:text-white" />
-                                                                </button>
-                                                                {!isCompleted && (
-                                                                    <button onClick={() => setCheckoutAppointment({ ...apt, time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: apt.status as 'Confirmed' | 'Pending' | 'Completed' })} className="p-1 hover:bg-white/10 rounded transition-colors" title="Concluir">
-                                                                        <Check className="w-3.5 h-3.5 text-green-500" />
-                                                                    </button>
-                                                                )}
-                                                                <button onClick={() => handleCancelAppointment(apt.id)} className="p-1 hover:bg-white/10 rounded transition-colors" title="Cancelar">
-                                                                    <X className="w-3.5 h-3.5 text-red-500" />
-                                                                </button>
-                                                            </>
+                                                    {/* Quick Actions Header */}
+                                                    <div className="flex items-center gap-1.5">
+                                                        {apt.notes && (
+                                                            <button onClick={() => setShowingDetailsAppointment(apt)} className="p-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-blue-500/50 rounded-md transition-colors group" title="Ver detalhes e observações">
+                                                                <Info className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300" />
+                                                            </button>
+                                                        )}
+                                                        {apt.clientPhone && apt.status === 'Confirmed' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    const waPhone = apt.clientPhone!.replace(/\\D/g, '');
+                                                                    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent('Seu agendamento foi confirmado')}`, '_blank');
+                                                                }}
+                                                                className="p-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-green-500/50 rounded-md transition-colors group"
+                                                                title="WhatsApp"
+                                                            >
+                                                                <MessageCircle className="w-3.5 h-3.5 text-green-500 group-hover:text-green-400" />
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-1 mb-3">
-                                                    <p className={`font-bold text-base truncate ${isCompleted ? 'text-neutral-500' : 'text-white'}`}>
-                                                        {apt.clientName}
-                                                    </p>
+                                                <div className="space-y-1 mb-3 cursor-pointer group" onClick={() => setShowingDetailsAppointment(apt)} title="Ver detalhes do agendamento">
+                                                    <div className="flex items-center justify-between">
+                                                        <p className={`font-bold text-base truncate transition-colors flex-1 ${isCompleted ? 'text-neutral-500' : 'text-white group-hover:text-neutral-300'}`}>
+                                                            {apt.clientName}
+                                                        </p>
+                                                        <ChevronRight className={`w-4 h-4 transition-all duration-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                                    </div>
                                                     <div className="flex items-center gap-2">
-                                                        <Scissors className="w-3 h-3 text-neutral-500" />
+                                                        <Scissors className="w-3.5 h-3.5 text-neutral-500" />
                                                         <p className="text-neutral-400 text-xs truncate max-w-[180px]" title={apt.service}>
                                                             {apt.service}
                                                         </p>
                                                     </div>
                                                     {isCompleted && apt.payment_method && (
-                                                        <span className="text-xs font-mono bg-green-500/10 text-green-400 px-2 py-0.5 rounded inline-block">
+                                                        <span className="text-xs font-mono bg-green-500/10 text-green-400 px-2.5 py-0.5 rounded-md border border-green-500/20 inline-block mt-1">
                                                             Pago via {apt.payment_method.toUpperCase()}
                                                         </span>
                                                     )}
                                                 </div>
 
-                                                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                                                    <div className="flex flex-col">
-                                                        {hasDiscount && apt.basePrice && (
-                                                            <span className="text-[10px] text-neutral-500 line-through">
-                                                                {formatCurrency(apt.basePrice, currencyRegion)}
+                                                <div className="pt-3 border-t border-neutral-800 flex flex-col gap-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex flex-col">
+                                                            {hasDiscount && apt.basePrice && (
+                                                                <span className="text-[10px] text-neutral-500 line-through">
+                                                                    {formatCurrency(apt.basePrice, currencyRegion)}
+                                                                </span>
+                                                            )}
+                                                            <span className={`text-sm font-bold ${isCompleted ? 'text-neutral-500' : 'text-white'}`}>
+                                                                {formatCurrency(apt.price, currencyRegion)}
                                                             </span>
-                                                        )}
-                                                        <span className={`text-sm font-bold ${isCompleted ? 'text-neutral-500' : 'text-white'}`}>
-                                                            {formatCurrency(apt.price, currencyRegion)}
-                                                        </span>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-1 items-end">
+                                                            {hasDiscount && (
+                                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 border border-red-500/20">
+                                                                    -{discountPercentage}%
+                                                                </span>
+                                                            )}
+                                                            {isCustomPriceHigher && (
+                                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                                                    Custom
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
 
-                                                    <div className="flex flex-col gap-1 items-end">
-                                                        {hasDiscount && (
-                                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
-                                                                -{discountPercentage}%
-                                                            </span>
-                                                        )}
-                                                        {isCustomPriceHigher && (
-                                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                                                Custom
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    {apt.status === 'Confirmed' && (
+                                                        <div className="flex items-center justify-between gap-2 mt-1">
+                                                            {!isCompleted && (
+                                                                <button
+                                                                    onClick={() => setCheckoutAppointment({ ...apt, time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: apt.status as 'Confirmed' | 'Pending' | 'Completed' })}
+                                                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white shadow-[0_0_10px_rgba(167,139,250,0.2)] hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 hover:shadow-lg'}`}
+                                                                >
+                                                                    <Check className="w-3.5 h-3.5" /> Concluir
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => setEditingAppointment(apt)}
+                                                                className="px-3 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 rounded-lg transition-colors"
+                                                                title="Editar"
+                                                            >
+                                                                <Edit2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCancelAppointment(apt.id)}
+                                                                className="px-3 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-colors"
+                                                                title="Cancelar"
+                                                            >
+                                                                <X className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -1692,15 +1715,15 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             )}
 
             {/* Appointment Details Modal */}
-            {showingDetailsAppointment && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
-                    <div className={`w-full max-w-md p-0 overflow-hidden relative transition-all animate-in fade-in zoom-in duration-300
+            {showingDetailsAppointment && createPortal(
+                <div className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/95 backdrop-blur-sm' : 'bg-black/90'} md:left-64`}>
+                    <div className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300
                         ${isBeauty
-                            ? 'bg-beauty-card border border-beauty-neon/30 rounded-2xl shadow-[0_0_30px_rgba(167,139,250,0.2)]'
-                            : 'bg-neutral-900 border-2 border-white rounded-xl shadow-[8px_8px_0px_0px_#ffffff]'}
+                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
+                            : 'bg-brutal-card border border-white/5 rounded-2xl shadow-promax-depth'}
                     `}>
                         {/* Header */}
-                        <div className={`p-6 border-b ${isBeauty ? 'border-beauty-neon/20' : 'border-white/10'}`}>
+                        <div className={`p-6 border-b ${isBeauty ? 'border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent' : 'border-white/5 bg-white/[0.02]'}`}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h3 className="font-heading text-xl uppercase mb-1 text-white">
@@ -1717,7 +1740,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 </div>
                                 <button
                                     onClick={() => setShowingDetailsAppointment(null)}
-                                    className="p-1 rounded-full text-white hover:bg-white/10 transition-colors"
+                                    className={`p-1 rounded-full transition-colors ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-white/10'}`}
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -1729,12 +1752,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             {/* Client Info */}
                             <div className="flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ring-2
-                                    ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/30 ring-beauty-neon/40' : 'bg-neutral-800 text-white border border-neutral-700 ring-accent-gold/40'}`}>
+                                    ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/30 ring-beauty-neon/40' : 'bg-white/5 text-accent-gold border border-white/10 ring-accent-gold/20'}`}>
                                     {showingDetailsAppointment.clientName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <p className="text-sm text-neutral-400 font-mono mb-0.5">Cliente</p>
-                                    <h4 className="text-lg font-bold text-white">{showingDetailsAppointment.clientName}</h4>
+                                    <p className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-0.5">Cliente</p>
+                                    <h4 className="text-lg font-bold text-white leading-tight">{showingDetailsAppointment.clientName}</h4>
                                     {showingDetailsAppointment.clientPhone && (
                                         <div className="flex items-center gap-1 mt-1">
                                             <Phone className="w-3 h-3 text-neutral-400" />
@@ -1746,21 +1769,21 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 </div>
                             </div>
 
-                            <div className="w-full h-px bg-white/10"></div>
+                            <div className="w-full h-px bg-white/5"></div>
 
                             {/* Service & Professional */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <div className="flex items-center gap-2 mb-2 text-neutral-400">
                                         <Scissors className="w-4 h-4" />
-                                        <span className="text-xs uppercase tracking-wider font-bold">Serviço</span>
+                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Serviço</span>
                                     </div>
                                     <p className="text-white font-medium text-sm">{showingDetailsAppointment.service}</p>
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-2 text-neutral-400">
                                         <User className="w-4 h-4" />
-                                        <span className="text-xs uppercase tracking-wider font-bold">Profissional</span>
+                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Profissional</span>
                                     </div>
                                     <p className="text-white font-medium text-sm">
                                         {teamMembers.find(m => m.id === showingDetailsAppointment.professional_id)?.name || 'N/A'}
@@ -1773,19 +1796,19 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className="flex items-center gap-2 mb-2 text-neutral-400">
                                         <Clock className="w-4 h-4" />
-                                        <span className="text-xs uppercase tracking-wider font-bold">Data e Hora</span>
+                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Data e Hora</span>
                                     </div>
                                     <p className="text-white font-medium text-sm">
                                         {new Date(showingDetailsAppointment.appointment_time).toLocaleDateString('pt-BR')}
                                     </p>
-                                    <p className={`font-mono font-bold ${accentText}`}>
+                                    <p className={`font-mono font-bold mt-0.5 ${accentText}`}>
                                         {new Date(showingDetailsAppointment.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-2 text-neutral-400">
                                         <DollarSign className="w-4 h-4" />
-                                        <span className="text-xs uppercase tracking-wider font-bold">Valor</span>
+                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Valor</span>
                                     </div>
                                     <div className="flex flex-col">
                                         {(() => {
@@ -1797,7 +1820,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                             {formatCurrency(basePrice, currencyRegion)}
                                                         </span>
                                                     )}
-                                                    <span className="text-xl font-bold text-white font-mono">
+                                                    <span className={`text-xl font-bold font-mono ${isBeauty ? 'text-white' : 'text-accent-gold'}`}>
                                                         {formatCurrency(showingDetailsAppointment.price, currencyRegion)}
                                                     </span>
                                                 </>
@@ -1811,11 +1834,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             {showingDetailsAppointment.notes && (
                                 <div className={`p-4 rounded-xl border ${isBeauty
                                     ? 'bg-beauty-neon/5 border-beauty-neon/20'
-                                    : 'bg-yellow-500/5 border-yellow-500/20'
+                                    : 'bg-accent-gold/5 border-accent-gold/20'
                                     }`}>
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Info className={`w-4 h-4 ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'}`} />
-                                        <span className={`text-xs font-bold uppercase tracking-wider ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'}`}>
+                                        <Info className={`w-4 h-4 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
                                             Observações
                                         </span>
                                     </div>
@@ -1827,30 +1850,29 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="p-4 border-t border-white/10 bg-black/20 flex gap-3">
+                        <div className={`p-5 border-t ${isBeauty ? 'border-beauty-neon/10 bg-beauty-card' : 'border-white/5 bg-brutal-surface'} flex gap-3 rounded-b-2xl`}>
                             {showingDetailsAppointment.status === 'Confirmed' && (
-                                <button
+                                <BrutalButton
+                                    variant="secondary"
+                                    className="flex-1 flex justify-center items-center gap-2"
                                     onClick={() => {
                                         setEditingAppointment(showingDetailsAppointment);
                                         setShowingDetailsAppointment(null);
                                     }}
-                                    className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white py-3 rounded-lg font-bold transition-colors border border-white/10 flex items-center justify-center gap-2"
                                 >
                                     <Edit2 className="w-4 h-4" /> Editar
-                                </button>
+                                </BrutalButton>
                             )}
-                            <button
+                            <BrutalButton
+                                variant="primary"
+                                className="flex-1 flex justify-center items-center gap-2"
                                 onClick={() => setShowingDetailsAppointment(null)}
-                                className={`flex-1 py-3 rounded-lg font-bold transition-colors ${isBeauty
-                                    ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90'
-                                    : 'bg-white text-black hover:bg-neutral-200'
-                                    }`}
                             >
-                                Fechar
-                            </button>
+                                <Check className="w-4 h-4" /> Fechar
+                            </BrutalButton>
                         </div>
                     </div>
-                </div>
+                </div>, document.body
             )}
 
             {/* All Future Appointments Modal */}
@@ -1867,7 +1889,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     <div className={`w-full max-w-4xl p-6 my-8 transition-all
                         ${isBeauty
                             ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                            : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]'}
+                            : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
                     `}>
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-heading text-2xl uppercase">Histórico de Agendamentos</h3>

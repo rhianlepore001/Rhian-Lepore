@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useSubscription } from '../../hooks/useSubscription';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
@@ -13,13 +14,13 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Rk3ZLPUPmLLh2qESPurB4bgAa4VqLe41OQPtQNUQTfu2A8pV8Zk7rYIBgg8SWUA9ItuYyGfGBr8cSw4YMa9tMJY004eg5XVbo');
 
 export const SubscriptionSettings: React.FC = () => {
-    const { userType, businessName, region } = useAuth();
+    const { businessName, region } = useAuth();
     const { subscriptionStatus, trialDaysRemaining, isSubscriptionActive, isTrial } = useSubscription();
+    const { isBeauty } = useBrutalTheme();
     // Auto-detect currency based on region
     const currency = region === 'PT' ? 'EUR' : 'BRL';
     const [loading, setLoading] = useState<string | null>(null);
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
     // Pricing Configuration

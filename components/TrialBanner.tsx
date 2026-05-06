@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 export const TrialBanner: React.FC = () => {
     const { trialDaysRemaining, isTrial, isExpired, subscriptionStatus } = useSubscription();
-    const { userType, role } = useAuth();
+    const { role } = useAuth();
+    const { isBeauty } = useBrutalTheme();
     const navigate = useNavigate();
 
     // Staff não vê banner de trial (herda plano do dono)
     if (role === 'staff') return null;
     if (!isTrial && !isExpired) return null;
-
-    const isBeauty = userType === 'beauty';
 
     // Se estiver expirado, mostramos algo mais urgente
     if (isExpired) {

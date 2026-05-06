@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
@@ -17,7 +18,7 @@ interface TeamMember {
 }
 
 export const CommissionsSettings: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user } = useAuth();
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [settlementDay, setSettlementDay] = useState<number | string>(5);
     const [loading, setLoading] = useState(true);
@@ -31,11 +32,7 @@ export const CommissionsSettings: React.FC = () => {
     const [creditFeePercent, setCreditFeePercent] = useState<string>('0');
     const [savingMachineFee, setSavingMachineFee] = useState(false);
 
-    const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const accentBorder = isBeauty ? 'border-beauty-neon' : 'border-accent-gold';
+    const { accent, isBeauty } = useBrutalTheme();
 
     useEffect(() => {
         fetchData();
@@ -220,7 +217,7 @@ export const CommissionsSettings: React.FC = () => {
         return (
             <SettingsLayout>
                 <div className="flex items-center justify-center py-12">
-                    <div className={`text-lg ${accentText}`}>Carregando configurações...</div>
+                    <div className={`text-lg ${accent.text}`}>Carregando configurações...</div>
                 </div>
             </SettingsLayout>
         );
@@ -230,10 +227,10 @@ export const CommissionsSettings: React.FC = () => {
         <SettingsLayout>
             <div className="space-y-6">
                 {/* Header with Info */}
-                <BrutalCard className={`border-l-4 ${accentBorder}`}>
+                <BrutalCard className={`border-l-4 ${accent.border}`}>
                     <div className="flex items-start gap-4">
-                        <div className={`p-3 ${accentBg} bg-opacity-10 rounded-lg`}>
-                            <DollarSign className={`w-8 h-8 ${accentText}`} />
+                        <div className={`p-3 ${accent.bg} bg-opacity-10 rounded-lg`}>
+                            <DollarSign className={`w-8 h-8 ${accent.text}`} />
                         </div>
                         <div className="flex-1">
                             <h3 className="text-white font-heading text-xl uppercase mb-2">
@@ -271,7 +268,7 @@ export const CommissionsSettings: React.FC = () => {
                                         className={`w-full pl-12 pr-4 py-3 rounded-lg text-white font-mono text-lg outline-none transition-all
                                             ${isBeauty
                                                 ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon focus:shadow-neon'
-                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-${accentColor}`}
+                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-accent-gold`}
                                         `}
                                     />
                                 </div>
@@ -317,7 +314,7 @@ export const CommissionsSettings: React.FC = () => {
                                         className={`transition-all p-4 rounded-lg
                                             ${isBeauty
                                                 ? 'bg-beauty-dark/40 border border-beauty-neon/20 hover:border-beauty-neon/50'
-                                                : `bg-neutral-900 border-2 ${isEditing ? `border-${accentColor}` : 'border-neutral-800 hover:border-neutral-700'}`}
+                                                : `bg-neutral-900 border-2 ${isEditing ? 'border-accent-gold' : 'border-neutral-800 hover:border-neutral-700'}`}
                                         `}
                                     >
                                         <div className="flex items-center justify-between gap-4">
@@ -339,8 +336,8 @@ export const CommissionsSettings: React.FC = () => {
                                                     <h4 className="text-white font-bold text-lg">{member.name}</h4>
                                                     {!isEditing && (
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <Percent className={`w-4 h-4 ${accentText}`} />
-                                                            <span className={`font-mono font-bold ${accentText}`}>
+                                                            <Percent className={`w-4 h-4 ${accent.text}`} />
+                                                            <span className={`font-mono font-bold ${accent.text}`}>
                                                                 {currentRate}% de comissão
                                                             </span>
                                                         </div>
@@ -366,7 +363,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                 className={`w-24 px-3 py-2 rounded-lg text-white font-mono text-center outline-none transition-all
                                                                     ${isBeauty
                                                                         ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
-                                                                        : `bg-black border-2 border-${accentColor}`}
+                                                                        : 'bg-black border-2 border-accent-gold'}
                                                                 `}
                                                                 autoFocus
                                                             />
@@ -513,7 +510,7 @@ export const CommissionsSettings: React.FC = () => {
                                         className={`w-full pl-10 pr-4 py-2 rounded-lg text-white font-mono outline-none transition-all ${
                                             isBeauty
                                                 ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-${accentColor}`
+                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-accent-gold`
                                         }`}
                                     />
                                 </div>
@@ -535,7 +532,7 @@ export const CommissionsSettings: React.FC = () => {
                                         className={`w-full pl-10 pr-4 py-2 rounded-lg text-white font-mono outline-none transition-all ${
                                             isBeauty
                                                 ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-${accentColor}`
+                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-accent-gold`
                                         }`}
                                     />
                                 </div>

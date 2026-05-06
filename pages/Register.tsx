@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
+import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
 import { PhoneInput } from '../components/PhoneInput';
 import { validatePassword } from '../utils/passwordValidation';
 import { AgenXLogo } from '../components/AgenXLogo';
@@ -27,7 +28,7 @@ export const Register: React.FC = () => {
 
   const companyIdFromUrl = searchParams.get('company');
   const isInvitedStaff = !!companyIdFromUrl;
-  const isBeauty = userType === 'beauty';
+  const { isBeauty } = useBrutalTheme({ override: userType as ThemeVariant });
   const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
 
   useEffect(() => {

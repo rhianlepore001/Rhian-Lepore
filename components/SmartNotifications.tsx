@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSmartNotifications, type SmartNotification } from '../hooks/useSmartNotifications';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,14 +16,10 @@ const TYPE_CONFIG: Record<SmartNotification['type'], { icon: React.ElementType; 
 };
 
 export const SmartNotificationsBanner: React.FC = () => {
-    const { userType } = useAuth();
+    const { accent } = useBrutalTheme();
     const navigate = useNavigate();
     const { notifications, hasNotifications, sendingId, dismiss, dismissAll, sendWhatsApp } = useSmartNotifications();
     const [expanded, setExpanded] = useState(false);
-
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
 
     if (!hasNotifications) return null;
 
@@ -35,7 +31,7 @@ export const SmartNotificationsBanner: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${accentBg} animate-pulse`} />
+                    <div className={`w-2 h-2 rounded-full ${accent.bg} animate-pulse`} />
                     <span className="text-xs font-mono text-white uppercase tracking-wider">
                         {notifications.length} {notifications.length === 1 ? 'oportunidade' : 'oportunidades'}
                     </span>
@@ -89,7 +85,7 @@ export const SmartNotificationsBanner: React.FC = () => {
                                     <button
                                         onClick={() => sendWhatsApp(notif)}
                                         disabled={sendingId === notif.id}
-                                        className={`${accentBg} text-black text-[10px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 flex items-center gap-1`}
+                                        className={`${accent.bg} text-black text-[10px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 flex items-center gap-1`}
                                     >
                                         {sendingId === notif.id ? (
                                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -103,7 +99,7 @@ export const SmartNotificationsBanner: React.FC = () => {
                                 ) : notif.actionUrl ? (
                                     <button
                                         onClick={() => navigate(notif.actionUrl!)}
-                                        className={`text-[10px] font-mono ${accentText} hover:opacity-70 transition-opacity px-2 py-1`}
+                                        className={`text-[10px] font-mono ${accent.text} hover:opacity-70 transition-opacity px-2 py-1`}
                                     >
                                         {notif.actionLabel} →
                                     </button>
@@ -142,10 +138,7 @@ export const SmartNotificationsBanner: React.FC = () => {
  */
 export const NotificationBell: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
     const { notifications } = useSmartNotifications();
-    const { userType } = useAuth();
-
-    const isBeauty = userType === 'beauty';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+    const { accent } = useBrutalTheme();
 
     if (notifications.length === 0) return null;
 
@@ -156,7 +149,7 @@ export const NotificationBell: React.FC<{ onClick?: () => void }> = ({ onClick }
             aria-label={`${notifications.length} notificações`}
         >
             <Bell className="w-5 h-5 text-neutral-400" />
-            <span className={`absolute -top-0.5 -right-0.5 ${accentBg} text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center`}>
+            <span className={`absolute -top-0.5 -right-0.5 ${accent.bg} text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center`}>
                 {notifications.length > 9 ? '9+' : notifications.length}
             </span>
         </button>

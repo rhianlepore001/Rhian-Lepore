@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
@@ -8,10 +9,8 @@ import { Loader2 } from 'lucide-react';
 import { logger } from '../../utils/Logger';
 
 export const FinancialSettings: React.FC = () => {
-  const { user, userType } = useAuth();
-
-  const isBeauty = userType === 'beauty';
-  const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+  const { user } = useAuth();
+  const { isBeauty, accent } = useBrutalTheme();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,7 +83,7 @@ export const FinancialSettings: React.FC = () => {
     <SettingsLayout>
       <div className="space-y-6">
         <div>
-          <h2 className={`text-xl font-bold font-mono ${accentText}`}>
+          <h2 className={`text-xl font-bold font-mono ${accent.text}`}>
             Configurações Financeiras
           </h2>
           <p className="text-neutral-400 text-sm mt-1">

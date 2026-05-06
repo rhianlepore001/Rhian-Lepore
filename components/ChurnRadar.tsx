@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrutalCard } from './BrutalCard';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { MessageSquare, Loader2, Users } from 'lucide-react';
 import { BrutalButton } from './BrutalButton';
 import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
@@ -18,8 +19,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
     const { logCampaignActivity, refetch } = useAIOSDiagnostic();
     const [sendingId, setSendingId] = useState<string | null>(null);
 
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const { accent } = useBrutalTheme();
 
     const handleReactivate = async (client: any) => {
         if (onReactivate) {
@@ -100,7 +100,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
                             <div className="flex items-center justify-between mt-auto">
                                 <div className="flex flex-col">
                                     <span className="text-[10px] uppercase font-mono text-text-secondary">Gasto por visita</span>
-                                    <span className={`text-sm font-bold ${accentText}`}>R$ {client.avg_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                    <span className={`text-sm font-bold ${accent.text}`}>R$ {client.avg_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
 
                                 <BrutalButton

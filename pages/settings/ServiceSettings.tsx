@@ -3,6 +3,7 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { ServiceModal } from '../../components/ServiceModal';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
@@ -10,7 +11,8 @@ import { Modal } from '../../components/Modal';
 import { formatCurrency } from '../../utils/formatters';
 
 export const ServiceSettings: React.FC = () => {
-    const { user, userType, region } = useAuth();
+    const { user, region } = useAuth();
+    const { accent, isBeauty } = useBrutalTheme();
     const [categories, setCategories] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -20,7 +22,6 @@ export const ServiceSettings: React.FC = () => {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
     useEffect(() => {
@@ -130,7 +131,7 @@ export const ServiceSettings: React.FC = () => {
                         </p>
                         <button
                             onClick={() => setIsCategoryModalOpen(true)}
-                            className={`px-6 py-3 bg-${accentColor} text-black font-bold rounded-lg hover:bg-${accentColor}/90 transition-colors`}
+                            className={`px-6 py-3 ${accent.bg} text-black font-bold rounded-lg ${accent.bgHover} transition-colors`}
                         >
                             Criar Primeira Categoria
                         </button>
@@ -201,7 +202,7 @@ export const ServiceSettings: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <p className="text-sm font-mono text-neutral-400">
-                                                            {service.duration_minutes}m • <span className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}>{formatCurrency(service.price, region)}</span>
+                                                            {service.duration_minutes}m • <span className={accent.text}>{formatCurrency(service.price, region)}</span>
                                                         </p>
                                                     </div>
 

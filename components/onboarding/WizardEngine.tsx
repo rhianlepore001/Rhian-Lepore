@@ -5,6 +5,7 @@ import { WizardOverlay } from '@/components/onboarding/WizardOverlay';
 import { WizardProgress } from '@/components/onboarding/WizardProgress';
 import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBrutalTheme } from '@/hooks/useBrutalTheme';
 import { saveOnboardingStep, completeOnboarding } from '@/lib/onboarding';
 
 // Fluxo simplificado: apenas boas-vindas + cadastro de serviço
@@ -38,11 +39,10 @@ function StepLoadingFallback() {
 
 export function WizardEngine() {
   const { state, dispatch } = useWizard();
-  const { userType, companyId, markTutorialCompleted } = useAuth();
+  const { companyId, markTutorialCompleted } = useAuth();
   const navigate = useNavigate();
 
-  const isBeauty = userType === 'beauty';
-  const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
+  const { isBeauty, accent } = useBrutalTheme();
 
   const { currentStep, isActive, completedSteps } = state;
 
@@ -80,7 +80,7 @@ export function WizardEngine() {
         return (
           <StepWelcome
             onNext={() => void completeStep(1)}
-            accentColor={accentColor}
+            accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
           />
         );
       case 2:
@@ -88,7 +88,7 @@ export function WizardEngine() {
           <StepServices
             onNext={() => void completeStep(2)}
             onBack={() => goToStep(1)}
-            accentColor={accentColor}
+            accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
           />
         );
       default:
@@ -106,9 +106,9 @@ export function WizardEngine() {
           
           {/* Decorative Pattern / Blobs */}
           <div className={`absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none
-            ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`} />
+            ${accent.bg}`} />
           <div className={`absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-10 pointer-events-none translate-x-1/3 translate-y-1/3
-            ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`} />
+            ${accent.bg}`} />
 
           <div className="relative z-10">
             <h1 className="text-3xl font-bold font-heading text-foreground tracking-tight">AgendiX</h1>
@@ -118,7 +118,7 @@ export function WizardEngine() {
           <div className="space-y-6 max-w-md relative z-10">
             <h2 className="text-4xl font-bold font-heading text-foreground leading-tight">
               Sua agenda <br/>
-              <span className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}>inteligente</span> e <br/>
+              <span className={accent.text}>inteligente</span> e <br/>
               automatizada.
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed">

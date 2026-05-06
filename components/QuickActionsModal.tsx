@@ -5,6 +5,7 @@ import { Calendar, DollarSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface QuickActionsModalProps {
     onClose: () => void;
@@ -12,9 +13,9 @@ interface QuickActionsModalProps {
 
 export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose }) => {
     const navigate = useNavigate();
-    const { userType, role } = useAuth();
+    const { role } = useAuth();
     const { setModalOpen } = useUI();
-    const isBeauty = userType === 'beauty';
+    const { isBeauty } = useBrutalTheme();
     const isStaff = role === 'staff';
 
     useEffect(() => {

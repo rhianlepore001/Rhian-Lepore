@@ -103,9 +103,16 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     </p>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5 text-neutral-500">
-                            <Percent className={`w-3 h-3 ${accent.text}`} />
-                            <span className="text-xs font-mono">{member.commission_rate || 0}% Comis.</span>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5">
+                                <Percent className={`w-3 h-3 ${accent.text}`} />
+                                <span className={`text-lg font-bold font-mono ${accent.text}`}>
+                                    {member.commission_rate || 0}%
+                                </span>
+                            </div>
+                            <span className="text-[9px] uppercase tracking-widest text-neutral-500">
+                                comissão
+                            </span>
                         </div>
                         {member.is_owner && (
                             <div className="flex items-center gap-1.5 text-neutral-500">

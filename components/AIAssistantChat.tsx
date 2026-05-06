@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { useAIAssistant, type ChatMessage } from '../hooks/useAIAssistant';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 const QUICK_QUESTIONS = [
     'Como foi meu mês?',
@@ -11,17 +12,14 @@ const QUICK_QUESTIONS = [
 ];
 
 export const AIAssistantChat: React.FC = () => {
-    const { userType, businessName } = useAuth();
+    const { businessName } = useAuth();
     const { messages, loading, sendMessage, clearMessages } = useAIAssistant();
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const { accent, isBeauty } = useBrutalTheme();
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,7 +50,7 @@ export const AIAssistantChat: React.FC = () => {
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[60] w-14 h-14 rounded-full ${accentBg} text-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center`}
+                className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[60] w-14 h-14 rounded-full ${accent.bg} text-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center`}
                 aria-label="Abrir assistente IA"
             >
                 {isOpen ? (
@@ -68,7 +66,7 @@ export const AIAssistantChat: React.FC = () => {
                     {/* Header */}
                     <div className={`px-4 py-3 border-b border-neutral-800 flex items-center justify-between`}>
                         <div className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full ${accentBg} flex items-center justify-center`}>
+                            <div className={`w-8 h-8 rounded-full ${accent.bg} flex items-center justify-center`}>
                                 <Sparkles className="w-4 h-4 text-black" />
                             </div>
                             <div>
@@ -94,7 +92,7 @@ export const AIAssistantChat: React.FC = () => {
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[50vh]">
                         {messages.length === 0 ? (
                             <div className="text-center py-6">
-                                <Sparkles className={`w-10 h-10 mx-auto mb-3 ${accentText} opacity-50`} />
+                                <Sparkles className={`w-10 h-10 mx-auto mb-3 ${accent.text} opacity-50`} />
                                 <p className="text-neutral-400 text-sm mb-4">
                                     Pergunte qualquer coisa sobre seu negócio!
                                 </p>
@@ -119,7 +117,7 @@ export const AIAssistantChat: React.FC = () => {
                                     <div
                                         className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
                                             msg.role === 'user'
-                                                ? `${accentBg} text-black`
+                                                ? `${accent.bg} text-black`
                                                 : 'bg-neutral-800 text-neutral-200'
                                         }`}
                                     >
@@ -132,7 +130,7 @@ export const AIAssistantChat: React.FC = () => {
                         {loading && (
                             <div className="flex justify-start">
                                 <div className="bg-neutral-800 px-4 py-3 rounded-xl flex items-center gap-2">
-                                    <Loader2 className={`w-4 h-4 animate-spin ${accentText}`} />
+                                    <Loader2 className={`w-4 h-4 animate-spin ${accent.text}`} />
                                     <span className="text-neutral-400 text-sm">Analisando...</span>
                                 </div>
                             </div>
@@ -157,7 +155,7 @@ export const AIAssistantChat: React.FC = () => {
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || loading}
-                                className={`${accentBg} text-black p-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
+                                className={`${accent.bg} text-black p-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
                                 aria-label="Enviar mensagem"
                                 title="Enviar"
                             >

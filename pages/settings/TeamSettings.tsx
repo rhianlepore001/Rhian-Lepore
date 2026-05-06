@@ -4,20 +4,21 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 
 export const TeamSettings: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user } = useAuth();
+    const { accent, isBeauty } = useBrutalTheme();
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
     const [copiedLink, setCopiedLink] = useState(false);
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
     useEffect(() => {
@@ -131,7 +132,7 @@ export const TeamSettings: React.FC = () => {
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <Users className={`w-5 h-5 text-${accentColor}`} />
+                                <Users className={`w-5 h-5 ${accent.text}`} />
                                 <h3 className={`text-lg font-heading uppercase text-white`}>Convide sua Equipe</h3>
                             </div>
                             <p className="text-sm text-neutral-400 max-w-xl">
@@ -145,7 +146,7 @@ export const TeamSettings: React.FC = () => {
                                 className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-mono text-sm uppercase transition-all
                                     ${copiedLink
                                         ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                                        : `bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 hover:border-${accentColor}/40`
+                                        : `bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 hover:${accent.border}`
                                     }`}
                             >
                                 {copiedLink ? (
@@ -167,7 +168,7 @@ export const TeamSettings: React.FC = () => {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className={`animate-spin h-10 w-10 border-4 border-t-transparent border-${accentColor} rounded-full`}></div>
+                        <div className={`animate-spin h-10 w-10 border-4 border-t-transparent ${accent.border} rounded-full`}></div>
                     </div>
                 ) : members.length === 0 ? (
                     <BrutalCard className="p-12 text-center border-dashed">
@@ -193,7 +194,7 @@ export const TeamSettings: React.FC = () => {
                         {owners.length > 0 && (
                             <section className="space-y-4">
                                 <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs uppercase tracking-[0.2em] px-1">
-                                    <ShieldCheck className={`w-4 h-4 text-${accentColor}`} />
+                                    <ShieldCheck className={`w-4 h-4 ${accent.text}`} />
                                     Proprietários
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

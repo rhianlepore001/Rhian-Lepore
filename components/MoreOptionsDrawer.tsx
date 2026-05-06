@@ -4,6 +4,7 @@ import { LayoutDashboard, Settings, LogOut, X, User, Users } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface MoreOptionsDrawerProps {
     onClose: () => void;
@@ -11,9 +12,9 @@ interface MoreOptionsDrawerProps {
 
 export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose }) => {
     const navigate = useNavigate();
-    const { userType, logout, fullName, businessName, avatarUrl, role } = useAuth();
+    const { logout, fullName, businessName, avatarUrl, role } = useAuth();
     const { setModalOpen } = useUI();
-    const isBeauty = userType === 'beauty';
+    const { isBeauty } = useBrutalTheme();
     const isStaff = role === 'staff';
 
     useEffect(() => {

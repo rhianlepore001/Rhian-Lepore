@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { BrutalCard } from '../BrutalCard';
 import { CheckCircle2, Clock, Calendar, Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useMeuDiaData, MeuDiaAppointment } from '../../hooks/useMeuDiaData';
 import { formatCurrency, Region } from '../../utils/formatters';
 
@@ -15,8 +16,8 @@ const QuickActionItem: React.FC<{
     onComplete: (id: string) => Promise<boolean>,
     currencyRegion: Region,
     isNext?: boolean,
-    isBeauty?: boolean,
-}> = ({ apt, onComplete, currencyRegion, isNext = false, isBeauty = false }) => {
+}> = ({ apt, onComplete, currencyRegion, isNext = false }) => {
+    const { isBeauty, accent } = useBrutalTheme();
     const [status, setStatus] = useState<'idle' | 'completing' | 'done'>('idle');
 
     const isConfirmed = apt.status === 'Confirmed' || apt.status === 'Confirmado';
@@ -71,7 +72,7 @@ const QuickActionItem: React.FC<{
                 </div>
                 <div className="flex-1 truncate">
                     {isNext && (
-                        <p className={`text-[9px] font-mono uppercase tracking-widest mb-0.5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
+                        <p className={`text-[9px] font-mono uppercase tracking-widest mb-0.5 ${accent.text}`}>
                             Próximo
                         </p>
                     )}
@@ -100,13 +101,12 @@ const QuickActionItem: React.FC<{
 };
 
 export const MeuDiaWidget: React.FC = () => {
-    const { userType, region, fullName } = useAuth();
+    const { region, fullName } = useAuth();
     const { appointments, summary, loading, markAsCompleted, fetchAllAppointments } = useMeuDiaData();
+    const { isBeauty, accent } = useBrutalTheme();
     const [showAll, setShowAll] = useState(false);
 
-    const isBeauty = userType === 'beauty';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
     const firstName = fullName?.split(' ')[0] || 'Profissional';
 
@@ -126,7 +126,7 @@ export const MeuDiaWidget: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2 md:gap-4 bg-neutral-900 p-4 rounded-xl border border-white/10">
                     <div className="flex flex-col items-center text-center">
                         <span className="text-[10px] md:text-xs uppercase font-mono text-text-secondary">Concluídos</span>
-                        <span className={`text-xl md:text-3xl font-bold font-heading ${accentText}`}>{summary.completed}</span>
+                        <span className={`text-xl md:text-3xl font-bold font-heading ${accent.text}`}>{summary.completed}</span>
                     </div>
                     <div className="flex flex-col items-center text-center border-x border-white/10">
                         <span className="text-[10px] md:text-xs uppercase font-mono text-text-secondary">Pendentes</span>
@@ -149,7 +149,7 @@ export const MeuDiaWidget: React.FC = () => {
                         </h3>
                         <button
                             onClick={() => setShowAll(true)}
-                            className={`flex items-center gap-1 text-xs font-mono uppercase tracking-widest min-h-[44px] px-2 -mr-2 ${accentText} hover:opacity-70 transition-opacity`}
+                            className={`flex items-center gap-1 text-xs font-mono uppercase tracking-widest min-h-[44px] px-2 -mr-2 ${accent.text} hover:opacity-70 transition-opacity`}
                         >
                             Ver todos
                             <ChevronRight className="w-3 h-3" />
@@ -176,7 +176,6 @@ export const MeuDiaWidget: React.FC = () => {
                                         onComplete={markAsCompleted}
                                         currencyRegion={currencyRegion}
                                         isNext={idx === nextIdx}
-                                        isBeauty={isBeauty}
                                     />
                                 ));
                             })()}

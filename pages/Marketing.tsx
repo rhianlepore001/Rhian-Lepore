@@ -1,22 +1,18 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Rocket, Bell } from 'lucide-react';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 export const Marketing: React.FC = () => {
-    const { userType } = useAuth();
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10';
-    const accentBorder = isBeauty ? 'border-beauty-neon/20' : 'border-accent-gold/20';
+    const { accent, isBeauty } = useBrutalTheme();
 
     return (
         <div className="flex items-center justify-center min-h-[60vh]">
-            <div className={`max-w-sm w-full mx-auto text-center p-10 border-2 ${accentBorder} ${accentBg} rounded-2xl`}>
-                <div className={`w-16 h-16 mx-auto mb-6 flex items-center justify-center rounded-2xl ${accentBg} border ${accentBorder}`}>
-                    <Rocket className={`w-8 h-8 ${accentText}`} />
+            <div className={`max-w-sm w-full mx-auto text-center p-10 border-2 ${accent.borderDim} ${accent.bgDim} rounded-2xl`}>
+                <div className={`w-16 h-16 mx-auto mb-6 flex items-center justify-center rounded-2xl ${accent.bgDim} border ${accent.borderDim}`}>
+                    <Rocket className={`w-8 h-8 ${accent.text}`} />
                 </div>
 
-                <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accentText} opacity-70`}>
+                <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text} opacity-70`}>
                     Em breve
                 </span>
 

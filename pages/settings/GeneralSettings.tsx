@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
 import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
@@ -11,7 +12,8 @@ import { BrutalCard } from '../../components/BrutalCard';
 import { InfoButton } from '../../components/HelpButtons';
 
 export const GeneralSettings: React.FC = () => {
-    const { user, userType, region } = useAuth();
+    const { user, region } = useAuth();
+    const { accent, isBeauty } = useBrutalTheme();
     const [businessName, setBusinessName] = useState('');
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
@@ -40,7 +42,6 @@ export const GeneralSettings: React.FC = () => {
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [hasChanges, setHasChanges] = useState(false);
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const currencySymbol = region === 'PT' ? '€' : 'R$';
 
@@ -315,7 +316,7 @@ export const GeneralSettings: React.FC = () => {
                                 key={template.id}
                                 onClick={() => handlePolicyTemplateChange(template.id)}
                                 className={`px-3 py-2 rounded-xl text-sm border transition-all active:animate-haptic-click ${policyTemplate === template.id
-                                    ? isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white shadow-neon' : `bg-${accentColor}/10 border-${accentColor} text-white shadow-gold`
+                                    ? isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white shadow-neon' : `bg-white/5 border-white/10 text-neutral-400 hover:bg-neutral-800`
                                     : isBeauty ? 'bg-white/5 border-white/10 text-neutral-400 hover:text-white' : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-neutral-800'
                                     }`}
                             >

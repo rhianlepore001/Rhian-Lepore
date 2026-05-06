@@ -68,5 +68,34 @@
 ## Blockers
 _(nenhum no momento)_
 
+## Design System End-to-End
+
+### Status: Especificação Completa, Implementação Pendente
+- **Spec**: `.specs/features/design-system-end-to-end/spec.md`
+- **Design**: `.specs/features/design-system-end-to-end/design.md`
+- **Tasks**: `.specs/features/design-system-end-to-end/tasks.md`
+
+### Decisões
+- **D-DS-001**: Manter Tailwind CSS + variáveis CSS (não CSS-in-JS)
+- **D-DS-002**: `useBrutalTheme()` retorna strings (classes Tailwind prontas)
+- **D-DS-003**: Mobile detection no hook, não nos componentes
+- **D-DS-004**: `forceTheme` via `useBrutalTheme({ override })`
+- **D-DS-005**: Glassmorphism nas settings mantido, mas via hook
+
+### Inconsistências Identificadas
+- 6 componentes base usam `isBeauty` inline em vez de `useBrutalTheme()`
+- Classes hardcoded (`text-accent-gold`, `bg-beauty-neon`) espalhados
+- Light mode tokens CSS existem mas componentes não consomem
+- Mobile shadows duplicadas entre hook e componentes
+
+### Próximos Passos
+1. Executar T1-T3 (fundação)
+2. Executar T4-T9 (componentes base) em paralelo
+3. Auditar componentes derivados (T10-T11)
+4. Testar light mode (T13-T14)
+5. Gerar visualizações Stitch (T15-T16)
+
 ## Deferred Ideas
-_(nenhum no momento)_
+- Sincronização de tema entre abas (BroadcastChannel)
+- Detecção automática `prefers-color-scheme`
+- Tema por componente individual

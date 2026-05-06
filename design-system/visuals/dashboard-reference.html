@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgendiX — Design System Reference: Dashboard (4 Estados)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold-400: #C29B40;
+      --gold-500: #A07A2A;
+      --gold-hover: #D4AF50;
+      --violet-400: #A78BFA;
+      --violet-500: #7C3AED;
+      --violet-hover: #C4B5FD;
+      --neutral-0: #121212;
+      --neutral-50: #1E1E1E;
+      --neutral-100: #252525;
+      --neutral-400: #525252;
+      --neutral-600: #A0A0A0;
+      --neutral-800: #EAEAEA;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #EAEAEA;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    .page-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #EAEAEA;
+    }
+
+    .page-subtitle {
+      text-align: center;
+      color: #525252;
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+
+    .grids {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .state-panel {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .state-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 12px 16px;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       BARBER DARK
+       ============================================ */
+    .barber-dark .state-label {
+      background: #0a0a0a;
+      color: #C29B40;
+      border-bottom: 1px solid rgba(194,155,64,0.2);
+    }
+    .barber-dark .dashboard {
+      background: #121212;
+      min-height: 500px;
+      padding: 16px;
+    }
+    .barber-dark .header {
+      background: rgba(18,18,18,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .barber-dark .header-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #EAEAEA;
+    }
+    .barber-dark .header-badge {
+      width: 6px; height: 6px;
+      background: #10B981;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 8px;
+      animation: pulse 2s infinite;
+    }
+    .barber-dark .header-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #525252;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .barber-dark .card {
+      background: #1E1E1E;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .barber-dark .card-accent {
+      border-color: rgba(194,155,64,0.3);
+      box-shadow: 0 0 10px rgba(194,155,64,0.15), 0 12px 40px -12px rgba(0,0,0,0.7);
+    }
+    .barber-dark .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .barber-dark .card-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #EAEAEA;
+    }
+    .barber-dark .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: #C29B40;
+    }
+    .barber-dark .metric-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #525252;
+      margin-top: 4px;
+    }
+    .barber-dark .btn-primary {
+      background: linear-gradient(135deg, #C29B40, #D4AF50);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(194,155,64,0.25);
+    }
+    .barber-dark .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #EAEAEA;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .barber-dark .btn-ghost {
+      background: transparent;
+      color: #C29B40;
+      border: 1px solid rgba(194,155,64,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .barber-dark .input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #EAEAEA;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      width: 100%;
+    }
+    .barber-dark .input:focus {
+      outline: none;
+      border-color: rgba(194,155,64,0.5);
+    }
+    .barber-dark .badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .barber-dark .badge-accent {
+      background: rgba(194,155,64,0.15);
+      color: #C29B40;
+      border: 1px solid rgba(194,155,64,0.2);
+    }
+    .barber-dark .badge-success {
+      background: rgba(16,185,129,0.1);
+      color: #10B981;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .barber-dark .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #A0A0A0;
+      margin-bottom: 4px;
+    }
+    .barber-dark .sidebar-item.active {
+      background: rgba(194,155,64,0.08);
+      color: #C29B40;
+      border: 1px solid rgba(194,155,64,0.15);
+      position: relative;
+    }
+    .barber-dark .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #C29B40;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ============================================
+       BARBER LIGHT
+       ============================================ */
+    .barber-light .state-label {
+      background: #E8E4DB;
+      color: #A07A2A;
+      border-bottom: 1px solid rgba(160,122,42,0.2);
+    }
+    .barber-light .dashboard {
+      background: #F5F1E8;
+      min-height: 500px;
+      padding: 16px;
+    }
+    .barber-light .header {
+      background: rgba(245,241,232,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .barber-light .header-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1A1A1A;
+    }
+    .barber-light .header-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #8B7D6B;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .barber-light .card {
+      background: #FFFFFF;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .barber-light .card-accent {
+      border-color: rgba(160,122,42,0.25);
+      box-shadow: 0 4px 20px rgba(160,122,42,0.1), 0 10px 30px -10px rgba(0,0,0,0.08);
+    }
+    .barber-light .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .barber-light .card-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1A1A1A;
+    }
+    .barber-light .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: #A07A2A;
+    }
+    .barber-light .metric-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #8B7D6B;
+      margin-top: 4px;
+    }
+    .barber-light .btn-primary {
+      background: linear-gradient(135deg, #A07A2A, #B8892F);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(160,122,42,0.2);
+    }
+    .barber-light .btn-secondary {
+      background: rgba(0,0,0,0.04);
+      color: #1A1A1A;
+      border: 1px solid rgba(0,0,0,0.08);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .barber-light .btn-ghost {
+      background: transparent;
+      color: #A07A2A;
+      border: 1px solid rgba(160,122,42,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .barber-light .input {
+      background: rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.08);
+      color: #1A1A1A;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      width: 100%;
+    }
+    .barber-light .input:focus {
+      outline: none;
+      border-color: rgba(160,122,42,0.4);
+    }
+    .barber-light .badge-accent {
+      background: rgba(160,122,42,0.1);
+      color: #A07A2A;
+      border: 1px solid rgba(160,122,42,0.15);
+    }
+    .barber-light .badge-success {
+      background: rgba(5,150,105,0.08);
+      color: #059669;
+      border: 1px solid rgba(5,150,105,0.15);
+    }
+    .barber-light .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #6B5E45;
+      margin-bottom: 4px;
+    }
+    .barber-light .sidebar-item.active {
+      background: rgba(160,122,42,0.06);
+      color: #A07A2A;
+      border: 1px solid rgba(160,122,42,0.12);
+      position: relative;
+    }
+    .barber-light .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #A07A2A;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ============================================
+       BEAUTY DARK
+       ============================================ */
+    .beauty-dark .state-label {
+      background: #151223;
+      color: #A78BFA;
+      border-bottom: 1px solid rgba(167,139,250,0.2);
+    }
+    .beauty-dark .dashboard {
+      background: #1F1B2E;
+      min-height: 500px;
+      padding: 16px;
+    }
+    .beauty-dark .header {
+      background: rgba(31,27,46,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .beauty-dark .header-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #EAEAEA;
+    }
+    .beauty-dark .header-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      color: #7B6F96;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .beauty-dark .card {
+      background: #2E2B3B;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .beauty-dark .card-accent {
+      border-color: rgba(167,139,250,0.3);
+      box-shadow: 0 0 15px rgba(167,139,250,0.15), 0 12px 40px -12px rgba(0,0,0,0.7);
+    }
+    .beauty-dark .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .beauty-dark .card-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #EAEAEA;
+    }
+    .beauty-dark .metric-value {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #A78BFA;
+    }
+    .beauty-dark .metric-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #7B6F96;
+      margin-top: 4px;
+    }
+    .beauty-dark .btn-primary {
+      background: linear-gradient(135deg, #A78BFA, #8B5CF6);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(167,139,250,0.3);
+    }
+    .beauty-dark .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: #EAEAEA;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .beauty-dark .btn-ghost {
+      background: transparent;
+      color: #A78BFA;
+      border: 1px solid rgba(167,139,250,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .beauty-dark .input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #EAEAEA;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      width: 100%;
+    }
+    .beauty-dark .input:focus {
+      outline: none;
+      border-color: rgba(167,139,250,0.4);
+    }
+    .beauty-dark .badge-accent {
+      background: rgba(167,139,250,0.12);
+      color: #A78BFA;
+      border: 1px solid rgba(167,139,250,0.2);
+    }
+    .beauty-dark .badge-success {
+      background: rgba(16,185,129,0.1);
+      color: #10B981;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .beauty-dark .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #B8AED4;
+      margin-bottom: 4px;
+    }
+    .beauty-dark .sidebar-item.active {
+      background: rgba(167,139,250,0.08);
+      color: #A78BFA;
+      border: 1px solid rgba(167,139,250,0.12);
+      position: relative;
+    }
+    .beauty-dark .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #A78BFA;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ============================================
+       BEAUTY LIGHT
+       ============================================ */
+    .beauty-light .state-label {
+      background: #EDE8FF;
+      color: #7C3AED;
+      border-bottom: 1px solid rgba(124,58,237,0.2);
+    }
+    .beauty-light .dashboard {
+      background: #F7F5FF;
+      min-height: 500px;
+      padding: 16px;
+    }
+    .beauty-light .header {
+      background: rgba(247,245,255,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(124,58,237,0.08);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .beauty-light .header-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1A1225;
+    }
+    .beauty-light .header-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      color: #8B80A8;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+    .beauty-light .card {
+      background: #FFFFFF;
+      border: 1px solid rgba(124,58,237,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 30px -10px rgba(124,58,237,0.06), 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .beauty-light .card-accent {
+      border-color: rgba(124,58,237,0.2);
+      box-shadow: 0 4px 20px rgba(124,58,237,0.1), 0 10px 30px -10px rgba(124,58,237,0.06);
+    }
+    .beauty-light .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(124,58,237,0.06);
+    }
+    .beauty-light .card-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1A1225;
+    }
+    .beauty-light .metric-value {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #7C3AED;
+    }
+    .beauty-light .metric-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #8B80A8;
+      margin-top: 4px;
+    }
+    .beauty-light .btn-primary {
+      background: linear-gradient(135deg, #7C3AED, #6D28D9);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+    }
+    .beauty-light .btn-secondary {
+      background: rgba(124,58,237,0.04);
+      color: #1A1225;
+      border: 1px solid rgba(124,58,237,0.1);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .beauty-light .btn-ghost {
+      background: transparent;
+      color: #7C3AED;
+      border: 1px solid rgba(124,58,237,0.15);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .beauty-light .input {
+      background: rgba(124,58,237,0.03);
+      border: 1px solid rgba(124,58,237,0.1);
+      color: #1A1225;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      width: 100%;
+    }
+    .beauty-light .input:focus {
+      outline: none;
+      border-color: rgba(124,58,237,0.35);
+    }
+    .beauty-light .badge-accent {
+      background: rgba(124,58,237,0.08);
+      color: #7C3AED;
+      border: 1px solid rgba(124,58,237,0.12);
+    }
+    .beauty-light .badge-success {
+      background: rgba(5,150,105,0.06);
+      color: #059669;
+      border: 1px solid rgba(5,150,105,0.12);
+    }
+    .beauty-light .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #5B4D7A;
+      margin-bottom: 4px;
+    }
+    .beauty-light .sidebar-item.active {
+      background: rgba(124,58,237,0.04);
+      color: #7C3AED;
+      border: 1px solid rgba(124,58,237,0.1);
+      position: relative;
+    }
+    .beauty-light .sidebar-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: #7C3AED;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ============================================
+       UTILS
+       ============================================ */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-3 { margin-bottom: 12px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+    .mt-4 { margin-top: 16px; }
+    .p-3 { padding: 12px; }
+    .text-sm { font-size: 13px; }
+    .text-xs { font-size: 11px; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .rounded-lg { border-radius: 8px; }
+    .w-full { width: 100%; }
+    .h-10 { height: 40px; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .icon { width: 16px; height: 16px; display: inline-block; }
+    .icon-sq { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    @media (max-width: 1200px) {
+      .grids { grid-template-columns: 1fr; }
+      body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">AgendiX Design System Reference</h1>
+  <p class="page-subtitle">Dashboard em 4 estados visuais — Barber/Beauty × Dark/Light</p>
+
+  <div class="grids">
+
+    <!-- BARBER DARK -->
+    <div class="state-panel barber-dark">
+      <div class="state-label">Barber Dark — Padrão</div>
+      <div class="dashboard">
+        <div class="header">
+          <div>
+            <div class="header-title">Barbearia Elite <span class="header-badge"></span></div>
+            <div class="header-sub">Barbearia</div>
+          </div>
+          <div class="flex gap-3">
+            <button class="btn-secondary" style="padding:8px 14px; font-size:12px;">Notificações</button>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(194,155,64,0.2),rgba(194,155,64,0.05));display:flex;align-items:center;justify-content:center;color:#C29B40;font-weight:700;font-size:12px;">J</div>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-3">
+          <div class="card">
+            <div class="metric-value">R$ 3.420</div>
+            <div class="metric-label">Faturamento Hoje</div>
+          </div>
+          <div class="card card-accent">
+            <div class="metric-value" style="color:#10B981;">R$ 28.5K</div>
+            <div class="metric-label">Lucro do Mês</div>
+          </div>
+          <div class="card">
+            <div class="metric-value">42</div>
+            <div class="metric-label">Atendimentos</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Agenda do Dia</span>
+            <span class="badge badge-accent">Hoje</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="flex items-center justify-between p-3" style="background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.03);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(194,155,64,0.1);color:#C29B40;">09</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#EAEAEA;">João Silva</div>
+                  <div style="font-size:11px;color:#525252;">Corte + Barba</div>
+                </div>
+              </div>
+              <span class="badge badge-success">Confirmado</span>
+            </div>
+            <div class="flex items-center justify-between p-3" style="background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.03);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(194,155,64,0.1);color:#C29B40;">10</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#EAEAEA;">Pedro Costa</div>
+                  <div style="font-size:11px;color:#525252;">Corte Degradê</div>
+                </div>
+              </div>
+              <span class="badge badge-accent">Pendente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:320px;">
+          <div class="card-header">
+            <span class="card-title">Novo Agendamento</span>
+          </div>
+          <div class="flex flex-col gap-3">
+            <input class="input" placeholder="Nome do cliente" value="Carlos Mendes">
+            <input class="input" placeholder="Serviço" value="Corte + Barba — R$ 65">
+            <div class="flex gap-2 mt-2">
+              <button class="btn-ghost" style="flex:1;">Cancelar</button>
+              <button class="btn-primary" style="flex:1;">Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="sidebar-item active">
+            <span class="icon" style="background:#C29B40;border-radius:4px;"></span>
+            Dashboard
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#525252;border-radius:4px;"></span>
+            Agenda
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#525252;border-radius:4px;"></span>
+            Financeiro
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARBER LIGHT -->
+    <div class="state-panel barber-light">
+      <div class="state-label">Barber Light — Modo Claro</div>
+      <div class="dashboard">
+        <div class="header">
+          <div>
+            <div class="header-title">Barbearia Elite <span class="header-badge"></span></div>
+            <div class="header-sub">Barbearia</div>
+          </div>
+          <div class="flex gap-3">
+            <button class="btn-secondary" style="padding:8px 14px; font-size:12px;">Notificações</button>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(160,122,42,0.15),rgba(160,122,42,0.05));display:flex;align-items:center;justify-content:center;color:#A07A2A;font-weight:700;font-size:12px;">J</div>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-3">
+          <div class="card">
+            <div class="metric-value">R$ 3.420</div>
+            <div class="metric-label">Faturamento Hoje</div>
+          </div>
+          <div class="card card-accent">
+            <div class="metric-value" style="color:#059669;">R$ 28.5K</div>
+            <div class="metric-label">Lucro do Mês</div>
+          </div>
+          <div class="card">
+            <div class="metric-value">42</div>
+            <div class="metric-label">Atendimentos</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Agenda do Dia</span>
+            <span class="badge badge-accent">Hoje</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="flex items-center justify-between p-3" style="background:rgba(0,0,0,0.02);border-radius:10px;border:1px solid rgba(0,0,0,0.04);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(160,122,42,0.08);color:#A07A2A;">09</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#1A1A1A;">João Silva</div>
+                  <div style="font-size:11px;color:#8B7D6B;">Corte + Barba</div>
+                </div>
+              </div>
+              <span class="badge badge-success">Confirmado</span>
+            </div>
+            <div class="flex items-center justify-between p-3" style="background:rgba(0,0,0,0.02);border-radius:10px;border:1px solid rgba(0,0,0,0.04);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(160,122,42,0.08);color:#A07A2A;">10</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#1A1A1A;">Pedro Costa</div>
+                  <div style="font-size:11px;color:#8B7D6B;">Corte Degradê</div>
+                </div>
+              </div>
+              <span class="badge badge-accent">Pendente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:320px;">
+          <div class="card-header">
+            <span class="card-title">Novo Agendamento</span>
+          </div>
+          <div class="flex flex-col gap-3">
+            <input class="input" placeholder="Nome do cliente" value="Carlos Mendes">
+            <input class="input" placeholder="Serviço" value="Corte + Barba — R$ 65">
+            <div class="flex gap-2 mt-2">
+              <button class="btn-ghost" style="flex:1;">Cancelar</button>
+              <button class="btn-primary" style="flex:1;">Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="sidebar-item active">
+            <span class="icon" style="background:#A07A2A;border-radius:4px;"></span>
+            Dashboard
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#C9C3B8;border-radius:4px;"></span>
+            Agenda
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#C9C3B8;border-radius:4px;"></span>
+            Financeiro
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BEAUTY DARK -->
+    <div class="state-panel beauty-dark">
+      <div class="state-label">Beauty Dark — Padrão</div>
+      <div class="dashboard">
+        <div class="header">
+          <div>
+            <div class="header-title">Studio Bella <span class="header-badge"></span></div>
+            <div class="header-sub">Salão de Beleza</div>
+          </div>
+          <div class="flex gap-3">
+            <button class="btn-secondary" style="padding:8px 14px; font-size:12px;">Notificações</button>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(167,139,250,0.05));display:flex;align-items:center;justify-content:center;color:#A78BFA;font-weight:700;font-size:12px;">M</div>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-3">
+          <div class="card">
+            <div class="metric-value">R$ 5.890</div>
+            <div class="metric-label">Faturamento Hoje</div>
+          </div>
+          <div class="card card-accent">
+            <div class="metric-value" style="color:#10B981;">R$ 42.1K</div>
+            <div class="metric-label">Lucro do Mês</div>
+          </div>
+          <div class="card">
+            <div class="metric-value">18</div>
+            <div class="metric-label">Atendimentos</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Agenda do Dia</span>
+            <span class="badge badge-accent">Hoje</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="flex items-center justify-between p-3" style="background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.03);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(167,139,250,0.1);color:#A78BFA;">09</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#EAEAEA;">Maria Santos</div>
+                  <div style="font-size:11px;color:#7B6F96;">Coloração + Hidratação</div>
+                </div>
+              </div>
+              <span class="badge badge-success">Confirmado</span>
+            </div>
+            <div class="flex items-center justify-between p-3" style="background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.03);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(167,139,250,0.1);color:#A78BFA;">11</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#EAEAEA;">Ana Paula</div>
+                  <div style="font-size:11px;color:#7B6F96;">Corte + Escova</div>
+                </div>
+              </div>
+              <span class="badge badge-accent">Pendente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:320px;">
+          <div class="card-header">
+            <span class="card-title">Novo Agendamento</span>
+          </div>
+          <div class="flex flex-col gap-3">
+            <input class="input" placeholder="Nome do cliente" value="Fernanda Lima">
+            <input class="input" placeholder="Serviço" value="Manicure — R$ 45">
+            <div class="flex gap-2 mt-2">
+              <button class="btn-ghost" style="flex:1;">Cancelar</button>
+              <button class="btn-primary" style="flex:1;">Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="sidebar-item active">
+            <span class="icon" style="background:#A78BFA;border-radius:4px;"></span>
+            Dashboard
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#7B6F96;border-radius:4px;"></span>
+            Agenda
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#7B6F96;border-radius:4px;"></span>
+            Financeiro
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BEAUTY LIGHT -->
+    <div class="state-panel beauty-light">
+      <div class="state-label">Beauty Light — Modo Claro</div>
+      <div class="dashboard">
+        <div class="header">
+          <div>
+            <div class="header-title">Studio Bella <span class="header-badge"></span></div>
+            <div class="header-sub">Salão de Beleza</div>
+          </div>
+          <div class="flex gap-3">
+            <button class="btn-secondary" style="padding:8px 14px; font-size:12px;">Notificações</button>
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(124,58,237,0.04));display:flex;align-items:center;justify-content:center;color:#7C3AED;font-weight:700;font-size:12px;">M</div>
+          </div>
+        </div>
+
+        <div class="grid-3 mb-3">
+          <div class="card">
+            <div class="metric-value">R$ 5.890</div>
+            <div class="metric-label">Faturamento Hoje</div>
+          </div>
+          <div class="card card-accent">
+            <div class="metric-value" style="color:#059669;">R$ 42.1K</div>
+            <div class="metric-label">Lucro do Mês</div>
+          </div>
+          <div class="card">
+            <div class="metric-value">18</div>
+            <div class="metric-label">Atendimentos</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Agenda do Dia</span>
+            <span class="badge badge-accent">Hoje</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="flex items-center justify-between p-3" style="background:rgba(124,58,237,0.02);border-radius:10px;border:1px solid rgba(124,58,237,0.04);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(124,58,237,0.06);color:#7C3AED;">09</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#1A1225;">Maria Santos</div>
+                  <div style="font-size:11px;color:#8B80A8;">Coloração + Hidratação</div>
+                </div>
+              </div>
+              <span class="badge badge-success">Confirmado</span>
+            </div>
+            <div class="flex items-center justify-between p-3" style="background:rgba(124,58,237,0.02);border-radius:10px;border:1px solid rgba(124,58,237,0.04);">
+              <div class="flex items-center gap-3">
+                <div class="icon-sq" style="background:rgba(124,58,237,0.06);color:#7C3AED;">11</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#1A1225;">Ana Paula</div>
+                  <div style="font-size:11px;color:#8B80A8;">Corte + Escova</div>
+                </div>
+              </div>
+              <span class="badge badge-accent">Pendente</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="max-width:320px;">
+          <div class="card-header">
+            <span class="card-title">Novo Agendamento</span>
+          </div>
+          <div class="flex flex-col gap-3">
+            <input class="input" placeholder="Nome do cliente" value="Fernanda Lima">
+            <input class="input" placeholder="Serviço" value="Manicure — R$ 45">
+            <div class="flex gap-2 mt-2">
+              <button class="btn-ghost" style="flex:1;">Cancelar</button>
+              <button class="btn-primary" style="flex:1;">Salvar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="sidebar-item active">
+            <span class="icon" style="background:#7C3AED;border-radius:4px;"></span>
+            Dashboard
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#C4B5E0;border-radius:4px;"></span>
+            Agenda
+          </div>
+          <div class="sidebar-item">
+            <span class="icon" style="background:#C4B5E0;border-radius:4px;"></span>
+            Financeiro
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center; margin-top:40px; padding:20px; border-top:1px solid rgba(255,255,255,0.05);">
+    <p style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#525252;">
+      AgendiX Design System v2.0 — Tokens: design-system/tokens.css — Hook: hooks/useBrutalTheme.ts
+    </p>
+  </div>
+</body>
+</html>

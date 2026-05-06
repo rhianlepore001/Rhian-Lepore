@@ -5,6 +5,7 @@ import { X, Loader2, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { BrutalButton } from './BrutalButton';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
 
@@ -69,16 +70,15 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     accentColor,
     currencySymbol
 }) => {
-    const { user, userType } = useAuth();
+    const { user } = useAuth();
     const { setModalOpen } = useUI();
+    const { isBeauty, accent } = useBrutalTheme();
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         setModalOpen(true);
         return () => setModalOpen(false);
     }, [setModalOpen]);
-
-    const isBeauty = userType === 'beauty';
 
     // Theme Styles
     const modalStyles = isBeauty
@@ -342,7 +342,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                 onChange={e => setIsCustomService(e.target.checked)}
                                 className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                             />
-                            <label className={`text-xs uppercase font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>Serviço Personalizado</label>
+                            <label className={`text-xs uppercase font-bold ${accent.text}`}>Serviço Personalizado</label>
                         </div>
                         {isCustomService && (
                             <input

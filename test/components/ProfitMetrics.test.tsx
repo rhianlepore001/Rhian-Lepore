@@ -1,17 +1,20 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { ProfitMetrics } from '../../components/dashboard/ProfitMetrics';
 import React from 'react';
-import { vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { ProfitMetrics } from '../../components/dashboard/ProfitMetrics';
 
-// Mocks para os contextos exigidos pelo BrutalCard (usado dentro do ProfitMetrics)
 vi.mock('../../contexts/AuthContext', () => ({
-    useAuth: () => ({ userType: 'barber' })
+    useAuth: () => ({ userType: 'barber' }),
 }));
 
 vi.mock('../../contexts/UIContext', () => ({
-    useUI: () => ({ isMobile: false })
+    useUI: () => ({ isMobile: false }),
 }));
+
+const renderProfitMetrics = (ui: React.ReactElement) => {
+    return render(<MemoryRouter>{ui}</MemoryRouter>);
+};
 
 describe('ProfitMetrics Component', () => {
     const mockMetrics = {
@@ -21,7 +24,8 @@ describe('ProfitMetrics Component', () => {
         avoidedNoShows: 200,
         filledSlots: 300,
         weeklyGrowth: 10,
-        campaignsSent: 5
+        campaignsSent: 5,
+        todayRevenue: 1000,
     };
 
     const mockMaturity = {
@@ -30,11 +34,11 @@ describe('ProfitMetrics Component', () => {
         completedThisMonth: 8,
         hasPublicBookings: true,
         accountDaysOld: 30,
-        score: 80
+        score: 80,
     };
 
-    it('renders all metric labels', () => {
-        render(
+    it('renders current card labels', () => {
+        renderProfitMetrics(
             <ProfitMetrics
                 metrics={mockMetrics}
                 dataMaturity={mockMaturity}
@@ -44,15 +48,12 @@ describe('ProfitMetrics Component', () => {
             />
         );
 
-        // Verifica labels principais (conforme refatorado)
-        expect(screen.getByText('Receita Realizada')).toBeInTheDocument();
-        expect(screen.getByText('Recuperado')).toBeInTheDocument();
-        expect(screen.getByText('Economia')).toBeInTheDocument();
-        expect(screen.getByText('Vagas')).toBeInTheDocument();
+        expect(screen.getByText('Receita do Dia')).toBeInTheDocument();
+        expect(screen.getByText('HOJE')).toBeInTheDocument();
     });
 
-    it('renders formatted currency values when data is mature', () => {
-        render(
+    it('renders formatted revenue when there is revenue today', () => {
+        renderProfitMetrics(
             <ProfitMetrics
                 metrics={mockMetrics}
                 dataMaturity={mockMaturity}
@@ -62,30 +63,21 @@ describe('ProfitMetrics Component', () => {
             />
         );
 
-        // Verifica formatação de moeda brasileira
         expect(screen.getByText('R$ 1.000,00')).toBeInTheDocument();
-        expect(screen.getByText('R$ 500,00')).toBeInTheDocument();
     });
 
-    it('renders learning state when data is immature', () => {
-        const immatureMaturity = {
-            ...mockMaturity,
-            appointmentsTotal: 2,
-            score: 10
-        };
-
-        render(
+    it('renders empty state when there is no revenue today', () => {
+        renderProfitMetrics(
             <ProfitMetrics
-                metrics={{ ...mockMetrics, campaignsSent: 0 }}
-                dataMaturity={immatureMaturity}
+                metrics={{ ...mockMetrics, todayRevenue: 0 }}
+                dataMaturity={mockMaturity}
                 currencySymbol="R$"
                 currencyRegion="BR"
                 isBeauty={false}
             />
         );
 
-        // Deve mostrar "Em Aprendizado"
-        const learningStates = screen.getAllByText('Em Aprendizado');
-        expect(learningStates.length).toBeGreaterThan(0);
+        expect(screen.getByText(/Nenhum atendimento concluído hoje ainda\./i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /registrar atendimento/i })).toBeInTheDocument();
     });
 });

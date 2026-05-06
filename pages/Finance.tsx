@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { supabase } from '../lib/supabase';
 import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock, Check, BarChart2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
@@ -44,7 +45,7 @@ interface MonthlyHistoryItem {
 }
 
 export const Finance: React.FC = () => {
-  const { user, userType, region, role, companyId, fullName } = useAuth();
+  const { user, region, role, companyId, fullName } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -91,10 +92,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const isBeauty = userType === 'beauty';
-  const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-  const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-  const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+  const { accent, colors, isBeauty, classes, font } = useBrutalTheme();
   const currencySymbol = region === 'PT' ? '€' : 'R$';
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
@@ -502,7 +500,7 @@ const [searchParams, setSearchParams] = useSearchParams();
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
           onChange={handleMonthChange}
-          accentColor={accentColor}
+          accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
         />
       )}
 
@@ -518,7 +516,7 @@ const [searchParams, setSearchParams] = useSearchParams();
         ]}
         activeTab={activeTab}
         onChange={(id) => setActiveTab(id as FinanceTabType)}
-        accentBg={accentBg}
+        accentBg={accent.bg}
       />
 
       {activeTab === 'overview' && (
@@ -526,14 +524,19 @@ const [searchParams, setSearchParams] = useSearchParams();
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <BrutalCard>
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">{isStaff ? 'Meu Giro' : 'Receita'}</p>
-                  <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-emerald-500/10">
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">{isStaff ? 'Meu Giro' : 'Receita'}</p>
+                    <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
+                  </div>
                 </div>
                 <InfoButton text={isStaff ? `Total dos seus atendimentos em ${months[selectedMonth]} ${selectedYear}.` : `Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
               </div>
-              <h3 className="text-2xl md:text-3xl font-heading text-green-500">
+              <h3 className="text-2xl md:text-3xl font-bold font-mono text-emerald-400">
                 {formatCurrency(summary.revenue || 0, currencyRegion)}
               </h3>
               <div className={`flex items-center gap-1 ${summary.growth >= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-mono mt-2`}>
@@ -544,14 +547,19 @@ const [searchParams, setSearchParams] = useSearchParams();
 
             {!isStaff && (
               <BrutalCard>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Despesas Pagas</p>
-                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-red-500/10">
+                      <TrendingDown className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Despesas Pagas</p>
+                      <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
+                    </div>
                   </div>
                   <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-heading text-red-500">
+                <h3 className="text-2xl md:text-3xl font-bold font-mono text-red-400">
                   {formatCurrency(summary.expenses || 0, currencyRegion)}
                 </h3>
                 <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
@@ -563,17 +571,22 @@ const [searchParams, setSearchParams] = useSearchParams();
 
             {!isStaff && (
               <BrutalCard>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Lucro Líquido</p>
-                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-xl ${accent.bgDim}`}>
+                      <Wallet className={`w-5 h-5 ${accent.text}`} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Lucro Líquido</p>
+                      <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
+                    </div>
                   </div>
                   <InfoButton text="O valor que sobra após subtrair as despesas pagas da receita. Seu lucro real no período." />
                 </div>
-                <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
+                <h3 className={`text-2xl md:text-3xl font-bold font-mono ${accent.text}`}>
                   {formatCurrency(summary.profit || 0, currencyRegion)}
                 </h3>
-                <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
+                <div className={`flex items-center gap-1 ${accent.text} text-xs font-mono mt-2`}>
                   <Wallet className="w-3 h-3" />
                   <span>Margem: {summary.revenue > 0 ? Math.round(((summary.profit || 0) / summary.revenue) * 100) : 0}%</span>
                 </div>
@@ -583,14 +596,19 @@ const [searchParams, setSearchParams] = useSearchParams();
             {/* Atendimentos e Ticket Médio (Donos) */}
             {!isStaff && (
               <BrutalCard>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Atendimentos</p>
-                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-white/5">
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Atendimentos</p>
+                      <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
+                    </div>
                   </div>
                   <InfoButton text="Total de serviços prestados e faturados." />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-heading text-white">
+                <h3 className="text-2xl md:text-3xl font-bold font-mono text-white">
                   {transactions.filter(t => t.type === 'revenue').length}
                 </h3>
                 <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
@@ -609,10 +627,10 @@ const [searchParams, setSearchParams] = useSearchParams();
                     <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
                   </div>
                 </div>
-                <h3 className={`text-2xl md:text-3xl font-heading ${accentText}`}>
+                <h3 className={`text-2xl md:text-3xl font-heading ${accent.text}`}>
                   {transactions.filter(t => t.type === 'revenue').length}
                 </h3>
-                <div className={`flex items-center gap-1 ${accentText} text-xs font-mono mt-2`}>
+                <div className={`flex items-center gap-1 ${accent.text} text-xs font-mono mt-2`}>
                   <Calendar className="w-3 h-3" />
                   <span>Serviços realizados no mês</span>
                 </div>
@@ -701,7 +719,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                 </thead>
                 <tbody className="divide-y divide-neutral-800">
                   {transactions.map((t) => (
-                    <tr key={t.id} className="hover:bg-white/5 transition-colors">
+                    <tr key={t.id} className={`hover:bg-white/[0.04] transition-colors duration-150 ${t.status === 'pending' ? 'border-l-2 border-l-yellow-500/60' : ''}`}>
                       <td className="p-3">
                         <div className="flex flex-col">
                           <span className="text-white font-medium text-sm">{t.date}</span>
@@ -724,7 +742,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                         </span>
                       </td>
                       <td className="p-3 text-right font-mono">
-                        <span className={t.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
+                        <span className={`font-bold ${t.type === 'expense' ? 'text-red-400' : 'text-emerald-400'}`}>
                           {t.type === 'expense' ? '-' : '+'}{formatCurrency((t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)), currencyRegion, false)}
                         </span>
                       </td>
@@ -907,7 +925,7 @@ const [searchParams, setSearchParams] = useSearchParams();
             <MonthlyHistory
               data={monthlyHistory}
               currencySymbol={currencySymbol}
-              accentColor={accentColor}
+              accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
               isBeauty={isBeauty}
             />
           </BrutalCard>
@@ -917,7 +935,7 @@ const [searchParams, setSearchParams] = useSearchParams();
       {
         activeTab === 'commissions' && (
           <CommissionsManagement
-            accentColor={accentColor}
+            accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
             currencySymbol={currencySymbol}
             onPaymentSuccess={fetchFinanceData}
           />
@@ -931,8 +949,8 @@ const [searchParams, setSearchParams] = useSearchParams();
           transactions={transactions}
           currencyRegion={currencyRegion}
           isBeauty={isBeauty}
-          accentBg={accentBg}
-          accentText={accentText}
+accentBg={accent.bg}
+          accentText={accent.text}
         />
       )}
 
@@ -1001,7 +1019,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
                 `}
                   placeholder="Ex: Venda de produto, Pagamento de aluguel..."
                   required
@@ -1018,7 +1036,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
                   `}
                   >
                     <option value="paid">Pago / Recebido</option>
@@ -1035,7 +1053,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                       className={`w-full p-3 rounded-lg text-white transition-all outline-none
                         ${isBeauty
                           ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                          : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                          : `bg-black border border-neutral-700 focus:border-accent-gold`}
                       `}
                     />
                   </div>
@@ -1054,7 +1072,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   className={`w-full p-3 rounded-lg text-white font-mono text-lg transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
                 `}
                   placeholder="0.00"
                   required
@@ -1072,7 +1090,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
                   `}
                   />
                 </div>
@@ -1085,7 +1103,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
                   `}
                   />
                 </div>
@@ -1100,7 +1118,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um serviço</option>
@@ -1119,7 +1137,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um cliente</option>
@@ -1138,7 +1156,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-${accentColor}`}
+                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um profissional</option>
@@ -1181,7 +1199,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                       onClick={() => setFilterType(type)}
                       className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterType === type
-                          ? `${accentBg} text-black`
+                          ? `${accent.bg} text-black`
                           : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
                     >
                       {type === 'all' ? 'Tudo' : type === 'revenue' ? 'Entradas' : 'Saídas'}
@@ -1199,7 +1217,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                       onClick={() => setFilterPaymentMethod(method)}
                       className={`px-3 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterPaymentMethod === method
-                          ? `${accentBg} text-black`
+                          ? `${accent.bg} text-black`
                           : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
                     >
                       {method === 'all' ? 'Todas' : method}

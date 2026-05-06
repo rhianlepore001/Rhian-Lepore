@@ -2,18 +2,16 @@ import React, { useState } from 'react';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { Shield, Lock, Smartphone, Trash2, CheckCircle2 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import { use2FA } from '../../hooks/use2FA';
 import { TwoFactorSetup } from '../../components/security/TwoFactorSetup';
 import { SettingsLayout } from '../../components/SettingsLayout';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
 export const SecuritySettings: React.FC = () => {
-    const { userType } = useAuth();
     const { isEnabled, loading, unenroll, factors, refreshUser } = use2FA();
     const [showSetup, setShowSetup] = useState(false);
 
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const { accent } = useBrutalTheme();
 
     const handleSetupComplete = () => {
         setShowSetup(false);

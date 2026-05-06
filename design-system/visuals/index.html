@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>AgendiX — Referências Visuais do Design System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #EAEAEA;
+      padding: 60px 40px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-family: 'Chivo', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #525252;
+      font-size: 15px;
+      margin-bottom: 48px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      max-width: 800px;
+      width: 100%;
+    }
+    .card {
+      background: #141414;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 32px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card:hover {
+      border-color: rgba(194,155,64,0.3);
+      box-shadow: 0 0 20px rgba(194,155,64,0.08);
+      transform: translateY(-2px);
+    }
+    .card-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #C29B40;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .card-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: #737373;
+      line-height: 1.6;
+    }
+    .card-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #525252;
+      margin-top: 8px;
+    }
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    footer p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #525252;
+    }
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      body { padding: 40px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Design System — Referências Visuais</h1>
+  <p class="subtitle">Telas de referência para os 4 estados visuais do AgendiX</p>
+
+  <div class="grid">
+    <a href="dashboard-reference.html" class="card">
+      <div class="card-number">01</div>
+      <div class="card-title">Dashboard Completo</div>
+      <div class="card-desc">
+        Dashboard em 4 estados visuais lado a lado: Barber Dark, Barber Light, Beauty Dark e Beauty Light. 
+        Inclui header, cards de métricas, agenda, formulário e navegação.
+      </div>
+      <div class="card-meta">4 paineis · 1 arquivo HTML</div>
+    </a>
+
+    <a href="components-reference.html" class="card">
+      <div class="card-number">02</div>
+      <div class="card-title">Componentes Isolados</div>
+      <div class="card-desc">
+        Cards, Buttons, Inputs, Modals, Badges e Table Rows em todos os 4 estados. 
+        Útil para validar tokens e classes antes da implementação.
+      </div>
+      <div class="card-meta">6 seções · 16 variações</div>
+    </a>
+  </div>
+
+  <footer>
+    <p>AgendiX Design System v2.0 — design-system/visuals/ — 2026-05-03</p>
+  </footer>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { BrutalButton } from './BrutalButton';
 import {
     X, ChevronLeft, Loader2, Plus, Check
@@ -30,8 +31,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     clients,
     onRefreshClients
 }) => {
-    const { user, userType, region, businessName, companyId } = useAuth();
+    const { user, region, businessName, companyId } = useAuth();
     const { setModalOpen } = useUI();
+    const { isBeauty, accent } = useBrutalTheme();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
 
@@ -61,8 +63,6 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState<string>('');
 
-    const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
 
@@ -206,10 +206,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                             Novo Atendimento
                         </h2>
                         {(() => {
-                            const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
-                            const accentRing = isBeauty ? 'ring-beauty-neon ring-offset-beauty-dark' : 'ring-accent-gold ring-offset-brutal-main';
-                            const accentFill = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-                            return (
+const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
+                             const accentRing = isBeauty ? 'ring-beauty-neon ring-offset-beauty-dark' : 'ring-accent-gold ring-offset-brutal-main';
+                             return (
                                 <div className="flex items-center gap-0 mt-2 w-full max-w-xs">
                                     {STEPS.map((label, idx) => {
                                         const n = idx + 1;
@@ -220,16 +219,16 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                                 <div className="flex flex-col items-center">
                                                     <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
                                                         isDone
-                                                            ? `${accentFill} border-0`
+                                                            ? `${accent.bg} border-0`
                                                             : isCurrent
                                                                 ? `ring-2 ring-offset-2 ${accentRing} bg-transparent`
                                                                 : 'border border-white/20 bg-transparent'
                                                     }`}>
                                                         {isDone && <Check size={12} className="text-black" />}
-                                                        {isCurrent && <div className={`w-2 h-2 rounded-full ${accentFill}`} />}
+                                                        {isCurrent && <div className={`w-2 h-2 rounded-full ${accent.bg}`} />}
                                                     </div>
                                                     <span className={`hidden md:block text-[9px] font-mono uppercase tracking-wider mt-1 ${
-                                                        isCurrent ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold')
+                                                        isCurrent ? accent.text
                                                         : isDone ? 'text-neutral-400' : 'text-neutral-600'
                                                     }`}>{label}</span>
                                                 </div>
@@ -289,7 +288,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                                 categories={categories}
                                 activeCategory={activeCategory}
                                 setActiveCategory={setActiveCategory}
-                                accentColor={accentColor}
+                                accentColor={accent.text}
                                 isBeauty={isBeauty}
                             />
 
@@ -326,7 +325,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                             setSelectedTime={setSelectedTime}
                             activeCardBg={activeCardBg}
                             cardBg={cardBg}
-                            accentColor={accentColor}
+                            accentColor={accent.text}
                             isBeauty={isBeauty}
                             services={services}
                             selectedServiceIds={selectedServiceIds}
@@ -351,7 +350,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                             customServicePrice={customServicePrice}
                             currencyRegion={currencyRegion}
                             isBeauty={isBeauty}
-                            accentColor={accentColor}
+                            accentColor={accent.text}
                             sendWhatsapp={sendWhatsapp}
                             setSendWhatsapp={setSendWhatsapp}
                             customPrice={customPrice}

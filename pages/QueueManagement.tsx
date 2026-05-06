@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { Clock, User, Phone, Play, X, Check, Megaphone, Trash2, QrCode, Download, DollarSign, Calendar, Save, AlertTriangle } from 'lucide-react';
@@ -9,7 +10,8 @@ import { formatPhone, formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 
 export const QueueManagement: React.FC = () => {
-    const { user, userType, region } = useAuth();
+    const { user, region } = useAuth();
+    const { accent, isBeauty } = useBrutalTheme();
     const [entries, setEntries] = useState<QueueEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [metrics, setMetrics] = useState({ waiting: 0, serving: 0, completed: 0 });
@@ -41,11 +43,6 @@ export const QueueManagement: React.FC = () => {
     useEffect(() => {
         audioRef.current = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
     }, []);
-
-    const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const bgAccent = isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10';
-    const borderAccent = isBeauty ? 'border-beauty-neon/20' : 'border-accent-gold/20';
 
     const fetchQueue = async () => {
         if (!user) return;
@@ -353,7 +350,7 @@ export const QueueManagement: React.FC = () => {
             <div className={`flex flex-col md:flex-row justify-between items-center ${isBeauty ? 'bg-beauty-card/40 border-beauty-neon/20' : 'bg-white/[0.04] border-white/10'} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-xl`}>
                 <div className="mb-4 md:mb-0">
                     <h1 className={`text-2xl md:text-3xl font-heading font-bold text-white mb-1 flex items-center gap-2`}>
-                        <Clock className={`w-8 h-8 ${accentColor}`} />
+                        <Clock className={`w-8 h-8 ${accent.text}`} />
                         Fila Digital
                     </h1>
                     <p className="text-neutral-400 text-sm font-mono">Gerencie atendimentos em tempo real</p>
@@ -393,7 +390,7 @@ export const QueueManagement: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left Column: Waiting / Next */}
                 <div className="space-y-4">
-                    <h2 className={`text-xl font-bold flex items-center gap-2 uppercase tracking-tight ${accentColor}`}>
+                    <h2 className={`text-xl font-bold flex items-center gap-2 uppercase tracking-tight ${accent.text}`}>
                         <Clock className="w-5 h-5" />
                         Próximos
                     </h2>
@@ -529,7 +526,7 @@ export const QueueManagement: React.FC = () => {
                             <X className="w-5 h-5" />
                         </button>
                         <h3 className="text-xl font-bold text-white mb-6 font-heading uppercase flex items-center gap-2">
-                            <User className={`w-5 h-5 ${accentColor}`} />
+                            <User className={`w-5 h-5 ${accent.text}`} />
                             Adicionar na Fila
                         </h3>
                         <form onSubmit={handleManualAdd} className="space-y-4">
@@ -652,7 +649,7 @@ export const QueueManagement: React.FC = () => {
                             </button>
 
                             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 font-heading uppercase">
-                                <QrCode className={`w-5 h-5 ${accentColor}`} />
+                                <QrCode className={`w-5 h-5 ${accent.text}`} />
                                 QR Code da Fila
                             </h3>
 

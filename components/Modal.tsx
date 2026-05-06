@@ -2,10 +2,9 @@ import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { X } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { BrutalButton } from './BrutalButton';
 import { useUI } from '../contexts/UIContext';
-import { useLocation } from 'react-router-dom';
 
 interface ModalProps {
     isOpen: boolean;
@@ -30,11 +29,8 @@ export const Modal: React.FC<ModalProps> = ({
     preventClose = false,
     forceTheme
 }) => {
-    const { userType } = useAuth();
+    const { classes, accent, colors } = useBrutalTheme({ override: forceTheme });
     const { setModalOpen } = useUI();
-    const location = useLocation();
-    const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
-    const isSettingsRoute = location.pathname.startsWith('/configuracoes');
 
     // Fecha ao pressionar ESC
     const handleEscape = useCallback((e: KeyboardEvent) => {
@@ -70,50 +66,13 @@ export const Modal: React.FC<ModalProps> = ({
         full: 'max-w-4xl'
     };
 
-    // Estilos do container do modal
-    const getModalStyles = () => {
-        if (isBeauty) {
-            return `
-        bg-gradient-to-br from-beauty-card/95 via-beauty-card/90 to-beauty-dark/95
-        backdrop-blur-2xl
-        border border-white/10
-        rounded-2xl
-        shadow-promax-glass
-      `;
-        } else {
-            return `
-        ${isSettingsRoute ? 'bg-brutal-card/75 backdrop-blur-2xl' : 'bg-gradient-brutal'}
-        border border-white/10
-        shadow-promax-glass rounded-2xl
-      `;
-        }
-    };
-
-    // Estilos do header
-    const getHeaderStyles = () => {
-        if (isBeauty) {
-            return 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent px-6 py-4';
-        } else {
-            return 'border-b border-white/5 bg-white/[0.02] px-6 py-4';
-        }
-    };
-
-    // Estilos do botão de fechar
-    const getCloseButtonStyles = () => {
-        if (isBeauty) {
-            return 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all';
-        } else {
-            return 'text-neutral-500 hover:text-white hover:bg-white/10 rounded-full p-1.5 transition-colors';
-        }
-    };
-
     const modalContent = (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 md:p-4">
             {/* Backdrop */}
             <div
                 className={`
           absolute inset-0 
-          ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-md' : 'bg-black/80 backdrop-blur-md'}
+          ${classes.modalOverlay}
           transition-opacity duration-300
         `}
                 onClick={() => !preventClose && onClose()}
@@ -124,9 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
                 <div
                     className={`
           relative w-full ${sizeClasses[size]}
-          ${getModalStyles()}
-          transform transition-all duration-300
-          animate-in fade-in zoom-in-95
+          ${classes.modalContainer}
           max-h-[calc(100vh-1.5rem)] md:max-h-[90vh] flex flex-col
         `.replace(/\s+/g, ' ').trim()}
                     role="dialog"
@@ -135,11 +92,11 @@ export const Modal: React.FC<ModalProps> = ({
                 >
                 {/* Header */}
                 {(title || showCloseButton) && (
-                    <div className={`flex items-center justify-between ${getHeaderStyles()}`}>
+                    <div className={classes.modalHeader}>
                         {title && (
                             <h3 id="modal-title" className={`
                 font-heading text-lg md:text-xl
-                ${isBeauty ? 'text-white' : 'text-white'}
+                ${colors.text}
               `}>
                                 {title}
                             </h3>
@@ -147,7 +104,7 @@ export const Modal: React.FC<ModalProps> = ({
                         {showCloseButton && (
                             <button
                                 onClick={onClose}
-                                className={getCloseButtonStyles()}
+                                className={`${accent.text}/60 hover:${accent.text} hover:${accent.bgDim} rounded-full p-1.5 transition-all hover:rotate-90 transition-transform duration-200`}
                                 aria-label="Fechar"
                             >
                                 <X className="w-5 h-5" />
@@ -159,7 +116,6 @@ export const Modal: React.FC<ModalProps> = ({
                 {/* Content */}
                 <div className={`
           flex-1 overflow-y-auto p-5 md:p-6
-          ${isBeauty ? 'scrollbar-thin scrollbar-thumb-beauty-neon/20' : ''}
         `}>
                     {children}
                 </div>
@@ -167,19 +123,10 @@ export const Modal: React.FC<ModalProps> = ({
                 {/* Footer */}
                 {footer && (
                     <div className={`
-            px-6 py-4
-            ${isBeauty
-                            ? 'border-t border-beauty-neon/20 bg-gradient-to-r from-transparent to-beauty-neon/5'
-                            : 'border-t border-white/8'
-                        }
+            px-6 py-4 border-t ${colors.divider}
           `}>
                         {footer}
                     </div>
-                )}
-
-                {/* Gradient overlay for Beauty */}
-                {isBeauty && (
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-beauty-neon/5 via-transparent to-beauty-acid/5 pointer-events-none" />
                 )}
                 </div>
             </FocusTrap>
@@ -260,7 +207,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 </ModalFooter>
             }
         >
-            <p className="text-text-secondary">{message}</p>
+            <ConfirmModalContent message={message} />
         </Modal>
     );
+};
+
+const ConfirmModalContent: React.FC<{ message: string }> = ({ message }) => {
+    const { colors } = useBrutalTheme();
+    return <p className={colors.textSecondary}>{message}</p>;
 };

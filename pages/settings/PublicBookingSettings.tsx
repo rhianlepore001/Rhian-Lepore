@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { supabase } from '../../lib/supabase';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 
 export const PublicBookingSettings: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user } = useAuth();
+    const { accent, isBeauty } = useBrutalTheme();
     const [loading, setLoading] = useState(true);
     const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [enableUpsells, setEnableUpsells] = useState(false);
@@ -91,7 +93,6 @@ export const PublicBookingSettings: React.FC = () => {
         }
     };
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const toggleActiveClass = isBeauty ? 'peer-checked:bg-beauty-neon' : 'peer-checked:bg-accent-gold';
 
@@ -150,7 +151,7 @@ export const PublicBookingSettings: React.FC = () => {
                             <p className="text-neutral-400 text-xs leading-relaxed">
                                 Sugere serviços extras para o cliente gastar mais por visita, automaticamente.
                             </p>
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl bg-${accentColor}/5 border border-${accentColor}/10 text-${accentColor} text-[10px] font-bold uppercase tracking-wider`}>
+                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl ${accent.bgDim} ${accent.borderDim} ${accent.text} text-[10px] font-bold uppercase tracking-wider`}>
                                 💰 +R$ 1.200/mês méd.
                             </div>
                             <div className="flex justify-end pt-2">

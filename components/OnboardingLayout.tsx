@@ -34,7 +34,12 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
     const progressPercent = Math.min((currentStep / progressSteps) * 100, 100);
 
     return (
-        <div className={isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col' : 'min-h-screen bg-brutal-main flex flex-col'}>
+        <div className={(isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col' : 'min-h-screen bg-brutal-main flex flex-col') + ' relative'}>
+            <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
+            <div
+                className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none"
+                style={{ backgroundColor: isBeauty ? 'rgba(167,139,250,0.04)' : 'rgba(194,155,64,0.04)' }}
+            />
             {/* Header */}
             <header className="border-b border-white/5 bg-black/30 backdrop-blur-sm z-50 flex-shrink-0">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">

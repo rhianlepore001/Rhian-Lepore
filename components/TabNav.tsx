@@ -26,7 +26,7 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
             onClick={() => onChange(tab.id)}
             className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 font-mono text-xs uppercase tracking-wide transition-all duration-200 whitespace-nowrap ${
               activeTab === tab.id
-                ? `${accentBg} text-black`
+                ? `${accentBg} text-black font-semibold`
                 : 'text-neutral-400 hover:text-white hover:bg-white/5'
             }`}
           >

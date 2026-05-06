@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, Brain, Lightbulb, History } from 'lucide-react';
 import { useSemanticMemory, SemanticMemory } from '../hooks/useSemanticMemory';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface AISemanticInsightsProps {
     clientId: string;
@@ -11,14 +12,9 @@ interface AISemanticInsightsProps {
 
 export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId, clientName }) => {
     const { searchMemories } = useSemanticMemory();
-    const { userType } = useAuth();
-    const isBeauty = userType === 'beauty';
+    const { accent } = useBrutalTheme();
     const [insights, setInsights] = useState<SemanticMemory[]>([]);
     const [loading, setLoading] = useState(true);
-
-    const themeColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const themeBg = isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10';
-    const themeBorder = isBeauty ? 'border-beauty-neon/30' : 'border-accent-gold/30';
 
     useEffect(() => {
         async function loadInsights() {
@@ -42,8 +38,8 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
     if (loading) {
         return (
             <div className="animate-pulse space-y-3">
-                <div className={`h-4 w-32 ${themeBg} rounded`}></div>
-                <div className={`h-20 w-full ${themeBg} rounded`}></div>
+                <div className={`h-4 w-32 ${accent.bgDim} rounded`}></div>
+                <div className={`h-20 w-full ${accent.bgDim} rounded`}></div>
             </div>
         );
     }
@@ -61,7 +57,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <div className={`flex items-center gap-2 ${themeColor}`}>
+                <div className={`flex items-center gap-2 ${accent.text}`}>
                     <Sparkles className="w-4 h-4" />
                     <h3 className="font-heading text-sm uppercase tracking-wider">Memória da IA</h3>
                 </div>
@@ -72,10 +68,10 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                 {insights.map((insight, idx) => (
                     <div
                         key={insight.id}
-                        className={`p-3 border-l-4 ${themeBorder} ${themeBg} relative group overflow-hidden`}
+                        className={`p-3 border-l-4 ${accent.border} ${accent.bgDim} relative group overflow-hidden`}
                     >
                         <div className="flex items-start gap-3">
-                            <div className={`mt-1 ${themeColor}`}>
+                            <div className={`mt-1 ${accent.text}`}>
                                 {insight.context_type === 'style' ? <History className="w-3 h-3" /> : <Lightbulb className="w-3 h-3" />}
                             </div>
                             <div className="flex-1">
@@ -93,12 +89,12 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                             </div>
                         </div>
                         {/* Subtle bg icon */}
-                        <Brain className={`absolute -bottom-2 -right-2 w-12 h-12 opacity-[0.03] ${themeColor}`} />
+                        <Brain className={`absolute -bottom-2 -right-2 w-12 h-12 opacity-[0.03] ${accent.text}`} />
                     </div>
                 ))}
             </div>
 
-            <div className={`mt-2 p-2 rounded ${isBeauty ? 'bg-beauty-neon/5' : 'bg-accent-gold/5'} border border-dashed ${themeBorder}`}>
+            <div className={`mt-2 p-2 rounded ${accent.bgDim} border border-dashed ${accent.border}`}>
                 <p className="text-[10px] text-neutral-400 text-center">
                     A IA está relacionando notas passadas para este atendimento.
                 </p>

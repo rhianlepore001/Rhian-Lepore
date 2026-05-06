@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { ProfitMetrics } from '../components/dashboard/ProfitMetrics';
 import { ActionCenter } from '../components/dashboard/ActionCenter';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate } from 'react-router-dom';
 import { InfoButton } from '../components/HelpButtons';
@@ -28,7 +29,7 @@ import { Skeleton } from '../components/SkeletonLoader';
 import { SmartNotificationsBanner } from '../components/SmartNotifications';
 
 export const Dashboard: React.FC = () => {
-  const { userType, region, role, user } = useAuth();
+  const { region, role, user } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
 
@@ -105,10 +106,9 @@ export const Dashboard: React.FC = () => {
   const [showProfitHistory, setShowProfitHistory] = useState(false);
   const [showGoalHistory, setShowGoalHistory] = useState(false);
 
-  const isBeauty = userType === 'beauty';
+  const { accent, isBeauty, font } = useBrutalTheme();
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
-  const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
 
   return (
     <div className="space-y-6 md:space-y-8 px-4 md:px-0">
@@ -204,7 +204,7 @@ export const Dashboard: React.FC = () => {
             <div className="mt-3 flex justify-end">
               <button
                 onClick={() => setShowProfitHistory(true)}
-                className={`py-3 px-2 -mr-2 text-xs font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity flex items-center gap-1 min-h-[44px]`}
+                className={`py-3 px-2 -mr-2 text-xs font-mono uppercase tracking-widest ${accent.text} hover:opacity-70 transition-opacity flex items-center gap-1 min-h-[44px]`}
               >
                 Ver histórico de lucros →
               </button>
@@ -238,7 +238,7 @@ export const Dashboard: React.FC = () => {
                       onClick={() => navigate(`/agenda?date=${apt.rawDate}`)}
                     >
                       <div className="flex items-center gap-3 md:gap-4">
-                        <div className={`font-mono text-base md:text-xl font-bold ${accentText} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700 flex flex-col items-center min-w-[70px]`}>
+                        <div className={`font-mono text-base md:text-xl font-bold ${accent.text} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700 flex flex-col items-center min-w-[70px]`}>
                           <span>{apt.time}</span>
                           <span className="text-[10px] md:text-xs opacity-70 mt-1">
                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
@@ -268,7 +268,7 @@ export const Dashboard: React.FC = () => {
               <div className="p-4 border-t border-white/5">
                 <button
                   onClick={() => setShowAllAppointments(true)}
-                  className={`w-full py-3 text-center text-xs font-mono text-text-secondary hover:${accentText} uppercase tracking-[0.2em] transition-colors bg-white/5 rounded-lg min-h-[44px] flex items-center justify-center`}
+                  className={`w-full py-3 text-center text-xs font-mono ${accent.text} opacity-60 hover:opacity-100 uppercase tracking-[0.2em] transition-colors bg-white/5 rounded-lg min-h-[44px] flex items-center justify-center`}
                 >
                   Ver Agenda Completa →
                 </button>
@@ -296,7 +296,7 @@ export const Dashboard: React.FC = () => {
                     <span className="text-xs font-bold uppercase text-text-secondary">Meta Mensal</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-sm font-mono font-bold ${accentText}`}>{formatCurrency(monthlyGoal, currencyRegion)}</span>
+                    <span className={`text-sm font-mono font-bold ${accent.text}`}>{formatCurrency(monthlyGoal, currencyRegion)}</span>
                     <button
                       onClick={() => setIsEditingGoal(true)}
                       className="p-1.5 rounded-md hover:bg-white/10 text-neutral-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
@@ -308,7 +308,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="w-full bg-neutral-800 h-2 rounded-full overflow-hidden mt-2 border border-white/5">
                   <div
-                    className={`h-full ${isBeauty ? 'bg-beauty-neon shadow-[0_0_10px_rgba(255,0,255,0.5)]' : 'bg-accent-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]'} transition-all duration-1000`}
+                    className={`h-full ${accent.bg} ${accent.shadow} transition-all duration-1000`}
                     style={{ width: `${Math.min((currentMonthRevenue / (monthlyGoal || 1)) * 100, 100)}%` }}
                   ></div>
                 </div>
@@ -323,7 +323,7 @@ export const Dashboard: React.FC = () => {
 
                 <button
                   onClick={() => setShowGoalHistory(true)}
-                  className={`mt-3 py-3 px-2 -ml-2 text-xs font-mono uppercase tracking-widest ${accentText} hover:opacity-70 transition-opacity relative z-10 min-h-[44px] flex items-center`}
+                  className={`mt-3 py-3 px-2 -ml-2 text-xs font-mono uppercase tracking-widest ${accent.text} hover:opacity-70 transition-opacity relative z-10 min-h-[44px] flex items-center`}
                 >
                   Ver histórico →
                 </button>

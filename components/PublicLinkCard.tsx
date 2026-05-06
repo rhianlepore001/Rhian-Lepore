@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrutalCard } from './BrutalCard';
 import { Link as LinkIcon, Copy, ExternalLink, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { supabase } from '../lib/supabase';
 
 interface PublicLinkCardProps {
@@ -11,7 +12,7 @@ interface PublicLinkCardProps {
 }
 
 export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, publicBookingEnabled = true, onSlugCreated }) => {
-    const { userType, user } = useAuth();
+    const { user } = useAuth();
     const [copied, setCopied] = useState(false);
 
     // Slug configuration states
@@ -21,10 +22,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
     const [checkingAvailability, setCheckingAvailability] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    const isBeauty = userType === 'beauty';
-    const accentIcon = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+    const { isBeauty, accent } = useBrutalTheme();
 
     // Debounced availability check
     useEffect(() => {
@@ -146,7 +144,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                         {slugInput && !slugError && (
                             <div className="bg-neutral-900 p-3 rounded border border-neutral-700">
                                 <p className="text-xs text-neutral-500 mb-1">Preview do seu link:</p>
-                                <code className={`text-sm ${accentText} font-mono break-all`}>
+                                <code className={`text-sm ${accent.text} font-mono break-all`}>
                                     {window.location.origin}/#/book/{slugInput}
                                 </code>
                             </div>
@@ -176,7 +174,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                         <button
                             onClick={handleSaveSlug}
                             disabled={!slugAvailable || saving || checkingAvailability}
-                            className={`w-full ${accentBg} text-black font-bold py-3 px-4 rounded-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 flex items-center justify-center gap-2`}
+                            className={`w-full ${accent.bg} text-black font-bold py-3 px-4 rounded-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 flex items-center justify-center gap-2`}
                         >
                             {saving ? (
                                 <>
@@ -272,18 +270,18 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
                     <div className={`p-3 ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'} rounded-lg`}>
-                        <LinkIcon className={`w-6 h-6 ${accentIcon}`} />
+                        <LinkIcon className={`w-6 h-6 ${accent.text}`} />
                     </div>
                     <div>
                         <h3 className="text-white font-heading text-lg uppercase mb-1">Seu Link de Agendamento</h3>
                         <p className="text-neutral-400 text-sm mb-3">Compartilhe este link com seus clientes para agendamentos online.</p>
                         <div className="flex items-center gap-2 flex-wrap">
-                            <code className={`${isBeauty ? 'bg-white/5 border border-white/10 rounded-lg' : 'bg-black/40 border-2 border-neutral-800'} px-3 py-2 ${accentText} text-sm font-mono break-all`}>
+                            <code className={`${isBeauty ? 'bg-white/5 border border-white/10 rounded-lg' : 'bg-black/40 border-2 border-neutral-800'} px-3 py-2 ${accent.text} text-sm font-mono break-all`}>
                                 {publicLink}
                             </code>
                             <button
                                 onClick={handleCopy}
-                                className={`flex items-center gap-2 px-4 py-2 ${isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover rounded-lg' : 'bg-accent-gold hover:bg-accent-goldHover'} text-black text-sm font-bold uppercase tracking-wider transition-all`}
+                                className={`flex items-center gap-2 px-4 py-2 ${accent.bg} ${isBeauty ? 'hover:bg-beauty-neonHover rounded-lg' : accent.bgHover} text-black text-sm font-bold uppercase tracking-wider transition-all`}
                             >
                                 {copied ? (
                                     <>

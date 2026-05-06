@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgendiX — Componentes Isolados (4 Estados)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #EAEAEA;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    .page-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .page-subtitle {
+      text-align: center;
+      color: #525252;
+      font-size: 13px;
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-family: 'Chivo', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .state-col {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .col-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 10px 12px;
+      font-weight: 500;
+    }
+
+    .col-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ============================================
+       BARBER DARK
+       ============================================ */
+    .bd .col-header {
+      background: #0a0a0a;
+      color: #C29B40;
+      border-bottom: 1px solid rgba(194,155,64,0.15);
+    }
+    .bd .col-body {
+      background: #121212;
+    }
+    .bd .card {
+      background: #1E1E1E;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .bd .card-accent {
+      border-color: rgba(194,155,64,0.25);
+      box-shadow: 0 0 10px rgba(194,155,64,0.1), 0 12px 40px -12px rgba(0,0,0,0.7);
+    }
+    .bd .card-glow {
+      border-color: rgba(194,155,64,0.15);
+      box-shadow: 0 0 20px rgba(194,155,64,0.08), 0 16px 36px -12px rgba(0,0,0,0.6);
+    }
+    .bd .btn-primary {
+      background: linear-gradient(135deg, #C29B40, #D4AF50);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(194,155,64,0.25);
+      width: 100%;
+    }
+    .bd .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #EAEAEA;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .bd .btn-ghost {
+      background: transparent;
+      color: #C29B40;
+      border: 1px solid rgba(194,155,64,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .bd .btn-danger {
+      background: rgba(239,68,68,0.08);
+      color: #EF4444;
+      border: 1px solid rgba(239,68,68,0.2);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .bd .input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #EAEAEA;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      width: 100%;
+    }
+    .bd .input:focus {
+      outline: none;
+      border-color: rgba(194,155,64,0.5);
+    }
+    .bd .input-error {
+      border-color: rgba(239,68,68,0.4);
+    }
+    .bd .badge-accent {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(194,155,64,0.12);
+      color: #C29B40;
+      border: 1px solid rgba(194,155,64,0.2);
+    }
+    .bd .badge-success {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(16,185,129,0.08);
+      color: #10B981;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .bd .badge-danger {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(239,68,68,0.08);
+      color: #EF4444;
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .bd .modal-overlay {
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      border-radius: 12px;
+    }
+    .bd .modal-container {
+      background: #1E1E1E;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+    .bd .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-family: 'Chivo', sans-serif;
+      font-weight: 700;
+      color: #EAEAEA;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bd .modal-body {
+      padding: 16px 20px;
+      color: #A0A0A0;
+      font-size: 13px;
+    }
+    .bd .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .bd .table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.04);
+      font-size: 12px;
+    }
+    .bd .table-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #525252;
+      padding: 0 12px 8px;
+    }
+
+    /* ============================================
+       BARBER LIGHT
+       ============================================ */
+    .bl .col-header {
+      background: #E8E4DB;
+      color: #A07A2A;
+      border-bottom: 1px solid rgba(160,122,42,0.15);
+    }
+    .bl .col-body {
+      background: #F5F1E8;
+    }
+    .bl .card {
+      background: #FFFFFF;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .bl .card-accent {
+      border-color: rgba(160,122,42,0.2);
+      box-shadow: 0 4px 20px rgba(160,122,42,0.1), 0 10px 30px -10px rgba(0,0,0,0.08);
+    }
+    .bl .card-glow {
+      border-color: rgba(160,122,42,0.12);
+      box-shadow: 0 8px 24px rgba(160,122,42,0.08), 0 4px 8px rgba(0,0,0,0.04);
+    }
+    .bl .btn-primary {
+      background: linear-gradient(135deg, #A07A2A, #B8892F);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(160,122,42,0.2);
+      width: 100%;
+    }
+    .bl .btn-secondary {
+      background: rgba(0,0,0,0.04);
+      color: #1A1A1A;
+      border: 1px solid rgba(0,0,0,0.08);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .bl .btn-ghost {
+      background: transparent;
+      color: #A07A2A;
+      border: 1px solid rgba(160,122,42,0.18);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .bl .btn-danger {
+      background: rgba(220,38,38,0.06);
+      color: #DC2626;
+      border: 1px solid rgba(220,38,38,0.15);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .bl .input {
+      background: rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.08);
+      color: #1A1A1A;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      width: 100%;
+    }
+    .bl .input:focus {
+      outline: none;
+      border-color: rgba(160,122,42,0.4);
+    }
+    .bl .input-error {
+      border-color: rgba(220,38,38,0.3);
+    }
+    .bl .badge-accent {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(160,122,42,0.08);
+      color: #A07A2A;
+      border: 1px solid rgba(160,122,42,0.12);
+    }
+    .bl .badge-success {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(5,150,105,0.06);
+      color: #059669;
+      border: 1px solid rgba(5,150,105,0.12);
+    }
+    .bl .badge-danger {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(220,38,38,0.06);
+      color: #DC2626;
+      border: 1px solid rgba(220,38,38,0.12);
+    }
+    .bl .modal-overlay {
+      background: rgba(31,24,10,0.4);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      border-radius: 12px;
+    }
+    .bl .modal-container {
+      background: #FFFFFF;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px -15px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .bl .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      font-family: 'Chivo', sans-serif;
+      font-weight: 700;
+      color: #1A1A1A;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bl .modal-body {
+      padding: 16px 20px;
+      color: #6B5E45;
+      font-size: 13px;
+    }
+    .bl .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .bl .table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.04);
+      font-size: 12px;
+    }
+    .bl .table-header {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8B7D6B;
+      padding: 0 12px 8px;
+    }
+
+    /* ============================================
+       BEAUTY DARK
+       ============================================ */
+    .byd .col-header {
+      background: #151223;
+      color: #A78BFA;
+      border-bottom: 1px solid rgba(167,139,250,0.15);
+    }
+    .byd .col-body {
+      background: #1F1B2E;
+    }
+    .byd .card {
+      background: #2E2B3B;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .byd .card-accent {
+      border-color: rgba(167,139,250,0.25);
+      box-shadow: 0 0 15px rgba(167,139,250,0.1), 0 12px 40px -12px rgba(0,0,0,0.7);
+    }
+    .byd .card-glow {
+      border-color: rgba(167,139,250,0.15);
+      box-shadow: 0 0 30px rgba(167,139,250,0.08), 0 16px 36px -12px rgba(0,0,0,0.6);
+    }
+    .byd .btn-primary {
+      background: linear-gradient(135deg, #A78BFA, #8B5CF6);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(167,139,250,0.3);
+      width: 100%;
+    }
+    .byd .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: #EAEAEA;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .byd .btn-ghost {
+      background: transparent;
+      color: #A78BFA;
+      border: 1px solid rgba(167,139,250,0.18);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .byd .btn-danger {
+      background: rgba(239,68,68,0.08);
+      color: #EF4444;
+      border: 1px solid rgba(239,68,68,0.18);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .byd .input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #EAEAEA;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      width: 100%;
+    }
+    .byd .input:focus {
+      outline: none;
+      border-color: rgba(167,139,250,0.4);
+    }
+    .byd .input-error {
+      border-color: rgba(239,68,68,0.35);
+    }
+    .byd .badge-accent {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(167,139,250,0.1);
+      color: #A78BFA;
+      border: 1px solid rgba(167,139,250,0.18);
+    }
+    .byd .badge-success {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(16,185,129,0.08);
+      color: #10B981;
+      border: 1px solid rgba(16,185,129,0.18);
+    }
+    .byd .badge-danger {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(239,68,68,0.08);
+      color: #EF4444;
+      border: 1px solid rgba(239,68,68,0.18);
+    }
+    .byd .modal-overlay {
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      border-radius: 12px;
+    }
+    .byd .modal-container {
+      background: #2E2B3B;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+    .byd .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-family: 'Chivo', sans-serif;
+      font-weight: 700;
+      color: #EAEAEA;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .byd .modal-body {
+      padding: 16px 20px;
+      color: #B8AED4;
+      font-size: 13px;
+    }
+    .byd .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .byd .table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.03);
+      font-size: 12px;
+    }
+    .byd .table-header {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #7B6F96;
+      padding: 0 12px 8px;
+    }
+
+    /* ============================================
+       BEAUTY LIGHT
+       ============================================ */
+    .byl .col-header {
+      background: #EDE8FF;
+      color: #7C3AED;
+      border-bottom: 1px solid rgba(124,58,237,0.15);
+    }
+    .byl .col-body {
+      background: #F7F5FF;
+    }
+    .byl .card {
+      background: #FFFFFF;
+      border: 1px solid rgba(124,58,237,0.06);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 30px -10px rgba(124,58,237,0.05), 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .byl .card-accent {
+      border-color: rgba(124,58,237,0.15);
+      box-shadow: 0 4px 20px rgba(124,58,237,0.08), 0 10px 30px -10px rgba(124,58,237,0.05);
+    }
+    .byl .card-glow {
+      border-color: rgba(124,58,237,0.1);
+      box-shadow: 0 8px 24px rgba(124,58,237,0.06), 0 4px 8px rgba(0,0,0,0.03);
+    }
+    .byl .btn-primary {
+      background: linear-gradient(135deg, #7C3AED, #6D28D9);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.2);
+      width: 100%;
+    }
+    .byl .btn-secondary {
+      background: rgba(124,58,237,0.04);
+      color: #1A1225;
+      border: 1px solid rgba(124,58,237,0.08);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .byl .btn-ghost {
+      background: transparent;
+      color: #7C3AED;
+      border: 1px solid rgba(124,58,237,0.12);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .byl .btn-danger {
+      background: rgba(220,38,38,0.05);
+      color: #DC2626;
+      border: 1px solid rgba(220,38,38,0.12);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .byl .input {
+      background: rgba(124,58,237,0.02);
+      border: 1px solid rgba(124,58,237,0.08);
+      color: #1A1225;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      width: 100%;
+    }
+    .byl .input:focus {
+      outline: none;
+      border-color: rgba(124,58,237,0.3);
+    }
+    .byl .input-error {
+      border-color: rgba(220,38,38,0.25);
+    }
+    .byl .badge-accent {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(124,58,237,0.06);
+      color: #7C3AED;
+      border: 1px solid rgba(124,58,237,0.1);
+    }
+    .byl .badge-success {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(5,150,105,0.05);
+      color: #059669;
+      border: 1px solid rgba(5,150,105,0.1);
+    }
+    .byl .badge-danger {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(220,38,38,0.05);
+      color: #DC2626;
+      border: 1px solid rgba(220,38,38,0.1);
+    }
+    .byl .modal-overlay {
+      background: rgba(31,27,46,0.4);
+      backdrop-filter: blur(12px);
+      padding: 24px;
+      border-radius: 12px;
+    }
+    .byl .modal-container {
+      background: #FFFFFF;
+      border: 1px solid rgba(124,58,237,0.06);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px -15px rgba(124,58,237,0.08), 0 8px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .byl .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(124,58,237,0.06);
+      font-family: 'Chivo', sans-serif;
+      font-weight: 700;
+      color: #1A1225;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .byl .modal-body {
+      padding: 16px 20px;
+      color: #5B4D7A;
+      font-size: 13px;
+    }
+    .byl .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(124,58,237,0.06);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .byl .table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(124,58,237,0.04);
+      font-size: 12px;
+    }
+    .byl .table-header {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8B80A8;
+      padding: 0 12px 8px;
+    }
+
+    @media (max-width: 1200px) {
+      .component-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .component-grid { grid-template-columns: 1fr; }
+      body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">Componentes Isolados</h1>
+  <p class="page-subtitle">Cards, Buttons, Inputs, Modals, Badges, Tables — em 4 estados visuais</p>
+
+  <!-- CARDS -->
+  <div class="section-title">01 — Cards</div>
+  <div class="component-grid">
+    <div class="state-col bd">
+      <div class="col-header">Barber Dark</div>
+      <div class="col-body">
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#EAEAEA;">Card Padrão</div>
+          <div style="font-size:12px;color:#A0A0A0;">bg: #1E1E1E — border: white/5</div>
+        </div>
+        <div class="card card-accent">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#C29B40;">Card Accent</div>
+          <div style="font-size:12px;color:#A0A0A0;">border: gold/25 — shadow gold</div>
+        </div>
+        <div class="card card-glow">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#C29B40;">Card Glow</div>
+          <div style="font-size:12px;color:#A0A0A0;">ring + shadow depth</div>
+        </div>
+      </div>
+    </div>
+    <div class="state-col bl">
+      <div class="col-header">Barber Light</div>
+      <div class="col-body">
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#1A1A1A;">Card Padrão</div>
+          <div style="font-size:12px;color:#6B5E45;">bg: #FFFFFF — border: black/6</div>
+        </div>
+        <div class="card card-accent">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#A07A2A;">Card Accent</div>
+          <div style="font-size:12px;color:#6B5E45;">border: gold/20 — shadow gold</div>
+        </div>
+        <div class="card card-glow">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#A07A2A;">Card Glow</div>
+          <div style="font-size:12px;color:#6B5E45;">ring + shadow depth</div>
+        </div>
+      </div>
+    </div>
+    <div class="state-col byd">
+      <div class="col-header">Beauty Dark</div>
+      <div class="col-body">
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#EAEAEA;">Card Padrão</div>
+          <div style="font-size:12px;color:#B8AED4;">bg: #2E2B3B — border: white/6</div>
+        </div>
+        <div class="card card-accent">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#A78BFA;">Card Accent</div>
+          <div style="font-size:12px;color:#B8AED4;">border: neon/25 — shadow neon</div>
+        </div>
+        <div class="card card-glow">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#A78BFA;">Card Glow</div>
+          <div style="font-size:12px;color:#B8AED4;">ring + shadow depth</div>
+        </div>
+      </div>
+    </div>
+    <div class="state-col byl">
+      <div class="col-header">Beauty Light</div>
+      <div class="col-body">
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#1A1225;">Card Padrão</div>
+          <div style="font-size:12px;color:#5B4D7A;">bg: #FFFFFF — border: violet/6</div>
+        </div>
+        <div class="card card-accent">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#7C3AED;">Card Accent</div>
+          <div style="font-size:12px;color:#5B4D7A;">border: violet/15 — shadow violet</div>
+        </div>
+        <div class="card card-glow">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px;color:#7C3AED;">Card Glow</div>
+          <div style="font-size:12px;color:#5B4D7A;">ring + shadow depth</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="section-title">02 — Buttons</div>
+  <div class="component-grid">
+    <div class="state-col bd">
+      <div class="col-header">Barber Dark</div>
+      <div class="col-body">
+        <button class="btn-primary">Primary</button>
+        <button class="btn-secondary">Secondary</button>
+        <button class="btn-ghost">Ghost</button>
+        <button class="btn-danger">Danger</button>
+      </div>
+    </div>
+    <div class="state-col bl">
+      <div class="col-header">Barber Light</div>
+      <div class="col-body">
+        <button class="btn-primary">Primary</button>
+        <button class="btn-secondary">Secondary</button>
+        <button class="btn-ghost">Ghost</button>
+        <button class="btn-danger">Danger</button>
+      </div>
+    </div>
+    <div class="state-col byd">
+      <div class="col-header">Beauty Dark</div>
+      <div class="col-body">
+        <button class="btn-primary">Primary</button>
+        <button class="btn-secondary">Secondary</button>
+        <button class="btn-ghost">Ghost</button>
+        <button class="btn-danger">Danger</button>
+      </div>
+    </div>
+    <div class="state-col byl">
+      <div class="col-header">Beauty Light</div>
+      <div class="col-body">
+        <button class="btn-primary">Primary</button>
+        <button class="btn-secondary">Secondary</button>
+        <button class="btn-ghost">Ghost</button>
+        <button class="btn-danger">Danger</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="section-title">03 — Inputs</div>
+  <div class="component-grid">
+    <div class="state-col bd">
+      <div class="col-header">Barber Dark</div>
+      <div class="col-body">
+        <input class="input" value="Input padrão" placeholder="Placeholder">
+        <input class="input" value="Input com focus" placeholder="Placeholder" style="border-color:rgba(194,155,64,0.5);">
+        <input class="input input-error" value="Input com erro" placeholder="Placeholder">
+      </div>
+    </div>
+    <div class="state-col bl">
+      <div class="col-header">Barber Light</div>
+      <div class="col-body">
+        <input class="input" value="Input padrão" placeholder="Placeholder">
+        <input class="input" value="Input com focus" placeholder="Placeholder" style="border-color:rgba(160,122,42,0.4);">
+        <input class="input input-error" value="Input com erro" placeholder="Placeholder">
+      </div>
+    </div>
+    <div class="state-col byd">
+      <div class="col-header">Beauty Dark</div>
+      <div class="col-body">
+        <input class="input" value="Input padrão" placeholder="Placeholder">
+        <input class="input" value="Input com focus" placeholder="Placeholder" style="border-color:rgba(167,139,250,0.4);">
+        <input class="input input-error" value="Input com erro" placeholder="Placeholder">
+      </div>
+    </div>
+    <div class="state-col byl">
+      <div class="col-header">Beauty Light</div>
+      <div class="col-body">
+        <input class="input" value="Input padrão" placeholder="Placeholder">
+        <input class="input" value="Input com focus" placeholder="Placeholder" style="border-color:rgba(124,58,237,0.3);">
+        <input class="input input-error" value="Input com erro" placeholder="Placeholder">
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="section-title">04 — Modals</div>
+  <div class="component-grid">
+    <div class="state-col bd">
+      <div class="col-header">Barber Dark</div>
+      <div class="col-body">
+        <div class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-header">
+              <span>Confirmar Ação</span>
+              <span style="font-size:18px;opacity:0.5;">×</span>
+            </div>
+            <div class="modal-body">
+              Tem certeza que deseja excluir este agendamento?
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" style="width:auto;">Cancelar</button>
+              <button class="btn-danger" style="width:auto;">Excluir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="state-col bl">
+      <div class="col-header">Barber Light</div>
+      <div class="col-body">
+        <div class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-header">
+              <span>Confirmar Ação</span>
+              <span style="font-size:18px;opacity:0.5;">×</span>
+            </div>
+            <div class="modal-body">
+              Tem certeza que deseja excluir este agendamento?
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" style="width:auto;">Cancelar</button>
+              <button class="btn-danger" style="width:auto;">Excluir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="state-col byd">
+      <div class="col-header">Beauty Dark</div>
+      <div class="col-body">
+        <div class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-header">
+              <span>Confirmar Ação</span>
+              <span style="font-size:18px;opacity:0.5;">×</span>
+            </div>
+            <div class="modal-body">
+              Tem certeza que deseja excluir este agendamento?
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" style="width:auto;">Cancelar</button>
+              <button class="btn-danger" style="width:auto;">Excluir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="state-col byl">
+      <div class="col-header">Beauty Light</div>
+      <div class="col-body">
+        <div class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-header">
+              <span>Confirmar Ação</span>
+              <span style="font-size:18px;opacity:0.5;">×</span>
+            </div>
+            <div class="modal-body">
+              Tem certeza que deseja excluir este agendamento?
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost" style="width:auto;">Cancelar</button>
+              <button class="btn-danger" style="width:auto;">Excluir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="section-title">05 — Badges</div>
+  <div class="component-grid">
+    <div class="state-col bd">
+      <div class="col-header">Barber Dark</div>
+      <div class="col-body" style="flex-direction:row;flex-wrap:wrap;">
+        <span class="badge-accent">Accent</span>
+        <span class="badge-success">Success</span>
+        <span class="badge-danger">Danger</span>
+      </div>
+    </div>
+    <div class="state-col bl">
+      <div class="col-header">Barber Light</div>
+      <div class="col-body" style="flex-direction:row;flex-wrap:wrap;">
+        <span class="badge-accent">Accent</span>
+        <span class="badge-success">Success</span>
+        <span class="badge-danger">Danger</span>
+      </div>
+    </div>
+    <div class="state-col byd">
+      <div class="col-header">Beauty Dark</div>
+      <div class="col-body" style="flex-direction:row;flex-wrap:wrap;">
+        <span class="badge-accent">Accent</span>
+        <span class="badge-success">Success</span>
+        <span class="badge-danger">Danger</span>
+      </div>
+    </div>
+    <div class="state-col byl">
+      <div class="col-header">Beauty Light</div>
+      <div class="col-body" style="flex-direction:row;flex-wrap:wrap;">
+        <span class="badge-accent">Accent</span>
+        <span class="badge-success">Success</span>
+        <span class="badge-danger">Danger</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLES -->
+  <div class="section-title">06 — Table Rows</div>
+  <div class="component-grid">
+    <div class="state-col bd">
+      <div class="col-header">Barber Dark</div>
+      <div class="col-body">
+        <div class="table-header">Profissional — Comissão</div>
+        <div class="table-row">
+          <span>João Silva</span>
+          <span style="color:#C29B40;font-weight:600;">R$ 1.240</span>
+        </div>
+        <div class="table-row">
+          <span>Pedro Costa</span>
+          <span style="color:#C29B40;font-weight:600;">R$ 980</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-col bl">
+      <div class="col-header">Barber Light</div>
+      <div class="col-body">
+        <div class="table-header">Profissional — Comissão</div>
+        <div class="table-row">
+          <span>João Silva</span>
+          <span style="color:#A07A2A;font-weight:600;">R$ 1.240</span>
+        </div>
+        <div class="table-row">
+          <span>Pedro Costa</span>
+          <span style="color:#A07A2A;font-weight:600;">R$ 980</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-col byd">
+      <div class="col-header">Beauty Dark</div>
+      <div class="col-body">
+        <div class="table-header">Profissional — Comissão</div>
+        <div class="table-row">
+          <span>Maria Santos</span>
+          <span style="color:#A78BFA;font-weight:600;">R$ 2.150</span>
+        </div>
+        <div class="table-row">
+          <span>Ana Paula</span>
+          <span style="color:#A78BFA;font-weight:600;">R$ 1.890</span>
+        </div>
+      </div>
+    </div>
+    <div class="state-col byl">
+      <div class="col-header">Beauty Light</div>
+      <div class="col-body">
+        <div class="table-header">Profissional — Comissão</div>
+        <div class="table-row">
+          <span>Maria Santos</span>
+          <span style="color:#7C3AED;font-weight:600;">R$ 2.150</span>
+        </div>
+        <div class="table-row">
+          <span>Ana Paula</span>
+          <span style="color:#7C3AED;font-weight:600;">R$ 1.890</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin-top:40px; padding:20px; border-top:1px solid rgba(255,255,255,0.05);">
+    <p style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#525252;">
+      AgendiX Design System v2.0 — Classes: useBrutalTheme().classes.* — Tokens: design-system/tokens.css
+    </p>
+  </div>
+</body>
+</html>

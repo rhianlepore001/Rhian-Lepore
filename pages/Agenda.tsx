@@ -5,6 +5,7 @@ import { BrutalCard } from '../components/BrutalCard';
 import { BrutalButton } from '../components/BrutalButton';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
@@ -75,7 +76,7 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 };
 
 export const Agenda: React.FC = () => {
-    const { user, userType, region, role, companyId } = useAuth();
+    const { user, region, role, companyId } = useAuth();
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -122,10 +123,7 @@ export const Agenda: React.FC = () => {
     const [finalPriceInput, setFinalPriceInput] = useState('');
 
 
-    const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+    const { accent, colors, isBeauty, classes, font } = useBrutalTheme();
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
@@ -1228,7 +1226,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         <ChevronLeft className="w-6 h-6 text-white" />
                     </button>
                     <div className="text-center">
-                        <h2 className={`text-2xl font-heading ${accentText} uppercase`}>
+                        <h2 className={`text-2xl font-heading ${accent.text} uppercase`}>
                             {selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
                         </h2>
                         <p className="text-white text-lg font-mono">
@@ -1251,7 +1249,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         <button
                             onClick={() => setSelectedProfessionalFilter(null)}
                             className={`px-4 py-2 rounded-lg font-bold transition-all border-2 ${selectedProfessionalFilter === null
-                                ? `${accentBg} text-black border-black`
+                                ? `${accent.bg} text-black border-black`
                                 : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600'
                                 }`}
                         >
@@ -1262,7 +1260,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 key={member.id}
                                 onClick={() => setSelectedProfessionalFilter(member.id)}
                                 className={`px-4 py-2 rounded-lg font-bold transition-all border-2 flex items-center gap-2 ${selectedProfessionalFilter === member.id
-                                    ? `${accentBg} text-black border-black`
+                                    ? `${accent.bg} text-black border-black`
                                     : 'bg-neutral-800 text-white border-neutral-700 hover:border-neutral-600'
                                     }`}
                             >
@@ -1462,7 +1460,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                             </div>
                                             <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
                                             <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
-                                            <span className={`text-xs font-mono font-bold ${accentText}`}>
+                                            <span className={`text-xs font-mono font-bold ${accent.text}`}>
                                                 {formatCurrency(apt.price, currencyRegion)}
                                             </span>
                                             <div className="mt-2 text-[10px] text-red-400 flex items-center gap-1">
@@ -1801,7 +1799,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     <p className="text-white font-medium text-sm">
                                         {new Date(showingDetailsAppointment.appointment_time).toLocaleDateString('pt-BR')}
                                     </p>
-                                    <p className={`font-mono font-bold mt-0.5 ${accentText}`}>
+                                    <p className={`font-mono font-bold mt-0.5 ${accent.text}`}>
                                         {new Date(showingDetailsAppointment.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
@@ -1912,7 +1910,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <ChevronLeft className="w-5 h-5 text-white" />
                             </button>
                             <div className="text-center">
-                                <p className={`text-xl font-heading ${accentText} uppercase`}>
+                                <p className={`text-xl font-heading ${accent.text} uppercase`}>
                                     {historyMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                                 </p>
                             </div>
@@ -1981,7 +1979,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                             {formatCurrency(apt.basePrice, currencyRegion)}
                                                         </span>
                                                     )}
-                                                    <p className={`text-lg font-mono font-bold ${accentText}`}>
+                                                    <p className={`text-lg font-mono font-bold ${accent.text}`}>
                                                         {formatCurrency(apt.price, currencyRegion)}
                                                     </p>
                                                     {hasDiscount && (
@@ -2052,7 +2050,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     clients={clients}
                     onClose={() => setEditingAppointment(null)}
                     onSave={fetchData}
-                    accentColor={accentColor}
+                    accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
                     currencySymbol={currencySymbol}
                 />
             )}

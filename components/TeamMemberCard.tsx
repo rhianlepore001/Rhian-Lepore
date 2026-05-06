@@ -19,34 +19,53 @@ interface TeamMemberCardProps {
     accentColor: string;
 }
 
+// Mapeamento estático — Tailwind não compila classes interpoladas dinamicamente
+const accentClasses = {
+    'beauty-neon': {
+        ring: 'ring-beauty-neon/30',
+        border: 'border-beauty-neon/40',
+        borderHover: 'group-hover:border-beauty-neon',
+        text: 'text-beauty-neon',
+        bg: 'bg-beauty-neon/20',
+        badgeBorder: 'border-beauty-neon/30',
+    },
+    default: {
+        ring: 'ring-accent-gold/30',
+        border: 'border-accent-gold/40',
+        borderHover: 'group-hover:border-accent-gold',
+        text: 'text-accent-gold',
+        bg: 'bg-accent-gold/20',
+        badgeBorder: 'border-accent-gold/30',
+    },
+};
+
 export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     member,
     onEdit,
     onDelete,
     accentColor
 }) => {
-    const isBeauty = accentColor === 'beauty-neon';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon/20' : 'bg-accent-gold/20';
-    const accentBorder = isBeauty ? 'border-beauty-neon/30' : 'border-accent-gold/30';
+    const accent = accentColor === 'beauty-neon' ? accentClasses['beauty-neon'] : accentClasses.default;
 
     return (
         <div className={`
-            relative p-4 md:p-5 rounded-2xl border-2 transition-all duration-300 group
-            ${member.active ? 'bg-neutral-900 border-neutral-800 hover:border-neutral-700 shadow-lg hover:shadow-xl' : 'bg-neutral-900/50 border-neutral-800/50 grayscale opacity-70'}
-            ${member.is_owner ? `ring-2 ring-${accentColor}/30 shadow-[0_0_25px_rgba(0,0,0,0.4)]` : ''}
+            relative p-4 md:p-5 rounded-2xl border transition-all duration-300 group
+            ${member.active
+                ? `bg-brutal-card border-white/5 hover:border-white/10 shadow-promax-glass hover:shadow-promax-depth`
+                : 'bg-brutal-card/50 border-white/5 grayscale opacity-70'}
+            ${member.is_owner ? `ring-2 ${accent.ring} shadow-[0_0_25px_rgba(0,0,0,0.4)]` : ''}
             active:scale-[0.98] md:active:scale-100
         `}>
             {/* Owner/Status Badges */}
             <div className="absolute top-4 right-4 flex items-center gap-2">
                 {member.is_owner && (
-                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${accentBg} ${accentText} text-[10px] font-bold uppercase border ${accentBorder} animate-pulse`}>
+                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${accent.bg} ${accent.text} text-xs font-bold uppercase border ${accent.badgeBorder} animate-pulse`}>
                         <Crown className="w-3 h-3" />
                         Dono
                     </div>
                 )}
                 {!member.active && (
-                    <div className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[10px] font-bold uppercase border border-red-500/20">
+                    <div className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-xs font-bold uppercase border border-red-500/20">
                         Inativo
                     </div>
                 )}
@@ -56,8 +75,10 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 {/* Avatar Section */}
                 <div className="relative">
                     <div className={`
-                        w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex-shrink-0 overflow-hidden bg-neutral-800 border-2 transition-all
-                        ${member.active ? `border-${accentColor}/40 group-hover:border-${accentColor}` : 'border-neutral-700'}
+                        w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex-shrink-0 overflow-hidden bg-brutal-surface border transition-all
+                        ${member.active
+                            ? `${accent.border} ${accent.borderHover} ring-2 ring-emerald-400/60 ring-offset-1 ring-offset-brutal-card`
+                            : 'border-white/5 ring-2 ring-red-500/30 ring-offset-1 ring-offset-brutal-card'}
                     `}>
                         {member.photo_url ? (
                             <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
@@ -68,7 +89,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                         )}
                     </div>
                     {member.active && (
-                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-black`}></div>
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-brutal-main"></div>
                     )}
                 </div>
 
@@ -77,41 +98,48 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     <h3 className={`font-heading text-base md:text-xl font-bold truncate leading-tight ${member.active ? 'text-white' : 'text-neutral-500'}`}>
                         {member.name}
                     </h3>
-                    <p className={`text-[10px] md:text-xs font-mono uppercase tracking-widest mb-2 ${accentText} opacity-80`}>
+                    <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${accent.text} opacity-80`}>
                         {member.role}
                     </p>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5 text-neutral-500">
-                            <Percent className={`w-3 h-3 ${accentText}`} />
-                            <span className="text-[10px] md:text-xs font-mono">{member.commission_rate || 0}% Comis.</span>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5">
+                                <Percent className={`w-3 h-3 ${accent.text}`} />
+                                <span className={`text-lg font-bold font-mono ${accent.text}`}>
+                                    {member.commission_rate || 0}%
+                                </span>
+                            </div>
+                            <span className="text-[9px] uppercase tracking-widest text-neutral-500">
+                                comissão
+                            </span>
                         </div>
                         {member.is_owner && (
                             <div className="flex items-center gap-1.5 text-neutral-500">
-                                <Star className={`w-3 h-3 ${accentText} fill-current`} />
-                                <span className="text-[10px] md:text-xs font-mono">Master</span>
+                                <Star className={`w-3 h-3 ${accent.text} fill-current`} />
+                                <span className="text-xs font-mono">Master</span>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Hover Actions */}
-            <div className="mt-4 pt-3 border-t border-neutral-800/50 flex justify-end items-center gap-3">
+            {/* Actions */}
+            <div className="mt-4 pt-3 border-t border-white/5 flex justify-end items-center gap-3">
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onEdit(member);
                     }}
                     className={`
-                        flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 
-                        bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 
-                        transition-all text-[11px] font-bold uppercase tracking-widest
-                        border border-neutral-700 hover:border-neutral-600
-                        active:bg-neutral-600
+                        flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5
+                        bg-white/[0.06] text-white rounded-xl hover:bg-white/[0.10]
+                        transition-all text-xs font-bold uppercase tracking-widest
+                        border border-white/10 hover:border-white/20
+                        active:bg-white/[0.04]
                     `}
                 >
-                    <Edit2 className={`w-3.5 h-3.5 ${accentText}`} />
+                    <Edit2 className={`w-3.5 h-3.5 ${accent.text}`} />
                     Editar
                 </button>
                 <button
@@ -123,7 +151,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     title="Excluir"
                     aria-label={`Excluir membro ${member.name}`}
                 >
-                    <Trash2 className="w-4.5 h-4.5" />
+                    <Trash2 className="w-4 h-4" />
                 </button>
             </div>
         </div>

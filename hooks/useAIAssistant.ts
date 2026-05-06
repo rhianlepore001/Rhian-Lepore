@@ -68,7 +68,7 @@ export function useAIAssistant() {
                 headers: {
                     'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                     'HTTP-Referer': 'https://rhian-lepore.com',
-                    'X-Title': 'AgenX AI Assistant',
+                    'X-Title': 'AgendiX AI Assistant',
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({

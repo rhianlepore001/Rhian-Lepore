@@ -13,7 +13,7 @@ export const useAppTour = () => {
     const isBeauty = userType === 'beauty';
 
     // Cores e Textos do tema
-    const themeName = 'AgenX';
+    const themeName = 'AgendiX';
 
     // Configuração base do Driver
     const driverConfig = {
@@ -102,7 +102,7 @@ export const useAppTour = () => {
                 {
                     element: '#root',
                     popover: {
-                        title: `Olá! Bem-vindo ao AgenX ✨`,
+                        title: `Olá! Bem-vindo ao AgendiX ✨`,
                         description: 'Prepare-se para transformar a gestão do seu negócio. Vamos fazer um tour personalizado para você dominar tudo.',
                         align: 'center',
                         side: 'bottom' // Ajuste para centralizar visualmente melhor
@@ -241,7 +241,7 @@ export const useAppTour = () => {
                     element: '#root',
                     popover: {
                         title: '🎓 Você está pronto!',
-                        description: 'Parabéns! Você completou o tour. Agora o sistema é todo seu. Explore e aproveite o poder do AgenX AIOS.',
+                        description: 'Parabéns! Você completou o tour. Agora o sistema é todo seu. Explore e aproveite o poder do AgendiX.',
                         align: 'center'
                     }
                 }

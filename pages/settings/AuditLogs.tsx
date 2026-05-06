@@ -7,7 +7,6 @@ import {
     User, Activity, RefreshCw, ChevronDown,
     ChevronUp, Eye, FileText, Clock
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import {
     AuditLog,
     getAuditLogs,
@@ -16,9 +15,9 @@ import {
     downloadLogsAsCSV,
     calculateDiff
 } from '../../lib/auditLogs';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
 export const AuditLogs: React.FC = () => {
-    const { userType } = useAuth();
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedLog, setExpandedLog] = useState<string | null>(null);
@@ -31,9 +30,7 @@ export const AuditLogs: React.FC = () => {
         end: ''
     });
 
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+    const { accent } = useBrutalTheme();
 
     useEffect(() => {
         loadLogs();
@@ -98,7 +95,7 @@ export const AuditLogs: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-white/10 pb-4">
                     <div>
                         <h2 className="text-2xl md:text-4xl font-heading text-white uppercase flex items-center gap-3">
-                            <Shield className={`w-8 h-8 ${accentText}`} />
+                            <Shield className={`w-8 h-8 ${accent.text}`} />
                             Logs de Auditoria
                         </h2>
                         <p className="text-text-secondary font-mono mt-2 text-sm">
@@ -337,7 +334,7 @@ export const AuditLogs: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <BrutalCard className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Total de Eventos</p>
-                            <p className={`text-3xl font-bold ${accentText}`}>{logs.length}</p>
+                            <p className={`text-3xl font-bold ${accent.text}`}>{logs.length}</p>
                         </BrutalCard>
                         <BrutalCard className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Período</p>

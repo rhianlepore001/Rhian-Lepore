@@ -1,0 +1,229 @@
+/**
+ * AgendiX Design System Tokens
+ * Auto-generated from design-system/tokens/*.json
+ * DO NOT EDIT MANUALLY — Update the JSON files and regenerate.
+ */
+
+/* ============================================
+   PRIMITIVE TOKENS (HSL for opacity control)
+   ============================================ */
+:root {
+  /* Gold Palette */
+  --color-gold-50: #FBF5E6;
+  --color-gold-100: #F5E8C8;
+  --color-gold-200: #EDD49A;
+  --color-gold-300: #D4AF50;
+  --color-gold-400: #C29B40;
+  --color-gold-500: #A07A2A;
+  --color-gold-600: #8A6D2A;
+  --color-gold-700: #6B5420;
+  --color-gold-800: #4D3D18;
+  --color-gold-900: #332810;
+
+  /* Violet Palette */
+  --color-violet-50: #F5F3FF;
+  --color-violet-100: #EDE9FE;
+  --color-violet-200: #E9D5FF;
+  --color-violet-300: #C4B5FD;
+  --color-violet-400: #A78BFA;
+  --color-violet-500: #8B5CF6;
+  --color-violet-600: #7C3AED;
+  --color-violet-700: #6D28D9;
+  --color-violet-800: #5B21B6;
+  --color-violet-900: #4C1D95;
+
+  /* Neutral Palette */
+  --color-neutral-0: #121212;
+  --color-neutral-50: #1E1E1E;
+  --color-neutral-100: #252525;
+  --color-neutral-200: #2A2A2A;
+  --color-neutral-300: #333333;
+  --color-neutral-400: #525252;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #A0A0A0;
+  --color-neutral-700: #D4D4D4;
+  --color-neutral-800: #EAEAEA;
+  --color-neutral-900: #FAFAFA;
+
+  /* Font Stacks */
+  --font-heading: 'Chivo', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ============================================
+   BARBER DARK (Default)
+   ============================================ */
+:root,
+html[data-theme="barber"][data-mode="dark"] {
+  --color-bg: #121212;
+  --color-card: #1E1E1E;
+  --color-card-elevated: #2A2A2A;
+  --color-card-hover: rgba(255, 255, 255, 0.04);
+  --color-surface: #252525;
+  --color-divider: rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-accent: #C29B40;
+  --color-accent-hover: #D4AF50;
+  --color-accent-dim: rgba(194, 155, 64, 0.2);
+  --color-accent-border: rgba(194, 155, 64, 0.6);
+  --color-text: #EAEAEA;
+  --color-text-secondary: #A0A0A0;
+  --color-text-muted: #525252;
+  --color-border: rgba(255, 255, 255, 0.05);
+  --color-border-strong: rgba(255, 255, 255, 0.1);
+  --color-input-bg: rgba(0, 0, 0, 0.3);
+  --color-input-border: rgba(255, 255, 255, 0.06);
+  --color-input-focus: rgba(194, 155, 64, 0.6);
+  --color-danger: #EF4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.08);
+  --color-danger-border: rgba(239, 68, 68, 0.3);
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.08);
+  --color-success-border: rgba(16, 185, 129, 0.2);
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.08);
+  --color-warning-border: rgba(245, 158, 11, 0.2);
+
+  --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-card-accent: 0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2);
+  --shadow-card-glow: 0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.1);
+  --shadow-btn-primary: 0 4px 20px rgba(194, 155, 64, 0.25);
+  --shadow-modal: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  --gradient-card: linear-gradient(135deg, #121212 0%, #1E1E1E 50%, #121212 100%);
+  --gradient-bg: radial-gradient(circle at 10% 90%, rgba(194, 155, 64, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 10%, rgba(194, 155, 64, 0.10) 0%, transparent 30%), var(--color-bg);
+}
+
+/* ============================================
+   BARBER LIGHT
+   ============================================ */
+html[data-theme="barber"][data-mode="light"] {
+  --color-bg: #F5F1E8;
+  --color-card: #FFFFFF;
+  --color-card-elevated: #FFFFFF;
+  --color-card-hover: rgba(0, 0, 0, 0.04);
+  --color-surface: #EDE9E0;
+  --color-divider: rgba(0, 0, 0, 0.08);
+  --color-overlay: rgba(31, 24, 10, 0.45);
+  --color-accent: #A07A2A;
+  --color-accent-hover: #B8892F;
+  --color-accent-dim: rgba(160, 122, 42, 0.15);
+  --color-accent-border: rgba(160, 122, 42, 0.4);
+  --color-text: #1A1A1A;
+  --color-text-secondary: #6B5E45;
+  --color-text-muted: rgba(0, 0, 0, 0.4);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.12);
+  --color-input-bg: rgba(0, 0, 0, 0.04);
+  --color-input-border: rgba(0, 0, 0, 0.1);
+  --color-input-focus: rgba(160, 122, 42, 0.5);
+  --color-danger: #DC2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.08);
+  --color-danger-border: rgba(220, 38, 38, 0.2);
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.08);
+  --color-success-border: rgba(5, 150, 105, 0.15);
+  --color-warning: #D97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-warning-border: rgba(217, 119, 6, 0.15);
+
+  --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card-accent: 0 4px 20px rgba(160, 122, 42, 0.15);
+  --shadow-card-glow: 0 8px 24px rgba(160, 122, 42, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-btn-primary: 0 4px 14px rgba(160, 122, 42, 0.2);
+  --shadow-modal: 0 20px 60px -15px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.08);
+
+  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #FAFAF8 100%);
+  --gradient-bg: radial-gradient(circle at 20% 80%, rgba(160, 122, 42, 0.03) 0%, transparent 40%), var(--color-bg);
+}
+
+/* ============================================
+   BEAUTY DARK
+   ============================================ */
+html[data-theme="beauty"][data-mode="dark"] {
+  --color-bg: #1F1B2E;
+  --color-card: #2E2B3B;
+  --color-card-elevated: #3A3548;
+  --color-card-hover: rgba(255, 255, 255, 0.04);
+  --color-surface: #3D3A4D;
+  --color-divider: rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-accent: #A78BFA;
+  --color-accent-hover: #C4B5FD;
+  --color-accent-dim: rgba(167, 139, 250, 0.2);
+  --color-accent-border: rgba(167, 139, 250, 0.5);
+  --color-text: #EAEAEA;
+  --color-text-secondary: #B8AED4;
+  --color-text-muted: #7B6F96;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-input-bg: rgba(255, 255, 255, 0.05);
+  --color-input-border: rgba(255, 255, 255, 0.1);
+  --color-input-focus: rgba(167, 139, 250, 0.5);
+  --color-danger: #EF4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.1);
+  --color-danger-border: rgba(239, 68, 68, 0.2);
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-success-border: rgba(16, 185, 129, 0.2);
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(245, 158, 11, 0.2);
+
+  --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-card-accent: 0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3);
+  --shadow-card-glow: 0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.4), 0 0 45px rgba(167, 139, 250, 0.2);
+  --shadow-btn-primary: 0 4px 20px rgba(167, 139, 250, 0.3);
+  --shadow-modal: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  --gradient-card: linear-gradient(135deg, #1F1B2E 0%, #2E2B3B 50%, #1F1B2E 100%);
+  --gradient-bg: radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.10) 0%, transparent 30%), var(--color-bg);
+}
+
+/* ============================================
+   BEAUTY LIGHT
+   ============================================ */
+html[data-theme="beauty"][data-mode="light"] {
+  --color-bg: #F7F5FF;
+  --color-card: #FFFFFF;
+  --color-card-elevated: #FFFFFF;
+  --color-card-hover: rgba(124, 58, 237, 0.04);
+  --color-surface: #EDE8FF;
+  --color-divider: rgba(124, 58, 237, 0.1);
+  --color-overlay: rgba(31, 27, 46, 0.45);
+  --color-accent: #7C3AED;
+  --color-accent-hover: #6D28D9;
+  --color-accent-dim: rgba(124, 58, 237, 0.12);
+  --color-accent-border: rgba(124, 58, 237, 0.3);
+  --color-text: #1A1225;
+  --color-text-secondary: #5B4D7A;
+  --color-text-muted: rgba(0, 0, 0, 0.35);
+  --color-border: rgba(124, 58, 237, 0.12);
+  --color-border-strong: rgba(124, 58, 237, 0.2);
+  --color-input-bg: rgba(124, 58, 237, 0.04);
+  --color-input-border: rgba(124, 58, 237, 0.15);
+  --color-input-focus: rgba(124, 58, 237, 0.4);
+  --color-danger: #DC2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.08);
+  --color-danger-border: rgba(220, 38, 38, 0.15);
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.08);
+  --color-success-border: rgba(5, 150, 105, 0.12);
+  --color-warning: #D97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-warning-border: rgba(217, 119, 6, 0.12);
+
+  --shadow-card: 0 10px 30px -10px rgba(124, 58, 237, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card-mobile: 0 4px 12px rgba(124, 58, 237, 0.06);
+  --shadow-card-accent: 0 4px 20px rgba(124, 58, 237, 0.2);
+  --shadow-card-glow: 0 8px 24px rgba(124, 58, 237, 0.15), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-btn-primary: 0 4px 14px rgba(124, 58, 237, 0.25);
+  --shadow-modal: 0 20px 60px -15px rgba(124, 58, 237, 0.12), 0 8px 16px rgba(0, 0, 0, 0.06);
+
+  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #FBF9FF 100%);
+  --gradient-bg: radial-gradient(circle at 15% 85%, rgba(124, 58, 237, 0.03) 0%, transparent 40%), var(--color-bg);
+}

@@ -8,6 +8,7 @@ import { PhoneInput } from '../components/PhoneInput';
 import { useParams, useNavigate } from 'react-router-dom';
 import { calculateNextVisitPrediction } from '../utils/tierSystem';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { formatPhone, formatCurrency } from '../utils/formatters';
 import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
 import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
@@ -15,22 +16,16 @@ import { useSemanticMemory } from '../hooks/useSemanticMemory';
 import { AISemanticInsights } from '../components/AISemanticInsights';
 
 export const ClientCRM: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { userType, user, region, businessName } = useAuth();
-  const isBeauty = userType === 'beauty';
-
-  // Theme helpers
-  const themeColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-  const themeBorder = isBeauty ? 'border-beauty-neon' : 'border-accent-gold';
-  const themeBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-  const themeButtonHover = isBeauty ? 'hover:bg-beauty-neon hover:text-white' : 'hover:bg-accent-gold hover:text-black';
+const { id } = useParams<{ id: string }>();
+  const { user, userType, region, businessName } = useAuth();
+  const { accent, isBeauty } = useBrutalTheme();
   const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [currencySymbol, setCurrencySymbol] = useState('R$');
-
+  
   // Edit State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
@@ -262,7 +257,7 @@ export const ClientCRM: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
           {/* Avatar & Tier */}
           <div className="flex flex-row md:flex-col items-center gap-4 w-full md:w-auto">
-            <div className={`w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 ${themeBorder} shadow-heavy relative overflow-hidden group`}>
+            <div className={`w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 ${accent.border} shadow-heavy relative overflow-hidden group`}>
               {client.photo_url ? (
                 <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
               ) : (
@@ -318,7 +313,7 @@ export const ClientCRM: React.FC = () => {
               </label>
             </div>
             <div className="flex flex-col justify-center md:items-center md:w-full">
-              <div className={`flex gap-1 ${themeColor} mb-1`}>
+              <div className={`flex gap-1 ${accent.text} mb-1`}>
                 {[1, 2, 3, 4, 5].map(i => (
                   <Star
                     key={i}
@@ -422,8 +417,8 @@ export const ClientCRM: React.FC = () => {
 
                 return (
                   <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
-                    <div className={`relative border-2 border-neutral-700 hover:${themeBorder} transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
-                      <Calendar className={`w-12 h-12 ${themeColor} mb-2 opacity-50`} />
+                    <div className={`relative border-2 border-neutral-700 hover:${accent.border} transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
+                      <Calendar className={`w-12 h-12 ${accent.text} mb-2 opacity-50`} />
                       <p className="text-white font-bold font-heading text-lg text-center leading-tight mb-1">{apt.service}</p>
                       <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
 
@@ -442,7 +437,7 @@ export const ClientCRM: React.FC = () => {
                       {/* Badges */}
                       <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {index === 0 && (
-                          <span className={`${themeBg} ${isBeauty ? 'text-white' : 'text-black'} text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
+                          <span className={`${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
                         )}
                         {hasDiscount && (
                           <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-1 flex items-center gap-1">
@@ -454,7 +449,7 @@ export const ClientCRM: React.FC = () => {
                     {/* Repeat Service Button for each card */}
                     <button
                       onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-neutral-800 ${themeButtonHover} text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
+                      className={`w-full mt-3 bg-neutral-800 ${accent.bgHover} ${isBeauty ? 'hover:text-white' : 'hover:text-black'} text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>
@@ -465,7 +460,7 @@ export const ClientCRM: React.FC = () => {
               {/* Keep existing hair records for backward compatibility */}
               {client.hairHistory.map((record: any) => (
                 <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className={`relative border-2 border-neutral-700 hover:${themeBorder} transition-colors`}>
+                  <div className={`relative border-2 border-neutral-700 hover:${accent.border} transition-colors`}>
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
                       <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
@@ -487,7 +482,7 @@ export const ClientCRM: React.FC = () => {
         <div className="md:col-span-2 h-full">
           <BrutalCard title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
             <textarea
-              className={`w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:${themeBorder} resize-none`}
+              className={`w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:${accent.border} resize-none`}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Digite observações sobre o cliente..."
@@ -513,7 +508,7 @@ export const ClientCRM: React.FC = () => {
             <div className="relative z-10">
               {/* ... existing code for at risk ... */}
               <div className="flex items-center gap-2 mb-3">
-                <div className={`flex items-center gap-2 ${themeColor} flex-1`}>
+                <div className={`flex items-center gap-2 ${accent.text} flex-1`}>
                   <Sparkles className="w-5 h-5 animate-pulse" />
                   <h3 className="font-heading text-lg uppercase tracking-wider">Cliente Inativo</h3>
                 </div>
@@ -522,7 +517,7 @@ export const ClientCRM: React.FC = () => {
 
               <div className="space-y-4">
                 <p className="text-sm text-text-secondary leading-relaxed border-l-2 border-white/10 pl-3">
-                  Detectamos que o valor médio por atendimento de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${themeColor} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
+                  Detectamos que o valor médio por atendimento de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${accent.text} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
                 </p>
 
                 <div className="bg-white/5 p-3 rounded border border-white/5">
@@ -548,7 +543,7 @@ export const ClientCRM: React.FC = () => {
           )}
 
           {/* Subtle background icon */}
-          <Sparkles className={`absolute -bottom-4 -right-4 w-24 h-24 opacity-5 ${themeColor}`} />
+          <Sparkles className={`absolute -bottom-4 -right-4 w-24 h-24 opacity-5 ${accent.text}`} />
         </BrutalCard>
       </div>
       {/* Edit Modal */}
@@ -557,7 +552,7 @@ export const ClientCRM: React.FC = () => {
           <div className={`w-full max-w-md p-6 relative transition-all
               ${isBeauty
               ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]'}
+              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
           `}>
             <button
               onClick={() => setShowEditModal(false)}
@@ -632,7 +627,7 @@ export const ClientCRM: React.FC = () => {
                   className={`flex-1 py-3 font-bold uppercase tracking-wider transition-all disabled:opacity-50
                       ${isBeauty
                       ? 'bg-beauty-neon text-black hover:bg-beauty-neonHover rounded-xl shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_#000000]'}
+                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-brutal-sm'}
                   `}
                 >
                   {updating ? 'Salvando...' : 'Salvar'}

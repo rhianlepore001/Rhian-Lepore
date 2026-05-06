@@ -64,7 +64,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                                         : 'bg-accent-gold text-black hover:bg-accent-gold/90 shadow-[0_4px_0_0_#8a6d2a]'}
                                 `}
                             >
-                                ✨ Sou eu quem atendo (Dono + Profissional)
+                                Sou eu quem atende (Dono + Profissional)
                             </button>
 
                             <button
@@ -72,9 +72,9 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                                     setIsOwnerMode(false);
                                     setIsModalOpen(true);
                                 }}
-                                className="w-full py-3 px-4 bg-transparent border border-neutral-700 text-neutral-400 font-bold rounded-lg hover:bg-neutral-800 transition-colors"
+                                className="w-full py-3 px-4 bg-transparent border border-neutral-700 text-neutral-400 font-bold rounded-lg hover:bg-neutral-800 hover:text-white transition-colors"
                             >
-                                👥 Tenho uma equipe
+                                Tenho uma equipe
                             </button>
                         </div>
                     </div>
@@ -107,17 +107,17 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                 )}
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex gap-3 pt-4">
                 <button
                     onClick={onBack}
-                    className="flex-1 py-4 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors"
+                    className="px-5 py-4 text-neutral-500 hover:text-neutral-300 font-bold transition-colors text-sm"
                 >
                     Voltar
                 </button>
                 <button
                     onClick={handleContinue}
                     disabled={members.length === 0}
-                    className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'}
+                    className={`flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${accentColor === 'beauty-neon' ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90' : 'bg-accent-gold text-black hover:bg-accent-gold/90'}`}
                 >
                     Continuar
                 </button>

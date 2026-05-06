@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$description": "Semantic tokens for Beauty Dark mode — premium lavender aesthetic on deep purple-black.",
+  "theme": "beauty",
+  "mode": "dark",
+  "color": {
+    "bg": "#1F1B2E",
+    "card": "#2E2B3B",
+    "cardElevated": "#3A3548",
+    "cardHover": "rgba(255, 255, 255, 0.04)",
+    "surface": "#3D3A4D",
+    "divider": "rgba(255, 255, 255, 0.08)",
+    "overlay": "rgba(0, 0, 0, 0.7)",
+    "accent": "#A78BFA",
+    "accentHover": "#C4B5FD",
+    "accentDim": "rgba(167, 139, 250, 0.2)",
+    "accentBorder": "rgba(167, 139, 250, 0.5)",
+    "text": "#EAEAEA",
+    "textSecondary": "#B8AED4",
+    "textMuted": "#7B6F96",
+    "border": "rgba(255, 255, 255, 0.1)",
+    "borderStrong": "rgba(255, 255, 255, 0.15)",
+    "inputBg": "rgba(255, 255, 255, 0.05)",
+    "inputBorder": "rgba(255, 255, 255, 0.1)",
+    "inputFocusBorder": "rgba(167, 139, 250, 0.5)",
+    "danger": "#EF4444",
+    "dangerBg": "rgba(239, 68, 68, 0.1)",
+    "dangerBorder": "rgba(239, 68, 68, 0.2)",
+    "success": "#10B981",
+    "successBg": "rgba(16, 185, 129, 0.1)",
+    "successBorder": "rgba(16, 185, 129, 0.2)",
+    "warning": "#F59E0B",
+    "warningBg": "rgba(245, 158, 11, 0.1)",
+    "warningBorder": "rgba(245, 158, 11, 0.2)"
+  },
+  "gradient": {
+    "card": "linear-gradient(135deg, #1F1B2E 0%, #2E2B3B 50%, #1F1B2E 100%)",
+    "surface": "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)",
+    "bgRadial": "radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.10) 0%, transparent 30%)"
+  },
+  "shadow": {
+    "card": "0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08)",
+    "cardMobile": "0 4px 12px rgba(0, 0, 0, 0.5)",
+    "cardAccent": "0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3)",
+    "cardGlow": "0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.4), 0 0 45px rgba(167, 139, 250, 0.2)",
+    "buttonPrimary": "0 4px 20px rgba(167, 139, 250, 0.3)",
+    "modal": "0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08)"
+  }
+}

@@ -2,18 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { BrutalCard } from './BrutalCard';
 import { formatCurrency } from '../utils/formatters';
 import { Skeleton } from './SkeletonLoader';
 
 export const StaffEarningsCard: React.FC = () => {
-    const { teamMemberId, region, userType } = useAuth();
+    const { teamMemberId, region } = useAuth();
     const [earnings, setEarnings] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const { accent } = useBrutalTheme();
 
     useEffect(() => {
         if (!teamMemberId) {
@@ -45,25 +45,32 @@ export const StaffEarningsCard: React.FC = () => {
         fetchEarnings();
     }, [teamMemberId]);
 
+    const monthName = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+
     return (
         <BrutalCard className="brutal-card-enhanced gold-accent-border" noPadding>
             <div className="p-4 flex items-center gap-4">
-                <div className={`p-3 rounded-xl bg-neutral-900 border border-white/10`}>
-                    <TrendingUp className={`w-5 h-5 ${accentText}`} />
+                <div className={`p-3 rounded-xl ${accent.bgDim} ${accent.border} shadow-gold shrink-0`}>
+                    <TrendingUp className={`w-5 h-5 ${accent.text}`} />
                 </div>
-                <div>
-                    <p className="text-xs font-mono uppercase text-text-secondary tracking-widest">
-                        Seu faturamento líquido
-                    </p>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] font-mono uppercase text-text-secondary tracking-widest">
+                            Comissões a receber
+                        </p>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-600 capitalize shrink-0">
+                            {monthName}
+                        </span>
+                    </div>
                     {loading ? (
-                        <Skeleton className="h-7 w-28 mt-1" />
+                        <Skeleton className="h-8 w-32 mt-1" />
                     ) : (
-                        <p className={`text-2xl font-bold font-heading ${accentText}`}>
+                        <p className={`text-3xl font-bold font-mono ${accent.text}`}>
                             {formatCurrency(earnings ?? 0, currencyRegion)}
                         </p>
                     )}
                     <p className="text-[10px] text-text-secondary mt-0.5">
-                        Comissões pendentes de recebimento
+                        Ainda não liquidadas pelo salão
                     </p>
                 </div>
             </div>

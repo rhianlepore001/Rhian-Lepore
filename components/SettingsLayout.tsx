@@ -4,45 +4,47 @@ import { Menu, X, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SETTINGS_ITEMS } from '../constants';
 import { useAppTour } from '../hooks/useAppTour';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface SettingsLayoutProps {
     children: React.ReactNode;
 }
 
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
-    const { userType, role } = useAuth();
+    const { role, isDev } = useAuth();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     useAppTour();
+    const { accent, colors } = useBrutalTheme();
 
-    const isBeauty = userType === 'beauty';
-    const bgColor = isBeauty ? 'bg-beauty-dark' : 'bg-neutral-950';
-
-    // Staff vê apenas o item "Serviços" no menu de ajustes
+    // Staff vê apenas o item "Serviços"; contas non-dev não veem itens devOnly
     const menuItems = role === 'staff'
         ? SETTINGS_ITEMS.filter(item => item.path === '/configuracoes/servicos')
-        : SETTINGS_ITEMS;
+        : SETTINGS_ITEMS.filter(item => isDev || !item.devOnly);
 
     // Get current page title for mobile header
     const currentPage = menuItems.find(item => item.path === location.pathname);
     const currentPageTitle = currentPage?.label || 'Configurações';
 
     return (
-        <div className={`min-h-screen flex relative ${bgColor} overflow-x-hidden w-full`}>
+        <div
+            className={`min-h-screen flex relative overflow-x-hidden w-full ${colors.bg}`}
+        >
 
             {/* Sidebar (Desktop) / Drawer (Mobile) */}
-            <aside className={`
-                fixed inset-y-0 left-0 z-50 w-64 
+            <aside
+                className={`
+                fixed bottom-0 left-0 z-50 w-64
                 transform transition-transform duration-300 ease-in-out md:translate-x-0
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                p-6 flex flex-col h-full
-                ${isBeauty
-                    ? 'bg-beauty-dark/95 border-r border-white/5 shadow-promax-glass'
-                    : 'bg-brutal-main/95 border-r border-white/5 shadow-promax-depth'}
+                p-6 flex flex-col
+                ${colors.bg}/95 border-r ${colors.divider} shadow-promax-glass
                 md:backdrop-blur-3xl
-            `}>
+            `}
+                style={{ top: 'calc(var(--header-top, 0px) + 5rem)' }}
+            >
                 <div className="flex items-center justify-between mb-8 flex-shrink-0">
-                    <h2 className={`font-heading text-xl uppercase tracking-wider text-white`}>
+                    <h2 className={`font-heading text-xl uppercase tracking-wider ${colors.text}`}>
                         Configurações
                     </h2>
                     <button
@@ -62,13 +64,9 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                             className={({ isActive }) => `
                                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all group shrink-0
                                 active:animate-haptic-click
-                                ${isBeauty
-                                    ? (isActive
-                                        ? 'bg-beauty-neon/20 text-beauty-neon shadow-[0_0_15px_rgba(167,139,250,0.2)]'
-                                        : 'text-neutral-400 hover:text-white hover:bg-white/5')
-                                    : (isActive
-                                        ? 'bg-accent-gold text-black font-bold shadow-promax-depth'
-                                        : 'text-neutral-400 hover:text-white hover:bg-white/5 border border-transparent')
+                                ${isActive
+                                    ? `${accent.bgDim} ${accent.text} ${accent.shadowStrong} font-bold`
+                                    : `${colors.textSecondary} hover:${colors.text} hover:bg-white/5 border border-transparent`
                                 }
                             `}
                         >
@@ -78,10 +76,10 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                     ))}
                 </nav>
 
-                <div className="pt-6 border-t border-white/10 mt-auto flex-shrink-0">
+                <div className={`pt-6 border-t ${colors.divider} mt-auto flex-shrink-0`}>
                     <NavLink
                         to="/dashboard"
-                        className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors px-2 active:animate-haptic-click"
+                        className={`flex items-center gap-2 ${colors.textSecondary} hover:${colors.text} transition-colors px-2 active:animate-haptic-click`}
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="text-sm font-medium">Voltar ao Dashboard</span>
@@ -92,7 +90,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-md transition-opacity"
+                    className={`fixed inset-0 ${colors.overlay} z-40 md:hidden backdrop-blur-md transition-opacity`}
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -101,19 +99,19 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <main className="flex-1 md:ml-64 min-h-screen flex flex-col w-full max-w-[100vw]">
 
                 {/* Mobile Header + Sticky Nav - PRO MAX REVITALIZATION */}
-                <div className={`md:hidden sticky top-0 z-30 border-b ${isBeauty ? 'bg-beauty-dark border-white/5' : 'bg-neutral-900 border-white/5'} backdrop-blur-md`}>
+                <div className={`md:hidden sticky top-0 z-30 border-b ${colors.bg}/70 ${colors.divider} backdrop-blur-xl`}>
                     {/* Top Bar */}
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click ${isBeauty ? 'bg-white/5 text-white' : 'bg-white/5 text-white shadow-sm'}`}
+                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click bg-white/5 ${colors.text}`}
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
                             <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold">Ajustes</span>
-                                <h1 className="text-lg font-black text-white uppercase tracking-tight leading-none">
+                                <span className={`text-xs uppercase tracking-widest ${colors.textSecondary} font-bold`}>Ajustes</span>
+                                <h1 className={`text-lg font-black ${colors.text} uppercase tracking-tight leading-none`}>
                                     {currentPageTitle}
                                 </h1>
                             </div>
@@ -121,29 +119,31 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                     </div>
 
                     {/* Horizontal Scrollable Nav (Mobile Only) - PRO MAX STYLE */}
-                    <div className="px-4 pb-4 overflow-x-auto hide-scrollbar">
-                        <div className="flex gap-3 min-w-max px-2">
-                            {menuItems.map(item => (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    className={({ isActive }) => `
-                                        flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
-                                        ${isActive
-                                            ? (isBeauty
-                                                ? 'bg-beauty-neon/20 border-beauty-neon/50 text-white shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                                                : 'bg-accent-gold text-black border-accent-gold shadow-promax-depth')
-                                            : 'bg-white/5 border-white/5 text-neutral-400 opacity-60'
-                                        }
-                                    `}
-                                >
-                                    <item.icon className="w-4 h-4" />
-                                    <span className="text-xs font-bold uppercase tracking-wide">
-                                        {item.label.split(' ')[0]}
-                                    </span>
-                                </NavLink>
-                            ))}
+                    <div className="relative">
+                        <div className="px-4 pb-4 overflow-x-auto hide-scrollbar">
+                            <div className="flex gap-3 min-w-max px-2">
+                                {menuItems.map(item => (
+                                    <NavLink
+                                        key={item.path}
+                                        to={item.path}
+                                        className={({ isActive }) => `
+                                            flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
+                                            ${isActive
+                                                ? `${accent.bgDim} ${accent.text} ${accent.border} shadow-promax-glass`
+                                                : `bg-white/5 ${colors.border} ${colors.textSecondary} opacity-80`
+                                            }
+                                        `}
+                                    >
+                                        <item.icon className="w-4 h-4" />
+                                        <span className="text-xs font-bold uppercase tracking-wide">
+                                            {item.label.split(' ')[0]}
+                                        </span>
+                                    </NavLink>
+                                ))}
+                            </div>
                         </div>
+                        {/* Gradient fade right */}
+                        <div className={`pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-neutral-900 to-transparent md:hidden`} />
                     </div>
                 </div>
 

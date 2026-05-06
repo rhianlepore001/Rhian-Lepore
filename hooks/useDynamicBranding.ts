@@ -4,7 +4,8 @@ import type { UserType } from '../contexts/AuthContext';
 
 interface BrandingConfig {
     title: string;
-    themeColor: string;
+    themeColorDark: string;
+    themeColorLight: string;
     manifestPath: string;
     faviconPath: string;
     appleTouchIcon: string;
@@ -14,22 +15,24 @@ interface BrandingConfig {
 
 const BRANDING_CONFIG: Record<UserType, BrandingConfig> = {
     barber: {
-        title: 'AgenX - Gestão Inteligente',
-        themeColor: '#121212',
+        title: 'AgendiX - Gestão Inteligente',
+        themeColorDark: '#121212',
+        themeColorLight: '#F5F1E8',
         manifestPath: '/manifest-barber.webmanifest',
         faviconPath: '/icon-agenx.svg',
         appleTouchIcon: '/icon-agenx.svg',
         ogImage: '/icon-agenx.svg',
-        description: 'AgenX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
+        description: 'AgendiX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
     },
     beauty: {
-        title: 'AgenX - Gestão Inteligente',
-        themeColor: '#1F1B2E',
+        title: 'AgendiX - Gestão Inteligente',
+        themeColorDark: '#1F1B2E',
+        themeColorLight: '#F7F5FF',
         manifestPath: '/manifest-beauty.webmanifest',
         faviconPath: '/icon-agenx.svg',
         appleTouchIcon: '/icon-agenx.svg',
         ogImage: '/icon-agenx.svg',
-        description: 'AgenX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
+        description: 'AgendiX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
     }
 };
 
@@ -46,17 +49,31 @@ export const useDynamicBranding = () => {
 
         const config = BRANDING_CONFIG[userType];
 
-        // Update document title
-        document.title = config.title;
+        // Apply theme and mode to HTML root
+        document.documentElement.setAttribute('data-theme', userType);
+        const savedMode = localStorage.getItem('agendix_color_mode') || 'dark';
+        document.documentElement.setAttribute('data-mode', savedMode);
 
-        // Update or create theme-color meta tag
+        // Sync theme-color meta tag (PWA status bar) with current theme + mode
+        const themeColor = savedMode === 'light' ? config.themeColorLight : config.themeColorDark;
         let themeColorMeta = document.querySelector('meta[name="theme-color"]');
         if (!themeColorMeta) {
             themeColorMeta = document.createElement('meta');
             themeColorMeta.setAttribute('name', 'theme-color');
             document.head.appendChild(themeColorMeta);
         }
-        themeColorMeta.setAttribute('content', config.themeColor);
+        themeColorMeta.setAttribute('content', themeColor);
+
+        // Observe data-mode changes to keep theme-color in sync after toggle
+        const observer = new MutationObserver(() => {
+            const currentMode = document.documentElement.getAttribute('data-mode') || 'dark';
+            const updatedColor = currentMode === 'light' ? config.themeColorLight : config.themeColorDark;
+            themeColorMeta!.setAttribute('content', updatedColor);
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode'] });
+
+        // Update document title
+        document.title = config.title;
 
         // Update manifest link
         let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
@@ -116,8 +133,9 @@ export const useDynamicBranding = () => {
             appleTitle.setAttribute('name', 'apple-mobile-web-app-title');
             document.head.appendChild(appleTitle);
         }
-        appleTitle.setAttribute('content', 'AgenX');
+        appleTitle.setAttribute('content', 'AgendiX');
 
+        return () => observer.disconnect();
     }, [userType, isAuthenticated]);
 
     return {

@@ -1,20 +1,18 @@
-
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { NAVIGATION_ITEMS } from '../constants';
 import { TrendingUp, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const { isSidebarOpen, closeSidebar } = useUI();
   const { logout, userType, role } = useAuth();
 
-  const isBeauty = userType === 'beauty';
   const isStaff = role === 'staff';
-  const themeColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-  const themeBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
+  const { accent, colors, classes } = useBrutalTheme();
 
   // Filtra itens de navegação com base no role do usuário
   const visibleItems = NAVIGATION_ITEMS.filter(item => !item.ownerOnly || !isStaff);
@@ -22,38 +20,18 @@ export const Sidebar: React.FC = () => {
   const renderLink = (path: string, Icon: React.ElementType, label: string) => {
     const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
 
-    if (isBeauty) {
-      return (
-        <Link
-          key={path}
-          to={path}
-          onClick={closeSidebar}
-          className={`
-              group flex items-center px-4 py-3 font-sans font-medium text-sm transition-all rounded-xl
-              ${isActive
-              ? 'bg-beauty-neon/10 text-beauty-neon'
-              : 'text-text-secondary hover:text-white hover:bg-white/5'}
-            `}
-        >
-          <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-beauty-neon' : 'text-neutral-500 group-hover:text-white'}`} />
-          {label}
-        </Link>
-      );
-    }
-
     return (
       <Link
         key={path}
         to={path}
         onClick={closeSidebar}
         className={`
-          group flex items-center px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide transition-all border-2
-          ${isActive
-            ? `${themeBg} border-black text-black shadow-heavy-sm translate-x-1`
-            : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-neutral-900 hover:border-neutral-800'}
+          ${classes.sidebarItem}
+          ${isActive ? classes.sidebarItemActive : classes.sidebarItemInactive}
+          ${isActive ? '' : colors.border}
         `}
       >
-        <Icon className={`w-5 h-5 mr-3 ${isActive ? 'text-black' : `${themeColor} group-hover:text-white`}`} />
+        <Icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? accent.text : `${accent.text} group-hover:${colors.text}`}`} />
         {label}
       </Link>
     );
@@ -64,7 +42,7 @@ export const Sidebar: React.FC = () => {
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-[4px] animate-in fade-in duration-200"
+          className={`fixed inset-0 ${colors.overlay} z-40 md:hidden backdrop-blur-[4px] animate-in fade-in duration-200`}
           onClick={closeSidebar}
         />
       )}
@@ -72,44 +50,63 @@ export const Sidebar: React.FC = () => {
       <aside
         id="sidebar-container"
         className={`
-          fixed left-0 z-50 w-64 flex flex-col
-          transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          fixed left-0 z-50 w-64 hidden md:flex flex-col
+          transition-transform duration-300 ease-in-out md:shadow-none
           md:translate-x-0
-          ${isBeauty
-            ? 'bg-beauty-dark/95 md:backdrop-blur-xl border-r border-white/5'
-            : 'bg-brutal-main border-r-4 border-brutal-border'}
+          ${classes.sidebar}
         `}
         style={{ top: 'var(--header-top, 0)', bottom: 0 }}
       >
         {/* Header mobile */}
-        <div className={`h-20 flex items-center justify-between px-6 md:hidden ${isBeauty ? 'border-b border-white/5 bg-transparent' : 'border-b-4 border-brutal-border bg-brutal-card'}`}>
-          <span className={`font-heading text-xl ${themeColor} uppercase tracking-tighter`}>Menu</span>
-          <button onClick={closeSidebar} className="text-text-secondary hover:text-white transition-colors" aria-label="Fechar menu" title="Fechar menu">
+        <div className={`h-16 flex items-center justify-between px-6 md:hidden border-b ${colors.divider} ${colors.bg}`}>
+          <div className="relative group">
+            <div className={`absolute -inset-2 ${accent.bgDim} blur-xl rounded-full opacity-60`} />
+            <div className="relative">
+              <img
+                src="/logo icon.png"
+                alt="AgendiX"
+                style={{ height: 32, width: 'auto', objectFit: 'contain', display: 'block' }}
+              />
+            </div>
+          </div>
+          <button onClick={closeSidebar} className={`${colors.textSecondary} hover:${colors.text} transition-colors`} aria-label="Fechar menu" title="Fechar menu">
             <X className="w-6 h-6" />
           </button>
         </div>
 
+        {/* Desktop: Header do menu com Logo */}
+        <div className={`hidden md:flex h-20 items-center justify-center border-b ${colors.divider}`}>
+          <Link to="/" onClick={closeSidebar} className="relative flex items-center hover:opacity-80 transition-opacity group">
+            <div className={`absolute -inset-3 ${accent.bgDim} blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
+            <div className="relative">
+              <img
+                src="/logo icon.png"
+                alt="AgendiX"
+                style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }}
+              />
+            </div>
+          </Link>
+        </div>
+
         {/* Navigation */}
-        <nav className="flex-1 py-8 overflow-y-auto space-y-2 px-4">
+        <nav className="flex-1 py-6 overflow-y-auto space-y-1 px-3">
           {visibleItems.map((item) => renderLink(item.path, item.icon, item.name))}
 
           {/* Links extras somente para staff */}
           {isStaff && renderLink('/meus-insights', TrendingUp, 'Meus Insights')}
 
-          {/* Botão de Logout */}
+          {/* Separador */}
+          <div className={`border-t ${colors.divider} pt-3 mt-3`} />
+
+          {/* Botão de Logout — neutro em repouso, vermelho no hover */}
           <button
             onClick={() => {
               logout();
               closeSidebar();
             }}
-            className={`w-full group flex items-center px-4 py-3 text-sm transition-all mt-8
-                ${isBeauty
-                ? 'font-sans font-medium text-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-xl'
-                : 'font-mono font-bold uppercase tracking-wide border-2 border-transparent hover:text-red-500 hover:bg-red-900/10 hover:border-red-900/50'}
-            `}
+            className="w-full group flex items-center px-4 py-3 text-sm font-sans font-medium text-neutral-600 hover:text-red-400 hover:bg-red-500/5 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200"
           >
-            <LogOut className={`w-5 h-5 mr-3 transition-colors ${isBeauty ? 'text-neutral-500 group-hover:text-red-400' : 'text-neutral-600 group-hover:text-red-500'}`} />
+            <LogOut className="w-5 h-5 mr-3 transition-colors text-neutral-600 group-hover:text-red-400" />
             Sair
           </button>
         </nav>

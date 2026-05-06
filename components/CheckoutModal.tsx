@@ -4,6 +4,7 @@ import { BrutalButton } from '@/components/BrutalButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/Logger';
+import { Banknote, CreditCard, Smartphone } from 'lucide-react';
 import type { Appointment } from '@/types';
 
 interface TeamMember {
@@ -130,6 +131,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
   };
 
+  // Ícone por método de pagamento
+  const paymentMethodIcon = (value: string) => {
+    if (value === 'cash') return <Banknote size={16} />;
+    if (value === 'pix' || value === 'mbway') return <Smartphone size={16} />;
+    return <CreditCard size={16} />;
+  };
+
   // Métodos de pagamento por região
   const paymentMethods = region === 'PT'
     ? [
@@ -163,9 +171,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* Resumo do atendimento (read-only) */}
-        <div className="bg-neutral-800 rounded-lg p-3 space-y-1 border border-neutral-700">
+        <div className="bg-white/[0.03] rounded-xl p-4 space-y-1 border border-white/[0.08] backdrop-blur-md">
           <p className="text-xs font-mono uppercase text-neutral-400">Serviço</p>
           <p className="text-white font-medium">{appointment?.service}</p>
         </div>
@@ -182,7 +190,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             min="0"
             value={finalPrice}
             onChange={(e) => setFinalPrice(parseFloat(e.target.value) || 0)}
-            className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-gold"
+            className="w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold"
           />
         </div>
 
@@ -191,16 +199,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <p className={`block text-xs font-mono uppercase mb-2 ${errors.paymentMethod ? 'text-red-400' : 'text-neutral-400'}`}>
             Forma de Pagamento <span className="text-red-500">*</span>
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {paymentMethods.map(({ value, label }) => (
               <label
                 key={value}
-                className={`flex items-center gap-2 cursor-pointer rounded-lg px-3 py-2 border transition-colors ${
+                className={`flex items-center gap-2 cursor-pointer rounded-xl px-3 py-2.5 border transition-all duration-200 ${
                   paymentMethod === value
-                    ? 'border-accent-gold bg-accent-gold/10 text-accent-gold'
+                    ? 'border-accent-gold bg-accent-gold/10 text-accent-gold shadow-[0_0_12px_rgba(194,155,64,0.15)]'
                     : errors.paymentMethod
                     ? 'border-red-500/50 text-neutral-300 hover:border-red-400'
-                    : 'border-neutral-700 text-neutral-300 hover:border-neutral-500'
+                    : 'border-white/10 bg-white/[0.02] text-neutral-300 hover:border-white/20 hover:bg-white/[0.03]'
                 }`}
               >
                 <input
@@ -215,6 +223,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   }}
                   className="sr-only"
                 />
+                {paymentMethodIcon(value)}
                 {label}
               </label>
             ))}
@@ -241,13 +250,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 placeholder="Ex: 2.5"
                 value={machineFeePercent}
                 onChange={(e) => setMachineFeePercent(e.target.value)}
-                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-gold"
+                className="w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold"
               />
             </div>
             {/* Valor líquido em tempo real */}
-            <div className="bg-neutral-900 rounded-lg px-3 py-2 border border-neutral-800 flex justify-between items-center">
-              <span className="text-xs text-neutral-400 font-mono uppercase">Valor Líquido</span>
-              <span className="text-white font-mono font-bold">
+            <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex justify-between items-center">
+              <span className="text-xs text-neutral-400 font-mono uppercase">Valor que você recebe</span>
+              <span className="text-emerald-400 font-mono font-bold">
                 R$ {netAmount.toFixed(2).replace('.', ',')}
               </span>
             </div>
@@ -270,8 +279,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               setReceivedBy(e.target.value);
               setErrors((prev) => ({ ...prev, receivedBy: undefined }));
             }}
-            className={`w-full bg-neutral-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-gold ${
-              errors.receivedBy ? 'border-red-500' : 'border-neutral-700'
+            className={`w-full bg-white/[0.04] border rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold ${
+              errors.receivedBy ? 'border-red-500' : 'border-white/[0.10]'
             }`}
           >
             <option value="">Selecionar...</option>

@@ -8,10 +8,12 @@ import { PhoneInput } from '../components/PhoneInput';
 import { Plus, Search, User, Users, Star, ChevronRight, MessageCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { formatPhone } from '../utils/formatters';
 
 export const Clients: React.FC = () => {
-    const { user, userType, region, companyId } = useAuth();
+    const { user, region, companyId } = useAuth();
+    const { isBeauty } = useBrutalTheme();
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const [clients, setClients] = useState<any[]>([]);
@@ -27,7 +29,6 @@ export const Clients: React.FC = () => {
     const [photo, setPhoto] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
 
-    const isBeauty = userType === 'beauty';
     const buttonClass = isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover text-black' : 'bg-accent-gold hover:bg-accent-goldHover text-black';
 
     const fetchClients = async () => {

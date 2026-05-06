@@ -5,6 +5,7 @@ import { BrutalCard } from '../BrutalCard';
 import { QrCode, Copy, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { use2FA } from '../../hooks/use2FA';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
 interface TwoFactorSetupProps {
     onComplete: () => void;
@@ -13,7 +14,7 @@ interface TwoFactorSetupProps {
 
 export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel }) => {
     const { enroll, verifyAndEnable } = use2FA();
-    const { userType } = useAuth();
+    const { accent } = useBrutalTheme();
 
     const [step, setStep] = useState<'intro' | 'scan' | 'verify'>('intro');
     const [factorId, setFactorId] = useState<string>('');
@@ -22,10 +23,6 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
     const [verificationCode, setVerificationCode] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const buttonVariant = isBeauty ? 'primary' : 'primary'; // Simplificando para evitar erros de tipo, já que não é usado
 
     // Passo 1: Gerar Secret e QR Code
     const handleStart = async () => {
@@ -116,7 +113,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                         <p className="text-neutral-500 text-xs mb-2">Não consegue escanear?</p>
                         <button
                             onClick={copyToClipboard}
-                            className={`text-xs ${accentText} hover:underline flex items-center gap-1 mx-auto`}
+                            className={`text-xs ${accent.text} hover:underline flex items-center gap-1 mx-auto`}
                         >
                             <Copy className="w-3 h-3" />
                             Copiar código de configuração

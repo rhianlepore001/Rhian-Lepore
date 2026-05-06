@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Info, Bot, X, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { createPortal } from 'react-dom';
 
 interface InfoButtonProps {
@@ -127,8 +128,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
         { role: 'assistant', content: `Olá! Sou seu assistente pessoal. Como posso ajudar com ${context}?` }
     ]);
     const [input, setInput] = useState('');
-    const { userType } = useAuth();
-    const isBeauty = userType === 'beauty';
+    const { accent, isBeauty } = useBrutalTheme();
 
     const handleSend = () => {
         if (!input.trim()) return;
@@ -150,7 +150,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className={`ml-2 p-1 rounded-full ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon hover:bg-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20'} transition-colors`}
+                className={`ml-2 p-1 rounded-full ${accent.bgDim} ${accent.text} hover:${accent.bg} transition-colors`}
                 title="Assistente IA"
                 aria-label="Abrir assistente IA"
             >

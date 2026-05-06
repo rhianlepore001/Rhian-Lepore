@@ -2,22 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { BrutalCard } from '../components/BrutalCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { supabase } from '../lib/supabase';
 import {
-    Users,
-    UserPlus,
-    Calendar,
     TrendingUp,
     DollarSign,
     Target,
-    Zap,
-    ShieldCheck,
     AlertCircle,
-    ArrowUpRight,
-    Brain
+    Brain,
+    Zap
 } from 'lucide-react';
 import { MonthYearSelector } from '../components/MonthYearSelector';
-import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 
@@ -62,8 +58,9 @@ interface ClientInsights {
 }
 
 export const Reports: React.FC = () => {
-    const { user, userType, region } = useAuth();
+    const { user, region } = useAuth();
     const { isMobile } = useUI();
+    const { accent, isBeauty } = useBrutalTheme();
     const [loading, setLoading] = useState(true);
     const currentDate = new Date();
     const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
@@ -76,10 +73,6 @@ export const Reports: React.FC = () => {
         retention_rate: 0
     });
 
-    const isBeauty = userType === 'beauty';
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon/20 text-beauty-neon' : 'bg-accent-gold/20 text-accent-gold';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     useEffect(() => {
@@ -117,7 +110,7 @@ export const Reports: React.FC = () => {
     if (loading && !stats) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
-                <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}`}></div>
+                <div className={`animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 ${accent.border}`}></div>
             </div>
         );
     }
@@ -129,7 +122,7 @@ export const Reports: React.FC = () => {
                 <div>
                     <h1 className="text-3xl md:text-5xl font-heading text-white uppercase tracking-tighter">Insights do Negócio</h1>
                     <p className="text-text-secondary font-mono mt-2 text-sm md:text-base flex items-center gap-2">
-                        <Brain className={`w-4 h-4 ${accentText}`} />
+                        <Brain className={`w-4 h-4 ${accent.text}`} />
                         Assistente de Negócios: analisando seus resultados
                     </p>
                 </div>
@@ -138,14 +131,14 @@ export const Reports: React.FC = () => {
                     selectedMonth={selectedMonth}
                     selectedYear={selectedYear}
                     onChange={handleMonthChange}
-                    accentColor={accentColor}
+                    accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
                 />
             </div>
 
             {!hasSufficientData ? (
                 <div className="flex flex-col items-center justify-center my-16 text-center px-4 fade-in">
-                    <div className={`w-24 h-24 rounded-full ${accentBg} flex items-center justify-center mb-6`}>
-                        <TrendingUp className={`w-12 h-12 ${accentText}`} />
+                    <div className={`w-24 h-24 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-6`}>
+                        <TrendingUp className={`w-12 h-12 ${accent.text}`} />
                     </div>
                     <h2 className="text-3xl font-heading text-white uppercase mb-4">Coletando Dados...</h2>
                     <p className="text-neutral-400 max-w-xl mx-auto leading-relaxed">
@@ -156,7 +149,7 @@ export const Reports: React.FC = () => {
                     </p>
                     <div className="mt-8 p-6 bg-white/5 rounded-xl border border-white/10 max-w-md w-full text-left">
                         <p className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                            <Brain className={`w-4 h-4 ${accentText}`} /> O que você verá aqui em breve:
+                            <Brain className={`w-4 h-4 ${accent.text}`} /> O que você verá aqui em breve:
                         </p>
                         <ul className="text-sm text-neutral-400 space-y-3">
                             <li className="flex gap-2"><DollarSign className="w-4 h-4 text-neutral-500" /> Faturamento médio real por atendimento</li>
@@ -174,7 +167,7 @@ export const Reports: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                             <BrutalCard>
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className={`p-2 rounded-xl ${accentBg}`}>
+                                    <div className={`p-2 rounded-xl ${accent.bgDim} ${accent.text}`}>
                                         <DollarSign className="w-5 h-5" />
                                     </div>
                                     <span className="text-neutral-400 font-mono text-xs uppercase tracking-widest">Média por atendimento</span>
@@ -218,48 +211,6 @@ export const Reports: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Impacto da Inteligência Artificial */}
-                    <div>
-                        <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider flex items-center gap-2">
-                            <Zap className="w-5 h-5 text-yellow-400" /> Impacto do Assistente Virtual
-                        </h2>
-                        <BrutalCard accent glow className="w-full">
-                            <div className="flex flex-col md:flex-row justify-between md:items-start mb-6 gap-4">
-                                <div>
-                                    <p className="text-neutral-400 text-sm">Receita recuperada e ações realizadas via campanhas e reagendamentos no WhatsApp</p>
-                                </div>
-                                <div className="text-left md:text-right">
-                                    <p className="text-3xl md:text-4xl font-heading text-white">
-                                        {formatCurrency(stats?.recovered_revenue || 0, currencyRegion)}
-                                    </p>
-                                    <p className="text-sm font-bold text-green-400 flex items-center md:justify-end gap-1 mt-1">
-                                        <ArrowUpRight className="w-4 h-4" /> Total de Receita Salva
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 mt-6 pt-6 border-t border-white/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                                        <Calendar className={`w-5 h-5 ${accentText}`} />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-heading text-white">{stats?.filled_slots || 0}</p>
-                                        <p className="text-xs text-neutral-500 uppercase font-mono">Agendamentos pela IA</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4 border-t sm:border-t-0 sm:border-l border-white/5 pt-4 sm:pt-0 sm:pl-4">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                                        <Users className="w-5 h-5 text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-heading text-white">{stats?.campaigns_sent || 0}</p>
-                                        <p className="text-xs text-neutral-500 uppercase font-mono">Mensagens Enviadas</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </BrutalCard>
-                    </div>
 
                     {/* Evolução e Performance */}
                     <div>
@@ -271,8 +222,8 @@ export const Reports: React.FC = () => {
                                         <AreaChart data={clientInsights.client_growth_by_month}>
                                             <defs>
                                                 <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor={isBeauty ? '#A78BFA' : '#EAB308'} stopOpacity={0} />
+                                                    <stop offset="5%" stopColor={accent.hex} stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor={accent.hex} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
@@ -285,7 +236,7 @@ export const Reports: React.FC = () => {
                                             <Area
                                                 type="monotone"
                                                 dataKey="new_clients"
-                                                stroke={isBeauty ? '#A78BFA' : '#EAB308'}
+                                                stroke={accent.hex}
                                                 fillOpacity={1}
                                                 fill="url(#colorGrowth)"
                                                 strokeWidth={3}
@@ -296,10 +247,10 @@ export const Reports: React.FC = () => {
                             </BrutalCard>
 
                             <BrutalCard title="Serviço Campeão" className="flex flex-col justify-center items-center text-center">
-                                <div className={`w-16 h-16 rounded-full ${accentBg} flex items-center justify-center mb-4`}>
-                                    <TrendingUp className={`w-8 h-8 ${accentText}`} />
+                                <div className={`w-16 h-16 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-4`}>
+                                    <TrendingUp className={`w-8 h-8 ${accent.text}`} />
                                 </div>
-                                <h2 className={`text-3xl md:text-4xl font-heading ${accentText} uppercase mb-2`}>{stats?.top_service || 'N/A'}</h2>
+                                <h2 className={`text-3xl md:text-4xl font-heading ${accent.text} uppercase mb-2`}>{stats?.top_service || 'N/A'}</h2>
                                 <p className="text-neutral-500 text-sm">Serviço mais vendido do período recente</p>
                             </BrutalCard>
                         </div>
@@ -326,7 +277,7 @@ export const Reports: React.FC = () => {
                                             <tr key={idx} className="hover:bg-white/5 transition-colors group">
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${accentBg}`}>
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${accent.bgDim} ${accent.text}`}>
                                                             {client.name.charAt(0)}
                                                         </div>
                                                         <div>
@@ -336,7 +287,7 @@ export const Reports: React.FC = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4 text-center font-mono text-white text-lg">{client.visits}</td>
-                                                <td className={`px-4 py-4 text-right font-bold text-lg ${accentText}`}>{formatCurrency(client.revenue, currencyRegion)}</td>
+                                                <td className={`px-4 py-4 text-right font-bold text-lg ${accent.text}`}>{formatCurrency(client.revenue, currencyRegion)}</td>
                                             </tr>
                                         ))
                                     )}

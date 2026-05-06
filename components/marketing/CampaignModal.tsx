@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from '../Modal';
 import { BrutalButton } from '../BrutalButton';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { generateReactivationMessage, getWhatsAppUrl } from '../../utils/aiosCopywriter';
 import { Sparkles, MessageSquare, Copy, Send, RefreshCw } from 'lucide-react';
 
@@ -22,10 +23,7 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
     const [message, setMessage] = useState('');
     const [isCopying, setIsCopying] = useState(false);
 
-    const isBeauty = userType === 'beauty';
-    const accentColorClass = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const accentTextColor = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBorderColor = isBeauty ? 'border-shared-accent-beauty/20' : 'border-accent-gold/20';
+    const { accent } = useBrutalTheme();
 
     const handleGenerate = () => {
         const newMessage = decodeURIComponent(generateReactivationMessage({
@@ -45,10 +43,49 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
         }
     }, [isOpen, clientData]);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(message);
-        setIsCopying(true);
-        setTimeout(() => setIsCopying(false), 2000);
+    const handleCopy = async () => {
+        // Se for mobile e suportar share, tenta share primeiro
+        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            try {
+                await navigator.share({
+                    title: 'Campanha de Reativação - AgendiX',
+                    text: message
+                });
+                return;
+            } catch (err) {
+                // Share failed or cancelled
+            }
+        }
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(message);
+                setIsCopying(true);
+                setTimeout(() => setIsCopying(false), 2000);
+            } else {
+                throw new Error('Clipboard API unavailable');
+            }
+        } catch (err) {
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = message;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) {
+                    setIsCopying(true);
+                    setTimeout(() => setIsCopying(false), 2000);
+                }
+            } catch (fallbackErr) {
+                console.error('Fallback copy failed', fallbackErr);
+            }
+        }
     };
 
     const handleSend = () => {
@@ -93,8 +130,8 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
             }
         >
             <div className="space-y-4">
-                <div className={`p-4 rounded-lg bg-white/5 border ${accentBorderColor} flex items-start gap-3`}>
-                    <Sparkles className={`w-5 h-5 ${accentTextColor} mt-1 flex-shrink-0`} />
+                <div className={`p-4 rounded-lg bg-white/5 border ${accent.borderDim} flex items-start gap-3`}>
+                    <Sparkles className={`w-5 h-5 ${accent.text} mt-1 flex-shrink-0`} />
                     <div>
                         <p className="text-sm text-white font-medium">Análise de IA Concluída</p>
                         <p className="text-xs text-text-secondary font-mono mt-1">
@@ -112,7 +149,7 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
                         className={`
                             w-full h-48 p-4 rounded-xl font-sans text-sm
                             bg-black/40 text-white border-2 border-white/10
-                            focus:border-${accentColorClass}/50 outline-none transition-all
+                            focus:${accent.border} outline-none transition-all
                             resize-none scrollbar-thin
                         `}
                         placeholder="Gerando sugestão..."

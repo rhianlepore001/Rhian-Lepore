@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface BrutalCardProps {
   id?: string;
@@ -12,6 +11,7 @@ interface BrutalCardProps {
   noPadding?: boolean;
   accent?: boolean;
   glow?: boolean;
+  animate?: boolean;
   forceTheme?: 'beauty' | 'barber';
   style?: React.CSSProperties;
 }
@@ -23,64 +23,31 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   title,
   action,
   noPadding = false,
-  accent = false,
-  glow = false,
+  accent: accentProp = false,
+  glow: glowProp = false,
+  animate = false,
   forceTheme,
   style
 }) => {
-  const { userType } = useAuth();
-  const { isMobile } = useUI();
+  const { classes, accent, colors } = useBrutalTheme({ override: forceTheme });
   const location = useLocation();
-  const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
   const isSettings = location.pathname.startsWith('/configuracoes');
 
-  // ===========================================
-  // BRUTALISMO (Barbearias): Moderno industrial com glass nas settings
-  // BEAUTY (Salões): Bordas suaves, efeitos neon roxo, visual premium
-  // ===========================================
+  const containerClass = glowProp
+    ? `${classes.cardGlow} ${className}`
+    : accentProp
+      ? `${classes.cardAccent} ${className}`
+      : `${classes.card} ${className}`;
+  const animationClass = animate ? 'animate-in fade-in zoom-in-[99%] duration-300' : '';
 
-  const getContainerClass = () => {
-    const blurClass = isMobile ? 'backdrop-blur-md' : 'backdrop-blur-2xl';
-
-    if (isBeauty) {
-      const shadowClass = isMobile ? 'shadow-lite-glass' : 'shadow-promax-glass';
-      const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
-      const baseBeauty = `relative bg-gradient-beauty ${blurClass} border border-white/10 rounded-2xl ${transitionClass} duration-500 overflow-hidden select-none touch-pan-y ${shadowClass}`;
-      const accentBeauty = accent ? 'border-beauty-neon/40 shadow-neon bg-beauty-neon/5' : '';
-      const glowBeauty = glow ? 'shadow-neon-strong ring-1 ring-beauty-neon/30' : '';
-
-      return `${baseBeauty} ${accentBeauty} ${glowBeauty} ${className}`;
-    } else {
-      const shadowClass = isMobile ? 'shadow-lite-gold' : 'shadow-promax-glass';
-      const transitionClass = isMobile ? 'transition-[transform,opacity]' : 'transition-all';
-      // Glass mode automático nas rotas de configurações
-      const bg = isSettings
-        ? 'bg-brutal-card/30 backdrop-blur-2xl'
-        : `bg-gradient-brutal ${blurClass}`;
-      const baseBrutal = `relative ${bg} border border-white/10 rounded-2xl ${transitionClass} duration-500 select-none touch-pan-y ${shadowClass} overflow-hidden`;
-      const accentBrutal = accent ? 'border-accent-gold/60 shadow-gold bg-accent-gold/5' : '';
-      const glowBrutal = glow ? 'shadow-promax-depth ring-1 ring-accent-gold/30' : '';
-
-      return `${baseBrutal} ${accentBrutal} ${glowBrutal} ${className}`;
-    }
-  };
-
-  const getHeaderClass = () => {
-    return 'flex justify-between items-center px-6 py-5 md:px-8 md:py-6 border-b border-white/5 bg-white/[0.02]';
-  };
-
-  const getTitleClass = () => {
-    if (isBeauty) {
-      return 'font-heading text-lg md:text-xl text-white tracking-tight font-bold';
-    } else {
-      return 'font-heading text-lg md:text-xl text-text-primary tracking-tight font-bold';
-    }
-  };
+  const headerClass = `flex justify-between items-center px-6 py-5 md:px-8 md:py-6 border-b ${colors.divider} bg-white/[0.02]`;
+  const titleClass = `font-heading text-lg md:text-xl ${colors.text} tracking-tight font-bold`;
+  const contentClass = `${noPadding ? '' : 'p-6 md:p-8'} ${colors.textSecondary} relative z-10`;
 
   return (
     <div
       id={id}
-      className={getContainerClass()}
+      className={`${containerClass} ${animationClass}`.trim()}
       style={{
         outline: 'none',
         WebkitTapHighlightColor: 'transparent',
@@ -95,12 +62,12 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
 
       {/* Área do Cabeçalho */}
       {(title || action) && (
-        <div className={getHeaderClass()}>
+        <div className={headerClass}>
           {title && (
             <div className="flex-1">
               {typeof title === 'string'
-                ? <h3 className={getTitleClass()}>{title}</h3>
-                : <div className={getTitleClass()}>{title}</div>
+                ? <h3 className={titleClass}>{title}</h3>
+                : <div className={titleClass}>{title}</div>
               }
             </div>
           )}
@@ -109,7 +76,7 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       )}
 
       {/* Conteúdo com padding padronizado */}
-      <div className={`${noPadding ? '' : 'p-6 md:p-8'} text-text-secondary relative z-10`}>
+      <div className={contentClass}>
         {children}
       </div>
     </div>

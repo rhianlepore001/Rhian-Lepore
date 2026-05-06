@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutDashboard, TrendingUp, FileText, Settings, LogOut, X, User, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, Settings, LogOut, X, User, Users } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface MoreOptionsDrawerProps {
     onClose: () => void;
@@ -11,9 +12,10 @@ interface MoreOptionsDrawerProps {
 
 export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose }) => {
     const navigate = useNavigate();
-    const { userType, logout, fullName, businessName, avatarUrl } = useAuth();
+    const { logout, fullName, businessName, avatarUrl, role } = useAuth();
     const { setModalOpen } = useUI();
-    const isBeauty = userType === 'beauty';
+    const { isBeauty } = useBrutalTheme();
+    const isStaff = role === 'staff';
 
     useEffect(() => {
         setModalOpen(true);
@@ -22,10 +24,8 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
 
     const menuItems = [
         { name: 'Início', icon: LayoutDashboard, path: '/' },
-        { name: 'Marketing', icon: TrendingUp, path: '/marketing' },
-        { name: 'Relatórios', icon: BarChart3, path: '/insights' },
         { name: 'Fila Digital', icon: Users, path: '/fila' },
-        { name: 'Ajustes', icon: Settings, path: '/configuracoes' },
+        ...(!isStaff ? [{ name: 'Ajustes', icon: Settings, path: '/configuracoes' }] : []),
     ];
 
     const handleNavigate = (path: string) => {

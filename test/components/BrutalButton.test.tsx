@@ -1,8 +1,8 @@
+import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrutalButton } from '../../components/BrutalButton';
-import React from 'react';
 
 vi.mock('../../contexts/AuthContext', () => ({
     useAuth: () => ({ userType: 'barber' }),
@@ -26,7 +26,7 @@ describe('BrutalButton Component', () => {
         expect(screen.getByRole('button')).toBeDisabled();
     });
 
-    it('não dispara onClick quando desabilitado', async () => {
+    it('nao dispara onClick quando desabilitado', async () => {
         const onClick = vi.fn();
         render(
             <BrutalButton disabled onClick={onClick}>
@@ -48,49 +48,41 @@ describe('BrutalButton Component', () => {
     });
 
     it('suporta aria-label para acessibilidade', () => {
-        render(<BrutalButton aria-label="Configurações">⚙️</BrutalButton>);
-        expect(screen.getByRole('button', { name: 'Configurações' })).toBeInTheDocument();
+        render(<BrutalButton aria-label="Configuracoes">X</BrutalButton>);
+        expect(screen.getByRole('button', { name: 'Configuracoes' })).toBeInTheDocument();
     });
 
     it('aplica w-full quando fullWidth=true', () => {
-        const { container } = render(
-            <BrutalButton fullWidth>Botão Largo</BrutalButton>
-        );
+        const { container } = render(<BrutalButton fullWidth>Botao Largo</BrutalButton>);
         const button = container.firstChild as HTMLElement;
         expect(button.className).toContain('w-full');
     });
 
-    it('renderiza ícone quando fornecido', () => {
+    it('renderiza icone quando fornecido', () => {
         render(
-            <BrutalButton icon={<span data-testid="icone">★</span>}>
-                Com Ícone
+            <BrutalButton icon={<span data-testid="icone">*</span>}>
+                Com Icone
             </BrutalButton>
         );
         expect(screen.getByTestId('icone')).toBeInTheDocument();
-        expect(screen.getByText('Com Ícone')).toBeInTheDocument();
+        expect(screen.getByText('Com Icone')).toBeInTheDocument();
     });
 
     it('aplica classe de danger variant', () => {
-        const { container } = render(
-            <BrutalButton variant="danger">Perigo</BrutalButton>
-        );
+        const { container } = render(<BrutalButton variant="danger">Perigo</BrutalButton>);
         const button = container.firstChild as HTMLElement;
         expect(button.className).toContain('red');
     });
 
     it('size sm aplica classes menores', () => {
-        const { container } = render(
-            <BrutalButton size="sm">Pequeno</BrutalButton>
-        );
+        const { container } = render(<BrutalButton size="sm">Pequeno</BrutalButton>);
         const button = container.firstChild as HTMLElement;
-        expect(button.className).toContain('h-8');
+        expect(button.className).toContain('h-9');
     });
 
     it('size lg aplica classes maiores', () => {
-        const { container } = render(
-            <BrutalButton size="lg">Grande</BrutalButton>
-        );
+        const { container } = render(<BrutalButton size="lg">Grande</BrutalButton>);
         const button = container.firstChild as HTMLElement;
-        expect(button.className).toContain('h-14');
+        expect(button.className).toContain('h-15');
     });
 });

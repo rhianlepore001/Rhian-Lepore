@@ -1,7 +1,7 @@
 {
-    "name": "AgenX Barber",
-    "short_name": "AgenX",
-    "description": "AgenX: Fluxo automático e gestão inteligente para barbearias",
+    "name": "AgendiX Barber",
+    "short_name": "AgendiX",
+    "description": "AgendiX: Fluxo automático e gestão inteligente para barbearias",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#121212",
@@ -9,9 +9,9 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "/icon-agenx.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
+            "src": "/logo-agendix-app.png",
+            "sizes": "512x512",
+            "type": "image/png",
             "purpose": "any maskable"
         }
     ],

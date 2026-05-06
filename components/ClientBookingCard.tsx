@@ -128,20 +128,21 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
     return (
         <div className={`
-            relative overflow-hidden rounded-2xl transition-all duration-300
+            relative overflow-hidden rounded-2xl transition-all duration-300 hover:translate-y-[-2px] hover:shadow-promax-glass
             ${isBeauty
-                ? 'bg-white border border-stone-100 shadow-md hover:shadow-lg'
-                : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700'
+                ? 'bg-silk-card border border-silk-border shadow-silk-shadow hover:shadow-[0_14px_40px_rgba(0,0,0,0.2)]'
+                : 'bg-brutal-card border border-white/5 hover:border-white/10'
             }
         `}>
-            {/* Status bar top */}
-            <div className={`h-1 w-full ${booking.status === 'confirmed' ? (isBeauty ? 'bg-green-400' : 'bg-green-500') :
-                    booking.status === 'pending' ? (isBeauty ? 'bg-amber-400' : 'bg-yellow-500') :
-                        booking.status === 'completed' ? (isBeauty ? 'bg-stone-300' : 'bg-zinc-600') :
-                            'bg-red-400'
-                }`} />
+            {/* Status bar — lateral esquerda */}
+            <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${
+                booking.status === 'confirmed' ? (isBeauty ? 'bg-green-400' : 'bg-green-500') :
+                booking.status === 'pending' ? (isBeauty ? 'bg-amber-400' : 'bg-yellow-500') :
+                booking.status === 'completed' ? (isBeauty ? 'bg-stone-300' : 'bg-zinc-600') :
+                'bg-red-400'
+            }`} aria-hidden="true" />
 
-            <div className="p-5 space-y-4">
+            <div className="p-5 pl-6 space-y-4">
                 {/* Header: date + status */}
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">

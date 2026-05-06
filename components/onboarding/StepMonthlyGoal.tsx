@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Target, SkipForward } from 'lucide-react';
+import { Loader2, Target } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -56,7 +56,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                     <Target className={`w-8 h-8 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                 </div>
                 <p className="text-neutral-400 text-sm">
-                    Definir uma meta ajuda o sistema a te mostrar seu progresso e sugerir ações para alcançar seus objetivos.
+                    Com uma meta definida, você acompanha seu progresso no dashboard e recebe alertas quando está perto de bater.
                 </p>
             </div>
 
@@ -102,31 +102,29 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                 </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex gap-3 pt-4">
                 <button
                     onClick={onBack}
-                    className="flex-1 py-4 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors"
+                    className="px-5 py-4 text-neutral-500 hover:text-neutral-300 font-bold transition-colors text-sm"
                 >
                     Voltar
                 </button>
                 <button
                     onClick={handleSubmit}
                     disabled={submitting || !goal}
-                    className={`flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed
+                    className={`flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed
                         ${isBeauty ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90' : 'bg-accent-gold text-black hover:bg-accent-gold/90'}`}
                 >
-                    {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Definir Meta'}
+                    {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Definir Meta'}
+                </button>
+                <button
+                    onClick={handleSkip}
+                    disabled={submitting}
+                    className="px-5 py-4 text-neutral-500 hover:text-neutral-300 font-bold transition-colors text-sm"
+                >
+                    Pular
                 </button>
             </div>
-
-            <button
-                onClick={handleSkip}
-                disabled={submitting}
-                className="w-full py-3 text-neutral-500 hover:text-neutral-300 transition-colors flex items-center justify-center gap-2 text-sm"
-            >
-                <SkipForward className="w-4 h-4" />
-                Pular por agora
-            </button>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
@@ -8,10 +9,8 @@ import { Loader2 } from 'lucide-react';
 import { logger } from '../../utils/Logger';
 
 export const FinancialSettings: React.FC = () => {
-  const { user, userType } = useAuth();
-
-  const isBeauty = userType === 'beauty';
-  const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+  const { user } = useAuth();
+  const { isBeauty, accent } = useBrutalTheme();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,7 +83,7 @@ export const FinancialSettings: React.FC = () => {
     <SettingsLayout>
       <div className="space-y-6">
         <div>
-          <h2 className={`text-xl font-bold font-mono ${accentText}`}>
+          <h2 className={`text-xl font-bold font-mono ${accent.text}`}>
             Configurações Financeiras
           </h2>
           <p className="text-neutral-400 text-sm mt-1">
@@ -93,8 +92,8 @@ export const FinancialSettings: React.FC = () => {
         </div>
 
         <BrutalCard>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-white">Repassar taxa de maquininha ao colaborador?</p>
                 <p className="text-xs text-neutral-400 mt-0.5">
@@ -109,12 +108,12 @@ export const FinancialSettings: React.FC = () => {
                   onChange={(e) => setMachineFeeEnabled(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-gold"></div>
+                <div className={`w-11 h-6 bg-white/10 border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${isBeauty ? 'peer-checked:bg-beauty-neon' : 'peer-checked:bg-accent-gold'}`}></div>
               </label>
             </div>
 
             {machineFeeEnabled && (
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-neutral-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/10">
                 <div>
                   <label htmlFor="debit-fee" className="block text-xs font-mono uppercase text-neutral-400 mb-1">
                     Taxa Débito (%)
@@ -129,7 +128,7 @@ export const FinancialSettings: React.FC = () => {
                     placeholder="Ex: 2.5"
                     value={debitFee}
                     onChange={(e) => setDebitFee(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-gold"
+                    className={`w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none ${isBeauty ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
                   />
                 </div>
                 <div>
@@ -146,7 +145,7 @@ export const FinancialSettings: React.FC = () => {
                     placeholder="Ex: 3.5"
                     value={creditFee}
                     onChange={(e) => setCreditFee(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-gold"
+                    className={`w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none ${isBeauty ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
                   />
                 </div>
               </div>

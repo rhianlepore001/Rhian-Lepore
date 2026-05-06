@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Upload, User as UserIcon } from 'lucide-react';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface ProfileModalProps {
     onClose: () => void;
@@ -22,9 +23,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     const [photoPreview, setPhotoPreview] = useState<string | null>(avatarUrl);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Theme
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const { accent, colors, classes, font } = useBrutalTheme();
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -89,7 +88,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     photo_url: newPhotoUrl
                 })
                 .eq('user_id', user?.id)
-                .eq('is_owner', true); // Assuming the profile being edited belongs to the owner/admin
+                .eq('is_owner', true);
 
             if (teamError) console.error("Error syncing team member profile:", teamError);
 
@@ -104,31 +103,26 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
         }
     };
 
-    // Unified Modal Styles
-    const modalStyles = isBeauty
-        ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-neon'
-        : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg';
-
     return createPortal(
-        <div className="fixed inset-0 bg-black/80 z-[100] md:left-64 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className={`fixed inset-0 ${colors.overlay} z-[100] md:left-64 flex items-center justify-center p-4 backdrop-blur-sm`}>
             <FocusTrap active={true}>
-                <div className={`w-full max-w-md p-6 relative transition-all ${modalStyles}`}
+                <div className={`w-full max-w-md p-6 relative transition-all ${classes.modalContainer}`}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="profile-modal-title"
                 >
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
+                    className={`absolute top-4 right-4 ${colors.textSecondary} hover:${colors.text} transition-colors`}
                 >
                     <span className="sr-only">Fechar</span>
                     X
                 </button>
-                <h3 id="profile-modal-title" className={`text-xl font-heading text-white mb-6 uppercase ${isBeauty ? 'tracking-normal' : 'tracking-wider'}`}>Meu Perfil</h3>
+                <h3 id="profile-modal-title" className={`text-xl font-heading ${colors.text} mb-6 ${font.heading === 'font-heading' ? 'tracking-wide' : 'tracking-normal'}`}>Meu Perfil</h3>
 
                 <div className="flex justify-center mb-6">
                     <div
-                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-${accentText.replace('text-', '')} overflow-hidden group transition-colors`}
+                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:${accent.border} overflow-hidden group transition-colors`}
                         onClick={() => fileInputRef.current?.click()}
                     >
                         {photoPreview ? (
@@ -152,17 +146,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 <form onSubmit={handleSave} className="space-y-4">
                     {!isStaff && (
                     <div>
-                        <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`} htmlFor="profile-business-name">Nome do Negócio</label>
+                        <label className={`block text-xs ${colors.textMuted} mb-1 ${font.label}`} htmlFor="profile-business-name">Nome do Negócio</label>
                         <input
                             id="profile-business-name"
                             type="text"
                             value={newBusinessName}
                             onChange={(e) => setNewBusinessName(e.target.value)}
-                            className={`w-full p-3 text-white outline-none transition-all
-                                ${isBeauty
-                                    ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50 focus:bg-white/10'
-                                    : 'bg-black border border-neutral-700 focus:border-white'}
-                            `}
+                            className={`w-full p-3 ${colors.text} outline-none transition-all ${classes.input}`}
                             placeholder="Ex: Studio Glow"
                             required
                         />
@@ -170,58 +160,48 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     )}
 
                     <div>
-                        <label className={`block text-xs text-neutral-500 mb-1 ${isBeauty ? 'font-sans font-medium' : 'font-mono'}`} htmlFor="profile-full-name">Seu Nome Completo</label>
+                        <label className={`block text-xs ${colors.textMuted} mb-1 ${font.label}`} htmlFor="profile-full-name">Seu Nome Completo</label>
                         <input
                             id="profile-full-name"
                             type="text"
                             value={newFullName}
                             onChange={(e) => setNewFullName(e.target.value)}
-                            className={`w-full p-3 text-white outline-none transition-all
-                                ${isBeauty
-                                    ? 'bg-white/5 border border-white/10 rounded-xl focus:border-beauty-neon/50 focus:bg-white/10'
-                                    : 'bg-black border border-neutral-700 focus:border-white'}
-                            `}
+                            className={`w-full p-3 ${colors.text} outline-none transition-all ${classes.input}`}
                             placeholder="Ex: Leticia Luiza"
                             required
                         />
                     </div>
 
-                    <div className={`p-4 border rounded ${isBeauty ? 'bg-white/5 border-white/5 rounded-xl' : 'bg-black/50 border-neutral-800'}`}>
-                        <p className={`text-xs text-neutral-500 mb-2 ${isBeauty ? 'font-sans' : 'font-mono'}`}>Informações da Conta</p>
+                    <div className={`p-4 border rounded ${colors.card} ${colors.border}`}>
+                        <p className={`text-xs ${colors.textMuted} mb-2 ${font.label}`}>Informações da Conta</p>
                         <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-white">Tipo</span>
-                            <span className={`text-xs font-bold uppercase ${accentText}`}>{userType}</span>
+                            <span className={`text-sm ${colors.text}`}>Tipo</span>
+                            <span className={`text-xs font-bold uppercase ${accent.text}`}>{userType}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-sm text-white">Região</span>
-                            <span className="text-xs font-bold text-white">{region}</span>
+                            <span className={`text-sm ${colors.text}`}>Região</span>
+                            <span className={`text-xs font-bold ${colors.text}`}>{region}</span>
                         </div>
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-3 font-bold uppercase tracking-wider mt-4 disabled:opacity-50 transition-all rounded-xl
-                            ${isBeauty
-                                ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90 shadow-neon'
-                                : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-heavy hover:shadow-heavy-lg'}
-                        `}
+                        className={`w-full py-3 font-bold uppercase tracking-wider mt-4 disabled:opacity-50 transition-all rounded-xl ${classes.buttonPrimary}`}
                     >
                         {loading ? 'Salvando...' : 'Salvar Alterações'}
                     </button>
                 </form>
 
                 {!isStaff && (
-                <div className="mt-4 pt-4 border-t border-neutral-800">
+                <div className={`mt-4 pt-4 border-t ${colors.divider}`}>
                     <button
                         type="button"
                         onClick={() => {
                             navigate('/configuracoes/geral');
                             onClose();
                         }}
-                        className={`w-full flex items-center justify-center gap-2 text-center py-2 text-xs font-mono uppercase transition-colors
-                            ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon' : 'text-accent-gold/70 hover:text-accent-gold'}
-                        `}
+                        className={`w-full flex items-center justify-center gap-2 text-center py-2 text-xs font-mono uppercase transition-colors ${accent.text}/70 hover:${accent.text}`}
                     >
                         <Settings className="w-3 h-3" />
                         Configurações Avançadas

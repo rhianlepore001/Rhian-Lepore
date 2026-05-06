@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$description": "Semantic tokens for Barber Light mode — warm parchment background with muted gold accent.",
+  "theme": "barber",
+  "mode": "light",
+  "color": {
+    "bg": "#F5F1E8",
+    "card": "#FFFFFF",
+    "cardElevated": "#FFFFFF",
+    "cardHover": "rgba(0, 0, 0, 0.04)",
+    "surface": "#EDE9E0",
+    "divider": "rgba(0, 0, 0, 0.08)",
+    "overlay": "rgba(31, 24, 10, 0.45)",
+    "accent": "#A07A2A",
+    "accentHover": "#B8892F",
+    "accentDim": "rgba(160, 122, 42, 0.15)",
+    "accentBorder": "rgba(160, 122, 42, 0.4)",
+    "text": "#1A1A1A",
+    "textSecondary": "#6B5E45",
+    "textMuted": "rgba(0, 0, 0, 0.4)",
+    "border": "rgba(0, 0, 0, 0.08)",
+    "borderStrong": "rgba(0, 0, 0, 0.12)",
+    "inputBg": "rgba(0, 0, 0, 0.04)",
+    "inputBorder": "rgba(0, 0, 0, 0.1)",
+    "inputFocusBorder": "rgba(160, 122, 42, 0.5)",
+    "danger": "#DC2626",
+    "dangerBg": "rgba(220, 38, 38, 0.08)",
+    "dangerBorder": "rgba(220, 38, 38, 0.2)",
+    "success": "#059669",
+    "successBg": "rgba(5, 150, 105, 0.08)",
+    "successBorder": "rgba(5, 150, 105, 0.15)",
+    "warning": "#D97706",
+    "warningBg": "rgba(217, 119, 6, 0.08)",
+    "warningBorder": "rgba(217, 119, 6, 0.15)"
+  },
+  "gradient": {
+    "card": "linear-gradient(135deg, #FFFFFF 0%, #FAFAF8 100%)",
+    "surface": "linear-gradient(135deg, #F5F1E8 0%, #EDE9E0 100%)",
+    "bgRadial": "radial-gradient(circle at 20% 80%, rgba(160, 122, 42, 0.03) 0%, transparent 40%)"
+  },
+  "shadow": {
+    "card": "0 10px 30px -10px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05)",
+    "cardMobile": "0 4px 12px rgba(0, 0, 0, 0.08)",
+    "cardAccent": "0 4px 20px rgba(160, 122, 42, 0.15)",
+    "cardGlow": "0 8px 24px rgba(160, 122, 42, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)",
+    "buttonPrimary": "0 4px 14px rgba(160, 122, 42, 0.2)",
+    "modal": "0 20px 60px -15px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.08)"
+  }
+}

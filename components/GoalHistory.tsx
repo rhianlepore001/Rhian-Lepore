@@ -42,7 +42,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
     const borderStyle = isBeauty ? 'border-beauty-neon/30 rounded-xl' : 'border-brutal-border border-2';
     const cardStyle = isBeauty
         ? 'bg-beauty-card/30 border border-beauty-neon/20 rounded-xl'
-        : 'bg-neutral-900 border-2 border-brutal-border shadow-[2px_2px_0px_0px_#000000]';
+        : 'bg-neutral-900 border-2 border-brutal-border shadow-brutal-sm';
 
     return (
         <div className="space-y-6">

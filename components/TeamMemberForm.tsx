@@ -146,7 +146,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             <div className={`w-full max-w-md overflow-hidden transition-all shadow-2xl
                 ${isBeauty
                     ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                    : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-[8px_8px_0px_0px_#000000]'}
+                    : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
             `}>
                 <div className={`flex items-center justify-between p-4 ${isBeauty ? 'border-b border-beauty-neon/20' : 'border-b border-neutral-800'}`}>
                     <h3 className={`font-bold text-lg ${isBeauty ? 'text-white font-sans' : 'text-white font-heading uppercase'}`}>

@@ -105,7 +105,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
 
     return (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 md:p-4 backdrop-blur-md">
-            <div className="bg-neutral-900 border-0 md:border-2 border-neutral-800 md:rounded-3xl w-full max-w-4xl h-full md:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="bg-brutal-card border-0 md:border md:border-white/5 md:rounded-3xl w-full max-w-4xl h-full md:h-[90vh] flex flex-col shadow-promax-depth overflow-hidden">
                 {/* Header */}
                 <div className="p-4 md:p-8 border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-md sticky top-0 z-20">
                     <div className="flex items-center justify-between mb-4 md:mb-6">

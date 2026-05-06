@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBrutalTheme } from '@/hooks/useBrutalTheme';
 import { useUI } from '@/contexts/UIContext';
 import { BrutalCard } from '@/components/BrutalCard';
 import { BrutalButton } from '@/components/BrutalButton';
@@ -12,9 +13,9 @@ interface PageItem {
 }
 
 export const PageName: React.FC = () => {
-  const { user, userType, companyId } = useAuth();
+  const { user, companyId } = useAuth();
   const { isMobile } = useUI();
-  const isBeauty = userType === 'beauty';
+  const { isBeauty } = useBrutalTheme();
 
   const [items, setItems] = useState<PageItem[]>([]);
   const [loading, setLoading] = useState(true);

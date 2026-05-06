@@ -139,8 +139,10 @@ export const QueueJoin: React.FC = () => {
 
     const accentColor = business.user_type === 'beauty' ? 'text-beauty-neon' : 'text-accent-gold';
     const borderColor = business.user_type === 'beauty' ? 'border-beauty-neon/20' : 'border-accent-gold/20';
-    const bgCard = business.user_type === 'beauty' ? 'bg-neutral-900/40 backdrop-blur-md' : 'bg-neutral-900';
-    const inputBg = business.user_type === 'beauty' ? 'bg-neutral-950/50' : 'bg-neutral-900';
+    const bgCard = business.user_type === 'beauty'
+        ? 'bg-white/[0.06] backdrop-blur-xl border-white/15'
+        : 'bg-white/[0.04] backdrop-blur-lg border-white/10';
+    const inputBg = business.user_type === 'beauty' ? 'bg-white/[0.05]' : 'bg-white/[0.03]';
 
     // Filtering Logic
     const filteredServices = services.filter(s => {
@@ -177,16 +179,16 @@ export const QueueJoin: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-md mx-auto px-6 -mt-4 relative z-20 space-y-6">
+            <div className="max-w-md mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-5">
 
                 {/* Intro Card */}
-                <div className={`${bgCard} border ${borderColor} rounded-xl p-5 shadow-lg`}>
+                <div className={`${bgCard} border ${borderColor} rounded-2xl p-5 shadow-xl`}>
                     <h2 className="text-lg font-bold text-white mb-2">Entre na fila sem esperar em pé!</h2>
                     <p className="text-sm text-neutral-400">Preencha seus dados, escolha o serviço e acompanhe sua vez pelo celular.</p>
                 </div>
 
                 {/* Form */}
-                <div className="space-y-4">
+                <div className={`${bgCard} border ${borderColor} rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl`}>
                     <div>
                         <label className="block text-xs font-bold uppercase text-neutral-500 mb-1.5 ml-1">Seu Nome</label>
                         <div className="relative">
@@ -194,7 +196,7 @@ export const QueueJoin: React.FC = () => {
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className={`w-full ${inputBg} border ${borderColor} rounded-xl p-4 pl-12 text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all font-medium`}
+                                className={`w-full ${inputBg} border ${borderColor} rounded-2xl p-4 pl-12 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400/60 transition-all font-medium`}
                                 placeholder="Como quer ser chamado?"
                             />
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
@@ -223,7 +225,7 @@ export const QueueJoin: React.FC = () => {
                                 <div className="flex gap-2 overflow-x-auto pb-1 noscroll">
                                     <button
                                         onClick={() => setSelectedCategory('all')}
-                                        className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === 'all' ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon/30' : 'bg-accent-gold/20 text-accent-gold border-accent-gold/30'}` : 'bg-neutral-900 border-neutral-800 text-neutral-500'}`}
+                                        className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === 'all' ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/15 text-beauty-neon border-beauty-neon/35' : 'bg-accent-gold/15 text-accent-gold border-accent-gold/35'}` : 'bg-white/[0.03] border-white/10 text-neutral-400'}`}
                                     >
                                         Todos
                                     </button>
@@ -231,7 +233,7 @@ export const QueueJoin: React.FC = () => {
                                         <button
                                             key={cat.id}
                                             onClick={() => setSelectedCategory(cat.id)}
-                                            className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon/30' : 'bg-accent-gold/20 text-accent-gold border-accent-gold/30'}` : 'bg-neutral-900 border-neutral-800 text-neutral-500'}`}
+                                            className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/15 text-beauty-neon border-beauty-neon/35' : 'bg-accent-gold/15 text-accent-gold border-accent-gold/35'}` : 'bg-white/[0.03] border-white/10 text-neutral-400'}`}
                                         >
                                             {cat.name}
                                         </button>
@@ -246,7 +248,7 @@ export const QueueJoin: React.FC = () => {
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                     placeholder="Buscar serviço..."
-                                    className={`w-full ${inputBg} border ${borderColor} rounded-lg p-3.5 pl-10 text-base text-white placeholder-neutral-600 focus:outline-none transition-all`}
+                                    className={`w-full ${inputBg} border ${borderColor} rounded-2xl p-3.5 pl-10 text-base text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 transition-all`}
                                 />
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
                             </div>
@@ -260,7 +262,7 @@ export const QueueJoin: React.FC = () => {
                                     <button
                                         key={service.id}
                                         onClick={() => setSelectedService(service.id)}
-                                        className={`w-full p-4 rounded-xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? `bg-neutral-800/80 ${borderColor} border-opacity-100 shadow-[0_0_15px_rgba(168,85,247,0.15)]` : `${inputBg} border-transparent opacity-60 hover:opacity-100`}`}
+                                        className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? `bg-white/[0.08] ${borderColor} border-opacity-100 shadow-[0_0_15px_rgba(168,85,247,0.12)]` : `${inputBg} border-white/5 hover:border-white/15`}`}
                                     >
                                         <span className="font-medium text-white text-base">{service.name}</span>
                                         <div className="text-right">
@@ -278,9 +280,9 @@ export const QueueJoin: React.FC = () => {
                         <div className="flex gap-2 overflow-x-auto pb-2 noscroll">
                             <button
                                 onClick={() => setSelectedProfessional(null)}
-                                className={`flex-shrink-0 w-20 p-2 rounded-xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === null ? `bg-neutral-800/80 ${borderColor}` : `${inputBg} border-transparent opacity-50`}`}
+                                className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === null ? `bg-white/[0.08] ${borderColor}` : `${inputBg} border-white/5`}`}
                             >
-                                <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700">
+                                <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center border border-white/10">
                                     <Users className="w-5 h-5 text-neutral-400" />
                                 </div>
                                 <span className="text-[10px] font-bold text-center">Qualquer</span>
@@ -289,12 +291,12 @@ export const QueueJoin: React.FC = () => {
                                 <button
                                     key={pro.id}
                                     onClick={() => setSelectedProfessional(pro.id)}
-                                    className={`flex-shrink-0 w-20 p-2 rounded-xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === pro.id ? `bg-neutral-800/80 ${borderColor}` : `${inputBg} border-transparent opacity-50`}`}
+                                    className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === pro.id ? `bg-white/[0.08] ${borderColor}` : `${inputBg} border-white/5`}`}
                                 >
                                     {pro.photo_url ? (
-                                        <img src={pro.photo_url} className="w-10 h-10 rounded-full object-cover border border-neutral-700" />
+                                        <img src={pro.photo_url} className="w-10 h-10 rounded-full object-cover border border-white/10" />
                                     ) : (
-                                        <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center border border-neutral-700">
+                                        <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center border border-white/10">
                                             <span className="text-xs font-bold">{pro.name.substring(0, 2)}</span>
                                         </div>
                                     )}

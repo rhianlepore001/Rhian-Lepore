@@ -34,36 +34,37 @@ const baseProps = {
 };
 
 describe('AppointmentReview — métodos de pagamento por region', () => {
-  it('BR: exibe Dinheiro, Pix e Cartão (sem MBWay)', () => {
+  it('BR: exibe Dinheiro, Pix, Débito e Crédito (sem MBWay)', () => {
     render(<AppointmentReview {...baseProps} region="BR" />);
 
-    expect(screen.getByText('DINHEIRO')).toBeInTheDocument();
-    expect(screen.getByText('PIX')).toBeInTheDocument();
-    expect(screen.getByText('CARTÃO')).toBeInTheDocument();
-    expect(screen.queryByText('MBWAY')).not.toBeInTheDocument();
+    expect(screen.getByText('Dinheiro')).toBeInTheDocument();
+    expect(screen.getByText('Pix')).toBeInTheDocument();
+    expect(screen.getByText('Débito')).toBeInTheDocument();
+    expect(screen.getByText('Crédito')).toBeInTheDocument();
+    expect(screen.queryByText('MBWay')).not.toBeInTheDocument();
   });
 
-  it('PT: exibe Dinheiro, MBWay e Cartão (sem Pix)', () => {
+  it('PT: exibe Dinheiro, MBWay, Débito e Crédito (sem Pix)', () => {
     render(<AppointmentReview {...baseProps} region="PT" currencyRegion="PT" currencySymbol="€" />);
 
-    expect(screen.getByText('DINHEIRO')).toBeInTheDocument();
-    expect(screen.getByText('MBWAY')).toBeInTheDocument();
-    expect(screen.getByText('CARTÃO')).toBeInTheDocument();
-    expect(screen.queryByText('PIX')).not.toBeInTheDocument();
+    expect(screen.getByText('Dinheiro')).toBeInTheDocument();
+    expect(screen.getByText('MBWay')).toBeInTheDocument();
+    expect(screen.getByText('Débito')).toBeInTheDocument();
+    expect(screen.getByText('Crédito')).toBeInTheDocument();
+    expect(screen.queryByText('Pix')).not.toBeInTheDocument();
   });
 
-  it('BR: exibe exatamente 3 botões de pagamento', () => {
+  it('BR: exibe os botões de pagamento corretos', () => {
     render(<AppointmentReview {...baseProps} region="BR" />);
-    // Os 3 botões de pagamento têm a label em uppercase
-    const paymentButtons = ['DINHEIRO', 'PIX', 'CARTÃO'];
+    const paymentButtons = ['Dinheiro', 'Pix', 'Débito', 'Crédito'];
     paymentButtons.forEach(label => {
       expect(screen.getByText(label)).toBeInTheDocument();
     });
   });
 
-  it('PT: exibe exatamente 3 botões de pagamento', () => {
+  it('PT: exibe os botões de pagamento corretos', () => {
     render(<AppointmentReview {...baseProps} region="PT" currencyRegion="PT" currencySymbol="€" />);
-    const paymentButtons = ['DINHEIRO', 'MBWAY', 'CARTÃO'];
+    const paymentButtons = ['Dinheiro', 'MBWay', 'Débito', 'Crédito'];
     paymentButtons.forEach(label => {
       expect(screen.getByText(label)).toBeInTheDocument();
     });

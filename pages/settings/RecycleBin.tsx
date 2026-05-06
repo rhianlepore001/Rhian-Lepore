@@ -7,7 +7,7 @@ import {
     Clock, Calendar, FileText, Users, Scissors,
     Wallet, CheckCircle2
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { supabase } from '../../lib/supabase';
 
 interface DeletedItem {
@@ -19,15 +19,11 @@ interface DeletedItem {
 }
 
 export const RecycleBin: React.FC = () => {
-    const { userType } = useAuth();
+    const { accent } = useBrutalTheme();
     const [items, setItems] = useState<DeletedItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [restoring, setRestoring] = useState<string | null>(null);
     const [filter, setFilter] = useState<string>('');
-
-    const isBeauty = userType === 'beauty';
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
 
     useEffect(() => {
         loadDeletedItems();
@@ -120,7 +116,7 @@ export const RecycleBin: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-white/10 pb-4">
                     <div>
                         <h2 className="text-2xl md:text-4xl font-heading text-white uppercase flex items-center gap-3">
-                            <Trash2 className={`w-8 h-8 ${accentText}`} />
+                            <Trash2 className={`w-8 h-8 ${accent.text}`} />
                             Lixeira
                         </h2>
                         <p className="text-text-secondary font-mono mt-2 text-sm">
@@ -247,7 +243,7 @@ export const RecycleBin: React.FC = () => {
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">
                                 Total na Lixeira
                             </p>
-                            <p className={`text-3xl font-bold ${accentText}`}>
+                            <p className={`text-3xl font-bold ${accent.text}`}>
                                 {items.length}
                             </p>
                         </BrutalCard>

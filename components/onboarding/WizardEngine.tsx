@@ -5,6 +5,7 @@ import { WizardOverlay } from '@/components/onboarding/WizardOverlay';
 import { WizardProgress } from '@/components/onboarding/WizardProgress';
 import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBrutalTheme } from '@/hooks/useBrutalTheme';
 import { saveOnboardingStep, completeOnboarding } from '@/lib/onboarding';
 
 // Fluxo simplificado: apenas boas-vindas + cadastro de serviço
@@ -38,11 +39,10 @@ function StepLoadingFallback() {
 
 export function WizardEngine() {
   const { state, dispatch } = useWizard();
-  const { userType, companyId, markTutorialCompleted } = useAuth();
+  const { companyId, markTutorialCompleted } = useAuth();
   const navigate = useNavigate();
 
-  const isBeauty = userType === 'beauty';
-  const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
+  const { isBeauty, accent } = useBrutalTheme();
 
   const { currentStep, isActive, completedSteps } = state;
 
@@ -80,7 +80,7 @@ export function WizardEngine() {
         return (
           <StepWelcome
             onNext={() => void completeStep(1)}
-            accentColor={accentColor}
+            accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
           />
         );
       case 2:
@@ -88,7 +88,7 @@ export function WizardEngine() {
           <StepServices
             onNext={() => void completeStep(2)}
             onBack={() => goToStep(1)}
-            accentColor={accentColor}
+            accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
           />
         );
       default:
@@ -98,32 +98,76 @@ export function WizardEngine() {
 
   return (
     <WizardOverlay isActive={isActive}>
-      <div className="relative z-[9997] flex flex-col items-center justify-center min-h-screen p-4 pointer-events-auto">
-        {/* Progress bar */}
-        <div className="w-full max-w-lg mb-6">
-          <WizardProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+      <div className="relative z-[9997] flex min-h-screen pointer-events-auto bg-background text-foreground">
+        
+        {/* Left Side: Brand/Visual */}
+        <div className={`hidden lg:flex lg:flex-col lg:w-1/2 p-12 justify-between relative overflow-hidden
+          ${isBeauty ? 'bg-beauty-neon/5' : 'bg-accent-gold/5'} border-r border-border`}>
+          
+          {/* Decorative Pattern / Blobs */}
+          <div className={`absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none
+            ${accent.bg}`} />
+          <div className={`absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-10 pointer-events-none translate-x-1/3 translate-y-1/3
+            ${accent.bg}`} />
+
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold font-heading text-foreground tracking-tight">AgendiX</h1>
+            <p className="text-muted-foreground mt-2 font-mono text-sm uppercase tracking-wider">Configuração Inicial</p>
+          </div>
+          
+          <div className="space-y-6 max-w-md relative z-10">
+            <h2 className="text-4xl font-bold font-heading text-foreground leading-tight">
+              Sua agenda <br/>
+              <span className={accent.text}>inteligente</span> e <br/>
+              automatizada.
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Prepare seu espaço em poucos minutos e comece a receber agendamentos online hoje mesmo.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground relative z-10">
+            © {new Date().getFullYear()} AgendiX. Todos os direitos reservados.
+          </div>
         </div>
 
-        {/* Step title */}
-        <div className="text-center mb-4">
-          <span className="text-2xl" aria-hidden="true">
-            {currentStepConfig.icon}
-          </span>
-          <h2 className="text-white text-xl font-bold mt-1">{currentStepConfig.title}</h2>
-        </div>
+        {/* Right Side: Content */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative">
+          
+          {/* Logo on mobile */}
+          <div className="lg:hidden absolute top-6 left-6">
+            <h1 className="text-xl font-bold font-heading text-foreground tracking-tight">AgendiX</h1>
+          </div>
 
-        {/* Step content — ID fora do Suspense para WizardPointer encontrar imediatamente */}
-        <div
-          key={currentStep}
-          id={`wizard-step-${currentStep}`}
-          className="w-full max-w-lg animate-slide-up"
-        >
-          <Suspense fallback={<StepLoadingFallback />}>
-            {renderCurrentStepContent()}
-          </Suspense>
+          <div className="w-full max-w-md mt-16 lg:mt-0">
+            {/* Progress bar */}
+            <div className="mb-10">
+              <WizardProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+            </div>
+
+            {/* Step title */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl" aria-hidden="true">
+                  {currentStepConfig.icon}
+                </span>
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">{currentStepConfig.title}</h2>
+              </div>
+            </div>
+
+            {/* Step content — ID fora do Suspense para WizardPointer encontrar imediatamente */}
+            <div
+              key={currentStep}
+              id={`wizard-step-${currentStep}`}
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+            >
+              <Suspense fallback={<StepLoadingFallback />}>
+                {renderCurrentStepContent()}
+              </Suspense>
+            </div>
+          </div>
         </div>
       </div>
-
     </WizardOverlay>
   );
 }

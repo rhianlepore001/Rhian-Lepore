@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useOnboardingState, OnboardingStep } from '../hooks/useOnboardingState';
 import { OnboardingLayout } from '../components/OnboardingLayout';
 import { StepBusinessInfo } from '../components/onboarding/StepBusinessInfo';
@@ -12,11 +12,10 @@ import { StepSuccess } from '../components/onboarding/StepSuccess';
 const TOTAL_STEPS = 5; // 4 etapas + tela de sucesso
 
 export const OnboardingWizard: React.FC = () => {
-    const { userType } = useAuth();
+    const { isBeauty } = useBrutalTheme();
     const navigate = useNavigate();
     const { step, loading, completed, goToStep } = useOnboardingState();
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
     if (loading) {
@@ -42,7 +41,7 @@ export const OnboardingWizard: React.FC = () => {
 
     const steps: Array<{ title: string; description: string; component: React.ReactNode }> = [
         {
-            title: isBeauty ? 'Bem-vindo ao AgenX Beauty' : 'Bem-vindo ao AgenX Barber',
+            title: isBeauty ? 'Bem-vindo ao AgendiX Beauty' : 'Bem-vindo ao AgendiX Barber',
             description: 'Primeiro, conte-nos sobre o seu negócio.',
             component: (
                 <StepBusinessInfo

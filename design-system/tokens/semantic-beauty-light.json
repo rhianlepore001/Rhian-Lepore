@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$description": "Semantic tokens for Beauty Light mode — soft lavender-white with purple accent.",
+  "theme": "beauty",
+  "mode": "light",
+  "color": {
+    "bg": "#F7F5FF",
+    "card": "#FFFFFF",
+    "cardElevated": "#FFFFFF",
+    "cardHover": "rgba(124, 58, 237, 0.04)",
+    "surface": "#EDE8FF",
+    "divider": "rgba(124, 58, 237, 0.1)",
+    "overlay": "rgba(31, 27, 46, 0.45)",
+    "accent": "#7C3AED",
+    "accentHover": "#6D28D9",
+    "accentDim": "rgba(124, 58, 237, 0.12)",
+    "accentBorder": "rgba(124, 58, 237, 0.3)",
+    "text": "#1A1225",
+    "textSecondary": "#5B4D7A",
+    "textMuted": "rgba(0, 0, 0, 0.35)",
+    "border": "rgba(124, 58, 237, 0.12)",
+    "borderStrong": "rgba(124, 58, 237, 0.2)",
+    "inputBg": "rgba(124, 58, 237, 0.04)",
+    "inputBorder": "rgba(124, 58, 237, 0.15)",
+    "inputFocusBorder": "rgba(124, 58, 237, 0.4)",
+    "danger": "#DC2626",
+    "dangerBg": "rgba(220, 38, 38, 0.08)",
+    "dangerBorder": "rgba(220, 38, 38, 0.15)",
+    "success": "#059669",
+    "successBg": "rgba(5, 150, 105, 0.08)",
+    "successBorder": "rgba(5, 150, 105, 0.12)",
+    "warning": "#D97706",
+    "warningBg": "rgba(217, 119, 6, 0.08)",
+    "warningBorder": "rgba(217, 119, 6, 0.12)"
+  },
+  "gradient": {
+    "card": "linear-gradient(135deg, #FFFFFF 0%, #FBF9FF 100%)",
+    "surface": "linear-gradient(135deg, #F7F5FF 0%, #EDE8FF 100%)",
+    "bgRadial": "radial-gradient(circle at 15% 85%, rgba(124, 58, 237, 0.03) 0%, transparent 40%)"
+  },
+  "shadow": {
+    "card": "0 10px 30px -10px rgba(124, 58, 237, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04)",
+    "cardMobile": "0 4px 12px rgba(124, 58, 237, 0.06)",
+    "cardAccent": "0 4px 20px rgba(124, 58, 237, 0.2)",
+    "cardGlow": "0 8px 24px rgba(124, 58, 237, 0.15), 0 4px 8px rgba(0, 0, 0, 0.04)",
+    "buttonPrimary": "0 4px 14px rgba(124, 58, 237, 0.25)",
+    "modal": "0 20px 60px -15px rgba(124, 58, 237, 0.12), 0 8px 16px rgba(0, 0, 0, 0.06)"
+  }
+}

@@ -1,56 +1,57 @@
+import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { BrutalCard } from '../../components/BrutalCard';
-import React from 'react';
 
-// Mock do AuthContext
 const mockUserType = { current: 'barber' };
+
 vi.mock('../../contexts/AuthContext', () => ({
-    useAuth: () => ({ userType: mockUserType.current })
+    useAuth: () => ({ userType: mockUserType.current }),
 }));
 
 vi.mock('../../contexts/UIContext', () => ({
-    useUI: () => ({ isMobile: false })
+    useUI: () => ({ isMobile: false }),
 }));
+
+const renderCard = (ui: React.ReactElement) => {
+    return render(<MemoryRouter>{ui}</MemoryRouter>);
+};
 
 describe('BrutalCard Component', () => {
     it('renders children correctly', () => {
-        render(
+        renderCard(
             <BrutalCard>
                 <div data-testid="child-content">Content</div>
             </BrutalCard>
         );
+
         expect(screen.getByTestId('child-content')).toBeInTheDocument();
     });
 
     it('applies correct mobile UX styles', () => {
-        const { container } = render(<BrutalCard>Content</BrutalCard>);
+        const { container } = renderCard(<BrutalCard>Content</BrutalCard>);
         const card = container.firstChild as HTMLElement;
 
-        // Verifica estilos inline críticos para mobile
         expect((card.style as any).webkitTapHighlightColor).toBe('transparent');
         expect(card.style.outline).toBe('none');
-
-        // Verifica classes de UX mobile e tokens de design (select-none)
         expect(card.className).toContain('select-none');
     });
 
     it('renders with Beauty theme when forced', () => {
-        const { container } = render(<BrutalCard forceTheme="beauty">Content</BrutalCard>);
+        const { container } = renderCard(<BrutalCard forceTheme="beauty">Content</BrutalCard>);
         const card = container.firstChild as HTMLElement;
 
-        // Na implementação atual Pro Max usamos rounded-[28px]
-        expect(card.className).toContain('rounded-[28px]');
-        expect(card.className).toContain('bg-gradient-beauty');
+        expect(card.className).toContain('rounded-2xl');
+        expect(card.className).toContain('bg-beauty-card');
     });
 
     it('renders with Brutal theme by default', () => {
         mockUserType.current = 'barber';
-        const { container } = render(<BrutalCard>Content</BrutalCard>);
+        const { container } = renderCard(<BrutalCard>Content</BrutalCard>);
         const card = container.firstChild as HTMLElement;
 
-        // Na implementação atual Pro Max usamos bg-gradient-brutal
-        expect(card.className).toContain('bg-gradient-brutal');
-        expect(card.className).toContain('rounded-[28px]');
+        expect(card.className).toContain('bg-brutal-card');
+        expect(card.className).toContain('rounded-2xl');
     });
 });

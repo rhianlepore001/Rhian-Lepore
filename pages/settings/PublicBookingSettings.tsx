@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { supabase } from '../../lib/supabase';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 
 export const PublicBookingSettings: React.FC = () => {
-    const { user, userType } = useAuth();
+    const { user } = useAuth();
+    const { accent, isBeauty } = useBrutalTheme();
     const [loading, setLoading] = useState(true);
     const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [enableUpsells, setEnableUpsells] = useState(false);
@@ -91,8 +93,8 @@ export const PublicBookingSettings: React.FC = () => {
         }
     };
 
-    const isBeauty = userType === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
+    const toggleActiveClass = isBeauty ? 'peer-checked:bg-beauty-neon' : 'peer-checked:bg-accent-gold';
 
     if (loading) return (
         <SettingsLayout>
@@ -108,7 +110,7 @@ export const PublicBookingSettings: React.FC = () => {
                 <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
 
                 <BrutalCard noPadding>
-                    <div className="p-6 md:p-8 flex items-start justify-between gap-6">
+                    <div className="p-6 md:p-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6">
                         <div className="flex-1">
                             <h3 className="font-bold text-lg md:text-xl mb-2 text-white">
                                 Ativar Reservas Online
@@ -125,12 +127,12 @@ export const PublicBookingSettings: React.FC = () => {
                                 className="sr-only peer"
                             />
                             <div className={`
-                                w-12 h-6 md:w-14 md:h-7 bg-white/5 border border-white/10 peer-focus:outline-none rounded-full peer 
+                                w-12 h-6 md:w-14 md:h-7 bg-white/[0.04] border border-white/10 peer-focus:outline-none rounded-full peer 
                                 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] 
                                 after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full 
                                 after:h-4 after:w-4 md:after:h-5 md:after:w-5 after:transition-all 
-                                peer-checked:bg-gradient-to-r ${isBeauty ? 'from-pink-500 to-purple-600' : 'from-accent-gold to-yellow-600'}
-                                shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]
+                                ${toggleActiveClass}
+                                shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)]
                             `}></div>
                         </label>
                     </div>
@@ -149,7 +151,7 @@ export const PublicBookingSettings: React.FC = () => {
                             <p className="text-neutral-400 text-xs leading-relaxed">
                                 Sugere serviços extras para o cliente gastar mais por visita, automaticamente.
                             </p>
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl bg-${accentColor}/5 border border-${accentColor}/10 text-${accentColor} text-[10px] font-bold uppercase tracking-wider`}>
+                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl ${accent.bgDim} ${accent.borderDim} ${accent.text} text-[10px] font-bold uppercase tracking-wider`}>
                                 💰 +R$ 1.200/mês méd.
                             </div>
                             <div className="flex justify-end pt-2">
@@ -160,7 +162,7 @@ export const PublicBookingSettings: React.FC = () => {
                                         onChange={(e) => setEnableUpsells(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                    <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
                                 </label>
                             </div>
                         </div>
@@ -189,7 +191,7 @@ export const PublicBookingSettings: React.FC = () => {
                                         onChange={(e) => setEnableProfessionalSelection(e.target.checked)}
                                         className="sr-only peer"
                                     />
-                                    <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                    <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
                                 </label>
                             </div>
                         </div>
@@ -210,7 +212,7 @@ export const PublicBookingSettings: React.FC = () => {
                                     onChange={(e) => setEnableEmailReminders(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
                             </label>
                         </div>
 
@@ -226,7 +228,7 @@ export const PublicBookingSettings: React.FC = () => {
                                     onChange={(e) => setEnableSelfRescheduling(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className={`w-11 h-6 bg-white/5 border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${accentColor}`}></div>
+                                <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
                             </label>
                         </div>
                     </div>

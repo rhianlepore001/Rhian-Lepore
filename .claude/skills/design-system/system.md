@@ -1,4 +1,4 @@
-# AgenX — Design System
+# AgendiX — Design System
 
 SaaS de gestão para barbearias e salões. Dois temas: **Barber** (industrial moderno) e **Beauty** (premium lavanda).
 

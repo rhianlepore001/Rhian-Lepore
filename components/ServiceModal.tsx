@@ -5,6 +5,7 @@ import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'l
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { PREDEFINED_SERVICES } from '../constants';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface Category {
     id: string;
@@ -25,10 +26,10 @@ interface Service {
 interface ServiceModalProps {
     service?: Service;
     categories: Category[];
-    allServices: Service[]; // For upsell selection
+    allServices: Service[];
     onClose: () => void;
     onSave: () => void;
-    accentColor: string;
+    accentColor?: string;
 }
 
 export const ServiceModal: React.FC<ServiceModalProps> = ({
@@ -37,10 +38,11 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     allServices,
     onClose,
     onSave,
-    accentColor: initialAccentColor // Evita conflito com a constante interna se houver
+    accentColor: _accentColorProp
 }) => {
-    const { user, userType, region } = useAuth();
-    const suggestions = userType === 'beauty' ? PREDEFINED_SERVICES.beauty : PREDEFINED_SERVICES.barber;
+    const { user, region } = useAuth();
+    const { isBeauty, accent, colors, classes, font } = useBrutalTheme();
+    const suggestions = isBeauty ? PREDEFINED_SERVICES.beauty : PREDEFINED_SERVICES.barber;
     const [name, setName] = useState(service?.name || '');
     const [description, setDescription] = useState(service?.description || '');
     const [price, setPrice] = useState(service?.price?.toString() || '');
@@ -223,46 +225,23 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         }
     };
 
-    const isBeauty = userType === 'beauty';
-    const accentColor = initialAccentColor || (isBeauty ? 'beauty-neon' : 'accent-gold');
-
-    const modalStyles = isBeauty
-        ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-        : 'bg-brutal-card border-4 border-brutal-border shadow-[8px_8px_0px_0px_#000000]';
-
-    const headerStyles = isBeauty
-        ? 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent px-6 py-4'
-        : 'border-b-2 border-black border-dashed px-6 py-4 bg-neutral-900/50';
-
-    const inputStyles = isBeauty
-        ? 'w-full p-3 bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:outline-none focus:border-beauty-neon focus:bg-beauty-dark transition-all placeholder-beauty-neon/30'
-        : 'w-full p-3 bg-neutral-900 border-2 border-brutal-border text-white focus:outline-none focus:border-accent-gold placeholder-neutral-600 shadow-[2px_2px_0px_0px_#000000] focus:shadow-[3px_3px_0px_0px_#C29B40] transition-all';
-
-    const buttonAccentStyles = isBeauty
-        ? 'bg-beauty-neon hover:bg-beauty-neon/90 text-black shadow-[0_0_15px_rgba(167,139,250,0.3)] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)]'
-        : 'bg-accent-gold hover:bg-accent-gold/90 text-black border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:shadow-[4px_4px_0px_0px_#000000]';
-
-    const backdropStyles = isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85';
-
     return createPortal(
-        <div className={`fixed inset-0 ${backdropStyles} flex items-center justify-center z-[10000] p-4 backdrop-blur-sm`}>
+        <div className={`fixed inset-0 ${classes.modalOverlay} flex items-center justify-center z-[10000] p-4 backdrop-blur-sm`}>
             <div className="absolute inset-0" onClick={onClose} />
             <FocusTrap active={true}>
-                <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${modalStyles} transform transition-all duration-300 shadow-2xl z-10 modal-enter`}
+                <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${classes.modalContainer} transform transition-all duration-300 z-10 modal-enter`}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="service-modal-title"
                 >
                 {/* Header */}
-                <div className={`flex items-center justify-between ${headerStyles} sticky top-0 z-10`}>
-                    <h3 id="service-modal-title" className={`font-heading text-lg md:text-xl ${isBeauty ? 'text-white' : 'text-white uppercase tracking-wider'}`}>
+                <div className={`flex items-center justify-between ${classes.modalHeader} sticky top-0 z-10`}>
+                    <h3 id="service-modal-title" className={`font-heading text-lg md:text-xl ${colors.text} ${font.heading === 'font-heading' ? 'tracking-wide' : 'tracking-normal'}`}>
                         {service ? 'Editar Serviço' : 'Novo Serviço'}
                     </h3>
                     <button
                         onClick={onClose}
-                        className={isBeauty
-                            ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all'
-                            : 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1 transition-colors'}
+                        className={`${colors.textSecondary} hover:${colors.text} hover:bg-white/10 rounded-full p-1.5 transition-all`}
                         aria-label="Fechar modal de serviço"
                         title="Fechar"
                     >
@@ -271,10 +250,10 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 </div>
 
                 {!service && (
-                    <div className={`p-4 ${isBeauty ? 'border-b border-beauty-neon/20 bg-beauty-neon/5' : 'border-b-2 border-black bg-neutral-900/30'}`}>
+                    <div className={`p-4 border-b ${colors.divider} ${accent.bgDim}`}>
                         <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className={`w-4 h-4 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
-                            <span className={`text-xs font-bold uppercase tracking-wider ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400 font-mono'}`}>Sugestões Rápidas:</span>
+                            <Sparkles className={`w-4 h-4 ${accent.text}`} />
+                            <span className={`text-xs font-bold uppercase tracking-wider ${colors.textSecondary} ${font.label}`}>Sugestões Rápidas:</span>
                         </div>
                         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                             {suggestions.map((s, i) => (
@@ -282,13 +261,13 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     key={i}
                                     type="button"
                                     onClick={() => handleApplySuggestion(s)}
-                                    className={`whitespace-nowrap px-3 py-1.5 text-xs text-white transition-all flex items-center gap-2 ${isBeauty
-                                        ? 'bg-beauty-card/50 border border-beauty-neon/30 rounded-full hover:bg-beauty-neon/20 hover:border-beauty-neon'
-                                        : 'bg-neutral-800 border-2 border-neutral-700 hover:bg-neutral-700 shadow-[2px_2px_0px_0px_#000000]'
+                                    className={`whitespace-nowrap px-3 py-1.5 text-xs text-white transition-all flex items-center gap-2 rounded-xl ${isBeauty
+                                        ? `${colors.card} ${accent.border} hover:${accent.bg}`
+                                        : `${colors.card} ${colors.border} hover:bg-white/10`
                                         }`}
                                 >
                                     {s.name}
-                                    <span className={`font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>{currencySymbol}{s.price}</span>
+                                    <span className={`font-bold ${accent.text}`}>{currencySymbol}{s.price}</span>
                                 </button>
                             ))}
                         </div>
@@ -299,7 +278,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <div
-                                className={`relative w-full h-48 rounded-lg bg-neutral-800 border-2 border-dashed ${imagePreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-${accentColor} overflow-hidden group transition-colors`}
+                                className={`relative w-full h-48 rounded-lg ${colors.card} border-2 border-dashed ${imagePreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:${accent.border} overflow-hidden group transition-colors`}
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {imagePreview ? (
@@ -322,15 +301,15 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
 
                             <div>
-                                <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-name">Nome do Serviço</label>
-                                <input id="service-name" type="text" required value={name} onChange={e => setName(e.target.value)} className={inputStyles} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
+                                <label className={`${classes.label} mb-1 block`} htmlFor="service-name">Nome do Serviço</label>
+                                <input id="service-name" type="text" required value={name} onChange={e => setName(e.target.value)} className={classes.input} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
                             </div>
 
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="text-white font-mono text-xs block" htmlFor="service-category">Categoria</label>
+                                    <label className={`${classes.label} block`} htmlFor="service-category">Categoria</label>
                                     {!isCreatingCategory && (
-                                        <button type="button" onClick={() => setIsCreatingCategory(true)} className={`text-${accentColor} hover:text-${accentColor}/80 text-xs font-bold flex items-center gap-1 transition-colors`}>
+                                        <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:${accent.bgDim} text-xs font-bold flex items-center gap-1 transition-colors`}>
                                             <Plus className="w-3 h-3" /> Nova Categoria
                                         </button>
                                     )}
@@ -338,17 +317,17 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                 {isCreatingCategory ? (
                                     <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Nome da categoria..." className={`flex-1 p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-${accentColor}`} autoFocus />
-                                            <button type="button" onClick={handleCreateCategory} disabled={!newCategoryName.trim() || savingCategory} className={`px-3 py-2 text-black ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${buttonAccentStyles}`}>
+                                            <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Nome da categoria..." className={`flex-1 ${classes.input}`} autoFocus />
+                                            <button type="button" onClick={handleCreateCategory} disabled={!newCategoryName.trim() || savingCategory} className={`px-3 py-2 font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${classes.buttonPrimary}`}>
                                                 {savingCategory ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                                             </button>
-                                            <button type="button" onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }} className="px-3 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600 transition-colors">
+                                            <button type="button" onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }} className={`px-3 py-2 ${classes.buttonSecondary} rounded-lg`}>
                                                 <X className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </div>
                                 ) : (
-                                    <select id="service-category" value={categoryId} onChange={e => setCategoryId(e.target.value)} className={inputStyles}>
+                                    <select id="service-category" value={categoryId} onChange={e => setCategoryId(e.target.value)} className={classes.input}>
                                         <option value="" disabled>Selecione uma categoria</option>
                                         {localCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                                     </select>
@@ -359,12 +338,12 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-price">Preço ({currencySymbol})</label>
-                                    <input id="service-price" type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={inputStyles} placeholder="0.00" />
+                                    <label className={`${classes.label} mb-1 block`} htmlFor="service-price">Preço ({currencySymbol})</label>
+                                    <input id="service-price" type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={classes.input} placeholder="0.00" />
                                 </div>
                                 <div>
-                                    <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-duration">Duração</label>
-                                    <select id="service-duration" value={duration} onChange={e => setDuration(e.target.value)} className={inputStyles}>
+                                    <label className={`${classes.label} mb-1 block`} htmlFor="service-duration">Duração</label>
+                                    <select id="service-duration" value={duration} onChange={e => setDuration(e.target.value)} className={classes.input}>
                                         <option value="15">15 min</option>
                                         <option value="30">30 min</option>
                                         <option value="45">45 min</option>
@@ -375,16 +354,16 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                             </div>
 
                             <div>
-                                <label className="text-white font-mono text-xs mb-1 block" htmlFor="service-description">Descrição</label>
-                                <textarea id="service-description" value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${inputStyles} resize-none`} placeholder="Detalhes do serviço..." />
+                                <label className={`${classes.label} mb-1 block`} htmlFor="service-description">Descrição</label>
+                                <textarea id="service-description" value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${classes.input} resize-none`} placeholder="Detalhes do serviço..." />
                             </div>
 
-                            <div className="border-t border-neutral-800 pt-4">
-                                <label className="text-white font-bold text-sm mb-2 block flex items-center gap-2">🚀 Upsells (Sugestões)</label>
-                                <div className="max-h-32 overflow-y-auto space-y-2 bg-neutral-800/50 p-2 rounded-lg border border-neutral-800">
+                            <div className={`border-t ${colors.divider} pt-4`}>
+                                <label className={`${colors.text} font-bold text-sm mb-2 block flex items-center gap-2`}>🚀 Upsells (Sugestões)</label>
+                                <div className={`max-h-32 overflow-y-auto space-y-2 ${colors.card} p-2 rounded-lg border ${colors.border}`}>
                                     {allServices.filter(s => s.id !== service?.id).map(s => (
-                                        <div key={s.id} onClick={() => toggleUpsell(s.id)} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `bg-${accentColor}/20 text-white` : 'hover:bg-neutral-700 text-neutral-400'}`}>
-                                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedUpsells.includes(s.id) ? `border-${accentColor} bg-${accentColor}` : 'border-neutral-600'}`}>
+                                        <div key={s.id} onClick={() => toggleUpsell(s.id)} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `${accent.bgDim} ${colors.text}` : `hover:bg-white/5 ${colors.textSecondary}`}`}>
+                                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedUpsells.includes(s.id) ? `${accent.border} ${accent.bg}` : `${colors.border}`}`}>
                                                 {selectedUpsells.includes(s.id) && <Check className="w-3 h-3 text-black" />}
                                             </div>
                                             <span className="text-sm">{s.name}</span>
@@ -395,12 +374,12 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
+                    <div className={`flex items-center justify-between pt-4 border-t ${colors.divider}`}>
                         <div className="flex items-center gap-2">
-                            <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded bg-neutral-800 border-neutral-700 text-${accentColor} focus:ring-0`} />
-                            <label htmlFor="active" className="text-white text-sm cursor-pointer">Serviço Ativo</label>
+                            <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded ${colors.inputBg} ${colors.border} ${accent.text} focus:ring-0`} />
+                            <label htmlFor="active" className={`${colors.text} text-sm cursor-pointer`}>Serviço Ativo</label>
                         </div>
-                        <button type="submit" disabled={loading} className={`px-6 py-3 text-black font-bold ${isBeauty ? 'rounded-xl' : 'rounded-lg'} transition-colors flex items-center gap-2 ${buttonAccentStyles}`}>
+                        <button type="submit" disabled={loading} className={`px-6 py-3 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 ${classes.buttonPrimary}`}>
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Serviço'}
                         </button>
                     </div>

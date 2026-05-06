@@ -419,13 +419,13 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                                 <User className="w-6 h-6 md:w-8 md:h-8 text-neutral-600" />
                                                             </div>
                                                         )}
-                                                        <div className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded shadow-lg text-[8px] md:text-[10px] font-bold border-2 bg-neutral-950 border-neutral-800 ${accentTextClass}`}>
+                                                        <div className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full shadow-lite-glass text-xs font-bold border bg-brutal-main border-white/10 ${accentTextClass}`}>
                                                             {(professional.commission_rate || 0)}%
                                                         </div>
                                                     </div>
                                                     <div>
                                                         <h3 className="text-base md:text-xl font-bold text-white leading-tight">{professional.professional_name}</h3>
-                                                        <p className="text-neutral-500 text-[9px] md:text-[10px] font-mono mt-1 uppercase tracking-tight flex items-center gap-1">
+                                                        <p className="text-neutral-500 text-xs font-mono mt-1 uppercase tracking-tight flex items-center gap-1">
                                                             Comissão por Serviço
                                                             <TrendingUp className="w-2.5 h-2.5" />
                                                         </p>
@@ -441,15 +441,15 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                                             <div className="grid grid-cols-3 gap-2 md:gap-4">
                                                 <div className="p-2 md:p-3 rounded-xl bg-black/30 border border-neutral-800/50">
-                                                    <p className="text-[8px] md:text-[10px] text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Este Mês</p>
+                                                    <p className="text-[8px] md:text-xs text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Este Mês</p>
                                                     <p className="text-xs md:text-lg font-mono font-bold text-white">{currencySymbol} {professional.total_earnings_month.toFixed(2)}</p>
                                                 </div>
                                                 <div className="p-2 md:p-3 rounded-xl bg-black/30 border border-neutral-800/50">
-                                                    <p className="text-[8px] md:text-[10px] text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Liquidado</p>
+                                                    <p className="text-[8px] md:text-xs text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Liquidado</p>
                                                     <p className="text-xs md:text-lg font-mono font-bold text-neutral-400">{currencySymbol} {professional.total_paid.toFixed(2)}</p>
                                                 </div>
                                                 <div className="p-2 md:p-3 rounded-xl bg-black/30 border border-neutral-800/50">
-                                                    <p className="text-[8px] md:text-[10px] text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Serviços</p>
+                                                    <p className="text-[8px] md:text-xs text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Serviços</p>
                                                     <p className="text-xs md:text-lg font-mono font-bold text-white">{professional.total_pending_records || 0}</p>
                                                 </div>
                                             </div>
@@ -458,7 +458,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                 <div className="flex gap-2 flex-1">
                                                     <button
                                                         onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
-                                                        className="flex-1 h-10 md:h-12 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 text-white transition-all flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold border border-neutral-700 active:scale-95"
+                                                        className="flex-1 h-10 md:h-12 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 text-white transition-all flex items-center justify-center gap-2 text-xs md:text-xs font-bold border border-neutral-700 active:scale-95"
                                                     >
                                                         <Scissors className="w-3.5 h-3.5" />
                                                         <span>Serviços</span>
@@ -522,14 +522,14 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         )}
                                         <div>
                                             <p className="text-white font-bold text-sm">{item.professional_name}</p>
-                                            <p className="text-neutral-500 text-[10px] font-mono">
+                                            <p className="text-neutral-500 text-xs font-mono">
                                                 {new Date(item.period_start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {new Date(item.period_end).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-green-400 font-mono font-bold">{currencySymbol} {item.net_amount.toFixed(2)}</p>
-                                        <p className="text-neutral-500 text-[10px] font-mono">
+                                        <p className="text-neutral-500 text-xs font-mono">
                                             Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
                                         </p>
                                         <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[9px] font-bold uppercase border border-green-500/20">
@@ -546,12 +546,12 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             {/* Inline Rate Prompt — colaborador sem % */}
             {showRatePrompt && pendingPayProfessional && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-md">
-                    <div className="bg-neutral-900 border-2 border-neutral-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+                    <div className="bg-brutal-card border border-white/5 rounded-2xl w-full max-w-sm p-6 shadow-promax-depth">
                         <h3 className="text-white font-heading text-lg uppercase mb-2">Comissão não configurada</h3>
                         <p className="text-neutral-400 text-sm mb-6">
                             <strong className="text-white">{pendingPayProfessional.professional_name}</strong> não tem percentual de comissão definido. Defina agora para calcular automaticamente.
                         </p>
-                        <label className="text-neutral-500 font-mono text-[10px] uppercase block mb-2">Percentual de comissão (%)</label>
+                        <label className="text-neutral-500 font-mono text-xs uppercase block mb-2">Percentual de comissão (%)</label>
                         <div className="flex gap-3 mb-6">
                             <div className="relative flex-1">
                                 <input
@@ -589,7 +589,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             {/* Pay Modal */}
             {showPayModal && selectedProfessional && (
                 <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-0 md:p-4 backdrop-blur-md">
-                    <div className="bg-neutral-900 border-0 md:border-2 border-neutral-800 md:rounded-[32px] w-full max-w-md h-full md:h-auto flex flex-col p-6 md:p-8 shadow-2xl relative overflow-y-auto">
+                    <div className="bg-brutal-card border-0 md:border md:border-white/5 md:rounded-2xl w-full max-w-md h-full md:h-auto flex flex-col p-6 md:p-8 shadow-promax-depth relative overflow-y-auto">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
@@ -598,7 +598,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 <div>
                                     <h3 className="text-white font-heading text-xl uppercase tracking-tight">Confirmar Repasse</h3>
                                     {paymentPeriodLabel && (
-                                        <p className="text-neutral-500 text-[10px] font-mono">Período: {paymentPeriodLabel}</p>
+                                        <p className="text-neutral-500 text-xs font-mono">Período: {paymentPeriodLabel}</p>
                                     )}
                                 </div>
                             </div>
@@ -617,7 +617,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             )}
                             <div>
                                 <p className="text-white font-bold text-lg leading-none mb-1">{selectedProfessional.professional_name}</p>
-                                <p className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">
+                                <p className="text-xs font-mono text-neutral-500 uppercase tracking-widest">
                                     Saldo: <span className="text-yellow-500">{currencySymbol} {selectedProfessional.total_due.toFixed(2)}</span>
                                 </p>
                             </div>
@@ -625,7 +625,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                         <div className="space-y-6">
                             <div>
-                                <label className="text-neutral-500 font-mono text-[10px] uppercase mb-2 block tracking-widest">Valor a Ser Liquidado ({currencySymbol})</label>
+                                <label className="text-neutral-500 font-mono text-xs uppercase mb-2 block tracking-widest">Valor a Ser Liquidado ({currencySymbol})</label>
                                 <input
                                     type="number"
                                     value={paymentAmount}
@@ -637,7 +637,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-neutral-500 font-mono text-[10px] uppercase block tracking-widest">Intervalo de Referência</label>
+                                <label className="text-neutral-500 font-mono text-xs uppercase block tracking-widest">Intervalo de Referência</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={() => {
@@ -647,7 +647,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                             setPaymentPeriodLabel(p.label);
                                             calculateAmountForDates(selectedProfessional.professional_id, p.start, p.end);
                                         }}
-                                        className="py-2.5 rounded-xl text-[10px] font-bold uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all active:scale-95"
+                                        className="py-2.5 rounded-xl text-xs font-bold uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all active:scale-95"
                                     >
                                         Período Atual
                                     </button>
@@ -668,7 +668,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                             setPaymentPeriodLabel(`${fmtLabel(prevStart)} → ${fmtLabel(prevEnd)}`);
                                             calculateAmountForDates(selectedProfessional.professional_id, start, end);
                                         }}
-                                        className="py-2.5 rounded-xl text-[10px] font-bold uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all active:scale-95"
+                                        className="py-2.5 rounded-xl text-xs font-bold uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all active:scale-95"
                                     >
                                         Período Anterior
                                     </button>
@@ -741,7 +741,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             {/* Commission Detail Report Modal */}
             {/* Toast */}
             {toast && (
-                <div className={`fixed bottom-4 right-4 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border transition-all ${toast.type === 'success' ? 'bg-green-900/90 border-green-700 text-green-100' : 'bg-red-900/90 border-red-700 text-red-100'}`}>
+                <div className={`fixed bottom-4 right-4 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-promax-glass border transition-all ${toast.type === 'success' ? 'bg-green-900/90 border-green-700/50 text-green-100' : 'bg-red-900/90 border-red-700/50 text-red-100'}`}>
                     <span className="text-sm font-medium">{toast.message}</span>
                     <button onClick={() => setToast(null)} className="ml-1 opacity-70 hover:opacity-100 transition-opacity">
                         <X className="w-4 h-4" />

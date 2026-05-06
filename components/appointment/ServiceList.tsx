@@ -73,7 +73,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
 
     if (!hasServices) {
         return (
-            <div className={`text-center py-12 px-4 rounded-xl border-2 border-dashed ${isBeauty ? 'border-white/10 bg-beauty-card/30' : 'border-neutral-800 bg-neutral-900/30'}`}>
+            <div className={`text-center py-12 px-4 rounded-xl border border-dashed ${isBeauty ? 'border-white/10 bg-beauty-card/30' : 'border-white/5 bg-brutal-card/30'}`}>
                 <Sparkles className={`w-12 h-12 mx-auto mb-4 ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}`} />
                 <h3 className="text-white font-bold text-lg mb-2">Nenhum serviço encontrado</h3>
                 <p className="text-neutral-400 text-sm mb-4">
@@ -97,7 +97,9 @@ export const ServiceList: React.FC<ServiceListProps> = ({
         <div key={categoryId} className="space-y-3">
             {/* Category Header (only show if not filtering by specific category) */}
             {activeCategory === 'all' && (
-                <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
+                <h3 className={`text-sm font-mono uppercase tracking-widest pb-2 border-l-2 pl-3 ${
+                    isBeauty ? 'text-beauty-neon/70 border-beauty-neon/40' : 'text-neutral-400 border-accent-gold/40'
+                }`}>
                     {getCategoryName(categoryId)}
                 </h3>
             )}
@@ -112,16 +114,14 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                             onClick={() => toggleService(service.id)}
                             className={`
                                         relative cursor-pointer transition-all duration-200 group overflow-hidden flex items-center gap-4 p-4
-                                        ${isBeauty
-                                    ? 'rounded-xl border'
-                                    : 'border-2 border-black'}
+                                        rounded-xl border
                                         ${isSelected
                                     ? (isBeauty
                                         ? 'bg-beauty-card border-beauty-neon shadow-neon'
-                                        : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
+                                        : 'bg-brutal-card border-accent-gold shadow-heavy-sm')
                                     : (isBeauty
                                         ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
-                                        : 'bg-brutal-card border-transparent hover:border-neutral-700')}
+                                        : 'bg-white/[0.06] border-white/[0.09] hover:bg-white/[0.10] hover:border-white/[0.16]')}
                                     `}
                         >
                             {/* Selection Indicator */}
@@ -151,7 +151,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                                 <div className={`text-lg font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
                                     {formatCurrency(service.price, currencyRegion)}
                                 </div>
-                                <div className="flex items-center justify-end gap-1 text-neutral-400 text-[10px] font-mono mt-1">
+                                <div className="flex items-center justify-end gap-1 text-neutral-400 text-xs font-mono mt-1">
                                     <Clock className="w-3 h-3" />
                                     {service.duration_minutes}min
                                 </div>
@@ -213,7 +213,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                         />
                     </div>
                 </div>
-                <p className="text-[10px] text-neutral-500 italic">
+                <p className="text-xs text-neutral-500 italic">
                     * Use esta opção para pacotes, promoções ou serviços não listados.
                 </p>
             </div>

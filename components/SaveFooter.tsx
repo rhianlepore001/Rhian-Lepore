@@ -1,19 +1,20 @@
 import React from 'react';
 import { Save, Check, Loader2 } from 'lucide-react';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface SaveFooterProps {
     onSave: () => void;
     saveStatus: 'idle' | 'saving' | 'saved' | 'error';
     hasChanges: boolean;
-    accentColor: string;
 }
 
 export const SaveFooter: React.FC<SaveFooterProps> = ({
     onSave,
     saveStatus,
     hasChanges,
-    accentColor
 }) => {
+    const { accent, classes } = useBrutalTheme();
+
     const getDesktopIcon = () => {
         switch (saveStatus) {
             case 'saving':
@@ -58,18 +59,20 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
         }
     };
 
+    const disabled = saveStatus === 'saving' || (!hasChanges && saveStatus !== 'saved');
+
     return (
         <>
             {/* Desktop Floating Action Button */}
             <div className="hidden md:block fixed bottom-8 right-8 z-50">
                 <button
                     onClick={onSave}
-                    disabled={saveStatus === 'saving' || (!hasChanges && saveStatus !== 'saved')}
+                    disabled={disabled}
                     className={`
                         w-16 h-16 flex items-center justify-center rounded-full font-bold shadow-lg transition-all transform hover:scale-105
-                        ${!hasChanges && saveStatus !== 'saved'
+                        ${disabled
                             ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                            : `bg-${accentColor} text-black hover:bg-${accentColor}/90`
+                            : `${accent.bg} text-black hover:brightness-110`
                         }
                     `}
                     aria-label="Salvar Alterações"
@@ -82,12 +85,12 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
             <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-neutral-900/95 backdrop-blur border-t border-neutral-800 z-50">
                 <button
                     onClick={onSave}
-                    disabled={saveStatus === 'saving' || (!hasChanges && saveStatus !== 'saved')}
+                    disabled={disabled}
                     className={`
-                        w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold transition-all
-                        ${!hasChanges && saveStatus !== 'saved'
+                        w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all
+                        ${disabled
                             ? 'bg-neutral-800 text-neutral-500'
-                            : `bg-${accentColor} text-black`
+                            : `${accent.bg} text-black`
                         }
                     `}
                 >

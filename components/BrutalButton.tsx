@@ -82,7 +82,7 @@ export const BrutalButton: React.FC<BrutalButtonProps> = ({
   return (
     <button
       className={`
-        relative overflow-hidden font-sans font-bold flex items-center justify-center gap-2 rounded-2xl border transition-all duration-300 select-none touch-none
+        relative overflow-hidden font-sans font-semibold flex items-center justify-center gap-2 rounded-2xl transition-all duration-300 select-none touch-none
         ${getVariantStyles()}
         ${getSizeStyles()}
         ${fullWidth ? 'w-full' : ''}

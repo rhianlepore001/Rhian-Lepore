@@ -4,11 +4,11 @@ import { Layout } from './components/Layout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { DynamicBranding } from './components/DynamicBranding';
+import { DesignSystemProvider } from './contexts/DesignSystemProvider';
 
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { DynamicBranding } from './components/DynamicBranding';
 
 
 // Lazy Load Pages
@@ -217,7 +217,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <ThemeProvider>
+      <DesignSystemProvider>
         <AuthProvider>
           <DynamicBranding />
           <PublicClientProvider>
@@ -227,7 +227,7 @@ const App: React.FC = () => {
             </AlertsProvider>
           </PublicClientProvider>
         </AuthProvider>
-      </ThemeProvider>
+      </DesignSystemProvider>
     </HashRouter>
   );
 };

@@ -5,6 +5,7 @@ import { BrutalButton } from '../../BrutalButton';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../utils/Logger';
+import { useBrutalTheme } from '../../../hooks/useBrutalTheme';
 
 interface GoalSettingsModalProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ export const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
 }) => {
     const [value, setValue] = useState(currentGoal.toString());
     const [isSaving, setIsSaving] = useState(false);
+    const { accent, colors, classes } = useBrutalTheme();
 
     const handleSave = async () => {
         const numValue = parseFloat(value);
@@ -36,9 +38,6 @@ export const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
             setIsSaving(false);
         }
     };
-
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBorder = isBeauty ? 'border-beauty-neon' : 'border-accent-gold';
 
     return (
         <Modal
@@ -69,33 +68,33 @@ export const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
         >
             <div className="space-y-6">
                 <div>
-                    <label className="block text-xs font-mono text-neutral-500 uppercase tracking-wider mb-2">
+                    <label className={`block text-xs font-mono ${colors.textMuted} uppercase tracking-wider mb-2`}>
                         Meta de Faturamento Mensal
                     </label>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-mono">
+                        <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${colors.textSecondary} font-mono`}>
                             R$
                         </span>
                         <input
                             type="number"
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
-                            className={`w-full bg-black border-2 ${accentBorder} pl-12 pr-4 py-4 text-2xl font-mono text-white focus:outline-none focus:ring-2 ${isBeauty ? 'focus:ring-beauty-neon/20 rounded-xl' : 'focus:ring-accent-gold/20'}`}
+                            className={`w-full ${colors.inputBg} border-2 ${accent.border} pl-12 pr-4 py-4 text-2xl font-mono ${colors.text} focus:outline-none focus:ring-2 ${accent.ring} rounded-xl`}
                             placeholder="0.00"
                         />
                     </div>
-                    <p className="mt-3 text-xs text-neutral-500 leading-relaxed">
+                    <p className={`mt-3 text-xs ${colors.textMuted} leading-relaxed`}>
                         Defina uma meta realista para motivar seu crescimento. Este valor será usado para calcular sua barra de progresso no dashboard deste mês.
                     </p>
                 </div>
 
-                <div className={`p-4 ${isBeauty ? 'bg-white/5 rounded-xl' : 'bg-neutral-800 border-2 border-brutal-border'} flex items-center gap-4`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isBeauty ? 'bg-beauty-acid/20 text-beauty-acid' : 'bg-green-500/20 text-green-500'}`}>
-                        <TrendingUp className="w-5 h-5" />
+                <div className={`p-4 ${colors.card} ${colors.border} rounded-xl flex items-center gap-4`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${classes.badgeSuccess.replace(/px-2 py-0\.5 text-xs font-bold uppercase /, '')}`}>
+                        <TrendingUp className={`w-5 h-5 ${classes.badgeSuccess.split(' ').find(c => c.startsWith('text-'))}`} />
                     </div>
                     <div>
-                        <p className="text-sm text-white font-heading">Foco em Crescimento</p>
-                        <p className="text-[10px] text-neutral-400 font-mono uppercase">Mantenha o histórico real de cada mês</p>
+                        <p className={`text-sm ${colors.text} font-heading`}>Foco em Crescimento</p>
+                        <p className={`text-[10px] ${colors.textMuted} font-mono uppercase`}>Mantenha o histórico real de cada mês</p>
                     </div>
                 </div>
             </div>

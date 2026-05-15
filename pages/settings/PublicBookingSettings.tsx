@@ -5,12 +5,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { supabase } from '../../lib/supabase';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
-import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
+import { SettingsSection } from '../../components/SettingsSection';
+import { SettingsSwitch } from '../../components/SettingsSwitch';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
     const [loading, setLoading] = useState(true);
     const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [enableUpsells, setEnableUpsells] = useState(false);
@@ -20,6 +21,7 @@ export const PublicBookingSettings: React.FC = () => {
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
     const [enableEmailReminders, setEnableEmailReminders] = useState(true);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
     useEffect(() => {
         fetchSettings();
@@ -34,7 +36,7 @@ export const PublicBookingSettings: React.FC = () => {
                 .eq('user_id', user.id)
                 .single();
 
-            if (settingsError && settingsError.code !== 'PGRST116') { // Ignore no rows found error
+            if (settingsError && settingsError.code !== 'PGRST116') {
                 throw settingsError;
             }
 
@@ -68,6 +70,7 @@ export const PublicBookingSettings: React.FC = () => {
 
     const handleSave = async () => {
         if (!user) return;
+        setSaveStatus('saving');
         try {
             const { error } = await supabase
                 .from('business_settings')
@@ -83,63 +86,65 @@ export const PublicBookingSettings: React.FC = () => {
                 });
 
             if (error) throw error;
-            
+
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
-            
-            alert('Configurações salvas com sucesso!');
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus('idle'), 2000);
         } catch (error) {
             console.error('Error saving settings:', error);
             alert('Erro ao salvar configurações.');
+            setSaveStatus('idle');
         }
     };
 
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const toggleActiveClass = isBeauty ? 'peer-checked:bg-beauty-neon' : 'peer-checked:bg-accent-gold';
+    const ToggleRow = ({
+        title,
+        description,
+        checked,
+        onChange,
+        badge,
+    }: {
+        title: string;
+        description: string;
+        checked: boolean;
+        onChange: (v: boolean) => void;
+        badge?: React.ReactNode;
+    }) => (
+        <div className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+            <div className="flex-1 min-w-0">
+                <h4 className={`${colors.text} text-sm font-bold mb-0.5`}>{title}</h4>
+                <p className={`${colors.textMuted} text-xs leading-relaxed`}>{description}</p>
+                {badge && <div className="mt-2">{badge}</div>}
+            </div>
+            <SettingsSwitch checked={checked} onChange={onChange} />
+        </div>
+    );
 
     if (loading) return (
         <SettingsLayout>
-            <div className="p-8 text-center text-neutral-400">Carregando agendamento...</div>
+            <div className={`p-8 text-center ${colors.textMuted}`}>Carregando agendamento...</div>
         </SettingsLayout>
     );
 
     return (
         <SettingsLayout>
-            <div className="max-w-4xl space-y-8 pb-20 md:pb-0">
-                {/* Cabeçalho redundante removido (gerenciado pelo SettingsLayout) */}
-
+            <div className="max-w-4xl space-y-6 pb-20 md:pb-0">
                 <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
 
-                <BrutalCard noPadding>
-                    <div className="p-6 md:p-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6">
-                        <div className="flex-1">
-                            <h3 className="font-bold text-lg md:text-xl mb-2 text-white">
-                                Ativar Reservas Online
-                            </h3>
-                            <p className="text-neutral-400 text-sm leading-relaxed">
-                                Seus clientes podem marcar horário através do seu link de reserva personalizado.
-                            </p>
-                        </div>
-                        <label id="toggle-public-booking" className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
-                            <input
-                                type="checkbox"
-                                checked={publicBookingEnabled}
-                                onChange={(e) => setPublicBookingEnabled(e.target.checked)}
-                                className="sr-only peer"
-                            />
-                            <div className={`
-                                w-12 h-6 md:w-14 md:h-7 bg-white/[0.04] border border-white/10 peer-focus:outline-none rounded-full peer 
-                                peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] 
-                                after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full 
-                                after:h-4 after:w-4 md:after:h-5 md:after:w-5 after:transition-all 
-                                ${toggleActiveClass}
-                                shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)]
-                            `}></div>
-                        </label>
-                    </div>
-                </BrutalCard>
+                <SettingsSection
+                    title="Reservas Online"
+                    description="Controle se seus clientes podem agendar através do link público."
+                >
+                    <ToggleRow
+                        title="Ativar Reservas Online"
+                        description="Seus clientes podem marcar horário através do seu link de reserva personalizado."
+                        checked={publicBookingEnabled}
+                        onChange={setPublicBookingEnabled}
+                    />
+                </SettingsSection>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <BrutalCard
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <SettingsSection
                         title={
                             <div className="flex items-center gap-2">
                                 <span className="text-sm">Upsells Inteligentes</span>
@@ -148,27 +153,19 @@ export const PublicBookingSettings: React.FC = () => {
                         }
                     >
                         <div className="space-y-4">
-                            <p className="text-neutral-400 text-xs leading-relaxed">
+                            <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Sugere serviços extras para o cliente gastar mais por visita, automaticamente.
                             </p>
                             <div className={`inline-flex items-center px-3 py-1.5 rounded-xl ${accent.bgDim} ${accent.borderDim} ${accent.text} text-[10px] font-bold uppercase tracking-wider`}>
-                                💰 +R$ 1.200/mês méd.
+                                +R$ 1.200/mês méd.
                             </div>
                             <div className="flex justify-end pt-2">
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={enableUpsells}
-                                        onChange={(e) => setEnableUpsells(e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
-                                </label>
+                                <SettingsSwitch checked={enableUpsells} onChange={setEnableUpsells} />
                             </div>
                         </div>
-                    </BrutalCard>
+                    </SettingsSection>
 
-                    <BrutalCard
+                    <SettingsSection
                         title={
                             <div className="flex items-center gap-2">
                                 <span className="text-sm">Profissionais</span>
@@ -177,73 +174,47 @@ export const PublicBookingSettings: React.FC = () => {
                         }
                     >
                         <div className="space-y-4">
-                            <p className="text-neutral-400 text-xs leading-relaxed">
+                            <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Permite que os clientes escolham com quem desejam realizar o procedimento.
                             </p>
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl bg-green-500/5 border border-green-500/10 text-green-400 text-[10px] font-bold uppercase tracking-wider`}>
-                                📈 +114% Retenção
+                            <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                                +114% Retenção
                             </div>
                             <div className="flex justify-end pt-2">
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={enableProfessionalSelection}
-                                        onChange={(e) => setEnableProfessionalSelection(e.target.checked)}
-                                        className="sr-only peer"
-                                    />
-                                    <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
-                                </label>
+                                <SettingsSwitch checked={enableProfessionalSelection} onChange={setEnableProfessionalSelection} />
                             </div>
                         </div>
-                    </BrutalCard>
+                    </SettingsSection>
                 </div>
 
-                <BrutalCard title="Automação e Lembretes">
-                    <div className="space-y-8 py-2">
-                        <div className="flex items-center justify-between gap-6">
-                            <div>
-                                <h4 className="text-white text-sm font-bold mb-1">Lembretes por E-mail</h4>
-                                <p className="text-neutral-500 text-xs">Aviso automático 24h antes do serviço.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={enableEmailReminders}
-                                    onChange={(e) => setEnableEmailReminders(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
-                            </label>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-6">
-                            <div>
-                                <h4 className="text-white text-sm font-bold mb-1">Reagendamento Autônomo</h4>
-                                <p className="text-neutral-500 text-xs">Cliente reagenda sozinho via link de e-mail.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={enableSelfRescheduling}
-                                    onChange={(e) => setEnableSelfRescheduling(e.target.checked)}
-                                    className="sr-only peer"
-                                />
-                                <div className={`w-11 h-6 bg-white/[0.04] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all ${toggleActiveClass}`}></div>
-                            </label>
-                        </div>
+                <SettingsSection title="Automação e Lembretes">
+                    <div className="space-y-2 divide-y divide-white/5">
+                        <ToggleRow
+                            title="Lembretes por E-mail"
+                            description="Aviso automático 24h antes do serviço."
+                            checked={enableEmailReminders}
+                            onChange={setEnableEmailReminders}
+                        />
+                        <ToggleRow
+                            title="Reagendamento Autônomo"
+                            description="Cliente reagenda sozinho via link de e-mail."
+                            checked={enableSelfRescheduling}
+                            onChange={setEnableSelfRescheduling}
+                        />
                     </div>
-                </BrutalCard>
+                </SettingsSection>
 
                 <div className="flex justify-end pt-4">
                     <BrutalButton
                         onClick={handleSave}
+                        loading={saveStatus === 'saving'}
                         className="w-full md:w-auto min-w-[200px]"
                     >
                         <Save className="w-5 h-5 mr-2" />
-                        Salvar Alterações
+                        {saveStatus === 'saved' ? 'Salvo!' : 'Salvar Alterações'}
                     </BrutalButton>
                 </div>
             </div>
-        </SettingsLayout >
+        </SettingsLayout>
     );
 };

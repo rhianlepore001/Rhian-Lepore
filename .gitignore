@@ -96,3 +96,7 @@ testsprite_tests/tmp/
 *.tmp
 test-results/
 playwright-report/
+
+# AIOX Local (AIOX)
+.aiox-core/local/
+.aiox/install-log.txt

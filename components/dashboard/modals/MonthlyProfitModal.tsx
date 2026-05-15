@@ -7,6 +7,8 @@ import { formatCurrency } from '../../../utils/formatters';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../utils/Logger';
+import { useBrutalTheme } from '../../../hooks/useBrutalTheme';
+import { EmptyState } from '../../EmptyState';
 
 interface MonthlyProfitItem {
     month: string;
@@ -39,7 +41,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
     const [history, setHistory] = useState<MonthlyProfitItem[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
+    const { accent, colors, classes } = useBrutalTheme();
 
     useEffect(() => {
         if (!isOpen || !user) return;
@@ -120,18 +122,18 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                 <div className="space-y-5">
                     {/* Resumo acumulado */}
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                            <p className="text-[10px] font-mono text-text-secondary uppercase tracking-wider mb-1">Lucro Acumulado (12m)</p>
-                            <p className={`text-2xl font-bold font-heading ${accentText}`}>
+                        <div className={`p-4 rounded-xl ${colors.card} ${colors.border}`}>
+                            <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Lucro Acumulado (12m)</p>
+                            <p className={`text-2xl font-bold font-heading ${accent.text}`}>
                                 {formatCurrency(totalAccumulated, currencyRegion)}
                             </p>
                         </div>
-                        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                            <p className="text-[10px] font-mono text-text-secondary uppercase tracking-wider mb-1">Melhor Mês</p>
-                            <p className="text-lg font-bold font-heading text-white">
+                        <div className={`p-4 rounded-xl ${colors.card} ${colors.border}`}>
+                            <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Melhor Mês</p>
+                            <p className={`text-lg font-bold font-heading ${colors.text}`}>
                                 {bestMonth?.month ? `${bestMonth.month.substring(0, 3)} ${bestMonth.year}` : '—'}
                             </p>
-                            <p className={`text-xs font-mono ${accentText}`}>
+                            <p className={`text-xs font-mono ${accent.text}`}>
                                 {bestMonth?.profit ? formatCurrency(bestMonth.profit, currencyRegion) : '—'}
                             </p>
                         </div>
@@ -142,20 +144,20 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                         {history.map((item, idx) => (
                             <div
                                 key={`${item.month}-${item.year}`}
-                                className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${idx === 0 ? 'bg-white/8 border-white/20 ring-1 ring-white/20' : 'bg-white/3 border-white/8 hover:bg-white/5'}`}
+                                className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${idx === 0 ? `${colors.card} ${colors.border} ring-1 ring-white/20` : `${colors.inputBg} ${colors.border} hover:bg-white/5`}`}
                             >
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">
-                                        <p className="text-sm font-heading text-white">
-                                            {item.month} <span className="text-text-secondary font-mono">{item.year}</span>
+                                        <p className={`text-sm font-heading ${colors.text}`}>
+                                            {item.month} <span className={`${colors.textSecondary} font-mono`}>{item.year}</span>
                                         </p>
                                         {idx === 0 && (
-                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'}`}>
+                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-black`}>
                                                 Atual
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-text-secondary font-mono mt-0.5">
+                                    <p className={`text-xs ${colors.textSecondary} font-mono mt-0.5`}>
                                         Receita: {formatCurrency(item.revenue, currencyRegion)} · Despesas: {formatCurrency(item.expenses, currencyRegion)}
                                     </p>
                                 </div>
@@ -163,7 +165,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                                 <div className="flex items-center gap-4 ml-4 flex-shrink-0">
                                     {/* Crescimento vs mês anterior */}
                                     {item.growth !== 0 && (
-                                        <div className={`flex items-center gap-1 text-xs font-mono ${item.growth > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        <div className={`flex items-center gap-1 text-xs font-mono ${item.growth > 0 ? classes.badgeSuccess.split(' ').find(c => c.startsWith('text-')) : classes.badgeDanger.split(' ').find(c => c.startsWith('text-'))}`}>
                                             {item.growth > 0
                                                 ? <TrendingUp className="w-3 h-3" />
                                                 : <TrendingDown className="w-3 h-3" />}
@@ -172,8 +174,8 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                                     )}
 
                                     <div className="text-right">
-                                        <p className="text-[10px] font-mono text-text-secondary uppercase">Lucro</p>
-                                        <p className={`text-base font-bold font-heading ${item.profit >= 0 ? accentText : 'text-red-400'}`}>
+                                        <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase`}>Lucro</p>
+                                        <p className={`text-base font-bold font-heading ${item.profit >= 0 ? accent.text : classes.badgeDanger.split(' ').find(c => c.startsWith('text-'))}`}>
                                             {formatCurrency(item.profit, currencyRegion)}
                                         </p>
                                     </div>
@@ -182,16 +184,15 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                         ))}
 
                         {history.length === 0 && (
-                            <div className="text-center py-10">
-                                <BarChart2 className="w-12 h-12 text-neutral-600 mx-auto mb-3 opacity-50" />
-                                <p className="text-text-secondary font-mono text-sm">Nenhum dado financeiro encontrado.</p>
-                                <p className="text-text-secondary/50 font-mono text-xs mt-1">Registre transações para ver o histórico aqui.</p>
-                            </div>
+                            <EmptyState
+                                icon={BarChart2}
+                                message="Nenhum dado financeiro encontrado."
+                            />
                         )}
                     </div>
 
                     {/* Legenda */}
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-text-secondary/60 border-t border-white/5 pt-3">
+                    <div className={`flex items-center gap-2 text-[10px] font-mono ${colors.textMuted} border-t ${colors.divider} pt-3`}>
                         <DollarSign className="w-3 h-3" />
                         <span>Lucro = Receita − Despesas pagas no período.</span>
                     </div>

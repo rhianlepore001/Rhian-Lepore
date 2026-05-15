@@ -3,14 +3,6 @@
     "enabled": false
   },
   "env_inactive": {},
-  "permissions": {
-    "allow": [
-      "Bash(git rm:*)",
-      "Bash(rm -f .claude/CLAUDE.md .claude/CLAUDE.md.backup.2026-03-14T15-52-40-381Z)",
-      "Read(//c/Users/User/.claude/skills/agent-orchestration-multi-agent-optimize/**)",
-      "Read(//c/Users/User/.claude/skills/agent-orchestrator/**)"
-    ]
-  },
   "language": "portuguese",
   "mcpServers": {
     "TestSprite": {

@@ -471,10 +471,10 @@ const [searchParams, setSearchParams] = useSearchParams();
   return (
     <div className="space-y-6 md:space-y-8 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-5 gap-4">
+      <div className={`flex flex-col md:flex-row justify-between items-start md:items-end border-b ${colors.divider} pb-5 gap-4`}>
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Financeiro</h2>
+            <h2 className={`text-2xl md:text-4xl font-heading ${colors.text} uppercase`}>Financeiro</h2>
             <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
           </div>
           <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
@@ -598,8 +598,8 @@ const [searchParams, setSearchParams] = useSearchParams();
               <BrutalCard>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-white/5">
-                      <Calendar className="w-5 h-5 text-white" />
+                    <div className={`p-3 rounded-xl ${colors.surface}`}>
+                      <Calendar className={`w-5 h-5 ${colors.text}`} />
                     </div>
                     <div>
                       <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Atendimentos</p>
@@ -608,7 +608,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   </div>
                   <InfoButton text="Total de serviços prestados e faturados." />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold font-mono text-white">
+                <h3 className={`text-2xl md:text-3xl font-bold font-mono ${colors.text}`}>
                   {transactions.filter(t => t.type === 'revenue').length}
                 </h3>
                 <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">

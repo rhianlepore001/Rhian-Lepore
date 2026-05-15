@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Sparkles, Clock, TrendingUp } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAIOSDiagnostic } from '../../hooks/useAIOSDiagnostic';
 import { formatCurrency } from '../../utils/formatters';
 import { useNavigate } from 'react-router-dom';
-import { useState, lazy, Suspense } from 'react';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
 const AIOSStrategyModal = lazy(() => import('./modals/AIOSStrategyModal').then(m => ({ default: m.AIOSStrategyModal })));
 
@@ -18,10 +18,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
     const { diagnostic, loading } = useAIOSDiagnostic();
     const navigate = useNavigate();
     const [isStrategyOpen, setIsStrategyOpen] = useState(false);
-
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const borderAccent = isBeauty ? 'border-beauty-neon/30' : 'border-accent-gold/30';
+    const { accent, colors, classes } = useBrutalTheme();
 
     const firstName = fullName?.split(' ')[0] || 'Profissional';
     const hasOpportunity = !loading && diagnostic && diagnostic.recoverable_revenue > 0;
@@ -31,29 +28,29 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
 
     return (
         <>
-            <div className="flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 mb-6">
+            <div className={`flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 mb-6`}>
                 {/* Esquerda: Avatar + linha de acento + saudação */}
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className={`relative w-9 h-9 rounded-full border-2 ${borderAccent} overflow-hidden bg-neutral-900 shrink-0`}>
+                    <div className={`relative w-10 h-10 rounded-full border-2 ${accent.borderDim} overflow-hidden ${colors.card} shrink-0 ring-2 ${accent.ring}`}>
                         {avatarUrl ? (
                             <img src={avatarUrl} alt={fullName || ''} className="w-full h-full object-cover" />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center font-heading text-white text-sm">
+                            <div className={`w-full h-full flex items-center justify-center font-heading ${colors.text} text-sm font-bold`}>
                                 {firstName[0]}
                             </div>
                         )}
-                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[color:var(--color-bg)] ${accentBg}`} />
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[color:var(--color-bg)] bg-emerald-400`} />
                     </div>
 
                     {/* Linha de acento lateral */}
-                    <div className={`w-1 h-8 rounded-full ${accentBg} shrink-0`} aria-hidden="true" />
+                    <div className={`w-1 h-8 rounded-full ${accent.bg} shrink-0 opacity-60`} aria-hidden="true" />
 
                     <div className="min-w-0">
-                        <h1 className="text-lg md:text-xl font-heading text-white leading-tight truncate">
+                        <h1 className={`text-lg md:text-xl font-heading font-bold tracking-tight ${colors.text} leading-tight truncate`}>
                             {greeting},{' '}
-                            <span className={accentText}>{firstName}</span>
+                            <span className={accent.text}>{firstName}</span>
                         </h1>
-                        <p className="text-[10px] md:text-xs text-neutral-500 font-mono uppercase tracking-widest leading-tight">
+                        <p className={`text-[10px] md:text-xs ${colors.textMuted} font-sans uppercase tracking-widest leading-tight`}>
                             {isStaff ? 'Agenda aberta' : 'Operação ativa'}
                         </p>
                     </div>
@@ -65,7 +62,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
                         {!loading && hasOpportunity && (
                             <button
                                 onClick={() => navigate('/crm')}
-                                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono text-green-400 bg-green-500/10 border border-green-500/20 hover:bg-green-500/15 transition-colors"
+                                className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono ${classes.badgeSuccess} hover:brightness-110 transition-all`}
                             >
                                 <TrendingUp size={12} />
                                 {formatCurrency(diagnostic.recoverable_revenue, region)} recuperável
@@ -74,15 +71,15 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
 
                         <button
                             onClick={() => setIsStrategyOpen(true)}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-medium bg-white/5 border border-white/10 text-text-secondary hover:text-white hover:bg-white/[0.08] transition-all"
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-medium ${colors.card} border ${colors.border} ${colors.textSecondary} hover:${colors.text} hover:bg-white/[0.08] transition-all`}
                         >
-                            <Sparkles size={13} className={accentText} />
+                            <Sparkles size={13} className={accent.text} />
                             <span className="hidden sm:inline">Estratégia</span>
                         </button>
 
                         <button
                             onClick={() => navigate('/agenda')}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-bold text-black transition-all hover:brightness-110 active:scale-95 ${accentBg}`}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-bold text-black transition-all hover:brightness-110 active:scale-95 ${accent.bg}`}
                         >
                             <Clock size={13} />
                             <span className="hidden sm:inline">Agendar</span>

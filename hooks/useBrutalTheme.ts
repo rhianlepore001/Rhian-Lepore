@@ -67,17 +67,43 @@ export interface BrutalThemeTokens {
     modal: string;
   };
 
+  shadow: {
+    card: string;
+    cardHover: string;
+    elevated: string;
+    modal: string;
+    glow: string;
+    button: string;
+  };
+
+  focus: {
+    ring: string;
+    ringOffset: string;
+  };
+
+  status: {
+    success: string;
+    successBg: string;
+    successBorder: string;
+    danger: string;
+    dangerBg: string;
+    dangerBorder: string;
+    warning: string;
+    warningBg: string;
+    warningBorder: string;
+  };
+
   classes: {
     card: string;
     cardAccent: string;
     cardGlow: string;
-      buttonPrimary: string;
-      buttonSecondary: string;
-      buttonGhost: string;
-      buttonDanger: string;
-      buttonSuccess: string;
-      buttonOutline: string;
-      input: string;
+    buttonPrimary: string;
+    buttonSecondary: string;
+    buttonGhost: string;
+    buttonDanger: string;
+    buttonSuccess: string;
+    buttonOutline: string;
+    input: string;
     inputFocus: string;
     label: string;
     error: string;
@@ -97,6 +123,7 @@ export interface BrutalThemeTokens {
     modalOverlay: string;
     modalContainer: string;
     modalHeader: string;
+    focusRing: string;
   };
 }
 
@@ -256,6 +283,119 @@ const RADIUS_MAP: BrutalThemeTokens['radius'] = {
   modal: 'rounded-2xl',
 };
 
+const SHADOW_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['shadow']>> = {
+  barber: {
+    dark: {
+      card: 'shadow-promax-glass',
+      cardHover: 'hover:shadow-promax-depth',
+      elevated: 'shadow-promax-depth',
+      modal: 'shadow-promax-glass',
+      glow: 'shadow-gold',
+      button: 'shadow-gold',
+    },
+    light: {
+      card: 'shadow-soft',
+      cardHover: 'hover:shadow-soft-lg',
+      elevated: 'shadow-soft-lg',
+      modal: 'shadow-soft-lg',
+      glow: 'shadow-gold',
+      button: 'shadow-gold',
+    },
+  },
+  beauty: {
+    dark: {
+      card: 'shadow-promax-glass',
+      cardHover: 'hover:shadow-neon',
+      elevated: 'shadow-neon-strong',
+      modal: 'shadow-promax-glass',
+      glow: 'shadow-neon-strong',
+      button: 'shadow-neon',
+    },
+    light: {
+      card: 'shadow-soft',
+      cardHover: 'hover:shadow-soft-lg',
+      elevated: 'shadow-soft-lg',
+      modal: 'shadow-soft-lg',
+      glow: 'shadow-neon',
+      button: 'shadow-neon',
+    },
+  },
+};
+
+const STATUS_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['status']>> = {
+  barber: {
+    dark: {
+      success: 'text-emerald-400',
+      successBg: 'bg-emerald-500/10',
+      successBorder: 'border-emerald-500/20',
+      danger: 'text-red-400',
+      dangerBg: 'bg-red-500/10',
+      dangerBorder: 'border-red-500/20',
+      warning: 'text-amber-400',
+      warningBg: 'bg-amber-500/10',
+      warningBorder: 'border-amber-500/20',
+    },
+    light: {
+      success: 'text-emerald-600',
+      successBg: 'bg-emerald-500/10',
+      successBorder: 'border-emerald-500/20',
+      danger: 'text-red-600',
+      dangerBg: 'bg-red-500/10',
+      dangerBorder: 'border-red-500/20',
+      warning: 'text-amber-600',
+      warningBg: 'bg-amber-500/10',
+      warningBorder: 'border-amber-500/20',
+    },
+  },
+  beauty: {
+    dark: {
+      success: 'text-emerald-300',
+      successBg: 'bg-emerald-500/20',
+      successBorder: 'border-emerald-500/20',
+      danger: 'text-red-300',
+      dangerBg: 'bg-red-500/20',
+      dangerBorder: 'border-red-500/20',
+      warning: 'text-amber-300',
+      warningBg: 'bg-amber-500/20',
+      warningBorder: 'border-amber-500/20',
+    },
+    light: {
+      success: 'text-emerald-600',
+      successBg: 'bg-emerald-500/10',
+      successBorder: 'border-emerald-500/15',
+      danger: 'text-red-600',
+      dangerBg: 'bg-red-500/10',
+      dangerBorder: 'border-red-500/15',
+      warning: 'text-amber-600',
+      warningBg: 'bg-amber-500/10',
+      warningBorder: 'border-amber-500/15',
+    },
+  },
+};
+
+const FOCUS_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['focus']>> = {
+  barber: {
+    dark: {
+      ring: 'ring-accent-gold/30',
+      ringOffset: 'ring-offset-2 ring-offset-brutal-card',
+    },
+    light: {
+      ring: 'ring-accent-gold/40',
+      ringOffset: 'ring-offset-2 ring-offset-white',
+    },
+  },
+  beauty: {
+    dark: {
+      ring: 'ring-beauty-neon/30',
+      ringOffset: 'ring-offset-2 ring-offset-beauty-card',
+    },
+    light: {
+      ring: 'ring-beauty-neon/30',
+      ringOffset: 'ring-offset-2 ring-offset-white',
+    },
+  },
+};
+
 export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeTokens {
   const { userType } = useAuth();
   const theme: ThemeVariant = options?.override || userType || getThemeFromDOM();
@@ -269,6 +409,9 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
   const colors = COLOR_MAP[theme][mode];
   const font = FONT_MAP[theme];
   const radius = RADIUS_MAP;
+  const shadow = SHADOW_MAP[theme][mode];
+  const focus = FOCUS_MAP[theme][mode];
+  const status = STATUS_MAP[theme][mode];
 
   const classes = useMemo<BrutalThemeTokens['classes']>(() => {
     const commonCard = `${colors.card} ${colors.border} ${radius.card} overflow-hidden select-none touch-pan-y`;
@@ -307,10 +450,11 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       sidebarItemInactive: `text-text-secondary hover:${colors.text} hover:bg-white/[0.04]`,
 
       modalOverlay: `${isBeauty ? 'bg-beauty-dark/80' : 'bg-black/80'} backdrop-blur-md transition-opacity duration-300`,
-      modalContainer: `${colors.card} ${colors.border} ${radius.modal} shadow-promax-glass transform transition-all duration-300 animate-in fade-in zoom-in-95`,
+      modalContainer: `${colors.card} ${colors.border} ${radius.modal} ${shadow.modal} transform transition-all duration-300 animate-in fade-in zoom-in-95`,
       modalHeader: `flex items-center justify-between border-b ${colors.divider} px-6 py-4`,
+      focusRing: `focus:outline-none focus:ring-2 ${focus.ring} ${focus.ringOffset} transition-shadow`,
     };
-  }, [theme, mode, accent, colors, font, radius]);
+  }, [theme, mode, accent, colors, font, radius, shadow, focus]);
 
   return {
     theme,
@@ -323,6 +467,9 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
     accent,
     font,
     radius,
+    shadow,
+    focus,
+    status,
     classes,
   };
 }

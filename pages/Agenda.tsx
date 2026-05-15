@@ -11,6 +11,7 @@ import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
+import { EmptyState } from '../components/EmptyState';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
@@ -123,11 +124,21 @@ export const Agenda: React.FC = () => {
     const [finalPriceInput, setFinalPriceInput] = useState('');
 
 
-    const { accent, colors, isBeauty, classes, font } = useBrutalTheme();
+    const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
+
+    // Helper for initials
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     // Atualiza selectedDate se o parâmetro de URL mudar
     useEffect(() => {
@@ -566,7 +577,7 @@ export const Agenda: React.FC = () => {
                     // We can't access customer_photo_url directly from public_bookings table easily if it wasn't selected in the query?
                     // Wait, public_bookings doesn't have photo_url usually?
                     // Ah, the user said "a foto que ele selecionou". 
-                    // In PublicBooking.tsx, we upload to `client_photos` but do we save it to `public_bookings`?
+                    // In PublicBooking.tsx, we upload to `client_photos` but do we save it to public_bookings?
                     // Looking at PublicBooking.tsx: handleSubmit uploads and calls `register` (context) or saves to public_bookings?
                     // Actually PublicBooking.tsx implementation of handleSubmit does NOT save photo_url to public_bookings table explicitly in the INSERT.
                     // It registers the client in public_clients table via `register`. 
@@ -1102,193 +1113,202 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-white text-xl">Carregando agenda...</div>
+            <div className={`flex items-center justify-center h-screen ${colors.bg}`}>
+                <div className={`${colors.textSecondary} text-xl animate-pulse`}>Carregando agenda...</div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8`}>
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-heading text-white uppercase">Agenda</h1>
-                    <p className="text-neutral-400 mt-1">Gerencie os agendamentos por profissional</p>
-                </div>
-                <div className="flex gap-3 w-full md:w-auto">
-                    <BrutalButton
-                        variant="secondary"
-                        icon={<History />}
-                        onClick={() => {
-                            setShowHistoryModal(true);
-                            // No need to call fetchHistoryAppointments here, useEffect will handle it
-                        }}
-                        className="flex-1 md:flex-none"
-                    >
-                        <span className="hidden md:inline">Histórico</span>
-                    </BrutalButton>
-                    <BrutalButton
-                        variant="secondary"
-                        icon={<Calendar />}
-                        onClick={() => setShowAllAppointmentsModal(true)}
-                        className="flex-1 md:flex-none"
-                    >
-                        <span className="hidden md:inline">Todos Agendamentos</span>
-                    </BrutalButton>
-                    <BrutalButton
-                        id="btn-new-appointment"
-                        variant="primary"
-                        icon={<Plus />}
-                        onClick={() => navigate('?new=true')}
-                        className="hidden md:flex"
-                    >
-                        Novo Agendamento
-                    </BrutalButton>
+            <div className={`${classes.section} px-4 pt-6 md:px-6`}>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 className={`text-3xl md:text-4xl font-heading ${colors.text} uppercase`}>Agenda</h1>
+                        <p className={`${colors.textSecondary} mt-1`}>Gerencie os agendamentos por profissional</p>
+                    </div>
+                    <div className="flex gap-3 w-full md:w-auto">
+                        <BrutalButton
+                            variant="secondary"
+                            icon={<History />}
+                            onClick={() => setShowHistoryModal(true)}
+                            className="flex-1 md:flex-none"
+                        >
+                            <span className="hidden md:inline">Histórico</span>
+                        </BrutalButton>
+                        <BrutalButton
+                            variant="secondary"
+                            icon={<Calendar />}
+                            onClick={() => setShowAllAppointmentsModal(true)}
+                            className="flex-1 md:flex-none"
+                        >
+                            <span className="hidden md:inline">Todos Agendamentos</span>
+                        </BrutalButton>
+                        <BrutalButton
+                            id="btn-new-appointment"
+                            variant="primary"
+                            icon={<Plus />}
+                            onClick={() => navigate('?new=true')}
+                            className="hidden md:flex"
+                        >
+                            Novo Agendamento
+                        </BrutalButton>
+                    </div>
                 </div>
             </div>
 
-            {/* --- NOVO: Agendamentos Atrasados (Overdue) --- */}
+            {/* --- Agendamentos Atrasados (Overdue) --- */}
             {isOverdueFilter && (
-                <BrutalCard className="border-l-4 border-red-600 bg-red-900/20">
-                    <div className="flex items-start gap-4">
-                        <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
-                        <div className="flex-1">
-                            <h3 className="text-white font-heading text-lg uppercase mb-2">
-                                🚨 Agendamentos Atrasados ({overdueAppointments.length})
-                            </h3>
-                            <p className="text-neutral-300 text-sm mb-4">
-                                Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
-                            </p>
+                <div className="px-4 md:px-6">
+                    <BrutalCard className="border-l-4 border-red-500 bg-red-500/5">
+                        <div className="flex items-start gap-4">
+                            <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
+                            <div className="flex-1">
+                                <h3 className={`${colors.text} font-heading text-lg uppercase mb-2`}>
+                                    Agendamentos Atrasados ({overdueAppointments.length})
+                                </h3>
+                                <p className={`${colors.textSecondary} text-sm mb-4`}>
+                                    Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
+                                </p>
 
-                            {isOverdueLoading ? (
-                                <div className="flex items-center gap-2 text-neutral-400">
-                                    <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
-                                </div>
-                            ) : overdueAppointments.length === 0 ? (
-                                <p className="text-green-400 text-sm">Nenhum agendamento atrasado encontrado. ✅</p>
-                            ) : (
-                                <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                                    {overdueAppointments.map(apt => {
-                                        const professional = teamMembers.find(m => m.id === apt.professional_id);
-                                        return (
-                                            <div key={apt.id} className="bg-neutral-900 p-3 rounded-lg border border-red-800 flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-white font-bold text-sm">{apt.clientName}</p>
-                                                    <p className="text-neutral-400 text-xs">{apt.service}</p>
-                                                    <p className="text-neutral-500 text-xs">
-                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                                        {professional && ` | Profissional: ${professional.name}`}
-                                                    </p>
+                                {isOverdueLoading ? (
+                                    <div className={`flex items-center gap-2 ${colors.textMuted}`}>
+                                        <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
+                                    </div>
+                                ) : overdueAppointments.length === 0 ? (
+                                    <EmptyState icon={Check} message="Nenhum agendamento atrasado encontrado." className="py-6" />
+                                ) : (
+                                    <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                                        {overdueAppointments.map(apt => {
+                                            const professional = teamMembers.find(m => m.id === apt.professional_id);
+                                            return (
+                                                <div key={apt.id} className={`${colors.card} ${colors.border} p-4 rounded-xl flex items-center justify-between`}>
+                                                    <div>
+                                                        <p className={`${colors.text} font-bold text-sm`}>{apt.clientName}</p>
+                                                        <p className={`${colors.textSecondary} text-xs`}>{apt.service}</p>
+                                                        <p className={`${colors.textMuted} text-xs`}>
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {professional && ` | Profissional: ${professional.name}`}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex gap-2 flex-shrink-0">
+                                                        <button
+                                                            onClick={() => setShowingDetailsAppointment(apt)}
+                                                            className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                            title="Informações"
+                                                        >
+                                                            <Info className="w-4 h-4" /> Info
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCompleteAppointment(apt.id, true)}
+                                                            className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                            title="Concluir e Faturar"
+                                                        >
+                                                            <Check className="w-4 h-4" /> Faturar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCancelAppointment(apt.id, true)}
+                                                            className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                            title="Cancelar"
+                                                        >
+                                                            <X className="w-4 h-4" /> Cancelar
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div className="flex gap-2 flex-shrink-0">
-                                                    <button
-                                                        onClick={() => setShowingDetailsAppointment(apt)}
-                                                        className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                        title="Informações"
-                                                    >
-                                                        <Info className="w-4 h-4" /> Info
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                        className="px-3 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                        title="Concluir e Faturar"
-                                                    >
-                                                        <Check className="w-4 h-4" /> Faturar
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleCancelAppointment(apt.id, true)}
-                                                        className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                        title="Cancelar"
-                                                    >
-                                                        <X className="w-4 h-4" /> Cancelar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </BrutalCard>
+                    </BrutalCard>
+                </div>
             )}
             {/* --- FIM: Agendamentos Atrasados --- */}
 
 
             {/* Date Navigator */}
-            <BrutalCard>
-                <div className="flex items-center justify-between">
-                    <button
-                        onClick={() => changeDate(-1)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                        <ChevronLeft className="w-6 h-6 text-white" />
-                    </button>
-                    <div className="text-center">
-                        <h2 className={`text-2xl font-heading ${accent.text} uppercase`}>
-                            {selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
-                        </h2>
-                        <p className="text-white text-lg font-mono">
-                            {selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => changeDate(1)}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                        <ChevronRight className="w-6 h-6 text-white" />
-                    </button>
-                </div>
-            </BrutalCard>
-
-            {/* Professional Filter */}
-            {teamMembers.length > 0 && (
+            <div className="px-4 md:px-6">
                 <BrutalCard>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center justify-between">
+                        <button
+                            onClick={() => changeDate(-1)}
+                            className={`p-2 rounded-xl transition-colors hover:${colors.surface}`}
+                        >
+                            <ChevronLeft className={`w-6 h-6 ${colors.text}`} />
+                        </button>
+                        <div className="text-center">
+                            <h2 className={`text-2xl font-heading ${accent.text} uppercase`}>
+                                {selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
+                            </h2>
+                            <p className={`${colors.text} text-lg font-mono`}>
+                                {selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => changeDate(1)}
+                            className={`p-2 rounded-xl transition-colors hover:${colors.surface}`}
+                        >
+                            <ChevronRight className={`w-6 h-6 ${colors.text}`} />
+                        </button>
+                    </div>
+                </BrutalCard>
+            </div>
+
+            {/* Professional Filter - Avatars */}
+            {teamMembers.length > 0 && (
+                <div className="px-4 md:px-6">
+                    <div className={`flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide ${colors.surface} ${colors.border} rounded-2xl p-4`}>
                         <button
                             onClick={() => setSelectedProfessionalFilter(null)}
-                            className={`px-4 py-2 rounded-lg font-bold transition-all border-2 ${selectedProfessionalFilter === null
-                                ? `${accent.bg} text-black border-black`
-                                : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-600'
-                                }`}
+                            className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                         >
-                            Todos os Profissionais
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalFilter === null ? `${accent.bg} ${accent.border} ${isBeauty ? 'text-white' : 'text-black'}` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalFilter === null ? accent.text : colors.textMuted}`}>Todos</span>
                         </button>
                         {teamMembers.map(member => (
                             <button
                                 key={member.id}
                                 onClick={() => setSelectedProfessionalFilter(member.id)}
-                                className={`px-4 py-2 rounded-lg font-bold transition-all border-2 flex items-center gap-2 ${selectedProfessionalFilter === member.id
-                                    ? `${accent.bg} text-black border-black`
-                                    : 'bg-neutral-800 text-white border-neutral-700 hover:border-neutral-600'
-                                    }`}
+                                className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                             >
-                                {member.photo_url && (
-                                    <img
-                                        src={member.photo_url}
-                                        alt={member.name}
-                                        className="w-6 h-6 rounded-full border border-black object-cover"
-                                    />
-                                )}
-                                {member.name}
+                                <div className="relative">
+                                    {member.photo_url ? (
+                                        <img
+                                            src={member.photo_url}
+                                            alt={member.name}
+                                            className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${selectedProfessionalFilter === member.id ? accent.border : colors.border}`}
+                                        />
+                                    ) : (
+                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${selectedProfessionalFilter === member.id ? `${accent.bg} ${accent.border} ${isBeauty ? 'text-white' : 'text-black'}` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                            {getInitials(member.name)}
+                                        </div>
+                                    )}
+                                    <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
+                                </div>
+                                <span className={`text-[10px] font-bold uppercase tracking-wider truncate max-w-[72px] ${selectedProfessionalFilter === member.id ? accent.text : colors.textMuted}`}>
+                                    {member.name}
+                                </span>
                             </button>
                         ))}
                     </div>
-                </BrutalCard>
+                </div>
             )}
 
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
-                <div className="space-y-4">
-                    <BrutalCard className="border-l-4 border-accent-gold bg-accent-gold/5">
+                <div className="px-4 md:px-6 space-y-4">
+                    <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} ${accent.bgDim}`}>
                         <div className="flex items-center gap-3">
-                            <AlertTriangle className="w-6 h-6 text-accent-gold" />
+                            <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
                             <div>
-                                <h3 className="text-white font-bold text-lg mb-1">
-                                    📌 {publicBookings.length} Solicitação(ões) Pendente(s)
+                                <h3 className={`${colors.text} font-bold text-lg mb-1`}>
+                                    {publicBookings.length} Solicitação(ões) Pendente(s)
                                 </h3>
-                                <p className="text-neutral-400 text-sm">
+                                <p className={`${colors.textSecondary} text-sm`}>
                                     {(() => {
                                         const edits = publicBookings.filter((b: any) => b.is_edit).length;
                                         const newOnes = publicBookings.length - edits;
@@ -1301,50 +1321,32 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         </div>
                     </BrutalCard>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {publicBookings.map(booking => {
                             const professional = teamMembers.find(m => m.id === booking.professional_id);
                             const bookingDate = new Date(booking.appointment_time);
                             const isToday = bookingDate.toDateString() === new Date().toDateString();
 
                             return (
-                                <div key={booking.id} className={`
-                                    relative p-5 transition-all duration-300 group
-                                    ${(booking as any).is_edit
-                                        ? (isBeauty
-                                            ? 'bg-beauty-card/40 backdrop-blur-md border border-blue-400/40 rounded-2xl hover:border-blue-400'
-                                            : 'bg-neutral-900 border-2 border-blue-400/50 rounded-xl hover:border-blue-400 shadow-heavy-sm'
-                                        )
-                                        : (isBeauty
-                                            ? 'bg-beauty-card/40 backdrop-blur-md border border-beauty-neon/30 rounded-2xl hover:border-beauty-neon shadow-neon-sm hover:shadow-neon'
-                                            : 'bg-neutral-900 border-2 border-accent-gold/50 rounded-xl hover:border-accent-gold shadow-heavy-sm'
-                                        )
-                                    }
-                                `}>
+                                <div key={booking.id} className={`${colors.card} ${colors.border} rounded-2xl p-5 transition-all duration-300`}>
                                     {/* Badge de tipo */}
                                     {(booking as any).is_edit && (
                                         <div className="mb-3">
-                                            <span className="text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded">
-                                                ✏️ ALTERAÇÃO DE AGENDAMENTO
+                                            <span className={`text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
+                                                ALTERAÇÃO DE AGENDAMENTO
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
-                                            <span className={`
-                                                text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors
-                                                ${isToday
-                                                    ? (isBeauty ? 'bg-beauty-neon text-black border-beauty-neon' : 'bg-accent-gold text-black border-accent-gold')
-                                                    : 'bg-neutral-800 text-neutral-400 border-neutral-700 group-hover:text-white'
-                                                }
-                                            `}>
+                                            <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
                                                 {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => handleAcceptBooking(booking)}
-                                                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white shadow-[0_0_15px_rgba(167,139,250,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]' : 'bg-green-500/20 text-green-400 border border-green-500/40 hover:bg-green-500/30'}`}
+                                                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${classes.buttonSuccess}`}
                                                 title="Aceitar"
                                             >
                                                 <Check className="w-3.5 h-3.5" /> Aceitar
@@ -1360,30 +1362,30 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     </div>
 
                                     <div className="space-y-1">
-                                        <p className="text-white font-bold text-xl leading-tight group-hover:text-beauty-neon transition-colors">{booking.customer_name}</p>
+                                        <p className={`${colors.text} font-bold text-xl leading-tight`}>{booking.customer_name}</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                                            <p className="text-neutral-400 text-sm font-mono tracking-wider">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <p className={`${colors.textSecondary} text-sm font-mono tracking-wider`}>
                                                 {formatPhone(booking.customer_phone, currencyRegion)}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+                                    <div className={`mt-4 pt-4 ${colors.divider} border-t space-y-3`}>
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">
-                                            <div className={`p-1.5 rounded-lg ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'}`}>
-                                                <Scissors className={`w-3.5 h-3.5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                            <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
+                                                <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
                                             <span className="font-medium">
-                                                {booking.service_ids?.length || 0} serviço(s) • <span className="text-white font-bold">{formatCurrency(booking.total_price, currencyRegion)}</span>
+                                                {booking.service_ids?.length || 0} serviço(s) • <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">
-                                            <div className={`p-1.5 rounded-lg ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'}`}>
-                                                <User className={`w-3.5 h-3.5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                            <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
+                                                <User className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
                                             <span>
-                                                Profissional: <span className="font-bold text-white uppercase tracking-tighter">{professional?.name || 'Qualquer um'}</span>
+                                                Profissional: <span className={`font-bold ${colors.text} uppercase tracking-tighter`}>{professional?.name || 'Qualquer um'}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -1391,75 +1393,68 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             );
                         })}
                     </div>
-                    <div className="border-b-2 border-neutral-800 my-8"></div>
+                    <div className={`${colors.divider} border-b-2 my-8`}></div>
                 </div>
             )}
 
             {/* Team Columns */}
             {teamMembers.length === 0 ? (
-                <BrutalCard>
-                    <div className="text-center py-12">
-                        <User className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-                        <h3 className="text-white font-bold text-xl mb-2">Nenhum profissional cadastrado</h3>
-                        <p className="text-neutral-400 mb-6">
-                            Adicione profissionais à sua equipe para começar a organizar agendamentos
-                        </p>
-                        <BrutalButton variant="secondary" onClick={() => navigate('/configuracoes/equipe')}>
-                            Adicionar Profissionais
-                        </BrutalButton>
-                    </div>
-                </BrutalCard>
+                <div className="px-4 md:px-6">
+                    <BrutalCard>
+                        <EmptyState
+                            icon={User}
+                            message="Nenhum profissional cadastrado. Adicione profissionais à sua equipe para começar a organizar agendamentos."
+                            ctaLabel="Adicionar Profissionais"
+                            onCta={() => navigate('/configuracoes/equipe')}
+                        />
+                    </BrutalCard>
+                </div>
             ) : (
-                <div className={`grid gap-4 ${selectedProfessionalFilter
-                    ? 'grid-cols-1 max-w-2xl mx-auto'
-                    : `grid-cols-1 md:grid-cols-${Math.min((teamMembers.length + (appointments.some(a => !a.professional_id) ? 1 : 0)), 4)}`
-                    } overflow-x-auto pb-4`}>
+                <div className={`flex flex-nowrap md:grid overflow-x-auto snap-x snap-mandatory gap-5 px-4 md:px-6 pb-4 scrollbar-hide ${selectedProfessionalFilter ? 'md:grid-cols-1 max-w-3xl mx-auto' : 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
 
                     {/* Unassigned Column (if any unassigned appointments exist) */}
                     {appointments.some(apt => !apt.professional_id) && !selectedProfessionalFilter && (
-                        <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl overflow-hidden flex flex-col h-full opacity-70 hover:opacity-100 transition-opacity min-w-[300px]">
-                            <div className="p-4 bg-neutral-800 border-b border-neutral-700 flex items-center justify-between sticky top-0 z-10">
+                        <div className="min-w-[300px] w-full snap-start flex flex-col">
+                            <div className={`${colors.surface} ${colors.border} rounded-t-2xl p-4 flex items-center justify-between`}>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center border border-neutral-600">
-                                        <Users className="w-5 h-5 text-neutral-400" />
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${colors.border} ${colors.card}`}>
+                                        <Users className={`w-5 h-5 ${colors.textMuted}`} />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-white uppercase tracking-wider text-sm">A Distribuir</h3>
-                                        <p className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full inline-block mt-1">
+                                        <h3 className={`font-bold ${colors.text} uppercase tracking-wider text-sm`}>A Distribuir</h3>
+                                        <span className={`text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full inline-block mt-1`}>
                                             Sem profissional
-                                        </p>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="p-4 space-y-3 flex-1 overflow-y-auto max-h-[800px]">
+                            <div className={`${colors.card} ${colors.border} rounded-b-2xl border-t-0 p-5 space-y-5 flex-1 overflow-y-auto max-h-[800px]`}>
                                 {appointments.filter(apt => !apt.professional_id).map(apt => {
                                     const { hasDiscount } = getDiscountInfo(apt);
                                     return (
                                         <div
                                             key={apt.id}
-                                            className="border-2 border-neutral-700 rounded-lg p-3 bg-neutral-800 hover:border-neutral-500 transition-colors"
+                                            className={`${colors.surface} ${colors.border} rounded-xl p-5 transition-colors`}
                                         >
-                                            <div className="flex items-start justify-between mb-2">
+                                            <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-mono font-bold text-white">
+                                                    <span className={`text-xs font-mono font-bold ${colors.text}`}>
                                                         {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
-                                                    <span className="text-xs font-mono text-neutral-500">
+                                                    <span className={`text-xs font-mono ${colors.textMuted}`}>
                                                         {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={() => setEditingAppointment(apt)}
-                                                        className="text-neutral-400 hover:text-white transition-colors"
-                                                        title="Editar / Atribuir"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    onClick={() => setEditingAppointment(apt)}
+                                                    className={`${colors.textMuted} hover:${colors.text} transition-colors`}
+                                                    title="Editar / Atribuir"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
                                             </div>
-                                            <p className="text-white font-bold text-sm mb-1">{apt.clientName}</p>
-                                            <p className="text-neutral-400 text-xs mb-1">{apt.service}</p>
+                                            <p className={`${colors.text} font-bold text-sm mb-1`}>{apt.clientName}</p>
+                                            <p className={`${colors.textSecondary} text-xs mb-1`}>{apt.service}</p>
                                             <span className={`text-xs font-mono font-bold ${accent.text}`}>
                                                 {formatCurrency(apt.price, currencyRegion)}
                                             </span>
@@ -1469,7 +1464,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                             {teamMembers.length === 1 && (
                                                 <button
                                                     onClick={() => handleAssignToProfessional(apt.id, teamMembers[0].id)}
-                                                    className={`mt-2 w-full font-bold text-[10px] py-2 rounded-lg transition-all flex items-center justify-center gap-1 ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white' : 'bg-green-600 text-white hover:bg-green-500'}`}
+                                                    className={`mt-3 w-full font-bold text-[10px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 ${classes.buttonSuccess}`}
                                                 >
                                                     <Check className="w-3 h-3" /> ATRIBUIR A {teamMembers[0].name.toUpperCase()}
                                                 </button>
@@ -1485,80 +1480,83 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         const memberPendingBookings = getPendingBookingsForProfessional(member.id);
 
                         return (
-                            <div key={member.id} className="flex flex-col">
+                            <div key={member.id} className="min-w-[300px] w-full snap-start flex flex-col gap-4">
                                 {/* Professional Header */}
                                 <div
                                     onClick={() => {
                                         setSelectedProfessional(member.id);
                                         setShowNewAppointmentModal(true);
                                     }}
-                                    className={`${isBeauty
-                                        ? 'bg-gradient-to-r from-beauty-neon/20 to-beauty-neon/5 hover:from-beauty-neon/30'
-                                        : 'bg-accent-gold hover:opacity-90'} text-white p-4 rounded-t-lg border-2 border-b-0 border-white/20 min-h-[90px] flex items-center cursor-pointer transition-all group relative`}
-                                    title="Clique para agendar com este profissional">
+                                    className={`${colors.surface} ${colors.border} rounded-t-2xl p-4 flex items-center cursor-pointer transition-all group relative`}
+                                    title="Clique para agendar com este profissional"
+                                >
                                     <div className="flex items-center gap-3 w-full">
-                                        {member.photo_url ? (
-                                            <img
-                                                src={member.photo_url}
-                                                alt={member.name}
-                                                className="w-12 h-12 rounded-full border-2 border-white/30 object-cover flex-shrink-0"
-                                            />
-                                        ) : (
-                                            <div className="w-12 h-12 rounded-full bg-white/10 border-2 border-white/30 flex items-center justify-center flex-shrink-0">
-                                                <User className="w-6 h-6 text-white" />
-                                            </div>
-                                        )}
+                                        <div className="relative flex-shrink-0">
+                                            {member.photo_url ? (
+                                                <img
+                                                    src={member.photo_url}
+                                                    alt={member.name}
+                                                    className={`w-12 h-12 rounded-full border-2 object-cover ${colors.border}`}
+                                                />
+                                            ) : (
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 text-sm font-bold ${colors.card} ${colors.border} ${colors.text}`}>
+                                                    {getInitials(member.name)}
+                                                </div>
+                                            )}
+                                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full" />
+                                        </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className={`font-heading font-bold text-lg truncate uppercase ${isBeauty ? 'text-white' : 'text-black'}`} title={member.name}>
+                                            <h3 className={`font-heading font-bold text-base truncate uppercase ${colors.text}`} title={member.name}>
                                                 {member.name}
                                             </h3>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon' : 'bg-black/10 text-black/70'}`}>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                                     {memberAppointments.length} agendamentos
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 p-1 rounded-full">
-                                        <Plus className={`w-4 h-4 ${isBeauty ? 'text-white' : 'text-black'}`} />
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className={`${colors.card} p-1.5 rounded-full`}>
+                                            <Plus className={`w-4 h-4 ${colors.text}`} />
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Appointments Column - Limited Height with Scroll */}
-                                <div className="bg-neutral-900 border-2 border-t-0 border-black rounded-b-lg p-3 h-[400px] overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-neutral-900">
+                                {/* Appointments Column */}
+                                <div className={`${colors.card} ${colors.border} rounded-b-2xl border-t-0 p-5 space-y-5 max-h-[600px] overflow-y-auto`}>
                                     {/* Pending Public Bookings */}
                                     {memberPendingBookings.map(booking => (
                                         <div
                                             key={booking.id}
-                                            className={`border-2 rounded-lg p-3 ${
+                                            className={`${colors.surface} rounded-xl p-5 border-2 ${
                                                 (booking as any).is_edit
-                                                    ? 'bg-blue-500/10 border-blue-400/60'
-                                                    : 'bg-accent-gold/10 border-accent-gold'
+                                                    ? 'border-blue-400/40'
+                                                    : accent.borderDim
                                             }`}
                                         >
-                                            <div className="flex items-start justify-between mb-2">
+                                            <div className="flex items-start justify-between mb-3">
                                                 <span className={`text-xs font-mono font-bold ${
-                                                    (booking as any).is_edit ? 'text-blue-400' : 'text-accent-gold'
+                                                    (booking as any).is_edit ? 'text-blue-400' : accent.text
                                                 }`}>
                                                     {(booking as any).is_edit
                                                         ? `✏️ ${booking.customer_name} alterou o agendamento`
-                                                        : '📌 SOLICITAÇÃO ONLINE'
+                                                        : 'SOLICITAÇÃO ONLINE'
                                                     }
                                                 </span>
                                             </div>
-                                            <p className="text-white font-bold text-sm mb-1">{booking.customer_name}</p>
-                                            <p className="text-neutral-400 text-xs mb-1">
-                                                {/* Note: booking.services is an array of IDs here, not objects. We need to map them if possible, but for now, we'll show the service IDs array length */}
+                                            <p className={`${colors.text} font-bold text-sm mb-1`}>{booking.customer_name}</p>
+                                            <p className={`${colors.textSecondary} text-xs mb-1`}>
                                                 {booking.service_ids?.length} serviço(s)
                                             </p>
-                                            <p className="text-neutral-500 text-xs mb-3">
+                                            <p className={`${colors.textMuted} text-xs mb-4`}>
                                                 {new Date(booking.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </p>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => handleAcceptBooking(booking)}
                                                     disabled={isProcessing}
-                                                    className={`flex-1 ${isProcessing ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700' : isBeauty ? 'bg-beauty-neon/20 border-beauty-neon/40 text-beauty-neon hover:bg-beauty-neon/30' : 'bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20'} border text-xs font-bold py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5`}
+                                                    className={`flex-1 ${isProcessing ? 'opacity-50 cursor-not-allowed' : classes.buttonSuccess} text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5`}
                                                 >
                                                     {isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                                                     {isProcessing ? 'Aguarde...' : 'Confirmar'}
@@ -1566,7 +1564,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 <button
                                                     onClick={() => handleRejectBooking(booking.id)}
                                                     disabled={isProcessing}
-                                                    className={`flex-1 ${isProcessing ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700' : 'bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20'} text-xs font-bold py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5`}
+                                                    className={`flex-1 ${isProcessing ? 'opacity-50 cursor-not-allowed' : classes.buttonDanger} text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5`}
                                                 >
                                                     <X className="w-3.5 h-3.5" />
                                                     Recusar
@@ -1576,7 +1574,6 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     ))}
 
                                     {/* Confirmed Appointments */}
-
                                     {memberAppointments.map(apt => {
                                         const { hasDiscount, discountPercentage, isCustomPriceHigher } = getDiscountInfo(apt);
                                         const isCompleted = apt.status === 'Completed';
@@ -1584,14 +1581,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         return (
                                             <div
                                                 key={apt.id}
-                                                className={`border rounded-xl p-4 transition-all hover:scale-[1.01] ${isCompleted
-                                                    ? 'bg-neutral-900/50 border-neutral-800 opacity-70 hover:opacity-100'
-                                                    : 'bg-neutral-800 border-neutral-700 hover:border-neutral-600 shadow-lg'
-                                                    }`}
+                                                className={`${isCompleted ? `${colors.card} opacity-70` : colors.surface} ${colors.border} rounded-xl p-5 transition-all hover:shadow-md ${accent.borderDim}`}
                                             >
-                                                <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-start justify-between mb-4">
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`text-sm font-mono font-bold px-2.5 py-0.5 rounded-md ${isCompleted ? 'bg-green-500/10 text-green-500 line-through decoration-2 border border-green-500/20' : isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/20' : 'bg-accent-gold/10 text-accent-gold border border-accent-gold/20'}`}>
+                                                        <span className={`text-sm font-mono font-bold px-3 py-1 rounded-lg ${isCompleted ? 'bg-emerald-500/10 text-emerald-500 line-through decoration-2 border border-emerald-500/20' : `${accent.bgDim} ${accent.text} ${accent.borderDim}`}`}>
                                                             {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
@@ -1599,66 +1593,66 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                     {/* Quick Actions Header */}
                                                     <div className="flex items-center gap-1.5">
                                                         {apt.notes && (
-                                                            <button onClick={() => setShowingDetailsAppointment(apt)} className="p-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-blue-500/50 rounded-md transition-colors group" title="Ver detalhes e observações">
-                                                                <Info className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300" />
+                                                            <button onClick={() => setShowingDetailsAppointment(apt)} className={`p-1.5 rounded-md transition-colors ${colors.surface} ${colors.border} hover:border-blue-400/50`} title="Ver detalhes e observações">
+                                                                <Info className="w-3.5 h-3.5 text-blue-400" />
                                                             </button>
                                                         )}
                                                         {apt.clientPhone && apt.status === 'Confirmed' && (
                                                             <button
                                                                 onClick={() => {
-                                                                    const waPhone = apt.clientPhone!.replace(/\\D/g, '');
+                                                                    const waPhone = apt.clientPhone!.replace(/\D/g, '');
                                                                     window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent('Seu agendamento foi confirmado')}`, '_blank');
                                                                 }}
-                                                                className="p-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-green-500/50 rounded-md transition-colors group"
+                                                                className={`p-1.5 rounded-md transition-colors ${colors.surface} ${colors.border} hover:border-emerald-500/50`}
                                                                 title="WhatsApp"
                                                             >
-                                                                <MessageCircle className="w-3.5 h-3.5 text-green-500 group-hover:text-green-400" />
+                                                                <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
                                                             </button>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-1 mb-3 cursor-pointer group" onClick={() => setShowingDetailsAppointment(apt)} title="Ver detalhes do agendamento">
+                                                <div className="space-y-2 mb-4 cursor-pointer group" onClick={() => setShowingDetailsAppointment(apt)} title="Ver detalhes do agendamento">
                                                     <div className="flex items-center justify-between">
-                                                        <p className={`font-bold text-base truncate transition-colors flex-1 ${isCompleted ? 'text-neutral-500' : 'text-white group-hover:text-neutral-300'}`}>
+                                                        <p className={`font-bold text-base truncate flex-1 ${isCompleted ? colors.textMuted : colors.text}`}>
                                                             {apt.clientName}
                                                         </p>
-                                                        <ChevronRight className={`w-4 h-4 transition-all duration-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                                        <ChevronRight className={`w-4 h-4 transition-all duration-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 ${accent.text}`} />
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <Scissors className="w-3.5 h-3.5 text-neutral-500" />
-                                                        <p className="text-neutral-400 text-xs truncate max-w-[180px]" title={apt.service}>
+                                                        <Scissors className={`w-3.5 h-3.5 ${colors.textMuted}`} />
+                                                        <p className={`text-sm truncate max-w-[180px] ${colors.textSecondary}`} title={apt.service}>
                                                             {apt.service}
                                                         </p>
                                                     </div>
                                                     {isCompleted && apt.payment_method && (
-                                                        <span className="text-xs font-mono bg-green-500/10 text-green-400 px-2.5 py-0.5 rounded-md border border-green-500/20 inline-block mt-1">
+                                                        <span className={`text-xs font-mono bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-md border border-emerald-500/20 inline-block mt-1`}>
                                                             Pago via {apt.payment_method.toUpperCase()}
                                                         </span>
                                                     )}
                                                 </div>
 
-                                                <div className="pt-3 border-t border-neutral-800 flex flex-col gap-3">
+                                                <div className={`pt-4 ${colors.divider} border-t flex flex-col gap-3`}>
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex flex-col">
                                                             {hasDiscount && apt.basePrice && (
-                                                                <span className="text-[10px] text-neutral-500 line-through">
+                                                                <span className={`text-[10px] ${colors.textMuted} line-through`}>
                                                                     {formatCurrency(apt.basePrice, currencyRegion)}
                                                                 </span>
                                                             )}
-                                                            <span className={`text-sm font-bold ${isCompleted ? 'text-neutral-500' : 'text-white'}`}>
+                                                            <span className={`text-sm font-bold ${isCompleted ? colors.textMuted : colors.text}`}>
                                                                 {formatCurrency(apt.price, currencyRegion)}
                                                             </span>
                                                         </div>
 
                                                         <div className="flex flex-col gap-1 items-end">
                                                             {hasDiscount && (
-                                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 border border-red-500/20">
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 border border-red-500/20`}>
                                                                     -{discountPercentage}%
                                                                 </span>
                                                             )}
                                                             {isCustomPriceHigher && (
-                                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20`}>
                                                                     Custom
                                                                 </span>
                                                             )}
@@ -1670,21 +1664,21 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                             {!isCompleted && (
                                                                 <button
                                                                     onClick={() => setCheckoutAppointment({ ...apt, time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: apt.status as 'Confirmed' | 'Pending' | 'Completed' })}
-                                                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm ${isBeauty ? 'bg-beauty-neon text-black hover:bg-white shadow-[0_0_10px_rgba(167,139,250,0.2)] hover:shadow-[0_0_15px_rgba(255,255,255,0.4)]' : 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 hover:shadow-lg'}`}
+                                                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${classes.buttonSuccess}`}
                                                                 >
                                                                     <Check className="w-3.5 h-3.5" /> Concluir
                                                                 </button>
                                                             )}
                                                             <button
                                                                 onClick={() => setEditingAppointment(apt)}
-                                                                className="px-3 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white border border-neutral-700 rounded-lg transition-colors"
+                                                                className={`px-3 py-2.5 rounded-xl transition-colors ${classes.buttonSecondary}`}
                                                                 title="Editar"
                                                             >
                                                                 <Edit2 className="w-3.5 h-3.5" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleCancelAppointment(apt.id)}
-                                                                className="px-3 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-colors"
+                                                                className={`px-3 py-2.5 rounded-xl transition-colors ${classes.buttonDanger}`}
                                                                 title="Cancelar"
                                                             >
                                                                 <X className="w-3.5 h-3.5" />
@@ -1697,13 +1691,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     })}
 
                                     {memberAppointments.length === 0 && memberPendingBookings.length === 0 && (
-                                        <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-60">
-                                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-3">
-                                                <Calendar className="w-8 h-8 text-neutral-600" />
-                                            </div>
-                                            <p className="text-sm font-bold text-neutral-400">Livre</p>
-                                            <p className="text-xs text-neutral-600 mt-1">Nenhum agendamento</p>
-                                        </div>
+                                        <EmptyState
+                                            icon={Calendar}
+                                            message="Nenhum agendamento para hoje"
+                                            className="py-8"
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -1714,31 +1706,23 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
             {/* Appointment Details Modal */}
             {showingDetailsAppointment && createPortal(
-                <div className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/95 backdrop-blur-sm' : 'bg-black/90'} md:left-64`}>
-                    <div className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300
-                        ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                            : 'bg-brutal-card border border-white/5 rounded-2xl shadow-promax-depth'}
-                    `}>
+                <div className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${colors.overlay} md:left-64`}>
+                    <div className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300 ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
                         {/* Header */}
-                        <div className={`p-6 border-b ${isBeauty ? 'border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent' : 'border-white/5 bg-white/[0.02]'}`}>
+                        <div className={`p-6 border-b ${colors.divider} ${colors.surface}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="font-heading text-xl uppercase mb-1 text-white">
+                                    <h3 className={`font-heading text-xl uppercase mb-1 ${colors.text}`}>
                                         Detalhes do Agendamento
                                     </h3>
-                                    <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block ${
-                                        showingDetailsAppointment.status === 'Completed' ? 'text-green-400 bg-green-500/10 border border-green-500/20' :
-                                        showingDetailsAppointment.status === 'Cancelled' ? 'text-red-400 bg-red-500/10 border border-red-500/20' :
-                                        'text-amber-400 bg-amber-500/10 border border-amber-500/20'
-                                    }`}>
-                                        {showingDetailsAppointment.status === 'Completed' ? '✓ Concluído' :
-                                         showingDetailsAppointment.status === 'Cancelled' ? '✕ Cancelado' : '● Confirmado'}
+                                    <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block ${showingDetailsAppointment.status === 'Completed' ? classes.badgeSuccess : showingDetailsAppointment.status === 'Cancelled' ? classes.badgeDanger : classes.badgeWarning}`}>
+                                        {showingDetailsAppointment.status === 'Completed' ? 'Concluído' :
+                                         showingDetailsAppointment.status === 'Cancelled' ? 'Cancelado' : 'Confirmado'}
                                     </span>
                                 </div>
                                 <button
                                     onClick={() => setShowingDetailsAppointment(null)}
-                                    className={`p-1 rounded-full transition-colors ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-white/10'}`}
+                                    className={`p-1 rounded-full transition-colors ${colors.textMuted} hover:${colors.text} hover:${colors.surface}`}
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -1749,17 +1733,16 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         <div className="p-6 space-y-6">
                             {/* Client Info */}
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ring-2
-                                    ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon border border-beauty-neon/30 ring-beauty-neon/40' : 'bg-white/5 text-accent-gold border border-white/10 ring-accent-gold/20'}`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${accent.bgDim} ${accent.text} ${accent.borderDim}`}>
                                     {showingDetailsAppointment.clientName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <p className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-0.5">Cliente</p>
-                                    <h4 className="text-lg font-bold text-white leading-tight">{showingDetailsAppointment.clientName}</h4>
+                                    <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-0.5`}>Cliente</p>
+                                    <h4 className={`text-lg font-bold ${colors.text} leading-tight`}>{showingDetailsAppointment.clientName}</h4>
                                     {showingDetailsAppointment.clientPhone && (
                                         <div className="flex items-center gap-1 mt-1">
-                                            <Phone className="w-3 h-3 text-neutral-400" />
-                                            <span className="text-xs text-neutral-400 font-mono">
+                                            <Phone className={`w-3 h-3 ${colors.textMuted}`} />
+                                            <span className={`text-xs ${colors.textMuted} font-mono`}>
                                                 {formatPhone(showingDetailsAppointment.clientPhone, currencyRegion)}
                                             </span>
                                         </div>
@@ -1767,23 +1750,23 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 </div>
                             </div>
 
-                            <div className="w-full h-px bg-white/5"></div>
+                            <div className={`w-full h-px ${colors.divider}`}></div>
 
                             {/* Service & Professional */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2 text-neutral-400">
+                                    <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Scissors className="w-4 h-4" />
-                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Serviço</span>
+                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Serviço</span>
                                     </div>
-                                    <p className="text-white font-medium text-sm">{showingDetailsAppointment.service}</p>
+                                    <p className={`${colors.text} font-medium text-sm`}>{showingDetailsAppointment.service}</p>
                                 </div>
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2 text-neutral-400">
+                                    <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <User className="w-4 h-4" />
-                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Profissional</span>
+                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Profissional</span>
                                     </div>
-                                    <p className="text-white font-medium text-sm">
+                                    <p className={`${colors.text} font-medium text-sm`}>
                                         {teamMembers.find(m => m.id === showingDetailsAppointment.professional_id)?.name || 'N/A'}
                                     </p>
                                 </div>
@@ -1792,11 +1775,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             {/* Time & Price */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2 text-neutral-400">
+                                    <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Clock className="w-4 h-4" />
-                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Data e Hora</span>
+                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Data e Hora</span>
                                     </div>
-                                    <p className="text-white font-medium text-sm">
+                                    <p className={`${colors.text} font-medium text-sm`}>
                                         {new Date(showingDetailsAppointment.appointment_time).toLocaleDateString('pt-BR')}
                                     </p>
                                     <p className={`font-mono font-bold mt-0.5 ${accent.text}`}>
@@ -1804,9 +1787,9 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     </p>
                                 </div>
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2 text-neutral-400">
+                                    <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <DollarSign className="w-4 h-4" />
-                                        <span className="text-[10px] font-mono uppercase tracking-widest font-bold">Valor</span>
+                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Valor</span>
                                     </div>
                                     <div className="flex flex-col">
                                         {(() => {
@@ -1814,11 +1797,11 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                             return (
                                                 <>
                                                     {hasDiscount && basePrice && (
-                                                        <span className="text-xs text-red-500 line-through font-mono">
+                                                        <span className={`text-xs text-red-500 line-through font-mono`}>
                                                             {formatCurrency(basePrice, currencyRegion)}
                                                         </span>
                                                     )}
-                                                    <span className={`text-xl font-bold font-mono ${isBeauty ? 'text-white' : 'text-accent-gold'}`}>
+                                                    <span className={`text-xl font-bold font-mono ${isBeauty ? colors.text : accent.text}`}>
                                                         {formatCurrency(showingDetailsAppointment.price, currencyRegion)}
                                                     </span>
                                                 </>
@@ -1830,17 +1813,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
                             {/* Notes Section - Prominent */}
                             {showingDetailsAppointment.notes && (
-                                <div className={`p-4 rounded-xl border ${isBeauty
-                                    ? 'bg-beauty-neon/5 border-beauty-neon/20'
-                                    : 'bg-accent-gold/5 border-accent-gold/20'
-                                    }`}>
+                                <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Info className={`w-4 h-4 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
-                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
-                                            Observações
-                                        </span>
+                                        <Info className={`w-4 h-4 ${accent.text}`} />
+                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
                                     </div>
-                                    <p className="text-neutral-300 text-sm leading-relaxed italic">
+                                    <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
                                         &quot;{showingDetailsAppointment.notes}&quot;
                                     </p>
                                 </div>
@@ -1848,7 +1826,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         </div>
 
                         {/* Footer Actions */}
-                        <div className={`p-5 border-t ${isBeauty ? 'border-beauty-neon/10 bg-beauty-card' : 'border-white/5 bg-brutal-surface'} flex gap-3 rounded-b-2xl`}>
+                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex gap-3 rounded-b-2xl`}>
                             {showingDetailsAppointment.status === 'Confirmed' && (
                                 <BrutalButton
                                     variant="secondary"
@@ -1883,31 +1861,27 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
             {/* History Modal */}
             {showHistoryModal && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
-                    <div className={`w-full max-w-4xl p-6 my-8 transition-all
-                        ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                            : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
-                    `}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-white font-heading text-2xl uppercase">Histórico de Agendamentos</h3>
+                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto ${colors.overlay}`}>
+                    <div className={`w-full max-w-4xl p-6 my-8 transition-all ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
+                        <div className={`flex items-center justify-between mb-6`}>
+                            <h3 className={`${colors.text} font-heading text-2xl uppercase`}>Histórico de Agendamentos</h3>
                             <button
                                 onClick={() => setShowHistoryModal(false)}
-                                className="text-neutral-400 hover:text-white transition-colors"
+                                className={`${colors.textMuted} hover:${colors.text} transition-colors`}
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
                         {/* Month Navigator */}
-                        <div className="flex items-center justify-between mb-6 bg-neutral-800 p-4 rounded-lg border border-neutral-700">
+                        <div className={`flex items-center justify-between mb-6 ${colors.surface} p-4 rounded-xl ${colors.border}`}>
                             <button
                                 onClick={() => {
                                     changeHistoryMonth(-1);
                                 }}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                className={`p-2 rounded-lg transition-colors hover:${colors.surface}`}
                             >
-                                <ChevronLeft className="w-5 h-5 text-white" />
+                                <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                             </button>
                             <div className="text-center">
                                 <p className={`text-xl font-heading ${accent.text} uppercase`}>
@@ -1918,19 +1892,16 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 onClick={() => {
                                     changeHistoryMonth(1);
                                 }}
-                                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                className={`p-2 rounded-lg transition-colors hover:${colors.surface}`}
                             >
-                                <ChevronRight className="w-5 h-5 text-white" />
+                                <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                             </button>
                         </div>
 
                         {/* History List */}
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                             {historyAppointments.length === 0 ? (
-                                <div className="text-center py-12 text-neutral-500">
-                                    <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                    <p>Nenhum agendamento concluído ou cancelado neste mês</p>
-                                </div>
+                                <EmptyState icon={History} message="Nenhum agendamento concluído ou cancelado neste mês" />
                             ) : (
                                 historyAppointments.map(apt => {
                                     const professional = teamMembers.find(m => m.id === apt.professional_id);
@@ -1939,34 +1910,28 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     return (
                                         <div
                                             key={apt.id}
-                                            className={`border-2 rounded-lg p-4 ${apt.status === 'Completed'
-                                                ? 'bg-green-500/10 border-green-500'
-                                                : 'bg-red-500/10 border-red-500'
-                                                }`}
+                                            className={`${colors.surface} rounded-xl p-5 border-2 ${apt.status === 'Completed' ? 'border-emerald-500/40' : 'border-red-500/40'}`}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${apt.status === 'Completed'
-                                                            ? 'bg-green-500 text-black'
-                                                            : 'bg-red-500 text-white'
-                                                            }`}>
-                                                            {apt.status === 'Completed' ? '✓ CONCLUÍDO' : '✗ CANCELADO'}
+                                                        <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${apt.status === 'Completed' ? status.successBg + ' ' + status.success : status.dangerBg + ' ' + status.danger}`}>
+                                                            {apt.status === 'Completed' ? 'CONCLUÍDO' : 'CANCELADO'}
                                                         </span>
-                                                        <span className="text-neutral-400 text-xs">
+                                                        <span className={`${colors.textMuted} text-xs`}>
                                                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
-                                                    <p className="text-white font-bold text-base mb-1">{apt.clientName}</p>
-                                                    <p className="text-neutral-400 text-sm mb-1">{apt.service}</p>
+                                                    <p className={`${colors.text} font-bold text-base mb-1`}>{apt.clientName}</p>
+                                                    <p className={`${colors.textSecondary} text-sm mb-1`}>{apt.service}</p>
                                                     {professional && (
-                                                        <p className="text-neutral-500 text-xs">
+                                                        <p className={`${colors.textMuted} text-xs`}>
                                                             Profissional: {professional.name}
                                                         </p>
                                                     )}
                                                     <button
                                                         onClick={() => setShowingDetailsAppointment(apt)}
-                                                        className="text-neutral-500 hover:text-white transition-colors mt-1 flex items-center gap-1 text-xs"
+                                                        className={`${colors.textMuted} hover:${colors.text} transition-colors mt-1 flex items-center gap-1 text-xs`}
                                                         title="Ver detalhes"
                                                     >
                                                         <Info className="w-3 h-3" />
@@ -1975,7 +1940,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 </div>
                                                 <div className="text-right flex flex-col items-end gap-2">
                                                     {hasDiscount && apt.basePrice && (
-                                                        <span className="text-xs font-mono text-red-500 line-through">
+                                                        <span className={`text-xs font-mono text-red-500 line-through`}>
                                                             {formatCurrency(apt.basePrice, currencyRegion)}
                                                         </span>
                                                     )}
@@ -1983,18 +1948,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         {formatCurrency(apt.price, currencyRegion)}
                                                     </p>
                                                     {hasDiscount && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1">
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1`}>
                                                             {discountPercentage}% OFF
                                                         </span>
                                                     )}
                                                     {isCustomPriceHigher && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1">
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
                                                             Preço Customizado
                                                         </span>
                                                     )}
                                                     <button
                                                         onClick={() => handleDeleteHistoryAppointment(apt.id)}
-                                                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                        className={`p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors`}
                                                         title="Excluir agendamento"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -2007,7 +1972,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             )}
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-neutral-800">
+                        <div className={`mt-6 pt-4 ${colors.divider} border-t`}>
                             <BrutalButton
                                 variant="secondary"
                                 className="w-full"

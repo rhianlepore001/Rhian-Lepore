@@ -13,7 +13,7 @@ import { formatPhone } from '../utils/formatters';
 
 export const Clients: React.FC = () => {
     const { user, region, companyId } = useAuth();
-    const { isBeauty } = useBrutalTheme();
+    const { isBeauty, colors } = useBrutalTheme();
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const [clients, setClients] = useState<any[]>([]);
@@ -235,7 +235,7 @@ export const Clients: React.FC = () => {
     return (
         <div className="space-y-6 relative">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-white/10 pb-4 gap-4">
-                <h2 className="text-2xl md:text-4xl font-heading text-white uppercase">Clientes</h2>
+                <h2 className={`text-2xl md:text-4xl font-heading ${colors.text} uppercase`}>Clientes</h2>
                 <BrutalButton variant="primary" icon={<Plus />} onClick={() => setShowModal(true)} className="w-full md:w-auto">Novo Cliente</BrutalButton>
             </div>
 

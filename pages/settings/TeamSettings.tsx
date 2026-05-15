@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
@@ -12,14 +11,12 @@ import { BrutalButton } from '../../components/BrutalButton';
 
 export const TeamSettings: React.FC = () => {
     const { user } = useAuth();
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
     const [copiedLink, setCopiedLink] = useState(false);
-
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
     useEffect(() => {
         fetchMembers();
@@ -61,8 +58,7 @@ export const TeamSettings: React.FC = () => {
 
     const handleCopyInviteLink = async () => {
         const inviteLink = `${window.location.origin}/#/register?company=${user?.id}`;
-        
-        // Se for mobile e suportar o share API, usa ele primeiro pois é mais intuitivo
+
         if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 await navigator.share({
@@ -70,15 +66,13 @@ export const TeamSettings: React.FC = () => {
                     text: 'Cadastre-se na nossa equipe e gerencie sua agenda:',
                     url: inviteLink
                 });
-                return; // Se compartilhou, não precisa mostrar o feedback de "copiado"
+                return;
             } catch (error) {
-                // Erro ao compartilhar ou cancelado
-                // Se falhou ou cancelou, tenta o copy como fallback
+                // fallback
             }
         }
 
         try {
-            // Tenta Clipboard API moderna
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(inviteLink);
                 setCopiedLink(true);
@@ -87,7 +81,6 @@ export const TeamSettings: React.FC = () => {
                 throw new Error('Clipboard API unavailable');
             }
         } catch (err) {
-            // Fallback para navegadores antigos ou sem HTTPS
             try {
                 const textArea = document.createElement("textarea");
                 textArea.value = inviteLink;
@@ -99,7 +92,7 @@ export const TeamSettings: React.FC = () => {
                 textArea.select();
                 const successful = document.execCommand('copy');
                 document.body.removeChild(textArea);
-                
+
                 if (successful) {
                     setCopiedLink(true);
                     setTimeout(() => setCopiedLink(false), 2000);
@@ -113,7 +106,6 @@ export const TeamSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="max-w-5xl space-y-8 pb-20">
-                {/* Header dinâmico no SettingsLayout */}
                 <div className="flex justify-end mb-6">
                     <BrutalButton
                         id="btn-add-team-member"
@@ -127,15 +119,14 @@ export const TeamSettings: React.FC = () => {
                     </BrutalButton>
                 </div>
 
-                {/* Invite Link Section */}
-                <BrutalCard className="border-white/10">
+                <BrutalCard className={`${colors.border}`}>
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <Users className={`w-5 h-5 ${accent.text}`} />
-                                <h3 className={`text-lg font-heading uppercase text-white`}>Convide sua Equipe</h3>
+                                <h3 className={`text-lg font-heading uppercase ${colors.text}`}>Convide sua Equipe</h3>
                             </div>
-                            <p className="text-sm text-neutral-400 max-w-xl">
+                            <p className={`text-sm ${colors.textMuted} max-w-xl`}>
                                 Envie este link exclusivo para seus funcionários. Eles poderão criar a própria conta (e-mail e senha) e acessarão apenas a própria agenda e comissões.
                             </p>
                         </div>
@@ -143,11 +134,13 @@ export const TeamSettings: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handleCopyInviteLink}
-                                className={`w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-mono text-sm uppercase transition-all
+                                className={`
+                                    w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-mono text-sm uppercase transition-all
                                     ${copiedLink
-                                        ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                                        : `bg-white/[0.05] hover:bg-white/[0.08] text-white border border-white/10 hover:${accent.border}`
-                                    }`}
+                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                        : `${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} hover:${accent.border}`
+                                    }
+                                `}
                             >
                                 {copiedLink ? (
                                     <>
@@ -172,28 +165,27 @@ export const TeamSettings: React.FC = () => {
                     </div>
                 ) : members.length === 0 ? (
                     <BrutalCard className="p-12 text-center border-dashed">
-                        <div className="w-20 h-20 bg-neutral-800/50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-neutral-700">
+                        <div className={`w-20 h-20 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-6 border ${colors.border}`}>
                             <UserCheck className="w-10 h-10 text-neutral-500" />
                         </div>
-                        <h3 className="text-2xl font-heading text-white uppercase mb-3">
+                        <h3 className={`text-2xl font-heading ${colors.text} uppercase mb-3`}>
                             Comece sua equipe
                         </h3>
-                        <p className="text-neutral-400 mb-8 max-w-sm mx-auto font-medium">
+                        <p className={`${colors.textMuted} mb-8 max-w-sm mx-auto font-medium`}>
                             Você ainda não cadastrou nenhum profissional. Adicione a si mesmo ou seus colaboradores.
                         </p>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="px-8 py-4 bg-white/[0.05] hover:bg-white/[0.08] text-white font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border border-white/10"
+                            className={`px-8 py-4 ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border ${colors.border}`}
                         >
                             Cadastrar Primeiro Perfil
                         </button>
                     </BrutalCard>
                 ) : (
                     <div className="space-y-12">
-                        {/* Owners Section */}
                         {owners.length > 0 && (
                             <section className="space-y-4">
-                                <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs uppercase tracking-[0.2em] px-1">
+                                <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
                                     <ShieldCheck className={`w-4 h-4 ${accent.text}`} />
                                     Proprietários
                                 </div>
@@ -207,17 +199,15 @@ export const TeamSettings: React.FC = () => {
                                                 setIsModalOpen(true);
                                             }}
                                             onDelete={handleDelete}
-                                            accentColor={accentColor}
                                         />
                                     ))}
                                 </div>
                             </section>
                         )}
 
-                        {/* Staff Section */}
                         {staff.length > 0 && (
                             <section className="space-y-4">
-                                <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs uppercase tracking-[0.2em] px-1 border-t border-neutral-800 pt-8">
+                                <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1 border-t ${colors.divider} pt-8`}>
                                     <Users className="w-4 h-4" />
                                     Equipe e Colaboradores
                                 </div>
@@ -231,7 +221,6 @@ export const TeamSettings: React.FC = () => {
                                                 setIsModalOpen(true);
                                             }}
                                             onDelete={handleDelete}
-                                            accentColor={accentColor}
                                         />
                                     ))}
                                 </div>
@@ -245,7 +234,6 @@ export const TeamSettings: React.FC = () => {
                         initialData={editingMember}
                         onClose={() => setIsModalOpen(false)}
                         onSave={fetchMembers}
-                        accentColor={accentColor}
                     />
                 )}
             </div>

@@ -7,10 +7,11 @@ import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Loader2 } from 'lucide-react';
 import { logger } from '../../utils/Logger';
+import { SettingsSwitch } from '../../components/SettingsSwitch';
 
 export const FinancialSettings: React.FC = () => {
   const { user } = useAuth();
-  const { isBeauty, accent } = useBrutalTheme();
+  const { isBeauty, accent, colors, classes } = useBrutalTheme();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,7 +87,7 @@ export const FinancialSettings: React.FC = () => {
           <h2 className={`text-xl font-bold font-mono ${accent.text}`}>
             Configurações Financeiras
           </h2>
-          <p className="text-neutral-400 text-sm mt-1">
+          <p className={`${colors.textMuted} text-sm mt-1`}>
             Configure o repasse de taxa de maquininha para os colaboradores.
           </p>
         </div>
@@ -95,27 +96,22 @@ export const FinancialSettings: React.FC = () => {
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="font-medium text-white">Repassar taxa de maquininha ao colaborador?</p>
-                <p className="text-xs text-neutral-400 mt-0.5">
+                <p className={`font-medium ${colors.text}`}>Repassar taxa de maquininha ao colaborador?</p>
+                <p className={`text-xs ${colors.textMuted} mt-0.5`}>
                   Se ativo, a comissão é calculada sobre o valor já descontado da taxa.
                 </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  aria-label="Repassar taxa de maquininha ao colaborador?"
-                  checked={machineFeeEnabled}
-                  onChange={(e) => setMachineFeeEnabled(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className={`w-11 h-6 bg-white/10 border border-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white/20 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${isBeauty ? 'peer-checked:bg-beauty-neon' : 'peer-checked:bg-accent-gold'}`}></div>
-              </label>
+              <SettingsSwitch
+                checked={machineFeeEnabled}
+                onChange={setMachineFeeEnabled}
+                ariaLabel="Repassar taxa de maquininha ao colaborador?"
+              />
             </div>
 
             {machineFeeEnabled && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/10">
                 <div>
-                  <label htmlFor="debit-fee" className="block text-xs font-mono uppercase text-neutral-400 mb-1">
+                  <label htmlFor="debit-fee" className={classes.label}>
                     Taxa Débito (%)
                   </label>
                   <input
@@ -128,11 +124,11 @@ export const FinancialSettings: React.FC = () => {
                     placeholder="Ex: 2.5"
                     value={debitFee}
                     onChange={(e) => setDebitFee(e.target.value)}
-                    className={`w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none ${isBeauty ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
+                    className={classes.input}
                   />
                 </div>
                 <div>
-                  <label htmlFor="credit-fee" className="block text-xs font-mono uppercase text-neutral-400 mb-1">
+                  <label htmlFor="credit-fee" className={classes.label}>
                     Taxa Crédito (%)
                   </label>
                   <input
@@ -145,7 +141,7 @@ export const FinancialSettings: React.FC = () => {
                     placeholder="Ex: 3.5"
                     value={creditFee}
                     onChange={(e) => setCreditFee(e.target.value)}
-                    className={`w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none ${isBeauty ? 'focus:border-beauty-neon' : 'focus:border-accent-gold'}`}
+                    className={classes.input}
                   />
                 </div>
               </div>

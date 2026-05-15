@@ -15,6 +15,7 @@ import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
 import { SetupCopilot } from '../components/dashboard/SetupCopilot';
 import { BusinessHealthCard } from '../components/dashboard/BusinessHealthCard';
 import { StaffEarningsCard } from '../components/StaffEarningsCard';
+import { EmptyState } from '../components/EmptyState';
 
 // Lazy loading para modais pesados
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -106,7 +107,7 @@ export const Dashboard: React.FC = () => {
   const [showProfitHistory, setShowProfitHistory] = useState(false);
   const [showGoalHistory, setShowGoalHistory] = useState(false);
 
-  const { accent, isBeauty, font } = useBrutalTheme();
+  const { accent, colors, isBeauty, font, classes, shadow, status } = useBrutalTheme();
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
   const currencySymbol = region === 'PT' ? '€' : 'R$';
 
@@ -117,7 +118,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Toast: rota bloqueada para staff */}
       {redirectToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border bg-red-900/90 border-red-700 text-red-100 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border ${status.dangerBg.replace('/10', '/90').replace('/20', '/90')} ${status.dangerBorder.replace('/20', '/70')} ${status.danger.replace('text-', 'text-').replace('400', '100').replace('600', '100')} animate-in fade-in slide-in-from-bottom-4 duration-300`}>
           <span className="text-sm font-medium">{redirectToast}</span>
         </div>
       )}
@@ -127,18 +128,18 @@ export const Dashboard: React.FC = () => {
 
       {/* Banner: véspera de pagamento de comissões (apenas owner) */}
       {!isStaff && commissionBanner && !commissionBannerDismissed && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-300">
+        <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl ${colors.card} ${accent.borderDim} ${colors.textSecondary}`}>
           <div className="flex items-center gap-2 text-sm">
-            <Bell className="w-4 h-4 shrink-0" />
+            <Bell className={`w-4 h-4 shrink-0 ${accent.text}`} />
             <span>Amanhã é dia de pagar as comissões.</span>
             <button
               onClick={() => navigate('/finance')}
-              className="underline underline-offset-2 hover:text-yellow-100 transition-colors"
+              className={`underline underline-offset-2 ${accent.text} hover:opacity-70 transition-opacity`}
             >
               Ver equipe →
             </button>
           </div>
-          <button onClick={() => setCommissionBannerDismissed(true)} className="text-yellow-500/60 hover:text-yellow-300 transition-colors shrink-0">
+          <button onClick={() => setCommissionBannerDismissed(true)} className={`${colors.textMuted} hover:${colors.text} transition-colors shrink-0`}>
             <span className="sr-only">Fechar</span>✕
           </button>
         </div>
@@ -146,18 +147,18 @@ export const Dashboard: React.FC = () => {
 
       {/* Banner: atendimentos não concluídos após 20h */}
       {unfinishedCount > 0 && !unfinishedBannerDismissed && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-300">
+        <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl ${colors.card} ${status.dangerBorder} border`}>
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4 shrink-0" />
-            <span>{unfinishedCount} atendimento{unfinishedCount > 1 ? 's' : ''} não {unfinishedCount > 1 ? 'foram confirmados' : 'foi confirmado'} hoje.</span>
+            <Calendar className={`w-4 h-4 shrink-0 ${status.danger}`} />
+            <span className={colors.textSecondary}>{unfinishedCount} atendimento{unfinishedCount > 1 ? 's' : ''} não {unfinishedCount > 1 ? 'foram confirmados' : 'foi confirmado'} hoje.</span>
             <button
               onClick={() => navigate('/agenda')}
-              className="underline underline-offset-2 hover:text-orange-100 transition-colors"
+              className={`underline underline-offset-2 ${status.danger} hover:opacity-70 transition-opacity`}
             >
               Ver agendamentos →
             </button>
           </div>
-          <button onClick={() => setUnfinishedBannerDismissed(true)} className="text-orange-500/60 hover:text-orange-300 transition-colors shrink-0">
+          <button onClick={() => setUnfinishedBannerDismissed(true)} className={`${status.danger} opacity-60 hover:opacity-100 transition-opacity shrink-0`}>
             <span className="sr-only">Fechar</span>✕
           </button>
         </div>
@@ -178,12 +179,12 @@ export const Dashboard: React.FC = () => {
             <BrutalCard className="brutal-card-enhanced animate-in fade-in slide-in-from-bottom-4 duration-500" noPadding>
               <div className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                  <span className="text-xs font-bold uppercase text-white">Avisos do Sistema</span>
+                  <AlertTriangle className={`w-4 h-4 ${accent.text}`} />
+                  <span className={`text-xs font-bold uppercase ${colors.text}`}>Avisos do Sistema</span>
                 </div>
                 <div className="space-y-2">
                   {alerts.slice(0, 2).map(alert => (
-                    <div key={alert.id} className="text-xs text-text-secondary border-l-2 border-yellow-500 pl-2">
+                    <div key={alert.id} className={`text-xs ${colors.textSecondary} border-l-2 ${accent.border} pl-2`}>
                       {alert.text}
                     </div>
                   ))}
@@ -230,7 +231,7 @@ export const Dashboard: React.FC = () => {
                   <Skeleton className="h-12 w-full opacity-30" />
                 </div>
               ) : (
-                <ul className="divide-y-2 divide-neutral-800">
+                <ul className={`divide-y ${colors.divider}`}>
                   {appointments.map((apt) => (
                     <li
                       key={apt.id}
@@ -238,15 +239,15 @@ export const Dashboard: React.FC = () => {
                       onClick={() => navigate(`/agenda?date=${apt.rawDate}`)}
                     >
                       <div className="flex items-center gap-3 md:gap-4">
-                        <div className={`font-mono text-base md:text-xl font-bold ${accent.text} bg-neutral-900 px-2 py-1 md:px-3 md:py-2 border border-neutral-700 flex flex-col items-center min-w-[70px]`}>
+                        <div className={`font-mono text-base md:text-xl font-bold ${accent.text} ${colors.card} px-2 py-1 md:px-3 md:py-2 border ${colors.border} rounded-xl flex flex-col items-center min-w-[70px]`}>
                           <span>{apt.time}</span>
-                          <span className="text-[10px] md:text-xs opacity-70 mt-1">
+                          <span className={`text-[10px] md:text-xs ${colors.textMuted} mt-1`}>
                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                           </span>
                         </div>
                         <div>
-                          <p className="font-heading text-sm md:text-lg text-white">{apt.clientName}</p>
-                          <p className="text-[10px] md:text-sm text-text-secondary font-mono">{apt.service}</p>
+                          <p className={`font-heading text-sm md:text-lg ${colors.text}`}>{apt.clientName}</p>
+                          <p className={`text-[10px] md:text-sm ${colors.textSecondary} font-mono`}>{apt.service}</p>
                         </div>
                       </div>
                       <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
@@ -255,20 +256,21 @@ export const Dashboard: React.FC = () => {
                     </li>
                   ))}
                   {appointments.length === 0 && (
-                    <li className="p-6 text-center">
-                      <Clock className="w-8 h-8 text-text-secondary/30 mx-auto mb-2" />
-                      <p className="text-text-secondary text-sm mb-3">Sua agenda está livre hoje.</p>
-                      <BrutalButton size="sm" onClick={() => navigate('/agenda')}>
-                        Criar primeiro agendamento
-                      </BrutalButton>
+                    <li className="p-2">
+                      <EmptyState
+                        icon={Clock}
+                        message="Sua agenda está livre hoje."
+                        ctaLabel="Criar primeiro agendamento"
+                        onCta={() => navigate('/agenda')}
+                      />
                     </li>
                   )}
                 </ul>
               )}
-              <div className="p-4 border-t border-white/5">
+              <div className={`p-4 border-t ${colors.divider}`}>
                 <button
                   onClick={() => setShowAllAppointments(true)}
-                  className={`w-full py-3 text-center text-xs font-mono ${accent.text} opacity-60 hover:opacity-100 uppercase tracking-[0.2em] transition-colors bg-white/5 rounded-lg min-h-[44px] flex items-center justify-center`}
+                  className={`w-full py-3 text-center text-xs font-mono ${accent.text} opacity-60 hover:opacity-100 uppercase tracking-[0.2em] transition-colors ${colors.surface} rounded-lg min-h-[44px] flex items-center justify-center`}
                 >
                   Ver Agenda Completa →
                 </button>
@@ -293,30 +295,30 @@ export const Dashboard: React.FC = () => {
               <div className="p-4 relative">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase text-text-secondary">Meta Mensal</span>
+                    <span className={`text-xs font-bold uppercase ${colors.textSecondary}`}>Meta Mensal</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-mono font-bold ${accent.text}`}>{formatCurrency(monthlyGoal, currencyRegion)}</span>
                     <button
                       onClick={() => setIsEditingGoal(true)}
-                      className="p-1.5 rounded-md hover:bg-white/10 text-neutral-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                      className={`p-1.5 rounded-md hover:bg-white/10 ${colors.textMuted} hover:${colors.text} transition-all opacity-0 group-hover:opacity-100`}
                       title="Editar Meta"
                     >
                       <Target className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-                <div className="w-full bg-neutral-800 h-2 rounded-full overflow-hidden mt-2 border border-white/5">
+                <div className={`w-full ${colors.surface} h-2 rounded-full overflow-hidden mt-2 border ${colors.border}`}>
                   <div
                     className={`h-full ${accent.bg} ${accent.shadow} transition-all duration-1000`}
                     style={{ width: `${Math.min((currentMonthRevenue / (monthlyGoal || 1)) * 100, 100)}%` }}
                   ></div>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <p className="text-[10px] text-text-secondary font-mono">
+                  <p className={`text-[10px] ${colors.textSecondary} font-mono`}>
                     {formatCurrency(currentMonthRevenue, currencyRegion)}
                   </p>
-                  <p className="text-[10px] text-text-secondary">
+                  <p className={`text-[10px] ${colors.textSecondary}`}>
                     {monthlyGoal > 0 ? Math.round((currentMonthRevenue / monthlyGoal) * 100) : 0}% atingido
                   </p>
                 </div>

@@ -5,7 +5,10 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { DollarSign, Calendar, Users, TrendingUp, Percent, AlertCircle, Loader2, Check, CreditCard } from 'lucide-react';
+import { SettingsSwitch } from '../../components/SettingsSwitch';
+import {
+    DollarSign, Calendar, Users, Percent, AlertCircle, Loader2, Check, CreditCard
+} from 'lucide-react';
 
 interface TeamMember {
     id: string;
@@ -26,13 +29,12 @@ export const CommissionsSettings: React.FC = () => {
     const [editingMember, setEditingMember] = useState<string | null>(null);
     const [tempRates, setTempRates] = useState<Record<string, string>>({});
 
-    // Taxa de maquininha
     const [machineFeeEnabled, setMachineFeeEnabled] = useState(false);
     const [debitFeePercent, setDebitFeePercent] = useState<string>('0');
     const [creditFeePercent, setCreditFeePercent] = useState<string>('0');
     const [savingMachineFee, setSavingMachineFee] = useState(false);
 
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent, colors, classes, isBeauty } = useBrutalTheme();
 
     useEffect(() => {
         fetchData();
@@ -43,7 +45,6 @@ export const CommissionsSettings: React.FC = () => {
         setLoading(true);
 
         try {
-            // Fetch team members
             const { data: membersData, error: membersError } = await supabase
                 .from('team_members')
                 .select('id, name, photo_url, commission_rate, active, commission_payment_frequency, commission_payment_day')
@@ -54,14 +55,12 @@ export const CommissionsSettings: React.FC = () => {
             if (membersError) throw membersError;
             setTeamMembers(membersData || []);
 
-            // Initialize temp rates
             const rates: Record<string, string> = {};
             membersData?.forEach(member => {
                 rates[member.id] = member.commission_rate?.toString() || '0';
             });
             setTempRates(rates);
 
-            // Fetch business settings (inclui taxa maquininha)
             const { data: settingsData, error: settingsError } = await supabase
                 .from('business_settings')
                 .select('commission_settlement_day_of_month, machine_fee_enabled, debit_fee_percent, credit_fee_percent')
@@ -89,7 +88,7 @@ export const CommissionsSettings: React.FC = () => {
 
         let day = typeof settlementDay === 'string' ? parseInt(settlementDay) : settlementDay;
         if (isNaN(day) || day < 1 || day > 31) {
-            day = 5; // Default fallback
+            day = 5;
             setSettlementDay(5);
         }
 
@@ -100,15 +99,13 @@ export const CommissionsSettings: React.FC = () => {
                     user_id: user.id,
                     commission_settlement_day_of_month: day,
                     updated_at: new Date().toISOString()
-                }, {
-                    onConflict: 'user_id'
-                });
+                }, { onConflict: 'user_id' });
 
             if (error) throw error;
-            alert('✅ Dia de acerto salvo com sucesso!');
+            alert('Dia de acerto salvo com sucesso!');
         } catch (error) {
             console.error('Error saving settlement day:', error);
-            alert('❌ Erro ao salvar dia de acerto.');
+            alert('Erro ao salvar dia de acerto.');
         } finally {
             setSaving(false);
         }
@@ -121,7 +118,7 @@ export const CommissionsSettings: React.FC = () => {
             const rate = parseFloat(tempRates[memberId] || '0');
 
             if (isNaN(rate) || rate < 0 || rate > 100) {
-                alert('⚠️ A taxa deve ser entre 0% e 100%');
+                alert('A taxa deve ser entre 0% e 100%');
                 return;
             }
 
@@ -139,7 +136,6 @@ export const CommissionsSettings: React.FC = () => {
 
             if (error) throw error;
 
-            // Recalculate pending commissions in finance_records
             const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
                 p_professional_id: memberId,
                 p_new_rate: rate
@@ -147,19 +143,17 @@ export const CommissionsSettings: React.FC = () => {
 
             if (recalculateError) {
                 console.error('Error recalculating commissions:', recalculateError);
-                // We don't block the user as the rate was updated, but log it
             }
 
-            // Update local state
             setTeamMembers(prev => prev.map(m =>
                 m.id === memberId ? { ...m, commission_rate: rate } : m
             ));
 
             setEditingMember(null);
-            alert('✅ Taxa de comissão atualizada!');
+            alert('Taxa de comissão atualizada!');
         } catch (error) {
             console.error('Error saving commission rate:', error);
-            alert('❌ Erro ao salvar taxa de comissão.');
+            alert('Erro ao salvar taxa de comissão.');
         } finally {
             setSaving(false);
         }
@@ -183,11 +177,11 @@ export const CommissionsSettings: React.FC = () => {
         const credit = parseFloat(creditFeePercent);
 
         if (isNaN(debit) || debit < 0 || debit > 100) {
-            alert('⚠️ Taxa débito deve ser entre 0% e 100%');
+            alert('Taxa débito deve ser entre 0% e 100%');
             return;
         }
         if (isNaN(credit) || credit < 0 || credit > 100) {
-            alert('⚠️ Taxa crédito deve ser entre 0% e 100%');
+            alert('Taxa crédito deve ser entre 0% e 100%');
             return;
         }
 
@@ -204,10 +198,10 @@ export const CommissionsSettings: React.FC = () => {
                 }, { onConflict: 'user_id' });
 
             if (error) throw error;
-            alert('✅ Configurações de taxa salvas com sucesso!');
+            alert('Configurações de taxa salvas com sucesso!');
         } catch (error) {
             console.error('Erro ao salvar taxa maquininha:', error);
-            alert('❌ Erro ao salvar configurações de taxa.');
+            alert('Erro ao salvar configurações de taxa.');
         } finally {
             setSavingMachineFee(false);
         }
@@ -226,17 +220,16 @@ export const CommissionsSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="space-y-6">
-                {/* Header with Info */}
                 <BrutalCard className={`border-l-4 ${accent.border}`}>
                     <div className="flex items-start gap-4">
                         <div className={`p-3 ${accent.bg} bg-opacity-10 rounded-lg`}>
                             <DollarSign className={`w-8 h-8 ${accent.text}`} />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-white font-heading text-xl uppercase mb-2">
+                            <h3 className={`${colors.text} font-heading text-xl uppercase mb-2`}>
                                 Gestão de Comissões
                             </h3>
-                            <p className="text-neutral-400 text-sm leading-relaxed">
+                            <p className={`${colors.textMuted} text-sm leading-relaxed`}>
                                 Configure as taxas de comissão para cada profissional e defina o dia mensal para acerto de contas.
                                 As comissões são calculadas automaticamente quando você marca um agendamento como concluído.
                             </p>
@@ -244,35 +237,30 @@ export const CommissionsSettings: React.FC = () => {
                     </div>
                 </BrutalCard>
 
-                {/* Settlement Day Configuration */}
-                <BrutalCard title="📅 Dia de Acerto Mensal">
+                <BrutalCard title="Dia de Acerto Mensal">
                     <div className="space-y-4">
-                        <p className="text-neutral-400 text-sm">
+                        <p className={`${colors.textMuted} text-sm`}>
                             Escolha o dia do mês em que você faz o acerto de comissões com sua equipe.
                             Você receberá um alerta no dashboard 2 dias antes.
                         </p>
 
                         <div className="flex items-center gap-4">
                             <div className="flex-1 max-w-xs">
-                                <label className="block text-white font-mono text-sm mb-2">
+                                <label className={classes.label}>
                                     Dia do Mês (1-31)
                                 </label>
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+                                    <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
                                     <input
                                         type="number"
                                         min="1"
                                         max="31"
                                         value={settlementDay}
                                         onChange={(e) => setSettlementDay(e.target.value)}
-                                        className={`w-full pl-12 pr-4 py-3 rounded-lg text-white font-mono text-lg outline-none transition-all
-                                            ${isBeauty
-                                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon focus:shadow-neon'
-                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-accent-gold`}
-                                        `}
+                                        className={`${classes.input} pl-12 text-lg`}
                                     />
                                 </div>
-                                <p className="text-neutral-500 text-xs mt-1 font-mono">
+                                <p className={`${colors.textMuted} text-xs mt-1 font-mono`}>
                                     Próximo acerto: Dia {settlementDay} deste mês
                                 </p>
                             </div>
@@ -289,18 +277,17 @@ export const CommissionsSettings: React.FC = () => {
                     </div>
                 </BrutalCard>
 
-                {/* Team Members Commission Rates */}
-                <BrutalCard title="👥 Taxas de Comissão por Profissional">
+                <BrutalCard title="Taxas de Comissão por Profissional">
                     {teamMembers.length === 0 ? (
                         <div className="text-center py-8">
-                            <Users className="w-12 h-12 text-neutral-600 mx-auto mb-3" />
-                            <p className="text-neutral-400">
+                            <Users className={`w-12 h-12 ${colors.textMuted} mx-auto mb-3`} />
+                            <p className={colors.textMuted}>
                                 Nenhum profissional ativo encontrado. Adicione membros da equipe primeiro.
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            <p className="text-neutral-400 text-sm mb-4">
+                            <p className={`${colors.textMuted} text-sm mb-4`}>
                                 Defina a porcentagem de comissão que cada profissional recebe sobre os serviços realizados.
                             </p>
 
@@ -311,29 +298,30 @@ export const CommissionsSettings: React.FC = () => {
                                 return (
                                     <div
                                         key={member.id}
-                                        className={`transition-all p-4 rounded-lg
+                                        className={`
+                                            transition-all p-4 rounded-xl border
                                             ${isBeauty
-                                                ? 'bg-beauty-dark/40 border border-beauty-neon/20 hover:border-beauty-neon/50'
-                                                : `bg-neutral-900 border-2 ${isEditing ? 'border-accent-gold' : 'border-neutral-800 hover:border-neutral-700'}`}
+                                                ? 'bg-beauty-dark/40 border-beauty-neon/20 hover:border-beauty-neon/50'
+                                                : `${colors.inputBg} ${isEditing ? accent.border : colors.border} hover:border-white/10`
+                                            }
                                         `}
                                     >
                                         <div className="flex items-center justify-between gap-4">
-                                            {/* Professional Info */}
                                             <div className="flex items-center gap-3 flex-1">
                                                 {member.photo_url ? (
                                                     <img
                                                         src={member.photo_url}
                                                         alt={member.name}
-                                                        className="w-12 h-12 rounded-full object-cover border-2 border-neutral-700"
+                                                        className={`w-12 h-12 rounded-full object-cover border-2 ${colors.border}`}
                                                     />
                                                 ) : (
-                                                    <div className="w-12 h-12 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center">
-                                                        <Users className="w-6 h-6 text-neutral-500" />
+                                                    <div className={`w-12 h-12 rounded-full ${colors.inputBg} border-2 ${colors.border} flex items-center justify-center`}>
+                                                        <Users className={`w-6 h-6 ${colors.textMuted}`} />
                                                     </div>
                                                 )}
 
                                                 <div className="flex-1">
-                                                    <h4 className="text-white font-bold text-lg">{member.name}</h4>
+                                                    <h4 className={`${colors.text} font-bold text-lg`}>{member.name}</h4>
                                                     {!isEditing && (
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <Percent className={`w-4 h-4 ${accent.text}`} />
@@ -345,7 +333,6 @@ export const CommissionsSettings: React.FC = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Edit Controls */}
                                             {isEditing ? (
                                                 <div className="flex flex-col gap-4 w-full md:w-auto">
                                                     <div className="flex items-center gap-3">
@@ -360,14 +347,15 @@ export const CommissionsSettings: React.FC = () => {
                                                                     ...prev,
                                                                     [member.id]: e.target.value
                                                                 }))}
-                                                                className={`w-24 px-3 py-2 rounded-lg text-white font-mono text-center outline-none transition-all
+                                                                className={`w-24 px-3 py-2 rounded-lg ${colors.text} font-mono text-center outline-none transition-all
                                                                     ${isBeauty
                                                                         ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
-                                                                        : 'bg-black border-2 border-accent-gold'}
+                                                                        : `bg-black border-2 ${accent.border}`
+                                                                    }
                                                                 `}
                                                                 autoFocus
                                                             />
-                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono">
+                                                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${colors.textMuted} font-mono`}>
                                                                 %
                                                             </span>
                                                         </div>
@@ -379,7 +367,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                     const val = e.target.value as 'weekly' | 'monthly';
                                                                     setTeamMembers(prev => prev.map(m => m.id === member.id ? { ...m, commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 } : m));
                                                                 }}
-                                                                className="bg-neutral-800 text-white text-[10px] p-2 rounded border border-neutral-700 outline-none uppercase font-mono"
+                                                                className={`${colors.inputBg} ${colors.text} text-[10px] p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >
                                                                 <option value="monthly">Mensal</option>
                                                                 <option value="weekly">Semanal</option>
@@ -390,7 +378,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                     const val = parseInt(e.target.value);
                                                                     setTeamMembers(prev => prev.map(m => m.id === member.id ? { ...m, commission_payment_day: val } : m));
                                                                 }}
-                                                                className="bg-neutral-800 text-white text-[10px] p-2 rounded border border-neutral-700 outline-none uppercase font-mono"
+                                                                className={`${colors.inputBg} ${colors.text} text-[10px] p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >
                                                                 {member.commission_payment_frequency === 'weekly' ? (
                                                                     <>
@@ -435,7 +423,7 @@ export const CommissionsSettings: React.FC = () => {
                                                 </div>
                                             ) : (
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <div className="text-[9px] uppercase font-mono text-neutral-500 whitespace-nowrap bg-white/5 px-2 py-1 rounded">
+                                                    <div className={`text-[9px] uppercase font-mono ${colors.textMuted} whitespace-nowrap ${colors.inputBg} px-2 py-1 rounded`}>
                                                         {member.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal'} •
                                                         {member.commission_payment_frequency === 'weekly'
                                                             ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][member.commission_payment_day || 0]
@@ -459,46 +447,40 @@ export const CommissionsSettings: React.FC = () => {
                     )}
                 </BrutalCard>
 
-                {/* Taxa de Maquininha */}
-                <BrutalCard title="💳 Taxa de Maquininha">
+                <BrutalCard title="Taxa de Maquininha">
                     <div className="space-y-4">
-                        <p className="text-neutral-400 text-sm">
+                        <p className={`${colors.textMuted} text-sm`}>
                             Configure se a taxa de maquininha é repassada ao colaborador no cálculo da comissão.
                             Quando ativado, a comissão é calculada sobre o valor líquido (valor — taxa).
                         </p>
 
-                        {/* Toggle */}
-                        <label className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${
-                            machineFeeEnabled
-                                ? (isBeauty ? 'bg-beauty-neon/10 border-beauty-neon/40' : 'bg-accent-gold/10 border-accent-gold/40')
-                                : 'bg-neutral-900 border-neutral-800'
-                        }`}>
-                            <div
-                                onClick={() => setMachineFeeEnabled(v => !v)}
-                                className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
-                                    machineFeeEnabled ? (isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold') : 'bg-neutral-700'
-                                }`}
-                            >
-                                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                                    machineFeeEnabled ? 'translate-x-6' : 'translate-x-0.5'
-                                }`} />
-                            </div>
+                        <div className={`
+                            flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border
+                            ${machineFeeEnabled
+                                ? `${accent.bgDim} ${accent.borderDim}`
+                                : `${colors.inputBg} ${colors.border}`
+                            }
+                        `}>
+                            <SettingsSwitch
+                                checked={machineFeeEnabled}
+                                onChange={setMachineFeeEnabled}
+                                ariaLabel="Repassar taxa ao colaborador?"
+                            />
                             <div>
-                                <span className="text-white font-bold block">Repassar taxa ao colaborador?</span>
-                                <span className="text-neutral-400 text-xs">
+                                <span className={`${colors.text} font-bold block`}>Repassar taxa ao colaborador?</span>
+                                <span className={`${colors.textMuted} text-xs`}>
                                     {machineFeeEnabled ? 'Ativado — comissão calculada sobre valor líquido' : 'Desativado — comissão sobre valor bruto'}
                                 </span>
                             </div>
-                        </label>
+                        </div>
 
-                        {/* Percentuais */}
                         <div className={`grid grid-cols-2 gap-4 transition-opacity ${machineFeeEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                             <div>
-                                <label className="block text-white font-mono text-sm mb-2">
+                                <label className={classes.label}>
                                     Taxa Débito (%)
                                 </label>
                                 <div className="relative">
-                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                                    <CreditCard className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${colors.textMuted}`} />
                                     <input
                                         type="number"
                                         min="0"
@@ -507,20 +489,16 @@ export const CommissionsSettings: React.FC = () => {
                                         value={debitFeePercent}
                                         onChange={e => setDebitFeePercent(e.target.value)}
                                         disabled={!machineFeeEnabled}
-                                        className={`w-full pl-10 pr-4 py-2 rounded-lg text-white font-mono outline-none transition-all ${
-                                            isBeauty
-                                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-accent-gold`
-                                        }`}
+                                        className={`${classes.input} pl-10`}
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-white font-mono text-sm mb-2">
+                                <label className={classes.label}>
                                     Taxa Crédito (%)
                                 </label>
                                 <div className="relative">
-                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                                    <CreditCard className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${colors.textMuted}`} />
                                     <input
                                         type="number"
                                         min="0"
@@ -529,11 +507,7 @@ export const CommissionsSettings: React.FC = () => {
                                         value={creditFeePercent}
                                         onChange={e => setCreditFeePercent(e.target.value)}
                                         disabled={!machineFeeEnabled}
-                                        className={`w-full pl-10 pr-4 py-2 rounded-lg text-white font-mono outline-none transition-all ${
-                                            isBeauty
-                                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                                : `bg-neutral-900 border-2 border-neutral-700 focus:border-accent-gold`
-                                        }`}
+                                        className={`${classes.input} pl-10`}
                                     />
                                 </div>
                             </div>
@@ -550,12 +524,11 @@ export const CommissionsSettings: React.FC = () => {
                     </div>
                 </BrutalCard>
 
-                {/* Help Card */}
-                <BrutalCard className="bg-neutral-900/50 border-neutral-800">
+                <BrutalCard className={`${colors.inputBg} ${colors.border}`}>
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-neutral-400 space-y-2">
-                            <p className="font-bold text-white">💡 Como funciona:</p>
+                        <div className={`text-sm ${colors.textMuted} space-y-2`}>
+                            <p className={`font-bold ${colors.text}`}>Como funciona:</p>
                             <ul className="list-disc list-inside space-y-1 ml-2">
                                 <li>Configure a taxa de comissão (%) para cada profissional</li>
                                 <li>Quando você marca um agendamento como &quot;Concluído&quot;, a comissão é calculada automaticamente</li>

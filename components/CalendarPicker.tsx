@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 
 interface CalendarPickerProps {
     selectedDate: Date | null;
     onDateSelect: (date: Date) => void;
     minDate?: Date;
-    isBeauty?: boolean;
+    forceTheme?: ThemeVariant;
     fullDates?: string[]; // Array of 'YYYY-MM-DD'
 }
 
@@ -13,16 +14,15 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     selectedDate,
     onDateSelect,
     minDate = new Date(),
-    isBeauty = false,
+    forceTheme,
     fullDates = []
 }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const { colors, accent, font, shadow, isBeauty } = useBrutalTheme({ override: forceTheme });
 
-    const hoverBg = isBeauty ? 'hover:bg-stone-100' : 'hover:bg-accent-gold/10';
-    const selectedClass = isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black';
-    const todayClass = isBeauty ? 'border-2 border-stone-800' : 'border-2 border-accent-gold';
-    const baseText = isBeauty ? 'text-stone-700' : 'text-white';
-    const disabledText = isBeauty ? 'text-stone-300' : 'text-neutral-600';
+    const hoverBg = `hover:${accent.bgDim}`;
+    const selectedClass = `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'}`;
+    const todayClass = `border-2 ${accent.border}`;
 
     // Get days in month
     const getDaysInMonth = (date: Date) => {
@@ -111,14 +111,14 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
         calendarDays.push(
             <button
                 key={day}
-                type="button" // FIX: Prevent accidental form submission
+                type="button"
                 onClick={() => handleDateClick(day)}
                 disabled={disabled}
                 className={`
-          h-12 rounded-lg font-mono text-sm transition-all
+          h-12 rounded-lg ${font.mono} text-sm transition-all
           ${disabled
-                        ? `${disabledText} cursor-not-allowed`
-                        : `${baseText} ${hoverBg} cursor-pointer hover:scale-105`
+                        ? `${colors.textMuted} cursor-not-allowed opacity-40`
+                        : `${colors.text} ${hoverBg} cursor-pointer hover:scale-105`
                     }
           ${selected
                         ? `${selectedClass} font-bold scale-105`
@@ -136,38 +136,38 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     }
 
     return (
-        <div className={`${isBeauty ? 'bg-stone-50 border border-stone-100 rounded-2xl shadow-sm' : 'bg-black/40 border-2 border-neutral-800'} p-6`}>
+        <div className={`${colors.card} ${colors.border} border rounded-2xl ${shadow.card} p-6`}>
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <button
-                    type="button" // FIX: Prevent accidental form submission
+                    type="button"
                     onClick={goToPreviousMonth}
                     className={`p-2 ${hoverBg} rounded-lg transition-all`}
                     aria-label="Mês anterior"
                     title="Mês anterior"
                 >
-                    <ChevronLeft className={`w-5 h-5 ${isBeauty ? 'text-stone-700' : 'text-white'}`} />
+                    <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                 </button>
 
-                <h3 className={`${isBeauty ? 'text-stone-800' : 'text-white'} font-heading text-lg uppercase`}>
+                <h3 className={`${colors.text} font-heading text-lg uppercase`}>
                     {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </h3>
 
                 <button
-                    type="button" // FIX: Prevent accidental form submission
+                    type="button"
                     onClick={goToNextMonth}
                     className={`p-2 ${hoverBg} rounded-lg transition-all`}
                     aria-label="Próximo mês"
                     title="Próximo mês"
                 >
-                    <ChevronRight className={`w-5 h-5 ${isBeauty ? 'text-stone-700' : 'text-white'}`} />
+                    <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                 </button>
             </div>
 
             {/* Day names */}
             <div className="grid grid-cols-7 gap-2 mb-2">
                 {dayNames.map(name => (
-                    <div key={name} className={`text-center ${isBeauty ? 'text-stone-400' : 'text-neutral-400'} text-xs font-mono uppercase`}>
+                    <div key={name} className={`text-center ${colors.textMuted} text-xs ${font.mono} uppercase`}>
                         {name}
                     </div>
                 ))}

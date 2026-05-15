@@ -1,19 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, ImageIcon, Upload, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
 import { UpsellSection } from '../components/UpsellSection';
-import { ProfessionalSelector } from '../components/ProfessionalSelector';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
-import { BrutalButton } from '../components/BrutalButton';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
+import { BookingModeToggle } from '../components/booking/BookingModeToggle';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 
@@ -31,8 +30,8 @@ interface Service {
     image_url: string | null;
     description: string | null;
     duration_minutes: number;
-    category?: string; // Legacy
-    category_id?: string; // New FK
+    category?: string;
+    category_id?: string;
 }
 
 interface Professional {
@@ -42,7 +41,7 @@ interface Professional {
     specialties: string[];
     individual_rating: number;
     total_reviews: number;
-    name: string; // Added for compatibility
+    name: string;
 }
 
 interface Category {
@@ -108,7 +107,17 @@ export const PublicBooking: React.FC = () => {
     const [editMode, setEditMode] = useState<'time' | 'service' | 'both' | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
 
+    // NEW: booking mode and quick flow step
+    const [bookingMode, setBookingMode] = useState<'chat' | 'quick'>('quick');
+    const [quickStep, setQuickStep] = useState<'services' | 'professional' | 'datetime' | 'contact' | 'success'>('services');
+
     const { client, register } = usePublicClient();
+
+    const isBeauty = business?.user_type === 'beauty';
+    const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
+    const { colors, accent, classes, shadow, radius, font, isDark } = useBrutalTheme({ override: themeOverride });
+
+    const accentTextOnAccent = isBeauty ? 'text-white' : 'text-black';
 
     // Sincroniza dados do cliente logado com os campos do formulário
     useEffect(() => {
@@ -119,10 +128,8 @@ export const PublicBooking: React.FC = () => {
     }, [client]);
 
     // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
-    // Evita depender do customerPhone para iniciar o fluxo de edição
     useEffect(() => {
         if (!editParam || !businessId) return;
-        // Aguarda o cliente ser carregado pelo contexto antes de buscar
         const phone = client?.phone || customerPhone;
         if (!phone) return;
 
@@ -197,6 +204,7 @@ export const PublicBooking: React.FC = () => {
                             if (['pending', 'confirmed'].includes(loadedBooking.status)) {
                                 setActiveBooking(loadedBooking);
                                 setStep('success');
+                                setQuickStep('success');
                             }
                         }
                     }
@@ -218,7 +226,6 @@ export const PublicBooking: React.FC = () => {
                 .eq('id', bookingId)
                 .single();
             if (booking) {
-                // Only update status — do NOT null out activeBooking
                 setActiveBooking(booking);
             }
         } catch (error) {
@@ -256,8 +263,6 @@ export const PublicBooking: React.FC = () => {
             clearInterval(interval);
         };
     }, [activeBooking?.id, activeBooking?.status]);
-
-    const isBeauty = business?.user_type === 'beauty';
 
     useEffect(() => {
         const fetchSlots = async () => {
@@ -322,7 +327,6 @@ export const PublicBooking: React.FC = () => {
                     setBusiness(profileData);
                     setBusinessId(profileData.id);
 
-                    // Fetch settings, services, categories in parallel or with individual error handling
                     try {
                         const { data: settings, error: sErr } = await supabase
                             .from('business_settings')
@@ -352,7 +356,6 @@ export const PublicBooking: React.FC = () => {
                         if (catErr) logger.error('PublicBooking: Error loading categories:', catErr);
                         logger.info('PublicBooking: Categories loaded:', { count: categoriesData?.length || 0 });
 
-                        // Add virtual "Outros" category if there are services without category
                         let finalCategories = categoriesData || [];
                         if ((servicesData || []).some(s => !s.category_id)) {
                             finalCategories = [...finalCategories, { id: 'no-category', name: 'Outros' }];
@@ -389,7 +392,6 @@ export const PublicBooking: React.FC = () => {
                         setGallery(galleryData || []);
                     } catch (e) { console.error('Gallery fetch failed', e); }
 
-                    // Signal that we are ready to show the chat even if some data failed
                     setIsDataReady(true);
                 }
             } catch (error) {
@@ -408,21 +410,13 @@ export const PublicBooking: React.FC = () => {
         if (business) {
             const originalBg = document.body.style.backgroundColor;
             const originalColor = document.body.style.color;
-
-            // Override body styles for public booking
-            const targetBg = isBeauty ? '#E2E1DA' : '#050505';
-            const targetColor = isBeauty ? '#1D1D1F' : '#EAEAEA';
+            const targetBg = isBeauty ? '#1F1B2E' : '#121212';
+            const targetColor = '#EAEAEA';
 
             document.body.style.backgroundColor = targetBg;
             document.body.style.color = targetColor;
-
-            // Force documentElement background to avoid white flashes
             document.documentElement.style.backgroundColor = targetBg;
-
-            // Atualiza o atributo de tema no <html> para o CSS pre-carregado do index.html atuar
-            document.documentElement.setAttribute('data-public-theme', isBeauty ? 'silk' : 'obsidian');
-
-            // Add a class for specific overrides
+            document.documentElement.setAttribute('data-public-theme', isBeauty ? 'beauty' : 'barber');
             document.body.classList.add('public-booking-root');
             if (isBeauty) document.body.classList.add('beauty-theme');
             else document.body.classList.remove('beauty-theme');
@@ -474,8 +468,8 @@ export const PublicBooking: React.FC = () => {
                             },
                             {
                                 id: 'services-ask',
-                                text: editingBookingId 
-                                    ? "Notei que você deseja alterar seu agendamento. Quais serviços gostaria de manter ou adicionar?" 
+                                text: editingBookingId
+                                    ? "Notei que você deseja alterar seu agendamento. Quais serviços gostaria de manter ou adicionar?"
                                     : "Qual serviço você gostaria de realizar hoje?",
                                 isAssistant: true,
                                 type: 'services'
@@ -551,6 +545,7 @@ export const PublicBooking: React.FC = () => {
             if (error) throw error;
             setActiveBooking(null);
             setStep('services');
+            setQuickStep('services');
             alert('Agendamento cancelado com sucesso.');
         } catch (error) {
             logger.error('Error cancelling booking', error);
@@ -559,22 +554,20 @@ export const PublicBooking: React.FC = () => {
     };
 
     const handleEditBooking = (booking: any) => {
-        // Popula estado com os dados do agendamento existente
         setEditingBookingId(booking.id);
-        setOriginalTimeISO(booking.appointment_time); // Registra o tempo original
+        setOriginalTimeISO(booking.appointment_time);
         const bDate = new Date(booking.appointment_time);
         setSelectedDate(bDate);
         setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
 
         if (booking.service_ids) setSelectedServices(booking.service_ids);
         setSelectedProfessional(booking.professional_id || 'any');
-        
+
         if (booking.customer_name) setCustomerName(booking.customer_name);
         const phone = booking.customer_phone || booking.phone || client?.phone || '';
         if (phone) setCustomerPhone(phone);
         setAcceptedPolicy(true);
 
-        // Adiciona mensagens com type correto para renderizar os botões de edição
         setMessages(prev => [
             ...prev,
             { id: Date.now().toString(), text: "Quero remarcar/editar meu agendamento.", isAssistant: false },
@@ -608,7 +601,6 @@ export const PublicBooking: React.FC = () => {
             try {
                 await register({ name: customerName, phone: customerPhone, photo_url: photoUrl, business_id: businessId });
             } catch (registerError) {
-                // Registro de cliente público é best-effort — não bloqueia o agendamento
                 logger.warn('register() falhou mas continuando com o agendamento:', registerError);
             }
             const year = selectedDate.getFullYear();
@@ -620,12 +612,12 @@ export const PublicBooking: React.FC = () => {
             const offset = business?.region === 'PT' ? '+00:00' : '-03:00';
             const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
 
-            // Se não estiver editando, verificar se já existe agendamento ativo para evitar duplicatas
             if (!editingBookingId) {
                 const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
                 if (existingBooking && existingBooking[0] && existingBooking[0].id !== editingBookingId) {
                     setActiveBooking(existingBooking[0]);
                     setStep('success');
+                    setQuickStep('success');
                     setIsSubmitting(false);
                     return;
                 }
@@ -644,18 +636,17 @@ export const PublicBooking: React.FC = () => {
                         service_ids: selectedServices,
                         professional_id: finalProfessionalId,
                         appointment_time: appointmentTimeISO,
-                        original_appointment_time: originalTimeISO, // Coluna nova para o painel saber qual editar!
+                        original_appointment_time: originalTimeISO,
                         updated_at: new Date().toISOString(),
                         customer_name: customerName,
                         total_price: totalPrice,
                         status: 'pending',
                         duration_minutes: duration,
-                        is_edit: true // Marca como edição para o painel diferenciar
+                        is_edit: true
                     })
                     .eq('id', editingBookingId);
 
                 if (updateError) throw updateError;
-                // Re-fetch the updated booking to set it as active, as the update no longer returns it directly
                 const { data: updatedBooking, error: fetchError } = await supabase
                     .from('public_bookings')
                     .select('*')
@@ -673,6 +664,7 @@ export const PublicBooking: React.FC = () => {
             }
 
             setStep('success');
+            setQuickStep('success');
         } catch (error: any) {
             logger.error('Error creating booking', error);
             alert(`Erro ao criar agendamento: ${error.message || error}`);
@@ -681,27 +673,52 @@ export const PublicBooking: React.FC = () => {
         }
     };
 
-    const accentColor = isBeauty ? 'silk-accent' : 'obsidian-accent';
-    const bgClass = isBeauty ? 'bg-[#E2E1DA]' : 'bg-obsidian-bg';
-    const cardClass = isBeauty ? 'bg-white shadow-silk-shadow border border-[#CAC9BF] rounded-lg' : 'bg-obsidian-surface border border-white/5 shadow-heavy rounded-none';
     const currencyRegion = (business?.region as Region) || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
-
-    // Link do WhatsApp do estabelecimento (usado no empty state e na tela de sucesso)
     const whatsappLink = business?.phone
         ? `https://wa.me/${business.phone.replace(/\D/g, '')}`
         : null;
 
-    // Barra de progresso: mapeia steps para números
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
-    const currentStepNum = stepIndex[step];
+    const currentStepNum = stepIndex[step as keyof typeof stepIndex] ?? 0;
     const stepLabels = ['Serviços', 'Agenda', 'Dados', 'Confirmado'];
+
+    // Quick flow stepper data
+    const quickSteps = [
+        { key: 'services' as const, label: 'Serviços' },
+        { key: 'professional' as const, label: 'Profissional' },
+        { key: 'datetime' as const, label: 'Data e Hora' },
+        { key: 'contact' as const, label: 'Confirmar' },
+    ];
+    const currentQuickStepIndex = quickSteps.findIndex(s => s.key === quickStep);
+
+    const handleQuickNext = () => {
+        if (quickStep === 'services') setQuickStep('professional');
+        else if (quickStep === 'professional') setQuickStep('datetime');
+        else if (quickStep === 'datetime') setQuickStep('contact');
+    };
+
+    const handleQuickBack = () => {
+        if (quickStep === 'professional') setQuickStep('services');
+        else if (quickStep === 'datetime') setQuickStep('professional');
+        else if (quickStep === 'contact') setQuickStep('datetime');
+    };
+
+    const canQuickProceed = () => {
+        switch (quickStep) {
+            case 'services': return selectedServices.length > 0;
+            case 'professional': return selectedProfessional !== null;
+            case 'datetime': return selectedDate !== null && selectedTime !== null;
+            case 'contact': return (client || (customerName && customerPhone)) && acceptedPolicy;
+            default: return false;
+        }
+    };
 
     if (loading) {
         return (
-            <div className={`h-screen flex items-center justify-center ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
+            <div className={`h-screen flex items-center justify-center ${colors.bg}`}>
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className={`w-10 h-10 ${isBeauty ? 'text-stone-500' : 'text-accent-gold'} animate-spin`} />
-                    <p className={`${isBeauty ? 'text-stone-400' : 'text-white/30'} font-black text-[10px] uppercase tracking-[0.2em]`}>
+                    <Loader2 className={`w-10 h-10 ${accent.text} animate-spin`} />
+                    <p className={`${colors.textMuted} font-black text-[10px] uppercase tracking-[0.2em]`}>
                         Carregando Experiência...
                     </p>
                 </div>
@@ -711,14 +728,14 @@ export const PublicBooking: React.FC = () => {
 
     if (!business) {
         return (
-            <div className={`h-screen flex items-center justify-center bg-[#050505]`}>
+            <div className={`h-screen flex items-center justify-center ${colors.bg}`}>
                 <div className="flex flex-col items-center gap-6 text-center px-8">
-                    <div className="w-20 h-20 rounded-none bg-neutral-900 border-2 border-white/10 flex items-center justify-center">
-                        <Sparkles className="w-10 h-10 text-white/10" />
+                    <div className={`w-20 h-20 rounded-none ${colors.card} ${colors.border} border-2 flex items-center justify-center`}>
+                        <Sparkles className={`w-10 h-10 ${colors.textMuted}`} />
                     </div>
                     <div>
-                        <p className="text-white font-black text-xl uppercase tracking-widest mb-2" style={{ fontFamily: 'Chivo,sans-serif' }}>Não encontrado</p>
-                        <p className="text-white/30 text-sm">O estabelecimento não existe ou o link está incorreto.</p>
+                        <p className={`${colors.text} font-black text-xl uppercase tracking-widest mb-2`} style={{ fontFamily: 'Chivo,sans-serif' }}>Não encontrado</p>
+                        <p className={`${colors.textMuted} text-sm`}>O estabelecimento não existe ou o link está incorreto.</p>
                     </div>
                 </div>
             </div>
@@ -726,14 +743,14 @@ export const PublicBooking: React.FC = () => {
     }
 
     return (
-        <div id="booking-root" className={`min-h-screen ${bgClass} ${isBeauty ? 'text-stone-800' : 'text-white'} selection:bg-accent-gold selection:text-black font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
-            {/* Background Texture Overlay (Pro-Max Detail) */}
+        <div id="booking-root" className={`min-h-screen ${colors.bg} ${colors.text} selection:${accent.bg} selection:${accentTextOnAccent} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
+            {/* Background Texture Overlay */}
             <div className="fixed inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-noise z-[1]" />
 
             {/* Sophisticated Glows */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
-                <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${isBeauty ? 'bg-silk-accent/5' : 'bg-obsidian-accent/5'}`}></div>
-                <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${isBeauty ? 'bg-stone-200/5' : 'bg-neutral-900/40'}`}></div>
+                <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${accent.bgDim}`}></div>
+                <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] bg-black/40`}></div>
             </div>
 
             <PublicBusinessHeader
@@ -745,554 +762,786 @@ export const PublicBooking: React.FC = () => {
                 address={business.address_street}
                 googleRating={business.google_rating}
                 totalReviews={business.total_reviews}
-                isBeauty={isBeauty}
                 userType={business.user_type}
                 gallery={gallery}
                 clientSession={client}
                 businessSlug={slug}
             />
 
-            {/* Barra de Progresso de Etapas */}
-            {step !== 'success' && (
-                <div className={`sticky top-0 z-[60] w-full border-b ${isBeauty ? 'bg-[#E2E1DA]/95 border-stone-200' : 'bg-[#050505]/95 border-white/5'} backdrop-blur-md`}>
-                    <div className="container mx-auto px-4 max-w-3xl py-3 flex items-center gap-0">
-                        {stepLabels.map((label, idx) => (
-                            <React.Fragment key={label}>
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-black transition-all duration-500 ${idx < currentStepNum
-                                        ? (isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black')
-                                        : idx === currentStepNum
-                                            ? (isBeauty ? 'bg-stone-800 text-white scale-110 shadow-lg' : 'bg-accent-gold text-black scale-110 shadow-[0_0_12px_rgba(194,155,64,0.4)]')
-                                            : (isBeauty ? 'bg-stone-200 text-stone-400' : 'bg-white/5 text-white/20')
-                                        }`}>
-                                        {idx < currentStepNum ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+            {/* Mode Toggle */}
+            <div className="container mx-auto px-4 max-w-3xl relative z-10 pt-6">
+                <BookingModeToggle mode={bookingMode} onChange={setBookingMode} forceTheme={themeOverride} />
+            </div>
+
+            {/* QUICK DIRECT FLOW */}
+            {bookingMode === 'quick' && quickStep !== 'success' && (
+                <div className="container mx-auto px-3 md:px-4 max-w-3xl relative z-10 pt-6 pb-32">
+                    {/* Quick Stepper */}
+                    <div className={`sticky top-0 z-[60] w-full border-b ${colors.bg}/95 ${colors.divider} backdrop-blur-md mb-8`}>
+                        <div className="py-3 flex items-center gap-0">
+                            {quickSteps.map((qs, idx) => (
+                                <React.Fragment key={qs.key}>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-black transition-all duration-500 ${idx < currentQuickStepIndex
+                                                ? `${accent.bg} ${accentTextOnAccent}`
+                                                : idx === currentQuickStepIndex
+                                                    ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
+                                                    : `${colors.surface} ${colors.textMuted}`
+                                            }`}>
+                                            {idx < currentQuickStepIndex ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+                                        </div>
+                                        <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
                                     </div>
-                                    <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentStepNum
-                                        ? (isBeauty ? 'text-stone-800' : 'text-accent-gold')
-                                        : (isBeauty ? 'text-stone-300' : 'text-white/20')
-                                        }`}>{label}</span>
+                                    {idx < quickSteps.length - 1 && (
+                                        <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentQuickStepIndex ? `${accent.bg} opacity-50` : colors.divider}`} />
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Step 1: Services */}
+                    {quickStep === 'services' && (
+                        <div className="space-y-8 animate-reveal-fragment">
+                            <div>
+                                <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 ${colors.text}`}>Escolha seus serviços</h2>
+                                <p className={`${colors.textMuted} text-sm`}>Selecione um ou mais serviços para seu atendimento.</p>
+                            </div>
+
+                            {/* Category Filters */}
+                            {categories.length > 0 && (
+                                <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
+                                    <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
+                                        <button onClick={() => setActiveCategory('all')}
+                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
+                                                    ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
+                                                    : `${colors.textMuted} hover:bg-white/5`
+                                                }`}>
+                                            Todos
+                                        </button>
+                                        {categories.map(cat => (
+                                            <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
+                                                        ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
+                                                        : `${colors.textMuted} ${colors.border} hover:bg-white/5`
+                                                    }`}>
+                                                {cat.name}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                                {idx < stepLabels.length - 1 && (
-                                    <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentStepNum
-                                        ? (isBeauty ? 'bg-stone-400' : 'bg-accent-gold/50')
-                                        : (isBeauty ? 'bg-stone-200' : 'bg-white/5')
-                                        }`} />
+                            )}
+
+                            {/* Service Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                {services.filter(s => {
+                                    const matchesCategory = activeCategory === 'all'
+                                        || (activeCategory === 'no-category' && !s.category_id)
+                                        || s.category_id === activeCategory;
+                                    const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                    return matchesCategory && matchesSearch;
+                                }).map((service, sIdx) => {
+                                    const isSelected = selectedServices.includes(service.id);
+                                    return (
+                                        <div key={service.id}
+                                            onClick={() => toggleService(service.id)}
+                                            style={{ animationDelay: `${sIdx * 80}ms` }}
+                                            className={`
+                                                relative overflow-hidden cursor-pointer transition-all duration-700 animate-reveal-fragment group
+                                                rounded-2xl
+                                                ${isSelected
+                                                    ? `md:scale-[1.02] ${shadow.glow} ring-2 ${accent.ring}`
+                                                    : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
+                                                }
+                                            `}>
+                                            <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
+                                                {service.image_url ? (
+                                                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                                                ) : (
+                                                    <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
+                                                        <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                                                    {categories.find(c => c.id === service.category_id)?.name || 'Especial'}
+                                                </div>
+                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent} scale-110 rotate-12` : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                    <Check className="w-6 h-6" />
+                                                </div>
+                                            </div>
+                                            <div className="p-6">
+                                                <div className="flex justify-between items-end">
+                                                    <div className="flex-1 space-y-3">
+                                                        <h4 className={`text-xl font-black tracking-tight ${colors.text} group-hover:${accent.text} transition-colors duration-500`}>
+                                                            {service.name}
+                                                        </h4>
+                                                        {service.description && (
+                                                            <p className={`text-xs line-clamp-1 opacity-50 ${colors.textSecondary}`}>
+                                                                {service.description}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex items-center gap-4">
+                                                            <span className={`text-base font-black tracking-tight ${accent.text}`}>
+                                                                {formatCurrency(service.price, currencyRegion)}
+                                                            </span>
+                                                            <div className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
+                                                            <span className={`text-[11px] font-bold ${colors.textMuted} flex items-center gap-1.5`}>
+                                                                <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {isSelected && (
+                                                <div className={`absolute bottom-0 left-0 right-0 h-1 ${accent.bg} animate-shimmer`} />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {services.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-20 gap-6 text-center">
+                                    <div className={`w-20 h-20 flex items-center justify-center border-2 ${colors.surface} ${colors.border} border rounded-2xl`}>
+                                        <Sparkles className={`w-10 h-10 ${colors.textMuted}`} />
+                                    </div>
+                                    <div>
+                                        <p className={`font-black text-lg uppercase tracking-widest mb-2 ${colors.textMuted}`}>Em Breve</p>
+                                        <p className={`text-sm ${colors.textMuted}`}>Nossos serviços serão apresentados em breve.<br />Entre em contato diretamente para agendar.</p>
+                                    </div>
+                                    {whatsappLink && (
+                                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                                            className={`flex items-center gap-3 px-8 py-4 font-black text-xs uppercase tracking-widest transition-all ${accent.bg} ${accentTextOnAccent} rounded-xl`}>
+                                            <Phone className="w-4 h-4" /> Falar via WhatsApp
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Step 2: Professional */}
+                    {quickStep === 'professional' && (
+                        <div className="space-y-8 animate-reveal-fragment">
+                            <div>
+                                <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 ${colors.text}`}>Escolha o profissional</h2>
+                                <p className={`${colors.textMuted} text-sm`}>Com quem você gostaria de ser atendido?</p>
+                            </div>
+
+                            {professionalCategories.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    <button onClick={() => setActiveProfessionalCategory('all')}
+                                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                        Todos
+                                    </button>
+                                    {professionalCategories.map((cat) => (
+                                        <button key={cat} onClick={() => setActiveProfessionalCategory(cat)}
+                                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <button onClick={() => setSelectedProfessional('any')}
+                                    className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                    <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
+                                        <Users className="w-8 h-8" />
+                                    </div>
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
+                                </button>
+
+                                {filteredProfessionals.map((pro, pIdx) => (
+                                    <button key={pro.id} style={{ animationDelay: `${pIdx * 100}ms` }}
+                                        onClick={() => setSelectedProfessional(pro.id)}
+                                        className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.glow}` : `${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}`}>
+                                        <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
+                                            {pro.photo_url ? (
+                                                <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
+                                            )}
+                                        </div>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${selectedProfessional === pro.id ? accentTextOnAccent : colors.text}`}>
+                                            {pro.name.split(' ')[0]}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 3: Date & Time */}
+                    {quickStep === 'datetime' && (
+                        <div className="space-y-8 animate-reveal-fragment">
+                            <div>
+                                <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 ${colors.text}`}>Escolha a data e hora</h2>
+                                <p className={`${colors.textMuted} text-sm`}>Selecione o melhor dia e horário para você.</p>
+                            </div>
+                            <div className="max-w-2xl mx-auto">
+                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} />
+                            </div>
+                            {selectedDate && (
+                                <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} forceTheme={themeOverride} />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Step 4: Contact & Confirm */}
+                    {quickStep === 'contact' && (
+                        <div className="space-y-8 animate-reveal-fragment max-w-2xl mx-auto">
+                            <div>
+                                <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 ${colors.text}`}>Confirme seu agendamento</h2>
+                                <p className={`${colors.textMuted} text-sm`}>Revise os detalhes e informe seus dados.</p>
+                            </div>
+
+                            {/* Summary Card */}
+                            <div className={`p-6 ${colors.card} ${colors.border} border rounded-2xl ${shadow.card}`}>
+                                <div className="flex justify-between items-center border-b pb-4 mb-4 ${colors.divider}">
+                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                    <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
+                                        <Star className="w-4 h-4" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 md:gap-8 mb-4">
+                                    <div className="space-y-1">
+                                        <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
+                                        <p className={`text-lg font-black tracking-tight ${colors.text}`}>
+                                            {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
+                                        <p className={`text-lg font-black tracking-tight ${accent.text}`}>
+                                            {formatCurrency(calculateTotal(), currencyRegion)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
+                                    <p className={`text-sm font-bold ${colors.textSecondary}`}>
+                                        {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
+                                    </p>
+                                </div>
+                                {selectedProfessional && selectedProfessional !== 'any' && (
+                                    <div className="space-y-1 mt-4 pt-4 border-t ${colors.divider}">
+                                        <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Profissional</p>
+                                        <p className={`text-sm font-bold ${colors.textSecondary}`}>
+                                            {professionals.find(p => p.id === selectedProfessional)?.name || 'Qualquer disponível'}
+                                        </p>
+                                    </div>
                                 )}
-                            </React.Fragment>
-                        ))}
+                            </div>
+
+                            {/* Contact Form */}
+                            <div className="space-y-6">
+                                {client ? (
+                                    <div className={`p-4 rounded-xl flex items-center gap-4 ${colors.surface} ${colors.border} border`}>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${accent.bgDim} ${accent.text} border ${accent.borderDim}`}>
+                                            <User className="w-6 h-6" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className={`font-bold ${colors.text}`}>{client.name}</p>
+                                            <p className={`text-sm ${colors.textMuted}`}>{client.phone}</p>
+                                        </div>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent.bg} ${accentTextOnAccent}`}>
+                                            <Check className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="space-y-2">
+                                            <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>Nome Completo</label>
+                                            <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                                                className={`w-full py-4 px-5 outline-none transition-all ${classes.input}`}
+                                                placeholder="Como devemos te chamar?" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
+                                            <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
+                                    <input type="checkbox" id="privacy-quick" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                                        className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
+                                    <label htmlFor="privacy-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
+                                        Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:${colors.text}`}>diretrizes de cancelamento</button>.
+                                    </label>
+                                </div>
+
+                                <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
+                                    <input type="checkbox" id="marketing-optin-quick" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
+                                        className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
+                                    <label htmlFor="marketing-optin-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
+                                        Aceito receber lembretes de agendamento e promoções por WhatsApp. Posso cancelar a qualquer momento.
+                                    </label>
+                                </div>
+
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={(!client && (!customerName || !customerPhone)) || !acceptedPolicy || isSubmitting}
+                                    className={`w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <span>Confirmar & Agendar</span>
+                                            <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Quick Flow Bottom Navigation */}
+            {bookingMode === 'quick' && quickStep !== 'success' && (
+                <div className={`fixed bottom-0 left-0 right-0 z-[200] w-full transition-all duration-500 ease-out`}>
+                    <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+                        <div className="flex items-center gap-3 max-w-3xl mx-auto pb-4">
+                            {quickStep !== 'services' && (
+                                <button onClick={handleQuickBack}
+                                    className={`px-6 py-4 font-bold text-xs uppercase tracking-widest transition-all ${classes.buttonSecondary}`}>
+                                    Voltar
+                                </button>
+                            )}
+                            <button
+                                onClick={handleQuickNext}
+                                disabled={!canQuickProceed()}
+                                className={`flex-1 py-4 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                                <span className="font-semibold">Continuar</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
-            <div className="container mx-auto px-3 md:px-4 max-w-3xl relative z-10 pt-10 pb-32">
-                {/* Professional Service Grade (Strategic Section) */}
-                {proIdParam && step === 'services' && (
-                    <div className="mb-16 animate-reveal-fragment">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className={`w-12 h-[2px] ${isBeauty ? 'bg-silk-accent' : 'bg-obsidian-accent'}`}></div>
-                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isBeauty ? 'text-stone-400' : 'text-obsidian-accent'}`}>
-                                Grade de Serviços: {professionals.find(p => p.id === proIdParam)?.name.split(' ')[0] || 'Profissional'}
-                            </span>
+            {/* CHAT FLOW */}
+            {bookingMode === 'chat' && (
+                <>
+                    {/* Barra de Progresso de Etapas */}
+                    {step !== 'success' && (
+                        <div className={`sticky top-0 z-[60] w-full border-b ${colors.bg}/95 ${colors.divider} backdrop-blur-md`}>
+                            <div className="container mx-auto px-4 max-w-3xl py-3 flex items-center gap-0">
+                                {stepLabels.map((label, idx) => (
+                                    <React.Fragment key={label}>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-black transition-all duration-500 ${idx < currentStepNum
+                                                    ? `${accent.bg} ${accentTextOnAccent}`
+                                                    : idx === currentStepNum
+                                                        ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
+                                                        : `${colors.surface} ${colors.textMuted}`
+                                                }`}>
+                                                {idx < currentStepNum ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+                                            </div>
+                                            <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentStepNum ? accent.text : colors.textMuted}`}>{label}</span>
+                                        </div>
+                                        {idx < stepLabels.length - 1 && (
+                                            <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentStepNum ? `${accent.bg} opacity-50` : colors.divider}`} />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
-                        <h2 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 ${isBeauty ? 'text-stone-800 font-light italic leading-tight' : 'massive-text text-white'}`}>
-                            Escolha sua <br /> Experiência
-                        </h2>
-                    </div>
-                )}
+                    )}
 
-                <div className="space-y-12">
-                    {messages.map((msg, idx) => (
-                        <ChatBubble
-                            key={msg.id}
-                            message={msg.text}
-                            isAssistant={msg.isAssistant}
-                            delay={idx === messages.length - 1 ? 200 : 0}
-                            isBeauty={isBeauty}
-                        >
-                            {msg.isAssistant && idx === messages.length - 1 && !isSubmitting && (
-                                <div className="mt-8 animate-reveal-fragment duration-700">
+                    <div className="container mx-auto px-3 md:px-4 max-w-3xl relative z-10 pt-10 pb-32">
+                        {proIdParam && step === 'services' && (
+                            <div className="mb-16 animate-reveal-fragment">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className={`w-12 h-[2px] ${accent.bg}`}></div>
+                                    <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${accent.text}`}>
+                                        Grade de Serviços: {professionals.find(p => p.id === proIdParam)?.name.split(' ')[0] || 'Profissional'}
+                                    </span>
+                                </div>
+                                <h2 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 ${colors.text} font-black tracking-tighter`}>
+                                    Escolha sua <br /> Experiência
+                                </h2>
+                            </div>
+                        )}
 
-                                    {msg.type === 'edit_options' && step === 'edit_options' && (
-                                        <div className="w-full space-y-4">
-                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                                <button
-                                                    onClick={() => {
-                                                        setEditMode('time');
-                                                        setMessages(prev => [...prev,
-                                                            { id: Date.now().toString(), text: "Gostaria de mudar apenas o horário.", isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: "Certo. Escolha sua nova data e horário abaixo:", isAssistant: true, type: 'datetime' }
-                                                        ]);
-                                                        setStep('datetime');
-                                                    }}
-                                                    className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 ${isBeauty ? 'bg-white text-stone-800 shadow-sm hover:shadow-silk-shadow rounded-2xl border border-stone-100' : 'bg-obsidian-card text-white hover:text-accent-gold border border-white/10 hover:border-accent-gold shadow-heavy rounded-none'}`}
-                                                >
-                                                    <Clock className="w-6 h-6" /> Mudar Horário
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setEditMode('service');
-                                                        setMessages(prev => [...prev,
-                                                            { id: Date.now().toString(), text: "Gostaria de alterar meus serviços.", isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: "Quais serviços você gostaria que fossem realizados?", isAssistant: true, type: 'services' }
-                                                        ]);
-                                                        setStep('services');
-                                                    }}
-                                                    className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 ${isBeauty ? 'bg-white text-stone-800 shadow-sm hover:shadow-silk-shadow rounded-2xl border border-stone-100' : 'bg-obsidian-card text-white hover:text-accent-gold border border-white/10 hover:border-accent-gold shadow-heavy rounded-none'}`}
-                                                >
-                                                    <Scissors className="w-6 h-6" /> Editar Serviços
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setEditMode('both');
-                                                        setMessages(prev => [...prev,
-                                                            { id: Date.now().toString(), text: "Gostaria de mudar serviços e horário.", isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: "Ok. Primeiro, vamos revisar seus serviços.", isAssistant: true, type: 'services' }
-                                                        ]);
-                                                        setStep('services');
-                                                    }}
-                                                    className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 ${isBeauty ? 'bg-white text-stone-800 shadow-sm hover:shadow-silk-shadow rounded-2xl border border-stone-100' : 'bg-obsidian-card text-white hover:text-accent-gold border border-white/10 hover:border-accent-gold shadow-heavy rounded-none'}`}
-                                                >
-                                                    <Calendar className="w-6 h-6" /> Mudar Ambos
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                        <div className="space-y-12">
+                            {messages.map((msg, idx) => (
+                                <ChatBubble
+                                    key={msg.id}
+                                    message={msg.text}
+                                    isAssistant={msg.isAssistant}
+                                    delay={idx === messages.length - 1 ? 200 : 0}
+                                    isBeauty={isBeauty}
+                                >
+                                    {msg.isAssistant && idx === messages.length - 1 && !isSubmitting && (
+                                        <div className="mt-8 animate-reveal-fragment duration-700">
 
-                                    {msg.type === 'edit_confirm' && step === 'edit_confirm' && (
-                                        <div className="w-full">
-                                            <div className={`p-6 text-center ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl' : 'bg-obsidian-card shadow-heavy-lg border-2 border-black rounded-none'}`}>
-                                                <AlertTriangle className={`w-8 h-8 mx-auto mb-4 ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`} />
-                                                <h3 className={`text-xl font-bold mb-2 ${isBeauty ? 'text-stone-800' : 'text-white'}`}>Deseja confirmar edição?</h3>
-                                                <p className={`text-sm mb-6 ${isBeauty ? 'text-stone-500' : 'text-neutral-400'}`}>As alterações serão aplicadas ao seu agendamento e o profissional será notificado caso necessário.</p>
-                                                
-                                                <div className="flex gap-4 max-w-sm mx-auto">
-                                                    <button onClick={() => setStep('edit_options')} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${isBeauty ? 'bg-stone-100 text-stone-500 rounded-xl hover:bg-stone-200' : 'bg-white/5 text-neutral-400 hover:bg-white/10'}`}>Cancelar</button>
-                                                    <button onClick={handleSubmit} disabled={isSubmitting} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${isBeauty ? 'bg-stone-800 text-white rounded-xl' : 'bg-accent-gold text-black border-2 border-black hover:bg-white flex items-center justify-center gap-2'}`}>
-                                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {msg.type === 'services' && step === 'services' && (
-                                        <div className="w-full space-y-8 md:space-y-12">
-                                            {/* Luxury Filters - Staggered Slide Animation */}
-                                            <div className="animate-reveal-fragment duration-700">
-                                                <div className={`p-1.5 ${isBeauty ? 'bg-white shadow-silk-shadow border border-stone-100 rounded-2xl' : 'bg-white/5 border border-white/10 rounded-none'} backdrop-blur-xl`}>
-                                                    <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin scrollbar-thumb-stone-200">
-                                                        <button onClick={() => setActiveCategory('all')}
-                                                            className={`px-5 md:px-8 py-2.5 ${isBeauty ? 'rounded-xl' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
-                                                            ${activeCategory === 'all'
-                                                                    ? (isBeauty ? 'bg-stone-800 text-white shadow-lg scale-105' : 'bg-accent-gold text-black shadow-heavy scale-105')
-                                                                    : (isBeauty ? 'text-stone-400 hover:bg-stone-100' : 'text-neutral-500 hover:bg-white/5')}`}>
-                                                            Todos
+                                            {msg.type === 'edit_options' && step === 'edit_options' && (
+                                                <div className="w-full space-y-4">
+                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                        <button onClick={() => { setEditMode('time'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de mudar apenas o horário.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Certo. Escolha sua nova data e horário abaixo:", isAssistant: true, type: 'datetime' }]); setStep('datetime'); }}
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            <Clock className="w-6 h-6" /> Mudar Horário
                                                         </button>
-                                                        {categories.map(cat => (
-                                                            <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                                className={`px-5 md:px-8 py-2.5 ${isBeauty ? 'rounded-xl border border-stone-50' : 'rounded-none'} text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500
-                                                                ${activeCategory === cat.id
-                                                                        ? (isBeauty ? 'bg-stone-800 text-white shadow-lg scale-105' : 'bg-accent-gold text-black shadow-heavy scale-105')
-                                                                        : (isBeauty ? 'text-stone-400 bg-transparent hover:bg-stone-100' : 'text-neutral-500 hover:bg-white/5')}`}>
-                                                                {cat.name}
+                                                        <button onClick={() => { setEditMode('service'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de alterar meus serviços.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Quais serviços você gostaria que fossem realizados?", isAssistant: true, type: 'services' }]); setStep('services'); }}
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            <Scissors className="w-6 h-6" /> Editar Serviços
+                                                        </button>
+                                                        <button onClick={() => { setEditMode('both'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de mudar serviços e horário.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Ok. Primeiro, vamos revisar seus serviços.", isAssistant: true, type: 'services' }]); setStep('services'); }}
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            <Calendar className="w-6 h-6" /> Mudar Ambos
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {msg.type === 'edit_confirm' && step === 'edit_confirm' && (
+                                                <div className="w-full">
+                                                    <div className={`p-6 text-center ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
+                                                        <AlertTriangle className={`w-8 h-8 mx-auto mb-4 ${accent.text}`} />
+                                                        <h3 className={`text-xl font-bold mb-2 ${colors.text}`}>Deseja confirmar edição?</h3>
+                                                        <p className={`text-sm mb-6 ${colors.textSecondary}`}>As alterações serão aplicadas ao seu agendamento e o profissional será notificado caso necessário.</p>
+                                                        <div className="flex gap-4 max-w-sm mx-auto">
+                                                            <button onClick={() => setStep('edit_options')} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${classes.buttonSecondary}`}>Cancelar</button>
+                                                            <button onClick={handleSubmit} disabled={isSubmitting} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${classes.buttonPrimary} flex items-center justify-center gap-2`}>
+                                                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {msg.type === 'services' && step === 'services' && (
+                                                <div className="w-full space-y-8 md:space-y-12">
+                                                    <div className="animate-reveal-fragment duration-700">
+                                                        <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
+                                                            <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
+                                                                <button onClick={() => setActiveCategory('all')}
+                                                                    className={`px-5 md:px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
+                                                                            ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
+                                                                            : `${colors.textMuted} hover:bg-white/5`
+                                                                        }`}>
+                                                                    Todos
+                                                                </button>
+                                                                {categories.map(cat => (
+                                                                    <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                                                                        className={`px-5 md:px-8 py-2.5 rounded-xl border text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
+                                                                                ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
+                                                                                : `${colors.textMuted} ${colors.border} hover:bg-white/5`
+                                                                            }`}>
+                                                                        {cat.name}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {services.length === 0 && (
+                                                        <div className="flex flex-col items-center justify-center py-20 gap-6 text-center">
+                                                            <div className={`w-20 h-20 flex items-center justify-center border-2 ${colors.surface} ${colors.border} border rounded-2xl`}>
+                                                                <Sparkles className={`w-10 h-10 ${colors.textMuted}`} />
+                                                            </div>
+                                                            <div>
+                                                                <p className={`font-black text-lg uppercase tracking-widest mb-2 ${colors.textMuted}`}>Em Breve</p>
+                                                                <p className={`text-sm ${colors.textMuted}`}>Nossos serviços serão apresentados em breve.<br />Entre em contato diretamente para agendar.</p>
+                                                            </div>
+                                                            {whatsappLink && (
+                                                                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                                                                    className={`flex items-center gap-3 px-8 py-4 font-black text-xs uppercase tracking-widest transition-all ${accent.bg} ${accentTextOnAccent} rounded-xl`}>
+                                                                    <Phone className="w-4 h-4" /> Falar via WhatsApp
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                                                        {services.filter(s => {
+                                                            const matchesCategory = activeCategory === 'all'
+                                                                || (activeCategory === 'no-category' && !s.category_id)
+                                                                || s.category_id === activeCategory;
+                                                            const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                                            return matchesCategory && matchesSearch;
+                                                        }).map((service, sIdx) => {
+                                                            const isSelected = selectedServices.includes(service.id);
+                                                            return (
+                                                                <div key={service.id}
+                                                                    onClick={() => toggleService(service.id)}
+                                                                    style={{ animationDelay: `${sIdx * 80}ms` }}
+                                                                    className={`relative overflow-hidden cursor-pointer transition-all duration-700 animate-reveal-fragment group rounded-2xl ${isSelected
+                                                                            ? `md:scale-[1.03] ${shadow.glow} ring-2 ${accent.ring}`
+                                                                            : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
+                                                                        }`}>
+                                                                    <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
+                                                                        {service.image_url ? (
+                                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                                                                        ) : (
+                                                                            <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
+                                                                                <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                                        <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                                                                            {categories.find(c => c.id === service.category_id)?.name || 'Especial'}
+                                                                        </div>
+                                                                        <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent} scale-110 rotate-12` : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                                            <Check className="w-6 h-6" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="p-6">
+                                                                        <div className="flex justify-between items-end">
+                                                                            <div className="flex-1 space-y-3">
+                                                                                <h4 className={`text-2xl font-black tracking-tight ${colors.text} group-hover:${accent.text} transition-colors duration-500`}>
+                                                                                    {service.name}
+                                                                                </h4>
+                                                                                {service.description && (
+                                                                                    <p className={`text-xs line-clamp-1 opacity-50 ${colors.textSecondary}`}>
+                                                                                        {service.description}
+                                                                                    </p>
+                                                                                )}
+                                                                                <div className="flex items-center gap-4">
+                                                                                    <span className={`text-base font-black tracking-tight ${accent.text}`}>
+                                                                                        {formatCurrency(service.price, currencyRegion)}
+                                                                                    </span>
+                                                                                    <div className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
+                                                                                    <span className={`text-[11px] font-bold ${colors.textMuted} flex items-center gap-1.5`}>
+                                                                                        <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    {isSelected && (
+                                                                        <div className={`absolute bottom-0 left-0 right-0 h-1 ${accent.bg} animate-shimmer`} />
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {msg.type === 'professionals' && step === 'datetime' && !selectedProfessional && (
+                                                <div className="w-full space-y-6">
+                                                    {professionalCategories.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <button onClick={() => setActiveProfessionalCategory('all')}
+                                                                className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                                                Todos
+                                                            </button>
+                                                            {professionalCategories.map((cat) => (
+                                                                <button key={cat} onClick={() => setActiveProfessionalCategory(cat)}
+                                                                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                                                    {cat}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                                        <button onClick={() => { setSelectedProfessional('any'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Perfeita escolha. Qual dia e horário ficam melhores para você?", isAssistant: true, type: 'datetime' }]); }}
+                                                            className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
+                                                                <Users className="w-8 h-8" />
+                                                            </div>
+                                                            <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
+                                                        </button>
+
+                                                        {filteredProfessionals.map((pro, pIdx) => (
+                                                            <button key={pro.id} style={{ animationDelay: `${pIdx * 100}ms` }}
+                                                                onClick={() => { setSelectedProfessional(pro.id); setMessages(prev => [...prev, { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para a sua visita?`, isAssistant: true, type: 'datetime' }]); }}
+                                                                className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                                <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
+                                                                    {pro.photo_url ? (
+                                                                        <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
+                                                                    )}
+                                                                </div>
+                                                                <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${colors.text}`}>
+                                                                    {pro.name.split(' ')[0]}
+                                                                </span>
                                                             </button>
                                                         ))}
                                                     </div>
                                                 </div>
-                                            </div>
+                                            )}
 
-                                            {/* Empty state se não há serviços */}
-                                            {services.length === 0 && (
-                                                <div className={`flex flex-col items-center justify-center py-20 gap-6 text-center ${isBeauty ? '' : ''}`}>
-                                                    <div className={`w-20 h-20 flex items-center justify-center border-2 ${isBeauty ? 'bg-stone-100 border-stone-200 rounded-2xl' : 'bg-white/5 border-white/10 rounded-none'}`}>
-                                                        <Sparkles className={`w-10 h-10 ${isBeauty ? 'text-stone-300' : 'text-white/20'}`} />
+                                            {msg.type === 'datetime' && step === 'datetime' && (
+                                                <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
+                                                    <div className={`${colors.card} ${colors.border} border-2 p-6 md:p-8 ${shadow.elevated} rounded-2xl`}>
+                                                        <h3 className={`mb-8 ${colors.text} font-heading text-xl text-center md:text-left`}>Seleção de Agenda</h3>
+                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} />
                                                     </div>
-                                                    <div>
-                                                        <p className={`font-black text-lg uppercase tracking-widest mb-2 ${isBeauty ? 'text-stone-500' : 'text-white/40'}`}>Em Breve</p>
-                                                        <p className={`text-sm ${isBeauty ? 'text-stone-400' : 'text-white/30'}`}>Nossos serviços serão apresentados em breve.<br />Entre em contato diretamente para agendar.</p>
-                                                    </div>
-                                                    {whatsappLink && (
-                                                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                                                            className={`flex items-center gap-3 px-8 py-4 font-black text-xs uppercase tracking-widest transition-all ${isBeauty ? 'bg-stone-800 text-white rounded-xl hover:scale-105' : 'bg-accent-gold text-black border-4 border-black shadow-heavy hover:translate-x-1 hover:translate-y-1'}`}>
-                                                            <Phone className="w-4 h-4" /> Falar via WhatsApp
-                                                        </a>
+                                                    {selectedDate && (
+                                                        <div className="animate-reveal-fragment duration-700">
+                                                            <h4 className={`mb-6 ${accent.text} font-heading text-lg text-center md:text-left`}>Horários Disponíveis</h4>
+                                                            <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => {
+                                                                setSelectedTime(time);
+                                                                const isLogged = !!client;
+                                                                if (editingBookingId) {
+                                                                    setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Quase pronto. Verifique o resumo da edição abaixo.", isAssistant: true, type: 'edit_confirm' }]);
+                                                                    setStep('edit_confirm');
+                                                                } else {
+                                                                    setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme a sua reserva." : "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
+                                                                    setStep('contact');
+                                                                }
+                                                            }} availableSlots={availableSlots} forceTheme={themeOverride} />
+                                                        </div>
                                                     )}
                                                 </div>
                                             )}
-
-                                            {/* Service Staggered Grid - Extra Polish */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                                                {services.filter(s => {
-                                                    const matchesCategory = activeCategory === 'all'
-                                                        || (activeCategory === 'no-category' && !s.category_id)
-                                                        || s.category_id === activeCategory;
-                                                    const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
-                                                    return matchesCategory && matchesSearch;
-                                                }).map((service, sIdx) => {
-                                                    const isSelected = selectedServices.includes(service.id);
-                                                    return (
-                                                        <div key={service.id}
-                                                            onClick={() => toggleService(service.id)}
-                                                            style={{ animationDelay: `${sIdx * 80}ms` }}
-                                                            className={`
-                                                                relative overflow-hidden cursor-pointer transition-all duration-700 animate-reveal-fragment group
-                                                                ${isBeauty ? 'rounded-3xl' : 'rounded-none'}
-                                                                ${isSelected
-                                                                    ? (isBeauty ? 'md:scale-[1.03] shadow-2xl ring-2 ring-stone-800' : 'md:scale-[1.03] shadow-heavy-lg border-4 border-accent-gold ring-4 ring-black')
-                                                                    : (isBeauty ? 'bg-white shadow-silk-shadow hover:-translate-y-1' : 'bg-obsidian-card border border-white/5 shadow-heavy hover:-translate-y-1')
-                                                                }
-                                                            `}>
-                                                            {/* Service Image/Cover with Persistent Category — Mobile-first height */}
-                                                            <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
-                                                                {service.image_url ? (
-                                                                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
-                                                                ) : (
-                                                                    <div className={`w-full h-full flex items-center justify-center ${isBeauty ? 'bg-stone-50' : 'bg-neutral-800'}`}>
-                                                                        <Sparkles className={`w-12 h-12 opacity-10 ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`} />
-                                                                    </div>
-                                                                )}
-                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                                                                {/* Persistent Category Label */}
-                                                                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${isBeauty ? 'bg-white/90 border-stone-100 text-stone-800' : 'bg-black/60 border-white/10 text-white/70'}`}>
-                                                                    {categories.find(c => c.id === service.category_id)?.name || 'Especial'}
-                                                                </div>
-
-                                                                {/* Select Indicator Over Image */}
-                                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 ${isBeauty ? 'rounded-full' : 'rounded-none'} ${isSelected ? (isBeauty ? 'bg-stone-800 border-white text-white rotate-12 scale-110' : 'bg-accent-gold border-black text-black scale-110 rotate-12') : 'bg-black/20 border-white/20 text-transparent'}`}>
-                                                                    <Check className="w-6 h-6" />
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Service Content - Massive Design */}
-                                                            <div className="p-6">
-                                                                <div className="flex justify-between items-end">
-                                                                    <div className="flex-1 space-y-3">
-                                                                        <h4 className={`
-                                                                            ${isBeauty ? 'font-black text-stone-800 tracking-tight' : 'massive-text text-white tracking-tighter'} 
-                                                                            text-2xl group-hover:text-accent-gold transition-colors duration-500
-                                                                        `}>
-                                                                            {service.name}
-                                                                        </h4>
-                                                                        {service.description && (
-                                                                            <p className={`text-xs line-clamp-1 opacity-50 ${isBeauty ? 'font-medium' : 'font-mono'}`}>
-                                                                                {service.description}
-                                                                            </p>
-                                                                        )}
-                                                                        <div className="flex items-center gap-4">
-                                                                            <span className={`text-base font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`}>
-                                                                                {formatCurrency(service.price, currencyRegion)}
-                                                                            </span>
-                                                                            <div className="w-1 h-1 rounded-full bg-neutral-500/30" />
-                                                                            <span className="text-[11px] font-bold text-neutral-500 flex items-center gap-1.5">
-                                                                                <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Bottom Glow on Selection */}
-                                                            {isSelected && !isBeauty && (
-                                                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-accent-gold animate-shimmer" />
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
                                         </div>
                                     )}
+                                </ChatBubble>
+                            ))}
 
-                                    {msg.type === 'professionals' && step === 'datetime' && !selectedProfessional && (
-                                        <div className="w-full space-y-6">
-                                            {professionalCategories.length > 0 && (
-                                                <div className="flex flex-wrap gap-2">
-                                                    <button
-                                                        onClick={() => setActiveProfessionalCategory('all')}
-                                                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeProfessionalCategory === 'all' ? (isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black border-2 border-black') : (isBeauty ? 'bg-stone-100 text-stone-600' : 'bg-white/5 text-white/50 border border-white/10')}`}
-                                                    >
-                                                        Todos
-                                                    </button>
-                                                    {professionalCategories.map((cat) => (
-                                                        <button
-                                                            key={cat}
-                                                            onClick={() => setActiveProfessionalCategory(cat)}
-                                                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeProfessionalCategory === cat ? (isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black border-2 border-black') : (isBeauty ? 'bg-stone-100 text-stone-600' : 'bg-white/5 text-white/50 border border-white/10')}`}
-                                                        >
-                                                            {cat}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedProfessional('any');
-                                                        setMessages(prev => [...prev,
-                                                        { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false },
-                                                        { id: (Date.now() + 1).toString(), text: "Perfeita escolha. Qual dia e horário ficam melhores para você?", isAssistant: true, type: 'datetime' }
-                                                        ]);
-                                                    }}
-                                                    className={`
-                                                    p-6 flex flex-col items-center gap-3 transition-all duration-300
-                                                    ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
-                                                `}>
-                                                    <div className={`w-16 h-16 flex items-center justify-center border-2 ${isBeauty ? 'bg-white border-stone-200 text-stone-300 rounded-full' : 'bg-neutral-900 border-black text-neutral-600 rounded-none'}`}>
-                                                        <Users className="w-8 h-8" />
-                                                    </div>
-                                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>Qualquer Profissional</span>
-                                                </button>
-
-                                                {filteredProfessionals.map((pro, pIdx) => (
-                                                    <button
-                                                        key={pro.id}
-                                                        style={{ animationDelay: `${pIdx * 100}ms` }}
-                                                        onClick={() => {
-                                                            setSelectedProfessional(pro.id);
-                                                            setMessages(prev => [...prev,
-                                                            { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false },
-                                                            { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para a sua visita?`, isAssistant: true, type: 'datetime' }
-                                                            ]);
-                                                        }}
-                                                        className={`
-                                                        p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment
-                                                        ${isBeauty ? 'bg-stone-50 hover:bg-white rounded-2xl shadow-sm hover:shadow-silk-shadow' : 'bg-obsidian-card border border-white/10 hover:border-obsidian-accent shadow-heavy'}
-                                                    `}>
-                                                        <div className={`w-16 h-16 overflow-hidden border-2 ${isBeauty ? 'bg-white border-stone-200 rounded-full' : 'bg-neutral-900 border-black rounded-none'}`}>
-                                                            {pro.photo_url ? (
-                                                                <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-white font-bold">{pro.name.charAt(0)}</div>
-                                                            )}
-                                                        </div>
-                                                        <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
-                                                            {pro.name.split(' ')[0]}
-                                                        </span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {msg.type === 'datetime' && step === 'datetime' && (
-                                        <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
-                                            <div className={`${isBeauty ? 'bg-white shadow-silk-shadow p-6 md:p-8 rounded-3xl' : 'bg-obsidian-card border-2 border-black p-6 md:p-8 shadow-heavy-lg'}`}>
-                                                <h3 className={`mb-8 ${isBeauty ? 'text-stone-800 silk-text' : 'massive-text text-white'} text-center md:text-left`}>Seleção de Agenda</h3>
-                                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} isBeauty={isBeauty} fullDates={fullDates} />
-                                            </div>
-
-                                            {selectedDate && (
-                                                <div className="animate-reveal-fragment duration-700">
-                                                    <h4 className={`mb-6 ${isBeauty ? 'text-stone-400 silk-text text-sm' : 'text-obsidian-accent massive-text text-xl'} text-center md:text-left`}>Horários Disponíveis</h4>
-                                                    <TimeGrid
-                                                        selectedTime={selectedTime}
-                                                        onTimeSelect={(time) => {
-                                                            setSelectedTime(time);
-                                                            const isLogged = !!client;
-                                                            if (editingBookingId) {
-                                                                setMessages(prev => [...prev,
-                                                                { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
-                                                                { id: (Date.now() + 1).toString(), text: "Quase pronto. Verifique o resumo da edição abaixo.", isAssistant: true, type: 'edit_confirm' }
-                                                                ]);
-                                                                setStep('edit_confirm');
-                                                            } else {
-                                                                setMessages(prev => [...prev,
-                                                                { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false },
-                                                                { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme a sua reserva." : "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }
-                                                                ]);
-                                                                setStep('contact');
-                                                            }
-                                                        }}
-                                                        availableSlots={availableSlots}
-                                                        isBeauty={isBeauty}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* Contact form was moved outside of ChatBubble to a Fixed Modal at the bottom */}
+                            {isTyping && (
+                                <div className="flex justify-start mb-12 animate-fade-in">
+                                    <div className={`px-8 py-5 ${colors.card} ${colors.border} border rounded-2xl flex items-center gap-2`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${colors.textMuted}`} />
+                                        <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.2s] ${colors.textMuted} opacity-60`} />
+                                        <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.4s] ${colors.textMuted} opacity-30`} />
+                                    </div>
                                 </div>
                             )}
-                        </ChatBubble>
-                    ))}
 
-                    {isTyping && (
-                        <div className="flex justify-start mb-12 animate-fade-in">
-                            <div className={`px-8 py-5 ${isBeauty ? 'bg-white rounded-2xl shadow-sm' : 'bg-obsidian-card border border-white/5 shadow-heavy rounded-none'} flex items-center gap-2`}>
-                                <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${isBeauty ? 'bg-stone-300' : 'bg-obsidian-accent'}`} />
-                                <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.2s] ${isBeauty ? 'bg-stone-200' : 'bg-obsidian-accent/60'}`} />
-                                <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.4s] ${isBeauty ? 'bg-stone-100' : 'bg-obsidian-accent/30'}`} />
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 'success' && activeBooking && (
-                        <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment">
-                            <div className="relative inline-block mb-10">
-                                <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${isBeauty ? 'bg-stone-800 border-white text-white rounded-full shadow-2xl' : 'bg-accent-gold border-black text-black rounded-none shadow-heavy-lg'}`}>
-                                    <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />
-                                </div>
-                                {/* Decorative sparkles around success icon */}
-                                <div className="absolute -top-4 -right-4 animate-bounce delay-100">
-                                    <Sparkles className="w-8 h-8 text-accent-gold" />
-                                </div>
-                                <div className="absolute -bottom-2 -left-6 animate-bounce delay-300">
-                                    <Sparkles className="w-6 h-6 text-accent-gold opacity-50" />
-                                </div>
-                            </div>
-
-                            <h2 className={`${isBeauty ? 'font-light tracking-widest text-stone-800' : 'massive-text text-white tracking-tighter'} text-5xl md:text-7xl mb-6`}>
-                                {isBeauty ? 'Sua beleza agendada' : 'RESERVA CONFIRMADA'}
-                            </h2>
-
-                            <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${isBeauty ? 'text-stone-500 italic' : 'text-white/40 font-mono uppercase tracking-widest'}`}>
-                                {editingBookingId ? (
-                                    isBeauty
-                                        ? "Edição feita com sucesso! Acesse sua área de membros."
-                                        : "EDIÇÃO CONCLUÍDA. ACESSE SUA ÁREA DE MEMBROS."
-                                ) : (
-                                    isBeauty
-                                        ? "Prepare-se para um momento único de auto-cuidado e transformação."
-                                        : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA."
-                                )}
-                            </p>
-
-                            {/* Summary Card - Premium Detail */}
-                            <div className={`p-8 mb-12 text-left relative overflow-hidden group ${isBeauty ? 'bg-white shadow-silk-shadow rounded-3xl border border-stone-100' : 'bg-obsidian-card border-4 border-black shadow-heavy-lg rounded-none'}`}>
-                                <div className="relative z-10 flex flex-col gap-6">
-                                    <div className="flex justify-between items-center border-b pb-4 border-neutral-500/10">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Resumo da Reserva</span>
-                                        <div className="p-1.5 rounded-full bg-accent-gold/10 text-accent-gold">
-                                            <Star className="w-4 h-4" />
+                            {step === 'success' && activeBooking && (
+                                <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment">
+                                    <div className="relative inline-block mb-10">
+                                        <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${accent.bg} ${accentTextOnAccent} rounded-full ${shadow.elevated}`}>
+                                            <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />
+                                        </div>
+                                        <div className="absolute -top-4 -right-4 animate-bounce delay-100">
+                                            <Sparkles className={`w-8 h-8 ${accent.text}`} />
+                                        </div>
+                                        <div className="absolute -bottom-2 -left-6 animate-bounce delay-300">
+                                            <Sparkles className={`w-6 h-6 ${accent.text} opacity-50`} />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 md:gap-8">
-                                        <div className="space-y-1">
-                                            <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Data e Hora</p>
-                                            <p className={`text-lg font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
-                                                {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Total</p>
-                                            <p className={`text-lg font-black tracking-tight ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
-                                                {formatCurrency(calculateTotal(), currencyRegion)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] uppercase font-black tracking-widest opacity-40">Serviços</p>
-                                        <p className={`text-sm font-bold opacity-60 ${isBeauty ? 'text-stone-700' : 'text-white'}`}>
-                                            {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
-                                        </p>
-                                    </div>
-                                </div>
-                                {/* Animated background gradient */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-accent-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                            </div>
 
-                            <div className="flex flex-col gap-5">
-                                <a
-                                    href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve! 🚀`)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`
-                                        group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden
-                                        ${isBeauty ? 'bg-stone-800 text-white rounded-2xl shadow-2xl hover:scale-105' : 'bg-green-500 text-black font-black border-4 border-black shadow-heavy-lg hover:translate-x-1 hover:translate-y-1 uppercase tracking-widest'}
-                                    `}
-                                >
-                                    <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20">
-                                        <Send className="w-5 h-5" />
-                                    </div>
-                                    <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
-                                    {/* Animated highlight shine */}
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
-                                </a>
+                                    <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
+                                        {isBeauty ? 'Sua beleza agendada' : 'RESERVA CONFIRMADA'}
+                                    </h2>
 
-                                {/* Client Area CTA — prominent card */}
-                                <Link
-                                    to={`/minha-area/${slug}`}
-                                    className={`
-                                        group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2
-                                        ${isBeauty
-                                            ? 'bg-white border-stone-200 hover:border-stone-400 shadow-lg hover:shadow-xl'
-                                            : 'bg-zinc-900 border-zinc-700 hover:border-white shadow-heavy-lg hover:translate-x-0.5 hover:-translate-y-0.5'
+                                    <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
+                                        {editingBookingId
+                                            ? (isBeauty ? "Edição feita com sucesso! Acesse sua área de membros." : "EDIÇÃO CONCLUÍDA. ACESSE SUA ÁREA DE MEMBROS.")
+                                            : (isBeauty ? "Prepare-se para um momento único de auto-cuidado e transformação." : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA.")
                                         }
-                                    `}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2.5 rounded-xl ${isBeauty ? 'bg-stone-100' : 'bg-zinc-800'}`}>
-                                                <LayoutDashboard className={`w-5 h-5 ${isBeauty ? 'text-stone-600' : 'text-white'}`} />
+                                    </p>
+
+                                    <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
+                                        <div className="relative z-10 flex flex-col gap-6">
+                                            <div className={`flex justify-between items-center border-b pb-4 ${colors.divider}`}>
+                                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                                <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
+                                                    <Star className="w-4 h-4" />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className={`font-black text-sm uppercase tracking-wider ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
-                                                    Minha Área de Cliente
-                                                </p>
-                                                <p className={`text-xs mt-0.5 ${isBeauty ? 'text-stone-500' : 'text-zinc-400'}`}>
-                                                    Acompanhe e gerencie seus agendamentos
+                                            <div className="grid grid-cols-2 gap-4 md:gap-8">
+                                                <div className="space-y-1">
+                                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
+                                                    <p className={`text-lg font-black tracking-tight ${colors.text}`}>
+                                                        {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
+                                                    </p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
+                                                    <p className={`text-lg font-black tracking-tight ${accent.text}`}>
+                                                        {formatCurrency(calculateTotal(), currencyRegion)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
+                                                <p className={`text-sm font-bold ${colors.textSecondary}`}>
+                                                    {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
                                                 </p>
                                             </div>
                                         </div>
-                                        <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${accent.bgDim} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000`} />
                                     </div>
-                                    <div className={`flex flex-wrap gap-2 mt-1`}>
-                                        {[
-                                            { icon: <Calendar className="w-3 h-3" />, label: 'Histórico' },
-                                            { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
-                                            { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
-                                        ].map(tag => (
-                                            <span key={tag.label} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${isBeauty ? 'bg-stone-100 text-stone-500' : 'bg-zinc-800 text-zinc-400'}`}>
-                                                {tag.icon}{tag.label}
-                                            </span>
-                                        ))}
+
+                                    <div className="flex flex-col gap-5">
+                                        <a href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)}`} target="_blank" rel="noopener noreferrer"
+                                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                                            <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
+                                                <Send className="w-5 h-5" />
+                                            </div>
+                                            <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                                        </a>
+
+                                        <Link to={`/minha-area/${slug}`}
+                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2.5 rounded-xl ${colors.surface}`}>
+                                                        <LayoutDashboard className={`w-5 h-5 ${colors.textSecondary}`} />
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-black text-sm uppercase tracking-wider ${colors.text}`}>Minha Área de Cliente</p>
+                                                        <p className={`text-xs mt-0.5 ${colors.textMuted}`}>Acompanhe e gerencie seus agendamentos</p>
+                                                    </div>
+                                                </div>
+                                                <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${colors.textMuted}`} />
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {[
+                                                    { icon: <Calendar className="w-3 h-3" />, label: 'Histórico' },
+                                                    { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
+                                                    { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
+                                                ].map(tag => (
+                                                    <span key={tag.label} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${colors.surface} ${colors.textMuted}`}>
+                                                        {tag.icon}{tag.label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </Link>
+
+                                        <button onClick={() => window.location.reload()}
+                                            className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${colors.text} underline decoration-2 underline-offset-8 ${accent.text}`}>
+                                            Realizar novo agendamento
+                                        </button>
                                     </div>
-                                </Link>
 
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${isBeauty ? 'text-stone-800' : 'text-white underline decoration-accent-gold decoration-2 underline-offset-8'}`}
-                                >
-                                    Realizar novo agendamento
-                                </button>
-                            </div>
-
-                            <div className="mt-16 opacity-0 animate-fade-in [animation-delay:1500ms]">
-                                <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
-                            </div>
+                                    <div className="mt-16 opacity-0 animate-fade-in [animation-delay:1500ms]">
+                                        <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={chatEndRef} />
                         </div>
-                    )}
-                    <div ref={chatEndRef} />
-                </div>
-            </div >
+                    </div>
+                </>
+            )}
 
-            {/* Modal/Bottom Sheet de Contato e Resumo */}
-            {step === 'contact' && (
+            {/* Chat Flow: Modal/Bottom Sheet de Contato e Resumo */}
+            {bookingMode === 'chat' && step === 'contact' && (
                 <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className={`${isBeauty ? 'bg-[#FAFAF9] sm:rounded-3xl border border-stone-200' : 'bg-obsidian-bg sm:border border-white/10 sm:shadow-heavy-lg'} w-full max-w-2xl p-6 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl`}>
-
+                    <div className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className={`text-2xl ${isBeauty ? 'text-stone-800 silk-text' : 'massive-text text-white'}`}>
-                                Confirmação do Agendamento
-                            </h3>
-                            <button onClick={() => setStep('datetime')} className="text-neutral-400 hover:text-black transition-colors rounded-full p-2 hover:bg-black/5">
+                            <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
+                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:${colors.text} transition-colors rounded-full p-2 hover:bg-white/5`}>
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
 
-                        {/* Summary Minimalista */}
-                        <div className={`p-4 mb-8 flex justify-between items-center ${isBeauty ? 'bg-white rounded-xl border border-stone-100 shadow-sm' : 'bg-neutral-900 border-l-4 border-obsidian-accent rounded-r-none'}`}>
+                        <div className={`p-4 mb-8 flex justify-between items-center ${colors.surface} ${colors.border} border rounded-xl`}>
                             <div>
-                                <p className={`text-xs font-bold uppercase tracking-widest ${isBeauty ? 'text-stone-400' : 'text-neutral-500'}`}>Resumo</p>
-                                <p className={`font-medium ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                <p className={`text-xs font-bold uppercase tracking-widest ${colors.textMuted}`}>Resumo</p>
+                                <p className={`font-medium ${colors.text}`}>
                                     {selectedDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {selectedTime}
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className={`text-xs font-bold uppercase tracking-widest ${isBeauty ? 'text-stone-400' : 'text-neutral-500'}`}>Total</p>
-                                <p className={`font-black ${isBeauty ? 'text-stone-800' : 'text-accent-gold'}`}>
+                                <p className={`text-xs font-bold uppercase tracking-widest ${colors.textMuted}`}>Total</p>
+                                <p className={`font-black ${accent.text}`}>
                                     {formatCurrency(calculateTotal(), currencyRegion)}
                                 </p>
                             </div>
@@ -1300,63 +1549,58 @@ export const PublicBooking: React.FC = () => {
 
                         <div className="relative z-10 space-y-6">
                             {client ? (
-                                <div className={`p-4 rounded-xl flex items-center gap-4 ${isBeauty ? 'bg-stone-100 border border-stone-200' : 'bg-black/30 border border-white/10'}`}>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isBeauty ? 'bg-white text-stone-800 shadow-sm' : 'bg-accent-gold/10 text-accent-gold border border-accent-gold/20'}`}>
+                                <div className={`p-4 rounded-xl flex items-center gap-4 ${colors.surface} ${colors.border} border`}>
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${accent.bgDim} ${accent.text} border ${accent.borderDim}`}>
                                         <User className="w-6 h-6" />
                                     </div>
                                     <div className="flex-1">
-                                        <p className={`font-bold ${isBeauty ? 'text-stone-800' : 'text-white'}`}>{client.name}</p>
-                                        <p className={`text-sm ${isBeauty ? 'text-stone-500' : 'text-neutral-400'}`}>{client.phone}</p>
+                                        <p className={`font-bold ${colors.text}`}>{client.name}</p>
+                                        <p className={`text-sm ${colors.textMuted}`}>{client.phone}</p>
                                     </div>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBeauty ? 'bg-stone-800 text-white' : 'bg-accent-gold text-black'}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent.bg} ${accentTextOnAccent}`}>
                                         <Check className="w-4 h-4" />
                                     </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-2">
-                                        <label className={`${isBeauty ? 'text-stone-500 silk-text text-xs uppercase tracking-widest' : 'text-neutral-500 massive-text text-xs'} block font-bold`}>Nome Completo</label>
+                                        <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>Nome Completo</label>
                                         <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-                                            className={`w-full py-4 px-5 outline-none transition-all ${isBeauty ? 'bg-white border border-stone-200 focus:border-stone-800 focus:ring-1 focus:ring-stone-800 rounded-lg shadow-sm' : 'bg-black/40 border-white/10 focus:border-obsidian-accent rounded-none text-white'}`}
+                                            className={`w-full py-4 px-5 outline-none transition-all ${classes.input}`}
                                             placeholder="Como devemos te chamar?" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className={`${isBeauty ? 'text-stone-500 silk-text text-xs uppercase tracking-widest' : 'text-neutral-500 massive-text text-xs'} block font-bold`}>WhatsApp</label>
+                                        <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
                                         <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                     </div>
                                 </div>
                             )}
 
-                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${isBeauty ? 'bg-stone-50 border-stone-100' : 'bg-black/20 border-white/5'}`}>
+                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
                                 <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                    className={`mt-1 w-5 h-5 ${isBeauty ? 'rounded text-stone-800 focus:ring-stone-800' : 'rounded-none text-obsidian-accent focus:ring-obsidian-accent bg-black border-white/20'} cursor-pointer`} />
-                                <label htmlFor="privacy" className={`text-sm cursor-pointer ${isBeauty ? 'text-stone-600' : 'text-neutral-400'} leading-snug`}>
-                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${isBeauty ? 'text-stone-800 hover:text-stone-600' : 'text-obsidian-accent hover:text-white'}`}>diretrizes de cancelamento</button>.
+                                    className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
+                                <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
+                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:${colors.text}`}>diretrizes de cancelamento</button>.
                                 </label>
                             </div>
 
-                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${isBeauty ? 'bg-stone-50 border-stone-100' : 'bg-black/20 border-white/5'}`}>
+                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
                                 <input type="checkbox" id="marketing-optin" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
-                                    className={`mt-1 w-5 h-5 ${isBeauty ? 'rounded text-stone-800 focus:ring-stone-800' : 'rounded-none text-obsidian-accent focus:ring-obsidian-accent bg-black border-white/20'} cursor-pointer`} />
-                                <label htmlFor="marketing-optin" className={`text-sm cursor-pointer ${isBeauty ? 'text-stone-600' : 'text-neutral-400'} leading-snug`}>
+                                    className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
+                                <label htmlFor="marketing-optin" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
                                     Aceito receber lembretes de agendamento e promoções por WhatsApp. Posso cancelar a qualquer momento.
                                 </label>
                             </div>
 
                             <div className="pt-2">
-                                <button
-                                    onClick={handleSubmit}
+                                <button onClick={handleSubmit}
                                     disabled={(!client && (!customerName || !customerPhone)) || !acceptedPolicy || isSubmitting}
-                                    className={`
-                                        w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative
-                                        ${isBeauty ? 'bg-stone-800 text-white rounded-xl shadow-lg hover:bg-stone-700' : 'bg-obsidian-accent text-black font-black uppercase text-lg tracking-[0.2em] shadow-heavy border-4 border-black active:translate-y-1 active:translate-x-1'}
-                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                    `}>
+                                    className={`w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
                                     {isSubmitting ? (
                                         <Loader2 className="w-6 h-6 animate-spin" />
                                     ) : (
                                         <>
-                                            <span className={!isBeauty ? 'mt-0.5' : 'font-semibold'}>Confirmar & Agendar</span>
+                                            <span>Confirmar & Agendar</span>
                                             <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                         </>
                                     )}
@@ -1367,67 +1611,28 @@ export const PublicBooking: React.FC = () => {
                 </div>
             )}
 
-
-            {/* Botão Flutuante "Avançar" — aparece ao selecionar serviços com animação slide-up */}
-            {step === 'services' && (
-                <div
-                    className={`
-                        fixed bottom-0 left-0 right-0 z-[200] w-full
-                        transition-all duration-500 ease-out
-                        ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                    `}
-                >
-                    <div
-                        className={`
-                            w-full px-4 pt-4
-                            ${isBeauty ? 'bg-[#E2E1DA]/90' : 'bg-black/85'}
-                            backdrop-blur-2xl
-                            border-t ${isBeauty ? 'border-stone-300' : 'border-white/10'}
-                            shadow-[0_-20px_50px_-10px_rgba(0,0,0,0.4)]
-                        `}
-                        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-                    >
-                        <button
-                            id="next-button"
-                            onClick={() => {
-                                const serviceNames = services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ');
-                                if (editMode === 'service') {
-                                    // Só mudou serviços: vai direto para confirmação
-                                    setMessages(prev => [...prev,
-                                        { id: Date.now().toString(), text: `Quero confirmar os novos serviços: ${serviceNames}`, isAssistant: false },
-                                        { id: (Date.now() + 1).toString(), text: "Perfeito. As alterações estão prontas para serem salvas.", isAssistant: true, type: 'edit_confirm' }
-                                    ]);
-                                    setStep('edit_confirm');
-                                } else if (editMode === 'both') {
-                                    // Mudou serviços + horário: pula seleção de profissional e vai direto para o calendário
-                                    setMessages(prev => [...prev,
-                                        { id: Date.now().toString(), text: `Confirmado os serviços: ${serviceNames}. Agora quero mudar o horário.`, isAssistant: false },
-                                        { id: (Date.now() + 1).toString(), text: "Ótimo! Agora escolha a nova data e horário para o seu agendamento.", isAssistant: true, type: 'datetime' }
-                                    ]);
-                                    setStep('datetime');
-                                } else {
-                                    // Novo agendamento: pede profissional normalmente
-                                    setMessages(prev => [...prev,
-                                        { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false },
-                                        { id: (Date.now() + 1).toString(), text: "Com qual profissional você gostaria de realizar esses serviços? Nossa equipe está pronta para te atender.", isAssistant: true, type: 'professionals' }
-                                    ]);
-                                    setStep('datetime');
-                                }
-                            }}
-                            className={`
-                                w-full flex items-center justify-between overflow-hidden group relative
-                                py-4 sm:py-5 px-6 sm:px-8
-                                ${isBeauty
-                                    ? 'rounded-2xl bg-stone-800 text-white shadow-2xl hover:bg-stone-700 active:scale-95'
-                                    : 'rounded-none bg-accent-gold text-black shadow-heavy-lg border-4 border-black font-black uppercase tracking-[0.2em] active:translate-x-0.5 active:translate-y-0.5'
-                                }
-                                transition-all duration-200
-                            `}
-                        >
+            {/* Chat Flow: Botão Flutuante "Avançar" */}
+            {bookingMode === 'chat' && step === 'services' && (
+                <div className={`fixed bottom-0 left-0 right-0 z-[200] w-full transition-all duration-500 ease-out ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+                    <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+                        <button id="next-button" onClick={() => {
+                            const serviceNames = services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ');
+                            if (editMode === 'service') {
+                                setMessages(prev => [...prev, { id: Date.now().toString(), text: `Quero confirmar os novos serviços: ${serviceNames}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Perfeito. As alterações estão prontas para serem salvas.", isAssistant: true, type: 'edit_confirm' }]);
+                                setStep('edit_confirm');
+                            } else if (editMode === 'both') {
+                                setMessages(prev => [...prev, { id: Date.now().toString(), text: `Confirmado os serviços: ${serviceNames}. Agora quero mudar o horário.`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Ótimo! Agora escolha a nova data e horário para o seu agendamento.", isAssistant: true, type: 'datetime' }]);
+                                setStep('datetime');
+                            } else {
+                                setMessages(prev => [...prev, { id: Date.now().toString(), text: `Quero agendar: ${serviceNames}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Com qual profissional você gostaria de realizar esses serviços? Nossa equipe está pronta para te atender.", isAssistant: true, type: 'professionals' }]);
+                                setStep('datetime');
+                            }
+                        }}
+                            className={`w-full flex items-center justify-between overflow-hidden group relative py-4 sm:py-5 px-6 sm:px-8 rounded-2xl ${classes.buttonPrimary} transition-all duration-200`}>
                             <div className="flex flex-col items-start z-10">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-bold uppercase opacity-60">Total</span>
-                                    <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black ${isBeauty ? 'bg-white/10' : 'bg-black/15'}`}>
+                                    <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black bg-black/15`}>
                                         {selectedServices.length} {selectedServices.length === 1 ? 'ITEM' : 'ITENS'}
                                     </span>
                                 </div>
@@ -1441,60 +1646,159 @@ export const PublicBooking: React.FC = () => {
                                 </span>
                                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1.5 transition-transform duration-300" />
                             </div>
-                            {/* Shine effect no hover */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* Float Gallery (Pro-Max Refinement for Desktop) */}
-            {
-                gallery.length > 0 && step !== 'success' && (
-                    <div className="fixed bottom-10 left-10 z-[60] hidden xl:block animate-fade-in">
-                        <div className={`p-4 ${isBeauty ? 'bg-white shadow-silk-shadow rounded-2xl' : 'bg-obsidian-card border-2 border-black shadow-heavy-lg'} w-72`}>
-                            <p className={`text-[10px] uppercase tracking-[0.2em] mb-4 ${isBeauty ? 'text-stone-400 font-light' : 'text-neutral-500 font-medium'}`}>Atmosfera & Arte</p>
-                            <div className="grid grid-cols-2 gap-2">
-                                {gallery.slice(0, 4).map((item, idx) => (
-                                    <div key={item.id} className={`aspect-square overflow-hidden ${isBeauty ? 'rounded-lg' : 'rounded-none border border-white/5'}`}>
-                                        <img src={item.image_url} alt="Portfolio" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+            {/* Success State (shared between modes) */}
+            {quickStep === 'success' && activeBooking && (
+                <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment px-4">
+                    <div className="relative inline-block mb-10">
+                        <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${accent.bg} ${accentTextOnAccent} rounded-full ${shadow.elevated}`}>
+                            <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />
+                        </div>
+                        <div className="absolute -top-4 -right-4 animate-bounce delay-100">
+                            <Sparkles className={`w-8 h-8 ${accent.text}`} />
+                        </div>
+                        <div className="absolute -bottom-2 -left-6 animate-bounce delay-300">
+                            <Sparkles className={`w-6 h-6 ${accent.text} opacity-50`} />
+                        </div>
+                    </div>
+
+                    <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
+                        {isBeauty ? 'Sua beleza agendada' : 'RESERVA CONFIRMADA'}
+                    </h2>
+
+                    <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
+                        {editingBookingId
+                            ? (isBeauty ? "Edição feita com sucesso! Acesse sua área de membros." : "EDIÇÃO CONCLUÍDA. ACESSE SUA ÁREA DE MEMBROS.")
+                            : (isBeauty ? "Prepare-se para um momento único de auto-cuidado e transformação." : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA.")
+                        }
+                    </p>
+
+                    <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
+                        <div className="relative z-10 flex flex-col gap-6">
+                            <div className={`flex justify-between items-center border-b pb-4 ${colors.divider}`}>
+                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
+                                    <Star className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 md:gap-8">
+                                <div className="space-y-1">
+                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
+                                    <p className={`text-lg font-black tracking-tight ${colors.text}`}>
+                                        {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
+                                    <p className={`text-lg font-black tracking-tight ${accent.text}`}>
+                                        {formatCurrency(calculateTotal(), currencyRegion)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
+                                <p className={`text-sm font-bold ${colors.textSecondary}`}>
+                                    {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
+                                </p>
+                            </div>
+                        </div>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${accent.bgDim} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000`} />
+                    </div>
+
+                    <div className="flex flex-col gap-5">
+                        <a href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)}`} target="_blank" rel="noopener noreferrer"
+                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                            <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
+                                <Send className="w-5 h-5" />
+                            </div>
+                            <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                        </a>
+
+                        <Link to={`/minha-area/${slug}`}
+                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2.5 rounded-xl ${colors.surface}`}>
+                                        <LayoutDashboard className={`w-5 h-5 ${colors.textSecondary}`} />
                                     </div>
+                                    <div>
+                                        <p className={`font-black text-sm uppercase tracking-wider ${colors.text}`}>Minha Área de Cliente</p>
+                                        <p className={`text-xs mt-0.5 ${colors.textMuted}`}>Acompanhe e gerencie seus agendamentos</p>
+                                    </div>
+                                </div>
+                                <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${colors.textMuted}`} />
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {[
+                                    { icon: <Calendar className="w-3 h-3" />, label: 'Histórico' },
+                                    { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
+                                    { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
+                                ].map(tag => (
+                                    <span key={tag.label} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${colors.surface} ${colors.textMuted}`}>
+                                        {tag.icon}{tag.label}
+                                    </span>
                                 ))}
                             </div>
-                        </div>
+                        </Link>
+
+                        <button onClick={() => window.location.reload()}
+                            className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${colors.text} underline decoration-2 underline-offset-8 ${accent.text}`}>
+                            Realizar novo agendamento
+                        </button>
                     </div>
-                )
-            }
 
-            {
-                showPolicyModal && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
-                        <div className={`${isBeauty ? 'bg-white rounded-3xl' : 'bg-obsidian-card border-4 border-black'} max-w-xl w-full p-10 relative shadow-2xl overflow-hidden`}>
-                            {!isBeauty && <div className="absolute top-0 left-0 w-32 h-32 opacity-5 massive-text text-9xl select-none -translate-x-8 -translate-y-8">RULE</div>}
+                    <div className="mt-16 opacity-0 animate-fade-in [animation-delay:1500ms]">
+                        <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
+                    </div>
+                </div>
+            )}
 
-                            <button onClick={() => setShowPolicyModal(false)} className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors z-30"><X className="w-8 h-8" /></button>
-
-                            <div className="relative z-10 space-y-6">
-                                <h3 className={`text-2xl ${isBeauty ? 'text-stone-800 italic font-light' : 'massive-text text-white'} flex items-center gap-3`}>
-                                    <AlertTriangle className={`w-6 h-6 ${isBeauty ? 'text-stone-800' : 'text-obsidian-accent'}`} />
-                                    Políticas Administrativas
-                                </h3>
-                                <div className={`leading-relaxed ${isBeauty ? 'text-stone-500 font-light' : 'text-neutral-300 font-medium'} max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar`}>
-                                    {businessSettings?.cancellation_policy ?
-                                        <p className="whitespace-pre-wrap">{businessSettings.cancellation_policy}</p> :
-                                        <p>Nossos profissionais reservam tempo exclusivo para você. Cancelamentos devem ser realizados com antecedência mínima de 24h. O não comparecimento impacta a logística de nossa equipe.</p>
-                                    }
+            {/* Float Gallery (Desktop) */}
+            {gallery.length > 0 && quickStep !== 'success' && step !== 'success' && (
+                <div className="fixed bottom-10 left-10 z-[60] hidden xl:block animate-fade-in">
+                    <div className={`p-4 ${colors.card} ${colors.border} border ${shadow.elevated} rounded-2xl w-72`}>
+                        <p className={`text-[10px] uppercase tracking-[0.2em] mb-4 ${colors.textMuted} font-medium`}>Atmosfera & Arte</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {gallery.slice(0, 4).map((item) => (
+                                <div key={item.id} className={`aspect-square overflow-hidden rounded-lg border ${colors.border}`}>
+                                    <img src={item.image_url} alt="Portfolio" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
                                 </div>
-                                <button
-                                    onClick={() => setShowPolicyModal(false)}
-                                    className={`w-full py-4 ${isBeauty ? 'bg-stone-800 text-white rounded-xl' : 'bg-white text-black font-bold massive-text shadow-heavy'}`}>
-                                    Compreendi as Políticas
-                                </button>
-                            </div>
+                            ))}
                         </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+
+            {/* Policy Modal */}
+            {showPolicyModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-2xl overflow-hidden rounded-3xl`}>
+                        <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:${colors.text} transition-colors z-30`}><X className="w-8 h-8" /></button>
+                        <div className="relative z-10 space-y-6">
+                            <h3 className={`text-2xl ${colors.text} flex items-center gap-3`}>
+                                <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
+                                Políticas Administrativas
+                            </h3>
+                            <div className={`leading-relaxed ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar`}>
+                                {businessSettings?.cancellation_policy ?
+                                    <p className="whitespace-pre-wrap">{businessSettings.cancellation_policy}</p> :
+                                    <p>Nossos profissionais reservam tempo exclusivo para você. Cancelamentos devem ser realizados com antecedência mínima de 24h. O não comparecimento impacta a logística de nossa equipe.</p>
+                                }
+                            </div>
+                            <button onClick={() => setShowPolicyModal(false)}
+                                className={`w-full py-4 ${classes.buttonPrimary}`}>
+                                Compreendi as Políticas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };

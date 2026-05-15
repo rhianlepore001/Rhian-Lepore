@@ -29,7 +29,7 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
   forceTheme,
   style
 }) => {
-  const { classes, accent, colors } = useBrutalTheme({ override: forceTheme });
+  const { classes, accent, colors, shadow } = useBrutalTheme({ override: forceTheme });
   const location = useLocation();
   const isSettings = location.pathname.startsWith('/configuracoes');
 

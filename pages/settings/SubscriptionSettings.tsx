@@ -16,7 +16,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 export const SubscriptionSettings: React.FC = () => {
     const { businessName, region } = useAuth();
     const { subscriptionStatus, trialDaysRemaining, isSubscriptionActive, isTrial } = useSubscription();
-    const { isBeauty } = useBrutalTheme();
+    const { isBeauty, colors } = useBrutalTheme();
     // Auto-detect currency based on region
     const currency = region === 'PT' ? 'EUR' : 'BRL';
     const [loading, setLoading] = useState<string | null>(null);
@@ -105,7 +105,7 @@ export const SubscriptionSettings: React.FC = () => {
             <div className="max-w-4xl pb-20">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 md:mb-12">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
+                        <h1 className={`text-2xl md:text-3xl font-heading ${colors.text} uppercase mb-2`}>
                             Assinatura e Planos
                         </h1>
                         <p className="text-sm md:text-base text-neutral-400">

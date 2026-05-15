@@ -90,12 +90,16 @@ export const Modal: React.FC<ModalProps> = ({
                     aria-modal="true"
                     aria-labelledby={title ? 'modal-title' : undefined}
                 >
+                {/* Craft Layers: Noise + Gradiente (consistente com BrutalCard) */}
+                <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none rounded-2xl" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-2xl" />
+
                 {/* Header */}
                 {(title || showCloseButton) && (
-                    <div className={classes.modalHeader}>
+                    <div className={`${classes.modalHeader} relative z-10`}>
                         {title && (
                             <h3 id="modal-title" className={`
-                font-heading text-lg md:text-xl
+                font-heading text-lg md:text-xl tracking-tight font-bold
                 ${colors.text}
               `}>
                                 {title}
@@ -104,10 +108,10 @@ export const Modal: React.FC<ModalProps> = ({
                         {showCloseButton && (
                             <button
                                 onClick={onClose}
-                                className={`${accent.text}/60 hover:${accent.text} hover:${accent.bgDim} rounded-full p-1.5 transition-all hover:rotate-90 transition-transform duration-200`}
+                                className={`${colors.textMuted} hover:${colors.text} rounded-full p-2 transition-all duration-200 hover:rotate-90 hover:bg-white/[0.06]`}
                                 aria-label="Fechar"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-4 h-4" />
                             </button>
                         )}
                     </div>
@@ -115,7 +119,7 @@ export const Modal: React.FC<ModalProps> = ({
 
                 {/* Content */}
                 <div className={`
-          flex-1 overflow-y-auto p-5 md:p-6
+          flex-1 overflow-y-auto p-5 md:p-6 relative z-10
         `}>
                     {children}
                 </div>
@@ -123,7 +127,7 @@ export const Modal: React.FC<ModalProps> = ({
                 {/* Footer */}
                 {footer && (
                     <div className={`
-            px-6 py-4 border-t ${colors.divider}
+            px-6 py-4 border-t ${colors.divider} relative z-10
           `}>
                         {footer}
                     </div>

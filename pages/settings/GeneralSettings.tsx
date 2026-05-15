@@ -8,18 +8,17 @@ import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
 import { SaveFooter } from '../../components/SaveFooter';
 import { PhoneInput } from '../../components/PhoneInput';
-import { BrutalCard } from '../../components/BrutalCard';
+import { SettingsSection } from '../../components/SettingsSection';
 import { InfoButton } from '../../components/HelpButtons';
 
 export const GeneralSettings: React.FC = () => {
     const { user, region } = useAuth();
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent, colors, classes, isBeauty } = useBrutalTheme();
     const [businessName, setBusinessName] = useState('');
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [instagram, setInstagram] = useState('');
 
-    // Image State
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [coverFile, setCoverFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -28,7 +27,7 @@ export const GeneralSettings: React.FC = () => {
     const [cancellationPolicy, setCancellationPolicy] = useState('');
     const [policyTemplate, setPolicyTemplate] = useState('flexible');
 
-    const [businessHours, setBusinessHours] = useState<any>({
+    const [businessHours, setBusinessHours] = useState<Record<string, { isOpen: boolean; blocks: { start: string; end: string }[] }>>({
         mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
         tue: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
         wed: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
@@ -41,9 +40,6 @@ export const GeneralSettings: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [hasChanges, setHasChanges] = useState(false);
-
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const currencySymbol = region === 'PT' ? '€' : 'R$';
 
     const policyTemplates: Record<string, string> = {
         flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
@@ -184,7 +180,7 @@ export const GeneralSettings: React.FC = () => {
     if (loading) {
         return (
             <SettingsLayout>
-                <div className="text-white p-8">Carregando...</div>
+                <div className={`${colors.textSecondary} p-8`}>Carregando...</div>
             </SettingsLayout>
         );
     }
@@ -192,34 +188,33 @@ export const GeneralSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="max-w-4xl pb-20 md:pb-0">
-                {/* Header dinâmico no SettingsLayout */}
+                <SettingsSection
+                    title="Identidade Visual"
+                    description="Logo e capa que aparecem na sua página pública de agendamento."
+                >
+                    <BrandIdentitySection
+                        logoPreview={logoPreview}
+                        coverPreview={coverPreview}
+                        onLogoChange={handleLogoChange}
+                        onCoverChange={handleCoverChange}
+                        onLogoRemove={() => { setLogoFile(null); setLogoPreview(null); }}
+                        onCoverRemove={() => { setCoverFile(null); setCoverPreview(null); }}
+                    />
+                </SettingsSection>
 
-                <div id="profile-logo-upload">
-                <BrandIdentitySection
-                    logoPreview={logoPreview}
-                    coverPreview={coverPreview}
-                    onLogoChange={handleLogoChange}
-                    onCoverChange={handleCoverChange}
-                    onLogoRemove={() => { setLogoFile(null); setLogoPreview(null); }}
-                    onCoverRemove={() => { setCoverFile(null); setCoverPreview(null); }}
-                    accentColor={accentColor}
-                />
-                </div>
+                <BusinessGalleryManager accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'} />
 
-                <BusinessGalleryManager accentColor={accentColor} />
-
-                <BrutalCard
+                <SettingsSection
                     title={
                         <div className="flex items-center gap-2">
                             <span>Informações do Negócio</span>
                             <InfoButton text="Dados básicos que aparecem no seu perfil público." />
                         </div>
                     }
-                    className="mb-4 md:mb-6"
                 >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         <div className="col-span-1 md:col-span-2">
-                            <label className="text-white font-mono text-xs md:text-sm mb-2 block">
+                            <label className={classes.label}>
                                 Nome do Negócio
                             </label>
                             <input
@@ -227,16 +222,12 @@ export const GeneralSettings: React.FC = () => {
                                 value={businessName}
                                 onChange={e => setBusinessName(e.target.value)}
                                 placeholder="Barbearia Premium"
-                                className={`w-full p-3 rounded-xl text-white outline-none transition-all
-                                    ${isBeauty
-                                        ? 'bg-white/[0.04] border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                        : 'bg-white/[0.04] border border-white/10 focus:border-accent-gold'}
-                                `}
+                                className={classes.input}
                             />
                         </div>
 
                         <div>
-                            <label className="text-white font-mono text-xs md:text-sm mb-2 block">
+                            <label className={classes.label}>
                                 Telefone/WhatsApp
                             </label>
                             <PhoneInput
@@ -248,27 +239,23 @@ export const GeneralSettings: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="text-white font-mono text-xs md:text-sm mb-2 block">
+                            <label className={classes.label}>
                                 Instagram
                             </label>
                             <div className="relative">
-                                <span className="absolute left-3 top-3 text-neutral-500">@</span>
+                                <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${colors.textMuted}`}>@</span>
                                 <input
                                     type="text"
                                     value={instagram}
                                     onChange={e => setInstagram(e.target.value)}
                                     placeholder="suabarbearia"
-                                    className={`w-full p-3 pl-8 rounded-xl text-white outline-none transition-all
-                                        ${isBeauty
-                                            ? 'bg-white/[0.04] border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                            : 'bg-white/[0.04] border border-white/10 focus:border-accent-gold'}
-                                    `}
+                                    className={`${classes.input} pl-8`}
                                 />
                             </div>
                         </div>
 
                         <div className="col-span-1 md:col-span-2">
-                            <label className="text-white font-mono text-xs md:text-sm mb-2 block">
+                            <label className={classes.label}>
                                 Endereço Completo
                             </label>
                             <input
@@ -276,49 +263,39 @@ export const GeneralSettings: React.FC = () => {
                                 value={address}
                                 onChange={e => setAddress(e.target.value)}
                                 placeholder="Rua Exemplo, 123 - Bairro, Cidade - SP"
-                                className={`w-full p-3 rounded-xl text-white outline-none transition-all
-                                    ${isBeauty
-                                        ? 'bg-white/[0.04] border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                        : 'bg-white/[0.04] border border-white/10 focus:border-accent-gold'}
-                                `}
+                                className={classes.input}
                             />
-                            <p className="text-neutral-500 text-xs mt-1">
+                            <p className={`${colors.textMuted} text-xs mt-1`}>
                                 Este endereço será usado para gerar o link do Google Maps para seus clientes.
                             </p>
                         </div>
                     </div>
-                </BrutalCard>
+                </SettingsSection>
 
-                <div id="business-hours-section">
-                <BrutalCard
-                    title="Horário de Funcionamento"
-                    className="mb-4 md:mb-6"
-                >
+                <SettingsSection title="Horário de Funcionamento">
                     <BusinessHoursEditor
                         hours={businessHours}
                         onChange={setBusinessHours}
-                        isBeauty={isBeauty}
                     />
-                </BrutalCard>
-                </div>
+                </SettingsSection>
 
-                <BrutalCard
-                    title="Política de Cancelamento"
-                    className="mb-6 md:mb-8"
-                >
+                <SettingsSection title="Política de Cancelamento">
                     <div className="flex flex-wrap gap-2 mb-4">
                         {[
-                            { id: 'flexible', label: '😊 Flexível', desc: '24h' },
-                            { id: 'moderate', label: '⚖️ Moderada', desc: '48h' },
-                            { id: 'strict', label: '🔒 Rígida', desc: '72h' }
+                            { id: 'flexible', label: 'Flexível', desc: '24h' },
+                            { id: 'moderate', label: 'Moderada', desc: '48h' },
+                            { id: 'strict', label: 'Rígida', desc: '72h' }
                         ].map(template => (
                             <button
                                 key={template.id}
                                 onClick={() => handlePolicyTemplateChange(template.id)}
-                                className={`px-3 py-2 rounded-xl text-sm border transition-all active:animate-haptic-click ${policyTemplate === template.id
-                                    ? isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-white shadow-neon' : `bg-white/5 border-white/10 text-neutral-400 hover:bg-neutral-800`
-                                    : isBeauty ? 'bg-white/5 border-white/10 text-neutral-400 hover:text-white' : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-neutral-800'
-                                    }`}
+                                className={`
+                                    px-3 py-2 rounded-xl text-sm border transition-all active:scale-[0.97]
+                                    ${policyTemplate === template.id
+                                        ? `${accent.bgDim} ${accent.borderDim} ${accent.text} ${accent.shadow}`
+                                        : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:${colors.textSecondary} hover:bg-white/[0.06]`
+                                    }
+                                `}
                             >
                                 <span className="block font-bold">{template.label}</span>
                                 <span className="text-xs opacity-70">{template.desc}</span>
@@ -331,22 +308,17 @@ export const GeneralSettings: React.FC = () => {
                         onChange={e => setCancellationPolicy(e.target.value)}
                         rows={4}
                         placeholder="Descreva sua política de cancelamento..."
-                        className={`w-full p-4 rounded-xl text-white outline-none resize-none transition-all
-                            ${isBeauty
-                                ? 'bg-white/5 border border-white/10 focus:border-beauty-neon placeholder-white/20'
-                                : 'bg-white/5 border border-white/10 focus:border-accent-gold'}
-                        `}
+                        className={classes.input}
                     />
-                    <p className="text-neutral-500 text-[10px] mt-2 italic px-1">
-                        💡 Você pode editar o texto acima para personalizar sua política.
+                    <p className={`${colors.textMuted} text-[10px] mt-2 italic px-1`}>
+                        Você pode editar o texto acima para personalizar sua política.
                     </p>
-                </BrutalCard>
+                </SettingsSection>
 
                 <SaveFooter
                     onSave={handleSave}
                     saveStatus={saveStatus}
                     hasChanges={hasChanges}
-                    accentColor={accentColor}
                 />
             </div>
         </SettingsLayout>

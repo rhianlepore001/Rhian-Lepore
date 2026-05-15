@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronRight, Scissors, Users, Clock, Link2, Calendar, Rocket, X, UserPlus, RefreshCw } from 'lucide-react';
+import { Check, ChevronRight, Scissors, Users, Clock, Link2, Calendar, Rocket, X, UserPlus, RefreshCw, ChevronDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getOnboardingProgress, saveOnboardingStep, getSetupStatus } from '../../lib/onboarding';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
 interface SetupStep {
     id: string;
@@ -19,9 +20,11 @@ interface SetupStep {
 export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
     const navigate = useNavigate();
     const { user, companyId } = useAuth();
+    const { accent, colors, classes } = useBrutalTheme();
     const [dismissed, setDismissed] = useState(false);
     const [loading, setLoading] = useState(true);
     const [resumeStepId, setResumeStepId] = useState<string | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     // Estado de conclusão de cada step
     const [checks, setChecks] = useState({
@@ -33,9 +36,6 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
         hasAppointments: false,
         isActivated: false,
     });
-
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
 
     // Mapeador: step.id → check de conclusão
     const isStepComplete = (stepId: string, status = checks): boolean => {
@@ -153,6 +153,14 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
     const allDone = completedCount === steps.length;
     const isActivated = checks.isActivated || allDone;
 
+    // Expande automaticamente se houver steps pendentes e ainda não ativado
+    useEffect(() => {
+        if (!loading && !isActivated) {
+            const pending = steps.some(s => !s.completed);
+            if (pending) setIsExpanded(true);
+        }
+    }, [loading, isActivated, steps]);
+
     // Marca setup completo no perfil quando tudo concluído
     useEffect(() => {
         if (allDone && user?.id && !checks.isActivated) {
@@ -211,26 +219,29 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
     const nextStep = steps.find(s => !s.completed);
     const resumeStep = steps.find(s => s.id === resumeStepId);
 
+    const successTextClass = classes.badgeSuccess.split(' ').find(c => c.startsWith('text-')) || 'text-emerald-400';
+    const successBgClass = classes.badgeSuccess.split(' ').find(c => c.startsWith('bg-')) || 'bg-emerald-500/10';
+
     return (
         <div className="space-y-3">
             {/* Banner "continuar de onde parou" */}
             {resumeStep && !dismissed && (
                 <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="relative rounded-2xl border p-4 overflow-hidden border-blue-500/20 bg-blue-500/5">
+                    <div className={`relative rounded-2xl border p-4 overflow-hidden ${colors.card} ${colors.border}`}>
                         <button
                             onClick={handleDismissResume}
-                            className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/10 text-text-secondary hover:text-white transition-colors"
+                            className={`absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/10 ${colors.textSecondary} hover:${colors.text} transition-colors`}
                             aria-label="Dispensar"
                         >
                             <X className="w-3.5 h-3.5" />
                         </button>
 
                         <div className="flex items-start gap-3 pr-8">
-                            <div className="flex-shrink-0 p-2 rounded-xl bg-blue-500/15">
-                                <RefreshCw className="w-4 h-4 text-blue-400" />
+                            <div className={`flex-shrink-0 p-2 rounded-xl ${accent.bgDim}`}>
+                                <RefreshCw className={`w-4 h-4 ${accent.text}`} />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-white leading-snug">
+                                <p className={`text-sm font-bold ${colors.text} leading-snug`}>
                                     Você estava configurando &quot;{resumeStep.label}&quot; — quer continuar?
                                 </p>
                             </div>
@@ -242,13 +253,13 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                     setResumeStepId(null);
                                     navigate(resumeStep.path);
                                 }}
-                                className="text-xs font-bold font-mono px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                                className={`text-xs font-bold font-mono px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors ${accent.bgDim} ${accent.text} hover:brightness-110`}
                             >
                                 Continuar <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                             <button
                                 onClick={handleDismissResume}
-                                className="text-xs text-text-secondary hover:text-white transition-colors font-mono"
+                                className={`text-xs ${colors.textSecondary} hover:${colors.text} transition-colors font-mono`}
                             >
                                 Não, obrigado
                             </button>
@@ -260,24 +271,23 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
             {/* Copilot card — oculto quando dismissed */}
             {!dismissed && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className={`
-                        relative rounded-2xl border overflow-hidden
-                        ${isBeauty ? 'border-beauty-neon/15 bg-beauty-card/50' : 'border-white/8 bg-neutral-900/60'}
-                        backdrop-blur-md
-                    `}>
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                    <div className={`relative rounded-2xl border overflow-hidden ${colors.card} ${colors.border} backdrop-blur-md`}>
+                        {/* Header — clickable para expandir/colapsar */}
+                        <button
+                            onClick={() => setIsExpanded(v => !v)}
+                            className="w-full flex items-center justify-between px-5 pt-5 pb-3 text-left"
+                        >
                             <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-xl ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'}`}>
-                                    <Rocket className={`w-5 h-5 ${accentText}`} />
+                                <div className={`p-2 rounded-xl ${accent.bgDim}`}>
+                                    <Rocket className={`w-5 h-5 ${accent.text}`} />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold font-heading text-white">
-                                        {isActivated ? 'Sistema Ativado! 🎉' : 'Configure seu espaço'}
+                                    <h3 className={`text-sm font-bold font-heading ${colors.text}`}>
+                                        {isActivated ? 'Sistema Ativado!' : 'Configure seu espaço'}
                                     </h3>
-                                    <p className="text-[11px] text-text-secondary font-mono">
+                                    <p className={`text-[11px] ${colors.textSecondary} font-mono`}>
                                         {isActivated
-                                            ? '100% — tudo pronto! 🎉'
+                                            ? '100% — tudo pronto!'
                                             : completedCount === 0
                                                 ? `${steps.length} passos para começar`
                                                 : `${completedCount} de ${steps.length} passos concluídos`
@@ -287,98 +297,94 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                             </div>
                             <div className="flex items-center gap-2">
                                 {!isActivated && (
-                                    <span className={`font-mono text-xs font-bold ${accentText}`}>
+                                    <span className={`font-mono text-xs font-bold ${accent.text}`}>
                                         {percentage}%
                                     </span>
                                 )}
+                                <ChevronDown className={`w-4 h-4 ${colors.textSecondary} transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 <button
-                                    onClick={() => setDismissed(true)}
-                                    className="p-1.5 rounded-full hover:bg-white/5 text-text-secondary hover:text-white transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
+                                    className={`p-1.5 rounded-full hover:bg-white/5 ${colors.textSecondary} hover:${colors.text} transition-colors`}
                                     title="Fechar"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
-                        </div>
+                        </button>
 
                         {/* Barra de progresso */}
                         <div className="px-5 pb-3">
-                            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div className={`w-full h-1.5 ${colors.inputBg} rounded-full overflow-hidden`}>
                                 <div
-                                    className={`h-full rounded-full transition-all duration-700 ${isActivated ? 'bg-green-500' : accentBg}`}
+                                    className={`h-full rounded-full transition-all duration-700 ${isActivated ? successBgClass : accent.bg}`}
                                     style={{ width: `${isActivated ? 100 : percentage}%` }}
                                 />
                             </div>
                         </div>
 
-                        {/* Steps (Oculto se ativado) */}
-                        {!isActivated && (
-                            <div className="px-5 pb-5 space-y-1">
-                            {steps.map((step) => (
-                                <div key={step.id}>
-                                    <button
-                                        onClick={() => handleStepClick(step)}
-                                        disabled={step.completed}
-                                        className={`
-                                            w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
-                                            ${step.completed
-                                                ? 'opacity-75 cursor-default bg-green-500/5'
-                                                : step.id === nextStep?.id
-                                                    ? `border-l-2 ${isBeauty ? 'border-beauty-neon bg-beauty-neon/5' : 'border-accent-gold bg-accent-gold/5'} cursor-pointer`
-                                                    : 'opacity-60 hover:opacity-100 hover:bg-white/3 cursor-pointer'
-                                            }
-                                        `}
-                                    >
-                                        <div className={`
-                                            w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0
-                                            ${step.completed
-                                                ? 'bg-green-500/20 text-green-400'
-                                                : step.id === nextStep?.id
-                                                    ? `${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon' : 'bg-accent-gold/20 text-accent-gold'}`
-                                                    : 'bg-white/5 text-text-secondary'
-                                            }
-                                        `}>
-                                            {step.completed ? <Check className="w-3.5 h-3.5" /> : step.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <p className={`text-sm font-medium ${step.completed ? 'text-neutral-600 line-through' : 'text-white'}`}>
-                                                    {step.label}
-                                                </p>
-                                                {step.id === 'team' && !step.completed && (
-                                                    <span className="text-[9px] font-mono font-bold text-text-secondary uppercase tracking-wide">
-                                                        Opcional
-                                                    </span>
-                                                )}
-                                                {step.completed && (
-                                                    <span className="text-[9px] font-mono font-bold text-green-500 uppercase tracking-wide">
-                                                        ✓ Feito
-                                                    </span>
-                                                )}
-                                                {!step.completed && step.id === nextStep?.id && (
-                                                    <span className={`text-[9px] font-mono font-bold uppercase tracking-wide px-1.5 py-0.5 rounded
-                                                        ${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon' : 'bg-accent-gold/20 text-accent-gold'}`}>
-                                                        Próximo
-                                                    </span>
+                        {/* Steps (collapsible) */}
+                        {!isActivated && isExpanded && (
+                            <div className="px-5 pb-5 space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+                                {steps.map((step) => (
+                                    <div key={step.id}>
+                                        <button
+                                            onClick={() => handleStepClick(step)}
+                                            disabled={step.completed}
+                                            className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
+                                                ${step.completed
+                                                    ? `opacity-75 cursor-default ${successBgClass}`
+                                                    : step.id === nextStep?.id
+                                                        ? `border-l-2 ${accent.border} ${accent.bgDim} cursor-pointer`
+                                                        : `opacity-60 hover:opacity-100 hover:bg-white/3 cursor-pointer`
+                                                }`}
+                                        >
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0
+                                                ${step.completed
+                                                    ? successBgClass
+                                                    : step.id === nextStep?.id
+                                                        ? `${accent.bgDim} ${accent.text}`
+                                                        : `${colors.inputBg} ${colors.textSecondary}`
+                                                }`}>
+                                                {step.completed ? <Check className="w-3.5 h-3.5" /> : step.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <p className={`text-sm font-medium ${step.completed ? `${colors.textMuted} line-through` : colors.text}`}>
+                                                        {step.label}
+                                                    </p>
+                                                    {step.id === 'team' && !step.completed && (
+                                                        <span className={`text-[9px] font-mono font-bold ${colors.textSecondary} uppercase tracking-wide`}>
+                                                            Opcional
+                                                        </span>
+                                                    )}
+                                                    {step.completed && (
+                                                        <span className={`text-[9px] font-mono font-bold ${successTextClass} uppercase tracking-wide`}>
+                                                            Feito
+                                                        </span>
+                                                    )}
+                                                    {!step.completed && step.id === nextStep?.id && (
+                                                        <span className={`text-[9px] font-mono font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${accent.bgDim} ${accent.text}`}>
+                                                            Próximo
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {!step.completed && (
+                                                    <p className={`text-[11px] ${colors.textSecondary} mt-0.5`}>{step.description}</p>
                                                 )}
                                             </div>
                                             {!step.completed && (
-                                                <p className="text-[11px] text-text-secondary mt-0.5">{step.description}</p>
+                                                <ChevronRight className={`w-4 h-4 ${colors.textSecondary} flex-shrink-0`} />
                                             )}
-                                        </div>
-                                        {!step.completed && (
-                                            <ChevronRight className="w-4 h-4 text-text-secondary flex-shrink-0" />
-                                        )}
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         )}
 
                         {/* Mensagem de Sucesso */}
                         {isActivated && (
-                            <div className="px-5 pb-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                <p className="text-sm text-text-secondary leading-relaxed">
+                            <div className={`px-5 pb-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-500`}>
+                                <p className={`text-sm ${colors.textSecondary} leading-relaxed`}>
                                     Sua barbearia já está online e pronta para receber agendamentos.
                                     Continue gerenciando sua agenda e clientes através do menu lateral.
                                 </p>

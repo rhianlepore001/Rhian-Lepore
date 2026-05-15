@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sun, Moon, CloudSun, Calendar, TrendingUp, Users, Clock, ArrowRight, Target } from 'lucide-react';
+import { Sun, Moon, CloudSun, Calendar, TrendingUp, Users, Target, ArrowRight } from 'lucide-react';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, Region } from '../../utils/formatters';
 
 interface ComandoDoDiaProps {
@@ -14,11 +15,11 @@ interface ComandoDoDiaProps {
     onNavigate: (path: string) => void;
 }
 
-function getGreeting(): { text: string; icon: React.ReactNode } {
+function getGreeting(accentText: string): { text: string; icon: React.ReactNode } {
     const hour = new Date().getHours();
-    if (hour < 12) return { text: 'Bom dia', icon: <Sun className="w-5 h-5 text-yellow-400" /> };
-    if (hour < 18) return { text: 'Boa tarde', icon: <CloudSun className="w-5 h-5 text-orange-400" /> };
-    return { text: 'Boa noite', icon: <Moon className="w-5 h-5 text-blue-400" /> };
+    if (hour < 12) return { text: 'Bom dia', icon: <Sun className={`w-5 h-5 ${accentText}`} /> };
+    if (hour < 18) return { text: 'Boa tarde', icon: <CloudSun className={`w-5 h-5 ${accentText}`} /> };
+    return { text: 'Boa noite', icon: <Moon className={`w-5 h-5 ${accentText}`} /> };
 }
 
 function getDayMessage(appointmentsToday: number, churnRiskCount: number, goalPercent: number): string {
@@ -47,16 +48,14 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
     monthlyGoal,
     currentMonthRevenue,
     churnRiskCount,
-    isBeauty,
+    isBeauty: _isBeauty,
     currencyRegion,
     onNavigate
 }) => {
-    const greeting = getGreeting();
+    const { accent, colors } = useBrutalTheme();
+    const greeting = getGreeting(accent.text);
     const goalPercent = monthlyGoal > 0 ? Math.round((currentMonthRevenue / monthlyGoal) * 100) : 0;
     const message = getDayMessage(appointmentsToday, churnRiskCount, goalPercent);
-
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
 
     const quickActions = [
         appointmentsToday > 0 && {
@@ -82,19 +81,24 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
         <div className="animate-in fade-in slide-in-from-top-2 duration-500">
             <div className={`
                 relative overflow-hidden rounded-2xl border
-                ${isBeauty ? 'border-beauty-neon/15 bg-gradient-to-br from-beauty-card/80 to-neutral-900/90' : 'border-white/8 bg-gradient-to-br from-neutral-900/80 to-black/90'}
+                ${accent.borderDim} ${colors.card}
                 backdrop-blur-md p-5 md:p-6
             `}>
+                {/* Craft layers */}
+                <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.01] to-transparent pointer-events-none" />
+
                 {/* Greeting + Message */}
-                <div className="flex items-start gap-3 mb-5">
-                    <div className={`p-2.5 rounded-xl ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'}`}>
+                <div className="relative flex items-start gap-3 mb-5">
+                    <div className={`p-2.5 rounded-xl ${accent.bgDim}`}>
                         {greeting.icon}
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-lg md:text-xl font-heading text-white flex items-center gap-2">
-                            {greeting.text}, <span className={accentText}>{firstName}</span>
+                        <h2 className={`text-lg md:text-xl font-heading ${colors.text} flex items-center gap-2`}>
+                            {greeting.text}, <span className={accent.text}>{firstName}</span>
                         </h2>
-                        <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                        <p className={`text-sm ${colors.textSecondary} mt-1 leading-relaxed`}>
                             {message}
                         </p>
                     </div>
@@ -102,7 +106,7 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
 
                 {/* Quick Stats Row */}
                 {quickActions.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-2">
                         {quickActions.map((item, idx) => (
                             <button
                                 key={idx}
@@ -111,20 +115,20 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
                                 className={`
                                     flex items-center gap-3 p-3 rounded-xl border transition-all text-left
                                     ${item.action ? 'cursor-pointer hover:bg-white/5 hover:border-white/15' : 'cursor-default'}
-                                    ${isBeauty ? 'border-white/5 bg-white/[0.02]' : 'border-white/5 bg-white/[0.02]'}
+                                    ${colors.border}
                                 `}
                             >
-                                <div className={`flex-shrink-0 ${accentText}`}>
+                                <div className={`flex-shrink-0 ${accent.text}`}>
                                     {item.icon}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-white font-medium truncate">{item.label}</p>
+                                    <p className={`text-xs ${colors.text} font-medium truncate`}>{item.label}</p>
                                     {item.detail && (
-                                        <p className="text-[10px] text-text-secondary font-mono truncate">{item.detail}</p>
+                                        <p className={`text-[10px] ${colors.textMuted} font-mono truncate`}>{item.detail}</p>
                                     )}
                                 </div>
                                 {item.action && (
-                                    <ArrowRight className="w-3 h-3 text-text-secondary flex-shrink-0" />
+                                    <ArrowRight className={`w-3 h-3 ${colors.textMuted} flex-shrink-0`} />
                                 )}
                             </button>
                         ))}
@@ -132,7 +136,7 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
                 )}
 
                 {/* Subtle accent glow */}
-                <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[80px] opacity-[0.04] pointer-events-none ${accentBg}`} />
+                <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[80px] opacity-[0.04] pointer-events-none ${accent.bg}`} />
             </div>
         </div>
     );

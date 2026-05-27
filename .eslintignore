@@ -6,3 +6,6 @@ clerk-migration
 .antigravity
 temp_aios_core
 testsprite_tests
+impeccable
+scripts/capture-v*.ts
+

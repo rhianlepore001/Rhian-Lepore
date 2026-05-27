@@ -56,45 +56,51 @@ export const Login: React.FC = () => {
         return (
             <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 md:p-12">
 
-                <div className="mb-12 md:mb-16 flex items-center gap-3 opacity-60">
-                    <AgenXLogo size={28} isBeauty={false} showText={true} />
+                <div className="mb-10 md:mb-14 flex items-center gap-3">
+                    <AgenXLogo size={32} isBeauty={false} showText={true} />
                 </div>
 
-                <div className="text-center mb-10 md:mb-14">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-600 mb-4">
+                <div className="text-center mb-10 md:mb-14 max-w-xl">
+                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 mb-4">
                         O sistema que trabalha enquanto você atende.
                     </p>
-                    <h1 className="font-heading text-4xl md:text-6xl text-white uppercase leading-none tracking-tight">
+                    <h1 className="font-heading text-4xl md:text-6xl text-white uppercase leading-[0.95] tracking-tight">
                         Escolha o seu<br />
-                        <span className="text-neutral-500">negócio</span>
+                        <span className="text-neutral-400">negócio</span>
                     </h1>
                 </div>
 
-                <div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-px bg-neutral-900">
+                <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
 
                     {/* BARBEARIAS */}
                     <button
                         data-testid="category-barber"
-                        aria-label="Barbearia"
+                        aria-label="Acessar painel para barbearias"
                         onClick={() => handleSelectSegment('barber')}
-                        className="group relative h-64 md:h-80 overflow-hidden cursor-pointer"
+                        className="group relative h-72 md:h-96 rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                     >
-                        <div
-                            className="absolute inset-0 bg-cover bg-center opacity-35 group-hover:opacity-55 transition-opacity duration-500"
-                            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80)' }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/50" />
-                        <div className="absolute top-0 left-0 w-px h-full bg-accent-gold/0 group-hover:bg-accent-gold/60 transition-all duration-300" />
-                        <div className="absolute top-0 left-0 right-0 h-px bg-accent-gold/0 group-hover:bg-accent-gold/30 transition-all duration-300" />
-                        {/* Conteúdo centralizado */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                            <h2 className="font-heading text-4xl md:text-5xl text-white uppercase tracking-tight text-center mb-4 group-hover:text-accent-gold transition-colors duration-200">
+                        <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
+                            <div
+                                className="absolute -inset-[2px] bg-black bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80)' }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
+                            <div className="absolute inset-0 bg-accent-gold/0 group-hover:bg-accent-gold/[0.03] transition-colors duration-500" />
+                        </div>
+
+                        {/* Corner accent — risco querendo fechar um quadrado */}
+                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-white/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
+                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-white/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
+
+                        <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
+                            <h2 className="font-heading text-3xl md:text-4xl text-white uppercase tracking-tight mb-3 group-hover:text-accent-gold transition-colors duration-300">
                                 Barbearias
                             </h2>
-                            <div className="w-8 h-px bg-accent-gold/25 group-hover:w-14 group-hover:bg-accent-gold/70 transition-all duration-300 ease-out mb-4" />
-                            <div className="flex items-center gap-2 font-mono text-[11px] text-neutral-600 group-hover:text-accent-gold transition-colors duration-200">
-                                <span className="uppercase tracking-widest">Entrar</span>
-                                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
+                            {/* Traço horizontal com animação de crescer */}
+                            <div className="w-0 h-[1px] bg-accent-gold/60 group-hover:w-16 transition-all duration-500 mb-5" />
+                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-accent-gold/40 group-hover:bg-accent-gold/10 transition-all duration-300">
+                                <span className="font-mono text-xs text-white/90 uppercase tracking-widest">Entrar</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-white/70 group-hover:text-accent-gold group-hover:translate-x-0.5 transition-all duration-300" />
                             </div>
                         </div>
                     </button>
@@ -102,41 +108,46 @@ export const Login: React.FC = () => {
                     {/* STUDIOS */}
                     <button
                         data-testid="category-beauty"
-                        aria-label="Salão de Beleza"
+                        aria-label="Acessar painel para salões e spas"
                         onClick={() => handleSelectSegment('beauty')}
-                        className="group relative h-64 md:h-80 overflow-hidden cursor-pointer"
+                        className="group relative h-72 md:h-96 rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-beauty-neon focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                     >
-                        <div
-                            className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-50 transition-transform transition-opacity duration-500 scale-[1.06] transform"
-                            style={{ backgroundImage: 'url(/studio-experience-bg.png)' }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-beauty-dark/60 via-beauty-dark/30 to-beauty-dark/70" />
-                        <div className="absolute inset-0 bg-black/20" />
-                        <div className="absolute top-0 left-0 w-px h-full bg-beauty-neon/0 group-hover:bg-beauty-neon/50 transition-all duration-300" />
-                        <div className="absolute top-0 left-0 right-0 h-px bg-beauty-neon/0 group-hover:bg-beauty-neon/25 transition-all duration-300" />
-                        {/* Conteúdo centralizado */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                            <h2 className="font-heading text-4xl md:text-5xl text-white uppercase tracking-tight text-center mb-4 group-hover:text-beauty-neon transition-colors duration-200">
+                        <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
+                            <div
+                                className="absolute -inset-[2px] bg-black bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                style={{ backgroundImage: 'url("/ChatGPT Image 16 de mai. de 2026, 17_04_26.png")' }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
+                            <div className="absolute inset-0 bg-beauty-neon/0 group-hover:bg-beauty-neon/[0.03] transition-colors duration-500" />
+                        </div>
+
+                        {/* Corner accent — risco querendo fechar um quadrado */}
+                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-white/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
+                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-white/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
+
+                        <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
+                            <h2 className="font-heading text-3xl md:text-4xl text-white uppercase tracking-tight mb-3 group-hover:text-beauty-neon transition-colors duration-300">
                                 Studios
                             </h2>
-                            <div className="w-8 h-px bg-beauty-neon/20 group-hover:w-14 group-hover:bg-beauty-neon/60 transition-all duration-300 ease-out mb-4" />
-                            <div className="flex items-center gap-2 font-mono text-[11px] text-neutral-600 group-hover:text-beauty-neon transition-colors duration-200">
-                                <span className="uppercase tracking-widest">Entrar</span>
-                                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
+                            {/* Traço horizontal com animação de crescer */}
+                            <div className="w-0 h-[1px] bg-beauty-neon/60 group-hover:w-16 transition-all duration-500 mb-5" />
+                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-beauty-neon/40 group-hover:bg-beauty-neon/10 transition-all duration-300">
+                                <span className="font-mono text-xs text-white/90 uppercase tracking-widest">Entrar</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-white/70 group-hover:text-beauty-neon group-hover:translate-x-0.5 transition-all duration-300" />
                             </div>
                         </div>
                     </button>
 
                 </div>
 
-                <div className="mt-10 w-full max-w-2xl">
-                    <div className="border-t border-neutral-900 pt-8 flex flex-col items-center gap-4">
-                        <p className="font-mono text-xs text-neutral-600 uppercase tracking-[0.2em]">
+                <div className="mt-10 md:mt-14 w-full max-w-md">
+                    <div className="border-t border-neutral-800 pt-8 flex flex-col items-center gap-4">
+                        <p className="font-mono text-xs text-white/40 uppercase tracking-[0.1em]">
                             Primeira vez por aqui?
                         </p>
                         <Link
                             to="/register"
-                            className="w-full flex items-center justify-center py-4 border border-neutral-700 hover:border-neutral-500 text-white text-sm font-mono uppercase tracking-widest transition-all duration-200 hover:bg-white/[0.03]"
+                            className="w-full flex items-center justify-center py-3.5 rounded-xl border border-white/15 hover:border-white/25 text-white text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-white/[0.04] hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                         >
                             Criar conta — 14 dias grátis
                         </Link>

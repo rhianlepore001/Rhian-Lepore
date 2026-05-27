@@ -11,7 +11,8 @@ import { BrutalButton } from '../../components/BrutalButton';
 
 export const TeamSettings: React.FC = () => {
     const { user } = useAuth();
-    const { accent, colors } = useBrutalTheme();
+    const { accent, colors, isBeauty } = useBrutalTheme();
+    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -194,6 +195,7 @@ export const TeamSettings: React.FC = () => {
                                         <TeamMemberCard
                                             key={member.id}
                                             member={member}
+                                            accentColor={accentColor}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
                                                 setIsModalOpen(true);
@@ -216,6 +218,7 @@ export const TeamSettings: React.FC = () => {
                                         <TeamMemberCard
                                             key={member.id}
                                             member={member}
+                                            accentColor={accentColor}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
                                                 setIsModalOpen(true);
@@ -232,6 +235,7 @@ export const TeamSettings: React.FC = () => {
                 {isModalOpen && (
                     <TeamMemberForm
                         initialData={editingMember}
+                        accentColor={accentColor}
                         onClose={() => setIsModalOpen(false)}
                         onSave={fetchMembers}
                     />
@@ -240,3 +244,6 @@ export const TeamSettings: React.FC = () => {
         </SettingsLayout>
     );
 };
+
+
+

@@ -68,9 +68,9 @@ describe('useBrutalTheme', () => {
     it('returns correct color tokens for barber dark', () => {
         const { result } = renderHook(() => useBrutalTheme());
 
-        expect(result.current.colors.bg).toBe('bg-brutal-main');
-        expect(result.current.colors.card).toBe('bg-brutal-card');
-        expect(result.current.colors.surface).toBe('bg-brutal-surface');
+        expect(result.current.colors.bg).toBe('bg-obsidian-bg');
+        expect(result.current.colors.card).toBe('bg-obsidian-card');
+        expect(result.current.colors.surface).toBe('bg-obsidian-surface');
         expect(result.current.colors.text).toBe('text-text-primary');
     });
 
@@ -102,7 +102,7 @@ describe('useBrutalTheme', () => {
     it('returns component classes', () => {
         const { result } = renderHook(() => useBrutalTheme());
 
-        expect(result.current.classes.card).toContain('bg-brutal-card');
+        expect(result.current.classes.card).toContain('bg-obsidian-card');
         expect(result.current.classes.card).toContain('rounded-2xl');
         expect(result.current.classes.buttonPrimary).toContain('bg-accent-gold');
         expect(result.current.classes.input).toContain('rounded-xl');
@@ -133,7 +133,7 @@ describe('useComponentClasses', () => {
     it('returns only classes tokens', () => {
         const { result } = renderHook(() => useComponentClasses());
 
-        expect(result.current.card).toContain('bg-brutal-card');
+        expect(result.current.card).toContain('bg-obsidian-card');
         expect(result.current.buttonPrimary).toContain('bg-accent-gold');
     });
 });
@@ -180,3 +180,4 @@ describe('useThemeTokens', () => {
         });
     });
 });
+

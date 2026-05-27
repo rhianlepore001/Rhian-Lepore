@@ -58,7 +58,7 @@ export const Sidebar: React.FC = () => {
         style={{ top: 'var(--header-top, 0)', bottom: 0 }}
       >
         {/* Header mobile */}
-        <div className={`h-16 flex items-center justify-between px-6 md:hidden border-b ${colors.divider} ${colors.bg}`}>
+        <div className={`h-16 flex items-center justify-between px-6 md:hidden border-b ${colors.divider} ${colors.card}`}>
           <div className="relative group">
             <div className={`absolute -inset-2 ${accent.bgDim} blur-xl rounded-full opacity-60`} />
             <div className="relative">
@@ -104,9 +104,9 @@ export const Sidebar: React.FC = () => {
               logout();
               closeSidebar();
             }}
-            className="w-full group flex items-center px-4 py-3 text-sm font-sans font-medium text-neutral-600 hover:text-red-400 hover:bg-red-500/5 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200"
+            className={`w-full group flex items-center px-4 py-3 text-sm font-sans font-medium ${colors.textMuted} hover:text-red-400 hover:bg-red-500/5 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200`}
           >
-            <LogOut className="w-5 h-5 mr-3 transition-colors text-neutral-600 group-hover:text-red-400" />
+            <LogOut className={`w-5 h-5 mr-3 transition-colors ${colors.textMuted} group-hover:text-red-400`} />
             Sair
           </button>
         </nav>

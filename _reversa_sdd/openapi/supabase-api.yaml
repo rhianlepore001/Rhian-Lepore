@@ -1,0 +1,836 @@
+openapi: 3.0.3
+info:
+  title: Agendix API
+  description: API do Agendix (Supabase PostgREST + RPCs) — SPA React + Supabase Backend
+  version: 1.0.0
+  contact:
+    name: Agendix
+servers:
+  - url: https://{project_ref}.supabase.co/rest/v1
+    description: Supabase REST API
+    variables:
+      project_ref:
+        default: your-project-ref
+        description: Ref do projeto Supabase
+
+security:
+  - bearerAuth: []
+
+paths:
+  /profiles:
+    get:
+      summary: Buscar perfil do usuário autenticado
+      operationId: getProfile
+      responses:
+        '200':
+          description: Perfil encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+    patch:
+      summary: Atualizar perfil
+      operationId: updateProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          description: Perfil atualizado
+
+  /appointments:
+    get:
+      summary: Listar agendamentos
+      operationId: listAppointments
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Confirmed, Pending, Completed, Cancelled]
+      responses:
+        '200':
+          description: Lista de agendamentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+    post:
+      summary: Criar agendamento
+      operationId: createAppointment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appointment'
+      responses:
+        '201':
+          description: Agendamento criado
+
+  /public_bookings:
+    get:
+      summary: Listar reservas públicas
+      operationId: listPublicBookings
+      parameters:
+        - name: business_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled]
+      responses:
+        '200':
+          description: Lista de reservas públicas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicBooking'
+    post:
+      summary: Criar reserva pública
+      operationId: createPublicBooking
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicBooking'
+      responses:
+        '201':
+          description: Reserva criada
+
+  /clients:
+    get:
+      summary: Listar clientes
+      operationId: listClients
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+    post:
+      summary: Criar cliente
+      operationId: createClient
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        '201':
+          description: Cliente criado
+
+  /finance_records:
+    get:
+      summary: Listar transações financeiras
+      operationId: listFinanceRecords
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [revenue, expense]
+      responses:
+        '200':
+          description: Lista de transações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinanceRecord'
+    post:
+      summary: Criar transação financeira
+      operationId: createFinanceRecord
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceRecord'
+      responses:
+        '201':
+          description: Transação criada
+
+  /team_members:
+    get:
+      summary: Listar profissionais
+      operationId: listTeamMembers
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de profissionais
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamMember'
+    post:
+      summary: Criar profissional
+      operationId: createTeamMember
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMember'
+      responses:
+        '201':
+          description: Profissional criado
+
+  /rpc/check_login_rate_limit:
+    post:
+      summary: Verificar rate limit de login
+      operationId: checkLoginRateLimit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_email:
+                  type: string
+      responses:
+        '200':
+          description: Status do rate limit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allowed:
+                    type: boolean
+
+  /rpc/create_secure_booking:
+    post:
+      summary: Criar agendamento com verificação de colisão
+      operationId: createSecureBooking
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_business_id:
+                  type: string
+                  format: uuid
+                p_professional_id:
+                  type: string
+                  format: uuid
+                p_customer_name:
+                  type: string
+                p_customer_phone:
+                  type: string
+                p_appointment_time:
+                  type: string
+                  format: date-time
+                p_service_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                p_total_price:
+                  type: number
+                p_duration_min:
+                  type: integer
+      responses:
+        '200':
+          description: Resultado da criação
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /rpc/complete_appointment:
+    post:
+      summary: Completar agendamento e criar registro financeiro
+      operationId: completeAppointment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_appointment_id:
+                  type: string
+                  format: uuid
+                p_payment_method:
+                  type: string
+                p_received_by:
+                  type: string
+                  format: uuid
+                p_completed_by:
+                  type: string
+                  format: uuid
+                p_machine_fee_percent:
+                  type: number
+                p_machine_fee_amount:
+                  type: number
+      responses:
+        '200':
+          description: Agendamento completado
+
+  /rpc/get_available_slots:
+    post:
+      summary: Buscar horários disponíveis
+      operationId: getAvailableSlots
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_business_id:
+                  type: string
+                  format: uuid
+                p_date:
+                  type: string
+                  format: date
+                p_professional_id:
+                  type: string
+                  format: uuid
+                p_duration_min:
+                  type: integer
+      responses:
+        '200':
+          description: Horários disponíveis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slots:
+                    type: array
+                    items:
+                      type: string
+
+  /rpc/get_finance_stats:
+    post:
+      summary: Estatísticas financeiras por período
+      operationId: getFinanceStats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+                p_start_date:
+                  type: string
+                  format: date-time
+                p_end_date:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Estatísticas financeiras
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revenue:
+                    type: number
+                  expenses:
+                    type: number
+                  profit:
+                    type: number
+
+  /rpc/get_dashboard_stats:
+    post:
+      summary: Estatísticas consolidadas do dashboard
+      operationId: getDashboardStats
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Estatísticas do dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_profit:
+                    type: number
+                  current_month_revenue:
+                    type: number
+                  weekly_growth:
+                    type: number
+                  data_maturity_score:
+                    type: number
+
+  /rpc/get_dashboard_actions:
+    post:
+      summary: Ações sugeridas do dashboard
+      operationId: getDashboardActions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Ações sugeridas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
+                    title:
+                      type: string
+                    description:
+                      type: string
+
+  /rpc/get_aios_diagnostic:
+    post:
+      summary: Diagnóstico AIOS de churn
+      operationId: getAIOSDiagnostic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_establishment_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Diagnóstico AIOS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIOSDiagnostic'
+
+  /rpc/mirror_public_client_to_crm:
+    post:
+      summary: Espelhar cliente público para CRM
+      operationId: mirrorPublicClientToCRM
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+                p_name:
+                  type: string
+                p_phone:
+                  type: string
+                p_email:
+                  type: string
+                p_photo_url:
+                  type: string
+      responses:
+        '200':
+          description: Cliente espelhado
+
+  /rpc/mark_commissions_as_paid:
+    post:
+      summary: Marcar comissões como pagas
+      operationId: markCommissionsAsPaid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_user_id:
+                  type: string
+                  format: uuid
+                p_professional_id:
+                  type: string
+                  format: uuid
+                p_amount:
+                  type: number
+                p_start_date:
+                  type: string
+                  format: date-time
+                p_end_date:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Comissões pagas
+
+  /rpc/get_audit_logs:
+    post:
+      summary: Buscar logs de auditoria
+      operationId: getAuditLogs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_limit:
+                  type: integer
+                p_offset:
+                  type: integer
+                p_action:
+                  type: string
+                p_resource_type:
+                  type: string
+                p_start_date:
+                  type: string
+                  format: date-time
+                p_end_date:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Logs de auditoria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+
+  /rpc/get_deleted_items:
+    post:
+      summary: Listar itens deletados (lixeira)
+      operationId: getDeletedItems
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                p_resource_type:
+                  type: string
+      responses:
+        '200':
+          description: Itens deletados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeletedItem'
+
+  /functions/v1/create-checkout-session:
+    post:
+      summary: Criar sessão de checkout Stripe
+      operationId: createCheckoutSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                priceId:
+                  type: string
+                successUrl:
+                  type: string
+                cancelUrl:
+                  type: string
+                mode:
+                  type: string
+                  enum: [subscription]
+      responses:
+        '200':
+          description: URL do checkout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        business_name:
+          type: string
+        user_type:
+          type: string
+          enum: [barber, beauty]
+        region:
+          type: string
+          enum: [BR, PT]
+        subscription_status:
+          type: string
+          enum: [trial, active, past_due, canceled, subscriber]
+        trial_ends_at:
+          type: string
+          format: date-time
+        role:
+          type: string
+          enum: [owner, staff]
+        company_id:
+          type: string
+          format: uuid
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        professional_id:
+          type: string
+          format: uuid
+        service:
+          type: string
+        appointment_time:
+          type: string
+          format: date-time
+        price:
+          type: number
+        status:
+          type: string
+          enum: [Confirmed, Pending, Completed, Cancelled]
+        payment_method:
+          type: string
+
+    PublicBooking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        customer_name:
+          type: string
+        customer_phone:
+          type: string
+        service_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        appointment_time:
+          type: string
+          format: date-time
+        total_price:
+          type: number
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled]
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        loyalty_tier:
+          type: string
+          enum: [Bronze, Silver, Gold, Platinum]
+        total_visits:
+          type: integer
+        is_active:
+          type: boolean
+
+    FinanceRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        appointment_id:
+          type: string
+          format: uuid
+        professional_id:
+          type: string
+          format: uuid
+        barber_name:
+          type: string
+        revenue:
+          type: number
+        commission_value:
+          type: number
+        commission_rate:
+          type: number
+        commission_paid:
+          type: boolean
+        type:
+          type: string
+          enum: [revenue, expense]
+        status:
+          type: string
+          enum: [paid, pending]
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+        photo_url:
+          type: string
+        active:
+          type: boolean
+        is_owner:
+          type: boolean
+        commission_rate:
+          type: number
+        slug:
+          type: string
+
+    AIOSDiagnostic:
+      type: object
+      properties:
+        recoverable_revenue:
+          type: number
+        at_risk_clients:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              phone:
+                type: string
+              days_since_last_visit:
+                type: integer
+        agenda_gaps:
+          type: array
+          items:
+            type: object
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+          format: uuid
+        old_values:
+          type: object
+        new_values:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    DeletedItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        resource_type:
+          type: string
+        name:
+          type: string
+        deleted_at:
+          type: string
+          format: date-time
+        days_until_permanent:
+          type: integer

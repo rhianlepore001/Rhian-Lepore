@@ -26,6 +26,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
   { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
   { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield },
+  { label: 'Preview UI', path: '/configuracoes/ui-preview', icon: ClipboardList, devOnly: true },
   { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ClipboardList, devOnly: true },
   { label: 'Erros', path: '/configuracoes/erros', icon: ShieldAlert, devOnly: true },
   { label: 'Lixeira', path: '/configuracoes/lixeira', icon: Trash2, devOnly: true },

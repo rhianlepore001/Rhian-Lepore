@@ -96,7 +96,7 @@ export const Register: React.FC = () => {
 
   const inputClass = isBeauty
     ? 'w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none transition-all bg-white/5 border border-white/10 focus:border-beauty-neon/50 focus:bg-white/8 font-sans'
-    : 'w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none transition-all bg-black/30 border border-neutral-700/60 font-mono focus:border-accent-gold/60 focus:bg-black/50';
+    : 'w-full px-4 py-3 rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none transition-all bg-white/[0.03] border border-white/15 font-mono focus:border-accent-gold/60 focus:bg-white/[0.05]';
 
   const labelClass = `block text-xs font-semibold uppercase tracking-wider mb-1.5 ${isBeauty ? 'text-neutral-400' : 'text-neutral-500 font-mono'}`;
 
@@ -132,7 +132,7 @@ export const Register: React.FC = () => {
                 <h1 className="font-heading text-2xl uppercase text-white tracking-tight mt-5">
                   Você foi convidado
                 </h1>
-                <p className={`text-xs font-mono uppercase tracking-widest mt-1.5 ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}`}>
+                <p className={`text-xs font-mono uppercase tracking-[0.1em] mt-1.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
                   {ownerBusinessName ? `Junte-se à equipe · ${ownerBusinessName}` : 'Crie sua conta para acessar a equipe'}
                 </p>
               </div>
@@ -196,7 +196,7 @@ export const Register: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-center mt-6 font-mono text-xs text-white/15 uppercase tracking-[0.2em]">AgendiX · v2.0</p>
+          <p className="text-center mt-6 font-mono text-xs text-white/30 uppercase tracking-[0.1em]">AgendiX · v2.0</p>
         </div>
       </div>
     );
@@ -225,7 +225,7 @@ export const Register: React.FC = () => {
             <AgenXLogo size={30} isBeauty={isBeauty} showText={true} />
             <div className="text-right">
               <p className="font-heading text-sm text-white uppercase tracking-tight">Criar conta</p>
-              <p className={`font-mono text-xs uppercase tracking-widest mt-0.5 ${isBeauty ? 'text-beauty-neon/40' : 'text-accent-gold/40'}`}>
+              <p className={`font-mono text-xs uppercase tracking-[0.1em] mt-0.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
                 {subtitle}
               </p>
             </div>
@@ -380,7 +380,7 @@ export const Register: React.FC = () => {
           </div>
         </div>
 
-        <p className="text-center mt-6 font-mono text-xs text-white/15 uppercase tracking-[0.2em]">AgendiX · v2.0</p>
+        <p className="text-center mt-6 font-mono text-xs text-white/30 uppercase tracking-[0.1em]">AgendiX · v2.0</p>
       </div>
     </div>
   );

@@ -1,0 +1,44 @@
+from_agent: ceo
+last_command: delegate
+target_agent: dev
+sub_agent: dev-dataviz
+timestamp: 2026-05-10T15:00:00Z
+context: |
+  Sprint 1 (Design System) concluído com sucesso.
+  Agora iniciando Sprint 2 — Dashboard Redesign.
+  
+  Decisão: 2 agentes @dev trabalhando em paralelo no Dashboard.
+  Este agente foca nos COMPONENTES DE DADOS e MÉTRICAS.
+
+task: |
+  Redesenhar os COMPONENTES DE DADOS do Dashboard do AgendiX.
+  
+  Foco: KPIs, gráficos, métricas, ações, saúde do negócio.
+  NÃO tocar em: Dashboard.tsx, DashboardHero, SetupCopilot (outro agente cuida).
+  
+  Arquivos:
+  - components/dashboard/ProfitMetrics.tsx — redesign completo com KPI cards e sparklines
+  - components/dashboard/BusinessHealthCard.tsx — redesign premium
+  - components/dashboard/ActionCenter.tsx — redesign com tokens
+  - components/dashboard/MeuDiaWidget.tsx — redesign visão do profissional
+  - components/dashboard/ComandoDoDia.tsx — redesign
+  - CRIAR components/dashboard/DashboardKpiCard.tsx — card reutilizável: título, valor, variação%, sparkline
+  - CRIAR components/dashboard/MiniSparkline.tsx — gráfico de linha minimalista com Recharts
+  
+  Regras técnicas:
+  - Usar skills: impeccable, interface-design, ui-styling, ui-ux-pro-max
+  - Zero hardcode de cor. Tudo via useBrutalTheme tokens.
+  - MiniSparkline usar Recharts (já está no projeto)
+  - DashboardKpiCard deve aceitar: title, value, variation (number, optional), sparklineData (number[], optional), variant ('default' | 'accent')
+  - Preservar interfaces/props existentes onde possível
+  - Valores monetários: font-mono com tabular-nums
+  - Variação positiva = verde (token success), negativa = vermelho (token danger)
+  
+  Validações obrigatórias:
+  - npm run typecheck (sem erros)
+  - npm run lint (sem erros)
+  - npm test (todos passando — incluindo ProfitMetrics.test.tsx)
+  - Mobile: 390px
+  - Light mode: funcional (não quebrar)
+
+consumed: false

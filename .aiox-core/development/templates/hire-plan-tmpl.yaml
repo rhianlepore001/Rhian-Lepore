@@ -1,0 +1,127 @@
+# Hire Plan Template — AgendiX CEO
+
+```yaml
+hire_plan:
+  metadata:
+    created: '{{DATE}}'
+    created_by: '@ceo (Cadu)'
+    status: 'draft'  # draft | pending_approval | approved | active
+    approved_by: null  # Human name after *escalate
+    approved_date: null
+
+  company_context:
+    name: 'AgendiX'
+    stage: '{{STAGE}}'  # pre-seed | seed | series-a | growth
+    current_team_size: '{{TEAM_SIZE}}'
+    product: 'SaaS B2B/B2C para gestão de barbearias e salões de beleza'
+    market: 'Brasil'
+
+  budget:
+    monthly_budget: '{{BUDGET}}'  # R$ value
+    hiring_model: '{{MODEL}}'  # CLT | PJ | Freelance | Hybrid
+    budget_period: '12_months'
+
+  team_gap_analysis:
+    current_capabilities:
+      - role: 'CTO / Architect'
+        agent: '@architect (Aria)'
+        status: 'virtual'
+        notes: 'Arquitetura técnica coberta pelo agente'
+      - role: 'Full-Stack Developer'
+        agent: '@dev (Dex)'
+        status: 'virtual'
+        notes: 'Implementação coberta pelo agente'
+      - role: 'Product Manager'
+        agent: '@pm (Morgan)'
+        status: 'virtual'
+        notes: 'Estratégia de produto coberta pelo agente'
+      - role: 'Product Owner'
+        agent: '@po (Pax)'
+        status: 'virtual'
+        notes: 'Backlog e stories cobertos pelo agente'
+      - role: 'QA'
+        agent: '@qa (Quinn)'
+        status: 'virtual'
+        notes: 'Qualidade e testes cobertos pelo agente'
+      - role: 'DevOps'
+        agent: '@devops (Gage)'
+        status: 'virtual'
+        notes: 'Infra e deploy cobertos pelo agente'
+      - role: 'Analyst'
+        agent: '@analyst (Atlas)'
+        status: 'virtual'
+        notes: 'Pesquisa de mercado coberta pelo agente'
+      - role: 'UX Designer'
+        agent: '@ux-design-expert (Nova)'
+        status: 'virtual'
+        notes: 'Design coberto pelo agente'
+
+    gaps:
+      - role: '{{ROLE_NAME}}'
+        priority: '{{PRIORITY}}'  # P0 | P1 | P2 | P3
+        reasoning: '{{WHY_THIS_ROLE_IS_NEEDED}}'
+        impact: '{{EXPECTED_IMPACT}}'
+
+  positions:
+    - id: 'pos-001'
+      title: '{{ROLE_TITLE}}'
+      level: '{{LEVEL}}'  # Junior | Pleno | Senior | Lead
+      department: '{{DEPARTMENT}}'  # Engineering | Product | Growth | etc.
+      reports_to: 'CEO'
+      location: 'Remoto'
+      hiring_model: '{{CLT_PJ_FREELANCE}}'
+      priority: '{{PRIORITY}}'  # P0 | P1 | P2 | P3
+      timeline: '{{MONTH}}'  # Month 1, Month 2, etc.
+
+      key_responsibilities:
+        - '{{RESP_1}}'
+        - '{{RESP_2}}'
+        - '{{RESP_3}}'
+        - '{{RESP_4}}'
+        - '{{RESP_5}}'
+
+      required_skills:
+        - '{{SKILL_1}}'
+        - '{{SKILL_2}}'
+        - '{{SKILL_3}}'
+
+      nice_to_have:
+        - '{{NICE_SKILL_1}}'
+        - '{{NICE_SKILL_2}}'
+
+      agendix_context:
+        product_type: 'SaaS B2B/B2C'
+        target_user: 'Donos de barbearias e salões'
+        end_user: 'Clientes que agendam'
+        mobile_first: true
+        tech_stack: 'React + Supabase'
+
+      cost:
+        monthly_salary: '{{SALARY}}'
+        taxes_benefits: '{{TAXES}}'
+        total_monthly: '{{TOTAL}}'
+        total_annual: '{{ANNUAL}}'
+
+      agent_mapping:
+        maps_to: '{{AGENT}}'  # e.g., @architect
+        delegate_context: '{{WHAT_HUMAN_WOULD_DO_THAT_AGENT_CANNOT}}'
+
+      cultural_fit:
+        entrepreneurial_mindset: true
+        startup_comfort: true
+        customer_obsessed: true
+        mobile_first_mindset: true
+
+  summary:
+    total_positions: '{{COUNT}}'
+    total_monthly_cost: '{{TOTAL_MONTHLY}}'
+    total_annual_cost: '{{TOTAL_ANNUAL}}'
+    p0_positions: '{{P0_COUNT}}'
+    p1_positions: '{{P1_COUNT}}'
+    estimated_hire_timeline: '{{TIMELINE}}'
+
+  approval:
+    human_decision: null  # approved | approved_with_mods | rejected
+    human_notes: null
+    approved_date: null
+```

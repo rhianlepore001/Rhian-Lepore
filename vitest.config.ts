@@ -14,6 +14,13 @@ export default defineConfig({
         exclude: [
             '**/node_modules/**',
             '**/testsprite_tests/**',
+            '**/impeccable/**',
+            '**/.aiox-core/**',
+            '**/.aiox/**',
+            '**/.claude/**',
+            '**/.agents/**',
+            '**/.agent/**',
+            '**/scripts/capture-v*.ts',
             '**/dist/**',
             '**/cypress/**',
             '**/e2e/**',
@@ -43,3 +50,4 @@ export default defineConfig({
         },
     },
 });
+

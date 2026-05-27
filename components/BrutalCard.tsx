@@ -55,10 +55,8 @@ export const BrutalCard: React.FC<BrutalCardProps> = ({
       }}
       tabIndex={-1}
     >
-      {/* Camadas de Craft: Destaque interno, Noise e Gradiente Suave */}
-      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.01] to-transparent pointer-events-none" />
+      {/* Camada sutil de profundidade */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none rounded-2xl" />
 
       {/* Área do Cabeçalho */}
       {(title || action) && (

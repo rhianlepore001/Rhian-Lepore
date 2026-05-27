@@ -114,7 +114,7 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
                                 disabled={!item.action}
                                 className={`
                                     flex items-center gap-3 p-3 rounded-xl border transition-all text-left
-                                    ${item.action ? 'cursor-pointer hover:bg-white/5 hover:border-white/15' : 'cursor-default'}
+                                    ${item.action ? `cursor-pointer ${colors.surfaceHover} hover:border-white/15` : 'cursor-default'}
                                     ${colors.border}
                                 `}
                             >

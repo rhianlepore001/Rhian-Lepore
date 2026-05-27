@@ -63,7 +63,7 @@ describe('ProfitMetrics Component', () => {
             />
         );
 
-        expect(screen.getByText('R$ 1.000,00')).toBeInTheDocument();
+        expect(screen.getAllByText('R$ 1.000,00').length).toBeGreaterThan(0);
     });
 
     it('renders empty state when there is no revenue today', () => {
@@ -81,3 +81,5 @@ describe('ProfitMetrics Component', () => {
         expect(screen.getByRole('button', { name: /registrar atendimento/i })).toBeInTheDocument();
     });
 });
+
+

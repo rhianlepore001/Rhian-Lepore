@@ -63,7 +63,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className={`fixed left-0 ${!isSettingsRoute ? 'md:left-64' : ''} right-0 z-30 transition-all duration-300
-        ${colors.bg}/40 backdrop-blur-2xl border-b ${colors.divider} shadow-promax-glass
+        ${colors.card} border-b ${colors.divider}
       `}
         style={{ top: 'var(--header-top, 0)' }}
       >
@@ -228,7 +228,7 @@ className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono upp
                   <p className={`text-sm font-bold ${colors.text} leading-tight`}>{fullName || 'Usuário'}</p>
                   <p className={`text-xs ${colors.textSecondary} font-mono leading-tight capitalize`}>{isBeauty ? 'Beauty Professional' : 'Barber'}</p>
                 </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-neutral-800 border-2 border-text-secondary flex items-center justify-center overflow-hidden">
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
                   ) : (

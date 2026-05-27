@@ -1,0 +1,2527 @@
+{
+  "generated_at": "2026-05-03T14:15:00Z",
+  "modules": [
+    {
+      "name": "auth",
+      "path": "contexts/AuthContext.tsx, pages/Login.tsx, pages/Register.tsx, pages/ForgotPassword.tsx, pages/UpdatePassword.tsx, hooks/use2FA.ts, components/security/TwoFactorSetup.tsx",
+      "purpose": "Autenticação e autorização de usuários via Supabase Auth, com suporte a owner/staff, dual theme, trial e rate limiting",
+      "primary_files": [
+        "contexts/AuthContext.tsx",
+        "pages/Login.tsx",
+        "pages/Register.tsx",
+        "pages/ForgotPassword.tsx",
+        "pages/UpdatePassword.tsx",
+        "hooks/use2FA.ts",
+        "components/security/TwoFactorSetup.tsx"
+      ],
+      "functions": [
+        {
+          "name": "login",
+          "file": "contexts/AuthContext.tsx",
+          "params": ["email: string", "password: string"],
+          "returns": "Promise<{ error: any }>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "logout",
+          "file": "contexts/AuthContext.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "register",
+          "file": "contexts/AuthContext.tsx",
+          "params": ["data: RegisterData"],
+          "returns": "Promise<{ error: any }>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchProfileData",
+          "file": "contexts/AuthContext.tsx",
+          "params": ["userId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "markTutorialCompleted",
+          "file": "contexts/AuthContext.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleLogin",
+          "file": "pages/Login.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Profile",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "full_name", "type": "string", "required": false },
+            { "name": "business_name", "type": "string", "required": false },
+            { "name": "user_type", "type": "string", "required": false },
+            { "name": "region", "type": "string", "required": false },
+            { "name": "phone", "type": "string", "required": false },
+            { "name": "tutorial_completed", "type": "boolean", "required": false },
+            { "name": "subscription_status", "type": "string", "required": false },
+            { "name": "trial_ends_at", "type": "timestamp", "required": false },
+            { "name": "role", "type": "string", "required": false },
+            { "name": "company_id", "type": "uuid", "required": false },
+            { "name": "photo_url", "type": "string", "required": false },
+            { "name": "aios_enabled", "type": "boolean", "required": false }
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "name": "TeamMember",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "staff_user_id", "type": "uuid", "required": true },
+            { "name": "name", "type": "string", "required": true },
+            { "name": "role", "type": "string", "required": true },
+            { "name": "active", "type": "boolean", "required": true },
+            { "name": "is_owner", "type": "boolean", "required": true },
+            { "name": "commission_rate", "type": "number", "required": true },
+            { "name": "slug", "type": "string", "required": true }
+          ],
+          "confidence": "inferred"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Staff herda subscription_status, trial_ends_at, user_type e business_name do owner",
+          "location": "contexts/AuthContext.tsx:92-124",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Trial padrão de 7 dias ao registrar",
+          "location": "contexts/AuthContext.tsx:273",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Rate limit anti-brute force via RPC, com fail-open em erro",
+          "location": "contexts/AuthContext.tsx:187-197",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Dev email hardcoded para override de funcionalidades",
+          "location": "contexts/AuthContext.tsx:160",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Slug gerado a partir do nome + número aleatório de 0-999",
+          "location": "contexts/AuthContext.tsx:295",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "date-utils"],
+      "algorithms": [
+        "Cálculo de assinatura ativa com parseDate e comparação temporal",
+        "Geração de slug sanitizado com regex e número aleatório"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "agenda",
+      "path": "pages/Agenda.tsx, pages/PublicBooking.tsx, pages/QueueManagement.tsx, pages/QueueJoin.tsx, pages/QueueStatus.tsx, components/AppointmentWizard.tsx, components/AppointmentEditModal.tsx, components/CheckoutModal.tsx, components/CalendarPicker.tsx, components/TimeGrid.tsx, components/ProfessionalSelector.tsx, components/UpsellSection.tsx, components/PublicBusinessHeader.tsx, components/ChatBubble.tsx, components/ClientAuthModal.tsx, components/AllAppointmentsModal.tsx, components/appointment/*.tsx, contexts/PublicClientContext.tsx",
+      "purpose": "Sistema de agendamento com três fluxos: agenda interna do owner, booking público via slug, e fila digital. Suporta múltiplos profissionais, dual theme, real-time updates, WhatsApp integration, e checkout com pagamento.",
+      "primary_files": [
+        "pages/Agenda.tsx",
+        "pages/PublicBooking.tsx",
+        "pages/QueueManagement.tsx",
+        "pages/QueueJoin.tsx",
+        "pages/QueueStatus.tsx",
+        "components/AppointmentWizard.tsx",
+        "components/AppointmentEditModal.tsx",
+        "components/CheckoutModal.tsx",
+        "components/CalendarPicker.tsx",
+        "components/TimeGrid.tsx",
+        "components/ProfessionalSelector.tsx",
+        "components/UpsellSection.tsx",
+        "components/PublicBusinessHeader.tsx",
+        "components/ChatBubble.tsx",
+        "components/ClientAuthModal.tsx",
+        "components/AllAppointmentsModal.tsx",
+        "contexts/PublicClientContext.tsx"
+      ],
+      "functions": [
+        {
+          "name": "fetchData",
+          "file": "pages/Agenda.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleAcceptBooking",
+          "file": "pages/Agenda.tsx",
+          "params": ["booking: any"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleRejectBooking",
+          "file": "pages/Agenda.tsx",
+          "params": ["bookingId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCompleteAppointment",
+          "file": "pages/Agenda.tsx",
+          "params": ["appointmentId: string", "isOverdue?: boolean"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCancelAppointment",
+          "file": "pages/Agenda.tsx",
+          "params": ["appointmentId: string", "isOverdue?: boolean"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCreateAppointment",
+          "file": "pages/Agenda.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSubmit",
+          "file": "pages/PublicBooking.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleEditBooking",
+          "file": "pages/PublicBooking.tsx",
+          "params": ["booking: any"],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleJoin",
+          "file": "pages/QueueJoin.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "confirmFinish",
+          "file": "pages/QueueManagement.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSubmit",
+          "file": "components/AppointmentWizard.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateTotal",
+          "file": "pages/PublicBooking.tsx",
+          "params": [],
+          "returns": "number",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateDuration",
+          "file": "pages/PublicBooking.tsx",
+          "params": [],
+          "returns": "number",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getDiscountInfo",
+          "file": "pages/Agenda.tsx",
+          "params": ["apt: Appointment"],
+          "returns": "{ hasDiscount, basePrice, discountAmount, discountPercentage, isCustomPriceHigher }",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Appointment",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "client_id", "type": "uuid", "required": true },
+            { "name": "professional_id", "type": "uuid", "required": false },
+            { "name": "service", "type": "text", "required": true },
+            { "name": "appointment_time", "type": "timestamptz", "required": true },
+            { "name": "price", "type": "numeric", "required": true },
+            { "name": "status", "type": "text", "required": true },
+            { "name": "notes", "type": "text", "required": false },
+            { "name": "payment_method", "type": "text", "required": false },
+            { "name": "duration_minutes", "type": "integer", "required": false },
+            { "name": "base_price", "type": "numeric", "required": false },
+            { "name": "public_booking_id", "type": "uuid", "required": false }
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "name": "PublicBooking",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "business_id", "type": "uuid", "required": true },
+            { "name": "customer_name", "type": "text", "required": true },
+            { "name": "customer_phone", "type": "text", "required": true },
+            { "name": "service_ids", "type": "uuid[]", "required": true },
+            { "name": "professional_id", "type": "uuid", "required": false },
+            { "name": "appointment_time", "type": "timestamptz", "required": true },
+            { "name": "total_price", "type": "numeric", "required": true },
+            { "name": "status", "type": "text", "required": true },
+            { "name": "is_edit", "type": "boolean", "required": false },
+            { "name": "original_appointment_time", "type": "timestamptz", "required": false }
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "name": "QueueEntry",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "business_id", "type": "uuid", "required": true },
+            { "name": "client_name", "type": "text", "required": true },
+            { "name": "client_phone", "type": "text", "required": false },
+            { "name": "service_id", "type": "uuid", "required": false },
+            { "name": "professional_id", "type": "uuid", "required": false },
+            { "name": "status", "type": "text", "required": true },
+            { "name": "joined_at", "type": "timestamptz", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Service",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "name", "type": "text", "required": true },
+            { "name": "price", "type": "numeric", "required": true },
+            { "name": "duration_minutes", "type": "integer", "required": false },
+            { "name": "category_id", "type": "uuid", "required": false },
+            { "name": "description", "type": "text", "required": false },
+            { "name": "active", "type": "boolean", "required": false },
+            { "name": "image_url", "type": "text", "required": false },
+            { "name": "upsell_text", "type": "text", "required": false },
+            { "name": "combo_discount", "type": "numeric", "required": false }
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "name": "QueueEntry",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "business_id", "type": "uuid", "required": true },
+            { "name": "client_id", "type": "uuid", "required": false },
+            { "name": "client_name", "type": "text", "required": true },
+            { "name": "client_phone", "type": "text", "required": false },
+            { "name": "service_id", "type": "uuid", "required": false },
+            { "name": "professional_id", "type": "uuid", "required": false },
+            { "name": "status", "type": "text", "required": true },
+            { "name": "joined_at", "type": "timestamptz", "required": true },
+            { "name": "estimated_wait_time", "type": "integer", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "BusinessProfile",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "business_name", "type": "text", "required": true },
+            { "name": "user_type", "type": "text", "required": true },
+            { "name": "google_rating", "type": "number", "required": false },
+            { "name": "total_reviews", "type": "number", "required": false },
+            { "name": "phone", "type": "text", "required": false },
+            { "name": "enable_upsells", "type": "boolean", "required": false },
+            { "name": "enable_professional_selection", "type": "boolean", "required": false },
+            { "name": "region", "type": "text", "required": false },
+            { "name": "cover_photo_url", "type": "text", "required": false },
+            { "name": "logo_url", "type": "text", "required": false },
+            { "name": "address_street", "type": "text", "required": false },
+            { "name": "instagram_handle", "type": "text", "required": false },
+            { "name": "business_slug", "type": "text", "required": false }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Dual booking system: public_bookings (pending) → appointments (confirmed). Owner aceita/rejeita.",
+          "location": "pages/Agenda.tsx:534-761",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Auto-atribuição de profissional: se 1 pro, atribui automaticamente; se múltiplos e qualquer, usa get_first_available_professional RPC",
+          "location": "pages/Agenda.tsx:634-643, pages/PublicBooking.tsx:635-638",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Prevenção de duplicata via get_active_booking_by_phone RPC",
+          "location": "pages/PublicBooking.tsx:625-629",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Espelhamento de cliente público: mirror_public_client_to_crm RPC sincroniza public_clients → clients",
+          "location": "contexts/PublicClientContext.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Fila: finish flow cria client (se necessário) + appointment Completed + finance_record",
+          "location": "pages/QueueManagement.tsx:174-303",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Busca de cliente por 3 formatos de telefone (raw, BR, PT)",
+          "location": "pages/Agenda.tsx:546-551",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Desconto/preço customizado: basePrice vs price. Se price < basePrice → desconto. Se price > basePrice → custom.",
+          "location": "pages/Agenda.tsx:1074-1103",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Staff não pode cancelar appointment Completed",
+          "location": "pages/Agenda.tsx:870-876",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Dual theme: isBeauty (userType === 'beauty') controla tema 'silk' vs 'obsidian'",
+          "location": "Propagado em todos os componentes do módulo",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Region-aware: region (BR/PT) controla moeda, métodos de pagamento e formatação",
+          "location": "pages/Agenda.tsx:129-130, components/CheckoutModal.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Real-time subscriptions em public_bookings e queue_entries via Supabase Realtime",
+          "location": "pages/Agenda.tsx:150-168, pages/QueueStatus.tsx:112-133",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Edição de booking público: is_edit=true + original_appointment_time permitem UPDATE do appointment original em vez de INSERT",
+          "location": "pages/PublicBooking.tsx:561-589, pages/Agenda.tsx:645-695",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "date-utils", "formatters", "ui-context", "public-client-context"],
+      "algorithms": [
+        "Cálculo de preço com desconto percentual (basePrice * (1 - discountPercentage/100))",
+        "Detecção de desconto vs preço customizado (basePrice vs price comparison)",
+        "Grid de horários 8h-20h30 com intervalos de 30min",
+        "Cálculo de tempo estimado na fila (position * 20min)",
+        "Busca de cliente por 3 formatos de telefone (raw, BR, PT)",
+        "Timezone correction para datas vindas de URL",
+        "Collision-safe booking via create_secure_booking RPC"
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "clients/crm",
+      "path": "pages/Clients.tsx, pages/ClientCRM.tsx, pages/ClientArea.tsx, components/ClientBookingCard.tsx, components/ClientWhatsAppFAB.tsx, components/AISemanticInsights.tsx, contexts/PublicClientContext.tsx, hooks/useAIOSDiagnostic.ts, hooks/useSemanticMemory.ts, utils/tierSystem.ts, utils/aiosCopywriter.ts",
+      "purpose": "Gestão de clientes e CRM — lista com sincronização automática de public_clients, tier de fidelidade, previsão de visita, memória semântica RAG, diagnóstico AIOS de churn com mensagens de reativação, portal de autoatendimento do cliente público com auth via telefone",
+      "primary_files": [
+        "pages/Clients.tsx",
+        "pages/ClientCRM.tsx",
+        "pages/ClientArea.tsx",
+        "components/ClientBookingCard.tsx",
+        "contexts/PublicClientContext.tsx",
+        "hooks/useAIOSDiagnostic.ts",
+        "hooks/useSemanticMemory.ts",
+        "utils/tierSystem.ts",
+        "utils/aiosCopywriter.ts"
+      ],
+      "functions": [
+        {
+          "name": "fetchClients",
+          "file": "pages/Clients.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCreateClient",
+          "file": "pages/Clients.tsx",
+          "params": ["e: React.FormEvent"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchClient (get_client_profile RPC)",
+          "file": "pages/ClientCRM.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveNotes",
+          "file": "pages/ClientCRM.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveSemanticNote",
+          "file": "pages/ClientCRM.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleWhatsAppClick",
+          "file": "pages/ClientCRM.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleUpdateClient",
+          "file": "pages/ClientCRM.tsx",
+          "params": ["e: React.FormEvent"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleDeleteClient",
+          "file": "pages/ClientCRM.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "login",
+          "file": "contexts/PublicClientContext.tsx",
+          "params": ["phone: string", "businessId: string"],
+          "returns": "Promise<PublicClient | null>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "register",
+          "file": "contexts/PublicClientContext.tsx",
+          "params": ["data: Omit<PublicClient, 'id'>"],
+          "returns": "Promise<PublicClient | null>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "logout",
+          "file": "contexts/PublicClientContext.tsx",
+          "params": [],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "saveMemory",
+          "file": "hooks/useSemanticMemory.ts",
+          "params": ["clientId: string", "observation: string", "contextType: string"],
+          "returns": "Promise<{success: boolean}>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "searchMemories",
+          "file": "hooks/useSemanticMemory.ts",
+          "params": ["clientId: string", "query: string", "limit?: number", "threshold?: number"],
+          "returns": "Promise<SemanticMemory[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "generateReactivationMessage",
+          "file": "utils/aiosCopywriter.ts",
+          "params": ["context: ClientContext"],
+          "returns": "string (URL-encoded)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateTier",
+          "file": "utils/tierSystem.ts",
+          "params": ["totalVisits: number"],
+          "returns": "LoyaltyTier",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateNextVisitPrediction",
+          "file": "utils/tierSystem.ts",
+          "params": ["appointments: Appointment[]"],
+          "returns": "string",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchBookings (get_client_bookings_history RPC)",
+          "file": "pages/ClientArea.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handlePhoneCheck",
+          "file": "pages/ClientArea.tsx",
+          "params": ["e: React.FormEvent"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleRegister",
+          "file": "pages/ClientArea.tsx",
+          "params": ["e: React.FormEvent"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveProfile",
+          "file": "pages/ClientArea.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Client",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "name", "type": "text", "required": true },
+            { "name": "phone", "type": "text", "required": false },
+            { "name": "email", "type": "text", "required": false },
+            { "name": "photo_url", "type": "text", "required": false },
+            { "name": "loyalty_tier", "type": "text", "required": false, "default": "'Bronze'" },
+            { "name": "total_visits", "type": "integer", "required": false, "default": "0" },
+            { "name": "rating", "type": "numeric", "required": false, "default": "0" },
+            { "name": "notes", "type": "text", "required": false },
+            { "name": "source", "type": "text", "required": false, "default": "'manual'" },
+            { "name": "is_active", "type": "boolean", "required": false, "default": "true" },
+            { "name": "company_id", "type": "uuid", "required": false },
+            { "name": "last_visit", "type": "timestamptz", "required": false },
+            { "name": "hair_history", "type": "text", "required": false },
+            { "name": "created_at", "type": "timestamptz", "required": false },
+            { "name": "updated_at", "type": "timestamptz", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "PublicClient",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "business_id", "type": "uuid", "required": true },
+            { "name": "name", "type": "varchar(255)", "required": true },
+            { "name": "phone", "type": "varchar(50)", "required": true },
+            { "name": "email", "type": "varchar(255)", "required": false },
+            { "name": "photo_url", "type": "text", "required": false },
+            { "name": "google_id", "type": "varchar(255)", "required": false },
+            { "name": "last_booking_at", "type": "timestamptz", "required": false },
+            { "name": "created_at", "type": "timestamptz", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "ClientSemanticMemory",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "client_id", "type": "uuid", "required": true },
+            { "name": "observation", "type": "text", "required": true },
+            { "name": "embedding", "type": "vector", "required": true },
+            { "name": "context_type", "type": "text", "required": false, "default": "'preference'" },
+            { "name": "created_at", "type": "timestamptz", "required": false }
+          ],
+          "confidence": "inferred"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Sincronização automática: public_clients são espelhados para clients via fetchClients (client-side) e mirror_public_client_to_crm (RPC SECURITY DEFINER)",
+          "location": "pages/Clients.tsx:33-83, contexts/PublicClientContext.tsx:88-156",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Deduplicação flexível de telefones: comparação ignora formatação e sufixos de país (55/351). Unique constraint (user_id, phone) no banco.",
+          "location": "pages/Clients.tsx:49-66",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Soft delete: UPDATE clients SET is_active=false. Clientes inativos filtrados com neq('is_active', false). Preserva histórico financeiro.",
+          "location": "pages/ClientCRM.tsx:216-239",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Tier automático para migrados: cliente 'Antigo' começa como 'Prata' com 1 visita para não cair em regras de inatividade.",
+          "location": "pages/Clients.tsx:194-195",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Classificação de clientes: VIP (≥5 visitas), Novos (1-4), Inativo (0 visitas). Counter baseado em actual_visits de appointments Completed.",
+          "location": "pages/Clients.tsx:218-229",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Previsão de próxima visita: média de intervalos entre appointments consecutivos. Resultados: 'Atrasado', 'Hoje', 'Amanhã', 'N dias', data formatada.",
+          "location": "utils/tierSystem.ts:60-103",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Reativação AIOS: clientes em risco recebem mensagens WhatsApp. Framework ABT para LTV≤500, StoryBrand para LTV>500.",
+          "location": "utils/aiosCopywriter.ts:14-49, pages/ClientCRM.tsx:159-186",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Memória semântica RAG: observações salvas com embeddings Gemini (generateEmbedding), busca via RPC match_client_memories com threshold de similaridade 0.4-0.5.",
+          "location": "hooks/useSemanticMemory.ts:20-79",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Portal do cliente público: autenticação via telefone (get_public_client_by_phone), register com espelhamento CRM (mirror_public_client_to_crm), sessão em localStorage.",
+          "location": "contexts/PublicClientContext.tsx:30-175, pages/ClientArea.tsx:158-207",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Self-rescheduling controlado por business_settings.enable_self_rescheduling (default: true). ClientArea verifica ao carregar.",
+          "location": "pages/ClientArea.tsx:78-87",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Fallback em registro público: se erro 23505 (unique constraint), tenta login via RPC como fallback silencioso.",
+          "location": "contexts/PublicClientContext.tsx:120-136",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "gemini", "formatters", "tier-system", "aios-copywriter", "ui-context", "public-client-context"],
+      "algorithms": [
+        "Cálculo de tier de fidelidade (0-5 Bronze, 6-15 Silver, 16-30 Gold, 31+ Platinum)",
+        "Previsão de próxima visita via média de intervalos entre appointments",
+        "Deduplicação flexível de telefones (raw, BR, PT, sufixos)",
+        "Geração de mensagem de reativação via frameworks ABT e StoryBrand",
+        "Memória semântica com embeddings Gemini e busca por similaridade (RAG)",
+        "Classificação automática de clientes (VIP/Novos/Inativo) por contagem de visitas",
+        "Sincronização client-side de public_clients para clients com deduplicação"
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "dashboard",
+      "path": "pages/Dashboard.tsx, hooks/useDashboardData.ts, hooks/useMeuDiaData.ts, hooks/useSmartRebooking.ts, hooks/useFinancialDoctor.ts, hooks/useAppTour.ts, components/dashboard/DashboardHero.tsx, components/dashboard/ProfitMetrics.tsx, components/dashboard/ActionCenter.tsx, components/dashboard/MeuDiaWidget.tsx, components/dashboard/SetupCopilot.tsx, components/dashboard/BusinessHealthCard.tsx, components/dashboard/SmartRebooking.tsx, components/dashboard/FinancialDoctorPanel.tsx, components/dashboard/DataMaturityBadge.tsx, components/dashboard/ComandoDoDia.tsx, components/dashboard/AIOSDiagnosticCard.tsx, components/dashboard/AIOSCampaignStats.tsx, components/dashboard/modals/GoalSettingsModal.tsx, components/dashboard/modals/MonthlyProfitModal.tsx, components/dashboard/modals/AllAppointmentsModal.tsx, components/dashboard/modals/GoalHistoryModal.tsx, components/dashboard/modals/AIOSStrategyModal.tsx",
+      "purpose": "Dashboard principal com visão dual (owner/staff). Para owners: receita do dia, agenda de hoje, meta mensal, saúde do negócio (Financial Doctor), oportunidades de ação, setup copilot, smart rebooking, diagnóstico AIOS. Para staff: widget Meu Dia com 1-touch complete e card de ganhos. Inclui data maturity progressivo, tour guiado, banners contextuais.",
+      "primary_files": [
+        "pages/Dashboard.tsx",
+        "hooks/useDashboardData.ts",
+        "hooks/useMeuDiaData.ts",
+        "hooks/useSmartRebooking.ts",
+        "hooks/useFinancialDoctor.ts",
+        "hooks/useAppTour.ts",
+        "components/dashboard/DashboardHero.tsx",
+        "components/dashboard/ProfitMetrics.tsx",
+        "components/dashboard/ActionCenter.tsx",
+        "components/dashboard/MeuDiaWidget.tsx",
+        "components/dashboard/SetupCopilot.tsx",
+        "components/dashboard/BusinessHealthCard.tsx",
+        "components/dashboard/FinancialDoctorPanel.tsx",
+        "components/dashboard/modals/GoalSettingsModal.tsx",
+        "components/dashboard/modals/MonthlyProfitModal.tsx"
+      ],
+      "functions": [
+        {
+          "name": "useDashboardData",
+          "file": "hooks/useDashboardData.ts",
+          "params": [],
+          "returns": "{ appointments, profit, currentMonthRevenue, weeklyGrowth, loading, monthlyGoal, goalHistory, businessSlug, accountCreatedAt, updateGoal, profitMetrics, dataMaturity, financialDoctor, actionItems, fetchAllAppointments }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "updateGoal",
+          "file": "hooks/useDashboardData.ts",
+          "params": ["newGoalValue: number"],
+          "returns": "Promise<{error}>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useMeuDiaData",
+          "file": "hooks/useMeuDiaData.ts",
+          "params": [],
+          "returns": "{ appointments, summary, loading, markAsCompleted, fetchAllAppointments, refreshAppointments }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "markAsCompleted",
+          "file": "hooks/useMeuDiaData.ts",
+          "params": ["id: string"],
+          "returns": "Promise<boolean>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useSmartRebooking",
+          "file": "hooks/useSmartRebooking.ts",
+          "params": [],
+          "returns": "{ suggestions: RebookingSuggestion[], loading: boolean }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useFinancialDoctor",
+          "file": "hooks/useFinancialDoctor.ts",
+          "params": ["params"],
+          "returns": "{ healthScore, insights, healthLabel, hasData }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateHealthScore",
+          "file": "hooks/useFinancialDoctor.ts",
+          "params": ["{ weeklyGrowth, churnRiskCount, repeatClientRate, completedThisMonth, currentMonthRevenue, monthlyGoal, dataMaturityScore }"],
+          "returns": "number (0-100)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "generateInsights",
+          "file": "hooks/useFinancialDoctor.ts",
+          "params": ["params"],
+          "returns": "FinancialInsight[] (max 5)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "startTour",
+          "file": "hooks/useAppTour.ts",
+          "params": ["context: 'dashboard' | 'agenda' | 'settings' | 'general'"],
+          "returns": "void",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "ProfitMetricsData",
+          "fields": [
+            { "name": "totalProfit", "type": "number", "required": true },
+            { "name": "recoveredRevenue", "type": "number", "required": true },
+            { "name": "avoidedNoShows", "type": "number", "required": true },
+            { "name": "filledSlots", "type": "number", "required": true },
+            { "name": "weeklyGrowth", "type": "number", "required": true },
+            { "name": "campaignsSent", "type": "number", "required": true },
+            { "name": "currentMonthRevenue", "type": "number", "required": false },
+            { "name": "monthScheduledValue", "type": "number", "required": false },
+            { "name": "todayRevenue", "type": "number", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "DataMaturity",
+          "fields": [
+            { "name": "appointmentsTotal", "type": "number", "required": true },
+            { "name": "appointmentsThisMonth", "type": "number", "required": true },
+            { "name": "completedThisMonth", "type": "number", "required": true },
+            { "name": "hasPublicBookings", "type": "boolean", "required": true },
+            { "name": "accountDaysOld", "type": "number", "required": true },
+            { "name": "score", "type": "number", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "FinancialDoctorData",
+          "fields": [
+            { "name": "avgTicket", "type": "number", "required": true },
+            { "name": "churnRiskCount", "type": "number", "required": true },
+            { "name": "topService", "type": "string", "required": true },
+            { "name": "repeatClientRate", "type": "number", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "RebookingSuggestion",
+          "fields": [
+            { "name": "clientId", "type": "string", "required": true },
+            { "name": "clientName", "type": "string", "required": true },
+            { "name": "clientPhone", "type": "string", "required": true },
+            { "name": "avgCadenceDays", "type": "number", "required": true },
+            { "name": "daysSinceLastVisit", "type": "number", "required": true },
+            { "name": "daysUntilSuggested", "type": "number", "required": true },
+            { "name": "urgency", "type": "'now'|'soon'|'upcoming'", "required": true },
+            { "name": "avgTicket", "type": "number", "required": true },
+            { "name": "totalVisits", "type": "number", "required": true },
+            { "name": "lastVisitDate", "type": "string", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "goal_settings",
+          "fields": [
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "month", "type": "integer", "required": true },
+            { "name": "year", "type": "integer", "required": true },
+            { "name": "monthly_goal", "type": "numeric", "required": true }
+          ],
+          "confidence": "inferred"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Dual dashboard: owner vê dashboard completo com métricas; staff vê MeuDiaWidget + StaffEarningsCard",
+          "location": "pages/Dashboard.tsx:108-347",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Data Maturity Guard: funcionalidades avançadas desbloqueadas progressivamente (score ≥ 30 para doctor, ≥ 75 para badge oculto)",
+          "location": "hooks/useFinancialDoctor.ts:26, components/dashboard/DataMaturityBadge.tsx:24",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Effective user ID: companyId (owner) usado para queries multi-tenant; staff usa owner ID",
+          "location": "hooks/useDashboardData.ts:36",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Goal cascade: goal_settings.monthly_goal (prioridade) > profiles.monthly_goal (fallback) > 15000 (default)",
+          "location": "hooks/useDashboardData.ts:93",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Health Score: base 50, ajustado por crescimento (+/-20), retorno (+15/-5), churn (-15/-8), meta (+15/-5), volume (+5)",
+          "location": "hooks/useFinancialDoctor.ts:15-57",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Smart Rebooking: clientes com ≥2 visitas e cadência próxima/ultrapassada são sugeridos para contato via WhatsApp",
+          "location": "hooks/useSmartRebooking.ts:82-131",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Banner de comissões: exibido 1 dia antes do settlement day, apenas para owner, com navegação para /finance",
+          "location": "pages/Dashboard.tsx:52-67",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Banner de não concluídos: exibido após 20h se houver appointments não Completed/Cancelled no dia",
+          "location": "pages/Dashboard.tsx:70-86",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Setup Copilot: 6 steps progressivos, auto-completa ao navegar, marca activation_completed quando todos completos",
+          "location": "components/dashboard/SetupCopilot.tsx:54-162",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "1-touch complete: staff marca appointment como Completed com optimistic update e rollback em erro",
+          "location": "hooks/useMeuDiaData.ts:101-131",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Monthly Profit: busca 12 meses de dados via get_finance_stats, calcula growth% vs mês anterior",
+          "location": "components/dashboard/modals/MonthlyProfitModal.tsx:44-94",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Goal History: busca 6 meses, calcula percentage (revenue/goal) e success (≥100%)",
+          "location": "hooks/useDashboardData.ts:198-244",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "date-utils", "formatters", "onboarding-lib", "driver.js", "lucide-react"],
+      "algorithms": [
+        "Health Score: base 50, ajustado por crescimento semanal (+/-20), taxa de retorno (+15/-5), churn (-15/-8), progresso na meta (+15/-5), volume (+5)",
+        "Smart Rebooking: cadência preditiva = média de intervalos entre visitas, urgência calculada por daysUntil = avgCadence - daysSince",
+        "Data Maturity Score: calculado server-side (get_dashboard_stats), thresholds no frontend (30, 50, 75)",
+        "Goal cascade: goal_settings > profile > 15000",
+        "Insights do Financial Doctor: até 5 insights ordenados por impacto (high/medium/low)",
+        "Tour guiado: driver.js com 3 contextos (dashboard/agenda/settings), localStorage persistence"
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "finance",
+      "path": "pages/Finance.tsx, components/CommissionsManagement.tsx, components/CommissionDetailReport.tsx, components/CommissionPaymentHistory.tsx, components/CommissionShareModal.tsx, components/ProfessionalCommissionDetails.tsx, components/FinanceInsights.tsx, components/MonthlyHistory.tsx, pages/settings/CommissionsSettings.tsx, pages/settings/SubscriptionSettings.tsx, pages/settings/FinancialSettings.tsx, hooks/useSubscription.ts, supabase/functions/create-checkout-session/index.ts, pages/StaffInsights.tsx",
+      "purpose": "Sistema financeiro completo com visão dual (owner/staff), gestão de comissões por profissional, registro manual de receitas/despesas, taxas de maquininha, assinaturas Stripe, insights avançados e exportação CSV",
+      "primary_files": [
+        "pages/Finance.tsx",
+        "components/CommissionsManagement.tsx",
+        "components/CommissionDetailReport.tsx",
+        "components/CommissionPaymentHistory.tsx",
+        "components/CommissionShareModal.tsx",
+        "components/ProfessionalCommissionDetails.tsx",
+        "components/FinanceInsights.tsx",
+        "components/MonthlyHistory.tsx",
+        "pages/settings/CommissionsSettings.tsx",
+        "pages/settings/SubscriptionSettings.tsx",
+        "pages/settings/FinancialSettings.tsx",
+        "hooks/useSubscription.ts",
+        "supabase/functions/create-checkout-session/index.ts"
+      ],
+      "functions": [
+        {
+          "name": "fetchFinanceData",
+          "file": "pages/Finance.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchMonthlyHistory",
+          "file": "pages/Finance.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleDeleteTransaction",
+          "file": "pages/Finance.tsx",
+          "params": ["t: Transaction"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCreateTransaction",
+          "file": "pages/Finance.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleExport",
+          "file": "pages/Finance.tsx",
+          "params": [],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchCommissionsDue",
+          "file": "components/CommissionsManagement.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchPaidCommissions",
+          "file": "components/CommissionsManagement.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calcCommissionPeriod",
+          "file": "components/CommissionsManagement.tsx",
+          "params": ["settlementDay: number"],
+          "returns": "{ start: string, end: string, label: string }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handlePayCommissions",
+          "file": "components/CommissionsManagement.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveInlineRate",
+          "file": "components/CommissionsManagement.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateAmountForDates",
+          "file": "components/CommissionsManagement.tsx",
+          "params": ["profId: string, start: string, end: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchRecords",
+          "file": "components/CommissionDetailReport.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleUpdateCommission",
+          "file": "components/ProfessionalCommissionDetails.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSubscribe",
+          "file": "pages/settings/SubscriptionSettings.tsx",
+          "params": ["planId: string, priceId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useSubscription",
+          "file": "hooks/useSubscription.ts",
+          "params": [],
+          "returns": "{ subscriptionStatus, trialEndsAt, isSubscriptionActive, trialDaysRemaining, isLoading, isTrial, isExpired }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchSettings (CommissionsSettings)",
+          "file": "pages/settings/CommissionsSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveCommissionRate",
+          "file": "pages/settings/CommissionsSettings.tsx",
+          "params": ["memberId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveMachineFee",
+          "file": "pages/settings/CommissionsSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "FinanceRecord",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "appointment_id", "type": "uuid", "required": false },
+            { "name": "professional_id", "type": "uuid", "required": false },
+            { "name": "barber_name", "type": "text", "required": true },
+            { "name": "client_name", "type": "text", "required": false },
+            { "name": "service_name", "type": "text", "required": false },
+            { "name": "revenue", "type": "numeric", "required": false, "default": "0" },
+            { "name": "commission_value", "type": "numeric", "required": false, "default": "0" },
+            { "name": "commission_rate", "type": "numeric", "required": false, "default": "0" },
+            { "name": "commission_paid", "type": "boolean", "required": false, "default": "false" },
+            { "name": "commission_paid_at", "type": "timestamptz", "required": false },
+            { "name": "type", "type": "text", "required": true },
+            { "name": "expense", "type": "numeric", "required": false, "default": "0" },
+            { "name": "status", "type": "text", "required": false, "default": "'paid'" },
+            { "name": "due_date", "type": "timestamptz", "required": false },
+            { "name": "description", "type": "text", "required": false },
+            { "name": "payment_method", "type": "text", "required": false },
+            { "name": "created_at", "type": "timestamptz", "required": true, "default": "now()" }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "commission_payments",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "company_id", "type": "uuid", "required": true },
+            { "name": "collaborator_id", "type": "uuid", "required": true },
+            { "name": "period_start", "type": "timestamptz", "required": true },
+            { "name": "period_end", "type": "timestamptz", "required": true },
+            { "name": "net_amount", "type": "numeric", "required": true },
+            { "name": "commission_percent", "type": "numeric", "required": true },
+            { "name": "status", "type": "text", "required": true, "default": "'paid'" },
+            { "name": "paid_at", "type": "timestamptz", "required": true }
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "name": "business_settings (finance fields)",
+          "fields": [
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "commission_settlement_day_of_month", "type": "integer", "required": false, "default": "5" },
+            { "name": "machine_fee_enabled", "type": "boolean", "required": false, "default": "false" },
+            { "name": "debit_fee_percent", "type": "numeric", "required": false, "default": "0" },
+            { "name": "credit_fee_percent", "type": "numeric", "required": false, "default": "0" }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Dual view: owner vê tudo, staff vê apenas seus próprios atendimentos (filtro por fullName)",
+          "location": "pages/Finance.tsx:69, :198-226",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Staff não vê abas de Comissões, Histórico nem Insights",
+          "location": "pages/Finance.tsx:510-518",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Período de comissão baseado em business_settings.commission_settlement_day_of_month (default: 5)",
+          "location": "components/CommissionsManagement.tsx:89-138",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Comissão = taxa × base de cálculo; base desconta taxa de maquininha se machine_fee_enabled=true",
+          "location": "components/CommissionDetailReport.tsx:79-99",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Owner pode pagar comissões em lote via RPC mark_commissions_as_paid, que marca records e cria commission_payments",
+          "location": "components/CommissionsManagement.tsx:287-316",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Transações manuais são INSERT em finance_records sem appointment_id; receitas automáticas são criadas ao concluir agendamento",
+          "location": "pages/Finance.tsx:402-471",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Deletar receita automática = deletar appointment vinculado + finance_record; deletar manual = deletar finance_record apenas",
+          "location": "pages/Finance.tsx:281-332",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Despesas pendentes podem ser liquidadas via RPC mark_expense_as_paid",
+          "location": "pages/Finance.tsx:758-763",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Taxa de maquininha (débito/crédito) configurável em business_settings; quando ativa, comissão é sobre valor líquido",
+          "location": "pages/settings/CommissionsSettings.tsx:28-33, pages/settings/FinancialSettings.tsx:18-20",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Assinatura via Stripe Checkout Session com auto-provisionamento de customer (lookup por email, create se não existe)",
+          "location": "supabase/functions/create-checkout-session/index.ts:49-83",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Preços regionais: BR (R$ 34,90 Solo / R$ 59,90 Team) e PT (€9,90 Solo / €19,90 Team)",
+          "location": "pages/settings/SubscriptionSettings.tsx:28-36",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Owner pode definir taxa de comissão inline ao pagar (se profissional sem taxa)",
+          "location": "components/CommissionsManagement.tsx:212-264",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "RPC recalculate_pending_commissions chamada ao alterar taxa de comissão de profissional",
+          "location": "pages/settings/CommissionsSettings.tsx:146-154",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Region awareness: moeda (R$/€), métodos de pagamento (Pix/MBWay), formatação",
+          "location": "pages/Finance.tsx:98-99, components/FinanceInsights.tsx:127-137",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "formatters", "stripe", "recharts", "html2canvas", "lucide-react"],
+      "algorithms": [
+        "Cálculo de growth%: ((currentRevenue - previousRevenue) / previousRevenue) * 100",
+        "Período de acerto (calcCommissionPeriod): navegando settlement day entre meses",
+        "Comissão com maquininha: base = price × (1 - fee%/100); value = base × rate%",
+        "Projeção mensal: (monthRevenue / currentDay) × daysInMonth (apenas após dia 15)",
+        "Taxa de retorno: clientes com >1 transação / total de clientes únicos × 100",
+        "Auto-repair de commission records: INSERT se finance_record_id não existe",
+        "Stripe checkout: lookup customer por email, create se necessário, criar session"
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "marketing",
+      "path": "pages/Marketing.tsx, hooks/useAIOSDiagnostic.ts, utils/aiosCopywriter.ts, components/ChurnRadar.tsx, components/marketing/CampaignModal.tsx, components/marketing/OpportunityCard.tsx, components/dashboard/AIOSDiagnosticCard.tsx, components/dashboard/AIOSStrategyModal.tsx, components/dashboard/AIOSCampaignStats.tsx",
+      "purpose": "Sistema de marketing preditivo (AIOS) com diagnóstico de churn, campanhas de reativação via WhatsApp, copywriting automatizado (ABT/StoryBrand), e página placeholder para campanhas futuras. Ativação condicional via profile.aios_enabled",
+      "primary_files": [
+        "pages/Marketing.tsx",
+        "hooks/useAIOSDiagnostic.ts",
+        "utils/aiosCopywriter.ts",
+        "components/ChurnRadar.tsx",
+        "components/marketing/CampaignModal.tsx",
+        "components/marketing/OpportunityCard.tsx",
+        "components/dashboard/AIOSDiagnosticCard.tsx"
+      ],
+      "functions": [
+        {
+          "name": "fetchDiagnostic",
+          "file": "hooks/useAIOSDiagnostic.ts",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "logCampaignActivity",
+          "file": "hooks/useAIOSDiagnostic.ts",
+          "params": ["clientId: string, agentName: string, campaignType: string"],
+          "returns": "Promise<any>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "generateReactivationMessage",
+          "file": "utils/aiosCopywriter.ts",
+          "params": ["context: ClientContext"],
+          "returns": "string (URL-encoded)",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "applyABT",
+          "file": "utils/aiosCopywriter.ts",
+          "params": ["context: ClientContext"],
+          "returns": "string",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "applyStoryBrand",
+          "file": "utils/aiosCopywriter.ts",
+          "params": ["context: ClientContext"],
+          "returns": "string",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getWhatsAppUrl",
+          "file": "utils/aiosCopywriter.ts",
+          "params": ["phone: string, message: string"],
+          "returns": "string",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleReactivate",
+          "file": "components/ChurnRadar.tsx",
+          "params": ["client: any"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleGenerate",
+          "file": "components/marketing/CampaignModal.tsx",
+          "params": [],
+          "returns": "void",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "AIOSDiagnostic",
+          "fields": [
+            { "name": "recoverable_revenue", "type": "number", "required": true },
+            { "name": "at_risk_clients", "type": "AtRiskClient[]", "required": true },
+            { "name": "agenda_gaps", "type": "AgendaGap[]", "required": true },
+            { "name": "diagnostic_date", "type": "string", "required": true }
+          ],
+          "confidence": "inferred"
+        },
+        {
+          "name": "ClientContext",
+          "fields": [
+            { "name": "name", "type": "string", "required": true },
+            { "name": "daysMissing", "type": "number", "required": true },
+            { "name": "userType", "type": "string", "required": true },
+            { "name": "businessName", "type": "string", "required": false },
+            { "name": "lastService", "type": "string", "required": false },
+            { "name": "ltv", "type": "number", "required": false }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "AIOS só ativa se profile.aios_enabled === true; componentes retornam null se false",
+          "location": "hooks/useAIOSDiagnostic.ts:32, components/dashboard/AIOSDiagnosticCard.tsx:16",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Clientes em risco: >30 dias sem retorno, identificados via RPC get_aios_diagnostic",
+          "location": "hooks/useAIOSDiagnostic.ts:38",
+          "confidence": "inferred"
+        },
+        {
+          "description": "Segmentação por LTV: >500 usa StoryBrand, ≤500 usa ABT",
+          "location": "utils/aiosCopywriter.ts:39-41",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Campanhas logadas via RPC log_aios_campaign para atribuição de ROI",
+          "location": "hooks/useAIOSDiagnostic.ts:56-70",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Página /marketing é placeholder Em breve",
+          "location": "pages/Marketing.tsx",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "formatters"],
+      "algorithms": [
+        "Segmentação ABT vs StoryBrand por LTV (>500 = StoryBrand)",
+        "ABT Framework: Conexão E Frequência MAS Ausência PORTANTO CTA",
+        "StoryBrand: Cliente como herói, empresa como guia",
+        "WhatsApp URL: wa.me/{phoneDigits}?text={encodedMessage}"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "onboarding",
+      "path": "pages/Onboarding.tsx, pages/OnboardingWizard.tsx, pages/StaffOnboarding.tsx, components/onboarding/WizardContext.tsx, components/onboarding/WizardEngine.tsx, components/onboarding/WizardOverlay.tsx, components/onboarding/WizardProgress.tsx, components/onboarding/WizardPointer.tsx, components/onboarding/StandaloneWizardPointer.tsx, components/onboarding/ActivationBanner.tsx, components/onboarding/StepBusinessInfo.tsx, components/onboarding/StepServices.tsx, components/onboarding/StepTeam.tsx, components/onboarding/StepMonthlyGoal.tsx, components/onboarding/StepSuccess.tsx, components/onboarding/StepBusinessHours.tsx, components/OnboardingLayout.tsx, contexts/GuidedModeContext.tsx, hooks/useOnboardingState.ts, lib/onboarding.ts, constants/WIZARD_TARGETS.ts, components/dashboard/SetupCopilot.tsx",
+      "purpose": "Sistema de onboarding dual (wizard novo 2-step + wizard legado 5-step), onboarding de staff, SetupCopilot pós-wizard com 6 milestones, guided mode com spotlight/pointer, e ativação condicional. Persiste progresso em onboarding_progress (novo) e business_settings (legado).",
+      "primary_files": [
+        "pages/Onboarding.tsx",
+        "components/onboarding/WizardEngine.tsx",
+        "components/onboarding/WizardContext.tsx",
+        "lib/onboarding.ts",
+        "contexts/GuidedModeContext.tsx",
+        "hooks/useOnboardingState.ts",
+        "components/dashboard/SetupCopilot.tsx",
+        "constants/WIZARD_TARGETS.ts",
+        "pages/StaffOnboarding.tsx"
+      ],
+      "functions": [
+        {
+          "name": "WizardEngine",
+          "file": "components/onboarding/WizardEngine.tsx",
+          "params": [],
+          "returns": "JSX.Element",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "completeStep",
+          "file": "components/onboarding/WizardEngine.tsx",
+          "params": ["step: WizardStep"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getOnboardingProgress",
+          "file": "lib/onboarding.ts",
+          "params": ["companyId: string"],
+          "returns": "Promise<OnboardingProgress | null>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "saveOnboardingStep",
+          "file": "lib/onboarding.ts",
+          "params": ["companyId: string, currentStep: number, completedSteps: number[], stepData?: Record<string, unknown>"],
+          "returns": "Promise<OnboardingProgress>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "completeOnboarding",
+          "file": "lib/onboarding.ts",
+          "params": ["companyId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getSetupStatus",
+          "file": "lib/onboarding.ts",
+          "params": ["userId: string"],
+          "returns": "Promise<SetupStatus>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useOnboardingState",
+          "file": "hooks/useOnboardingState.ts",
+          "params": [],
+          "returns": "UseOnboardingStateReturn",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "startGuide",
+          "file": "contexts/GuidedModeContext.tsx",
+          "params": ["stepId: WizardStepId"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "endGuide",
+          "file": "contexts/GuidedModeContext.tsx",
+          "params": [],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "wizardReducer",
+          "file": "components/onboarding/WizardContext.tsx",
+          "params": ["state: WizardState, action: WizardAction"],
+          "returns": "WizardState",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "onboarding_progress",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "company_id", "type": "uuid", "required": true },
+            { "name": "current_step", "type": "smallint", "required": true, "default": "1" },
+            { "name": "completed_steps", "type": "smallint[]", "required": true, "default": "'{}'" },
+            { "name": "is_completed", "type": "boolean", "required": true, "default": "false" },
+            { "name": "is_skipped", "type": "boolean", "required": true, "default": "false" },
+            { "name": "started_at", "type": "timestamptz", "required": true, "default": "now()" },
+            { "name": "completed_at", "type": "timestamptz", "required": false },
+            { "name": "last_activity", "type": "timestamptz", "required": true, "default": "now()" },
+            { "name": "step_data", "type": "jsonb", "required": true, "default": "'{}'" }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "WizardState",
+          "fields": [
+            { "name": "currentStep", "type": "WizardStep (1|2|3|4|5)", "required": true },
+            { "name": "completedSteps", "type": "WizardStep[]", "required": true },
+            { "name": "isActive", "type": "boolean", "required": true },
+            { "name": "isCompleted", "type": "boolean", "required": true },
+            { "name": "isLoading", "type": "boolean", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "OnboardingProgress",
+          "fields": [
+            { "name": "id", "type": "string", "required": true },
+            { "name": "company_id", "type": "string", "required": true },
+            { "name": "current_step", "type": "number", "required": true },
+            { "name": "completed_steps", "type": "number[]", "required": true },
+            { "name": "is_completed", "type": "boolean", "required": true },
+            { "name": "completed_at", "type": "string | null", "required": false },
+            { "name": "step_data", "type": "Record<string, unknown>", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "GuidedModeState",
+          "fields": [
+            { "name": "activeStep", "type": "WizardStepId | null", "required": true },
+            { "name": "targetElementId", "type": "string | null", "required": true },
+            { "name": "position", "type": "'top'|'bottom'|'left'|'right'", "required": true },
+            { "name": "message", "type": "string", "required": true },
+            { "name": "isGuideActive", "type": "boolean", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Sistema dual de onboarding: wizard novo (2 steps: Welcome + Services) via WizardContext+WizardEngine+onboarding_progress table; wizard legado (5 steps: BusinessInfo+Services+Team+MonthlyGoal+Success) via useOnboardingState+business_settings columns",
+          "location": "pages/Onboarding.tsx, pages/OnboardingWizard.tsx, hooks/useOnboardingState.ts, components/onboarding/WizardContext.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Restauração de passo salvo: OnboardingInner lê onboarding_progress.current_step no mount e despacha SET_STEP; useOnboardingState lê business_settings.onboarding_step com clamp 1-5",
+          "location": "pages/Onboarding.tsx:31-34, hooks/useOnboardingState.ts:58-61",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Compleção do wizard marca onboarding_progress.is_completed=true + profiles.tutorial_completed=true (evita redirect loop entre ProtectedLayout e Onboarding)",
+          "location": "components/onboarding/WizardEngine.tsx:64-68, pages/Onboarding.tsx:24-27",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Constraint chk_step_range: current_step BETWEEN 1 AND 5 garantido no banco. Hook legado também clampa com Math.min(Math.max(...), 5)",
+          "location": "supabase/migrations/20260320_onboarding_wizard.sql:35, hooks/useOnboardingState.ts:59",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Upsert merge JSONB: RPC upsert_onboarding_progress usa || para preservar dados de steps anteriores, não sobrescrever",
+          "location": "supabase/migrations/20260320_onboarding_wizard.sql:223",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "RLS multi-tenant: onboarding_progress policies (select/insert/update) filtram por company_id via subquery em profiles WHERE id = auth.uid()",
+          "location": "supabase/migrations/20260320_onboarding_wizard.sql:113-158",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "RPC upsert_onboarding_progress é SECURITY DEFINER: valida company_id do chamador contra parametro, RAISE EXCEPTION 'insufficient_privilege' em mismatch",
+          "location": "supabase/migrations/20260320_onboarding_wizard.sql:192-202",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "SetupCopilot (pós-wizard): 6 milestones progressivos (services, team, clients, hours, booking, appointment). Detecta completion e dispara profiles.activation_completed=true",
+          "location": "components/dashboard/SetupCopilot.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Guided mode: GuidedModeContext persiste estado em sessionStorage. startGuide salva last_guided_step em onboarding_progress.step_data. Falhas no Supabase não bloqueiam o guide local (graceful degradation)",
+          "location": "contexts/GuidedModeContext.tsx:66-92",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Eventos customizados: SetupCopilot dispatches 'setup-step-completed' e 'system-activated'. StandaloneWizardPointer e ActivationBanner escutam esses eventos",
+          "location": "components/onboarding/StandaloneWizardPointer.tsx, components/onboarding/ActivationBanner.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Focus trapping: WizardOverlay usa focus-trap-react com escapeDeactivates: false para prevenir escape do wizard",
+          "location": "components/onboarding/WizardOverlay.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Spotlight mechanism: WizardPointer aplica box-shadow: 0 0 0 9999px rgba(0,0,0,0.75) no alvo e usa MutationObserver para aguardar elementos lazy-rendered",
+          "location": "components/onboarding/WizardPointer.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Staff onboarding: StaffOnboarding page apenas cumprimenta e chama markTutorialCompleted(), sem steps de configuração",
+          "location": "pages/StaffOnboarding.tsx:27-31",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Redirect flow: Login verifica business_settings.onboarding_completed → navega para /onboarding se false. ProtectedLayout verifica activation_completed → navega para /onboarding",
+          "location": "pages/Login.tsx:34-39, App.tsx:69-74",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "StepBusinessHours usa RPC update_onboarding_step (legado) para persistir progresso, enquanto WizardEngine usa saveOnboardingStep/completedOnboarding (novo via onboarding_progress)",
+          "location": "components/onboarding/StepBusinessHours.tsx:57-63, components/onboarding/WizardEngine.tsx:55-74",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "focus-trap-react", "lucide-react", "react-router-dom", "dashboard"],
+      "algorithms": [
+        "Wizard state machine: reducer com ações SET_STEP, COMPLETE_STEP, SET_LOADING, CLOSE_WIZARD, COMPLETE_WIZARD",
+        "Step progression: COMPLETE_STEP calcula nextStep = min(currentStep + 1, TOTAL_STEPS), adiciona step ao Set de completedSteps",
+        "Onboarding redirect guard: Login e ProtectedLayout verificam flags (onboarding_completed, activation_completed) para redirecionar",
+        "Merchant setup status: getSetupStatus faz 6 queries em paralelo (services, team_members, clients, business_settings, profiles, appointments) para determinar milestones completos",
+        "Guided mode persistence: sessionStorage.setItem para estado local + saveOnboardingStep para last_guided_step no banco",
+        "JSONB merge: upsert_onboarding_progress usa operador || para concatenar step_data sem sobrescrever passos anteriores",
+        "Focus trap: focus-trap-react com escapeDeactivates: false",
+        "Spotlight: box-shadow 9999px rgba(0,0,0,0.75) + 4px outline colorido no target element"
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "staff/team",
+      "path": "pages/settings/TeamSettings.tsx, components/TeamMemberForm.tsx, components/TeamMemberCard.tsx, components/onboarding/StepTeam.tsx, components/StaffEarningsCard.tsx, pages/StaffInsights.tsx, pages/StaffOnboarding.tsx, hooks/useMeuDiaData.ts, contexts/AuthContext.tsx, components/ProfileModal.tsx, pages/ProfessionalPortfolio.tsx",
+      "purpose": "Gestão de equipe com dois papéis (owner/staff), convite via link compartilhável, RLS multi-tenant baseado em company_id, portfólio público de profissionais, comissões por profissional e experiência dedicada para staff (Meu Dia, Meus Resultados, ganhos pendentes)",
+      "primary_files": [
+        "pages/settings/TeamSettings.tsx",
+        "components/TeamMemberForm.tsx",
+        "components/TeamMemberCard.tsx",
+        "components/onboarding/StepTeam.tsx",
+        "components/StaffEarningsCard.tsx",
+        "pages/StaffInsights.tsx",
+        "pages/StaffOnboarding.tsx",
+        "hooks/useMeuDiaData.ts",
+        "contexts/AuthContext.tsx"
+      ],
+      "functions": [
+        {
+          "name": "fetchMembers",
+          "file": "pages/settings/TeamSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleDelete",
+          "file": "pages/settings/TeamSettings.tsx",
+          "params": ["id: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCopyInviteLink",
+          "file": "pages/settings/TeamSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSubmit",
+          "file": "components/TeamMemberForm.tsx",
+          "params": ["e: React.FormEvent"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleFillWithOwner",
+          "file": "components/TeamMemberForm.tsx",
+          "params": [],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchData (StaffInsights)",
+          "file": "pages/StaffInsights.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getPeriodRange",
+          "file": "pages/StaffInsights.tsx",
+          "params": ["period: Period"],
+          "returns": "{ start: string, end: string }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "markAsCompleted",
+          "file": "hooks/useMeuDiaData.ts",
+          "params": ["id: string"],
+          "returns": "Promise<boolean>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchEarnings",
+          "file": "components/StaffEarningsCard.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleStart (StaffOnboarding)",
+          "file": "pages/StaffOnboarding.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "TeamMember",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "name", "type": "text", "required": true },
+            { "name": "role", "type": "text", "required": true },
+            { "name": "bio", "type": "text", "required": false },
+            { "name": "photo_url", "type": "text", "required": false },
+            { "name": "active", "type": "boolean", "required": true, "default": "true" },
+            { "name": "is_owner", "type": "boolean", "required": false },
+            { "name": "commission_rate", "type": "numeric", "required": false, "default": "0" },
+            { "name": "slug", "type": "text", "required": true },
+            { "name": "specialties", "type": "text[]", "required": false },
+            { "name": "cpf", "type": "text", "required": false },
+            { "name": "staff_user_id", "type": "uuid", "required": false },
+            { "name": "business_id", "type": "uuid", "required": false },
+            { "name": "display_order", "type": "integer", "required": false, "default": "0" },
+            { "name": "created_at", "type": "timestamptz", "required": false, "default": "now()" },
+            { "name": "updated_at", "type": "timestamptz", "required": false, "default": "now()" }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "Profile (staff fields)",
+          "fields": [
+            { "name": "role", "type": "text", "required": false, "default": "'owner'" },
+            { "name": "company_id", "type": "text", "required": false }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Dois papéis apenas: owner e staff. Owner tem acesso total; staff tem acesso restrito",
+          "location": "contexts/AuthContext.tsx, App.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Convite sem tabela de convites: link compartilhável com owner UUID como parâmetro URL",
+          "location": "pages/settings/TeamSettings.tsx:62",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Staff herda subscriptionStatus, trialEndsAt, userType, businessName do owner no login",
+          "location": "contexts/AuthContext.tsx:92-124",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "company_id como isolamento: todas as queries de staff usam companyId (= owner ID). RLS garante isolamento",
+          "location": "20260307_us015b_multi_user_rls.sql",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "teamMemberId como ponte: ID do registro em team_members usado como professional_id em appointments e finance_records",
+          "location": "hooks/useMeuDiaData.ts, components/StaffEarningsCard.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Staff não pode usar checkout completo: check apt.status='Completed' && role='staff' impede re-completar",
+          "location": "pages/Agenda.tsx:870-876",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Staff vê apenas suas comissões: finance_records WHERE professional_id = teamMemberId AND commission_paid = false",
+          "location": "components/StaffEarningsCard.tsx:28-29",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Vinculação pendente: se teamMemberId=null, StaffInsights exibe mensagem de erro",
+          "location": "pages/StaffInsights.tsx:104-121",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Auto-preenchimento do owner: 'Sou eu quem atende' preenche dados do perfil com is_owner=true, commission_rate=100",
+          "location": "components/TeamMemberForm.tsx:64-70",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Sincronização de perfil: ProfileModal atualiza nome/foto no team_members do owner (is_owner=true) automaticamente",
+          "location": "components/ProfileModal.tsx",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Storage bucket team_photos: público para leitura, upload/update/delete restrito ao owner",
+          "location": "20260218_team_setup.sql:21-50",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "OwnerRouteGuard: protege financeiro, fila, marketing, insights, configurações (exceto Servicos) para role=staff",
+          "location": "App.tsx",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "formatters", "lucide-react"],
+      "algorithms": [
+        "Geração de slug: name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-')",
+        "Auto-preenchimento owner: fullName + businessName + avatarUrl → is_owner=true, commission_rate=100",
+        "Convite via link: origin/#/register?company=ownerId com Web Share API (mobile) e Clipboard API (fallback)",
+        "Busca de teamMemberId no login: SELECT id FROM team_members WHERE staff_user_id=userId AND user_id=companyId",
+        "Cálculo de período em StaffInsights: getPeriodRange(day/week/month) com boundaries UTC",
+        "Evolução de RLS em 6 migrations: user_isolation → is_staff_of → company_isolation → staff_user_id → staff_commission_rls → staff_read_company_data"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "settings",
+      "path": "pages/settings/, components/SettingsLayout.tsx, components/BusinessHoursEditor.tsx, components/BrandIdentitySection.tsx, components/BusinessGalleryManager.tsx, components/PublicLinkCard.tsx, components/ServiceModal.tsx, components/TeamMemberCard.tsx, components/TeamMemberForm.tsx, components/SaveFooter.tsx, components/security/TwoFactorSetup.tsx, hooks/use2FA.ts, hooks/useSubscription.ts, lib/auditLogs.ts, constants.ts",
+      "purpose": "Hub de configurações do sistema com 10 sub-páginas: perfil do negócio, horários, agendamento público, equipe, serviços, comissões, financeiro, assinatura, segurança (2FA), auditoria, erros e lixeira. RBAC com role-based menu filtering, dual theme e Stripe checkout.",
+      "primary_files": [
+        "pages/settings/GeneralSettings.tsx",
+        "pages/settings/PublicBookingSettings.tsx",
+        "pages/settings/TeamSettings.tsx",
+        "pages/settings/ServiceSettings.tsx",
+        "pages/settings/CommissionsSettings.tsx",
+        "pages/settings/FinancialSettings.tsx",
+        "pages/settings/SubscriptionSettings.tsx",
+        "pages/settings/SecuritySettings.tsx",
+        "pages/settings/AuditLogs.tsx",
+        "pages/settings/SystemLogs.tsx",
+        "pages/settings/RecycleBin.tsx",
+        "components/SettingsLayout.tsx",
+        "lib/auditLogs.ts",
+        "hooks/use2FA.ts",
+        "hooks/useSubscription.ts",
+        "constants.ts"
+      ],
+      "functions": [
+        {
+          "name": "fetchSettings",
+          "file": "pages/settings/GeneralSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSave",
+          "file": "pages/settings/GeneralSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handlePolicyTemplateChange",
+          "file": "pages/settings/GeneralSettings.tsx",
+          "params": ["type: string"],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchSettings",
+          "file": "pages/settings/PublicBookingSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSave",
+          "file": "pages/settings/PublicBookingSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchMembers",
+          "file": "pages/settings/TeamSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleCopyInviteLink",
+          "file": "pages/settings/TeamSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchData",
+          "file": "pages/settings/ServiceSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "fetchData",
+          "file": "pages/settings/CommissionsSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveCommissionRate",
+          "file": "pages/settings/CommissionsSettings.tsx",
+          "params": ["memberId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSaveMachineFee",
+          "file": "pages/settings/CommissionsSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSave",
+          "file": "pages/settings/FinancialSettings.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleSubscribe",
+          "file": "pages/settings/SubscriptionSettings.tsx",
+          "params": ["planId: string, priceId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "use2FA",
+          "file": "hooks/use2FA.ts",
+          "params": [],
+          "returns": "{ factors, loading, isEnabled, enroll, verifyAndEnable, unenroll, refreshUser }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getAuditLogs",
+          "file": "lib/auditLogs.ts",
+          "params": ["filters: AuditLogFilters"],
+          "returns": "Promise<AuditLog[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "createAuditLog",
+          "file": "lib/auditLogs.ts",
+          "params": ["action, resource_type, resource_id?, old_values?, new_values?, metadata?"],
+          "returns": "Promise<any>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateDiff",
+          "file": "lib/auditLogs.ts",
+          "params": ["oldValues?: Record<string, unknown>, newValues?: Record<string, unknown>"],
+          "returns": "{ field: string; old: unknown; new: unknown }[]",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "downloadLogsAsCSV",
+          "file": "lib/auditLogs.ts",
+          "params": ["logs: AuditLog[], filename?: string"],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "loadDeletedItems",
+          "file": "pages/settings/RecycleBin.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleRestore",
+          "file": "pages/settings/RecycleBin.tsx",
+          "params": ["item: DeletedItem"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "business_settings",
+          "fields": [
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "business_hours", "type": "jsonb", "required": false },
+            { "name": "cancellation_policy", "type": "text", "required": false },
+            { "name": "public_booking_enabled", "type": "boolean", "required": false, "default": "true" },
+            { "name": "enable_upsells", "type": "boolean", "required": false, "default": "false" },
+            { "name": "enable_professional_selection", "type": "boolean", "required": false, "default": "true" },
+            { "name": "enable_email_reminders", "type": "boolean", "required": false, "default": "true" },
+            { "name": "enable_self_rescheduling", "type": "boolean", "required": false, "default": "true" },
+            { "name": "lead_time_hours", "type": "integer", "required": false, "default": "2" },
+            { "name": "max_bookings_per_day", "type": "integer", "required": false },
+            { "name": "commission_settlement_day_of_month", "type": "integer", "required": false, "default": "5" },
+            { "name": "machine_fee_enabled", "type": "boolean", "required": false, "default": "false" },
+            { "name": "debit_fee_percent", "type": "numeric", "required": false, "default": "0" },
+            { "name": "credit_fee_percent", "type": "numeric", "required": false, "default": "0" },
+            { "name": "onboarding_completed", "type": "boolean", "required": false, "default": "false" },
+            { "name": "onboarding_progress", "type": "jsonb", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "service_categories",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": true },
+            { "name": "name", "type": "text", "required": true },
+            { "name": "display_order", "type": "integer", "required": false, "default": "0" }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "audit_logs",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "company_id", "type": "uuid", "required": true },
+            { "name": "user_id", "type": "uuid", "required": false },
+            { "name": "user_name", "type": "text", "required": false },
+            { "name": "action", "type": "text", "required": true },
+            { "name": "resource_type", "type": "text", "required": true },
+            { "name": "resource_id", "type": "uuid", "required": false },
+            { "name": "old_values", "type": "jsonb", "required": false },
+            { "name": "new_values", "type": "jsonb", "required": false },
+            { "name": "ip_address", "type": "text", "required": false },
+            { "name": "user_agent", "type": "text", "required": false },
+            { "name": "metadata", "type": "jsonb", "required": false },
+            { "name": "created_at", "type": "timestamptz", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "system_errors",
+          "fields": [
+            { "name": "id", "type": "uuid", "required": true },
+            { "name": "error_message", "type": "text", "required": true },
+            { "name": "stack_trace", "type": "text", "required": false },
+            { "name": "severity", "type": "text", "required": true, "default": "'error'" },
+            { "name": "context", "type": "jsonb", "required": false },
+            { "name": "resolved", "type": "boolean", "required": false, "default": "false" },
+            { "name": "user_id", "type": "uuid", "required": false },
+            { "name": "created_at", "type": "timestamptz", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "RBAC no menu: staff vê apenas /configuracoes/servicos; owners vêem tudo exceto devOnly; dev vê inclusive auditoria, erros, lixeira",
+          "location": "components/SettingsLayout.tsx:21-23, App.tsx:185-197",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Owner-only routes: todas as rotas /configuracoes/* (exceto servicos) envolvidas por OwnerRouteGuard",
+          "location": "App.tsx:185-196",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Convite de equipe via link aberto: origin/#/register?company=userId, sem tabela de convites",
+          "location": "pages/settings/TeamSettings.tsx:62",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Policy de cancelamento: 3 templates (flexible=24h, moderate=48h, strict=72h), texto editável",
+          "location": "pages/settings/GeneralSettings.tsx:47-51",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Upload de logo/cover: max 10MB, buckets separados (logos/covers), path: {userId}/{timestamp}.{ext}",
+          "location": "pages/settings/GeneralSettings.tsx:100-126",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Comissão com taxa de maquininha: se machine_fee_enabled, comissão calculada sobre valor líquido via RPC recalculate_pending_commissions",
+          "location": "pages/settings/CommissionsSettings.tsx:120-154",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Dia de acerto: validação 1-31, fallback para 5 se inválido",
+          "location": "pages/settings/CommissionsSettings.tsx:89-96",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Stripe checkout: preços hardcoded por região (BRL/EUR), Edge Function create-checkout-session",
+          "location": "pages/settings/SubscriptionSettings.tsx:26-36, 74-100",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "2FA: fluxo TOTP completo via Supabase MFA (enroll/challenge/verify/unenroll)",
+          "location": "hooks/use2FA.ts:27-58",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Auditoria: logs inseridos apenas via service_role RPC. Client lê com RLS. Diff de mudanças campo-a-campo.",
+          "location": "lib/auditLogs.ts:30-53, AuditLogs.tsx:213",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Lixeira: 30 dias de retenção. Restore via RPC por tipo (5 resource_types). Countdown visual com cores (vermelho≤7, laranja≤15, verde>15).",
+          "location": "pages/settings/RecycleBin.tsx:36-86, 110-114",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Setup step events: salvamento em GeneralSettings dispara 'setup-step-completed' para 'hours' e 'profile'; PublicBookingSettings para 'booking'",
+          "location": "pages/settings/GeneralSettings.tsx:169-170, pages/settings/PublicBookingSettings.tsx:85",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["supabase", "auth", "stripe", "lucide-react", "react-router-dom", "useBrutalTheme", "useAppTour", "use2FA", "useSubscription"],
+      "algorithms": [
+        "Política de cancelamento com templates editáveis",
+        "Upload de imagem com validação de tamanho (10MB) e path dinâmico",
+        "Convite de equipe via link aberto com navigator.share (mobile) ou clipboard (desktop)",
+        "Cálculo de comissão com taxa de maquininha descontada (machine_fee_enabled)",
+        "Dia de acerto mensal com validação 1-31 e fallback",
+        "Checkout Stripe via Edge Function com preços por região",
+        "2FA TOTP: enroll → QR code → challenge → verify",
+        "Diff de auditoria campo-a-campo (old_values vs new_values)",
+        "Lixeira com countdown de 30 dias e restore via RPC dinâmica"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "security/audit",
+      "path": "pages/settings/SecuritySettings.tsx, components/security/TwoFactorSetup.tsx, hooks/use2FA.ts, pages/settings/AuditLogs.tsx, lib/auditLogs.ts, pages/settings/SystemLogs.tsx, utils/Logger.ts, pages/settings/RecycleBin.tsx",
+      "purpose": "Segurança (2FA/TOTP via Supabase MFA), auditoria (logs automáticos com diff campo-a-campo), monitoramento de erros (system_errors com severity) e lixeira (soft delete com restore em 30 dias)",
+      "primary_files": [
+        "pages/settings/SecuritySettings.tsx",
+        "components/security/TwoFactorSetup.tsx",
+        "hooks/use2FA.ts",
+        "pages/settings/AuditLogs.tsx",
+        "lib/auditLogs.ts",
+        "pages/settings/SystemLogs.tsx",
+        "utils/Logger.ts",
+        "pages/settings/RecycleBin.tsx"
+      ],
+      "functions": [
+        {
+          "name": "use2FA",
+          "file": "hooks/use2FA.ts",
+          "params": [],
+          "returns": "{ factors, loading, isEnabled, enroll, verifyAndEnable, unenroll, refreshUser }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "enroll",
+          "file": "hooks/use2FA.ts",
+          "params": [],
+          "returns": "Promise<AuthMFAEnrollResponse>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "verifyAndEnable",
+          "file": "hooks/use2FA.ts",
+          "params": ["factorId: string", "code: string"],
+          "returns": "Promise<AuthMFAVerifyResponse>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "unenroll",
+          "file": "hooks/use2FA.ts",
+          "params": ["factorId: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getAuditLogs",
+          "file": "lib/auditLogs.ts",
+          "params": ["filters: AuditLogFilters"],
+          "returns": "Promise<AuditLog[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "createAuditLog",
+          "file": "lib/auditLogs.ts",
+          "params": ["action, resource_type, resource_id?, old_values?, new_values?, metadata?"],
+          "returns": "Promise<any>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "calculateDiff",
+          "file": "lib/auditLogs.ts",
+          "params": ["oldValues?: Record<string,unknown>", "newValues?: Record<string,unknown>"],
+          "returns": "{ field: string; old: unknown; new: unknown }[]",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "downloadLogsAsCSV",
+          "file": "lib/auditLogs.ts",
+          "params": ["logs: AuditLog[]", "filename?: string"],
+          "returns": "void",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "loadLogs",
+          "file": "pages/settings/SystemLogs.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "loadDeletedItems",
+          "file": "pages/settings/RecycleBin.tsx",
+          "params": [],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "handleRestore",
+          "file": "pages/settings/RecycleBin.tsx",
+          "params": ["item: DeletedItem"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "logger.error",
+          "file": "utils/Logger.ts",
+          "params": ["message: string", "error?: any", "context?: LogContext"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "logger.critical",
+          "file": "utils/Logger.ts",
+          "params": ["message: string", "error?: any", "context?: LogContext"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "AuditLog",
+          "fields": [
+            { "name": "id", "type": "string (UUID)", "required": true },
+            { "name": "user_id", "type": "string (UUID)", "required": true },
+            { "name": "user_name", "type": "string", "required": false },
+            { "name": "action", "type": "string (enum)", "required": true },
+            { "name": "resource_type", "type": "string", "required": true },
+            { "name": "resource_id", "type": "string (UUID)", "required": false },
+            { "name": "old_values", "type": "Record<string,unknown>", "required": false },
+            { "name": "new_values", "type": "Record<string,unknown>", "required": false },
+            { "name": "ip_address", "type": "string", "required": false },
+            { "name": "user_agent", "type": "string", "required": false },
+            { "name": "metadata", "type": "Record<string,unknown>", "required": false },
+            { "name": "created_at", "type": "string (TIMESTAMPTZ)", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "SystemError",
+          "fields": [
+            { "name": "id", "type": "string (UUID)", "required": true },
+            { "name": "error_message", "type": "string", "required": true },
+            { "name": "stack_trace", "type": "string", "required": false },
+            { "name": "component_stack", "type": "string", "required": false },
+            { "name": "severity", "type": "string (enum: info|warning|error|critical)", "required": true },
+            { "name": "context", "type": "any (JSONB)", "required": false },
+            { "name": "user_id", "type": "string (UUID)", "required": false },
+            { "name": "resolved", "type": "boolean", "required": false },
+            { "name": "created_at", "type": "string (TIMESTAMPTZ)", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "DeletedItem",
+          "fields": [
+            { "name": "id", "type": "string (UUID)", "required": true },
+            { "name": "resource_type", "type": "string", "required": true },
+            { "name": "name", "type": "string", "required": true },
+            { "name": "deleted_at", "type": "string (TIMESTAMPTZ)", "required": true },
+            { "name": "days_until_permanent", "type": "number", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "2FA: enrollment via Supabase MFA (TOTP), challenge-verify flow, unenroll com confirmação",
+          "location": "hooks/use2FA.ts:27-60",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Audit logs: RLS rigorosa em 3 evoluções. V1 (2026-02-14): INSERT aberto. V2 (US-029): service_role only. V3 (US-0303): authenticated INSERT com user_id=auth.uid() AND company_id=profile",
+          "location": "supabase/migrations/20260214_audit_system.sql, 20260318_fix_audit_logs_integrity.sql, 20260320_us0303_fix_audit_logs_insert_policy.sql",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Soft delete: 5 tabelas com deleted_at. Retenção 30 dias. Restore via RPC com ownership check (JWT company_id vs resource company_id)",
+          "location": "supabase/migrations/20260214_soft_delete.sql, 20260318_add_rpc_ownership_checks.sql",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Audit trigger automático em 6 tabelas: appointments, clients, financial_records, services, team_members, profiles",
+          "location": "supabase/migrations/20260214_audit_system.sql:196-229",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Route guards: segurança e lixeira/auditoria/erros separados por role. SecuritySettings = OwnerRouteGuard, AuditLogs/SystemLogs/RecycleBin = DevRouteGuard",
+          "location": "App.tsx:193-196",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Logger: fire-and-forget para Supabase. error e critical enviam para system_errors via log_error RPC. critical delega para error com severity no context",
+          "location": "utils/Logger.ts:37-76",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Audit log cleanup: 180 dias (cleanup_old_audit_logs). Soft delete cleanup: 30 dias (cleanup_old_deleted_items). Ambas requerem cronjob externo — não há scheduler automático",
+          "location": "supabase/migrations/20260214_audit_system.sql:300-316, 20260214_soft_delete.sql:336-393",
+          "confidence": "inferred"
+        }
+      ],
+      "dependencies": ["supabase", "@supabase/supabase-js", "qrcode", "lucide-react", "contexts/AuthContext", "components/BrutalCard", "components/BrutalButton", "components/SettingsLayout"],
+      "algorithms": [
+        "2FA TOTP enrollment: enroll → QR code generation → challenge → verify code",
+        "Audit diff: JSONB field-by-field comparison (calculateDiff)",
+        "Soft delete ownership check: JWT company_id vs resource company_id (SECURITY DEFINER)",
+        "Audit log RLS evolution: 3 migrations tightening INSERT policies",
+        "Lixeira: dynamic resource_type → restore RPC mapping",
+        "Logger: fire-and-forget pattern for error logging to Supabase",
+        "Audit trail: automatic trigger on INSERT/UPDATE/DELETE across 6 tables"
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "ai-assistant",
+      "path": "hooks/useAIAssistant.ts, lib/ai-assistant-prompts.ts, components/AIAssistantChat.tsx, hooks/useAIOSDiagnostic.ts, components/dashboard/AIOSDiagnosticCard.tsx, components/dashboard/AIOSCampaignStats.tsx, components/dashboard/modals/AIOSStrategyModal.tsx, lib/gemini.ts, lib/openrouter.ts, hooks/useContentCalendar.ts, hooks/useSemanticMemory.ts, components/AISemanticInsights.tsx",
+      "purpose": "Assistente IA contextual via OpenRouter/Gemini com diagnóstico de churn (AIOS), memória semântica RAG (embeddings 768d), cache semântico, calendário de conteúdo e geração de conteúdo social",
+      "primary_files": [
+        "hooks/useAIAssistant.ts",
+        "lib/ai-assistant-prompts.ts",
+        "components/AIAssistantChat.tsx",
+        "hooks/useAIOSDiagnostic.ts",
+        "components/dashboard/AIOSDiagnosticCard.tsx",
+        "components/dashboard/AIOSCampaignStats.tsx",
+        "components/dashboard/modals/AIOSStrategyModal.tsx",
+        "lib/gemini.ts",
+        "lib/openrouter.ts",
+        "hooks/useContentCalendar.ts",
+        "hooks/useSemanticMemory.ts",
+        "components/AISemanticInsights.tsx"
+      ],
+      "functions": [
+        {
+          "name": "useAIAssistant",
+          "file": "hooks/useAIAssistant.ts",
+          "params": [],
+          "returns": "{ messages, loading, sendMessage, clearMessages }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "sendMessage",
+          "file": "hooks/useAIAssistant.ts",
+          "params": ["userMessage: string"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "buildSystemPrompt",
+          "file": "lib/ai-assistant-prompts.ts",
+          "params": ["ctx: BusinessContext"],
+          "returns": "string",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useAIOSDiagnostic",
+          "file": "hooks/useAIOSDiagnostic.ts",
+          "params": [],
+          "returns": "{ diagnostic, loading, error, refetch, logCampaignActivity }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "generateEmbedding",
+          "file": "lib/gemini.ts",
+          "params": ["text: string"],
+          "returns": "Promise<number[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getSemanticCache",
+          "file": "lib/gemini.ts",
+          "params": ["query: string", "threshold?: number"],
+          "returns": "Promise<string | null>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "saveSemanticCache",
+          "file": "lib/gemini.ts",
+          "params": ["query: string", "response: string", "metadata?: object"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "analyzePhoto",
+          "file": "lib/gemini.ts",
+          "params": ["imageBase64: string"],
+          "returns": "Promise<GeminiPhotoAnalysis>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "generateSocialContent",
+          "file": "lib/gemini.ts",
+          "params": ["imageDescription, businessType, businessName, customRequest?"],
+          "returns": "Promise<GeminiSocialContent>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "generateContentCalendar",
+          "file": "lib/gemini.ts",
+          "params": ["businessType, businessName"],
+          "returns": "Promise<GeminiCalendarDay[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "analyzeCampaignOpportunities",
+          "file": "lib/gemini.ts",
+          "params": ["clients, appointments, businessType, businessName"],
+          "returns": "Promise<GeminiMarketingCampaign[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useContentCalendar",
+          "file": "hooks/useContentCalendar.ts",
+          "params": [],
+          "returns": "{ posts, loading, generatePosts, setPosts }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "useSemanticMemory",
+          "file": "hooks/useSemanticMemory.ts",
+          "params": [],
+          "returns": "{ saveMemory, searchMemories }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "OpenRouterService.generateInstagramIdeas",
+          "file": "lib/openrouter.ts",
+          "params": ["businessName, userType, segment"],
+          "returns": "Promise<object>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "OpenRouterService.analyzeAndSuggestPhotoEdit",
+          "file": "lib/openrouter.ts",
+          "params": ["imageUrl, instruction"],
+          "returns": "Promise<string>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "OpenRouterService.fetchMonthlyTrends",
+          "file": "lib/openrouter.ts",
+          "params": ["businessName, userType, month"],
+          "returns": "Promise<object>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "BusinessContext",
+          "fields": [
+            { "name": "businessName", "type": "string", "required": true },
+            { "name": "userType", "type": "'barber' | 'beauty'", "required": true },
+            { "name": "currentMonthRevenue", "type": "number", "required": true },
+            { "name": "previousMonthRevenue", "type": "number", "required": true },
+            { "name": "monthlyGoal", "type": "number", "required": true },
+            { "name": "totalClients", "type": "number", "required": true },
+            { "name": "appointmentsThisMonth", "type": "number", "required": true },
+            { "name": "clientsAtRisk", "type": "number", "required": true },
+            { "name": "avgTicket", "type": "number", "required": true },
+            { "name": "topService", "type": "string", "required": true },
+            { "name": "emptySlots", "type": "number", "required": true },
+            { "name": "currencySymbol", "type": "string", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "AIOSDiagnostic",
+          "fields": [
+            { "name": "recoverable_revenue", "type": "number", "required": true },
+            { "name": "at_risk_clients", "type": "Array", "required": true },
+            { "name": "agenda_gaps", "type": "Array", "required": true },
+            { "name": "diagnostic_date", "type": "string", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "SemanticMemory",
+          "fields": [
+            { "name": "id", "type": "string", "required": true },
+            { "name": "client_id", "type": "string", "required": true },
+            { "name": "observation", "type": "string", "required": true },
+            { "name": "context_type", "type": "'style' | 'preference' | 'habit'", "required": true },
+            { "name": "created_at", "type": "string", "required": true },
+            { "name": "similarity", "type": "number", "required": false }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "ChatMessage",
+          "fields": [
+            { "name": "role", "type": "'user' | 'assistant'", "required": true },
+            { "name": "content", "type": "string", "required": true },
+            { "name": "timestamp", "type": "Date", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "CalendarPost",
+          "fields": [
+            { "name": "day", "type": "number", "required": true },
+            { "name": "caption", "type": "string", "required": true },
+            { "name": "hashtags", "type": "string", "required": true },
+            { "name": "theme", "type": "string", "required": true },
+            { "name": "holiday", "type": "string", "required": false },
+            { "name": "bgGradient", "type": "string", "required": true },
+            { "name": "textColor", "type": "string", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "AIOS Diagnostic: feature flag aiosEnabled em profiles. Card renderiza apenas se aiosEnabled=true e recoverable_revenue > 0",
+          "location": "hooks/useAIOSDiagnostic.ts:31-35, components/dashboard/AIOSDiagnosticCard.tsx:16",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Semantic Cache: threshold de 0.92 (92%) para hit.hits evitam chamadas à API Gemini. Miss → chama API e salva resposta.",
+          "location": "lib/gemini.ts:49-69",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Gemini embeddings: text-embedding-004 com 768 dimensões. Dimensão corrigida de 1536 para 768 em migration 20260222_fix_vector_dimensions_and_rpc.sql",
+          "location": "lib/gemini.ts:36, supabase/migrations/20260222_fix_vector_dimensions_and_rpc.sql",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "RLS client_semantic_memory: evolução em 3 migrações. Original: permissiva. Fix US-026: isolamento por company_id via JOIN.",
+          "location": "supabase/migrations/20260318_fix_rls_client_semantic_memory.sql",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "AI Chat: histórico limitado a últimos 6 msgs. System prompt com dados reais de negócio, regras de pt-BR, 3 frases máx, sem jargões.",
+          "location": "hooks/useAIAssistant.ts:61-64, lib/ai-assistant-prompts.ts:21-46",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "API keys expostas no frontend: VITE_OPENROUTER_API_KEY e VITE_GEMINI_API_KEY. Risco de segurança — qualquer usuário pode inspecionar o código.",
+          "location": "hooks/useAIAssistant.ts:9, lib/openrouter.ts:4, lib/gemini.ts:6",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Data Maturity Guard: features AIOS progressivas conforme volume de dados (appointments e clientes)",
+          "location": "supabase/migrations/20260222_data_maturity_guard.sql",
+          "confidence": "inferred"
+        }
+      ],
+      "dependencies": ["@google/generative-ai", "supabase", "lucide-react", "contexts/AuthContext", "hooks/useDashboardData", "utils/brazilianHolidays", "utils/Logger", "utils/formatters"],
+      "algorithms": [
+        "Semantic Cache: embedding → cosine similarity match → cache hit (>0.92) or miss → API call → save",
+        "AIOS Diagnostic: get_aios_diagnostic RPC → at_risk_clients + recoverable_revenue + agenda_gaps",
+        "AI Chat: system prompt + last 6 msgs → OpenRouter API → gemini-2.0-flash-lite-001",
+        "Content Calendar: Brazilian holidays + OpenRouter prompt → JSON generation → CalendarPost mapping",
+        "Semantic Memory RAG: text-embedding-004 (768d) → pgvector match_client_memories (cosine similarity)",
+        "Campaign Analysis: real business data (birthdays, inactive, patterns) → Gemini prompt → JSON campaign suggestions"
+      ],
+      "complexity": "high"
+    }
+  ]
+}

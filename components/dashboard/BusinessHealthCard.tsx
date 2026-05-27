@@ -92,7 +92,7 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
     const sentimentBg: Record<HealthItem['sentiment'], string> = {
         good: status.successBg,
         warning: status.warningBg,
-        neutral: 'bg-white/5',
+        neutral: colors.surface,
     };
 
     if (!items) {

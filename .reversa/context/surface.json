@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-05-03T14:06:00Z",
+  "project_root": "C:\\Users\\User\\Downloads\\Rhian-Lepore-main",
+  "languages": [
+    { "name": "TypeScript", "extensions": [".ts", ".tsx"], "file_count": 190 },
+    { "name": "SQL", "extensions": [".sql"], "file_count": 100 },
+    { "name": "CSS", "extensions": [".css", ".scss"], "file_count": 17 },
+    { "name": "HTML", "extensions": [".html"], "file_count": 1 },
+    { "name": "JSON", "extensions": [".json"], "file_count": 12 }
+  ],
+  "primary_language": "TypeScript",
+  "frameworks": [
+    { "name": "React", "version": "19.2.0", "source": "package.json" },
+    { "name": "React Router DOM", "version": "7.9.6", "source": "package.json" },
+    { "name": "Vite", "version": "6.2.0", "source": "package.json" },
+    { "name": "Supabase", "version": "2.84.0", "source": "package.json" },
+    { "name": "Stripe React", "version": "5.4.1", "source": "package.json" },
+    { "name": "Recharts", "version": "3.4.1", "source": "package.json" }
+  ],
+  "package_manager": "npm",
+  "entry_points": [
+    { "path": "index.html", "type": "html_entry" },
+    { "path": "index.tsx", "type": "app_bootstrap" },
+    { "path": "App.tsx", "type": "app_root" }
+  ],
+  "config_files": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "tsconfig.json",
+    ".eslintrc.json",
+    ".env.example",
+    "vercel.json"
+  ],
+  "ci_cd": [
+    ".github/workflows/ci.yml"
+  ],
+  "docker": {},
+  "database_hints": [
+    { "path": "supabase/migrations/", "type": "migrations_dir" },
+    { "path": "supabase/functions/", "type": "edge_functions_dir" }
+  ],
+  "test_framework": "Vitest",
+  "test_file_count": 16,
+  "modules": [
+    "auth",
+    "agenda",
+    "public-booking",
+    "queue",
+    "clients",
+    "crm",
+    "dashboard",
+    "finance",
+    "marketing",
+    "onboarding",
+    "staff",
+    "team",
+    "settings",
+    "security",
+    "audit",
+    "subscriptions",
+    "ai-assistant",
+    "supabase-backend"
+  ],
+  "total_files": 340
+}

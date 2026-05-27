@@ -3,10 +3,13 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { supabase } from '@/lib/supabase';
 
+const mockUser = { id: 'user-123', created_at: '2023-01-01T00:00:00Z' };
+
 // Mock simples do AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
     useAuth: () => ({
-        user: { id: 'user-123', created_at: '2023-01-01T00:00:00Z' }
+        user: mockUser,
+        companyId: 'user-123'
     })
 }));
 
@@ -34,12 +37,12 @@ describe('useDashboardData', () => {
             monthly_goal: 10000
         };
 
-        (supabase.from as any).mockImplementation((table: string) => {
+                (supabase.from as any).mockImplementation((table: string) => {
             if (table === 'profiles') {
                 return {
                     select: vi.fn().mockReturnThis(),
                     eq: vi.fn().mockReturnThis(),
-                    single: vi.fn().mockResolvedValue({ data: mockProfile, error: null })
+                    single: vi.fn().mockResolvedValue({ data: mockProfile, error: null }),
                 };
             }
             if (table === 'appointments') {
@@ -47,11 +50,24 @@ describe('useDashboardData', () => {
                     select: vi.fn().mockReturnThis(),
                     eq: vi.fn().mockReturnThis(),
                     gte: vi.fn().mockReturnThis(),
+                    lte: vi.fn().mockResolvedValue({ data: [{ price: 50 }], error: null }),
                     order: vi.fn().mockReturnThis(),
-                    limit: vi.fn().mockResolvedValue({ data: mockAppointments, error: null })
+                    limit: vi.fn().mockResolvedValue({ data: mockAppointments, error: null }),
                 };
             }
-            return {};
+            if (table === 'goal_settings') {
+                return {
+                    select: vi.fn().mockReturnThis(),
+                    eq: vi.fn().mockReturnThis(),
+                    maybeSingle: vi.fn().mockResolvedValue({ data: { monthly_goal: 10000 }, error: null }),
+                };
+            }
+            return {
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            };
         });
 
         (supabase.rpc as any).mockImplementation((fn: string) => {
@@ -61,6 +77,9 @@ describe('useDashboardData', () => {
             // Mock finance stats para o loop de 6 meses
             if (fn === 'get_finance_stats') {
                 return Promise.resolve({ data: { revenue: 1000 }, error: null });
+            }
+            if (fn === 'get_dashboard_actions') {
+                return Promise.resolve({ data: [], error: null });
             }
             return Promise.resolve({ data: null, error: null });
         });
@@ -78,6 +97,7 @@ describe('useDashboardData', () => {
 
     it('should handle errors during fetch', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
         (supabase.from as any).mockImplementation(() => ({
             select: vi.fn().mockReturnThis(),
@@ -89,10 +109,13 @@ describe('useDashboardData', () => {
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        expect(consoleSpy).toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalled();
         expect(result.current.loading).toBe(false);
 
         consoleSpy.mockRestore();
+        warnSpy.mockRestore();
     });
 });
+
+
 

@@ -27,6 +27,7 @@ export interface BrutalThemeTokens {
     bg: string;
     card: string;
     surface: string;
+    surfaceHover: string;
     text: string;
     textSecondary: string;
     textMuted: string;
@@ -203,29 +204,31 @@ const ACCENT_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['acce
 const COLOR_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['colors']>> = {
   barber: {
     dark: {
-      bg: 'bg-brutal-main',
-      card: 'bg-brutal-card',
-      surface: 'bg-brutal-surface',
+      bg: 'bg-obsidian-bg',
+      card: 'bg-obsidian-card',
+      surface: 'bg-obsidian-surface',
+      surfaceHover: 'hover:bg-white/[0.03]',
       text: 'text-text-primary',
       textSecondary: 'text-text-secondary',
-      textMuted: 'text-text-muted',
-      border: 'border-white/5',
-      divider: 'border-white/5',
-      overlay: 'bg-black/70',
-      inputBg: 'bg-black/30',
-      inputBorder: 'border-neutral-700/60',
+      textMuted: 'text-white/40',
+      border: 'border-white/[0.06]',
+      divider: 'border-white/[0.06]',
+      overlay: 'bg-black/80',
+      inputBg: 'bg-white/[0.03]',
+      inputBorder: 'border-white/10',
     },
     light: {
-      bg: 'bg-[#F5F1E8]',
-      card: 'bg-white',
-      surface: 'bg-[#EDE9E0]',
+      bg: 'bg-silk-bg',
+      card: 'bg-silk-card',
+      surface: 'bg-silk-surface',
+      surfaceHover: 'hover:bg-black/[0.03]',
       text: 'text-[#1A1A1A]',
       textSecondary: 'text-[#6B5E45]',
       textMuted: 'text-black/40',
-      border: 'border-black/8',
-      divider: 'border-black/8',
+      border: 'border-black/[0.08]',
+      divider: 'border-black/[0.08]',
       overlay: 'bg-[#1F180A]/45',
-      inputBg: 'bg-black/4',
+      inputBg: 'bg-black/[0.04]',
       inputBorder: 'border-black/10',
     },
   },
@@ -234,6 +237,7 @@ const COLOR_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['color
       bg: 'bg-beauty-dark',
       card: 'bg-beauty-card',
       surface: 'bg-[#3D3A4D]',
+      surfaceHover: 'hover:bg-white/[0.03]',
       text: 'text-text-primary',
       textSecondary: 'text-[#B8AED4]',
       textMuted: 'text-[#7B6F96]',
@@ -247,6 +251,7 @@ const COLOR_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['color
       bg: 'bg-[#F7F5FF]',
       card: 'bg-white',
       surface: 'bg-[#EDE8FF]',
+      surfaceHover: 'hover:bg-black/[0.03]',
       text: 'text-[#1A1225]',
       textSecondary: 'text-[#5B4D7A]',
       textMuted: 'text-black/35',
@@ -286,10 +291,10 @@ const RADIUS_MAP: BrutalThemeTokens['radius'] = {
 const SHADOW_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['shadow']>> = {
   barber: {
     dark: {
-      card: 'shadow-promax-glass',
-      cardHover: 'hover:shadow-promax-depth',
-      elevated: 'shadow-promax-depth',
-      modal: 'shadow-promax-glass',
+      card: 'shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]',
+      cardHover: 'hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]',
+      elevated: 'shadow-[0_16px_48px_-12px_rgba(0,0,0,0.7)]',
+      modal: 'shadow-[0_24px_64px_-16px_rgba(0,0,0,0.8)]',
       glow: 'shadow-gold',
       button: 'shadow-gold',
     },
@@ -423,7 +428,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       cardGlow: `${commonCard} ${commonMobileShadow} ${accent.shadowStrong} ${accent.ring} transition-all duration-500`,
 
       buttonPrimary: `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} font-bold ${radius.button} ${accent.shadow} hover:brightness-110 active:scale-[0.97] transition-all duration-300`,
-      buttonSecondary: `${isBeauty ? 'bg-white/10 text-white border-white/10 hover:bg-white/20' : 'bg-white/5 text-text-primary border-white/10 hover:bg-white/10'} font-bold ${radius.button} transition-all duration-300`,
+      buttonSecondary: `${isBeauty ? 'bg-white/10 text-white border-white/10 hover:bg-white/20' : 'bg-white/[0.06] text-text-primary border-white/15 hover:bg-white/10'} font-bold ${radius.button} transition-all duration-300`,
       buttonGhost: `bg-transparent border-transparent ${accent.text} hover:bg-white/5 transition-all duration-300`,
       buttonDanger: `${isBeauty ? 'bg-red-500/20 text-red-300' : 'bg-red-500/10 text-red-400'} border border-red-500/20 ${radius.button} hover:brightness-110 transition-all duration-300`,
       buttonSuccess: `${isBeauty ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'} ${radius.button} hover:brightness-110 transition-all duration-300`,
@@ -444,7 +449,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       tableHeader: `text-xs ${font.mono} uppercase tracking-wider text-neutral-500`,
       section: `space-y-4 md:space-y-6`,
       pageContainer: `min-h-screen ${colors.bg} text-text-primary`,
-      sidebar: `${isBeauty ? 'bg-beauty-dark/95 backdrop-blur-xl' : 'bg-brutal-main'} border-r ${colors.divider}`,
+      sidebar: `${isBeauty ? 'bg-beauty-dark/95 backdrop-blur-xl' : 'bg-obsidian-bg'} border-r ${colors.divider}`,
       sidebarItem: `group relative flex items-center px-4 py-3 font-sans font-medium text-sm transition-all duration-200 rounded-xl`,
       sidebarItemActive: `${accent.bgDim} ${accent.text} ${accent.borderDim} before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.5 before:rounded-full before:${accent.bg.replace('bg-', '')}`,
       sidebarItemInactive: `text-text-secondary hover:${colors.text} hover:bg-white/[0.04]`,

@@ -51,7 +51,8 @@ describe('BrutalCard Component', () => {
         const { container } = renderCard(<BrutalCard>Content</BrutalCard>);
         const card = container.firstChild as HTMLElement;
 
-        expect(card.className).toContain('bg-brutal-card');
+        expect(card.className).toContain('bg-obsidian-card');
         expect(card.className).toContain('rounded-2xl');
     });
 });
+

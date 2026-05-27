@@ -26,6 +26,9 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
     const [resumeStepId, setResumeStepId] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
 
+    // Chave para persistir se o usuário já viu e dispensou a mensagem de "Sistema Ativado!"
+    const getActivationSeenKey = () => `setup_copilot_activated_seen_${user?.id ?? 'anon'}`;
+
     // Estado de conclusão de cada step
     const [checks, setChecks] = useState({
         hasServices: false,
@@ -61,8 +64,19 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                     status.hasBookingSlug = true;
                 }
                 setChecks(status);
-                // Se já estava ativado antes (sessões futuras), oculta o card automaticamente
-                if (status.isActivated) {
+
+                // Se o sistema já foi ativado e o usuário já viu/dispensou a mensagem,
+                // não mostrar mais o copilot
+                const activationSeen = localStorage.getItem(getActivationSeenKey());
+                const allDoneNow =
+                    status.hasServices &&
+                    status.hasTeam &&
+                    status.hasClients &&
+                    status.hasBusinessHours &&
+                    status.hasBookingSlug &&
+                    status.hasAppointments;
+                const isActivatedNow = status.isActivated || allDoneNow;
+                if (isActivatedNow && activationSeen === 'true') {
                     setDismissed(true);
                 }
 
@@ -164,7 +178,12 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
     // Marca setup completo no perfil quando tudo concluído
     useEffect(() => {
         if (allDone && user?.id && !checks.isActivated) {
-            supabase.from('profiles').update({ setup_completed: true, activation_completed: true, activated_at: new Date().toISOString() }).eq('id', user.id);
+            supabase.from('profiles')
+                .update({ setup_completed: true, activation_completed: true, activated_at: new Date().toISOString() })
+                .eq('id', user.id)
+                .then(({ error }) => {
+                    if (error) console.warn('[SetupCopilot] Falha ao atualizar activation_completed:', error);
+                });
             setChecks(prev => ({ ...prev, isActivated: true }));
         }
     }, [allDone, user?.id, checks.isActivated]);
@@ -230,7 +249,7 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                     <div className={`relative rounded-2xl border p-4 overflow-hidden ${colors.card} ${colors.border}`}>
                         <button
                             onClick={handleDismissResume}
-                            className={`absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/10 ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                            className={`absolute top-3 right-3 p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} transition-colors`}
                             aria-label="Dispensar"
                         >
                             <X className="w-3.5 h-3.5" />
@@ -271,7 +290,7 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
             {/* Copilot card — oculto quando dismissed */}
             {!dismissed && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className={`relative rounded-2xl border overflow-hidden ${colors.card} ${colors.border} backdrop-blur-md`}>
+                    <div className={`relative rounded-2xl border overflow-hidden ${colors.card} ${colors.border}`}>
                         {/* Header — clickable para expandir/colapsar */}
                         <button
                             onClick={() => setIsExpanded(v => !v)}
@@ -303,8 +322,16 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                 )}
                                 <ChevronDown className={`w-4 h-4 ${colors.textSecondary} transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
-                                    className={`p-1.5 rounded-full hover:bg-white/5 ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDismissed(true);
+                                        // Se o sistema está ativado, persistir no localStorage
+                                        // para nunca mais mostrar a mensagem "Sistema Ativado!"
+                                        if (isActivated) {
+                                            localStorage.setItem(getActivationSeenKey(), 'true');
+                                        }
+                                    }}
+                                    className={`p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} transition-colors`}
                                     title="Fechar"
                                 >
                                     <X className="w-4 h-4" />
@@ -333,9 +360,9 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                             className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all
                                                 ${step.completed
                                                     ? `opacity-75 cursor-default ${successBgClass}`
-                                                    : step.id === nextStep?.id
-                                                        ? `border-l-2 ${accent.border} ${accent.bgDim} cursor-pointer`
-                                                        : `opacity-60 hover:opacity-100 hover:bg-white/3 cursor-pointer`
+                                            : step.id === nextStep?.id
+                                                ? `${accent.bgDim} ring-1 ${accent.borderDim} cursor-pointer`
+                                                : `opacity-60 hover:opacity-100 ${colors.surfaceHover} cursor-pointer`
                                                 }`}
                                         >
                                             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0

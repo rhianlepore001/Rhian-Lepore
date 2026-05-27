@@ -1,6 +1,7 @@
 // components/onboarding/WizardEngine.tsx
 import React, { Suspense, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Sparkles, Scissors } from 'lucide-react';
 import { WizardOverlay } from '@/components/onboarding/WizardOverlay';
 import { WizardProgress } from '@/components/onboarding/WizardProgress';
 import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
@@ -19,12 +20,12 @@ const StepServices = React.lazy(
 interface WizardStepConfig {
   step: WizardStep;
   title: string;
-  icon: string;
+  Icon: React.FC<{ className?: string }>;
 }
 
 const WIZARD_STEPS: WizardStepConfig[] = [
-  { step: 1, title: 'Boas-vindas', icon: '👋' },
-  { step: 2, title: 'Seus Serviços', icon: '✂️' },
+  { step: 1, title: 'Boas-vindas', Icon: Sparkles },
+  { step: 2, title: 'Seus Serviços', Icon: Scissors },
 ];
 
 const TOTAL_STEPS = WIZARD_STEPS.length; // 2
@@ -42,7 +43,7 @@ export function WizardEngine() {
   const { companyId, markTutorialCompleted } = useAuth();
   const navigate = useNavigate();
 
-  const { isBeauty, accent } = useBrutalTheme();
+  const { isBeauty, accent, colors, shadow } = useBrutalTheme();
 
   const { currentStep, isActive, completedSteps } = state;
 
@@ -98,75 +99,69 @@ export function WizardEngine() {
 
   return (
     <WizardOverlay isActive={isActive}>
-      <div className="relative z-[9997] flex min-h-screen pointer-events-auto bg-background text-foreground">
-        
-        {/* Left Side: Brand/Visual */}
-        <div className={`hidden lg:flex lg:flex-col lg:w-1/2 p-12 justify-between relative overflow-hidden
-          ${isBeauty ? 'bg-beauty-neon/5' : 'bg-accent-gold/5'} border-r border-border`}>
-          
-          {/* Decorative Pattern / Blobs */}
-          <div className={`absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none
-            ${accent.bg}`} />
-          <div className={`absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-10 pointer-events-none translate-x-1/3 translate-y-1/3
-            ${accent.bg}`} />
+      <div className={`relative z-[9997] min-h-screen pointer-events-auto ${colors.bg} ${colors.text} font-sans overflow-x-hidden transition-colors duration-700`}>
 
-          <div className="relative z-10">
-            <h1 className="text-3xl font-bold font-heading text-foreground tracking-tight">AgendiX</h1>
-            <p className="text-muted-foreground mt-2 font-mono text-sm uppercase tracking-wider">Configuração Inicial</p>
-          </div>
-          
-          <div className="space-y-6 max-w-md relative z-10">
-            <h2 className="text-4xl font-bold font-heading text-foreground leading-tight">
-              Sua agenda <br/>
-              <span className={accent.text}>inteligente</span> e <br/>
-              automatizada.
-            </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Prepare seu espaço em poucos minutos e comece a receber agendamentos online hoje mesmo.
-            </p>
-          </div>
+        {/* Background Texture Overlay */}
+        <div className="fixed inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-noise z-[1]" />
 
-          <div className="text-sm text-muted-foreground relative z-10">
-            © {new Date().getFullYear()} AgendiX. Todos os direitos reservados.
+        {/* Sophisticated Glows */}
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
+          <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${accent.bgDim}`} />
+          <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] bg-black/40`} />
+        </div>
+
+        {/* Header */}
+        <div className="relative z-10 w-full">
+          <div className={`sticky top-0 z-[60] w-full border-b ${colors.bg}/95 ${colors.divider} backdrop-blur-md`}>
+            <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accent.bgDim}`}>
+                  <currentStepConfig.Icon className={`w-4 h-4 ${accent.text}`} />
+                </div>
+                <h2 className="text-sm font-bold tracking-tight">{currentStepConfig.title}</h2>
+              </div>
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+                Passo {currentStep} de {TOTAL_STEPS}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Side: Content */}
-        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative">
-          
-          {/* Logo on mobile */}
-          <div className="lg:hidden absolute top-6 left-6">
-            <h1 className="text-xl font-bold font-heading text-foreground tracking-tight">AgendiX</h1>
+        {/* Main Content */}
+        <div className="relative z-10 max-w-2xl mx-auto px-4 pt-8 pb-24">
+
+          {/* Progress bar */}
+          <div className="mb-8">
+            <WizardProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'} />
           </div>
 
-          <div className="w-full max-w-md mt-16 lg:mt-0">
-            {/* Progress bar */}
-            <div className="mb-10">
-              <WizardProgress currentStep={currentStep} totalSteps={TOTAL_STEPS} />
-            </div>
-
-            {/* Step title */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl" aria-hidden="true">
-                  {currentStepConfig.icon}
-                </span>
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">{currentStepConfig.title}</h2>
-              </div>
-            </div>
-
-            {/* Step content — ID fora do Suspense para WizardPointer encontrar imediatamente */}
-            <div
-              key={currentStep}
-              id={`wizard-step-${currentStep}`}
-              className="animate-in fade-in slide-in-from-bottom-4 duration-500"
-            >
+          {/* Step content */}
+          <div
+            key={currentStep}
+            id={`wizard-step-${currentStep}`}
+            className={`${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl shadow-sm overflow-hidden`}
+          >
+            <div className="p-6 md:p-8">
               <Suspense fallback={<StepLoadingFallback />}>
                 {renderCurrentStepContent()}
               </Suspense>
             </div>
           </div>
+
         </div>
+
+        {/* Footer */}
+        <div className="fixed bottom-0 left-0 right-0 z-[60] border-t ${colors.divider} ${colors.bg}/90 backdrop-blur-2xl">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              © {new Date().getFullYear()} AgendiX
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Configuração Inicial
+            </span>
+          </div>
+        </div>
+
       </div>
     </WizardOverlay>
   );

@@ -100,3 +100,11 @@ playwright-report/
 # AIOX Local (AIOX)
 .aiox-core/local/
 .aiox/install-log.txt
+
+# Screenshots & Relatorios temporarios
+screenshots*/
+auto-*.png
+relatorio/
+impeccable/
+
+

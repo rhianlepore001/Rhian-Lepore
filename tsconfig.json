@@ -1,6 +1,7 @@
 {
   "exclude": [
     "clerk-migration",
+    "impeccable",
     "node_modules",
     "supabase",
     "vitest.config.ts"

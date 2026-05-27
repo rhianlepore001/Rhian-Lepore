@@ -59,7 +59,7 @@ const QuickActionItem: React.FC<{
         : 'rounded-lg opacity-75';
 
     return (
-        <li className={`p-3 md:p-4 hover:bg-white/5 ${colors.card} transition-all flex items-center justify-between group ${nextHighlight} ${status === 'completing' ? 'opacity-50 scale-95' : ''}`}>
+        <li className={`p-3 md:p-4 ${colors.surfaceHover} ${colors.card} transition-all flex items-center justify-between group ${nextHighlight} ${status === 'completing' ? 'opacity-50 scale-95' : ''}`}>
             <div className="flex items-center gap-3 md:gap-4 flex-1">
                 <div className={`font-mono text-base font-bold ${colors.text} ${colors.surface} px-3 py-2 border ${colors.border} rounded-lg flex flex-col items-center shadow-inner min-w-[56px] text-center relative`}>
                     <span>{apt.time}</span>

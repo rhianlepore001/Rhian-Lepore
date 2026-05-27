@@ -77,7 +77,6 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
             <BusinessHoursEditor
                 hours={businessHours}
                 onChange={setBusinessHours}
-                isBeauty={userType === 'beauty'}
             />
 
             <div className="flex gap-4 pt-4">

@@ -39,10 +39,10 @@ export const ActionCenter = React.memo(({
 
     const getColorClass = (type: ActionItem['type']) => {
         switch (type) {
-            case 'recovery': return `border-l-[3px] ${status.dangerBorder}`;
-            case 'gap': return `border-l-[3px] ${status.warningBorder}`;
-            case 'upsell': return `border-l-[3px] ${status.successBorder}`;
-            default: return `border-l-[3px] ${colors.border}`;
+            case 'recovery': return `${status.dangerBorder}`;
+            case 'gap': return `${status.warningBorder}`;
+            case 'upsell': return `${status.successBorder}`;
+            default: return `${colors.border}`;
         }
     };
 
@@ -68,7 +68,7 @@ export const ActionCenter = React.memo(({
                     actions.map((action, idx) => (
                         <div
                             key={action.id}
-                            className={`p-5 md:p-6 hover:bg-white/[0.03] transition-all duration-200 ${getColorClass(action.type)} group cursor-pointer`}
+                            className={`p-5 md:p-6 ${colors.surfaceHover} transition-all duration-200 border ${getColorClass(action.type)} group cursor-pointer`}
                             style={{ animationDelay: `${idx * 50}ms` }}
                         >
                             <div className="flex justify-between items-start gap-4">

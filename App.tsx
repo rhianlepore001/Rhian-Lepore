@@ -31,6 +31,7 @@ const AuditLogs = React.lazy(() => import('./pages/settings/AuditLogs').then(mod
 const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(module => ({ default: module.RecycleBin })));
 const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySettings').then(module => ({ default: module.SecuritySettings })));
 const SystemLogs = React.lazy(() => import('./pages/settings/SystemLogs').then(module => ({ default: module.SystemLogs })));
+const UiPreview = React.lazy(() => import('./pages/settings/UiPreview').then(module => ({ default: module.UiPreview })));
 const OnboardingWizard = React.lazy(() => import('./pages/OnboardingWizard').then(module => ({ default: module.OnboardingWizard })));
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 const StaffOnboarding = React.lazy(() => import('./pages/StaffOnboarding').then(module => ({ default: module.StaffOnboarding })));
@@ -194,6 +195,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/lixeira" element={<DevRouteGuard><RecycleBin /></DevRouteGuard>} />
           <Route path="/configuracoes/seguranca" element={<OwnerRouteGuard><SecuritySettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/erros" element={<DevRouteGuard><SystemLogs /></DevRouteGuard>} />
+          <Route path="/configuracoes/ui-preview" element={<DevRouteGuard><UiPreview /></DevRouteGuard>} />
           <Route path="/configuracoes/notificacoes" element={<OwnerRouteGuard><Placeholder title="Notificações" /></OwnerRouteGuard>} />
         </Route>
 

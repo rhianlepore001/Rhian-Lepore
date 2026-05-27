@@ -1,5 +1,5 @@
 {
-    "ignorePatterns": ["e2e/", "dist/", "coverage/"],
+    "ignorePatterns": ["e2e/", "dist/", "coverage/", "impeccable/", "scripts/capture-v*.ts"],
     "env": {
         "browser": true,
         "es2021": true,

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
+import type { TeamMember as TeamMemberType } from '../../types/team';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { BrutalCard } from '../../components/BrutalCard';
@@ -13,49 +14,26 @@ export const TeamSettings: React.FC = () => {
     const { user } = useAuth();
     const { accent, colors, isBeauty } = useBrutalTheme();
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const [members, setMembers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: members = [], isLoading: loading } = useTeamMembers();
+    const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
     const [copiedLink, setCopiedLink] = useState(false);
 
-    useEffect(() => {
-        fetchMembers();
-    }, [user]);
-
-    const fetchMembers = async () => {
-        if (!user) return;
-        try {
-            const { data } = await supabase
-                .from('team_members')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('is_owner', { ascending: false })
-                .order('name', { ascending: true });
-
-            setMembers(data || []);
-        } catch (error) {
-            console.error('Error fetching members:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const cardMembers = members.map(m => ({ ...m, photo_url: m.photo_url ?? null }));
 
     const handleDelete = async (id: string) => {
         if (!confirm('Tem certeza que deseja excluir este profissional?')) return;
-
         try {
-            const { error } = await supabase.from('team_members').delete().eq('id', id).eq('user_id', user.id);
-            if (error) throw error;
-            fetchMembers();
+            await deleteMemberMutation.mutateAsync(id);
         } catch (error) {
             console.error('Error deleting member:', error);
             alert('Erro ao excluir.');
         }
     };
 
-    const owners = members.filter(m => m.is_owner);
-    const staff = members.filter(m => !m.is_owner);
+    const owners = cardMembers.filter(m => m.is_owner);
+    const staff = cardMembers.filter(m => !m.is_owner);
 
     const handleCopyInviteLink = async () => {
         const inviteLink = `${window.location.origin}/#/register?company=${user?.id}`;
@@ -164,7 +142,7 @@ export const TeamSettings: React.FC = () => {
                     <div className="flex items-center justify-center py-20">
                         <div className={`animate-spin h-10 w-10 border-4 border-t-transparent ${accent.border} rounded-full`}></div>
                     </div>
-                ) : members.length === 0 ? (
+                ) : cardMembers.length === 0 ? (
                     <BrutalCard className="p-12 text-center border-dashed">
                         <div className={`w-20 h-20 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-6 border ${colors.border}`}>
                             <UserCheck className="w-10 h-10 text-neutral-500" />
@@ -237,13 +215,12 @@ export const TeamSettings: React.FC = () => {
                         initialData={editingMember}
                         accentColor={accentColor}
                         onClose={() => setIsModalOpen(false)}
-                        onSave={fetchMembers}
+                        onSave={() => {
+                            deleteMemberMutation.reset();
+                        }}
                     />
                 )}
             </div>
         </SettingsLayout>
     );
 };
-
-
-

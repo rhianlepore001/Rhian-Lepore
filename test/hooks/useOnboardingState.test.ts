@@ -33,6 +33,7 @@ const setupAuthMock = (profileData?: object) => {
         }),
         update: vi.fn().mockReturnThis(),
         insert: vi.fn().mockReturnThis(),
+        upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
     }));
     (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
 };
@@ -61,13 +62,14 @@ describe('useOnboardingState', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({
-                data: table === 'business_settings'
-                    ? { onboarding_step: 3, onboarding_completed: false }
+                data: table === 'onboarding_progress'
+                    ? { current_step: 3, is_completed: false }
                     : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
                 error: null,
             }),
             update: vi.fn().mockReturnThis(),
             insert: vi.fn().mockReturnThis(),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }));
 
         const { result } = renderHook(() => useOnboardingState(), { wrapper });
@@ -83,13 +85,14 @@ describe('useOnboardingState', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({
-                data: table === 'business_settings'
-                    ? { onboarding_step: 5, onboarding_completed: true }
+                data: table === 'onboarding_progress'
+                    ? { current_step: 5, is_completed: true }
                     : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
                 error: null,
             }),
             update: vi.fn().mockReturnThis(),
             insert: vi.fn().mockReturnThis(),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }));
 
         const { result } = renderHook(() => useOnboardingState(), { wrapper });
@@ -105,13 +108,14 @@ describe('useOnboardingState', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({
-                data: table === 'business_settings'
-                    ? { onboarding_step: 1, onboarding_completed: false }
+                data: table === 'onboarding_progress'
+                    ? { current_step: 1, is_completed: false }
                     : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
                 error: null,
             }),
             update: vi.fn().mockReturnThis(),
             insert: vi.fn().mockReturnThis(),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }));
 
         const { result } = renderHook(() => useOnboardingState(), { wrapper });
@@ -121,9 +125,11 @@ describe('useOnboardingState', () => {
             await result.current.goToStep(2);
         });
 
-        expect(supabase.rpc).toHaveBeenCalledWith('update_onboarding_step', {
-            p_user_id: mockUser.id,
-            p_step: 2,
+        expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', {
+            p_company_id: mockUser.id,
+            p_current_step: 2,
+            p_completed_steps: [],
+            p_step_data: {},
         });
         expect(result.current.step).toBe(2);
     });
@@ -134,13 +140,14 @@ describe('useOnboardingState', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({
-                data: table === 'business_settings'
-                    ? { onboarding_step: 99, onboarding_completed: false }
+                data: table === 'onboarding_progress'
+                    ? { current_step: 99, is_completed: false }
                     : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
                 error: null,
             }),
             update: vi.fn().mockReturnThis(),
             insert: vi.fn().mockReturnThis(),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }));
 
         const { result } = renderHook(() => useOnboardingState(), { wrapper });
@@ -155,13 +162,14 @@ describe('useOnboardingState', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({
-                data: table === 'business_settings'
-                    ? { onboarding_step: 4, onboarding_completed: false }
+                data: table === 'onboarding_progress'
+                    ? { current_step: 4, is_completed: false }
                     : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
                 error: null,
             }),
             update: vi.fn().mockReturnThis(),
             insert: vi.fn().mockReturnThis(),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }));
 
         const { result } = renderHook(() => useOnboardingState(), { wrapper });
@@ -171,11 +179,7 @@ describe('useOnboardingState', () => {
             await result.current.completeOnboarding();
         });
 
-        expect(supabase.rpc).toHaveBeenCalledWith('update_onboarding_step', {
-            p_user_id: mockUser.id,
-            p_step: 5,
-            p_completed: true,
-        });
+        expect(supabase.from).toHaveBeenCalledWith('onboarding_progress');
         expect(result.current.completed).toBe(true);
     });
 });

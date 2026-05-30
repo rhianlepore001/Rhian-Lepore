@@ -20,7 +20,7 @@ interface UseOnboardingStateReturn {
 }
 
 export const useOnboardingState = (): UseOnboardingStateReturn => {
-  const { user, tutorialCompleted, markTutorialCompleted } = useAuth();
+  const { companyId, user, tutorialCompleted, markTutorialCompleted } = useAuth();
   const [state, setState] = useState<OnboardingState>({
     step: 1,
     completed: false,
@@ -34,20 +34,20 @@ export const useOnboardingState = (): UseOnboardingStateReturn => {
   markTutorialCompletedRef.current = markTutorialCompleted;
 
   const fetchProgress = useCallback(async () => {
-    if (!user) return;
+    if (!companyId || !user) return;
 
     try {
       const { data, error } = await supabase
-        .from('business_settings')
-        .select('onboarding_step, onboarding_completed')
-        .eq('user_id', user.id)
+        .from('onboarding_progress')
+        .select('current_step, is_completed')
+        .eq('company_id', companyId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Erro ao buscar progresso do onboarding:', error);
       }
 
-      if (data?.onboarding_completed) {
+      if (data?.is_completed) {
         if (!tutorialCompletedRef.current) {
           await markTutorialCompletedRef.current();
         }
@@ -55,8 +55,8 @@ export const useOnboardingState = (): UseOnboardingStateReturn => {
         return;
       }
 
-      const savedStep = data?.onboarding_step
-        ? (Math.min(Math.max(data.onboarding_step, 1), 5) as OnboardingStep)
+      const savedStep = data?.current_step
+        ? (Math.min(Math.max(data.current_step, 1), 5) as OnboardingStep)
         : 1;
 
       setState({ step: savedStep, completed: false, loading: false });
@@ -64,7 +64,7 @@ export const useOnboardingState = (): UseOnboardingStateReturn => {
       console.error('Erro inesperado no onboarding:', err);
       setState(prev => ({ ...prev, loading: false }));
     }
-  }, [user]); // Só re-cria quando o user muda — refs usadas para callbacks estáveis
+  }, [companyId, user]); // Só re-cria quando o tenant/user muda — refs usadas para callbacks estáveis
 
   useEffect(() => {
     fetchProgress();
@@ -72,36 +72,44 @@ export const useOnboardingState = (): UseOnboardingStateReturn => {
 
   const goToStep = useCallback(
     async (nextStep: OnboardingStep) => {
-      if (!user) return;
+      if (!companyId || !user) return;
 
       try {
-        await supabase.rpc('update_onboarding_step', {
-          p_user_id: user.id,
-          p_step: nextStep,
+        await supabase.rpc('upsert_onboarding_progress', {
+          p_company_id: companyId,
+          p_current_step: nextStep,
+          p_completed_steps: [],
+          p_step_data: {},
         });
         setState(prev => ({ ...prev, step: nextStep }));
       } catch (err) {
         console.error('Erro ao salvar etapa:', err);
       }
     },
-    [user]
+    [companyId, user]
   );
 
   const completeOnboarding = useCallback(async () => {
-    if (!user) return;
+    if (!companyId || !user) return;
 
     try {
-      await supabase.rpc('update_onboarding_step', {
-        p_user_id: user.id,
-        p_step: 5,
-        p_completed: true,
-      });
+      await supabase
+        .from('onboarding_progress')
+        .upsert(
+          {
+            company_id: companyId,
+            current_step: 5,
+            is_completed: true,
+            completed_at: new Date().toISOString(),
+          },
+          { onConflict: 'company_id' }
+        );
       await markTutorialCompletedRef.current();
       setState(prev => ({ ...prev, step: 5, completed: true }));
     } catch (err) {
       console.error('Erro ao finalizar onboarding:', err);
     }
-  }, [user]);
+  }, [companyId, user]);
 
   return {
     step: state.step,

@@ -5,6 +5,7 @@ import { BrutalButton } from '../components/BrutalButton';
 import { PhoneInput } from '../components/PhoneInput';
 import { User, Scissors, Clock, Loader2, AlertTriangle, Users, Search, Sparkles, MapPin } from 'lucide-react';
 import { formatCurrency, formatPhone } from '../utils/formatters';
+import { joinQueue } from '../services/queue';
 
 interface Service {
     id: string;
@@ -110,20 +111,13 @@ export const QueueJoin: React.FC = () => {
         if (!name || !phone || !selectedService || !business) return;
         setSubmitting(true);
         try {
-            const { data, error } = await supabase
-                .from('queue_entries')
-                .insert({
-                    business_id: business.id,
-                    client_name: name,
-                    client_phone: phone,
-                    service_id: selectedService,
-                    professional_id: selectedProfessional,
-                    status: 'waiting'
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
+            const data = await joinQueue({
+                businessId: business.id,
+                clientName: name,
+                clientPhone: phone,
+                serviceId: selectedService,
+                professionalId: selectedProfessional,
+            });
             navigate(`/queue-status/${data.id}`);
 
         } catch (err) {

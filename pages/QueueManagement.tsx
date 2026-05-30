@@ -8,6 +8,7 @@ import { Clock, User, Phone, Play, X, Check, Megaphone, Trash2, QrCode, Download
 import { QueueEntry } from '../types';
 import { formatPhone, formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+import { addManualQueueEntry, finishQueueEntry, resetExpiredCallingEntries, updateQueueStatus } from '../services/queue';
 
 export const QueueManagement: React.FC = () => {
     const { user, region } = useAuth();
@@ -47,6 +48,8 @@ export const QueueManagement: React.FC = () => {
     const fetchQueue = async () => {
         if (!user) return;
         try {
+            await resetExpiredCallingEntries(user.id);
+
             const { data, error } = await supabase
                 .from('queue_entries')
                 .select('*')
@@ -102,14 +105,11 @@ export const QueueManagement: React.FC = () => {
         if (!user || !addClientName.trim()) return;
         setIsAdding(true);
         try {
-            const { error } = await supabase.from('queue_entries').insert({
-                business_id: user.id,
-                client_name: addClientName.trim(),
-                client_phone: addClientPhone.trim() || '0000000000',
-                status: 'waiting',
-                joined_at: new Date().toISOString(),
+            await addManualQueueEntry({
+                businessId: user.id,
+                clientName: addClientName,
+                clientPhone: addClientPhone || '0000000000',
             });
-            if (error) throw error;
             setShowAddModal(false);
             setAddClientName('');
             setAddClientPhone('');
@@ -123,14 +123,14 @@ export const QueueManagement: React.FC = () => {
         }
     };
 
-    const updateStatus = async (id: string, newStatus: string) => {
+    const updateStatus = async (id: string, newStatus: QueueEntry['status']) => {
+        if (!user) return;
         try {
-            const { error } = await supabase
-                .from('queue_entries')
-                .update({ status: newStatus })
-                .eq('id', id);
-
-            if (error) throw error;
+            await updateQueueStatus({
+                entryId: id,
+                businessId: user.id,
+                status: newStatus,
+            });
 
             // Optimistic update
             setEntries(prev => prev.map(e => e.id === id ? { ...e, status: newStatus as any } : e).filter(e =>
@@ -175,103 +175,12 @@ export const QueueManagement: React.FC = () => {
             const priceVal = parseFloat(finishPrice);
             if (isNaN(priceVal)) throw new Error('Valor inválido');
 
-            // 1. Identify or Create Client
-            let clientId = finishingEntry.client_id;
-
-            // Search by phone if no ID (though queue normally has no client_id initially unless logged in? 
-            // Actually our QueueJoin doesn't link to 'clients' table, it just stores name/phone in queue_entries.
-            // So we ALWAYS need to search/create here.)
-
-            if (!clientId) {
-                const rawPhone = finishingEntry.client_phone;
-                // Try to find client by phone
-                const { data: existingClient } = await supabase
-                    .from('clients')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .or(`phone.eq.${rawPhone},phone.eq.${formatPhone(rawPhone, 'BR')},phone.eq.${formatPhone(rawPhone, 'PT')}`) // Try exact and formatted
-                    .maybeSingle();
-
-                if (existingClient) {
-                    clientId = existingClient.id;
-                } else {
-                    // Create new
-                    const { data: newClient, error: clientError } = await supabase
-                        .from('clients')
-                        .insert({
-                            user_id: user.id,
-                            name: finishingEntry.client_name,
-                            phone: finishingEntry.client_phone,
-                            // We don't have email/photo easily unless we want to ask? Let's keep it simple.
-                        })
-                        .select()
-                        .single();
-                    if (clientError) throw clientError;
-                    clientId = newClient.id;
-                }
-            }
-
-            // 2. Insert Appointment (for history)
-            // Need service name
-            const { data: aptData, error: aptError } = await supabase
-                .from('appointments')
-                .insert({
-                    user_id: user.id,
-                    client_id: clientId,
-                    professional_id: finishPro || null, // Default to null if no pro
-                    service: finishService,
-                    appointment_time: new Date().toISOString(), // Now
-                    price: priceVal,
-                    status: 'Completed',
-                    duration_minutes: 30 // Approx
-                })
-                .select()
-                .single();
-
-            if (aptError) throw aptError;
-
-            // 3. Create Finance Record
-            let commissionRate = 0;
-            let professionalName = 'Profissional';
-            if (finishPro) {
-                const pro = teamMembers.find(m => m.id === finishPro);
-                if (pro) {
-                    commissionRate = pro.commission_rate || 0;
-                    professionalName = pro.name;
-                }
-            }
-
-            const commissionValue = (priceVal * commissionRate) / 100;
-
-            const { error: financeError } = await supabase
-                .from('finance_records')
-                .insert({
-                    user_id: user.id,
-                    appointment_id: aptData.id,
-                    professional_id: finishPro || null,
-                    barber_name: professionalName,
-                    revenue: priceVal,
-                    commission_rate: commissionRate,
-                    commission_value: commissionValue,
-                    created_at: new Date().toISOString(),
-
-                    type: 'revenue', // Ensure we mark it as revenue
-                    client_name: finishingEntry.client_name, // Pass client name for Finance display
-                    service_name: finishService // Ideally pass service name too
-                });
-
-            if (financeError) throw financeError;
-
-            // 4. Update Queue Entry
-            const { error: updateError } = await supabase
-                .from('queue_entries')
-                .update({ status: 'completed' })
-                .eq('id', finishingEntry.id);
-
-            if (updateError) {
-                logger.error('Error updating queue status', updateError);
-                throw updateError;
-            }
+            await finishQueueEntry({
+                entryId: finishingEntry.id,
+                serviceName: finishService,
+                finalPrice: priceVal,
+                professionalId: finishPro || null,
+            });
 
             setShowFinishModal(false);
 

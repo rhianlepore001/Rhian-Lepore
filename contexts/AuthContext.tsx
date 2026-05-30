@@ -83,13 +83,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBusinessName(profile.business_name || '');
         setFullName(profile.full_name || '');
         setAvatarUrl(profile.photo_url || null);
-        setTutorialCompleted(profile.tutorial_completed ?? false);
         setRole(isStaffAccount ? 'staff' : 'owner');
-        setCompanyId(profile.company_id || null);
+        setCompanyId(profile.company_id || userId);
         setAiosEnabled(profile.aios_enabled ?? false);
 
         // Se for staff, herda o plano de assinatura do dono
         if (isStaffAccount && profile.company_id) {
+          setTutorialCompleted(profile.tutorial_completed ?? false);
+
           const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('subscription_status, trial_ends_at, user_type, business_name')
@@ -119,6 +120,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           setTeamMemberId(teamMember?.id || null);
         } else {
+          const { data: onboardingProgress, error: onboardingError } = await supabase
+            .from('onboarding_progress')
+            .select('is_completed')
+            .eq('company_id', profile.company_id || userId)
+            .single();
+
+          if (onboardingError && onboardingError.code !== 'PGRST116') {
+            console.error('Error fetching onboarding progress:', onboardingError);
+          }
+
+          setTutorialCompleted(onboardingProgress?.is_completed ?? profile.tutorial_completed ?? false);
           setSubscriptionStatus((profile.subscription_status as any) || 'trial');
           setTrialEndsAt(profile.trial_ends_at || null);
           setTeamMemberId(null);
@@ -223,10 +235,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const markTutorialCompleted = async () => {
     if (!session?.user) return;
     try {
-      await supabase
-        .from('profiles')
-        .update({ tutorial_completed: true })
-        .eq('id', session.user.id);
+      if (role === 'staff') {
+        await supabase
+          .from('profiles')
+          .update({ tutorial_completed: true })
+          .eq('id', session.user.id);
+      } else {
+        const { error } = await supabase
+          .from('onboarding_progress')
+          .upsert(
+            {
+              company_id: companyId || session.user.id,
+              current_step: 5,
+              completed_steps: [1, 2, 3, 4, 5],
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+            },
+            { onConflict: 'company_id' }
+          );
+
+        if (error) throw error;
+      }
+
       setTutorialCompleted(true);
     } catch (error) {
       console.error('Error marking tutorial as complete:', error);
@@ -278,6 +308,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ]);
 
         if (profileError) return { error: profileError };
+
+        if (!data.companyId) {
+          const { error: onboardingError } = await supabase.rpc('upsert_onboarding_progress', {
+            p_company_id: authData.user.id,
+            p_current_step: 1,
+            p_completed_steps: [],
+            p_step_data: {}
+          });
+
+          if (onboardingError) return { error: onboardingError };
+        }
 
         // Se for um registro de equipe (tem companyId), cria também o registro em team_members
         if (data.companyId) {

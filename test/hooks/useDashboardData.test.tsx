@@ -1,7 +1,9 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { supabase } from '@/lib/supabase';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockUser = { id: 'user-123', created_at: '2023-01-01T00:00:00Z' };
 
@@ -12,6 +14,22 @@ vi.mock('@/contexts/AuthContext', () => ({
         companyId: 'user-123'
     })
 }));
+
+const createWrapper = () => {
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                retry: false,
+                gcTime: Infinity,
+            },
+        },
+    });
+    return ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>
+            {children}
+        </QueryClientProvider>
+    );
+};
 
 describe('useDashboardData', () => {
     beforeEach(() => {
@@ -37,7 +55,7 @@ describe('useDashboardData', () => {
             monthly_goal: 10000
         };
 
-                (supabase.from as any).mockImplementation((table: string) => {
+        (supabase.from as any).mockImplementation((table: string) => {
             if (table === 'profiles') {
                 return {
                     select: vi.fn().mockReturnThis(),
@@ -84,7 +102,7 @@ describe('useDashboardData', () => {
             return Promise.resolve({ data: null, error: null });
         });
 
-        const { result } = renderHook(() => useDashboardData());
+        const { result } = renderHook(() => useDashboardData(), { wrapper: createWrapper() });
 
         // Esperar pelo loading sumir (timeout maior para o loop de 6 rpc calls)
         await waitFor(() => expect(result.current.loading).toBe(false), { timeout: 3000 });
@@ -105,7 +123,7 @@ describe('useDashboardData', () => {
             single: vi.fn().mockRejectedValue(new Error('DB Error'))
         }));
 
-        const { result } = renderHook(() => useDashboardData());
+        const { result } = renderHook(() => useDashboardData(), { wrapper: createWrapper() });
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -116,6 +134,3 @@ describe('useDashboardData', () => {
         warnSpy.mockRestore();
     });
 });
-
-
-

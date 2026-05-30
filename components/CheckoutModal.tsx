@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { BrutalButton } from '@/components/BrutalButton';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { logger } from '@/utils/Logger';
 import { Banknote, CreditCard, Smartphone } from 'lucide-react';
 import type { Appointment } from '@/types';
+import { calcCheckoutNetAmount, calcMachineFee, getMachineFeePercent } from '@/services/scheduling';
+import { useCheckout } from '@/hooks/useScheduling';
+import type { CheckoutPaymentMethod } from '@/types/scheduling';
 
 interface TeamMember {
   id: string;
@@ -35,18 +37,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onConfirm,
 }) => {
   const { companyId, region } = useAuth();
+  const checkout = useCheckout();
+  const { isPending, mutateAsync, reset } = checkout;
 
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
   const [receivedBy, setReceivedBy] = useState<string>('');
   const [machineFeePercent, setMachineFeePercent] = useState<string>('');
   const [finalPrice, setFinalPrice] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string }>({});
 
-  // Suprime lint warning — companyId mantido para futuras queries multi-tenant
   void companyId;
 
-  // Reset estado quando appointment muda
   useEffect(() => {
     if (appointment) {
       setPaymentMethod('');
@@ -54,26 +55,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setMachineFeePercent('');
       setFinalPrice(appointment.price ?? 0);
       setErrors({});
-      setLoading(false);
+      reset();
     }
-  }, [appointment?.id]);
+  }, [appointment?.id, reset]);
 
-  // Pré-preencher taxa quando método de pagamento muda
   useEffect(() => {
-    if (paymentMethod === 'debit' && financialSettings?.debit_fee_percent) {
-      setMachineFeePercent(String(financialSettings.debit_fee_percent));
-    } else if (paymentMethod === 'credit' && financialSettings?.credit_fee_percent) {
-      setMachineFeePercent(String(financialSettings.credit_fee_percent));
+    const defaultFeePercent = getMachineFeePercent(paymentMethod, financialSettings);
+    if (defaultFeePercent > 0) {
+      setMachineFeePercent(String(defaultFeePercent));
     } else if (!['debit', 'credit'].includes(paymentMethod)) {
       setMachineFeePercent('');
     }
   }, [paymentMethod, financialSettings]);
 
   const showMachineFee = ['debit', 'credit'].includes(paymentMethod);
-
   const feePercent = parseFloat(machineFeePercent) || 0;
-  const feeAmount = showMachineFee ? parseFloat((finalPrice * feePercent / 100).toFixed(2)) : 0;
-  const netAmount = parseFloat((finalPrice - feeAmount).toFixed(2));
+  const feeAmount = paymentMethod ? calcMachineFee(finalPrice, paymentMethod, feePercent) : 0;
+  const netAmount = calcCheckoutNetAmount(finalPrice, feeAmount);
+  const loading = isPending;
 
   const handleConfirm = async () => {
     const newErrors: { paymentMethod?: string; receivedBy?: string } = {};
@@ -84,7 +83,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (!receivedBy) {
       newErrors.receivedBy = 'Selecione quem recebeu o pagamento';
     }
-    // EC-F2-05: taxa não pode exceder o valor
     if (showMachineFee && feeAmount > finalPrice) {
       newErrors.paymentMethod = 'Taxa não pode exceder o valor do serviço';
     }
@@ -93,53 +91,38 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setErrors(newErrors);
       return;
     }
-    if (!appointment) return;
+    if (!appointment || !paymentMethod) return;
 
-    setLoading(true);
     setErrors({});
 
     try {
-      // Atualizar preço final se foi editado
-      if (finalPrice !== appointment.price) {
-        const { error: priceError } = await supabase
-          .from('appointments')
-          .update({ price: finalPrice })
-          .eq('id', appointment.id);
-        if (priceError) throw priceError;
-      }
-
-      // Chamar RPC v2 com todos os parâmetros
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
-      const { error: rpcError } = await supabase.rpc('complete_appointment', {
-        p_appointment_id: appointment.id,
-        p_payment_method: paymentMethod,
-        p_received_by: receivedByUUID,
-        p_completed_by: receivedByUUID,
-        p_machine_fee_percent: feePercent,
-        p_machine_fee_amount: feeAmount,
-      });
 
-      if (rpcError) throw rpcError;
+      await mutateAsync({
+        appointmentId: appointment.id,
+        paymentMethod,
+        receivedBy: receivedByUUID,
+        completedBy: receivedByUUID,
+        finalPrice,
+        machineFeePercent: feePercent,
+        machineFeeAmount: feeAmount,
+      });
 
       onConfirm();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       logger.error('Erro ao concluir atendimento via checkout', { error: errorMessage });
       alert('Erro ao concluir atendimento. Tente novamente.');
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Ícone por método de pagamento
   const paymentMethodIcon = (value: string) => {
     if (value === 'cash') return <Banknote size={16} />;
     if (value === 'pix' || value === 'mbway') return <Smartphone size={16} />;
     return <CreditCard size={16} />;
   };
 
-  // Métodos de pagamento por região
-  const paymentMethods = region === 'PT'
+  const paymentMethods: Array<{ value: CheckoutPaymentMethod; label: string }> = region === 'PT'
     ? [
         { value: 'cash', label: 'Dinheiro' },
         { value: 'mbway', label: 'MBWay' },
@@ -172,13 +155,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
     >
       <div className="space-y-5">
-        {/* Resumo do atendimento (read-only) */}
         <div className="bg-white/[0.03] rounded-xl p-4 space-y-1 border border-white/[0.08] backdrop-blur-md">
           <p className="text-xs font-mono uppercase text-neutral-400">Serviço</p>
           <p className="text-white font-medium">{appointment?.service}</p>
         </div>
 
-        {/* Valor final (editável — EC-F2-04: permite valor zero) */}
         <div>
           <label htmlFor="checkout-price" className="block text-xs font-mono uppercase text-neutral-400 mb-1">
             Valor Final (R$)
@@ -189,12 +170,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             step="0.01"
             min="0"
             value={finalPrice}
-            onChange={(e) => setFinalPrice(parseFloat(e.target.value) || 0)}
+            onChange={(event) => setFinalPrice(parseFloat(event.target.value) || 0)}
             className="w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold"
           />
         </div>
 
-        {/* Forma de Pagamento (obrigatório) */}
         <div>
           <p className={`block text-xs font-mono uppercase mb-2 ${errors.paymentMethod ? 'text-red-400' : 'text-neutral-400'}`}>
             Forma de Pagamento <span className="text-red-500">*</span>
@@ -233,7 +213,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
         </div>
 
-        {/* Taxa de Maquininha — apenas para Débito/Crédito */}
         {showMachineFee && (
           <div className="space-y-2">
             <div>
@@ -249,11 +228,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 max="100"
                 placeholder="Ex: 2.5"
                 value={machineFeePercent}
-                onChange={(e) => setMachineFeePercent(e.target.value)}
+                onChange={(event) => setMachineFeePercent(event.target.value)}
                 className="w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold"
               />
             </div>
-            {/* Valor líquido em tempo real */}
             <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex justify-between items-center">
               <span className="text-xs text-neutral-400 font-mono uppercase">Valor que você recebe</span>
               <span className="text-emerald-400 font-mono font-bold">
@@ -263,7 +241,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
         )}
 
-        {/* Recebido Por (obrigatório) */}
         <div>
           <label
             htmlFor="checkout-received-by"
@@ -275,8 +252,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             id="checkout-received-by"
             aria-label="Recebido por"
             value={receivedBy}
-            onChange={(e) => {
-              setReceivedBy(e.target.value);
+            onChange={(event) => {
+              setReceivedBy(event.target.value);
               setErrors((prev) => ({ ...prev, receivedBy: undefined }));
             }}
             className={`w-full bg-white/[0.04] border rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold ${

@@ -10,6 +10,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { formatPhone } from '../utils/formatters';
+import { calcLoyaltyTier, createClient, syncPublicClientsToCrm } from '../services/crm';
 
 export const Clients: React.FC = () => {
     const { user, region, companyId } = useAuth();
@@ -33,55 +34,8 @@ export const Clients: React.FC = () => {
 
     const fetchClients = async () => {
         try {
-            // Sync new public_clients to clients table automatically
-            if (user) {
-                const { data: publicClients } = await supabase
-                    .from('public_clients')
-                    .select('*')
-                    .eq('business_id', effectiveUserId);
-
-                if (publicClients && publicClients.length > 0) {
-                    const { data: existingClients } = await supabase
-                        .from('clients')
-                        .select('phone')
-                        .eq('user_id', effectiveUserId)
-                        .not('phone', 'is', null);
-
-                    const existingPhonesRaw = existingClients?.map(c => c.phone?.replace(/\D/g, '')).filter(Boolean) || [];
-
-                    const newClientsToInsert = publicClients
-                        .filter(pc => {
-                            if (!pc.phone) return false;
-                            const pcPhoneRaw = pc.phone.replace(/\D/g, '');
-                            
-                            // Check for structural match (e.g. with/without 55 or 351, or formatting symbols)
-                            for (const existing of existingPhonesRaw) {
-                                if (existing === pcPhoneRaw) return false;
-                                // se o número no DB estiver sem +55 e o pc tiver +55, ou vice-versa
-                                if (existing.length >= 8 && pcPhoneRaw.length >= 8) {
-                                    if (existing.endsWith(pcPhoneRaw) || pcPhoneRaw.endsWith(existing)) {
-                                        return false;
-                                    }
-                                }
-                            }
-                            return true;
-                        })
-                        .map(pc => ({
-                            user_id: effectiveUserId,
-                            name: pc.name,
-                            phone: pc.phone,
-                            email: pc.email || '',
-                            photo_url: pc.photo_url || null,
-                            loyalty_tier: 'Bronze',
-                            total_visits: 0,
-                            rating: 0,
-                            notes: 'Registrado via link público'
-                        }));
-
-                    if (newClientsToInsert.length > 0) {
-                        await supabase.from('clients').insert(newClientsToInsert);
-                    }
-                }
+            if (effectiveUserId) {
+                await syncPublicClientsToCrm(effectiveUserId);
             }
 
             // Fetch clients, filtering out inactive ones
@@ -115,7 +69,8 @@ export const Clients: React.FC = () => {
                     // Merge visit counts into client data
                     const clientsWithVisits = data.map(client => ({
                         ...client,
-                        actual_visits: visitCounts[client.id] || 0
+                        actual_visits: visitCounts[client.id] || 0,
+                        loyalty_tier: calcLoyaltyTier(visitCounts[client.id] || 0)
                     }));
 
                     setClients(clientsWithVisits);
@@ -185,20 +140,14 @@ export const Clients: React.FC = () => {
                 }
             }
 
-            // Create client regardless of photo upload success
-            const { error } = await supabase.from('clients').insert({
-                user_id: user.id,
+            await createClient({
+                companyId: effectiveUserId || user.id,
                 name,
                 email,
                 phone,
-                photo_url: photoUrl,
-                loyalty_tier: origin === 'Antigo' ? 'Prata' : 'Bronze',
-                total_visits: origin === 'Antigo' ? 1 : 0, // Inicia com 1 visita se for antigo pra nao cair nas regras de virgem
-                rating: 0,
-                notes: origin === 'Antigo' ? 'Cliente migrado de outro sistema.' : ''
+                photoUrl,
+                origin,
             });
-
-            if (error) throw error;
 
             setShowModal(false);
             setName('');

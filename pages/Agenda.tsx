@@ -12,6 +12,7 @@ import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
+import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
@@ -652,80 +653,33 @@ export const Agenda: React.FC = () => {
             }
 
             if (booking.is_edit) {
-                // Edição: atualiza o appointment com base no horário original da reserva (âncora absoluta)
-                let existingAptQuery = supabase
-                    .from('appointments')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .eq('client_id', clientId);
-
-                if (booking.original_appointment_time) {
-                    existingAptQuery = existingAptQuery.eq('appointment_time', booking.original_appointment_time);
-                } else {
-                    // Fallback para agendamentos antigos: busca o próximo agendamento futuro
-                    existingAptQuery = existingAptQuery
-                        .in('status', ['Confirmed', 'pending'])
-                        .order('appointment_time', { ascending: true });
-                }
-
-                const { data: existingApt } = await existingAptQuery.limit(1).maybeSingle();
-
-                if (existingApt) {
-                    // Atualiza o appointment existente com os novos dados
-                    const { error: updateAptError } = await supabase
-                        .from('appointments')
-                        .update({
-                            professional_id: finalProfessionalId,
-                            service: serviceNames,
-                            appointment_time: booking.appointment_time,
-                            price: booking.total_price,
-                            status: 'Confirmed',
-                            duration_minutes: booking.duration_minutes || 30
-                        })
-                        .eq('id', existingApt.id);
-
-                    if (updateAptError) throw updateAptError;
-                } else {
-                    // Fallback: se não encontrou o appointment original, cria um novo
-                    const { error: aptError } = await supabase
-                        .from('appointments')
-                        .insert({
-                            user_id: user.id,
-                            client_id: clientId,
-                            professional_id: finalProfessionalId,
-                            service: serviceNames,
-                            appointment_time: booking.appointment_time,
-                            price: booking.total_price,
-                            status: 'Confirmed',
-                            duration_minutes: booking.duration_minutes || 30
-                        });
-
-                    if (aptError) throw aptError;
-                }
+                await createAcceptedAppointmentFromBooking({
+                    businessId: user.id,
+                    clientId,
+                    professionalId: finalProfessionalId,
+                    serviceNames,
+                    bookingId: booking.id,
+                    appointmentTime: booking.appointment_time,
+                    totalPrice: booking.total_price,
+                    durationMinutes: booking.duration_minutes || 30,
+                    preservePublicBookingLink: true,
+                });
             } else {
-                // Novo agendamento: cria normalmente
-                const { error: aptError } = await supabase
-                    .from('appointments')
-                    .insert({
-                        user_id: user.id,
-                        client_id: clientId,
-                        professional_id: finalProfessionalId,
-                        service: serviceNames,
-                        appointment_time: booking.appointment_time,
-                        price: booking.total_price,
-                        status: 'Confirmed',
-                        duration_minutes: booking.duration_minutes || 30
-                    });
-
-                if (aptError) throw aptError;
+                await createAcceptedAppointmentFromBooking({
+                    businessId: user.id,
+                    clientId,
+                    professionalId: finalProfessionalId,
+                    serviceNames,
+                    bookingId: booking.id,
+                    appointmentTime: booking.appointment_time,
+                    totalPrice: booking.total_price,
+                    durationMinutes: booking.duration_minutes || 30,
+                    preservePublicBookingLink: false,
+                });
             }
 
 
-            await supabase
-                .from('public_bookings')
-                .update({ status: 'confirmed' })
-                .eq('id', booking.id)
-                .eq('business_id', user.id);
+            await confirmPublicBooking(booking.id, user.id);
 
             // Fetch the client to ensure we have the correct phone number if it was just created
             const phone = booking.customer_phone;
@@ -772,12 +726,8 @@ export const Agenda: React.FC = () => {
 
     const handleRejectBooking = async (bookingId: string) => {
         try {
-            await supabase
-                .from('public_bookings')
-                .update({ status: 'cancelled' })
-                .eq('id', bookingId)
-                .eq('business_id', user.id);
-            alert('Solicitação recusada.');
+            await rejectPublicBooking(bookingId, user.id);
+            alert('Solicita��o recusada.');
             fetchData();
         } catch (error) {
             logger.error('Error rejecting booking', error);
@@ -786,7 +736,6 @@ export const Agenda: React.FC = () => {
 
     const handleCompleteAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
         try {
-            // Use RPC to handle finance record creation
             const { error } = await supabase.rpc('complete_appointment', { p_appointment_id: appointmentId });
 
             if (error) throw error;
@@ -798,83 +747,9 @@ export const Agenda: React.FC = () => {
             }
         } catch (error: any) {
             logger.error('Error completing appointment', error);
-
-            // Fallback for missing updated_at column or other RPC errors
-            if (error.message?.includes('updated_at') || error.message?.includes('does not exist')) {
-                try {
-                    logger.info('Attempting client-side fallback for completion...');
-
-                    // 1. Get appointment details
-                    const { data: appointment, error: fetchError } = await supabase
-                        .from('appointments')
-                        .select('*')
-                        .eq('id', appointmentId)
-                        .single();
-
-                    if (fetchError) throw fetchError;
-
-                    // 2. Update appointment status (without updated_at)
-                    const { error: updateError } = await supabase
-                        .from('appointments')
-                        .update({ status: 'Completed' })
-                        .eq('id', appointmentId);
-
-                    if (updateError) throw updateError;
-
-                    // 3. Get professional details
-                    let commissionRate = 0;
-                    let professionalName = 'Profissional';
-
-                    if (appointment.professional_id) {
-                        const { data: professional } = await supabase
-                            .from('team_members')
-                            .select('name, commission_rate')
-                            .eq('id', appointment.professional_id)
-                            .single();
-
-                        if (professional) {
-                            professionalName = professional.name;
-                            commissionRate = professional.commission_rate || 0;
-                        }
-                    }
-
-                    // 4. Calculate commission
-                    const commissionValue = (appointment.price * commissionRate) / 100;
-
-                    // 5. Create finance record
-                    const { error: financeError } = await supabase
-                        .from('finance_records')
-                        .insert({
-                            user_id: appointment.user_id,
-                            barber_name: professionalName,
-                            professional_id: appointment.professional_id,
-                            appointment_id: appointmentId,
-                            revenue: appointment.price,
-                            commission_rate: commissionRate,
-                            commission_value: commissionValue,
-                            created_at: new Date().toISOString()
-                        });
-
-                    if (financeError) throw financeError;
-
-                    // Success! Refresh data
-                    if (isOverdue) {
-                        fetchOverdueAppointments();
-                    } else {
-                        fetchData();
-                    }
-                    return; // Exit successfully
-
-                } catch (fallbackError: any) {
-                    logger.error('Fallback failed', fallbackError);
-                    alert(`Erro ao concluir agendamento (Fallback falhou): ${fallbackError.message || fallbackError}`);
-                }
-            } else {
-                alert(`Erro ao concluir agendamento: ${error.message || error}`);
-            }
+            alert(`Erro ao concluir agendamento: ${error.message || error}`);
         }
     };
-
     const handleCancelAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
         // Guard: staff não pode cancelar agendamento já finalizado (D-07)
         const apt = appointments.find((a) => a.id === appointmentId)

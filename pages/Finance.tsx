@@ -16,6 +16,7 @@ import { TabNav } from '../components/TabNav';
 import { FinanceInsights } from '../components/FinanceInsights';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history' | 'insights';
 
@@ -45,7 +46,7 @@ interface MonthlyHistoryItem {
 }
 
 export const Finance: React.FC = () => {
-  const { user, region, role, companyId, fullName } = useAuth();
+  const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -102,6 +103,11 @@ const [searchParams, setSearchParams] = useSearchParams();
   ];
 
   useEffect(() => {
+    if (isStaff && activeTab !== 'overview') {
+      setActiveTab('overview');
+      return;
+    }
+
     if (activeTab === 'overview') {
       fetchFinanceData();
     } else if (activeTab === 'history') {
@@ -110,7 +116,7 @@ const [searchParams, setSearchParams] = useSearchParams();
       if (monthlyHistory.length === 0) fetchMonthlyHistory();
       if (transactions.length === 0) fetchFinanceData();
     }
-  }, [activeTab, selectedMonth, selectedYear, user]);
+  }, [activeTab, selectedMonth, selectedYear, user, isStaff]);
 
   useEffect(() => {
     const isNewQuery = searchParams.get('new') === 'true';
@@ -123,6 +129,8 @@ const [searchParams, setSearchParams] = useSearchParams();
   }, [searchParams, user]);
 
   const fetchFinanceData = async () => {
+    if (!user) return;
+
     try {
       // Calculate start and end dates for the selected month
       const startOfMonth = new Date(selectedYear, selectedMonth, 1);
@@ -133,13 +141,12 @@ const [searchParams, setSearchParams] = useSearchParams();
 
       const queryUserId = isStaff && companyId ? companyId : user.id;
 
-      const { data, error } = await supabase.rpc('get_finance_stats', {
-        p_user_id: queryUserId,
-        p_start_date: startDateParam,
-        p_end_date: endDateParam
+      const data = await fetchFinanceStats({
+        companyId: queryUserId,
+        startDate: startDateParam,
+        endDate: endDateParam,
+        professionalId: isStaff ? teamMemberId : null,
       });
-
-      if (error) throw error;
 
       if (data) {
         // Calculate growth vs previous month
@@ -148,10 +155,11 @@ const [searchParams, setSearchParams] = useSearchParams();
         const prevStartDate = new Date(prevYear, prevMonth, 1).toISOString().split('T')[0];
         const prevEndDate = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0];
 
-        const { data: prevData } = await supabase.rpc('get_finance_stats', {
-          p_user_id: queryUserId,
-          p_start_date: prevStartDate,
-          p_end_date: prevEndDate
+        const prevData = await fetchFinanceStats({
+          companyId: queryUserId,
+          startDate: prevStartDate,
+          endDate: prevEndDate,
+          professionalId: isStaff ? teamMemberId : null,
         });
 
         const growth = prevData && prevData.revenue > 0
@@ -171,31 +179,9 @@ const [searchParams, setSearchParams] = useSearchParams();
 
         setChartData(data.chart_data || []);
 
-        const formattedTransactions = (data.transactions || []).map((item: any) => {
-          const createdAt = new Date(item.created_at);
-          const isExpense = item.type === 'expense';
-          const isPaid = isExpense
-            ? item.commission_paid === true
-            : (item.status ? item.status === 'paid' : true);
-          return {
-            id: item.id,
-            serviceName: item.service_name || item.description || 'Serviço',
-            professionalName: item.barber_name || 'Manual',
-            clientName: item.client_name || '',
-            amount: item.amount || 0,
-            expense: item.expense || 0,
-            date: createdAt.toLocaleDateString('pt-BR'),
-            time: createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            rawDate: createdAt,
-            type: item.type,
-            payment_method: item.payment_method,
-            commission_paid: item.commission_paid,
-            status: isPaid ? 'paid' : 'pending'
-          };
-        });
-        // Para staff: filtra apenas as transações do próprio profissional
+        const formattedTransactions = (data.transactions || []).map(mapFinanceTransaction);
         const staffFiltered = isStaff
-          ? formattedTransactions.filter((t: any) => t.professionalName === fullName)
+          ? filterStaffTransactions(formattedTransactions, teamMemberId)
           : formattedTransactions;
 
         const filtered = staffFiltered.filter((t: any) => {

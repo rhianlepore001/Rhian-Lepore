@@ -12,6 +12,7 @@ import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { BookingModeToggle } from '../components/booking/BookingModeToggle';
+import { getActiveBookingByPhone, submitPublicBooking } from '../services/publicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
@@ -195,17 +196,11 @@ export const PublicBooking: React.FC = () => {
 
                     // Fluxo normal (sem edição): busca agendamento ativo pelo telefone
                     if (!editParam) {
-                        const { data: activeBookingData } = await supabase.rpc('get_active_booking_by_phone', {
-                            p_phone: customerPhone,
-                            p_business_id: businessId
-                        });
-                        if (activeBookingData && activeBookingData[0]) {
-                            const loadedBooking = activeBookingData[0];
-                            if (['pending', 'confirmed'].includes(loadedBooking.status)) {
-                                setActiveBooking(loadedBooking);
-                                setStep('success');
-                                setQuickStep('success');
-                            }
+                        const loadedBooking = await getActiveBookingByPhone(customerPhone, businessId);
+                        if (loadedBooking && ['pending', 'confirmed'].includes(loadedBooking.status)) {
+                            setActiveBooking(loadedBooking);
+                            setStep('success');
+                            setQuickStep('success');
                         }
                     }
                 } catch (error) {
@@ -613,9 +608,9 @@ export const PublicBooking: React.FC = () => {
             const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
 
             if (!editingBookingId) {
-                const { data: existingBooking } = await supabase.rpc('get_active_booking_by_phone', { p_phone: customerPhone, p_business_id: businessId });
-                if (existingBooking && existingBooking[0] && existingBooking[0].id !== editingBookingId) {
-                    setActiveBooking(existingBooking[0]);
+                const existingBooking = await getActiveBookingByPhone(customerPhone, businessId);
+                if (existingBooking && existingBooking.id !== editingBookingId) {
+                    setActiveBooking(existingBooking);
                     setStep('success');
                     setQuickStep('success');
                     setIsSubmitting(false);
@@ -629,39 +624,20 @@ export const PublicBooking: React.FC = () => {
                 if (autoProId) finalProfessionalId = autoProId;
             }
 
-            if (editingBookingId) {
-                const { error: updateError } = await supabase
-                    .from('public_bookings')
-                    .update({
-                        service_ids: selectedServices,
-                        professional_id: finalProfessionalId,
-                        appointment_time: appointmentTimeISO,
-                        original_appointment_time: originalTimeISO,
-                        updated_at: new Date().toISOString(),
-                        customer_name: customerName,
-                        total_price: totalPrice,
-                        status: 'pending',
-                        duration_minutes: duration,
-                        is_edit: true
-                    })
-                    .eq('id', editingBookingId);
+            const booking = await submitPublicBooking({
+                businessId,
+                customerName,
+                customerPhone,
+                serviceIds: selectedServices,
+                professionalId: finalProfessionalId,
+                appointmentTime: appointmentTimeISO,
+                totalPrice,
+                durationMinutes: duration,
+                editingBookingId,
+                originalAppointmentTime: originalTimeISO,
+            });
 
-                if (updateError) throw updateError;
-                const { data: updatedBooking, error: fetchError } = await supabase
-                    .from('public_bookings')
-                    .select('*')
-                    .eq('id', editingBookingId)
-                    .single();
-                if (fetchError) throw fetchError;
-                setActiveBooking(updatedBooking);
-            } else {
-                const { data: newBooking, error: insertError } = await supabase.from('public_bookings')
-                    .insert({ business_id: businessId, customer_name: customerName, customer_phone: customerPhone, service_ids: selectedServices, professional_id: finalProfessionalId, appointment_time: appointmentTimeISO, total_price: totalPrice, status: 'pending', duration_minutes: duration })
-                    .select()
-                    .single();
-                if (insertError) throw insertError;
-                setActiveBooking(newBooking);
-            }
+            setActiveBooking(booking);
 
             setStep('success');
             setQuickStep('success');

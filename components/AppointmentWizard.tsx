@@ -19,6 +19,8 @@ import { ScheduleSelection } from './appointment/ScheduleSelection';
 import { AppointmentReview } from './appointment/AppointmentReview';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime } from '../utils/date';
+import { useCreateAppointment } from '../hooks/useScheduling';
+import type { CheckoutPaymentMethod } from '../types/scheduling';
 
 
 export const AppointmentWizard: React.FC<WizardProps> = ({
@@ -34,6 +36,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const { user, region, businessName, companyId } = useAuth();
     const { setModalOpen } = useUI();
     const { isBeauty, accent } = useBrutalTheme();
+    const createAppointment = useCreateAppointment();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
 
@@ -121,24 +124,22 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             const client = clients.find(c => c.id === selectedClientId);
 
             // Use the secure RPC to ensure no collisions
-            const { data: result, error: rpcError } = await supabase.rpc('create_secure_booking', {
-                p_business_id: companyId ?? user?.id,
-                p_professional_id: selectedProId,
-                p_customer_name: client?.name || 'Cliente',
-                p_customer_phone: client?.phone || null,
-                p_customer_email: client?.email || null,
-                p_appointment_time: dateTime.toISOString(),
-                p_service_ids: selectedServiceIds,
-                p_total_price: finalPrice || 0,
-                p_duration_min: duration || 30,
-                p_status: 'Confirmed',
-                p_client_id: selectedClientId,
-                p_notes: notes || null,
-                p_custom_service_name: isCustomService ? (customServiceName || 'Serviço Personalizado') : null,
-                p_payment_method: paymentMethod || null
-            });
-
-            if (rpcError) throw rpcError;
+            const result = await createAppointment.mutateAsync({
+                companyId: companyId ?? user?.id ?? '',
+                professionalId: selectedProId,
+                customerName: client?.name || 'Cliente',
+                customerPhone: client?.phone || null,
+                customerEmail: client?.email || null,
+                appointmentTime: dateTime,
+                serviceIds: selectedServiceIds,
+                totalPrice: finalPrice || 0,
+                durationMinutes: duration || 30,
+                status: 'Confirmed',
+                clientId: selectedClientId,
+                notes: notes || null,
+                customServiceName: isCustomService ? (customServiceName || 'Servico Personalizado') : null,
+                paymentMethod: paymentMethod ? paymentMethod as CheckoutPaymentMethod : null
+            }) as { success?: boolean; message?: string };
 
             if (!result.success) {
                 alert(result.message);

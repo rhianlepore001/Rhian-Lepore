@@ -1,17 +1,20 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CheckoutModal } from './CheckoutModal';
 import type { Appointment } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
-  }
+  },
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -20,11 +23,12 @@ vi.mock('@/contexts/AuthContext', () => ({
     companyId: 'company-abc',
     role: 'owner',
     userType: 'barber',
-  })
+    region: 'BR',
+  }),
 }));
 
 vi.mock('@/contexts/UIContext', () => ({
-  useUI: () => ({ setModalOpen: vi.fn() })
+  useUI: () => ({ setModalOpen: vi.fn() }),
 }));
 
 vi.mock('@/components/Modal', () => ({
@@ -46,7 +50,7 @@ vi.mock('@/components/BrutalButton', () => ({
 
 const mockAppointment: Appointment = {
   id: 'apt-001',
-  clientName: 'João Silva',
+  clientName: 'Joao Silva',
   service: 'Corte Masculino',
   time: '10:00',
   appointment_time: '2026-04-13T10:00:00',
@@ -55,8 +59,8 @@ const mockAppointment: Appointment = {
 };
 
 const mockTeamMembers = [
-  { id: 'tm-001', name: 'Carlos', active: true },
-  { id: 'tm-002', name: 'Ana', active: true },
+  { id: '11111111-1111-4111-8111-111111111111', name: 'Carlos', active: true },
+  { id: '22222222-2222-4222-8222-222222222222', name: 'Ana', active: true },
 ];
 
 describe('CheckoutModal', () => {
@@ -70,53 +74,115 @@ describe('CheckoutModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
   });
 
-  it('renderiza sem crash com appointment válido', () => {
-    render(<CheckoutModal {...defaultProps} />);
+  const renderCheckoutModal = (props = defaultProps) => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <CheckoutModal {...props} />
+      </QueryClientProvider>
+    );
+  };
+
+  it('renderiza sem crash com appointment valido', () => {
+    renderCheckoutModal();
     expect(screen.getByText('Concluir Atendimento')).toBeInTheDocument();
   });
 
   it('exibe mensagem de erro ao confirmar sem payment_method', () => {
-    render(<CheckoutModal {...defaultProps} />);
+    renderCheckoutModal();
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
     expect(screen.getByText('Selecione a forma de pagamento')).toBeInTheDocument();
   });
 
-  it('NÃO exibe campo taxa quando PIX selecionado', () => {
-    render(<CheckoutModal {...defaultProps} />);
+  it('nao exibe campo taxa quando PIX selecionado', () => {
+    renderCheckoutModal();
     fireEvent.click(screen.getByLabelText('PIX'));
     expect(screen.queryByLabelText(/taxa de maquininha/i)).not.toBeInTheDocument();
   });
 
-  it('NÃO exibe campo taxa quando Dinheiro selecionado', () => {
-    render(<CheckoutModal {...defaultProps} />);
+  it('nao exibe campo taxa quando Dinheiro selecionado', () => {
+    renderCheckoutModal();
     fireEvent.click(screen.getByLabelText('Dinheiro'));
     expect(screen.queryByLabelText(/taxa de maquininha/i)).not.toBeInTheDocument();
   });
 
-  it('EXIBE campo taxa quando Débito selecionado', () => {
-    render(<CheckoutModal {...defaultProps} />);
+  it('exibe campo taxa quando Debito selecionado', () => {
+    renderCheckoutModal();
     fireEvent.click(screen.getByLabelText('Débito'));
     expect(screen.getByLabelText(/taxa de maquininha/i)).toBeInTheDocument();
   });
 
-  it('EXIBE campo taxa quando Crédito selecionado', () => {
-    render(<CheckoutModal {...defaultProps} />);
+  it('exibe campo taxa quando Credito selecionado', () => {
+    renderCheckoutModal();
     fireEvent.click(screen.getByLabelText('Crédito'));
     expect(screen.getByLabelText(/taxa de maquininha/i)).toBeInTheDocument();
   });
 
-  it('dropdown Recebido por contém opção Dono como primeira entrada', () => {
-    render(<CheckoutModal {...defaultProps} />);
+  it('dropdown Recebido por contem opcao Dono como primeira entrada', () => {
+    renderCheckoutModal();
     const select = screen.getByLabelText(/recebido por/i);
     const options = Array.from(select.querySelectorAll('option'));
     expect(options[1].textContent).toBe('Dono');
   });
 
   it('dropdown Recebido por lista team members passados via prop', () => {
-    render(<CheckoutModal {...defaultProps} />);
+    renderCheckoutModal();
     expect(screen.getByText('Carlos')).toBeInTheDocument();
     expect(screen.getByText('Ana')).toBeInTheDocument();
+  });
+
+  it('finaliza checkout via RPC com preco final e sem update client-side separado', async () => {
+    renderCheckoutModal();
+
+    fireEvent.change(screen.getByLabelText(/valor final/i), { target: { value: '70' } });
+    fireEvent.click(screen.getByLabelText('Débito'));
+    fireEvent.change(screen.getByLabelText(/taxa de maquininha/i), { target: { value: '2.5' } });
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: '11111111-1111-4111-8111-111111111111' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+
+    await waitFor(() => {
+      expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment', {
+        p_appointment_id: 'apt-001',
+        p_payment_method: 'debit',
+        p_received_by: '11111111-1111-4111-8111-111111111111',
+        p_completed_by: '11111111-1111-4111-8111-111111111111',
+        p_final_price: 70,
+        p_machine_fee_percent: 2.5,
+        p_machine_fee_amount: 1.75,
+      });
+    });
+    expect(supabase.from).not.toHaveBeenCalledWith('appointments');
+    expect(defaultProps.onConfirm).toHaveBeenCalled();
+  });
+
+  it('quando RPC falha, exibe erro e nao faz update mais insert no client-side', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    (supabase.rpc as any).mockResolvedValue({
+      data: null,
+      error: new Error('RPC indisponivel'),
+    });
+
+    renderCheckoutModal();
+
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith('Erro ao concluir atendimento. Tente novamente.');
+    });
+    expect(supabase.from).not.toHaveBeenCalled();
+    expect(defaultProps.onConfirm).not.toHaveBeenCalled();
+
+    alertSpy.mockRestore();
   });
 });

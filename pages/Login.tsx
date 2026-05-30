@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { getOnboardingProgress } from '../lib/onboarding';
 import { Screw } from '../components/Screw';
 import { AgenXLogo } from '../components/AgenXLogo';
 
@@ -14,10 +15,20 @@ export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
+    const errorRef = useRef<HTMLDivElement>(null);
 
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
     const [showGateway, setShowGateway] = useState(true);
     const isBeauty = loginTheme === 'beauty';
+
+    useEffect(() => {
+        if (!error) return;
+
+        requestAnimationFrame(() => {
+            errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            errorRef.current?.focus({ preventScroll: true });
+        });
+    }, [error]);
 
     const handleLogin = async () => {
         setLoading(true);
@@ -29,13 +40,21 @@ export const Login: React.FC = () => {
         } else {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                const { data: settings } = await supabase
-                    .from('business_settings')
-                    .select('onboarding_completed')
-                    .eq('user_id', user.id)
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role, company_id, tutorial_completed')
+                    .eq('id', user.id)
                     .single();
 
-                if (settings && !settings.onboarding_completed) {
+                if (profile?.role === 'staff' && !profile.tutorial_completed) {
+                    navigate('/staff-onboarding');
+                    return;
+                }
+
+                const companyId = profile?.company_id || user.id;
+                const progress = await getOnboardingProgress(companyId);
+
+                if (!progress?.is_completed) {
                     navigate('/onboarding');
                 } else {
                     navigate('/');
@@ -249,7 +268,9 @@ export const Login: React.FC = () => {
 
                         {error && (
                             <div
+                                ref={errorRef}
                                 role="alert"
+                                tabIndex={-1}
                                 className={`mb-5 p-3.5 text-xs rounded-xl border
                                     ${isBeauty
                                         ? 'bg-red-500/10 border-red-500/20 text-red-300'

@@ -44,13 +44,8 @@ export const profileFieldsSchema = z.object({
   business_slug: z.string().nullable().optional(),
   monthly_goal: z.number().nullable().optional(),
   public_booking_enabled: z.boolean().default(true),
-  enable_upsells: z.boolean().default(false),
-  enable_professional_selection: z.boolean().default(true),
-  enable_email_reminders: z.boolean().default(true),
-  lead_time_hours: z.number().int().min(0).default(2),
+  booking_lead_time_hours: z.number().int().min(0).default(2),
   max_bookings_per_day: z.number().int().positive().nullable().optional(),
-  currency: z.string().default('BRL'),
-  google_place_id: z.string().nullable().optional(),
 });
 
 export type BusinessSettings = z.infer<typeof businessSettingsSchema>;

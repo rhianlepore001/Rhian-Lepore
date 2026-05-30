@@ -46,7 +46,7 @@ export async function fetchProfileFields(
 ): Promise<ProfileFields | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url')
+    .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, business_slug, monthly_goal, public_booking_enabled, booking_lead_time_hours, max_bookings_per_day')
     .eq('id', userId)
     .single();
 
@@ -65,7 +65,7 @@ export async function updateProfileFields(
     .from('profiles')
     .update(parsed)
     .eq('id', userId)
-    .select()
+    .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, business_slug, monthly_goal, public_booking_enabled, booking_lead_time_hours, max_bookings_per_day')
     .single();
 
   if (error) throw error;

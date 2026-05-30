@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useTeamMembers } from '../../hooks/useTeam';
+import { useBusinessSettings } from '../../hooks/useSettings';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
@@ -22,7 +24,20 @@ interface TeamMember {
 
 export const CommissionsSettings: React.FC = () => {
     const { user } = useAuth();
-    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const { data: rawMembers, isLoading: membersLoading } = useTeamMembers();
+    const { data: settingsData } = useBusinessSettings();
+    const { accent, colors, classes, isBeauty } = useBrutalTheme();
+
+    const teamMembers: TeamMember[] = (rawMembers ?? []).filter(m => m.active).map(m => ({
+        id: m.id,
+        name: m.name,
+        photo_url: m.photo_url ?? undefined,
+        commission_rate: m.commission_rate ?? m.commission_percent ?? 0,
+        active: m.active,
+        commission_payment_frequency: 'monthly' as const,
+        commission_payment_day: 5,
+    }));
+
     const [settlementDay, setSettlementDay] = useState<number | string>(5);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -34,53 +49,32 @@ export const CommissionsSettings: React.FC = () => {
     const [creditFeePercent, setCreditFeePercent] = useState<string>('0');
     const [savingMachineFee, setSavingMachineFee] = useState(false);
 
-    const { accent, colors, classes, isBeauty } = useBrutalTheme();
+    const [editedMembers, setEditedMembers] = useState<Record<string, TeamMember>>({});
 
     useEffect(() => {
-        fetchData();
-    }, [user]);
+        const rates: Record<string, string> = {};
+        const edited: Record<string, TeamMember> = {};
+        teamMembers.forEach(member => {
+            rates[member.id] = member.commission_rate?.toString() || '0';
+            edited[member.id] = member;
+        });
+        setTempRates(rates);
+        setEditedMembers(edited);
+    }, [rawMembers]);
 
-    const fetchData = async () => {
-        if (!user) return;
-        setLoading(true);
-
-        try {
-            const { data: membersData, error: membersError } = await supabase
-                .from('team_members')
-                .select('id, name, photo_url, commission_rate, active, commission_payment_frequency, commission_payment_day')
-                .eq('user_id', user.id)
-                .eq('active', true)
-                .order('name');
-
-            if (membersError) throw membersError;
-            setTeamMembers(membersData || []);
-
-            const rates: Record<string, string> = {};
-            membersData?.forEach(member => {
-                rates[member.id] = member.commission_rate?.toString() || '0';
-            });
-            setTempRates(rates);
-
-            const { data: settingsData, error: settingsError } = await supabase
-                .from('business_settings')
-                .select('commission_settlement_day_of_month, machine_fee_enabled, debit_fee_percent, credit_fee_percent')
-                .eq('user_id', user.id)
-                .single();
-
-            if (!settingsError && settingsData) {
-                if (settingsData.commission_settlement_day_of_month) {
-                    setSettlementDay(settingsData.commission_settlement_day_of_month);
-                }
-                setMachineFeeEnabled(settingsData.machine_fee_enabled ?? false);
-                setDebitFeePercent(String(settingsData.debit_fee_percent ?? 0));
-                setCreditFeePercent(String(settingsData.credit_fee_percent ?? 0));
-            }
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        } finally {
-            setLoading(false);
-        }
+    const getMemberDisplay = (id: string): TeamMember => {
+        return editedMembers[id] ?? teamMembers.find(m => m.id === id) ?? teamMembers.find(m => m.id === id)!;
     };
+
+    useEffect(() => {
+        if (settingsData) {
+            setSettlementDay(settingsData.commission_settlement_day_of_month ?? 5);
+            setMachineFeeEnabled(settingsData.machine_fee_enabled ?? false);
+            setDebitFeePercent(String(settingsData.debit_fee_percent ?? 0));
+            setCreditFeePercent(String(settingsData.credit_fee_percent ?? 0));
+        }
+        setLoading(false);
+    }, [settingsData]);
 
     const handleSaveSettlementDay = async () => {
         if (!user) return;
@@ -145,10 +139,6 @@ export const CommissionsSettings: React.FC = () => {
                 console.error('Error recalculating commissions:', recalculateError);
             }
 
-            setTeamMembers(prev => prev.map(m =>
-                m.id === memberId ? { ...m, commission_rate: rate } : m
-            ));
-
             setEditingMember(null);
             alert('Taxa de comissão atualizada!');
         } catch (error) {
@@ -207,7 +197,7 @@ export const CommissionsSettings: React.FC = () => {
         }
     };
 
-    if (loading) {
+    if (loading && membersLoading) {
         return (
             <SettingsLayout>
                 <div className="flex items-center justify-center py-12">
@@ -293,7 +283,8 @@ export const CommissionsSettings: React.FC = () => {
 
                             {teamMembers.map((member) => {
                                 const isEditing = editingMember === member.id;
-                                const currentRate = member.commission_rate || 0;
+                                const displayMember = getMemberDisplay(member.id);
+                                const currentRate = displayMember.commission_rate || 0;
 
                                 return (
                                     <div
@@ -365,7 +356,10 @@ export const CommissionsSettings: React.FC = () => {
                                                                 value={member.commission_payment_frequency || 'monthly'}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value as 'weekly' | 'monthly';
-                                                                    setTeamMembers(prev => prev.map(m => m.id === member.id ? { ...m, commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 } : m));
+                                                                    setEditedMembers(prev => ({
+                                                                        ...prev,
+                                                                        [member.id]: { ...prev[member.id], commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 }
+                                                                    }));
                                                                 }}
                                                                 className={`${colors.inputBg} ${colors.text} text-[10px] p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >
@@ -376,7 +370,10 @@ export const CommissionsSettings: React.FC = () => {
                                                                 value={member.commission_payment_day || 5}
                                                                 onChange={(e) => {
                                                                     const val = parseInt(e.target.value);
-                                                                    setTeamMembers(prev => prev.map(m => m.id === member.id ? { ...m, commission_payment_day: val } : m));
+                                                                    setEditedMembers(prev => ({
+                                                                        ...prev,
+                                                                        [member.id]: { ...prev[member.id], commission_payment_day: val }
+                                                                    }));
                                                                 }}
                                                                 className={`${colors.inputBg} ${colors.text} text-[10px] p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >

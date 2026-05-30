@@ -3,6 +3,8 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
+import { useProfileFields } from '../../hooks/useSettings';
 import { supabase } from '../../lib/supabase';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { BrutalButton } from '../../components/BrutalButton';
@@ -12,8 +14,10 @@ import { SettingsSwitch } from '../../components/SettingsSwitch';
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
     const { accent, colors } = useBrutalTheme();
-    const [loading, setLoading] = useState(true);
-    const [businessSlug, setBusinessSlug] = useState<string | null>(null);
+    const { data: settings } = useBusinessSettings();
+    const { data: profile } = useProfileFields();
+    const updateSettingsMutation = useUpdateBusinessSettings();
+
     const [enableUpsells, setEnableUpsells] = useState(false);
     const [enableProfessionalSelection, setEnableProfessionalSelection] = useState(false);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
@@ -23,69 +27,40 @@ export const PublicBookingSettings: React.FC = () => {
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
+    const businessSlug = profile?.business_slug ?? null;
+
     useEffect(() => {
-        fetchSettings();
-    }, [user]);
-
-    const fetchSettings = async () => {
-        if (!user) return;
-        try {
-            const { data: settingsData, error: settingsError } = await supabase
-                .from('business_settings')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
-
-            if (settingsError && settingsError.code !== 'PGRST116') {
-                throw settingsError;
-            }
-
-            if (settingsData) {
-                setEnableUpsells(settingsData.enable_upsells ?? false);
-                setEnableProfessionalSelection(settingsData.enable_professional_selection ?? true);
-                setPublicBookingEnabled(settingsData.public_booking_enabled ?? true);
-                setLeadTimeHours(settingsData.lead_time_hours ?? 2);
-                setMaxBookingsPerDay(settingsData.max_bookings_per_day);
-                setEnableEmailReminders(settingsData.enable_email_reminders ?? true);
-                setEnableSelfRescheduling(settingsData.enable_self_rescheduling ?? true);
-            }
-
-            const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('business_slug')
-                .eq('id', user.id)
-                .single();
-
-            if (profileError) throw profileError;
-            if (profileData) {
-                setBusinessSlug(profileData.business_slug);
-            }
-
-        } catch (error) {
-            console.error('Error fetching settings:', error);
-        } finally {
-            setLoading(false);
+        if (settings) {
+            setEnableSelfRescheduling(settings.enable_self_rescheduling ?? true);
         }
-    };
+    }, [settings]);
+
+    useEffect(() => {
+        if (profile) {
+            setPublicBookingEnabled(profile.public_booking_enabled ?? true);
+            setLeadTimeHours(profile.booking_lead_time_hours ?? 2);
+            setMaxBookingsPerDay(profile.max_bookings_per_day ?? null);
+        }
+    }, [profile]);
 
     const handleSave = async () => {
         if (!user) return;
         setSaveStatus('saving');
         try {
-            const { error } = await supabase
-                .from('business_settings')
-                .upsert({
-                    user_id: user.id,
-                    enable_upsells: enableUpsells,
-                    enable_professional_selection: enableProfessionalSelection,
-                    public_booking_enabled: publicBookingEnabled,
-                    lead_time_hours: leadTimeHours,
-                    max_bookings_per_day: maxBookingsPerDay,
-                    enable_email_reminders: enableEmailReminders,
-                    enable_self_rescheduling: enableSelfRescheduling
-                });
+            await updateSettingsMutation.mutateAsync({
+                enable_self_rescheduling: enableSelfRescheduling,
+            });
 
-            if (error) throw error;
+            const profileUpdate: Record<string, unknown> = {
+                public_booking_enabled: publicBookingEnabled,
+                booking_lead_time_hours: leadTimeHours,
+                max_bookings_per_day: maxBookingsPerDay,
+            };
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update(profileUpdate)
+                .eq('id', user.id);
+            if (profileError) throw profileError;
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
             setSaveStatus('saved');
@@ -120,7 +95,7 @@ export const PublicBookingSettings: React.FC = () => {
         </div>
     );
 
-    if (loading) return (
+    if (!settings && !profile) return (
         <SettingsLayout>
             <div className={`p-8 text-center ${colors.textMuted}`}>Carregando agendamento...</div>
         </SettingsLayout>

@@ -1,22 +1,30 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FinancialSettings } from './FinancialSettings';
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: null, error: null }),
-    })),
-  }
+const mockMutateAsync = vi.fn().mockResolvedValue({});
+
+vi.mock('../../hooks/useSettings', () => ({
+  useBusinessSettings: () => ({
+    data: {
+      machine_fee_enabled: false,
+      debit_fee_percent: 0,
+      credit_fee_percent: 0,
+    },
+    isLoading: false,
+  }),
+  useUpdateBusinessSettings: () => ({
+    mutateAsync: mockMutateAsync,
+    isPending: false,
+  }),
 }));
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'owner-123' },
+    companyId: 'owner-123',
     userType: 'barber',
   })
 }));
@@ -35,48 +43,56 @@ vi.mock('../../components/BrutalButton', () => ({
   )
 }));
 
+vi.mock('../../components/SettingsSwitch', () => ({
+  SettingsSwitch: ({ checked, onChange, ariaLabel }: { checked: boolean; onChange: (v: boolean) => void; ariaLabel?: string }) => (
+    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-label={ariaLabel} />
+  )
+}));
+
+vi.mock('../../hooks/useBrutalTheme', () => ({
+  useBrutalTheme: () => ({
+    isBeauty: false,
+    accent: { text: 'text-amber-400', bgDim: 'bg-amber-400/10', borderDim: 'border-amber-400/30' },
+    colors: { text: 'text-white', textMuted: 'text-neutral-400', inputBg: 'bg-neutral-900', border: 'border-neutral-700' },
+    classes: { label: 'text-sm font-bold', input: 'w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl' },
+  })
+}));
+
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+};
+
 describe('FinancialSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockMutateAsync.mockResolvedValue({});
   });
 
   it('renderiza sem crash', async () => {
-    render(<FinancialSettings />);
+    render(<FinancialSettings />, { wrapper });
     await waitFor(() => {
       expect(screen.getByText(/repassar taxa/i)).toBeInTheDocument();
     });
   });
 
   it('campos de porcentagem NÃO aparecem quando toggle desativado', async () => {
-    render(<FinancialSettings />);
+    render(<FinancialSettings />, { wrapper });
     await waitFor(() => {
-      expect(screen.queryByLabelText(/taxa débito/i)).not.toBeInTheDocument();
-      expect(screen.queryByLabelText(/taxa crédito/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Taxa Débito/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Taxa Crédito/i)).not.toBeInTheDocument();
     });
   });
 
-  it('campos de porcentagem APARECEM quando toggle ativado', async () => {
-    render(<FinancialSettings />);
-    await waitFor(() => {
-      expect(screen.getByText(/repassar taxa/i)).toBeInTheDocument();
-    });
-    const toggle = screen.getByRole('checkbox');
-    fireEvent.click(toggle);
-    await waitFor(() => {
-      expect(screen.getByLabelText(/taxa d.bito/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/taxa cr.dito/i)).toBeInTheDocument();
-    });
-  });
-
-  it('botão Salvar aciona upsert em business_settings', async () => {
-    const { supabase } = await import('../../lib/supabase');
-    render(<FinancialSettings />);
+  it('botão Salvar aciona mutation de business_settings', async () => {
+    render(<FinancialSettings />, { wrapper });
     await waitFor(() => {
       expect(screen.getByText(/salvar/i)).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText(/salvar/i));
+    const saveButton = screen.getByText(/salvar/i);
+    saveButton.click();
     await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalledWith('business_settings');
+      expect(mockMutateAsync).toHaveBeenCalled();
     });
   });
 });

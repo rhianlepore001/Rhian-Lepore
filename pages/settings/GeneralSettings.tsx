@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
+import { useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
 import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
@@ -12,13 +14,12 @@ import { SettingsSection } from '../../components/SettingsSection';
 import { InfoButton } from '../../components/HelpButtons';
 
 export const GeneralSettings: React.FC = () => {
-    const { user, region } = useAuth();
+    const { user, companyId, region } = useAuth();
     const { accent, colors, classes, isBeauty } = useBrutalTheme();
-    const [businessName, setBusinessName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [address, setAddress] = useState('');
-    const [instagram, setInstagram] = useState('');
-
+    const { data: settings } = useBusinessSettings();
+    const { data: profile } = useProfileFields();
+    const updateSettingsMutation = useUpdateBusinessSettings();
+    const updateProfileMutation = useUpdateProfileFields();
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [coverFile, setCoverFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -37,9 +38,13 @@ export const GeneralSettings: React.FC = () => {
         sun: { isOpen: false, blocks: [] },
     });
 
-    const [loading, setLoading] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [hasChanges, setHasChanges] = useState(false);
+
+    const [businessName, setBusinessName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [address, setAddress] = useState('');
+    const [instagram, setInstagram] = useState('');
 
     const policyTemplates: Record<string, string> = {
         flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
@@ -47,52 +52,31 @@ export const GeneralSettings: React.FC = () => {
         strict: 'Cancelamentos com menos de 72h de antecedência não terão reembolso. Reagendamentos são permitidos uma vez.'
     };
 
-    useEffect(() => {
-        fetchSettings();
-    }, [user]);
+    const loading = !settings && !profile;
 
-    useEffect(() => {
+    React.useEffect(() => {
+        if (profile) {
+            setBusinessName(profile.business_name ?? '');
+            setPhone(profile.phone ?? '');
+            setAddress(profile.address_street ?? '');
+            setInstagram(profile.instagram_handle ?? '');
+            setLogoPreview(profile.logo_url ?? null);
+            setCoverPreview(profile.cover_photo_url ?? null);
+        }
+    }, [profile]);
+
+    React.useEffect(() => {
+        if (settings) {
+            setCancellationPolicy(settings.cancellation_policy ?? policyTemplates.flexible);
+            if (settings.business_hours) setBusinessHours(settings.business_hours as any);
+        }
+    }, [settings]);
+
+    React.useEffect(() => {
         if (!loading) {
             setHasChanges(true);
         }
     }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours]);
-
-    const fetchSettings = async () => {
-        if (!user) return;
-        try {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url')
-                .eq('id', user.id)
-                .single();
-
-            if (profile) {
-                setBusinessName(profile.business_name || '');
-                setPhone(profile.phone || '');
-                setAddress(profile.address_street || '');
-                setInstagram(profile.instagram_handle || '');
-                setLogoPreview(profile.logo_url || null);
-                setCoverPreview(profile.cover_photo_url || null);
-            }
-
-            const { data: settings } = await supabase
-                .from('business_settings')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
-
-            if (settings) {
-                setCancellationPolicy(settings.cancellation_policy || policyTemplates.flexible);
-                if (settings.business_hours) setBusinessHours(settings.business_hours);
-            }
-
-            setHasChanges(false);
-        } catch (error) {
-            console.error('Error fetching settings:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleLogoChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
@@ -132,24 +116,19 @@ export const GeneralSettings: React.FC = () => {
             if (logoFile) logoUrl = await uploadFile(logoFile, 'logos', user.id);
             if (coverFile) coverUrl = await uploadFile(coverFile, 'covers', user.id);
 
-            const { error: profileError } = await supabase.from('profiles').update({
+            await updateProfileMutation.mutateAsync({
                 business_name: businessName,
                 phone,
                 address_street: address,
                 instagram_handle: instagram,
                 logo_url: logoUrl,
                 cover_photo_url: coverUrl,
-            }).eq('id', user.id);
+            } as any);
 
-            if (profileError) throw profileError;
-
-            const { error: settingsError } = await supabase.from('business_settings').upsert({
-                user_id: user.id,
+            await updateSettingsMutation.mutateAsync({
                 cancellation_policy: cancellationPolicy,
-                business_hours: businessHours,
-            }, { onConflict: 'user_id' });
-
-            if (settingsError) throw settingsError;
+                business_hours: businessHours as any,
+            });
 
             const { error: authError } = await supabase.auth.updateUser({
                 data: {

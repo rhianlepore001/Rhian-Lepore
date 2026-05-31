@@ -3,9 +3,7 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
-import { useProfileFields } from '../../hooks/useSettings';
-import { supabase } from '../../lib/supabase';
+import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsSection } from '../../components/SettingsSection';
@@ -17,6 +15,7 @@ export const PublicBookingSettings: React.FC = () => {
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
+    const updateProfileMutation = useUpdateProfileFields();
 
     const [enableUpsells, setEnableUpsells] = useState(false);
     const [enableProfessionalSelection, setEnableProfessionalSelection] = useState(false);
@@ -51,16 +50,11 @@ export const PublicBookingSettings: React.FC = () => {
                 enable_self_rescheduling: enableSelfRescheduling,
             });
 
-            const profileUpdate: Record<string, unknown> = {
+            await updateProfileMutation.mutateAsync({
                 public_booking_enabled: publicBookingEnabled,
                 booking_lead_time_hours: leadTimeHours,
                 max_bookings_per_day: maxBookingsPerDay,
-            };
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update(profileUpdate)
-                .eq('id', user.id);
-            if (profileError) throw profileError;
+            });
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
             setSaveStatus('saved');

@@ -4,6 +4,7 @@ import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircl
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
+import { useQueryClient } from '@tanstack/react-query';
 import type { TeamMember as TeamMemberType } from '../../types/team';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
@@ -11,8 +12,9 @@ import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 
 export const TeamSettings: React.FC = () => {
-    const { user } = useAuth();
+    const { user, companyId } = useAuth();
     const { accent, colors, isBeauty } = useBrutalTheme();
+    const queryClient = useQueryClient();
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const { data: members = [], isLoading: loading } = useTeamMembers();
     const deleteMemberMutation = useDeleteTeamMember();
@@ -216,7 +218,7 @@ export const TeamSettings: React.FC = () => {
                         accentColor={accentColor}
                         onClose={() => setIsModalOpen(false)}
                         onSave={() => {
-                            deleteMemberMutation.reset();
+                            queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
                         }}
                     />
                 )}

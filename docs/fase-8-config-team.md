@@ -6,6 +6,8 @@ Criar a camada de tipos, services e hooks para Configuracoes (business_settings 
 
 ## Entregue nesta etapa
 
+### Infraestrutura
+
 - `types/team.ts`
   - Schemas Zod para `TeamMember`, `TeamMemberInput`, `TeamMemberUpdate`
   - Colunas alinhadas com o schema real do banco: `active` (nao `is_active`), `is_owner`, `commission_rate`, `commission_percent`, `cpf`, `display_order`, `business_id`, `staff_user_id`, `slug`
@@ -44,10 +46,26 @@ Criar a camada de tipos, services e hooks para Configuracoes (business_settings 
   - Adiciona `is_owner` e `commission_rate` a `team_members`
   - Backfill: `is_owner = true` onde `user_id = business_id`
 
+### Paginas migradas para hooks TanStack Query
+
+1. **TeamSettings.tsx** — `useTeamMembers()` + `useDeleteTeamMember()` + invalidacao de cache no `onSave`
+2. **PublicBookingSettings.tsx** — `useBusinessSettings()` + `useProfileFields()` + `useUpdateBusinessSettings()` + `useUpdateProfileFields()` (sem supabase direto)
+3. **CommissionsSettings.tsx** — `useTeamMembers()` + `useBusinessSettings()` + invalidacao de cache em 3 saves; RLS corrigido (`companyId` em vez de `user.id`)
+4. **GeneralSettings.tsx** — `useBusinessSettings()` + `useProfileFields()` + `useUpdateBusinessSettings()` + `useUpdateProfileFields()` (mantem supabase.storage para upload e supabase.auth.updateUser)
+5. **FinancialSettings.tsx** — `useBusinessSettings()` + `useUpdateBusinessSettings()` (sem supabase direto para business_settings)
+
+### Bug fixes criticos corrigidos
+
+1. **TeamSettings `onSave`** — invalida query cache `['team', companyId, 'members']` apos criar/editar membro
+2. **CommissionsSettings saves** — 3 saves diretos agora invalidam cache TanStack Query correspondente
+3. **CommissionsSettings RLS** — `user.id` substituido por `companyId` em todos os writes (staff via RLS)
+4. **PublicBookingSettings profile** — supabase direto substituido por `useUpdateProfileFields()` mutation com invalidacao automatica
+5. **CommissionsSettings loading** — estado manual `loading`/`setLoading` removido, derivado de `membersLoading && !settingsData`
+
 ## Fora de escopo
 
-- Refactor completo das paginas de settings para consumir os novos hooks (pode ser feito incrementalmente)
-- Implementacao de Produtos (Fase 9)
+- Refactor de `TeamMemberForm.tsx` para usar service layer (ainda faz supabase direto, mas o parent invalida cache via `onSave`)
+- Implementacao de Produtos (Fase 9+)
 - Testes E2E
 
 ## Criterios Reversa cobertos
@@ -60,9 +78,11 @@ Criar a camada de tipos, services e hooks para Configuracoes (business_settings 
 
 - `npm run typecheck` sem erros
 - `npm run build` sem erros
-- 193 testes passando (1 preexistente falhando, nao relacionado)
+- 192 testes passando (1 preexistente falhando em `useDashboardData`, nao relacionado)
 - Schemas Zod alinhados com colunas reais do banco (revisado por auditor)
 - Migration para `is_owner` e `commission_rate` idempotente
+- 5 paginas de settings migradas sem supabase direto para fetch/write (exceto storage e auth)
+- RLS multi-tenant: todos os writes usam `companyId`, nunca `user.id` direto
 
 ## Proxima fase
 

@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useTeamMembers } from '../../hooks/useTeam';
 import { useBusinessSettings } from '../../hooks/useSettings';
+import { useQueryClient } from '@tanstack/react-query';
 import { BrutalCard } from '../../components/BrutalCard';
 import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
@@ -23,9 +24,10 @@ interface TeamMember {
 }
 
 export const CommissionsSettings: React.FC = () => {
-    const { user } = useAuth();
+    const { user, companyId } = useAuth();
     const { data: rawMembers, isLoading: membersLoading } = useTeamMembers();
     const { data: settingsData } = useBusinessSettings();
+    const queryClient = useQueryClient();
     const { accent, colors, classes, isBeauty } = useBrutalTheme();
 
     const teamMembers: TeamMember[] = (rawMembers ?? []).filter(m => m.active).map(m => ({
@@ -39,7 +41,6 @@ export const CommissionsSettings: React.FC = () => {
     }));
 
     const [settlementDay, setSettlementDay] = useState<number | string>(5);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editingMember, setEditingMember] = useState<string | null>(null);
     const [tempRates, setTempRates] = useState<Record<string, string>>({});
@@ -73,7 +74,6 @@ export const CommissionsSettings: React.FC = () => {
             setDebitFeePercent(String(settingsData.debit_fee_percent ?? 0));
             setCreditFeePercent(String(settingsData.credit_fee_percent ?? 0));
         }
-        setLoading(false);
     }, [settingsData]);
 
     const handleSaveSettlementDay = async () => {
@@ -90,13 +90,14 @@ export const CommissionsSettings: React.FC = () => {
             const { error } = await supabase
                 .from('business_settings')
                 .upsert({
-                    user_id: user.id,
+                    user_id: companyId,
                     commission_settlement_day_of_month: day,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });
 
             if (error) throw error;
             alert('Dia de acerto salvo com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
         } catch (error) {
             console.error('Error saving settlement day:', error);
             alert('Erro ao salvar dia de acerto.');
@@ -126,7 +127,7 @@ export const CommissionsSettings: React.FC = () => {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', memberId)
-                .eq('user_id', user.id);
+                .eq('user_id', companyId!);
 
             if (error) throw error;
 
@@ -140,6 +141,7 @@ export const CommissionsSettings: React.FC = () => {
             }
 
             setEditingMember(null);
+            queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
             alert('Taxa de comissão atualizada!');
         } catch (error) {
             console.error('Error saving commission rate:', error);
@@ -180,7 +182,7 @@ export const CommissionsSettings: React.FC = () => {
             const { error } = await supabase
                 .from('business_settings')
                 .upsert({
-                    user_id: user.id,
+                    user_id: companyId,
                     machine_fee_enabled: machineFeeEnabled,
                     debit_fee_percent: debit,
                     credit_fee_percent: credit,
@@ -189,6 +191,7 @@ export const CommissionsSettings: React.FC = () => {
 
             if (error) throw error;
             alert('Configurações de taxa salvas com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
         } catch (error) {
             console.error('Erro ao salvar taxa maquininha:', error);
             alert('Erro ao salvar configurações de taxa.');
@@ -197,7 +200,7 @@ export const CommissionsSettings: React.FC = () => {
         }
     };
 
-    if (loading && membersLoading) {
+    if (membersLoading && !settingsData) {
         return (
             <SettingsLayout>
                 <div className="flex items-center justify-center py-12">

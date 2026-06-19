@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
 
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
@@ -12,7 +13,11 @@ interface ModalProps {
   children: React.ReactNode;
   size?: ModalSize;
   footer?: React.ReactNode;
+  /** quando true, ignora ESC e clique no overlay (modais críticos como checkout) */
+  preventClose?: boolean;
+  /** @deprecated use `preventClose` para travar overlay + ESC juntos */
   closeOnOverlay?: boolean;
+  /** @deprecated use `preventClose` para travar overlay + ESC juntos */
   closeOnEsc?: boolean;
   showCloseButton?: boolean;
   className?: string;
@@ -22,9 +27,10 @@ interface ModalProps {
 const SIZE_MAP: Record<ModalSize, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
-  lg: 'max-w-lg',
+  lg: 'max-w-[560px]',
   xl: 'max-w-2xl',
-  full: 'max-w-4xl',
+  // size=full ocupa a viewport inteira (modais cheios tipo Checkout/Commission — DS Lock §3.4)
+  full: 'max-w-none w-screen h-[100dvh] md:max-w-none md:w-screen md:h-[100dvh] rounded-none',
 };
 
 export const Modal: React.FC<ModalProps> = ({
@@ -32,8 +38,9 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   title,
   children,
-  size = 'md',
+  size = 'lg',
   footer,
+  preventClose = false,
   closeOnOverlay = true,
   closeOnEsc = true,
   showCloseButton = true,
@@ -41,16 +48,18 @@ export const Modal: React.FC<ModalProps> = ({
   forceTheme,
 }) => {
   const { classes, colors } = useBrutalTheme({ override: forceTheme });
-  const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  const allowEsc = !preventClose && closeOnEsc;
+  const allowOverlay = !preventClose && closeOnOverlay;
 
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && closeOnEsc) {
+      if (e.key === 'Escape' && allowEsc) {
         onClose();
       }
     },
-    [onClose, closeOnEsc]
+    [onClose, allowEsc]
   );
 
   useEffect(() => {
@@ -58,10 +67,6 @@ export const Modal: React.FC<ModalProps> = ({
       previousFocusRef.current = document.activeElement as HTMLElement;
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
-
-      requestAnimationFrame(() => {
-        dialogRef.current?.focus();
-      });
     }
 
     return () => {
@@ -76,66 +81,84 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!open) return null;
 
+  const isFull = size === 'full';
+
   const content = (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 md:p-4">
+    <div
+      className={`fixed inset-0 flex items-stretch justify-center ${isFull ? '' : 'p-3 md:p-4 items-center'}`}
+      style={{ zIndex: 'var(--z-modal)' }}
+    >
       <div
         className={`absolute inset-0 ${classes.modalOverlay}`}
-        onClick={closeOnOverlay ? onClose : undefined}
+        onClick={allowOverlay ? onClose : undefined}
         aria-hidden="true"
       />
 
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? 'ui-modal-title' : undefined}
-        tabIndex={-1}
-        className={[
-          'relative w-full',
-          SIZE_MAP[size],
-          classes.modalContainer,
-          'max-h-[calc(100vh-1.5rem)] md:max-h-[90vh] flex flex-col',
-          'focus:outline-none',
-          className,
-        ].filter(Boolean).join(' ')}
+      <FocusTrap
+        active={open}
+        focusTrapOptions={{
+          escapeDeactivates: false,
+          allowOutsideClick: true,
+          initialFocus: false,
+          fallbackFocus: '[data-ui-modal-dialog]',
+        }}
       >
-        {(title || showCloseButton) && (
-          <div className={`${classes.modalHeader} shrink-0`}>
-            {title && (
-              <h2
-                id="ui-modal-title"
-                className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}
-              >
-                {title}
-              </h2>
-            )}
-            {showCloseButton && (
-              <button
-                type="button"
-                onClick={onClose}
-                className={[
-                  'p-1.5 rounded-lg transition-colors duration-150',
-                  colors.textMuted,
-                  'hover:bg-[var(--color-card-hover)]',
-                ].join(' ')}
-                aria-label="Fechar"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        )}
+        <div
+          data-ui-modal-dialog
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? 'ui-modal-title' : undefined}
+          tabIndex={-1}
+          className={[
+            'relative w-full',
+            SIZE_MAP[size],
+            classes.modalContainer,
+            isFull ? 'flex flex-col' : 'max-h-[calc(100vh-1.5rem)] md:max-h-[90vh] flex flex-col',
+            'focus:outline-none',
+            className,
+          ].filter(Boolean).join(' ')}
+        >
+          {(title || showCloseButton) && (
+            <div className={`${classes.modalHeader} shrink-0`}>
+              {title && (
+                <h2
+                  id="ui-modal-title"
+                  className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}
+                >
+                  {title}
+                </h2>
+              )}
+              {showCloseButton && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className={[
+                    'p-1.5 rounded-lg transition-colors duration-150',
+                    colors.textMuted,
+                    'hover:bg-[var(--color-card-hover)]',
+                    'min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px]',
+                    'inline-flex items-center justify-center',
+                  ].join(' ')}
+                  aria-label="Fechar"
+                  disabled={preventClose}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
 
-        <div className="flex-1 overflow-y-auto p-5 md:p-6">
-          {children}
+          <div className="flex-1 overflow-y-auto p-5 md:p-6">
+            {children}
+          </div>
+
+          {footer && (
+            <div className={`px-5 py-4 md:px-6 border-t ${colors.divider} shrink-0`}>
+              {footer}
+            </div>
+          )}
         </div>
-
-        {footer && (
-          <div className={`px-5 py-4 md:px-6 border-t ${colors.divider} shrink-0`}>
-            {footer}
-          </div>
-        )}
-      </div>
+      </FocusTrap>
     </div>
   );
 

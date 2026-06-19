@@ -1,11 +1,17 @@
 import React from 'react';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
 
-type CardVariant = 'default' | 'accent' | 'glow';
+/**
+ * Card canônico — apenas `outlined` (default) e `elevated`.
+ * Variants legados `accent` e `glow` são aceitos por compat e mapeados para `elevated`
+ * com aviso de deprecação em runtime (dev only).
+ */
+export type CardVariant = 'outlined' | 'elevated';
+type CardVariantInput = CardVariant | 'default' | 'accent' | 'glow';
 
 interface CardProps {
   children: React.ReactNode;
-  variant?: CardVariant;
+  variant?: CardVariantInput;
   title?: React.ReactNode;
   action?: React.ReactNode;
   noPadding?: boolean;
@@ -15,9 +21,18 @@ interface CardProps {
   forceTheme?: ThemeVariant;
 }
 
+const DEPRECATED_VARIANTS = new Set(['default', 'accent', 'glow']);
+
+function normalizeVariant(variant: CardVariantInput): CardVariant {
+  if (variant === 'elevated') return 'elevated';
+  if (variant === 'outlined') return 'outlined';
+  if (variant === 'accent' || variant === 'glow') return 'elevated';
+  return 'outlined';
+}
+
 export const Card: React.FC<CardProps> = ({
   children,
-  variant = 'default',
+  variant = 'outlined',
   title,
   action,
   noPadding = false,
@@ -26,25 +41,49 @@ export const Card: React.FC<CardProps> = ({
   style,
   forceTheme,
 }) => {
-  const { classes, colors } = useBrutalTheme({ override: forceTheme });
+  const { classes, colors, density, radius, shadow } = useBrutalTheme({ override: forceTheme });
 
-  const variantMap: Record<CardVariant, string> = {
-    default: classes.card,
-    accent: classes.cardAccent,
-    glow: classes.cardGlow,
+  if (import.meta.env.DEV && DEPRECATED_VARIANTS.has(variant)) {
+    console.warn(
+      `[ui/Card] variant="${variant}" está deprecado. Use "outlined" ou "elevated". (DS Lock §3.3)`
+    );
+  }
+
+  const normalized = normalizeVariant(variant);
+
+  const containerByVariant: Record<CardVariant, string> = {
+    outlined: [
+      colors.card,
+      colors.border,
+      'border',
+      radius.card,
+      'overflow-hidden select-none',
+      'transition-[box-shadow,transform] duration-200 ease-out',
+    ].join(' '),
+    elevated: [
+      colors.card,
+      radius.card,
+      'overflow-hidden select-none',
+      shadow.card,
+      'transition-[box-shadow,transform] duration-200 ease-out',
+    ].join(' '),
   };
+
+  // mantém a forma legada do classes.card como fallback se o usuário forçar default
+  const containerClass =
+    variant === 'default' ? classes.card : containerByVariant[normalized];
 
   return (
     <div
       id={id}
-      className={[variantMap[variant], className].filter(Boolean).join(' ')}
+      className={[containerClass, className].filter(Boolean).join(' ')}
       style={style}
     >
       {(title || action) && (
         <div
           className={[
             'flex items-center justify-between',
-            'px-5 py-4 md:px-6 md:py-5',
+            density.cardPadding,
             `border-b ${colors.divider}`,
           ].join(' ')}
         >
@@ -62,7 +101,7 @@ export const Card: React.FC<CardProps> = ({
           {action && <div className="ml-3 shrink-0">{action}</div>}
         </div>
       )}
-      <div className={noPadding ? '' : 'p-5 md:p-6'}>
+      <div className={noPadding ? '' : density.cardPadding}>
         {children}
       </div>
     </div>

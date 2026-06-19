@@ -90,7 +90,7 @@ export const UpdatePassword: React.FC = () => {
 
         const passwordCheck = validatePassword(password);
         if (!passwordCheck.isValid) {
-            setError(`Senha fraca: ${passwordCheck.errors.join(', ')}`);
+            setError(`Sua senha precisa de: ${passwordCheck.errors.join(', ')}`);
             return;
         }
 

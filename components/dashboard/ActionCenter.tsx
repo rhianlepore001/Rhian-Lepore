@@ -1,6 +1,6 @@
 import React from 'react';
-import { BrutalCard } from '../BrutalCard';
-import { BrutalButton } from '../BrutalButton';
+import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
 import { Send, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { ActionItem } from '../../types';
 import { InfoButton } from '../HelpButtons';
@@ -47,7 +47,8 @@ export const ActionCenter = React.memo(({
     };
 
     return (
-        <BrutalCard
+        <Card
+          variant="outlined"
             className="h-full"
             title={
                 <div className="flex items-center gap-2">
@@ -89,7 +90,7 @@ export const ActionCenter = React.memo(({
                                     <h4 className={`text-sm md:text-base font-semibold ${colors.text} mb-1.5 leading-tight transition-colors`}>{action.title}</h4>
                                     <p className={`text-xs md:text-sm ${colors.textMuted} leading-relaxed font-sans`}>{action.description}</p>
                                 </div>
-                                <BrutalButton
+                                <Button
                                     size="sm"
                                     variant="secondary"
                                     className="shrink-0 h-10 w-10 md:h-auto md:w-auto p-0 md:px-4 flex items-center justify-center"
@@ -97,7 +98,7 @@ export const ActionCenter = React.memo(({
                                     onClick={() => onActionClick(action)}
                                 >
                                     <span className="hidden md:inline ml-2 font-bold text-xs uppercase tracking-widest">Executar</span>
-                                </BrutalButton>
+                                </Button>
                             </div>
                         </div>
                     ))
@@ -111,7 +112,7 @@ export const ActionCenter = React.memo(({
                     </p>
                 </div>
             </div>
-        </BrutalCard>
+        </Card>
     );
 });
 

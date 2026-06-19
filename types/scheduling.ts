@@ -46,8 +46,77 @@ export const createAppointmentInputSchema = z.object({
   paymentMethod: checkoutPaymentMethodSchema.nullish(),
 });
 
+export const agendaStaffFilterSchema = z.object({
+  companyId: z.string().min(1),
+  role: z.enum(['owner', 'staff']).optional(),
+  teamMemberId: z.string().nullish(),
+});
+
+export const agendaAppointmentViewSchema = z.object({
+  id: z.string().min(1),
+  client_id: z.string(),
+  clientName: z.string(),
+  clientPhone: z.string().optional(),
+  service: z.string(),
+  appointment_time: z.string(),
+  price: z.number(),
+  status: z.string(),
+  professional_id: z.string().nullable(),
+  basePrice: z.number().optional(),
+  notes: z.string().optional(),
+  payment_method: z.string().nullable().optional(),
+});
+
+export interface AgendaAppointmentView {
+  id: string;
+  client_id: string;
+  clientName: string;
+  clientPhone?: string;
+  service: string;
+  appointment_time: string;
+  price: number;
+  status: string;
+  professional_id: string | null;
+  basePrice?: number;
+  notes?: string;
+  payment_method?: string | null;
+}
+
+export const createAgendaAppointmentInputSchema = z.object({
+  companyId: z.string().min(1),
+  clientId: z.string().min(1),
+  professionalId: z.string().min(1),
+  serviceNames: z.string().min(1),
+  appointmentTime: z.date(),
+  price: moneyAmountSchema,
+  notes: z.string().trim().nullish(),
+});
+
+export const assignProfessionalInputSchema = z.object({
+  appointmentId: uuidSchema.or(z.string().min(1)),
+  professionalId: uuidSchema.or(z.string().min(1)),
+});
+
+export const cancelAppointmentInputSchema = z.object({
+  appointmentId: uuidSchema.or(z.string().min(1)),
+});
+
+export const deleteAppointmentInputSchema = z.object({
+  appointmentId: uuidSchema.or(z.string().min(1)),
+});
+
+export const markAppointmentCompleteInputSchema = z.object({
+  appointmentId: uuidSchema.or(z.string().min(1)),
+});
+
 export type AppointmentStatus = z.infer<typeof appointmentStatusSchema>;
 export type CheckoutPaymentMethod = z.infer<typeof checkoutPaymentMethodSchema>;
 export type MachineFeeSettings = z.infer<typeof machineFeeSettingsSchema>;
 export type CheckoutInput = z.infer<typeof checkoutInputSchema>;
 export type CreateAppointmentInput = z.infer<typeof createAppointmentInputSchema>;
+export type AgendaStaffFilter = z.infer<typeof agendaStaffFilterSchema>;
+export type CreateAgendaAppointmentInput = z.infer<typeof createAgendaAppointmentInputSchema>;
+export type AssignProfessionalInput = z.infer<typeof assignProfessionalInputSchema>;
+export type CancelAppointmentInput = z.infer<typeof cancelAppointmentInputSchema>;
+export type DeleteAppointmentInput = z.infer<typeof deleteAppointmentInputSchema>;
+export type MarkAppointmentCompleteInput = z.infer<typeof markAppointmentCompleteInputSchema>;

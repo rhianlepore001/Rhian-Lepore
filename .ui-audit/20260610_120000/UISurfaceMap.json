@@ -1,0 +1,105 @@
+{
+  "runId": "20260610_120000",
+  "generatedAt": "2026-06-10",
+  "routeCount": 35,
+  "surfaceGroups": {
+    "authenticatedCore": 10,
+    "settings": 12,
+    "publicClient": 6,
+    "authOnboarding": 7
+  },
+  "surfaces": [
+    { "id": "dashboard", "route": "/#/", "type": "dashboard", "layout": "protected", "role": "owner|staff", "files": ["pages/Dashboard.tsx", "components/dashboard/*"], "priority": "critical" },
+    { "id": "agenda", "route": "/#/agenda", "type": "calendar", "layout": "protected", "files": ["pages/Agenda.tsx", "components/TimeGrid.tsx", "components/AppointmentWizard.tsx"], "priority": "critical" },
+    { "id": "financeiro", "route": "/#/financeiro", "type": "dashboard+tables", "layout": "protected", "role": "owner", "files": ["pages/Finance.tsx", "components/FinanceInsights.tsx"], "priority": "critical" },
+    { "id": "clientes", "route": "/#/clientes", "type": "list", "layout": "protected", "files": ["pages/Clients.tsx"], "priority": "high" },
+    { "id": "client-crm", "route": "/#/clientes/:id", "type": "detail", "layout": "protected", "files": ["pages/ClientCRM.tsx"], "priority": "high" },
+    { "id": "fila", "route": "/#/fila", "type": "queue-management", "layout": "protected", "role": "owner", "files": ["pages/QueueManagement.tsx"], "priority": "high" },
+    { "id": "produtos", "route": "/#/produtos", "type": "list+form", "layout": "protected", "files": ["pages/Products.tsx"], "priority": "medium" },
+    { "id": "marketing", "route": "/#/marketing", "type": "campaigns", "layout": "protected", "role": "owner", "files": ["pages/Marketing.tsx", "components/marketing/*"], "priority": "medium" },
+    { "id": "insights", "route": "/#/insights", "type": "reports", "layout": "protected", "role": "owner", "files": ["pages/Reports.tsx"], "priority": "medium" },
+    { "id": "staff-insights", "route": "/#/meus-insights", "type": "dashboard", "layout": "protected", "role": "staff", "files": ["pages/StaffInsights.tsx"], "priority": "medium" },
+    { "id": "login", "route": "/#/login", "type": "auth", "layout": "standalone", "files": ["pages/Login.tsx"], "priority": "high" },
+    { "id": "register", "route": "/#/register", "type": "auth", "layout": "standalone", "files": ["pages/Register.tsx"], "priority": "high" },
+    { "id": "forgot-password", "route": "/#/forgot-password", "type": "auth", "layout": "standalone", "files": ["pages/ForgotPassword.tsx"], "priority": "low" },
+    { "id": "update-password", "route": "/#/update-password", "type": "auth", "layout": "standalone", "files": ["pages/UpdatePassword.tsx"], "priority": "low" },
+    { "id": "onboarding-wizard", "route": "/#/onboarding-wizard", "type": "onboarding", "layout": "standalone-auth", "files": ["pages/OnboardingWizard.tsx", "components/onboarding/*"], "priority": "high" },
+    { "id": "onboarding", "route": "/#/onboarding", "type": "onboarding", "layout": "standalone-auth", "files": ["pages/Onboarding.tsx"], "priority": "medium" },
+    { "id": "staff-onboarding", "route": "/#/staff-onboarding", "type": "onboarding", "layout": "standalone-auth", "files": ["pages/StaffOnboarding.tsx"], "priority": "medium" },
+    { "id": "public-booking", "route": "/#/book/:slug", "type": "public-booking", "layout": "public", "files": ["pages/PublicBooking.tsx", "components/booking/*"], "priority": "critical" },
+    { "id": "queue-join", "route": "/#/queue/:slug", "type": "public-queue", "layout": "public", "files": ["pages/QueueJoin.tsx"], "priority": "medium" },
+    { "id": "queue-status", "route": "/#/queue-status/:id", "type": "public-status", "layout": "public", "files": ["pages/QueueStatus.tsx"], "priority": "medium" },
+    { "id": "pro-portfolio", "route": "/#/pro/:slug", "type": "public-profile", "layout": "public", "files": ["pages/ProfessionalPortfolio.tsx"], "priority": "low" },
+    { "id": "client-area", "route": "/#/minha-area/:slug", "type": "client-portal", "layout": "public", "files": ["pages/ClientArea.tsx"], "priority": "medium" },
+    { "id": "settings-geral", "route": "/#/configuracoes/geral", "type": "settings-form", "layout": "settings", "files": ["pages/settings/GeneralSettings.tsx", "components/SettingsLayout.tsx"], "priority": "high" },
+    { "id": "settings-agendamento", "route": "/#/configuracoes/agendamento", "type": "settings-form", "layout": "settings", "files": ["pages/settings/PublicBookingSettings.tsx"], "priority": "medium" },
+    { "id": "settings-equipe", "route": "/#/configuracoes/equipe", "type": "settings-crud", "layout": "settings", "files": ["pages/settings/TeamSettings.tsx"], "priority": "medium" },
+    { "id": "settings-servicos", "route": "/#/configuracoes/servicos", "type": "settings-crud", "layout": "settings", "files": ["pages/settings/ServiceSettings.tsx"], "priority": "medium" },
+    { "id": "settings-comissoes", "route": "/#/configuracoes/comissoes", "type": "settings-crud", "layout": "settings", "files": ["pages/settings/CommissionsSettings.tsx"], "priority": "medium" },
+    { "id": "settings-assinatura", "route": "/#/configuracoes/assinatura", "type": "billing", "layout": "settings-fullscreen", "files": ["pages/settings/SubscriptionSettings.tsx"], "priority": "high" },
+    { "id": "settings-seguranca", "route": "/#/configuracoes/seguranca", "type": "settings-form", "layout": "settings", "files": ["pages/settings/SecuritySettings.tsx"], "priority": "low" },
+    { "id": "settings-auditoria", "route": "/#/configuracoes/auditoria", "type": "dev-tools", "layout": "settings", "files": ["pages/settings/AuditLogs.tsx"], "priority": "low" },
+    { "id": "settings-lixeira", "route": "/#/configuracoes/lixeira", "type": "dev-tools", "layout": "settings", "files": ["pages/settings/RecycleBin.tsx"], "priority": "low" },
+    { "id": "settings-erros", "route": "/#/configuracoes/erros", "type": "dev-tools", "layout": "settings", "files": ["pages/settings/SystemLogs.tsx"], "priority": "low" },
+    { "id": "settings-ui-preview", "route": "/#/configuracoes/ui-preview", "type": "design-system-preview", "layout": "settings", "files": ["pages/settings/UiPreview.tsx"], "priority": "reference" },
+    { "id": "settings-notificacoes", "route": "/#/configuracoes/notificacoes", "type": "placeholder", "layout": "settings", "files": ["pages/Placeholder.tsx"], "priority": "low" }
+  ],
+  "shellComponents": [
+    "components/Layout.tsx",
+    "components/Sidebar.tsx",
+    "components/Header.tsx",
+    "components/BottomMobileNav.tsx",
+    "components/BrutalBackground.tsx",
+    "components/SettingsLayout.tsx",
+    "components/DynamicBranding.tsx"
+  ],
+  "sharedComponents": {
+    "canonical": ["Button", "Input", "Select", "Card", "Modal", "Table", "Tabs", "Badge", "EmptyState", "Skeleton", "ErrorState", "ConfirmModal", "Toast"],
+    "legacy": ["BrutalCard", "BrutalButton", "Modal (root)", "EmptyState (root)", "SettingsSection", "TabNav", "SkeletonLoader"]
+  },
+  "tokenSources": [
+    "design-system/tokens.css",
+    "hooks/useBrutalTheme.ts",
+    "index.html (tailwind.config inline + CSS vars)",
+    "hooks/useDynamicBranding.ts"
+  ],
+  "inconsistencies": [
+    { "pattern": "card", "variants": 3, "files": ["components/BrutalCard.tsx", "components/ui/Card.tsx", "inline div+colors.card"], "usageRatio": "BrutalCard ~50 arquivos vs ui/Card ~18" },
+    { "pattern": "button", "variants": 3, "files": ["components/ui/Button.tsx", "components/BrutalButton.tsx", "inline accent classes"], "usageRatio": "BrutalButton dominante em modais e forms legados" },
+    { "pattern": "modal", "variants": 4, "files": ["components/ui/Modal.tsx", "components/Modal.tsx", "components/ui/ConfirmModal.tsx", "custom fullscreen divs"], "notes": "CheckoutModal, CommissionPaymentHistory, ServiceModal — cada um com shell próprio" },
+    { "pattern": "empty-state", "variants": 2, "files": ["components/ui/EmptyState.tsx", "components/EmptyState.tsx"] },
+    { "pattern": "theme-branching", "variants": 2, "files": ["hooks/useBrutalTheme.ts", "~80 arquivos com isBeauty ternário"], "notes": "Migração incompleta — light mode quebra em páginas legadas" },
+    { "pattern": "border-radius", "variants": 4, "files": ["rounded-lg", "rounded-xl", "rounded-2xl", "rounded-3xl espalhados"], "notes": "Sem escala única aplicada" },
+    { "pattern": "side-stripe-accent", "variants": 1, "count": 20, "files": ["components/PublicLinkCard.tsx", "pages/QueueManagement.tsx", "components/dashboard/MeuDiaWidget.tsx"], "notes": "border-l-4 como accent — anti-pattern Impeccable" },
+    { "pattern": "loading", "variants": 3, "files": ["components/ui/Skeleton.tsx", "components/SkeletonLoader.tsx", "inline animate-pulse divs"] },
+    { "pattern": "settings-layout", "variants": 2, "files": ["components/SettingsLayout.tsx", "pages com BrutalCard manual"] }
+  ],
+  "aiSlopTells": [
+    "identical-card-grids",
+    "ghost-card-gradient-overlays",
+    "hero-metric-kpi-rows",
+    "side-stripe-border-l-4",
+    "uniform-rounded-2xl-everywhere",
+    "muted-gray-on-tinted-bg-risk",
+    "identical-fade-in-page-animations",
+    "nested-card-within-card",
+    "generic-dashboard-widget-stack"
+  ],
+  "hotspots": [
+    "dashboard",
+    "agenda",
+    "financeiro",
+    "public-booking",
+    "login",
+    "settings-geral",
+    "client-crm",
+    "queue-management"
+  ],
+  "themeCoverageGaps": [
+    "pages/ClientArea.tsx — 85+ isBeauty branches, maior débito legado",
+    "pages/Finance.tsx — BrutalCard + isBeauty misturados",
+    "pages/Login.tsx e Register.tsx — auth standalone com lógica duplicada por tema",
+    "pages/PublicBooking.tsx — 42 rounded-* hardcoded, pouco useBrutalTheme",
+    "Light mode: tokens existem em tokens.css mas UI legada assume dark"
+  ]
+}

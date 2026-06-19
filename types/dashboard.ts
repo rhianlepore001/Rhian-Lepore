@@ -85,3 +85,25 @@ export type DashboardStats = z.infer<typeof dashboardStatsSchema>;
 export type ActionItem = z.infer<typeof actionItemSchema>;
 export type DashboardAppointment = z.infer<typeof dashboardAppointmentSchema>;
 export type GoalHistoryItem = z.infer<typeof goalHistoryItemSchema>;
+
+export const clientGrowthEntrySchema = z.object({
+  month: z.string(),
+  new_clients: z.number(),
+});
+
+export const topClientSchema = z.object({
+  name: z.string(),
+  visits: z.number(),
+  revenue: z.number(),
+  last_visit: z.string(),
+});
+
+export const clientInsightsSchema = z.object({
+  client_growth_by_month: z.array(clientGrowthEntrySchema).default([]),
+  top_clients: z.array(topClientSchema).default([]),
+  retention_rate: z.number().default(0),
+});
+
+export type ClientGrowthEntry = z.infer<typeof clientGrowthEntrySchema>;
+export type TopClient = z.infer<typeof topClientSchema>;
+export type ClientInsights = z.infer<typeof clientInsightsSchema>;

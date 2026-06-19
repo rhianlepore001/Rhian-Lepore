@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="barber" data-mode="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgendiX — Dashboard (artifact)</title>
+  <link rel="stylesheet" href="../shared/artifact-ds.css" />
+</head>
+<body>
+  <div class="theme-toolbar">
+    <span>UI Audit artifact</span>
+    <span class="tag" id="theme-tag">barber / dark</span>
+    <label>Tema <select id="theme-select"><option value="barber">Barber</option><option value="beauty">Beauty</option></select></label>
+    <label>Modo <select id="mode-select"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+  </div>
+
+  <div class="artifact-body app-shell">
+    <aside class="sidebar">
+      <div style="padding:8px 12px 20px;font-family:Chivo;font-weight:900;">AgendiX</div>
+      <a class="nav-item active" href="#">Início</a>
+      <a class="nav-item" href="#">Agenda</a>
+      <a class="nav-item" href="#">Clientes</a>
+      <a class="nav-item" href="#">Financeiro</a>
+    </aside>
+
+    <main class="main stack">
+      <!-- PageHeader — UI-004 fix: 1 primary CTA -->
+      <header class="page-header">
+        <div>
+          <h1 class="h1">Bom dia, Rhian</h1>
+          <p class="text-secondary" style="margin-top:4px;">Quarta, 10 de junho</p>
+        </div>
+        <div class="page-header-actions">
+          <button type="button" class="btn btn-secondary">Ver agenda</button>
+        </div>
+      </header>
+
+      <!-- Hero KPI — full width, UI-004 + UI-017 -->
+      <section class="kpi-hero">
+        <p class="text-secondary" style="font-size:0.875rem;margin-bottom:8px;">Faturamento hoje</p>
+        <p class="value">R$ 1.240,00</p>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span class="badge badge-success">+12% vs ontem</span>
+          <span class="text-muted">Meta diária: 78%</span>
+        </div>
+        <div style="margin-top:16px;height:6px;border-radius:999px;background:var(--color-surface);overflow:hidden;">
+          <div style="width:78%;height:100%;background:var(--color-accent);border-radius:999px;"></div>
+        </div>
+      </section>
+
+      <!-- Secondary KPIs — compact barber / spaced beauty via grid -->
+      <section class="kpi-grid">
+        <div class="card kpi-sm">
+          <p class="text-muted" style="font-size:0.75rem;margin-bottom:4px;">Agendamentos</p>
+          <p class="value">8</p>
+        </div>
+        <div class="card kpi-sm">
+          <p class="text-muted" style="font-size:0.75rem;margin-bottom:4px;">Ticket médio</p>
+          <p class="value">R$ 85</p>
+        </div>
+        <div class="card kpi-sm">
+          <p class="text-muted" style="font-size:0.75rem;margin-bottom:4px;">Lucro mês</p>
+          <p class="value">R$ 4,2k</p>
+        </div>
+      </section>
+
+      <!-- Banner outlined — not competing with hero -->
+      <div class="banner-outlined">
+        <span class="text-secondary">2 atendimentos não confirmados hoje.</span>
+        <button type="button" class="btn btn-ghost" style="min-height:36px;padding:0 12px;">Ver agenda</button>
+      </div>
+
+      <!-- Meu dia — 2nd fold -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="h2">Seu dia</h2>
+          <span class="badge">3 restantes</span>
+        </div>
+        <div class="card-body stack" style="gap:8px;">
+          <div class="time-slot now">
+            <div><strong>14:30</strong> <span class="text-secondary">— João Silva · Corte</span></div>
+            <button type="button" class="btn btn-primary" style="min-height:36px;padding:0 14px;font-size:0.8125rem;">Concluir</button>
+          </div>
+          <div class="time-slot">
+            <div><strong>15:00</strong> <span class="text-secondary">— Maria · Barba</span></div>
+          </div>
+          <div class="time-slot">
+            <div><strong>15:45</strong> <span class="text-secondary">— Pedro · Corte + barba</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navegação mobile">
+    <button type="button" class="active">Início</button>
+    <button type="button">Agenda</button>
+    <button type="button" style="color:var(--color-accent);">+</button>
+    <button type="button">Clientes</button>
+    <button type="button">Mais</button>
+  </nav>
+
+  <script src="../shared/artifact-theme.js"></script>
+  <script>initThemeToolbar('barber', 'dark');</script>
+</body>
+</html>

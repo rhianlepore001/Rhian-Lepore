@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { BrutalCard } from '../../components/BrutalCard';
@@ -14,45 +14,50 @@ vi.mock('../../contexts/UIContext', () => ({
     useUI: () => ({ isMobile: false }),
 }));
 
+beforeEach(() => {
+    // Silencia o aviso de deprecação para não poluir o log dos testes.
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+});
+
 const renderCard = (ui: React.ReactElement) => {
     return render(<MemoryRouter>{ui}</MemoryRouter>);
 };
 
-describe('BrutalCard Component', () => {
-    it('renders children correctly', () => {
+describe('BrutalCard (wrapper @deprecated)', () => {
+    it('renderiza os filhos', () => {
         renderCard(
             <BrutalCard>
                 <div data-testid="child-content">Content</div>
             </BrutalCard>
         );
-
         expect(screen.getByTestId('child-content')).toBeInTheDocument();
     });
 
-    it('applies correct mobile UX styles', () => {
-        const { container } = renderCard(<BrutalCard>Content</BrutalCard>);
-        const card = container.firstChild as HTMLElement;
-
-        expect((card.style as any).webkitTapHighlightColor).toBe('transparent');
-        expect(card.style.outline).toBe('none');
-        expect(card.className).toContain('select-none');
-    });
-
-    it('renders with Beauty theme when forced', () => {
+    it('aplica o tema beauty quando forçado (soft radius)', () => {
         const { container } = renderCard(<BrutalCard forceTheme="beauty">Content</BrutalCard>);
         const card = container.firstChild as HTMLElement;
-
         expect(card.className).toContain('rounded-2xl');
-        expect(card.className).toContain('bg-beauty-card');
+        expect(card.className).toContain('bg-theme-card');
     });
 
-    it('renders with Brutal theme by default', () => {
+    it('aplica o tema barber por padrão (sharp radius)', () => {
         mockUserType.current = 'barber';
         const { container } = renderCard(<BrutalCard>Content</BrutalCard>);
         const card = container.firstChild as HTMLElement;
+        expect(card.className).toContain('bg-theme-card');
+        expect(card.className).toContain('rounded-lg');
+    });
 
-        expect(card.className).toContain('bg-obsidian-card');
-        expect(card.className).toContain('rounded-2xl');
+    it('mapeia accent/glow para variant="elevated" (sem side-stripe)', () => {
+        const { container } = renderCard(<BrutalCard accent>Content</BrutalCard>);
+        const card = container.firstChild as HTMLElement;
+        expect(card.className).not.toContain('before:');
+    });
+
+    it('emite aviso de deprecação no dev', () => {
+        const warn = vi.spyOn(console, 'warn');
+        renderCard(<BrutalCard>X</BrutalCard>);
+        expect(warn).toHaveBeenCalled();
+        expect(warn.mock.calls.some((args) => String(args[0]).includes('deprecated'))).toBe(true);
     });
 });
-

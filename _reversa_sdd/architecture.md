@@ -8,7 +8,7 @@
 
 ## Resumo Executivo
 
-**agendix** (também conhecido como *Beauty OS* / *AgenX*) é um SaaS multi-tenant para gestão de barbearias e salões de beleza. A arquitetura segue um padrão **SPA + BaaS** (Backend-as-a-Service), onde o frontend React consome serviços do Supabase (PostgreSQL, Auth, Storage, Realtime) e integra-se com Stripe (pagamentos), Google Gemini (IA/embeddings), OpenRouter (LLM proxy) e WhatsApp (comunicação).
+**agendix** (também conhecido como *Beauty OS* / *AgendiX*) é um SaaS multi-tenant para gestão de barbearias e salões de beleza. A arquitetura segue um padrão **SPA + BaaS** (Backend-as-a-Service), onde o frontend React consome serviços do Supabase (PostgreSQL, Auth, Storage, Realtime) e integra-se com Stripe (pagamentos), Google Gemini (IA/embeddings), OpenRouter (LLM proxy) e WhatsApp (comunicação).
 
 A aplicação é **mobile-first**, projetada para uso primário em celulares por barbeiros e profissionais de beleza. Utiliza **HashRouter** para compatibilidade com hospedagem estática e **PWA** para experiência de app nativo.
 

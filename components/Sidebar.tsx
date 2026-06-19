@@ -5,6 +5,7 @@ import { TrendingUp, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -13,6 +14,8 @@ export const Sidebar: React.FC = () => {
 
   const isStaff = role === 'staff';
   const { accent, colors, classes } = useBrutalTheme();
+  const { mode } = useTheme();
+  const isLight = mode === 'light';
 
   // Filtra itens de navegação com base no role do usuário
   const visibleItems = NAVIGATION_ITEMS.filter(item => !item.ownerOnly || !isStaff);
@@ -61,12 +64,13 @@ export const Sidebar: React.FC = () => {
         <div className={`h-16 flex items-center justify-between px-6 md:hidden border-b ${colors.divider} ${colors.card}`}>
           <div className="relative group">
             <div className={`absolute -inset-2 ${accent.bgDim} blur-xl rounded-full opacity-60`} />
-            <div className="relative">
+            <div className="relative flex items-center gap-2.5">
               <img
-                src="/logo icon.png"
-                alt="AgendiX"
+                src={isLight ? "/logo-agendix-light.png" : "/logo-agendix-icon.png"}
+                alt="AgendiX Logo"
                 style={{ height: 32, width: 'auto', objectFit: 'contain', display: 'block' }}
               />
+              <span className={`text-xl font-heading font-black uppercase tracking-tighter leading-none ${colors.text}`}>AgendiX</span>
             </div>
           </div>
           <button onClick={closeSidebar} className={`${colors.textSecondary} hover:${colors.text} transition-colors`} aria-label="Fechar menu" title="Fechar menu">
@@ -78,12 +82,13 @@ export const Sidebar: React.FC = () => {
         <div className={`hidden md:flex h-20 items-center justify-center border-b ${colors.divider}`}>
           <Link to="/" onClick={closeSidebar} className="relative flex items-center hover:opacity-80 transition-opacity group">
             <div className={`absolute -inset-3 ${accent.bgDim} blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
-            <div className="relative">
+            <div className="relative flex items-center gap-3">
               <img
-                src="/logo icon.png"
-                alt="AgendiX"
-                style={{ height: 44, width: 'auto', objectFit: 'contain', display: 'block' }}
+                src={isLight ? "/logo-agendix-light.png" : "/logo-agendix-icon.png"}
+                alt="AgendiX Logo"
+                style={{ height: 40, width: 'auto', objectFit: 'contain', display: 'block' }}
               />
+              <span className={`text-2xl font-heading font-black uppercase tracking-tighter leading-none ${colors.text}`}>AgendiX</span>
             </div>
           </Link>
         </div>

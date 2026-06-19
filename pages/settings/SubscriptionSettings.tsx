@@ -1,17 +1,24 @@
+import { Card, Button } from '../../components/ui';
 import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useSubscription } from '../../hooks/useSubscription';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
+
+
 import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Initialize Stripe outside component to avoid recreation
-// Replace with your actual publishable key from the dashboard or env var
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Rk3ZLPUPmLLh2qESPurB4bgAa4VqLe41OQPtQNUQTfu2A8pV8Zk7rYIBgg8SWUA9ItuYyGfGBr8cSw4YMa9tMJY004eg5XVbo');
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+if (!stripePublishableKey) {
+    throw new Error(
+        'VITE_STRIPE_PUBLISHABLE_KEY é obrigatória. Configure-a no arquivo .env.local.'
+    );
+}
+
+const stripePromise = loadStripe(stripePublishableKey);
 
 export const SubscriptionSettings: React.FC = () => {
     const { businessName, region } = useAuth();
@@ -148,7 +155,7 @@ export const SubscriptionSettings: React.FC = () => {
                 {/* Planos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {plans.map((plan) => (
-                        <BrutalCard
+                        <Card
                             key={plan.id}
                             forceTheme={isBeauty ? 'beauty' : 'barber'}
                             className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-' + accentColor : ''}`}
@@ -183,7 +190,7 @@ export const SubscriptionSettings: React.FC = () => {
                                 ))}
                             </div>
 
-                            <BrutalButton
+                            <Button
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
                                 variant={plan.recommended ? 'primary' : 'ghost'}
                                 onClick={() => handleSubscribe(plan.id, plan.priceId)}
@@ -195,8 +202,8 @@ export const SubscriptionSettings: React.FC = () => {
                                 ) : (
                                     isTrial ? 'Começar Assinatura' : 'Alterar Plano'
                                 )}
-                            </BrutalButton>
-                        </BrutalCard>
+                            </Button>
+                        </Card>
                     ))}
                 </div>
 

@@ -3,9 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { getOnboardingProgress } from '../lib/onboarding';
+import { getOnboardingProgress } from '../services/onboarding';
+import { mapError, formatUserFacingError } from '../utils/mapError';
 import { Screw } from '../components/Screw';
-import { AgenXLogo } from '../components/AgenXLogo';
+import { AgendiXLogo } from '../components/AgendiXLogo';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -20,6 +24,7 @@ export const Login: React.FC = () => {
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
     const [showGateway, setShowGateway] = useState(true);
     const isBeauty = loginTheme === 'beauty';
+    const { colors, accent, font, radius } = useBrutalTheme({ override: loginTheme });
 
     useEffect(() => {
         if (!error) return;
@@ -35,7 +40,7 @@ export const Login: React.FC = () => {
         setError(null);
         const { error } = await login(email, password);
         if (error) {
-            setError(error.message);
+            setError(formatUserFacingError(mapError(error, 'Não foi possível entrar. Verifique seus dados e tente de novo.')));
             setLoading(false);
         } else {
             const { data: { user } } = await supabase.auth.getUser();
@@ -68,6 +73,8 @@ export const Login: React.FC = () => {
     const handleSelectSegment = (theme: 'barber' | 'beauty') => {
         setLoginTheme(theme);
         setShowGateway(false);
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-mode', 'dark');
     };
 
     // ─── GATEWAY ─────────────────────────────────────────────────────────────
@@ -76,7 +83,7 @@ export const Login: React.FC = () => {
             <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 md:p-12">
 
                 <div className="mb-10 md:mb-14 flex items-center gap-3">
-                    <AgenXLogo size={32} isBeauty={false} showText={true} />
+                    <AgendiXLogo size={32} isBeauty={false} showText={true} />
                 </div>
 
                 <div className="text-center mb-10 md:mb-14 max-w-xl">
@@ -134,7 +141,7 @@ export const Login: React.FC = () => {
                         <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
                             <div
                                 className="absolute -inset-[2px] bg-black bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
-                                style={{ backgroundImage: 'url("/ChatGPT Image 16 de mai. de 2026, 17_04_26.png")' }}
+                                style={{ backgroundImage: 'url("/mulher-studio.png")' }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
                             <div className="absolute inset-0 bg-beauty-neon/0 group-hover:bg-beauty-neon/[0.03] transition-colors duration-500" />
@@ -210,14 +217,14 @@ export const Login: React.FC = () => {
                     <div className={`absolute top-0 left-0 right-0 h-[2px] ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
 
                     <div>
-                        <AgenXLogo size={32} isBeauty={isBeauty} showText={true} />
+                        <AgendiXLogo size={32} isBeauty={isBeauty} showText={true} />
                     </div>
 
                     <div>
                         <p className={`font-mono text-xs uppercase tracking-[0.2em] mb-3
                             ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}
                         `}>
-                            {isBeauty ? 'Studios & Spas' : 'Barber Shop'}
+                            {isBeauty ? 'Salões & Studios' : 'Barbearia'}
                         </p>
                         <h2 className="font-heading text-4xl text-white uppercase leading-none tracking-tight mb-4">
                             {isBeauty ? 'Seu salão,\nseu ritmo.' : 'Seu corte,\nsua regra.'}
@@ -225,7 +232,7 @@ export const Login: React.FC = () => {
                         <p className={`text-xs leading-relaxed
                             ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
                         `}>
-                            Gestão inteligente para profissionais sérios.
+                            Tudo o que o seu negócio precisa, em um só lugar.
                         </p>
                     </div>
 
@@ -252,7 +259,7 @@ export const Login: React.FC = () => {
                     <div className="p-8 md:p-10">
                         {/* Logo mobile */}
                         <div className="md:hidden mb-8 flex items-center gap-2">
-                            <AgenXLogo size={28} isBeauty={isBeauty} showText={true} />
+                            <AgendiXLogo size={28} isBeauty={isBeauty} showText={true} />
                         </div>
 
                         <div className="mb-8">
@@ -262,7 +269,7 @@ export const Login: React.FC = () => {
                             <p className={`text-xs uppercase tracking-widest
                                 ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
                             `}>
-                                Acesse sua conta
+                                Bom te ver de novo
                             </p>
                         </div>
 
@@ -271,113 +278,86 @@ export const Login: React.FC = () => {
                                 ref={errorRef}
                                 role="alert"
                                 tabIndex={-1}
-                                className={`mb-5 p-3.5 text-xs rounded-xl border
+                                className={`mb-5 p-3.5 text-xs ${radius.input} border
                                     ${isBeauty
-                                        ? 'bg-red-500/10 border-red-500/20 text-red-300'
-                                        : 'bg-red-500/8 border-red-500/30 text-red-400 font-mono'}
+                                        ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)] text-[var(--color-danger)]'
+                                        : 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)] text-[var(--color-danger)] font-mono'}
                                 `}
                             >
                                 {error}
                             </div>
                         )}
 
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label
-                                    htmlFor="login-email"
-                                    className={`text-xs font-semibold uppercase tracking-wider
-                                        ${isBeauty ? 'text-neutral-400' : 'text-neutral-500 font-mono'}
-                                    `}
-                                >
-                                    Email
-                                </label>
-                                <input
-                                    id="login-email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none transition-all
-                                        ${isBeauty
-                                            ? 'bg-white/5 border border-white/10 focus:border-beauty-neon/50 focus:bg-white/8 font-sans'
-                                            : 'bg-black/30 border border-neutral-700/60 font-mono focus:border-accent-gold/60 focus:bg-black/50'}
-                                    `}
-                                    placeholder="seu@email.com"
-                                />
-                            </div>
+                        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-4">
+                            <Input
+                                id="login-email"
+                                type="email"
+                                label="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="seu@email.com"
+                                autoComplete="email"
+                                forceTheme={loginTheme}
+                                required
+                            />
 
-                            <div className="space-y-1.5">
-                                <label
-                                    htmlFor="login-password"
-                                    className={`text-xs font-semibold uppercase tracking-wider
-                                        ${isBeauty ? 'text-neutral-400' : 'text-neutral-500 font-mono'}
-                                    `}
-                                >
-                                    Senha
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        id="login-password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className={`w-full px-4 py-3 rounded-xl text-white text-sm focus:outline-none transition-all
-                                            ${isBeauty
-                                                ? 'bg-white/5 border border-white/10 focus:border-beauty-neon/50 font-sans'
-                                                : 'bg-black/30 border border-neutral-700/60 font-mono focus:border-accent-gold/60 focus:bg-black/50'}
-                                        `}
-                                        placeholder="••••••••"
-                                    />
+                            <Input
+                                id="login-password"
+                                type={showPassword ? 'text' : 'password'}
+                                label="Senha"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                forceTheme={loginTheme}
+                                required
+                                iconRight={
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(prev => !prev)}
                                         aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                                        className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}
                                     >
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
-                                </div>
+                                }
+                            />
+
+                            <div className="pt-2">
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    size="md"
+                                    fullWidth
+                                    loading={loading}
+                                    forceTheme={loginTheme}
+                                >
+                                    Entrar
+                                </Button>
                             </div>
-                        </div>
 
-                        <button
-                            onClick={handleLogin}
-                            disabled={loading}
-                            aria-busy={loading}
-                            className={`w-full mt-6 h-12 rounded-xl font-semibold text-sm tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]
-                                ${isBeauty
-                                    ? 'bg-beauty-neon text-white hover:bg-beauty-neonHover shadow-[0_4px_20px_rgba(167,139,250,0.3)] hover:shadow-[0_6px_24px_rgba(167,139,250,0.45)]'
-                                    : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-[0_4px_20px_rgba(194,155,64,0.25)] hover:shadow-[0_6px_24px_rgba(194,155,64,0.4)]'}
-                            `}
-                        >
-                            {loading
-                                ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                : 'Entrar na conta'
-                            }
-                        </button>
-
-                        <div className="mt-6 pt-5 border-t border-white/5 flex flex-col gap-2.5 text-center">
-                            <Link
-                                to="/forgot-password"
-                                className="font-mono text-xs uppercase tracking-wider text-neutral-600 hover:text-neutral-300 transition-colors"
-                            >
-                                Esqueci minha senha
-                            </Link>
-                            <Link
-                                to={`/register?type=${loginTheme}`}
-                                className={`font-mono text-xs uppercase tracking-wider font-bold transition-colors
-                                    ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon' : 'text-accent-gold/60 hover:text-accent-gold'}
-                                `}
-                            >
-                                Não tem conta? Criar agora
-                            </Link>
-                        </div>
+                            <div className={`mt-6 pt-5 border-t ${colors.divider} flex flex-col gap-2.5 text-center`}>
+                                <Link
+                                    to="/forgot-password"
+                                    className={`text-xs ${colors.textSecondary} hover:${colors.text} transition-colors min-h-[44px] inline-flex items-center justify-center font-mono uppercase tracking-wider`}
+                                >
+                                    Esqueci minha senha
+                                </Link>
+                                <Link
+                                    to={`/register?type=${loginTheme}`}
+                                    className={`text-xs font-bold font-mono uppercase tracking-wider ${accent.text} hover:opacity-80 transition-opacity min-h-[44px] inline-flex items-center justify-center`}
+                                >
+                                    Não tem conta? Criar agora
+                                </Link>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
             </div>
 
             <div className="absolute bottom-5 font-mono text-xs text-white/15 uppercase tracking-[0.2em]">
-                AgendiX • v2.0
+AgendiX
             </div>
         </div>
     );

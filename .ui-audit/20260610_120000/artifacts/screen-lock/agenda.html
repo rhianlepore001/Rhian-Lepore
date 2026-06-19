@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendiX — Agenda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;background:#131316}
+:root{--font-display:'Chivo',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace;--sidebar-w:56px;--bottom-nav-h:44px}
+[data-theme="barber-dark"]{--bg:#121212;--card:#1E1E1E;--card-alt:#252520;--text-primary:#EAEAEA;--text-secondary:#A8A8A0;--accent:#C29B40;--accent-hover:#D4AE52;--accent-foreground:#121212;--accent-subtle:rgba(194,155,64,0.10);--input-bg:#2A2A2A;--input-border:#404040;--input-focus:rgba(194,155,64,0.45);--border:#333;--hover-overlay:rgba(255,255,255,0.04);--shadow:0 1px 3px rgba(0,0,0,0.4);--success:#4ADE80;--danger:#F87171;--warn:#FBBF24;--radius-card:8px;--radius-button:8px;--radius-input:6px;--py:20px;--px:16px;--gap:12px;--sidebar-bg:#0E0E0E;--sidebar-active:rgba(194,155,64,0.12);--bottom-nav-bg:#0E0E0E}
+[data-theme="barber-light"]{--bg:#F5F1E8;--card:#FFFFFF;--card-alt:#F0EDE4;--text-primary:#1A1A1A;--text-secondary:#6B6B5E;--accent:#A07A2A;--accent-hover:#B8902E;--accent-foreground:#000000;--accent-subtle:rgba(160,122,42,0.08);--input-bg:#FFFFFF;--input-border:#D4D0C6;--input-focus:rgba(160,122,42,0.40);--border:#E5E1D6;--hover-overlay:rgba(0,0,0,0.03);--shadow:0 1px 3px rgba(0,0,0,0.07);--success:#16A34A;--danger:#DC2626;--warn:#CA8A04;--radius-card:8px;--radius-button:8px;--radius-input:6px;--py:20px;--px:16px;--gap:12px;--sidebar-bg:#EDE9E0;--sidebar-active:rgba(160,122,42,0.10);--bottom-nav-bg:#EDE9E0}
+[data-theme="beauty-dark"]{--bg:#1F1B2E;--card:#2E2B3B;--card-alt:#363246;--text-primary:#EAEAEA;--text-secondary:#B0AAC0;--accent:#A78BFA;--accent-hover:#B9A0FB;--accent-foreground:#1F1B2E;--accent-subtle:rgba(167,139,250,0.10);--input-bg:#3A3650;--input-border:#4E4A64;--input-focus:rgba(167,139,250,0.40);--border:#443F5A;--hover-overlay:rgba(255,255,255,0.04);--shadow:0 2px 8px rgba(0,0,0,0.3);--success:#4ADE80;--danger:#F87171;--warn:#FBBF24;--radius-card:16px;--radius-button:12px;--radius-input:8px;--py:24px;--px:20px;--gap:16px;--sidebar-bg:#16132A;--sidebar-active:rgba(167,139,250,0.10);--bottom-nav-bg:#16132A}
+[data-theme="beauty-light"]{--bg:#F7F5FF;--card:#FFFFFF;--card-alt:#F0EDFC;--text-primary:#1A1A1A;--text-secondary:#6B6580;--accent:#7C3AED;--accent-hover:#8B49F0;--accent-foreground:#FFFFFF;--accent-subtle:rgba(124,58,237,0.08);--input-bg:#FFFFFF;--input-border:#DDD8F0;--input-focus:rgba(124,58,237,0.40);--border:#E5E0F5;--hover-overlay:rgba(0,0,0,0.03);--shadow:0 2px 8px rgba(0,0,0,0.06);--success:#16A34A;--danger:#DC2626;--warn:#CA8A04;--radius-card:16px;--radius-button:12px;--radius-input:8px;--py:24px;--px:20px;--gap:16px;--sidebar-bg:#EDE9FC;--sidebar-active:rgba(124,58,237,0.08);--bottom-nav-bg:#EDE9FC}
+.theme-nav{position:sticky;top:0;z-index:100;display:flex;gap:4px;padding:12px 16px;background:var(--nav-bg,#111);border-bottom:1px solid rgba(255,255,255,0.08);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.theme-nav::-webkit-scrollbar{display:none}
+.theme-nav-btn{font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:0.02em;padding:8px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;background:transparent;color:rgba(255,255,255,0.55);cursor:pointer;white-space:nowrap;transition:all 180ms ease-out}
+.theme-nav-btn:hover{color:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.25)}
+.theme-nav-btn.active{color:#fff;border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.08)}
+.theme-nav-btn[data-theme="barber-dark"].active{border-color:#C29B40;color:#C29B40}
+.theme-nav-btn[data-theme="barber-light"].active{border-color:#A07A2A;color:#A07A2A;background:rgba(160,122,42,0.12)}
+.theme-nav-btn[data-theme="beauty-dark"].active{border-color:#A78BFA;color:#A78BFA}
+.theme-nav-btn[data-theme="beauty-light"].active{border-color:#7C3AED;color:#7C3AED;background:rgba(124,58,237,0.12)}
+.matrix-grid{display:grid;grid-template-columns:1fr;min-height:calc(100dvh - 49px)}
+.panel{display:none;background:var(--bg);min-height:100dvh;position:relative}
+.panel.active{display:flex;flex-direction:column;min-height:100dvh;height:100dvh;overflow:hidden}
+.panel-label{font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:0.04em;color:var(--text-secondary);opacity:0.45;padding:var(--py) var(--px) 0;text-transform:none}
+.agenda-shell{display:flex;flex-direction:column;flex:1;min-height:0}
+.sidebar{display:none;flex-direction:column;width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--border);padding:12px 0;align-items:center;gap:4px;flex-shrink:0}
+.sidebar-logo{width:32px;height:32px;border-radius:var(--radius-input);background:var(--card-alt);color:var(--text-primary);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1;margin-bottom:12px}
+[data-theme^="barber"] .sidebar-logo{background:var(--accent);color:var(--accent-foreground);border-color:transparent}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;flex:1}
+.sidebar-link{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);background:transparent;border:none;cursor:pointer;transition:all 150ms ease-out}
+.sidebar-link:hover{background:var(--hover-overlay);color:var(--text-primary)}
+.sidebar-link.active{background:var(--sidebar-active);color:var(--accent)}
+.sidebar-link svg{width:20px;height:20px}
+.sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:4px;align-items:center;padding-top:8px}
+.sidebar-avatar{width:28px;height:28px;border-radius:50%;background:var(--card-alt);color:var(--text-secondary);border:1px solid var(--border);font-family:var(--font-body);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.main-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;padding:12px var(--px);gap:12px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:5}
+.page-header-left{display:flex;flex-direction:column;gap:2px;min-width:0}
+.page-header-title{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text-primary);letter-spacing:-0.01em;text-transform:none}
+.page-header-sub{font-family:var(--font-mono);font-size:11px;font-weight:400;color:var(--text-secondary);text-transform:none}
+.page-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.page-header-cta{font-family:var(--font-body);font-size:13px;font-weight:600;padding:8px 14px;border-radius:var(--radius-button);background:var(--accent);color:var(--accent-foreground);border:none;cursor:pointer;white-space:nowrap;min-height:36px;transition:background 150ms ease-out;text-transform:none}
+.page-header-cta:hover{background:var(--accent-hover)}
+.page-header-cta:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.content-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:var(--py) var(--px);display:flex;flex-direction:column;gap:var(--gap);padding-bottom:calc(var(--bottom-nav-h) + 16px)}
+.date-strip{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px}
+.date-strip::-webkit-scrollbar{display:none}
+.date-chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:var(--radius-input);border:1px solid var(--border);background:var(--card);cursor:pointer;min-width:52px;transition:all 150ms ease-out}
+.date-chip:hover{background:var(--card-alt)}
+.date-chip.active{background:var(--accent-subtle);border-color:var(--accent);color:var(--accent)}
+.date-chip-day{font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--text-secondary);text-transform:none}
+.date-chip-num{font-family:var(--font-mono);font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;text-transform:none}
+.date-chip.active .date-chip-day,.date-chip.active .date-chip-num{color:var(--accent)}
+.agenda-summary{font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text-secondary);text-transform:none}
+.time-grid{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);overflow:hidden;box-shadow:var(--shadow)}
+.time-row{display:grid;grid-template-columns:52px 1fr;border-bottom:1px solid var(--border);min-height:56px}
+.time-row:last-child{border-bottom:none}
+.time-label{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--text-secondary);padding:8px 10px;border-right:1px solid var(--border);font-variant-numeric:tabular-nums;text-transform:none;align-self:stretch;display:flex;align-items:flex-start;padding-top:10px}
+.time-slots{padding:6px 8px;display:flex;flex-direction:column;gap:6px;min-height:56px}
+.time-slots.empty{align-items:center;justify-content:center}
+.slot-empty{font-family:var(--font-mono);font-size:10px;color:var(--text-secondary);opacity:0.35;text-transform:none}
+.appt-block{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;border-radius:var(--radius-input);background:var(--card-alt);border:1px solid var(--border);cursor:pointer;transition:background 150ms ease-out}
+.appt-block:hover{background:var(--hover-overlay)}
+.appt-block.highlight{border-color:var(--accent);background:var(--accent-subtle)}
+.appt-meta{display:flex;flex-direction:column;gap:1px;flex:1;min-width:120px}
+.appt-name{font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--text-primary);text-transform:none}
+.appt-service{font-family:var(--font-body);font-size:11px;font-weight:400;color:var(--text-secondary);text-transform:none}
+.appt-duration{font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--text-secondary);font-variant-numeric:tabular-nums;text-transform:none}
+.badge{font-family:var(--font-mono);font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;border:1px solid var(--border);text-transform:none;white-space:nowrap}
+.badge--confirmed{background:var(--card);color:var(--success);border-color:color-mix(in srgb,var(--success) 30%,var(--border))}
+.badge--pending{background:var(--card);color:var(--text-secondary);opacity:0.85}
+.badge--progress{background:var(--accent-subtle);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
+.badge--cancelled{background:var(--card);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 30%,var(--border));opacity:0.75}
+.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:var(--bottom-nav-h);background:var(--bottom-nav-bg);border-top:1px solid var(--border);align-items:center;justify-content:space-around;padding:0 8px;z-index:50}
+.bottom-nav-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 12px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;min-width:48px;min-height:36px;transition:color 150ms ease-out}
+.bottom-nav-link:hover{color:var(--text-primary)}
+.bottom-nav-link.active{color:var(--accent);font-weight:600}
+.bottom-nav-link svg{width:20px;height:20px}
+.bottom-nav-link-label{font-family:var(--font-body);font-size:10px;font-weight:500;text-transform:none;letter-spacing:0}
+@media(min-width:768px){
+  .theme-nav{gap:6px;padding:14px 24px;background:rgba(15,15,15,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);justify-content:center}
+  .theme-nav-btn{font-size:13px;padding:9px 18px}
+  .matrix-grid{grid-template-columns:1fr 1fr;min-height:calc(100dvh - 58px)}
+  .panel{display:flex!important;min-height:auto;height:calc(100dvh - 58px);max-height:calc(100dvh - 58px);position:relative;border-right:1px solid rgba(128,128,128,0.08);border-bottom:1px solid rgba(128,128,128,0.08);overflow:hidden}
+  .panel.active{height:calc(100dvh - 58px)}
+  .panel:nth-child(2n){border-right:none}
+  .panel:nth-child(n+3){border-bottom:none}
+  .panel-label{padding:6px 10px 0}
+  .agenda-shell{flex-direction:row;height:100%;overflow:hidden}
+  .sidebar{display:flex;position:sticky;top:0;height:100%;max-height:100%;align-self:stretch;overflow-y:auto}
+  .bottom-nav{display:none}
+  .content-scroll{padding-bottom:var(--py)}
+  .page-header-title{font-size:18px}
+  .time-row{grid-template-columns:60px 1fr;min-height:64px}
+  .time-label{font-size:12px;padding:10px 12px}
+}
+@media(max-width:420px){
+  .page-header-cta{font-size:12px;padding:6px 10px;min-height:32px}
+  .page-header-title{font-size:18px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:0.01ms!important;animation-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+
+<nav class="theme-nav" id="themeNav">
+  <button class="theme-nav-btn active" data-theme="barber-dark" data-target="barber-dark">Barber Dark</button>
+  <button class="theme-nav-btn" data-theme="barber-light" data-target="barber-light">Barber Light</button>
+  <button class="theme-nav-btn" data-theme="beauty-dark" data-target="beauty-dark">Beauty Dark</button>
+  <button class="theme-nav-btn" data-theme="beauty-light" data-target="beauty-light">Beauty Light</button>
+</nav>
+
+<main class="matrix-grid" id="matrixGrid">
+
+<!-- BARBER DARK -->
+<section class="panel active" data-theme="barber-dark" id="barber-dark" data-od-id="panel-barber-dark">
+<span class="panel-label">Barber · Dark</span>
+<div class="agenda-shell">
+<aside class="sidebar" data-od-id="sidebar-bd">
+<span class="sidebar-logo">A</span>
+<nav class="sidebar-nav">
+<button class="sidebar-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+<button class="sidebar-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+<button class="sidebar-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+<button class="sidebar-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>
+</nav>
+<div class="sidebar-bottom"><span class="sidebar-avatar">M</span></div>
+</aside>
+<div class="main-area">
+<header class="page-header" data-od-id="pageheader-bd">
+<div class="page-header-left">
+<h1 class="page-header-title">Agenda</h1>
+<span class="page-header-sub">qua, 10 jun 2026 · 14 agendamentos</span>
+</div>
+<div class="page-header-right">
+<button class="page-header-cta" type="button">Novo agendamento</button>
+</div>
+</header>
+<div class="content-scroll" data-od-id="content-bd">
+<div class="date-strip" data-od-id="datestrip-bd">
+<button class="date-chip" type="button"><span class="date-chip-day">seg</span><span class="date-chip-num">8</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">ter</span><span class="date-chip-num">9</span></button>
+<button class="date-chip active" type="button"><span class="date-chip-day">qua</span><span class="date-chip-num">10</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">qui</span><span class="date-chip-num">11</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sex</span><span class="date-chip-num">12</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sáb</span><span class="date-chip-num">13</span></button>
+</div>
+<p class="agenda-summary">3 vagas livres entre 09h e 19h</p>
+<div class="time-grid" data-od-id="timegrid-bd">
+<div class="time-row"><span class="time-label">09:00</span><div class="time-slots"><div class="appt-block highlight"><div class="appt-meta"><span class="appt-name">Carlos Eduardo</span><span class="appt-service">Corte + barba</span></div><span class="appt-duration">45 min</span><span class="badge badge--progress">Em atendimento</span></div></div></div>
+<div class="time-row"><span class="time-label">10:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Rafael Mendes</span><span class="appt-service">Corte degradê</span></div><span class="appt-duration">30 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">11:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">12:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">13:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Felipe Santos</span><span class="appt-service">Corte simples</span></div><span class="appt-duration">30 min</span><span class="badge badge--pending">Pendente</span></div></div></div>
+<div class="time-row"><span class="time-label">14:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Thiago Almeida</span><span class="appt-service">Corte + sobrancelha</span></div><span class="appt-duration">45 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">15:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Bruno Costa</span><span class="appt-service">Barba</span></div><span class="appt-duration">20 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">16:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">17:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Lucas Pereira</span><span class="appt-service">Corte + barba</span></div><span class="appt-duration">45 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">18:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">André Silva</span><span class="appt-service">Corte degradê</span></div><span class="appt-duration">30 min</span><span class="badge badge--cancelled">Cancelado</span></div></div></div>
+<div class="time-row"><span class="time-label">19:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+</div>
+</div>
+</div>
+<nav class="bottom-nav" data-od-id="bottomnav-bd">
+<button class="bottom-nav-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="bottom-nav-link-label">Home</span></button>
+<button class="bottom-nav-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="bottom-nav-link-label">Agenda</span></button>
+<button class="bottom-nav-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="bottom-nav-link-label">Clientes</span></button>
+<button class="bottom-nav-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="bottom-nav-link-label">Finanças</span></button>
+</nav>
+</div>
+</section>
+
+<!-- BARBER LIGHT -->
+<section class="panel" data-theme="barber-light" id="barber-light" data-od-id="panel-barber-light">
+<span class="panel-label">Barber · Light</span>
+<div class="agenda-shell">
+<aside class="sidebar" data-od-id="sidebar-bl">
+<span class="sidebar-logo">A</span>
+<nav class="sidebar-nav">
+<button class="sidebar-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+<button class="sidebar-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+<button class="sidebar-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+<button class="sidebar-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>
+</nav>
+<div class="sidebar-bottom"><span class="sidebar-avatar">M</span></div>
+</aside>
+<div class="main-area">
+<header class="page-header" data-od-id="pageheader-bl">
+<div class="page-header-left"><h1 class="page-header-title">Agenda</h1><span class="page-header-sub">qua, 10 jun 2026 · 14 agendamentos</span></div>
+<div class="page-header-right"><button class="page-header-cta" type="button">Novo agendamento</button></div>
+</header>
+<div class="content-scroll" data-od-id="content-bl">
+<div class="date-strip" data-od-id="datestrip-bl">
+<button class="date-chip" type="button"><span class="date-chip-day">seg</span><span class="date-chip-num">8</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">ter</span><span class="date-chip-num">9</span></button>
+<button class="date-chip active" type="button"><span class="date-chip-day">qua</span><span class="date-chip-num">10</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">qui</span><span class="date-chip-num">11</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sex</span><span class="date-chip-num">12</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sáb</span><span class="date-chip-num">13</span></button>
+</div>
+<p class="agenda-summary">3 vagas livres entre 09h e 19h</p>
+<div class="time-grid" data-od-id="timegrid-bl">
+<div class="time-row"><span class="time-label">09:00</span><div class="time-slots"><div class="appt-block highlight"><div class="appt-meta"><span class="appt-name">Carlos Eduardo</span><span class="appt-service">Corte + barba</span></div><span class="appt-duration">45 min</span><span class="badge badge--progress">Em atendimento</span></div></div></div>
+<div class="time-row"><span class="time-label">10:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Rafael Mendes</span><span class="appt-service">Corte degradê</span></div><span class="appt-duration">30 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">11:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">12:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">13:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Felipe Santos</span><span class="appt-service">Corte simples</span></div><span class="appt-duration">30 min</span><span class="badge badge--pending">Pendente</span></div></div></div>
+<div class="time-row"><span class="time-label">14:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Thiago Almeida</span><span class="appt-service">Corte + sobrancelha</span></div><span class="appt-duration">45 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">15:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Bruno Costa</span><span class="appt-service">Barba</span></div><span class="appt-duration">20 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">16:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">17:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Lucas Pereira</span><span class="appt-service">Corte + barba</span></div><span class="appt-duration">45 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">18:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">André Silva</span><span class="appt-service">Corte degradê</span></div><span class="appt-duration">30 min</span><span class="badge badge--cancelled">Cancelado</span></div></div></div>
+<div class="time-row"><span class="time-label">19:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+</div>
+</div>
+</div>
+<nav class="bottom-nav" data-od-id="bottomnav-bl">
+<button class="bottom-nav-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="bottom-nav-link-label">Home</span></button>
+<button class="bottom-nav-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="bottom-nav-link-label">Agenda</span></button>
+<button class="bottom-nav-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="bottom-nav-link-label">Clientes</span></button>
+<button class="bottom-nav-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="bottom-nav-link-label">Finanças</span></button>
+</nav>
+</div>
+</section>
+
+<!-- BEAUTY DARK -->
+<section class="panel" data-theme="beauty-dark" id="beauty-dark" data-od-id="panel-beauty-dark">
+<span class="panel-label">Beauty · Dark</span>
+<div class="agenda-shell">
+<aside class="sidebar" data-od-id="sidebar-bdd">
+<span class="sidebar-logo">A</span>
+<nav class="sidebar-nav">
+<button class="sidebar-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+<button class="sidebar-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+<button class="sidebar-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+<button class="sidebar-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>
+</nav>
+<div class="sidebar-bottom"><span class="sidebar-avatar">M</span></div>
+</aside>
+<div class="main-area">
+<header class="page-header" data-od-id="pageheader-bdd">
+<div class="page-header-left"><h1 class="page-header-title">Agenda</h1><span class="page-header-sub">qua, 10 jun 2026 · 12 agendamentos</span></div>
+<div class="page-header-right"><button class="page-header-cta" type="button">Novo agendamento</button></div>
+</header>
+<div class="content-scroll" data-od-id="content-bdd">
+<div class="date-strip" data-od-id="datestrip-bdd">
+<button class="date-chip" type="button"><span class="date-chip-day">seg</span><span class="date-chip-num">8</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">ter</span><span class="date-chip-num">9</span></button>
+<button class="date-chip active" type="button"><span class="date-chip-day">qua</span><span class="date-chip-num">10</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">qui</span><span class="date-chip-num">11</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sex</span><span class="date-chip-num">12</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sáb</span><span class="date-chip-num">13</span></button>
+</div>
+<p class="agenda-summary">4 vagas livres entre 09h e 19h</p>
+<div class="time-grid" data-od-id="timegrid-bdd">
+<div class="time-row"><span class="time-label">09:00</span><div class="time-slots"><div class="appt-block highlight"><div class="appt-meta"><span class="appt-name">Larissa Ferreira</span><span class="appt-service">Mechas + corte</span></div><span class="appt-duration">90 min</span><span class="badge badge--progress">Em atendimento</span></div></div></div>
+<div class="time-row"><span class="time-label">10:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">11:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Amanda Costa</span><span class="appt-service">Progressiva</span></div><span class="appt-duration">120 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">12:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">13:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">14:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Juliana Rocha</span><span class="appt-service">Corte + escova</span></div><span class="appt-duration">60 min</span><span class="badge badge--pending">Pendente</span></div></div></div>
+<div class="time-row"><span class="time-label">15:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Beatriz Lima</span><span class="appt-service">Hidratação</span></div><span class="appt-duration">45 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">16:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Camila Souza</span><span class="appt-service">Coloração</span></div><span class="appt-duration">90 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">17:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">18:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Patrícia Nunes</span><span class="appt-service">Manicure</span></div><span class="appt-duration">40 min</span><span class="badge badge--cancelled">Cancelado</span></div></div></div>
+<div class="time-row"><span class="time-label">19:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+</div>
+</div>
+</div>
+<nav class="bottom-nav" data-od-id="bottomnav-bdd">
+<button class="bottom-nav-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="bottom-nav-link-label">Home</span></button>
+<button class="bottom-nav-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="bottom-nav-link-label">Agenda</span></button>
+<button class="bottom-nav-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="bottom-nav-link-label">Clientes</span></button>
+<button class="bottom-nav-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="bottom-nav-link-label">Finanças</span></button>
+</nav>
+</div>
+</section>
+
+<!-- BEAUTY LIGHT -->
+<section class="panel" data-theme="beauty-light" id="beauty-light" data-od-id="panel-beauty-light">
+<span class="panel-label">Beauty · Light</span>
+<div class="agenda-shell">
+<aside class="sidebar" data-od-id="sidebar-blt">
+<span class="sidebar-logo">A</span>
+<nav class="sidebar-nav">
+<button class="sidebar-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+<button class="sidebar-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+<button class="sidebar-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></button>
+<button class="sidebar-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>
+</nav>
+<div class="sidebar-bottom"><span class="sidebar-avatar">M</span></div>
+</aside>
+<div class="main-area">
+<header class="page-header" data-od-id="pageheader-blt">
+<div class="page-header-left"><h1 class="page-header-title">Agenda</h1><span class="page-header-sub">qua, 10 jun 2026 · 12 agendamentos</span></div>
+<div class="page-header-right"><button class="page-header-cta" type="button">Novo agendamento</button></div>
+</header>
+<div class="content-scroll" data-od-id="content-blt">
+<div class="date-strip" data-od-id="datestrip-blt">
+<button class="date-chip" type="button"><span class="date-chip-day">seg</span><span class="date-chip-num">8</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">ter</span><span class="date-chip-num">9</span></button>
+<button class="date-chip active" type="button"><span class="date-chip-day">qua</span><span class="date-chip-num">10</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">qui</span><span class="date-chip-num">11</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sex</span><span class="date-chip-num">12</span></button>
+<button class="date-chip" type="button"><span class="date-chip-day">sáb</span><span class="date-chip-num">13</span></button>
+</div>
+<p class="agenda-summary">4 vagas livres entre 09h e 19h</p>
+<div class="time-grid" data-od-id="timegrid-blt">
+<div class="time-row"><span class="time-label">09:00</span><div class="time-slots"><div class="appt-block highlight"><div class="appt-meta"><span class="appt-name">Larissa Ferreira</span><span class="appt-service">Mechas + corte</span></div><span class="appt-duration">90 min</span><span class="badge badge--progress">Em atendimento</span></div></div></div>
+<div class="time-row"><span class="time-label">10:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">11:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Amanda Costa</span><span class="appt-service">Progressiva</span></div><span class="appt-duration">120 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">12:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">13:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">14:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Juliana Rocha</span><span class="appt-service">Corte + escova</span></div><span class="appt-duration">60 min</span><span class="badge badge--pending">Pendente</span></div></div></div>
+<div class="time-row"><span class="time-label">15:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Beatriz Lima</span><span class="appt-service">Hidratação</span></div><span class="appt-duration">45 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">16:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Camila Souza</span><span class="appt-service">Coloração</span></div><span class="appt-duration">90 min</span><span class="badge badge--confirmed">Confirmado</span></div></div></div>
+<div class="time-row"><span class="time-label">17:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+<div class="time-row"><span class="time-label">18:00</span><div class="time-slots"><div class="appt-block"><div class="appt-meta"><span class="appt-name">Patrícia Nunes</span><span class="appt-service">Manicure</span></div><span class="appt-duration">40 min</span><span class="badge badge--cancelled">Cancelado</span></div></div></div>
+<div class="time-row"><span class="time-label">19:00</span><div class="time-slots empty"><span class="slot-empty">—</span></div></div>
+</div>
+</div>
+</div>
+<nav class="bottom-nav" data-od-id="bottomnav-blt">
+<button class="bottom-nav-link" aria-label="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="bottom-nav-link-label">Home</span></button>
+<button class="bottom-nav-link active" aria-label="Agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="bottom-nav-link-label">Agenda</span></button>
+<button class="bottom-nav-link" aria-label="Clientes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="bottom-nav-link-label">Clientes</span></button>
+<button class="bottom-nav-link" aria-label="Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="bottom-nav-link-label">Finanças</span></button>
+</nav>
+</div>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var nav=document.getElementById('themeNav');
+  var grid=document.getElementById('matrixGrid');
+  var isMobile=function(){return window.innerWidth<768};
+  function showPanel(id){
+    var panels=grid.querySelectorAll('.panel');
+    panels.forEach(function(p){p.classList.remove('active')});
+    var target=document.getElementById(id);
+    if(target)target.classList.add('active');
+    var btns=nav.querySelectorAll('.theme-nav-btn');
+    btns.forEach(function(b){b.classList.remove('active')});
+    var activeBtn=nav.querySelector('[data-target="'+id+'"]');
+    if(activeBtn)activeBtn.classList.add('active');
+  }
+  nav.addEventListener('click',function(e){
+    var btn=e.target.closest('.theme-nav-btn');
+    if(!btn)return;
+    var target=btn.getAttribute('data-target');
+    if(!target)return;
+    showPanel(target);
+    if(isMobile()){
+      var panel=document.getElementById(target);
+      if(panel){window.scrollTo({top:panel.offsetTop,behavior:'smooth'})}
+    }
+  });
+  function syncNav(){
+    if(!isMobile()){
+      grid.querySelectorAll('.panel').forEach(function(p){p.classList.add('active')});
+      var btns=nav.querySelectorAll('.theme-nav-btn');
+      btns.forEach(function(b){b.classList.remove('active')});
+      btns[0].classList.add('active');
+    }
+  }
+  window.addEventListener('resize',syncNav);
+  syncNav();
+})();
+</script>
+</body>
+</html>

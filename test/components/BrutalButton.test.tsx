@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrutalButton } from '../../components/BrutalButton';
@@ -8,7 +8,11 @@ vi.mock('../../contexts/AuthContext', () => ({
     useAuth: () => ({ userType: 'barber' }),
 }));
 
-describe('BrutalButton Component', () => {
+beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+});
+
+describe('BrutalButton (wrapper @deprecated)', () => {
     it('renderiza com texto', () => {
         render(<BrutalButton>Clique aqui</BrutalButton>);
         expect(screen.getByRole('button', { name: 'Clique aqui' })).toBeInTheDocument();
@@ -37,9 +41,10 @@ describe('BrutalButton Component', () => {
         expect(onClick).not.toHaveBeenCalled();
     });
 
-    it('mostra spinner SVG quando loading=true', () => {
+    it('mostra spinner SVG quando loading=true e marca aria-busy', () => {
         const { container } = render(<BrutalButton loading>Carregando</BrutalButton>);
         expect(container.querySelector('svg.animate-spin')).toBeInTheDocument();
+        expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'true');
     });
 
     it('fica desabilitado quando loading=true', () => {
@@ -71,18 +76,25 @@ describe('BrutalButton Component', () => {
     it('aplica classe de danger variant', () => {
         const { container } = render(<BrutalButton variant="danger">Perigo</BrutalButton>);
         const button = container.firstChild as HTMLElement;
-        expect(button.className).toContain('red');
+        expect(button.className).toContain('danger');
     });
 
-    it('size sm aplica classes menores', () => {
+    it('size sm atende touch min 44px no mobile (WCAG 2.5.8)', () => {
         const { container } = render(<BrutalButton size="sm">Pequeno</BrutalButton>);
         const button = container.firstChild as HTMLElement;
-        expect(button.className).toContain('h-9');
+        expect(button.className).toContain('min-h-[44px]');
     });
 
     it('size lg aplica classes maiores', () => {
         const { container } = render(<BrutalButton size="lg">Grande</BrutalButton>);
         const button = container.firstChild as HTMLElement;
-        expect(button.className).toContain('h-15');
+        expect(button.className).toContain('h-[52px]');
+    });
+
+    it('emite aviso de deprecação no dev', () => {
+        const warn = vi.spyOn(console, 'warn');
+        render(<BrutalButton>X</BrutalButton>);
+        expect(warn).toHaveBeenCalled();
+        expect(warn.mock.calls.some((args) => String(args[0]).includes('deprecated'))).toBe(true);
     });
 });

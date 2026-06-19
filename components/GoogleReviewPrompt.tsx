@@ -1,7 +1,8 @@
-
 import React from 'react';
 import { Star, ExternalLink, ThumbsUp } from 'lucide-react';
-import { BrutalButton } from './BrutalButton';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 
 interface GoogleReviewPromptProps {
     businessName: string;
@@ -14,30 +15,25 @@ export const GoogleReviewPrompt: React.FC<GoogleReviewPromptProps> = ({
     googlePlaceId,
     isBeauty
 }) => {
-    // Construct Google Review URL
-    // If we have a Place ID, we can use the direct review link
-    // Otherwise, we search for the business name
+    const { colors, accent } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
+
     const reviewUrl = googlePlaceId
         ? `https://search.google.com/local/writereview?placeid=${googlePlaceId}`
         : `https://www.google.com/search?q=${encodeURIComponent(businessName + ' avaliar')}`;
 
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-
     return (
-        <div className={`
-            mt-8 p-6 md:p-8 rounded-3xl border-2 transition-all animate-in zoom-in duration-500
-            ${isBeauty
-                ? 'bg-beauty-card/50 border-beauty-neon/30 shadow-neon'
-                : 'bg-neutral-900 border-accent-gold shadow-heavy'}
-        `}>
+        <Card
+            variant="elevated"
+            className="mt-8 animate-in zoom-in duration-500"
+        >
             <div className="flex flex-col items-center text-center space-y-4">
-                <div className={`p-4 rounded-full bg-white/5 border border-white/10 mb-2`}>
-                    <ThumbsUp className={`w-10 h-10 text-${accentColor}`} />
+                <div className={`p-4 rounded-full ${accent.bgDim} ${accent.border} border mb-2`}>
+                    <ThumbsUp className={`w-10 h-10 ${accent.text}`} />
                 </div>
 
-                <h3 className="text-2xl font-bold text-white uppercase tracking-tight">Sua opinião vale muito!</h3>
-                <p className="text-neutral-400 max-w-sm">
-                    Ficamos felizes com seu agendamento em <span className="text-white font-bold">{businessName}</span>.
+                <h3 className={`text-2xl font-bold ${colors.text} uppercase tracking-tight`}>Sua opinião vale muito!</h3>
+                <p className={`${colors.textSecondary} max-w-sm`}>
+                    Ficamos felizes com seu agendamento em <span className={`${colors.text} font-bold`}>{businessName}</span>.
                     Pode nos deixar uma avaliação no Google? Isso nos ajuda muito!
                 </p>
 
@@ -47,16 +43,17 @@ export const GoogleReviewPrompt: React.FC<GoogleReviewPromptProps> = ({
                     ))}
                 </div>
 
-                <BrutalButton
+                <Button
                     variant="primary"
                     size="lg"
-                    className="w-full flex items-center justify-center gap-2 mt-4"
+                    fullWidth
+                    className="mt-4"
+                    iconRight={<ExternalLink className="w-5 h-5" />}
                     onClick={() => window.open(reviewUrl, '_blank')}
                 >
                     Avaliar no Google
-                    <ExternalLink className="w-5 h-5" />
-                </BrutalButton>
+                </Button>
             </div>
-        </div>
+        </Card>
     );
 };

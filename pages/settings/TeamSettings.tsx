@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Card, Button } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,8 +9,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { TeamMember as TeamMemberType } from '../../types/team';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
 
 export const TeamSettings: React.FC = () => {
     const { user, companyId } = useAuth();
@@ -88,7 +87,7 @@ export const TeamSettings: React.FC = () => {
         <SettingsLayout>
             <div className="max-w-5xl space-y-8 pb-20">
                 <div className="flex justify-end mb-6">
-                    <BrutalButton
+                    <Button
                         id="btn-add-team-member"
                         onClick={() => {
                             setEditingMember(null);
@@ -97,10 +96,10 @@ export const TeamSettings: React.FC = () => {
                     >
                         <Plus className="w-5 h-5 mr-1" />
                         Profissional
-                    </BrutalButton>
+                    </Button>
                 </div>
 
-                <BrutalCard className={`${colors.border}`}>
+                <Card className={`${colors.border}`}>
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -138,14 +137,14 @@ export const TeamSettings: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className={`animate-spin h-10 w-10 border-4 border-t-transparent ${accent.border} rounded-full`}></div>
                     </div>
                 ) : cardMembers.length === 0 ? (
-                    <BrutalCard className="p-12 text-center border-dashed">
+                    <Card className="p-12 text-center border-dashed">
                         <div className={`w-20 h-20 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-6 border ${colors.border}`}>
                             <UserCheck className="w-10 h-10 text-neutral-500" />
                         </div>
@@ -161,7 +160,7 @@ export const TeamSettings: React.FC = () => {
                         >
                             Cadastrar Primeiro Perfil
                         </button>
-                    </BrutalCard>
+                    </Card>
                 ) : (
                     <div className="space-y-12">
                         {owners.length > 0 && (

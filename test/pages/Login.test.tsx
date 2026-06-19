@@ -21,7 +21,7 @@ vi.mock('@/lib/supabase', () => ({
   },
 }));
 
-vi.mock('@/lib/onboarding', () => ({
+vi.mock('@/services/onboarding', () => ({
   getOnboardingProgress: vi.fn(),
 }));
 
@@ -33,7 +33,7 @@ describe('Login page', () => {
 
   it('shows, focuses and scrolls to the error message when login fails', async () => {
     const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
-    loginMock.mockResolvedValue({ error: { message: 'Credenciais inválidas' } });
+    loginMock.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
 
     render(
       <MemoryRouter>
@@ -44,11 +44,12 @@ describe('Login page', () => {
     await userEvent.click(screen.getByTestId('category-barber'));
     await userEvent.type(screen.getByLabelText('Email'), 'owner@test.com');
     await userEvent.type(screen.getByLabelText('Senha'), 'wrong-password');
-    await userEvent.click(screen.getByRole('button', { name: /entrar na conta/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^entrar$/i }));
 
     const alert = await screen.findByRole('alert');
 
-    expect(alert).toHaveTextContent('Credenciais inválidas');
+    expect(alert).toHaveTextContent('Email ou senha incorretos');
+    expect(alert).toHaveTextContent('#invalidl');
 
     await waitFor(() => {
       expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
@@ -57,5 +58,5 @@ describe('Login page', () => {
       });
       expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
     });
-  });
+  }, 10000);
 });

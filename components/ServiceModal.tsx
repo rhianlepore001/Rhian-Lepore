@@ -2,37 +2,29 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { PREDEFINED_SERVICES } from '../constants';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-
-interface Category {
-    id: string;
-    name: string;
-}
-
-interface Service {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    duration_minutes: number;
-    category_id: string;
-    image_url: string | null;
-    active: boolean;
-}
+import {
+    useCreateServiceCategory,
+    useSaveService,
+    useServiceUpsellIds,
+    useUploadServiceImage,
+} from '../hooks/useServiceSettings';
+import type { ServiceCategory, ServiceItem } from '@/types/serviceSettings';
 
 interface ServiceModalProps {
-    service?: Service;
-    categories: Category[];
-    allServices: Service[];
+    companyId: string;
+    service?: ServiceItem | null;
+    categories: ServiceCategory[];
+    allServices: ServiceItem[];
     onClose: () => void;
     onSave: () => void;
     accentColor?: string;
 }
 
 export const ServiceModal: React.FC<ServiceModalProps> = ({
+    companyId,
     service,
     categories,
     allServices,
@@ -40,8 +32,13 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     onSave,
     accentColor: _accentColorProp
 }) => {
-    const { user, region } = useAuth();
+    const { region } = useAuth();
     const { isBeauty, accent, colors, classes, font } = useBrutalTheme();
+    const saveServiceMutation = useSaveService();
+    const uploadImageMutation = useUploadServiceImage();
+    const createCategoryMutation = useCreateServiceCategory();
+    const { data: upsellIds = [] } = useServiceUpsellIds(service?.id);
+
     const suggestions = isBeauty ? PREDEFINED_SERVICES.beauty : PREDEFINED_SERVICES.barber;
     const [name, setName] = useState(service?.name || '');
     const [description, setDescription] = useState(service?.description || '');
@@ -59,21 +56,22 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Category creation states
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
-    const [savingCategory, setSavingCategory] = useState(false);
-    const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+    const [localCategories, setLocalCategories] = useState<ServiceCategory[]>(categories);
 
     const currencySymbol = region === 'BR' ? 'R$' : '€';
 
     useEffect(() => {
-        if (service?.id) {
-            fetchUpsells();
+        if (upsellIds.length > 0) {
+            setSelectedUpsells(upsellIds);
         }
-    }, [service]);
+    }, [upsellIds]);
 
-    // Bloqueia Scroll do Body
+    useEffect(() => {
+        setLocalCategories(categories);
+    }, [categories]);
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -81,23 +79,11 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         };
     }, []);
 
-    const fetchUpsells = async () => {
-        if (!service) return;
-        const { data } = await supabase
-            .from('service_upsells')
-            .select('upsell_service_id')
-            .eq('parent_service_id', service.id);
-
-        if (data) {
-            setSelectedUpsells(data.map(u => u.upsell_service_id));
-        }
-    };
-
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
 
-            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            if (file.size > 10 * 1024 * 1024) {
                 alert('A imagem deve ter no máximo 10MB.');
                 return;
             }
@@ -109,71 +95,40 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) return;
         setLoading(true);
 
         try {
-            let imageUrl = service?.image_url;
+            let imageUrl = service?.image_url ?? null;
 
             if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop();
-                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage
-                    .from('service_images')
-                    .upload(fileName, imageFile);
-
-                if (uploadError) throw uploadError;
-
-                const { data } = supabase.storage.from('service_images').getPublicUrl(fileName);
-                imageUrl = data.publicUrl;
+                imageUrl = await uploadImageMutation.mutateAsync({ companyId, file: imageFile });
             }
 
-            const serviceData = {
-                user_id: user.id,
+            const durationMinutes = duration === 'custom'
+                ? (parseInt(customHours || '0') * 60) + parseInt(customMinutes || '0')
+                : parseInt(duration);
+
+            await saveServiceMutation.mutateAsync({
+                companyId,
+                serviceId: service?.id,
                 name,
                 description,
                 price: price ? parseFloat(price) : 0,
-                duration_minutes: duration === 'custom'
-                    ? (parseInt(customHours || '0') * 60) + parseInt(customMinutes || '0')
-                    : parseInt(duration),
-                category_id: categoryId,
+                durationMinutes,
+                categoryId,
                 active,
-                image_url: imageUrl
-            };
+                imageUrl,
+                upsellIds: selectedUpsells,
+            });
 
-            let serviceId = service?.id;
-
-            if (serviceId) {
-                await supabase.from('services').update(serviceData).eq('id', serviceId).eq('user_id', user.id);
-            } else {
-                const { data, error } = await supabase.from('services').insert(serviceData).select().single();
-                if (error) throw error;
-                serviceId = data.id;
-            }
-
-            // Handle Upsells
-            if (serviceId) {
-                if (service?.id) {
-                    await supabase.from('service_upsells').delete().eq('parent_service_id', serviceId);
-                }
-
-                if (selectedUpsells.length > 0) {
-                    const upsellData = selectedUpsells.map(upsellId => ({
-                        parent_service_id: serviceId,
-                        upsell_service_id: upsellId
-                    }));
-                    await supabase.from('service_upsells').insert(upsellData);
-                }
-            }
-
-            // Report setup step completed
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'services' } }));
 
             onSave();
             onClose();
         } catch (error) {
             console.error('Error saving service:', error);
-            alert(`Erro ao salvar serviço: ${error.message || JSON.stringify(error)}`);
+            const message = error instanceof Error ? error.message : JSON.stringify(error);
+            alert(`Erro ao salvar serviço: ${message}`);
         } finally {
             setLoading(false);
         }
@@ -186,21 +141,14 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     };
 
     const handleCreateCategory = async () => {
-        if (!user || !newCategoryName.trim()) return;
-        setSavingCategory(true);
+        if (!newCategoryName.trim()) return;
 
         try {
-            const { data, error } = await supabase
-                .from('service_categories')
-                .insert({
-                    user_id: user.id,
-                    name: newCategoryName.trim(),
-                    display_order: localCategories.length
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
+            const data = await createCategoryMutation.mutateAsync({
+                companyId,
+                name: newCategoryName.trim(),
+                displayOrder: localCategories.length,
+            });
 
             setLocalCategories([...localCategories, data]);
             setCategoryId(data.id);
@@ -209,12 +157,10 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         } catch (error) {
             console.error('Error creating category:', error);
             alert('Erro ao criar categoria');
-        } finally {
-            setSavingCategory(false);
         }
     };
 
-    const handleApplySuggestion = (suggestion: any) => {
+    const handleApplySuggestion = (suggestion: { name: string; price: number; duration_minutes: number; category: string }) => {
         setName(suggestion.name);
         setPrice(suggestion.price.toString());
         setDuration(suggestion.duration_minutes.toString());
@@ -225,6 +171,8 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         }
     };
 
+    const savingCategory = createCategoryMutation.isPending;
+
     return createPortal(
         <div className={`fixed inset-0 ${classes.modalOverlay} flex items-center justify-center z-[10000] p-4 backdrop-blur-sm`}>
             <div className="absolute inset-0" onClick={onClose} />
@@ -234,7 +182,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                     aria-modal="true"
                     aria-labelledby="service-modal-title"
                 >
-                {/* Header */}
                 <div className={`flex items-center justify-between ${classes.modalHeader} sticky top-0 z-10`}>
                     <h3 id="service-modal-title" className={`font-heading text-lg md:text-xl ${colors.text} ${font.heading === 'font-heading' ? 'tracking-wide' : 'tracking-normal'}`}>
                         {service ? 'Editar Serviço' : 'Novo Serviço'}

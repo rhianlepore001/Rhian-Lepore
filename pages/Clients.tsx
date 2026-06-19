@@ -1,423 +1,379 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { BrutalCard } from '../components/BrutalCard';
-import { BrutalButton } from '../components/BrutalButton';
 import { logger } from '../utils/Logger';
 import { PhoneInput } from '../components/PhoneInput';
 import { Plus, Search, User, Users, Star, ChevronRight, MessageCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import {
+  Card,
+  Button,
+  EmptyState,
+  Input,
+  Modal,
+  SkeletonCard,
+  PageHeader,
+} from '../components/ui';
 import { formatPhone } from '../utils/formatters';
 import { calcLoyaltyTier, createClient, syncPublicClientsToCrm } from '../services/crm';
 
 export const Clients: React.FC = () => {
-    const { user, region, companyId } = useAuth();
-    const { isBeauty, colors } = useBrutalTheme();
-    const effectiveUserId = companyId ?? user?.id;
-    const [searchParams] = useSearchParams();
-    const [clients, setClients] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-    const [showModal, setShowModal] = useState(false);
+  const { user, region, companyId } = useAuth();
+  const { colors, accent, radius } = useBrutalTheme();
+  const effectiveUserId = companyId ?? user?.id;
+  const [searchParams] = useSearchParams();
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [showModal, setShowModal] = useState(false);
 
-    // Form State
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [origin, setOrigin] = useState<'Novo' | 'Recente' | 'Antigo'>('Novo');
-    const [photo, setPhoto] = useState<File | null>(null);
-    const [uploading, setUploading] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [origin, setOrigin] = useState<'Novo' | 'Recente' | 'Antigo'>('Novo');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [filterType, setFilterType] = useState<'Todos' | 'VIP' | 'Inativo' | 'Novos'>('Todos');
 
-    const buttonClass = isBeauty ? 'bg-beauty-neon hover:bg-beauty-neonHover text-black' : 'bg-accent-gold hover:bg-accent-goldHover text-black';
+  const fetchClients = async () => {
+    try {
+      if (effectiveUserId) {
+        await syncPublicClientsToCrm(effectiveUserId);
+      }
 
-    const fetchClients = async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', effectiveUserId)
+        .neq('is_active', false)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const clientIds = data.map((c) => c.id);
+
+        const { data: appointmentCounts, error: countError } = await supabase
+          .from('appointments')
+          .select('client_id')
+          .in('client_id', clientIds)
+          .eq('status', 'Completed')
+          .eq('user_id', effectiveUserId);
+
+        if (!countError && appointmentCounts) {
+          const visitCounts: Record<string, number> = {};
+          appointmentCounts.forEach((apt) => {
+            visitCounts[apt.client_id] = (visitCounts[apt.client_id] || 0) + 1;
+          });
+
+          setClients(
+            data.map((client) => ({
+              ...client,
+              actual_visits: visitCounts[client.id] || 0,
+              loyalty_tier: calcLoyaltyTier(visitCounts[client.id] || 0),
+            }))
+          );
+        } else {
+          setClients(data);
+        }
+      }
+    } catch (error) {
+      logger.error('Error fetching clients', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchClients();
+  }, []);
+
+  useEffect(() => {
+    const querySearch = searchParams.get('search');
+    if (querySearch) {
+      setSearchTerm(querySearch);
+    }
+  }, [searchParams]);
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!phone && !email) {
+      alert('Informe pelo menos um contato (telefone ou e-mail).');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) throw new Error('Usuário não autenticado');
+
+      let photoUrl = null;
+
+      if (photo) {
         try {
-            if (effectiveUserId) {
-                await syncPublicClientsToCrm(effectiveUserId);
-            }
+          const fileExt = photo.name.split('.').pop();
+          const fileName = `${authUser.id}/${Date.now()}.${fileExt}`;
 
-            // Fetch clients, filtering out inactive ones
-            const { data, error } = await supabase
-                .from('clients')
-                .select('*')
-                .eq('user_id', effectiveUserId)
-                .neq('is_active', false) // Filter out inactive clients (soft deleted)
-                .order('name', { ascending: true });
+          const { error: uploadError } = await supabase.storage
+            .from('client_photos')
+            .upload(fileName, photo);
 
-            if (error) throw error;
-
-            if (data) {
-                // Fetch actual visit counts from completed appointments for all clients
-                const clientIds = data.map(c => c.id);
-
-                const { data: appointmentCounts, error: countError } = await supabase
-                    .from('appointments')
-                    .select('client_id')
-                    .in('client_id', clientIds)
-                    .eq('status', 'Completed')
-                    .eq('user_id', effectiveUserId);
-
-                if (!countError && appointmentCounts) {
-                    // Count visits per client
-                    const visitCounts: Record<string, number> = {};
-                    appointmentCounts.forEach(apt => {
-                        visitCounts[apt.client_id] = (visitCounts[apt.client_id] || 0) + 1;
-                    });
-
-                    // Merge visit counts into client data
-                    const clientsWithVisits = data.map(client => ({
-                        ...client,
-                        actual_visits: visitCounts[client.id] || 0,
-                        loyalty_tier: calcLoyaltyTier(visitCounts[client.id] || 0)
-                    }));
-
-                    setClients(clientsWithVisits);
-                } else {
-                    setClients(data);
-                }
-            }
-        } catch (error) {
-            logger.error('Error fetching clients', error);
-        } finally {
-            setLoading(false);
+          if (uploadError) {
+            logger.error('Photo upload error', uploadError);
+            alert('Aviso: Não foi possível fazer upload da foto. O cliente será criado sem foto.');
+          } else {
+            const {
+              data: { publicUrl },
+            } = supabase.storage.from('client_photos').getPublicUrl(fileName);
+            photoUrl = publicUrl;
+          }
+        } catch (photoError) {
+          logger.error('Photo upload exception', photoError);
+          alert('Aviso: Erro ao fazer upload da foto. O cliente será criado sem foto.');
         }
-    };
+      }
 
-    useEffect(() => {
-        fetchClients();
-    }, []);
+      await createClient({
+        companyId: effectiveUserId || authUser.id,
+        name,
+        email,
+        phone,
+        photoUrl,
+        origin,
+      });
 
-    useEffect(() => {
-        const querySearch = searchParams.get('search');
-        if (querySearch) {
-            setSearchTerm(querySearch);
+      setShowModal(false);
+      setName('');
+      setEmail('');
+      setPhone('');
+      setOrigin('Novo');
+      setPhoto(null);
+      await fetchClients();
+    } catch (error: unknown) {
+      logger.error('Error creating client', error);
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      alert(`Erro ao criar cliente: ${message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch =
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.phone?.includes(searchTerm);
+
+    const totalV = client.actual_visits ?? client.total_visits ?? 0;
+
+    let matchesFilter = true;
+    if (filterType === 'VIP') matchesFilter = totalV >= 5;
+    if (filterType === 'Inativo') matchesFilter = totalV === 0;
+    if (filterType === 'Novos') matchesFilter = totalV > 0 && totalV < 5;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  return (
+    <div className="space-y-6 relative">
+      <PageHeader
+        title="Clientes"
+        action={
+          <Button variant="primary" icon={<Plus />} onClick={() => setShowModal(true)}>
+            Adicionar cliente
+          </Button>
         }
-    }, [searchParams]);
+      />
 
-    const handleCreateClient = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!phone && !email) {
-            alert('Informe pelo menos um contato (telefone ou e-mail).');
-            return;
-        }
-
-        setUploading(true);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('Usuário não autenticado');
-
-            let photoUrl = null;
-
-            // Upload photo if provided - make this optional and non-blocking
-            if (photo) {
-                try {
-                    const fileExt = photo.name.split('.').pop();
-                    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-                    logger.info('Attempting to upload photo to client_photos bucket...');
-
-                    const { data: uploadData, error: uploadError } = await supabase.storage
-                        .from('client_photos')
-                        .upload(fileName, photo);
-
-                    if (uploadError) {
-                        logger.error('Photo upload error', uploadError);
-                        // Don't throw - just warn the user and continue without photo
-                        alert('Aviso: Não foi possível fazer upload da foto. O cliente será criado sem foto.');
-                    } else {
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('client_photos')
-                            .getPublicUrl(fileName);
-                        photoUrl = publicUrl;
-                        logger.info('Photo uploaded successfully', { publicUrl });
-                    }
-                } catch (photoError) {
-                    logger.error('Photo upload exception', photoError);
-                    alert('Aviso: Erro ao fazer upload da foto. O cliente será criado sem foto.');
-                }
-            }
-
-            await createClient({
-                companyId: effectiveUserId || user.id,
-                name,
-                email,
-                phone,
-                photoUrl,
-                origin,
-            });
-
-            setShowModal(false);
-            setName('');
-            setEmail('');
-            setPhone('');
-            setOrigin('Novo');
-            setPhoto(null);
-            await fetchClients();
-        } catch (error: any) {
-            logger.error('Error creating client', error);
-            alert(`Erro ao criar cliente: ${error.message || JSON.stringify(error)}`);
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const [filterType, setFilterType] = useState<'Todos' | 'VIP' | 'Inativo' | 'Novos'>('Todos');
-
-    const filteredClients = clients.filter(client => {
-        const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            client.phone?.includes(searchTerm);
-
-        // Regras de negócio da classificação (VIP = 5+ agendamentos, Inativo = Lógica complexa simplificada por enquanto para visitas, Novos = 0-1)
-        const totalV = client.actual_visits ?? client.total_visits ?? 0;
-
-        let matchesFilter = true;
-        if (filterType === 'VIP') matchesFilter = totalV >= 5;
-        if (filterType === 'Inativo') matchesFilter = totalV === 0;
-        if (filterType === 'Novos') matchesFilter = totalV > 0 && totalV < 5;
-
-        return matchesSearch && matchesFilter;
-    });
-
-    return (
-        <div className="space-y-6 relative">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-white/10 pb-4 gap-4">
-                <h2 className={`text-2xl md:text-4xl font-heading ${colors.text} uppercase`}>Clientes</h2>
-                <BrutalButton variant="primary" icon={<Plus />} onClick={() => setShowModal(true)} className="w-full md:w-auto">Novo Cliente</BrutalButton>
-            </div>
-
-
-
-            {/* Search Bar and Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`} />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nome ou telefone..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className={`
-                            w-full p-4 pl-12 text-white font-mono text-sm outline-none transition-all duration-300
-                            ${isBeauty
-                                ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                                : 'bg-black/40 border-2 border-neutral-800 focus:border-accent-gold focus:shadow-heavy-sm'
-                            }
-                        `}
-                    />
-                </div>
-                <div className="flex gap-2 self-start md:self-stretch overflow-x-auto pb-2 md:pb-0 hide-scrollbar w-full md:w-auto">
-                    {['Todos', 'VIP', 'Novos', 'Inativo'].map(type => (
-                        <button
-                            key={type}
-                            onClick={() => setFilterType(type as any)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all whitespace-nowrap
-                                ${filterType === type
-                                    ? (isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black')
-                                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}
-                            `}
-                        >
-                            {type}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {loading ? (
-                    <div className="col-span-full text-center text-text-secondary p-10">Carregando clientes...</div>
-                ) : filteredClients.length === 0 ? (
-                    <div className="col-span-full text-center p-10">
-                        <Users className="w-10 h-10 text-text-secondary/30 mx-auto mb-3" />
-                        <p className="text-text-secondary text-sm mb-1">Nenhum cliente ainda.</p>
-                        <p className="text-text-secondary/60 text-xs mb-4">Seus clientes aparecerão aqui conforme fizerem agendamentos.</p>
-                    </div>
-                ) : (
-                    filteredClients.map(client => {
-                        const rating = client.rating || 0;
-                        // Use actual_visits from our query, fallback to total_visits column
-                        const totalVisits = client.actual_visits ?? client.total_visits ?? 0;
-
-                        return (
-                            <Link key={client.id} to={`/clientes/${client.id}`}>
-                                <BrutalCard className="hover:border-white/40 transition-colors cursor-pointer group h-full relative">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className={`w-12 h-12 rounded-full border-2 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} flex items-center justify-center bg-black overflow-hidden`}>
-                                            {client.photo_url ? (
-                                                <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <User className={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} />
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            {totalVisits >= 5 && (
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'}`}>
-                                                    VIP
-                                                </span>
-                                            )}
-                                            <span className="text-xs font-mono text-neutral-400">
-                                                {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
-                                            </span>
-                                            {rating > 0 && (
-                                                <div className="flex gap-0.5">
-                                                    {[1, 2, 3, 4, 5].map(i => (
-                                                        <Star
-                                                            key={i}
-                                                            className={`w-3 h-3 ${i <= rating ? 'fill-accent-gold text-accent-gold' : 'text-neutral-600'}`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className={`text-lg font-heading text-white mb-1 group-hover:${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} transition-colors`}>{client.name}</h3>
-                                            <p className="text-sm text-text-secondary font-mono flex items-center gap-2">
-                                                {client.phone ? formatPhone(client.phone, region as any) : 'Sem telefone'}
-                                                {client.phone && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}`, '_blank');
-                                                        }}
-                                                        className={`p-1 rounded-full hover:bg-green-500/10 transition-colors ${isBeauty ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-500'}`}
-                                                        title="WhatsApp"
-                                                    >
-                                                        <MessageCircle className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </p>
-                                        </div>
-                                        {/* Clickable Indicator */}
-                                        <ChevronRight className={`w-5 h-5 text-neutral-600 group-hover:${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} group-hover:translate-x-1 transition-all`} />
-                                    </div>
-                                </BrutalCard>
-                            </Link>
-                        );
-                    })
-                )}
-            </div>
-
-            {/* Modal */}
-            {showModal && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80' : 'bg-black/85'}`}>
-                    <div className={`
-                        w-full max-w-md p-6 relative modal-enter
-                        ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                            : 'bg-brutal-card border-4 border-brutal-border shadow-heavy-lg'
-                        }
-                    `}>
-                        <button
-                            onClick={() => setShowModal(false)}
-                            className={`absolute top-4 right-4 p-1.5 rounded-full transition-all ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-500 hover:text-white hover:bg-neutral-800'}`}
-                        >
-                            <span className="text-xl font-bold">×</span>
-                        </button>
-                        <h3 className={`text-xl font-heading text-white mb-6 ${isBeauty ? '' : 'uppercase'}`}>Novo Cliente</h3>
-
-                        <form onSubmit={handleCreateClient} className="space-y-4">
-                            <div>
-                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Nome Completo</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className={`
-                                        w-full p-3 text-white outline-none transition-all duration-300
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]'
-                                            : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
-                                        }
-                                    `}
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Telefone</label>
-                                <PhoneInput
-                                    value={phone}
-                                    onChange={setPhone}
-                                    defaultRegion={region as 'BR' | 'PT'}
-                                    className="w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Origem do Cliente</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['Novo', 'Recente', 'Antigo'].map(opt => (
-                                        <button
-                                            key={opt}
-                                            type="button"
-                                            onClick={() => setOrigin(opt as any)}
-                                            className={`p-2 rounded-xl text-xs font-bold uppercase transition-all
-                                                ${origin === opt
-                                                    ? (isBeauty ? 'bg-beauty-neon/20 border-beauty-neon text-beauty-neon text-black' : 'bg-accent-gold/20 border-accent-gold text-accent-gold')
-                                                    : 'bg-black border-neutral-800 text-neutral-500'} border-2`}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                                {origin === 'Antigo' && (
-                                    <p className="text-[10px] text-neutral-400 mt-2 font-mono">
-                                        * Clientes antigos já começam com o status Prata para não serem tratados como 1º agendamento.
-                                    </p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Email (Opcional)</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={`
-                                        w-full p-3 text-white outline-none transition-all duration-300
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]'
-                                            : 'bg-black border-2 border-neutral-700 focus:border-accent-gold'
-                                        }
-                                    `}
-                                />
-                            </div>
-
-                            <div>
-                                <label className={`block text-xs font-mono mb-2 ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-500'}`}>Foto (Opcional)</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => setPhoto(e.target.files?.[0] || null)}
-                                    className={`
-                                        w-full p-3 text-white outline-none transition-all duration-300
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-lg file:text-sm file:font-semibold file:bg-beauty-neon file:text-black hover:file:bg-beauty-neonHover'
-                                            : 'bg-black border-2 border-neutral-700 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-accent-gold file:text-black hover:file:bg-accent-goldHover'
-                                        }
-                                    `}
-                                />
-                                <p className="text-xs text-neutral-500 mt-1">Formatos aceitos: JPG, PNG</p>
-                            </div>
-
-                            <BrutalButton
-                                type="submit"
-                                variant="primary"
-                                fullWidth
-                                loading={uploading}
-                                className="mt-4"
-                            >
-                                {uploading ? 'Cadastrando...' : 'Cadastrar'}
-                            </BrutalButton>
-                        </form>
-                    </div>
-                </div>
-            )}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou telefone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={[
+              'w-full p-4 pl-12 text-sm outline-none transition-colors duration-200',
+              radius.input,
+              colors.text,
+              colors.inputBg,
+              `border ${colors.inputBorder}`,
+              'focus:border-[var(--color-input-focus)] focus:ring-1 focus:ring-[var(--color-input-focus)]',
+            ].join(' ')}
+          />
         </div>
-    );
+        <div className="flex gap-2 self-start md:self-stretch overflow-x-auto pb-2 md:pb-0 hide-scrollbar w-full md:w-auto">
+          {(['Todos', 'VIP', 'Novos', 'Inativo'] as const).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setFilterType(type)}
+              className={[
+                'px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap min-h-[44px]',
+                radius.button,
+                filterType === type
+                  ? `${accent.bg} text-black`
+                  : `${colors.surface} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
+              ].join(' ')}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {loading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : filteredClients.length === 0 ? (
+          <div className="col-span-full">
+            <EmptyState
+              icon={Users}
+              title="Seus clientes aparecem aqui. Cadastre o primeiro ou importe da agenda."
+              action={
+                <Button variant="primary" size="md" icon={<Plus />} onClick={() => setShowModal(true)}>
+                  Adicionar cliente
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          filteredClients.map((client) => {
+            const rating = client.rating || 0;
+            const totalVisits = client.actual_visits ?? client.total_visits ?? 0;
+
+            return (
+              <Link key={client.id} to={`/clientes/${client.id}`}>
+                <Card variant="outlined" className="hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer group h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className={[
+                        'w-12 h-12 rounded-full border-2 flex items-center justify-center overflow-hidden',
+                        accent.border,
+                        colors.inputBg,
+                      ].join(' ')}
+                    >
+                      {client.photo_url ? (
+                        <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className={accent.text} />
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {totalVisits >= 5 && (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${accent.bg} text-black`}>
+                          VIP
+                        </span>
+                      )}
+                      <span className={`text-xs font-mono ${colors.textSecondary}`}>
+                        {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
+                      </span>
+                      {rating > 0 && (
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${i <= rating ? `${accent.text} fill-current` : colors.textMuted}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className={`text-lg font-heading ${colors.text} mb-1 group-hover:${accent.text} transition-colors`}>
+                        {client.name}
+                      </h3>
+                      <p className={`text-sm ${colors.textSecondary} font-mono flex items-center gap-2`}>
+                        {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
+                        {client.phone && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}`, '_blank');
+                            }}
+                            className="p-1 rounded-full hover:bg-green-500/10 transition-colors text-green-500"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                      </p>
+                    </div>
+                    <ChevronRight className={`w-5 h-5 ${colors.textMuted} group-hover:${accent.text} group-hover:translate-x-1 transition-all`} />
+                  </div>
+                </Card>
+              </Link>
+            );
+          })
+        )}
+      </div>
+
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="Novo cliente" size="md">
+        <form onSubmit={handleCreateClient} className="space-y-4">
+          <Input label="Nome completo" value={name} onChange={(e) => setName(e.target.value)} required />
+          <div>
+            <label className={`block text-sm font-medium mb-1.5 ${colors.text}`}>Telefone</label>
+            <PhoneInput value={phone} onChange={setPhone} defaultRegion={region as 'BR' | 'PT'} className="w-full" />
+          </div>
+          <div>
+            <label className={`block text-sm font-medium mb-1.5 ${colors.text}`}>Origem do cliente</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['Novo', 'Recente', 'Antigo'] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setOrigin(opt)}
+                  className={[
+                    'p-2 text-xs font-semibold transition-all min-h-[44px]',
+                    radius.button,
+                    origin === opt
+                      ? `${accent.bgDim} border ${accent.border} ${accent.text}`
+                      : `${colors.inputBg} border ${colors.inputBorder} ${colors.textSecondary}`,
+                  ].join(' ')}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Input
+            label="Email (opcional)"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <div>
+            <label className={`block text-sm font-medium mb-1.5 ${colors.text}`}>Foto (opcional)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+              className={[
+                'w-full p-3 text-sm',
+                radius.input,
+                colors.text,
+                colors.inputBg,
+                `border ${colors.inputBorder}`,
+              ].join(' ')}
+            />
+          </div>
+          <Button type="submit" variant="primary" fullWidth loading={uploading}>
+            {uploading ? 'Cadastrando...' : 'Cadastrar'}
+          </Button>
+        </form>
+      </Modal>
+    </div>
+  );
 };

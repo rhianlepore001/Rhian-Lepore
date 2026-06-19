@@ -63,7 +63,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className={`fixed left-0 ${!isSettingsRoute ? 'md:left-64' : ''} right-0 z-30 transition-all duration-300
-        ${colors.card} border-b ${colors.divider}
+        ${colors.bg} backdrop-blur-xl border-b ${colors.divider}
       `}
         style={{ top: 'var(--header-top, 0)' }}
       >

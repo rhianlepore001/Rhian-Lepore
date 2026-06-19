@@ -6,7 +6,7 @@ Instruções para agentes de IA que trabalham neste repositório.
 
 ## Projeto
 
-**AGENX** — SaaS de gestão para barbearias e salões de beleza (Brasil e Portugal).
+**AgendiX** — SaaS de gestão para barbearias e salões de beleza (Brasil e Portugal).
 React 19 + TypeScript + Supabase. Multi-tenant com isolamento por `company_id`.
 
 Stack: React 19, TypeScript 5.8, Vite 6, Tailwind CSS, Supabase (auth + banco), OpenRouter (IA), Stripe, Vercel.
@@ -99,26 +99,16 @@ specs/
 6. **Mobile first** — barbeiro usa celular; testar em Chrome Android antes de qualquer deploy
 7. **91 migrations** — histórico instável de RLS; ao criar policy nova, testar com usuário real
 
-
 ---
 
-# Reversa
+## graphify
 
-> Framework de Engenharia Reversa instalado neste projeto.
+Este projeto tem um grafo de conhecimento em `graphify-out/` com god nodes, comunidades e relações cross-file.
 
-## Como usar
+Regras:
+- **Sempre** leia `graphify-out/GRAPH_REPORT.md` antes de ler arquivos fonte, rodar grep/glob ou responder perguntas sobre a codebase. O grafo é o mapa primário.
+- Para perguntas cross-module ("como X se relaciona com Y"), prefira MCP graphify ou `/graphify query` em vez de varrer arquivos.
+- Após modificar código, rode `graphify update .` para manter o grafo atual (AST-only, sem custo de API).
 
-Digite `/reversa` para ativar o Reversa e iniciar ou retomar a análise do projeto.
+Ciclo v1.0 encerrado — backlog em `specs/active/`; histórico em `docs/v1/` (arquivado).
 
-## Comportamento ao ativar
-
-Quando o usuário digitar `/reversa` ou a palavra `reversa` sozinha em uma mensagem:
-
-1. Ative o skill `reversa` disponível em `.claude/skills/reversa/SKILL.md`
-2. Se não encontrar em `.claude/skills/`, tente `.agents/skills/reversa/SKILL.md`
-3. Leia o SKILL.md na íntegra e siga exatamente as instruções do Reversa
-
-## Regra não-negociável
-
-Nunca apague, modifique ou sobrescreva arquivos pré-existentes do projeto legado.
-O Reversa escreve **apenas** em `.reversa/` e `_reversa_sdd/`.

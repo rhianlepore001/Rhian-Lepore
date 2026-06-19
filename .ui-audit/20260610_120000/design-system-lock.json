@@ -1,0 +1,115 @@
+{
+  "locked": true,
+  "approvedAt": "2026-06-10T12:00:00-03:00",
+  "runId": "20260610_120000",
+  "version": "1.0-audit",
+  "tokens": [
+    "color",
+    "spacing",
+    "typography",
+    "radius",
+    "shadow",
+    "z-index",
+    "density"
+  ],
+  "components": [
+    "Button",
+    "Input",
+    "Select",
+    "Textarea",
+    "Checkbox",
+    "Card",
+    "Modal",
+    "Table",
+    "EmptyState",
+    "PageHeader",
+    "Sidebar",
+    "Badge",
+    "Toast",
+    "Skeleton"
+  ],
+  "layout": [
+    "AppShell",
+    "ContentMaxWidth",
+    "PageHeader",
+    "BottomMobileNav"
+  ],
+  "themeMatrix": [
+    "barber-dark",
+    "barber-light",
+    "beauty-dark",
+    "beauty-light"
+  ],
+  "themeDifferentiation": {
+    "radius": "A-barber-sharp-beauty-soft",
+    "density": "B-barber-compact-beauty-breathable"
+  },
+  "brandPreserved": {
+    "barberAccent": "gold",
+    "beautyAccent": "purple",
+    "logo": "fixed",
+    "fonts": ["Chivo", "Inter", "JetBrains Mono"]
+  },
+  "rules": [
+    "Modal sempre centered, focus trap obrigatório, max-width default 560px (size lg)",
+    "Card variants: outlined | elevated only — ban glow, ghost gradient, side-stripe, nested",
+    "Primary action no PageHeader — nunca flutuante aleatório; 1 primary por view",
+    "Accent ≤ 10% superfície — só CTA, active nav, focus, progress, status badge",
+    "useBrutalTheme() only — ban isBeauty ternaries em código novo",
+    "Radius e density derivam de theme (barber vs beauty) — nunca hardcode por página",
+    "Touch target mínimo 44px em mobile",
+    "Z-index escala semântica — ban z-999 e valores arbitrários",
+    "Loading: skeleton > spinner; spinner só em Button loading",
+    "Copy sentence case PT-BR — ban UPPERCASE labels",
+    "prefers-reduced-motion respeitado — ban animate-in page-wide"
+  ],
+  "canonicalPaths": {
+    "components": "components/ui/",
+    "tokens": "design-system/tokens.css",
+    "hook": "hooks/useBrutalTheme.ts",
+    "documentation": "design-system/MASTER.md"
+  },
+  "deprecated": [
+    "components/BrutalCard.tsx",
+    "components/BrutalButton.tsx",
+    "components/Modal.tsx",
+    "components/EmptyState.tsx",
+    "components/SkeletonLoader.tsx"
+  ],
+  "criticalScreens": [
+    {
+      "id": "login",
+      "route": "/#/login",
+      "order": 1
+    },
+    {
+      "id": "dashboard",
+      "route": "/#/",
+      "order": 2
+    },
+    {
+      "id": "agenda",
+      "route": "/#/agenda",
+      "order": 3
+    },
+    {
+      "id": "financeiro",
+      "route": "/#/financeiro",
+      "order": 4
+    }
+  ],
+  "requiredHookMigrations": [
+    "RADIUS_MAP per ThemeVariant in useBrutalTheme.ts",
+    "density object per ThemeVariant in useBrutalTheme.ts",
+    "focus-trap-react in components/ui/Modal.tsx"
+  ],
+  "bans": [
+    "border-l-4 accent side-stripe",
+    "ghost gradient card overlay",
+    "nested cards",
+    "isBeauty ternary styling",
+    "z-index arbitrary 999",
+    "page-wide animate-in fade-in",
+    "hero-metric template grid without hierarchy"
+  ]
+}

@@ -1,6 +1,7 @@
+import { Card, Button } from '../../components/ui';
 import React, { useState, useEffect } from 'react';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
+
+
 import { SettingsLayout } from '../../components/SettingsLayout';
 import {
     Shield, Download, Filter, Calendar,
@@ -103,7 +104,7 @@ export const AuditLogs: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex gap-2">
-                        <BrutalButton
+                        <Button
                             variant="secondary"
                             size="sm"
                             icon={<RefreshCw />}
@@ -111,8 +112,8 @@ export const AuditLogs: React.FC = () => {
                             disabled={loading}
                         >
                             Atualizar
-                        </BrutalButton>
-                        <BrutalButton
+                        </Button>
+                        <Button
                             variant="primary"
                             size="sm"
                             icon={<Download />}
@@ -120,12 +121,12 @@ export const AuditLogs: React.FC = () => {
                             disabled={logs.length === 0}
                         >
                             Exportar CSV
-                        </BrutalButton>
+                        </Button>
                     </div>
                 </div>
 
                 {/* Filtros */}
-                <BrutalCard>
+                <Card>
                     <div className="flex items-center gap-2 mb-4">
                         <Filter className="w-5 h-5 text-neutral-400" />
                         <h3 className="text-white font-bold">Filtros</h3>
@@ -181,18 +182,18 @@ export const AuditLogs: React.FC = () => {
                         </div>
                     </div>
                     <div className="mt-4 flex justify-end">
-                        <BrutalButton
+                        <Button
                             variant="primary"
                             size="sm"
                             onClick={loadLogs}
                         >
                             Aplicar Filtros
-                        </BrutalButton>
+                        </Button>
                     </div>
-                </BrutalCard>
+                </Card>
 
                 {/* Lista de Logs */}
-                <BrutalCard noPadding>
+                <Card noPadding>
                     {loading ? (
                         <div className="p-8 text-center">
                             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-neutral-400 mb-2" />
@@ -327,27 +328,27 @@ export const AuditLogs: React.FC = () => {
                             })}
                         </div>
                     )}
-                </BrutalCard>
+                </Card>
 
                 {/* Rodapé com Estatísticas */}
                 {logs.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <BrutalCard className="text-center">
+                        <Card className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Total de Eventos</p>
                             <p className={`text-3xl font-bold ${accent.text}`}>{logs.length}</p>
-                        </BrutalCard>
-                        <BrutalCard className="text-center">
+                        </Card>
+                        <Card className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Período</p>
                             <p className="text-white text-sm font-mono">
                                 {logs.length > 0 && new Date(logs[logs.length - 1].created_at).toLocaleDateString('pt-BR')}
                                 {' - '}
                                 {logs.length > 0 && new Date(logs[0].created_at).toLocaleDateString('pt-BR')}
                             </p>
-                        </BrutalCard>
-                        <BrutalCard className="text-center">
+                        </Card>
+                        <Card className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Retenção</p>
                             <p className="text-white text-sm">180 dias</p>
-                        </BrutalCard>
+                        </Card>
                     </div>
                 )}
             </div>

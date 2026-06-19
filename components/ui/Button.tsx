@@ -15,8 +15,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   forceTheme?: ThemeVariant;
 }
 
+// Touch target mínimo 44px no mobile em todos os tamanhos (WCAG 2.5.8, DS Lock §1.3).
+// Desktop pode comprimir o sm para reduzir densidade de cliques.
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'text-xs px-3 py-1.5 h-9 min-h-[36px] gap-1.5',
+  sm: 'text-xs px-3 py-2.5 min-h-[44px] md:min-h-[36px] md:h-9 md:py-1.5 gap-1.5',
   md: 'text-sm px-5 py-2.5 h-11 min-h-[44px] gap-2',
   lg: 'text-base px-6 py-3 h-[52px] min-h-[52px] gap-2.5',
 };

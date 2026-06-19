@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { BrutalCard } from '../components/BrutalCard';
+import { Card } from '../components/ui';
+import React, { useState } from 'react';
+
 import { useAuth } from '../contexts/AuthContext';
-import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { supabase } from '../lib/supabase';
+import { useReportsData } from '../hooks/useReports';
 import {
     TrendingUp,
     DollarSign,
@@ -15,90 +15,18 @@ import {
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
-import { logger } from '../utils/Logger';
-
-interface DashboardStats {
-    total_profit: number;
-    current_month_revenue: number;
-    month_scheduled_value: number;
-    weekly_growth: number;
-    monthly_goal: number;
-    recovered_revenue: number;
-    avoided_no_shows: number;
-    filled_slots: number;
-    campaigns_sent: number;
-    appointments_total: number;
-    appointments_this_month: number;
-    completed_this_month: number;
-    has_public_bookings: boolean;
-    account_days_old: number;
-    data_maturity_score: number;
-    avg_ticket: number;
-    churn_risk_count: number;
-    top_service: string;
-    repeat_client_rate: number;
-}
-
-interface ClientGrowthEntry {
-    month: string;
-    new_clients: number;
-}
-
-interface TopClient {
-    name: string;
-    visits: number;
-    revenue: number;
-    last_visit: string;
-}
-
-interface ClientInsights {
-    client_growth_by_month: ClientGrowthEntry[];
-    top_clients: TopClient[];
-    retention_rate: number;
-}
 
 export const Reports: React.FC = () => {
-    const { user, region } = useAuth();
-    const { isMobile } = useUI();
+    const { user, companyId, region } = useAuth();
+    const effectiveUserId = companyId ?? user?.id;
     const { accent, isBeauty } = useBrutalTheme();
-    const [loading, setLoading] = useState(true);
     const currentDate = new Date();
     const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
     const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-    const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [clientInsights, setClientInsights] = useState<ClientInsights>({
-        client_growth_by_month: [],
-        top_clients: [],
-        retention_rate: 0
-    });
+    const { stats, clientInsights, loading } = useReportsData(effectiveUserId);
 
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
-
-    useEffect(() => {
-        fetchData();
-    }, [selectedMonth, selectedYear, user]);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-
-            const [statsResult, clientResult] = await Promise.all([
-                supabase.rpc('get_dashboard_stats', { p_user_id: user.id }),
-                supabase.rpc('get_client_insights', { p_user_id: user.id, p_months: 6 })
-            ]);
-
-            if (statsResult.error) logger.error('Error fetching dashboard stats', statsResult.error);
-            if (clientResult.error) logger.error('Error fetching client insights', clientResult.error);
-
-            if (statsResult.data) setStats(statsResult.data);
-            if (clientResult.data) setClientInsights(clientResult.data);
-        } catch (error) {
-            logger.error('Unexpected error fetching report data', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleMonthChange = (month: number, year: number) => {
         setSelectedMonth(month);
@@ -117,7 +45,6 @@ export const Reports: React.FC = () => {
 
     return (
         <div className="space-y-6 md:space-y-10 pb-24">
-            {/* Header Strategist */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-white/5 pb-6">
                 <div>
                     <h1 className="text-3xl md:text-5xl font-heading text-white uppercase tracking-tighter">Insights do Negócio</h1>
@@ -161,11 +88,10 @@ export const Reports: React.FC = () => {
                 </div>
             ) : (
                 <div className="space-y-8 fade-in">
-                    {/* Visão Geral Rápida */}
                     <div>
                         <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider">Visão Geral</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                            <BrutalCard>
+                            <Card>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className={`p-2 rounded-xl ${accent.bgDim} ${accent.text}`}>
                                         <DollarSign className="w-5 h-5" />
@@ -174,9 +100,9 @@ export const Reports: React.FC = () => {
                                 </div>
                                 <h3 className="text-3xl font-heading text-white">{formatCurrency(stats?.avg_ticket || 0, currencyRegion)}</h3>
                                 <p className="text-xs text-neutral-500 mt-2">Últimos 90 dias</p>
-                            </BrutalCard>
+                            </Card>
 
-                            <BrutalCard>
+                            <Card>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="p-2 rounded-xl bg-green-500/10 text-green-400">
                                         <TrendingUp className="w-5 h-5" />
@@ -185,9 +111,9 @@ export const Reports: React.FC = () => {
                                 </div>
                                 <h3 className="text-3xl font-heading text-white">{stats?.weekly_growth || 0}%</h3>
                                 <p className="text-xs text-neutral-500 mt-2">Vs. semana anterior</p>
-                            </BrutalCard>
+                            </Card>
 
-                            <BrutalCard>
+                            <Card>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
                                         <Target className="w-5 h-5" />
@@ -196,9 +122,9 @@ export const Reports: React.FC = () => {
                                 </div>
                                 <h3 className="text-3xl font-heading text-white">{stats?.repeat_client_rate || 0}%</h3>
                                 <p className="text-xs text-neutral-500 mt-2">Clientes que voltaram</p>
-                            </BrutalCard>
+                            </Card>
 
-                            <BrutalCard>
+                            <Card>
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
                                         <AlertCircle className="w-5 h-5" />
@@ -207,16 +133,14 @@ export const Reports: React.FC = () => {
                                 </div>
                                 <h3 className="text-3xl font-heading text-white">{stats?.churn_risk_count || 0}</h3>
                                 <p className="text-xs text-neutral-500 mt-2">Há mais de 45 dias sem vir</p>
-                            </BrutalCard>
+                            </Card>
                         </div>
                     </div>
 
-
-                    {/* Evolução e Performance */}
                     <div>
                         <h2 className="text-xl font-heading text-white uppercase mb-4 tracking-wider">Performance e Crescimento</h2>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <BrutalCard title="Evolução de Clientes (6 Meses)" className="lg:col-span-2">
+                            <Card title="Evolução de Clientes (6 Meses)" className="lg:col-span-2">
                                 <div className="h-[250px] w-full mt-4">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={clientInsights.client_growth_by_month}>
@@ -244,20 +168,19 @@ export const Reports: React.FC = () => {
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
-                            </BrutalCard>
+                            </Card>
 
-                            <BrutalCard title="Serviço Campeão" className="flex flex-col justify-center items-center text-center">
+                            <Card title="Serviço Campeão" className="flex flex-col justify-center items-center text-center">
                                 <div className={`w-16 h-16 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-4`}>
                                     <TrendingUp className={`w-8 h-8 ${accent.text}`} />
                                 </div>
                                 <h2 className={`text-3xl md:text-4xl font-heading ${accent.text} uppercase mb-2`}>{stats?.top_service || 'N/A'}</h2>
                                 <p className="text-neutral-500 text-sm">Serviço mais vendido do período recente</p>
-                            </BrutalCard>
+                            </Card>
                         </div>
                     </div>
 
-                    {/* Top Clients Table */}
-                    <BrutalCard title="Nossos Melhores Clientes">
+                    <Card title="Nossos Melhores Clientes">
                         <div className="overflow-x-auto -mx-4 md:mx-0">
                             <table className="w-full text-left">
                                 <thead>
@@ -294,7 +217,7 @@ export const Reports: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
-                    </BrutalCard>
+                    </Card>
                 </div>
             )}
         </div>

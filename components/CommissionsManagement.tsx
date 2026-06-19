@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { BrutalCard } from './BrutalCard';
-import { BrutalButton } from './BrutalButton';
-import { User, DollarSign, Check, Loader2, X, Percent, TrendingUp, Clock, Scissors, Info as InfoIcon, FileText } from 'lucide-react';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
+import { Modal } from '@/components/ui';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { User, DollarSign, Check, Loader2, Percent, TrendingUp, Clock, Scissors, Info as InfoIcon, FileText } from 'lucide-react';
 import { InfoButton } from './HelpButtons';
 import { useNavigate } from 'react-router-dom';
 import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
 import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
+import { useToast } from '@/components/ui';
 
 interface CommissionDue {
     professional_id: string;
@@ -73,6 +76,9 @@ function calcCommissionPeriod(settlementDay: number): { start: string; end: stri
 export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ accentColor, currencySymbol, onPaymentSuccess }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const isBeauty = accentColor.includes('beauty');
+    const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
+    const accentTextClass = accent.text;
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'pending' | 'paid'>('pending');
@@ -104,12 +110,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const [inlineRate, setInlineRate] = useState('');
     const [savingRate, setSavingRate] = useState(false);
 
-    // Toast
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-    const showAlert = (message: string, type: 'success' | 'error' = 'error') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 4000);
-    };
+    const { showToast } = useToast();
 
     // Modals
     const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -237,7 +238,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         if (!user || !pendingPayProfessional) return;
         const rate = parseFloat(inlineRate);
         if (isNaN(rate) || rate < 0 || rate > 100) {
-            showAlert('Informe um percentual válido entre 0 e 100.', 'error');
+            showToast('Informe um percentual válido entre 0 e 100.', 'error');
             return;
         }
         setSavingRate(true);
@@ -257,7 +258,8 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             setPendingPayProfessional(null);
             openPayModal(updated);
         } catch (err: any) {
-            showAlert(`Erro ao salvar comissão: ${err.message || 'Erro inesperado'}`, 'error');
+            console.error('Erro ao salvar comissão:', err);
+            showToast('Não foi possível salvar a comissão. Tente novamente.', 'error');
         } finally {
             setSavingRate(false);
         }
@@ -286,7 +288,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
     const handlePayCommissions = async () => {
         if (!user || !selectedProfessional || !paymentAmount || !paymentStartDate || !paymentEndDate) {
-            showAlert('Por favor, preencha todos os campos.', 'error');
+            showToast('Por favor, preencha todos os campos.', 'error');
             return;
         }
         if (payingProfessionalId) return; // EC-F3-01: prevent double click
@@ -303,13 +305,14 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             if (error) throw error;
 
-            showAlert(`Comissão de ${selectedProfessional.professional_name} paga com sucesso!`, 'success');
+            showToast(`Comissão de ${selectedProfessional.professional_name} paga com sucesso!`, 'success');
             setShowPayModal(false);
             setSelectedProfessional(null);
             fetchCommissionsDue();
             if (onPaymentSuccess) onPaymentSuccess();
         } catch (error: any) {
-            showAlert(`Erro ao registrar pagamento: ${error.message || 'Erro inesperado'}`, 'error');
+            console.error('Erro ao registrar pagamento:', error);
+            showToast('Não foi possível registrar o pagamento. Tente novamente.', 'error');
         } finally {
             setPayingProfessionalId(null);
         }
@@ -321,31 +324,29 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         ? [...commissionsDue].sort((a, b) => (b.total_earnings_month || 0) - (a.total_earnings_month || 0))[0]
         : null;
 
-    const accentTextClass = accentColor.startsWith('text-') ? accentColor : `text-${accentColor}`;
-
     return (
         <div className="space-y-6 md:space-y-8 pb-10">
             {/* Header */}
             <div className="px-1 md:px-0">
                 <div className="flex items-center gap-1">
-                    <h2 className="text-2xl md:text-3xl font-heading text-white uppercase tracking-tighter">Gestão de Comissões</h2>
+                    <h2 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase tracking-tighter`}>Gestão de Comissões</h2>
                     <InfoButton text="Controle total dos repasses da sua equipe. O sistema calcula automaticamente o que cada profissional deve receber com base nas taxas configuradas." />
                 </div>
-                <p className="text-neutral-400 text-sm md:text-base max-w-2xl leading-relaxed">
+                <p className={`${colors.textSecondary} text-sm md:text-base max-w-2xl leading-relaxed`}>
                     {periodLabel ? `Período atual: ${periodLabel}` : 'Controle financeiro total da sua equipe.'}
                 </p>
             </div>
 
             {/* Tabs: Pendente / Pago */}
-            <div className="flex gap-1 p-1 bg-neutral-900 rounded-xl border border-neutral-800 w-fit">
+            <div className={`flex gap-1 p-1 ${colors.card} rounded-xl ${colors.border} border w-fit`}>
                 {(['pending', 'paid'] as const).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                             activeTab === tab
-                                ? `${accentColor.startsWith('text-') ? accentColor.replace('text-', 'bg-') : 'bg-accent-gold'} text-black`
-                                : 'text-neutral-400 hover:text-white'
+                                ? `${accent.bg} text-black`
+                                : `${colors.textMuted} hover:${colors.text}`
                         }`}
                     >
                         {tab === 'pending' ? 'Pendente' : 'Pago'}
@@ -359,137 +360,148 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     {/* Metrics */}
                     {!loading && commissionsDue.length > 0 && (
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-                            <div className="bg-neutral-900 border-2 border-neutral-800 rounded-2xl p-4 md:p-6 relative overflow-hidden">
-                                <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accentColor === 'text-beauty-neon' ? 'bg-beauty-neon' : 'bg-accent-gold'}`}></div>
-                                <p className="text-neutral-500 text-[9px] md:text-xs uppercase font-mono font-bold mb-1 md:mb-2 tracking-widest">Pendente</p>
-                                <h4 className={`text-lg md:text-3xl font-mono font-bold ${totalDueOverall > 0 ? 'text-yellow-400' : 'text-neutral-400'}`}>
-                                    {currencySymbol} {(totalDueOverall || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </h4>
-                            </div>
-                            <div className="bg-neutral-900 border-2 border-neutral-800 rounded-2xl p-4 md:p-6 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-green-500"></div>
-                                <p className="text-neutral-500 text-[9px] md:text-xs uppercase font-mono font-bold mb-1 md:mb-2 tracking-widest">Pago (Mês)</p>
-                                <h4 className="text-lg md:text-3xl font-mono font-bold text-green-400">
-                                    {currencySymbol} {(totalPaidMonth || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </h4>
-                            </div>
-                            <div className="col-span-2 lg:col-span-1 bg-neutral-900 border-2 border-neutral-800 rounded-2xl p-4 md:p-6 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-blue-500"></div>
-                                <p className="text-neutral-500 text-[9px] md:text-xs uppercase font-mono font-bold mb-1 md:mb-2 tracking-widest">Destaque</p>
-                                <h4 className="text-lg md:text-3xl font-mono font-bold text-blue-400 truncate">
-                                    {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
-                                </h4>
-                                <p className="text-[9px] text-neutral-600 mt-1 font-mono uppercase tracking-widest">Melhor Desempenho</p>
-                            </div>
+                            <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
+                                <div className={`p-4 md:p-6`}>
+                                    <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accent.bg}`}></div>
+                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pendente</p>
+                                    <h4 className={`text-lg md:text-3xl ${font.mono} font-bold ${totalDueOverall > 0 ? 'text-yellow-400' : colors.textMuted}`}>
+                                        {currencySymbol} {(totalDueOverall || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </h4>
+                                </div>
+                            </Card>
+                            <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
+                                <div className="p-4 md:p-6">
+                                    <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-green-500"></div>
+                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pago (Mês)</p>
+                                    <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-green-400`}>
+                                        {currencySymbol} {(totalPaidMonth || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    </h4>
+                                </div>
+                            </Card>
+                            <Card variant="outlined" className="col-span-2 lg:col-span-1 p-4 md:p-6 relative overflow-hidden" noPadding>
+                                <div className="p-4 md:p-6">
+                                    <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-blue-500"></div>
+                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Destaque</p>
+                                    <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-blue-400 truncate`}>
+                                        {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
+                                    </h4>
+                                    <p className={`text-[9px] ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-widest`}>Melhor Desempenho</p>
+                                </div>
+                            </Card>
                         </div>
                     )}
 
                     {/* List */}
-                    <div className="bg-neutral-900/40 border-0 md:border-2 border-neutral-800 md:rounded-3xl p-0 md:p-8 backdrop-blur-sm overflow-y-auto">
+                    <div className={`${colors.surface} opacity-40 border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 backdrop-blur-sm overflow-y-auto`}>
                         {loading ? (
-                            <div className="text-center py-24 text-neutral-500">
+                            <div className={`text-center py-24 ${colors.textMuted}`}>
                                 <Loader2 className={`w-12 h-12 mx-auto animate-spin mb-4 ${accentTextClass}`} />
-                                <p className="font-mono uppercase tracking-widest animate-pulse">Sincronizando dados...</p>
+                                <p className={`${font.mono} uppercase tracking-widest animate-pulse`}>Sincronizando dados...</p>
                             </div>
                         ) : commissionsDue.length === 0 ? (
-                            <div className="text-center py-20 bg-neutral-900/50 rounded-2xl border-2 border-dashed border-neutral-800 mx-4 md:mx-0">
-                                <div className="w-16 h-16 bg-neutral-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <Check className="w-8 h-8 text-green-500" />
+                            <div className={`text-center py-20 ${colors.card} rounded-2xl border-2 border-dashed ${colors.border} mx-4 md:mx-0`}>
+                                <div className={`w-16 h-16 ${colors.surface} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                                    <Check className={`w-8 h-8 ${status.success}`} />
                                 </div>
-                                <p className="text-lg font-bold text-white mb-2 uppercase font-heading">Tudo em dia!</p>
-                                <p className="text-neutral-500 max-w-xs mx-auto text-sm px-4">
+                                <p className={`text-lg font-bold ${colors.text} mb-2 uppercase ${font.heading}`}>Tudo em dia!</p>
+                                <p className={`${colors.textMuted} max-w-xs mx-auto text-sm px-4`}>
                                     Nenhum profissional com comissões pendentes no momento.
                                 </p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-4 md:gap-6">
                                 {commissionsDue.map(professional => (
-                                    <div
+                                    <Card
                                         key={professional.professional_id}
-                                        className="group bg-neutral-900 border-y md:border-2 border-neutral-800 md:rounded-2xl p-4 md:p-6 hover:border-neutral-700 transition-all duration-300"
+                                        variant="outlined"
+                                        className="hover:border-[var(--color-border-strong)] transition-all duration-300"
+                                        noPadding
                                     >
-                                        <div className="flex flex-col gap-5">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3 md:gap-4">
-                                                    <div className="relative">
-                                                        {professional.photo_url ? (
-                                                            <img src={professional.photo_url} alt={professional.professional_name} className="w-12 h-12 md:w-16 md:h-16 rounded-xl object-cover border border-neutral-800" />
-                                                        ) : (
-                                                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-                                                                <User className="w-6 h-6 md:w-8 md:h-8 text-neutral-600" />
+                                        <div className="p-4 md:p-6">
+                                            <div className="flex flex-col gap-5">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3 md:gap-4">
+                                                        <div className="relative">
+                                                            {professional.photo_url ? (
+                                                                <img src={professional.photo_url} alt={professional.professional_name} className="w-12 h-12 md:w-16 md:h-16 rounded-xl object-cover border border-[var(--color-border)]" />
+                                                            ) : (
+                                                                <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl ${colors.surface} ${colors.border} border flex items-center justify-center`}>
+                                                                    <User className={`w-6 h-6 md:w-8 md:h-8 ${colors.textMuted}`} />
+                                                                </div>
+                                                            )}
+                                                            <div className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-xs font-bold border ${colors.card} ${colors.border} ${accentTextClass}`}>
+                                                                {(professional.commission_rate || 0)}%
                                                             </div>
-                                                        )}
-                                                        <div className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full shadow-lite-glass text-xs font-bold border bg-brutal-main border-white/10 ${accentTextClass}`}>
-                                                            {(professional.commission_rate || 0)}%
+                                                        </div>
+                                                        <div>
+                                                            <h3 className={`text-base md:text-xl font-bold ${colors.text} leading-tight`}>{professional.professional_name}</h3>
+                                                            <p className={`${colors.textMuted} text-xs ${font.mono} mt-1 uppercase tracking-tight flex items-center gap-1`}>
+                                                                Comissão por Serviço
+                                                                <TrendingUp className="w-2.5 h-2.5" />
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <h3 className="text-base md:text-xl font-bold text-white leading-tight">{professional.professional_name}</h3>
-                                                        <p className="text-neutral-500 text-xs font-mono mt-1 uppercase tracking-tight flex items-center gap-1">
-                                                            Comissão por Serviço
-                                                            <TrendingUp className="w-2.5 h-2.5" />
+                                                    <div className="text-right">
+                                                        <p className={`text-[9px] ${colors.textMuted} ${font.mono} uppercase mb-0.5`}>Saldo Atual</p>
+                                                        <p className={`text-lg md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-yellow-400' : colors.textMuted}`}>
+                                                            {currencySymbol} {(professional.total_due || 0).toFixed(2)}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-[9px] text-neutral-500 font-mono uppercase mb-0.5">Saldo Atual</p>
-                                                    <p className={`text-lg md:text-2xl font-mono font-bold ${professional.total_due > 0 ? 'text-yellow-400' : 'text-neutral-600'}`}>
-                                                        {currencySymbol} {(professional.total_due || 0).toFixed(2)}
-                                                    </p>
-                                                </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-3 gap-2 md:gap-4">
-                                                <div className="p-2 md:p-3 rounded-xl bg-black/30 border border-neutral-800/50">
-                                                    <p className="text-[8px] md:text-xs text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Este Mês</p>
-                                                    <p className="text-xs md:text-lg font-mono font-bold text-white">{currencySymbol} {professional.total_earnings_month.toFixed(2)}</p>
+                                                <div className="grid grid-cols-3 gap-2 md:gap-4">
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
+                                                        <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Este Mês</p>
+                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{currencySymbol} {professional.total_earnings_month.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
+                                                        <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Liquidado</p>
+                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>{currencySymbol} {professional.total_paid.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
+                                                        <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Serviços</p>
+                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{professional.total_pending_records || 0}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="p-2 md:p-3 rounded-xl bg-black/30 border border-neutral-800/50">
-                                                    <p className="text-[8px] md:text-xs text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Liquidado</p>
-                                                    <p className="text-xs md:text-lg font-mono font-bold text-neutral-400">{currencySymbol} {professional.total_paid.toFixed(2)}</p>
-                                                </div>
-                                                <div className="p-2 md:p-3 rounded-xl bg-black/30 border border-neutral-800/50">
-                                                    <p className="text-[8px] md:text-xs text-neutral-500 uppercase font-bold mb-0.5 font-mono tracking-tighter">Serviços</p>
-                                                    <p className="text-xs md:text-lg font-mono font-bold text-white">{professional.total_pending_records || 0}</p>
-                                                </div>
-                                            </div>
 
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex gap-2 flex-1">
-                                                    <button
-                                                        onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
-                                                        className="flex-1 h-10 md:h-12 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 text-white transition-all flex items-center justify-center gap-2 text-xs md:text-xs font-bold border border-neutral-700 active:scale-95"
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex gap-2 flex-1">
+                                                        <button
+                                                            onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
+                                                            className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
+                                                        >
+                                                            <Scissors className="w-3.5 h-3.5" />
+                                                            <span>Serviços</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
+                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            title="Relatório detalhado"
+                                                        >
+                                                            <FileText className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setDetailsProfessional(professional); setShowHistoryModal(true); }}
+                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            title="Histórico de pagamentos"
+                                                        >
+                                                            <Clock className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
+                                                        </button>
+                                                    </div>
+                                                    <Button
+                                                        variant="primary"
+                                                        className="flex-[1.5] md:flex-none md:w-48"
+                                                        icon={payingProfessionalId === professional.professional_id ? undefined : <DollarSign className="w-4 h-4" />}
+                                                        onClick={() => handleOpenPayModal(professional)}
+                                                        disabled={!!payingProfessionalId || professional.total_due <= 0}
+                                                        loading={payingProfessionalId === professional.professional_id}
                                                     >
-                                                        <Scissors className="w-3.5 h-3.5" />
-                                                        <span>Serviços</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
-                                                        className="w-10 md:w-14 h-10 md:h-12 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 text-white transition-all flex items-center justify-center border border-neutral-700 active:scale-95"
-                                                        title="Relatório detalhado"
-                                                    >
-                                                        <FileText className="w-3.5 h-3.5 md:w-4 md:h-4 text-neutral-400" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setDetailsProfessional(professional); setShowHistoryModal(true); }}
-                                                        className="w-10 md:w-14 h-10 md:h-12 rounded-xl bg-neutral-800/50 hover:bg-neutral-800 text-white transition-all flex items-center justify-center border border-neutral-700 active:scale-95"
-                                                        title="Histórico de pagamentos"
-                                                    >
-                                                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-neutral-400" />
-                                                    </button>
+                                                        {payingProfessionalId === professional.professional_id ? 'Processando' : 'Realizar Pagamento'}
+                                                    </Button>
                                                 </div>
-                                                <BrutalButton
-                                                    variant="primary"
-                                                    className="flex-[1.5] md:flex-none md:w-48 h-10 md:h-12 text-xs md:text-sm font-bold"
-                                                    icon={payingProfessionalId === professional.professional_id ? <Loader2 className="animate-spin w-4 h-4" /> : <DollarSign className="w-4 h-4" />}
-                                                    onClick={() => handleOpenPayModal(professional)}
-                                                    disabled={!!payingProfessionalId || professional.total_due <= 0}
-                                                >
-                                                    {payingProfessionalId === professional.professional_id ? 'Processando' : 'Realizar Pagamento'}
-                                                </BrutalButton>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Card>
                                 ))}
                             </div>
                         )}
@@ -499,40 +511,40 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             {/* Paid Tab */}
             {activeTab === 'paid' && (
-                <div className="bg-neutral-900/40 border-0 md:border-2 border-neutral-800 md:rounded-3xl p-0 md:p-8 backdrop-blur-sm">
+                <div className={`${colors.surface} opacity-40 border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 backdrop-blur-sm`}>
                     {loadingPaid ? (
                         <div className="text-center py-24">
                             <Loader2 className={`w-10 h-10 mx-auto animate-spin mb-4 ${accentTextClass}`} />
                         </div>
                     ) : paidCommissions.length === 0 ? (
                         <div className="text-center py-20">
-                            <p className="text-neutral-500">Nenhum pagamento registrado ainda.</p>
+                            <p className={colors.textMuted}>Nenhum pagamento registrado ainda.</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-neutral-800">
+                        <div className={`divide-y ${colors.divider}`}>
                             {paidCommissions.map(item => (
                                 <div key={item.id} className="flex items-center justify-between py-4 px-2 md:px-0">
                                     <div className="flex items-center gap-3">
                                         {item.photo_url ? (
-                                            <img src={item.photo_url} alt={item.professional_name} className="w-10 h-10 rounded-lg object-cover border border-neutral-800" />
+                                            <img src={item.photo_url} alt={item.professional_name} className={`w-10 h-10 rounded-lg object-cover ${colors.border} border`} />
                                         ) : (
-                                            <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
-                                                <User className="w-5 h-5 text-neutral-600" />
+                                            <div className={`w-10 h-10 rounded-lg ${colors.surface} flex items-center justify-center`}>
+                                                <User className={`w-5 h-5 ${colors.textMuted}`} />
                                             </div>
                                         )}
                                         <div>
-                                            <p className="text-white font-bold text-sm">{item.professional_name}</p>
-                                            <p className="text-neutral-500 text-xs font-mono">
+                                            <p className={`${colors.text} font-bold text-sm`}>{item.professional_name}</p>
+                                            <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                                 {new Date(item.period_start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {new Date(item.period_end).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-green-400 font-mono font-bold">{currencySymbol} {item.net_amount.toFixed(2)}</p>
-                                        <p className="text-neutral-500 text-xs font-mono">
+                                        <p className={`text-green-400 ${font.mono} font-bold`}>{currencySymbol} {item.net_amount.toFixed(2)}</p>
+                                        <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                             Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
                                         </p>
-                                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[9px] font-bold uppercase border border-green-500/20">
+                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full ${status.successBg} ${status.success} text-[9px] font-bold uppercase ${status.successBorder} border`}>
                                             Pago
                                         </span>
                                     </div>
@@ -545,174 +557,170 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             {/* Inline Rate Prompt — colaborador sem % */}
             {showRatePrompt && pendingPayProfessional && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 backdrop-blur-md">
-                    <div className="bg-brutal-card border border-white/5 rounded-2xl w-full max-w-sm p-6 shadow-promax-depth">
-                        <h3 className="text-white font-heading text-lg uppercase mb-2">Comissão não configurada</h3>
-                        <p className="text-neutral-400 text-sm mb-6">
-                            <strong className="text-white">{pendingPayProfessional.professional_name}</strong> não tem percentual de comissão definido. Defina agora para calcular automaticamente.
-                        </p>
-                        <label className="text-neutral-500 font-mono text-xs uppercase block mb-2">Percentual de comissão (%)</label>
-                        <div className="flex gap-3 mb-6">
-                            <div className="relative flex-1">
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.5"
-                                    value={inlineRate}
-                                    onChange={e => setInlineRate(e.target.value)}
-                                    className="w-full p-3 bg-black border-2 border-neutral-700 rounded-xl text-white font-mono text-xl focus:outline-none focus:border-accent-gold"
-                                    placeholder="Ex: 40"
-                                    autoFocus
-                                />
-                                <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <BrutalButton variant="secondary" className="flex-1" onClick={() => { setShowRatePrompt(false); setPendingPayProfessional(null); }}>
-                                Cancelar
-                            </BrutalButton>
-                            <BrutalButton
-                                variant="primary"
-                                className="flex-1"
-                                onClick={handleSaveInlineRate}
-                                disabled={savingRate || !inlineRate}
-                                icon={savingRate ? <Loader2 className="w-4 h-4 animate-spin" /> : undefined}
-                            >
-                                {savingRate ? 'Salvando...' : 'Confirmar e Pagar'}
-                            </BrutalButton>
+                <Modal
+                    open
+                    onClose={() => { setShowRatePrompt(false); setPendingPayProfessional(null); }}
+                    title="Comissão não configurada"
+                    size="sm"
+                >
+                    <p className={`${colors.textSecondary} text-sm mb-6`}>
+                        <strong className={colors.text}>{pendingPayProfessional.professional_name}</strong> não tem percentual de comissão definido. Defina agora para calcular automaticamente.
+                    </p>
+                    <label className={`${colors.textMuted} ${font.mono} text-xs uppercase block mb-2`}>Percentual de comissão (%)</label>
+                    <div className="flex gap-3 mb-6">
+                        <div className="relative flex-1">
+                            <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.5"
+                                value={inlineRate}
+                                onChange={e => setInlineRate(e.target.value)}
+                                className={`w-full p-3 ${colors.inputBg} ${colors.inputBorder} border-2 rounded-xl ${colors.text} ${font.mono} text-xl focus:outline-none focus:border-[var(--color-input-focus)]`}
+                                placeholder="Ex: 40"
+                                autoFocus
+                            />
+                            <Percent className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 ${colors.textMuted}`} />
                         </div>
                     </div>
-                </div>
+                    <div className="flex gap-3">
+                        <Button variant="secondary" fullWidth onClick={() => { setShowRatePrompt(false); setPendingPayProfessional(null); }}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onClick={handleSaveInlineRate}
+                            disabled={savingRate || !inlineRate}
+                            loading={savingRate}
+                        >
+                            {savingRate ? 'Salvando...' : 'Confirmar e Pagar'}
+                        </Button>
+                    </div>
+                </Modal>
             )}
 
             {/* Pay Modal */}
             {showPayModal && selectedProfessional && (
-                <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-0 md:p-4 backdrop-blur-md">
-                    <div className="bg-brutal-card border-0 md:border md:border-white/5 md:rounded-2xl w-full max-w-md h-full md:h-auto flex flex-col p-6 md:p-8 shadow-promax-depth relative overflow-y-auto">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                                    <DollarSign className="w-5 h-5 text-green-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-heading text-xl uppercase tracking-tight">Confirmar Repasse</h3>
-                                    {paymentPeriodLabel && (
-                                        <p className="text-neutral-500 text-xs font-mono">Período: {paymentPeriodLabel}</p>
-                                    )}
-                                </div>
-                            </div>
-                            <button onClick={() => setShowPayModal(false)} className="text-neutral-500 hover:text-white transition-all p-2 hover:bg-neutral-800 rounded-xl">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="flex items-center gap-4 mb-8 p-4 bg-black/40 rounded-2xl border border-neutral-800">
-                            {selectedProfessional.photo_url ? (
-                                <img src={selectedProfessional.photo_url} alt={selectedProfessional.professional_name} className="w-12 h-12 rounded-xl object-cover ring-2 ring-neutral-800" />
-                            ) : (
-                                <div className="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center">
-                                    <User className="w-6 h-6 text-neutral-600" />
-                                </div>
-                            )}
-                            <div>
-                                <p className="text-white font-bold text-lg leading-none mb-1">{selectedProfessional.professional_name}</p>
-                                <p className="text-xs font-mono text-neutral-500 uppercase tracking-widest">
-                                    Saldo: <span className="text-yellow-500">{currencySymbol} {selectedProfessional.total_due.toFixed(2)}</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-neutral-500 font-mono text-xs uppercase mb-2 block tracking-widest">Valor a Ser Liquidado ({currencySymbol})</label>
-                                <input
-                                    type="number"
-                                    value={paymentAmount}
-                                    onChange={e => setPaymentAmount(e.target.value)}
-                                    step="0.01"
-                                    className="w-full p-4 bg-black border-2 border-neutral-800 rounded-2xl text-white font-mono text-2xl focus:outline-none focus:border-green-500 transition-all"
-                                    placeholder="0.00"
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <label className="text-neutral-500 font-mono text-xs uppercase block tracking-widest">Intervalo de Referência</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        onClick={() => {
-                                            const p = calcCommissionPeriod(settlementDay);
-                                            setPaymentStartDate(p.start);
-                                            setPaymentEndDate(p.end);
-                                            setPaymentPeriodLabel(p.label);
-                                            calculateAmountForDates(selectedProfessional.professional_id, p.start, p.end);
-                                        }}
-                                        className="py-2.5 rounded-xl text-xs font-bold uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all active:scale-95"
-                                    >
-                                        Período Atual
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            // Período anterior: um ciclo antes do atual
-                                            const current = calcCommissionPeriod(settlementDay);
-                                            const prevEnd = new Date(current.start);
-                                            prevEnd.setDate(prevEnd.getDate() - 1);
-                                            const prevStart = new Date(prevEnd);
-                                            prevStart.setDate(prevStart.getDate() - 30);
-                                            const fmt = (d: Date) => d.toISOString().split('T')[0];
-                                            const fmtLabel = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-                                            const start = fmt(prevStart);
-                                            const end = fmt(prevEnd);
-                                            setPaymentStartDate(start);
-                                            setPaymentEndDate(end);
-                                            setPaymentPeriodLabel(`${fmtLabel(prevStart)} → ${fmtLabel(prevEnd)}`);
-                                            calculateAmountForDates(selectedProfessional.professional_id, start, end);
-                                        }}
-                                        className="py-2.5 rounded-xl text-xs font-bold uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 transition-all active:scale-95"
-                                    >
-                                        Período Anterior
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <input
-                                        type="date"
-                                        value={paymentStartDate}
-                                        onChange={e => { setPaymentStartDate(e.target.value); calculateAmountForDates(selectedProfessional.professional_id, e.target.value, paymentEndDate); }}
-                                        className="w-full p-3 bg-black border border-neutral-700 rounded-xl text-white text-xs focus:ring-1 focus:ring-neutral-500 outline-none"
-                                    />
-                                    <input
-                                        type="date"
-                                        value={paymentEndDate}
-                                        onChange={e => { setPaymentEndDate(e.target.value); calculateAmountForDates(selectedProfessional.professional_id, paymentStartDate, e.target.value); }}
-                                        className="w-full p-3 bg-black border border-neutral-700 rounded-xl text-white text-xs focus:ring-1 focus:ring-neutral-500 outline-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl flex gap-3">
-                            <InfoIcon className="w-5 h-5 text-blue-500 shrink-0" />
-                            <p className="text-blue-400 text-[11px] leading-snug">
-                                <strong>Aviso:</strong> Este pagamento será registrado como despesa e as comissões do período serão marcadas como pagas.
-                            </p>
-                        </div>
-
-                        <div className="mt-auto md:mt-8 pt-6 flex flex-col md:flex-row gap-3">
-                            <BrutalButton variant="secondary" className="w-full h-12 rounded-2xl text-xs md:text-sm font-bold order-2 md:order-1" onClick={() => setShowPayModal(false)}>
+                <Modal
+                    open
+                    size="full"
+                    onClose={() => setShowPayModal(false)}
+                    title="Confirmar repasse"
+                    footer={
+                        <div className="flex flex-col gap-3 md:flex-row">
+                            <Button variant="secondary" className="order-2 flex-1 md:order-1" onClick={() => setShowPayModal(false)}>
                                 Cancelar
-                            </BrutalButton>
-                            <BrutalButton
+                            </Button>
+                            <Button
                                 variant="primary"
-                                className="w-full h-12 rounded-2xl text-xs md:text-sm font-bold order-1 md:order-2"
+                                className="order-1 flex-1 md:order-2"
                                 onClick={handlePayCommissions}
                                 disabled={!!payingProfessionalId}
-                                icon={payingProfessionalId === selectedProfessional.professional_id ? <Loader2 className="animate-spin" /> : undefined}
+                                loading={payingProfessionalId === selectedProfessional.professional_id}
                             >
-                                {payingProfessionalId === selectedProfessional.professional_id ? 'Confirmando...' : 'Liquidar Agora'}
-                            </BrutalButton>
+                                {payingProfessionalId === selectedProfessional.professional_id ? 'Confirmando...' : 'Liquidar agora'}
+                            </Button>
+                        </div>
+                    }
+                >
+                    {paymentPeriodLabel && (
+                        <p className={`mb-6 text-sm ${colors.textMuted}`}>Período: {paymentPeriodLabel}</p>
+                    )}
+
+                    <div className={`mb-8 flex items-center gap-4 rounded-2xl ${colors.border} border ${colors.inputBg} p-4`}>
+                        {selectedProfessional.photo_url ? (
+                            <img src={selectedProfessional.photo_url} alt={selectedProfessional.professional_name} className={`h-12 w-12 rounded-xl object-cover ring-2 ${colors.border}`} />
+                        ) : (
+                            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${colors.surface}`}>
+                                <User className={`h-6 w-6 ${colors.textMuted}`} />
+                            </div>
+                        )}
+                        <div>
+                            <p className={`mb-1 text-lg font-bold leading-none ${colors.text}`}>{selectedProfessional.professional_name}</p>
+                            <p className={`text-xs ${font.mono} ${colors.textMuted}`}>
+                                Saldo: <span className="text-yellow-500">{currencySymbol} {selectedProfessional.total_due.toFixed(2)}</span>
+                            </p>
                         </div>
                     </div>
-                </div>
+
+                    <div className="space-y-6">
+                        <div>
+                            <label className={`mb-2 block text-xs ${font.mono} uppercase tracking-widest ${colors.textMuted}`}>
+                                Valor a ser liquidado ({currencySymbol})
+                            </label>
+                            <input
+                                type="number"
+                                value={paymentAmount}
+                                onChange={(e) => setPaymentAmount(e.target.value)}
+                                step="0.01"
+                                className={`w-full rounded-2xl border-2 ${colors.border} ${colors.inputBg} p-4 ${font.mono} text-2xl ${colors.text} transition-all focus:border-green-500 focus:outline-none`}
+                                placeholder="0.00"
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className={`block text-xs ${font.mono} uppercase tracking-widest ${colors.textMuted}`}>Intervalo de referência</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const p = calcCommissionPeriod(settlementDay);
+                                        setPaymentStartDate(p.start);
+                                        setPaymentEndDate(p.end);
+                                        setPaymentPeriodLabel(p.label);
+                                        calculateAmountForDates(selectedProfessional.professional_id, p.start, p.end);
+                                    }}
+                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all hover:${colors.surfaceHover} active:scale-95`}
+                                >
+                                    Período atual
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const current = calcCommissionPeriod(settlementDay);
+                                        const prevEnd = new Date(current.start);
+                                        prevEnd.setDate(prevEnd.getDate() - 1);
+                                        const prevStart = new Date(prevEnd);
+                                        prevStart.setDate(prevStart.getDate() - 30);
+                                        const fmt = (d: Date) => d.toISOString().split('T')[0];
+                                        const fmtLabel = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+                                        const start = fmt(prevStart);
+                                        const end = fmt(prevEnd);
+                                        setPaymentStartDate(start);
+                                        setPaymentEndDate(end);
+                                        setPaymentPeriodLabel(`${fmtLabel(prevStart)} → ${fmtLabel(prevEnd)}`);
+                                        calculateAmountForDates(selectedProfessional.professional_id, start, end);
+                                    }}
+                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all hover:${colors.surfaceHover} active:scale-95`}
+                                >
+                                    Período anterior
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    type="date"
+                                    value={paymentStartDate}
+                                    onChange={(e) => { setPaymentStartDate(e.target.value); calculateAmountForDates(selectedProfessional.professional_id, e.target.value, paymentEndDate); }}
+                                    className={`w-full rounded-xl ${colors.border} border ${colors.inputBg} p-3 text-xs ${colors.text} outline-none focus:ring-1 focus:ring-[var(--color-input-focus)]`}
+                                />
+                                <input
+                                    type="date"
+                                    value={paymentEndDate}
+                                    onChange={(e) => { setPaymentEndDate(e.target.value); calculateAmountForDates(selectedProfessional.professional_id, paymentStartDate, e.target.value); }}
+                                    className={`w-full rounded-xl ${colors.border} border ${colors.inputBg} p-3 text-xs ${colors.text} outline-none focus:ring-1 focus:ring-[var(--color-input-focus)]`}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={`mt-8 flex gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4`}>
+                        <InfoIcon className="h-5 w-5 shrink-0 text-blue-500" />
+                        <p className="text-[11px] leading-snug text-blue-400">
+                            <strong>Aviso:</strong> Este pagamento será registrado como despesa e as comissões do período serão marcadas como pagas.
+                        </p>
+                    </div>
+                </Modal>
             )}
 
             {/* Professional Details Modal */}
@@ -739,16 +747,6 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             )}
 
             {/* Commission Detail Report Modal */}
-            {/* Toast */}
-            {toast && (
-                <div className={`fixed bottom-4 right-4 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-promax-glass border transition-all ${toast.type === 'success' ? 'bg-green-900/90 border-green-700/50 text-green-100' : 'bg-red-900/90 border-red-700/50 text-red-100'}`}>
-                    <span className="text-sm font-medium">{toast.message}</span>
-                    <button onClick={() => setToast(null)} className="ml-1 opacity-70 hover:opacity-100 transition-opacity">
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-            )}
-
             {showReportModal && detailsProfessional && (
                 <CommissionDetailReport
                     professionalId={detailsProfessional.professional_id}

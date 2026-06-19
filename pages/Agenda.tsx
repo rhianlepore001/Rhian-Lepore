@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
-import { BrutalCard } from '../components/BrutalCard';
-import { BrutalButton } from '../components/BrutalButton';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -67,9 +67,9 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
     const dateParam = searchParams.get('date');
     if (dateParam) {
         const date = new Date(dateParam);
-        // Verifica se a data é válida e não é NaN
+        // Verifica se a data Ã© vÃ¡lida e nÃ£o Ã© NaN
         if (!isNaN(date.getTime())) {
-            // Ajusta para o fuso horário local para evitar problemas de dia
+            // Ajusta para o fuso horÃ¡rio local para evitar problemas de dia
             const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
             return localDate;
         }
@@ -79,10 +79,11 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 
 export const Agenda: React.FC = () => {
     const { user, region, role, companyId } = useAuth();
+    const isStaff = role === 'staff';
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    useAppTour(); // Instancia para detectar continuação do tour
+    useAppTour(); // Instancia para detectar continuaÃ§Ã£o do tour
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -126,7 +127,7 @@ export const Agenda: React.FC = () => {
 
 
     const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
-    const currencySymbol = region === 'PT' ? '€' : 'R$';
+    const currencySymbol = region === 'PT' ? 'â¬' : 'R$';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
@@ -141,7 +142,7 @@ export const Agenda: React.FC = () => {
             .slice(0, 2);
     };
 
-    // Atualiza selectedDate se o parâmetro de URL mudar
+    // Atualiza selectedDate se o parÃ¢metro de URL mudar
     useEffect(() => {
         setSelectedDate(getInitialDate(searchParams));
     }, [searchParams]);
@@ -268,7 +269,7 @@ export const Agenda: React.FC = () => {
 
         if (isNewQuery) {
             setShowNewAppointmentModal(true);
-            // Limpar o parâmetro da URL para evitar reabrir ao atualizar
+            // Limpar o parÃ¢metro da URL para evitar reabrir ao atualizar
             searchParams.delete('new');
             navigate({ search: searchParams.toString() }, { replace: true });
         } else if (showNewAppointmentModal) {
@@ -319,7 +320,7 @@ export const Agenda: React.FC = () => {
             .order('name');
         setCheckoutTeamMembers(membersData || []);
 
-        // Buscar configurações financeiras para pré-preencher taxa
+        // Buscar configuraÃ§Ãµes financeiras para prÃ©-preencher taxa
         const { data: finSettings } = await supabase
             .from('business_settings')
             .select('machine_fee_enabled, debit_fee_percent, credit_fee_percent')
@@ -523,7 +524,11 @@ export const Agenda: React.FC = () => {
     };
 
     const handleDeleteHistoryAppointment = async (appointmentId: string) => {
-        if (!confirm('Tem certeza que deseja excluir este agendamento do histórico? Esta ação é irreversível e removerá também o registro financeiro associado.')) return;
+        if (isStaff) {
+            alert('Apenas o dono pode excluir agendamentos do histórico.');
+            return;
+        }
+        if (!confirm('Tem certeza que deseja excluir este agendamento do histÃ³rico? Esta aÃ§Ã£o Ã© irreversÃ­vel e removerÃ¡ tambÃ©m o registro financeiro associado.')) return;
 
         try {
             // Delete associated finance records first (if any)
@@ -532,12 +537,12 @@ export const Agenda: React.FC = () => {
             // Then delete the appointment
             await supabase.from('appointments').delete().eq('id', appointmentId).eq('user_id', user.id);
 
-            alert('Agendamento e registro financeiro excluídos com sucesso!');
+            alert('Agendamento e registro financeiro excluÃ­dos com sucesso!');
             fetchHistoryAppointments(); // Refresh history
             fetchData(); // Also refresh main agenda data in case it affects counts/stats
         } catch (error) {
             logger.error('Error deleting history appointment', error);
-            alert('Erro ao excluir agendamento do histórico.');
+            alert('Erro ao excluir agendamento do histÃ³rico.');
         }
     };
 
@@ -686,30 +691,30 @@ export const Agenda: React.FC = () => {
             const waPhone = phone.replace(/\D/g, '');
             const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
 
-            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
+            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmaÃ§Ã£o para o cliente via WhatsApp?')) {
                 const dateObj = new Date(booking.appointment_time);
                 const formattedDate = dateObj.toLocaleDateString('pt-BR');
                 const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 const establishment = businessName;
 
-                const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
+                const currencySymbol = currencyRegion === 'PT' ? 'â‚¬' : 'R$';
                 const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
 
                 const message = isBeauty
-                    ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
-                    `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
-                    `📅 *${formattedDate}* às *${formattedTime}*\n` +
-                    `💼 *Serviço*: ${serviceNames}\n` +
-                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `📍 Local: estamos te esperando!\n\n` +
-                    `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
-                    : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️\n` +
+                    ? `OlÃ¡ ${booking.customer_name}! Tudo bem? âœ¨\n` +
+                    `Sua reserva na *${establishment || 'EstÃ©tica'}* estÃ¡ confirmada!\n` +
+                    `ðŸ“… *${formattedDate}* Ã s *${formattedTime}*\n` +
+                    `ðŸ’¼ *ServiÃ§o*: ${serviceNames}\n` +
+                    `ðŸ’° *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                    `ðŸ“  Local: estamos te esperando!\n\n` +
+                    `Estamos preparando tudo para te receber com a melhor experiÃªncia. AtÃ© logo! ðŸ’–`
+                    : `Fala, ${booking.customer_name}! Seu horÃ¡rio estÃ¡ garantido! ðŸ›¡ï¸ \n` +
                     `Marque na sua agenda:\n` +
-                    `🗓️ *${formattedDate}* às *${formattedTime}*\n` +
-                    `✂️ *Serviço*: ${serviceNames}\n` +
-                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `📍 Onde: *${establishment || 'Barbearia'}*.\n\n` +
-                    `Prepare-se para o trato! Nos vemos em breve. 👋`;
+                    `ðŸ—“ï¸  *${formattedDate}* Ã s *${formattedTime}*\n` +
+                    `âœ‚ï¸  *ServiÃ§o*: ${serviceNames}\n` +
+                    `ðŸ’° *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                    `ðŸ“  Onde: *${establishment || 'Barbearia'}*.\n\n` +
+                    `Prepare-se para o trato! Nos vemos em breve. ðŸ‘‹`;
 
                 const waMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
@@ -727,7 +732,7 @@ export const Agenda: React.FC = () => {
     const handleRejectBooking = async (bookingId: string) => {
         try {
             await rejectPublicBooking(bookingId, user.id);
-            alert('Solicita��o recusada.');
+            alert('Solicitação recusada.');
             fetchData();
         } catch (error) {
             logger.error('Error rejecting booking', error);
@@ -735,6 +740,10 @@ export const Agenda: React.FC = () => {
     };
 
     const handleCompleteAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
+        if (isStaff) {
+            alert('Apenas o dono pode concluir agendamentos.');
+            return;
+        }
         try {
             const { error } = await supabase.rpc('complete_appointment', { p_appointment_id: appointmentId });
 
@@ -751,20 +760,17 @@ export const Agenda: React.FC = () => {
         }
     };
     const handleCancelAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
-        // Guard: staff não pode cancelar agendamento já finalizado (D-07)
-        const apt = appointments.find((a) => a.id === appointmentId)
-            || overdueAppointments.find((a) => a.id === appointmentId);
-        if (apt?.status === 'Completed' && role === 'staff') {
-            alert('Este agendamento já foi finalizado. Fale com o dono.');
+        if (isStaff) {
+            alert('Apenas o dono pode cancelar agendamentos.');
             return;
         }
-        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
+        if (!confirm('Cancelar este agendamento? Ele serÃ¡ movido para o histÃ³rico.')) return;
         try {
             await supabase
                 .from('appointments')
                 .update({ status: 'Cancelled' })
                 .eq('id', appointmentId);
-            alert('Agendamento cancelado e movido para o histórico!');
+            alert('Agendamento cancelado e movido para o histÃ³rico!');
             if (isOverdue) {
                 fetchOverdueAppointments();
             } else {
@@ -812,7 +818,7 @@ export const Agenda: React.FC = () => {
         try {
             const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
             if (selectedServicesDetails.length === 0) {
-                alert('Serviço inválido.');
+                alert('ServiÃ§o invÃ¡lido.');
                 return;
             }
 
@@ -821,7 +827,7 @@ export const Agenda: React.FC = () => {
             // Use manually edited price
             const finalPrice = parseFloat(finalPriceInput);
             if (isNaN(finalPrice)) {
-                alert('Preço inválido!');
+                alert('PreÃ§o invÃ¡lido!');
                 return;
             }
 
@@ -853,22 +859,22 @@ export const Agenda: React.FC = () => {
                 const waPhone = client.phone.replace(/\D/g, '');
                 const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
 
-                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
+                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmaÃ§Ã£o para o cliente via WhatsApp?')) {
                     const dateObj = dateTime;
                     const formattedDate = dateObj.toLocaleDateString('pt-BR');
                     const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     const establishment = businessName;
 
-                    const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
+                    const currencySymbol = currencyRegion === 'PT' ? 'â‚¬' : 'R$';
                     const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
 
-                    const message = `Agendamento confirmado! ✨
-📅 Data: ${formattedDate}
-⏰ Horário: ${formattedTime}
-💇‍♀️ Serviço: ${serviceNames}
-💰 Valor: ${currencySymbol} ${formattedPrice}
+                    const message = `Agendamento confirmado! âœ¨
+Data: ${formattedDate}
+HorÃ¡rio: ${formattedTime}
+ServiÃ§o: ${serviceNames}
+Valor: ${currencySymbol} ${formattedPrice}
 
-Obrigada pela confiança! Te espero no ${establishment}.`;
+Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
 
                     const waMessage = encodeURIComponent(message);
                     window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
@@ -1004,23 +1010,23 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         <p className={`${colors.textSecondary} mt-1`}>Gerencie os agendamentos por profissional</p>
                     </div>
                     <div className="flex gap-3 w-full md:w-auto">
-                        <BrutalButton
+                        <Button
                             variant="secondary"
                             icon={<History />}
                             onClick={() => setShowHistoryModal(true)}
                             className="flex-1 md:flex-none"
                         >
                             <span className="hidden md:inline">Histórico</span>
-                        </BrutalButton>
-                        <BrutalButton
+                        </Button>
+                        <Button
                             variant="secondary"
                             icon={<Calendar />}
                             onClick={() => setShowAllAppointmentsModal(true)}
                             className="flex-1 md:flex-none"
                         >
                             <span className="hidden md:inline">Todos Agendamentos</span>
-                        </BrutalButton>
-                        <BrutalButton
+                        </Button>
+                        <Button
                             id="btn-new-appointment"
                             variant="primary"
                             icon={<Plus />}
@@ -1028,7 +1034,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             className="hidden md:flex"
                         >
                             Novo Agendamento
-                        </BrutalButton>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -1036,7 +1042,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             {/* --- Agendamentos Atrasados (Overdue) --- */}
             {isOverdueFilter && (
                 <div className="px-4 md:px-6">
-                    <BrutalCard className="border-l-4 border-red-500 bg-red-500/5">
+                    <Card variant="outlined" className="border-l-4 border-red-500 bg-red-500/5">
                         <div className="flex items-start gap-4">
                             <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
                             <div className="flex-1">
@@ -1044,7 +1050,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     Agendamentos Atrasados ({overdueAppointments.length})
                                 </h3>
                                 <p className={`${colors.textSecondary} text-sm mb-4`}>
-                                    Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
+                                    Estes agendamentos estÃ£o no passado e precisam ser marcados como ConcluÃ­dos (para faturamento) ou Cancelados.
                                 </p>
 
                                 {isOverdueLoading ? (
@@ -1063,7 +1069,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         <p className={`${colors.text} font-bold text-sm`}>{apt.clientName}</p>
                                                         <p className={`${colors.textSecondary} text-xs`}>{apt.service}</p>
                                                         <p className={`${colors.textMuted} text-xs`}>
-                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                             {professional && ` | Profissional: ${professional.name}`}
                                                         </p>
                                                     </div>
@@ -1071,24 +1077,28 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         <button
                                                             onClick={() => setShowingDetailsAppointment(apt)}
                                                             className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                            title="Informações"
+                                                            title="InformaÃ§Ãµes"
                                                         >
                                                             <Info className="w-4 h-4" /> Info
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                            className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                            title="Concluir e Faturar"
-                                                        >
-                                                            <Check className="w-4 h-4" /> Faturar
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleCancelAppointment(apt.id, true)}
-                                                            className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                            title="Cancelar"
-                                                        >
-                                                            <X className="w-4 h-4" /> Cancelar
-                                                        </button>
+                                                        {!isStaff && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleCompleteAppointment(apt.id, true)}
+                                                                    className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    title="Concluir e Faturar"
+                                                                >
+                                                                    <Check className="w-4 h-4" /> Faturar
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleCancelAppointment(apt.id, true)}
+                                                                    className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    title="Cancelar"
+                                                                >
+                                                                    <X className="w-4 h-4" /> Cancelar
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -1097,49 +1107,61 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 )}
                             </div>
                         </div>
-                    </BrutalCard>
+                    </Card>
                 </div>
             )}
             {/* --- FIM: Agendamentos Atrasados --- */}
 
 
             {/* Date Navigator */}
-            <div className="px-4 md:px-6">
-                <BrutalCard>
-                    <div className="flex items-center justify-between">
-                        <button
-                            onClick={() => changeDate(-1)}
-                            className={`p-2 rounded-xl transition-colors hover:${colors.surface}`}
-                        >
-                            <ChevronLeft className={`w-6 h-6 ${colors.text}`} />
-                        </button>
-                        <div className="text-center">
-                            <h2 className={`text-2xl font-heading ${accent.text} uppercase`}>
-                                {selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
-                            </h2>
-                            <p className={`${colors.text} text-lg font-mono`}>
-                                {selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => changeDate(1)}
-                            className={`p-2 rounded-xl transition-colors hover:${colors.surface}`}
-                        >
-                            <ChevronRight className={`w-6 h-6 ${colors.text}`} />
-                        </button>
-                    </div>
-                </BrutalCard>
+            <div className="px-4 md:px-6 flex items-center justify-between gap-2">
+                <button
+                    onClick={() => changeDate(-1)}
+                    className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
+                >
+                    <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
+                </button>
+                
+                <div className="flex-1 flex items-center gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-1">
+                    {Array.from({ length: 7 }).map((_, i) => {
+                        const d = new Date(selectedDate);
+                        d.setDate(d.getDate() - 3 + i);
+                        const isSelected = d.toDateString() === selectedDate.toDateString();
+                        const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+                        const dayNum = d.getDate();
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => {
+                                    const newDateStr = d.toISOString().split('T')[0];
+                                    navigate(`/agenda?date=${newDateStr}`);
+                                }}
+                                className={`flex flex-col items-center justify-center min-w-[70px] h-[80px] rounded-2xl snap-start transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text}`}`}
+                            >
+                                <span className="text-sm font-medium capitalize mb-1">{dayName}</span>
+                                <span className={`text-2xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <button
+                    onClick={() => changeDate(1)}
+                    className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
+                >
+                    <ChevronRight className={`w-5 h-5 ${colors.text}`} />
+                </button>
             </div>
 
             {/* Professional Filter - Avatars */}
             {teamMembers.length > 0 && (
                 <div className="px-4 md:px-6">
-                    <div className={`flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide ${colors.surface} ${colors.border} rounded-2xl p-4`}>
+                    <div className={`flex items-center gap-6 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scrollbar-hide`}>
                         <button
                             onClick={() => setSelectedProfessionalFilter(null)}
                             className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                         >
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalFilter === null ? `${accent.bg} ${accent.border} ${isBeauty ? 'text-white' : 'text-black'}` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalFilter === null ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
                                 <Users className="w-5 h-5" />
                             </div>
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalFilter === null ? accent.text : colors.textMuted}`}>Todos</span>
@@ -1155,17 +1177,17 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         <img
                                             src={member.photo_url}
                                             alt={member.name}
-                                            className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${selectedProfessionalFilter === member.id ? accent.border : colors.border}`}
+                                            className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${selectedProfessionalFilter === member.id ? `${accent.border} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : colors.border}`}
                                         />
                                     ) : (
-                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${selectedProfessionalFilter === member.id ? `${accent.bg} ${accent.border} ${isBeauty ? 'text-white' : 'text-black'}` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${selectedProfessionalFilter === member.id ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
                                             {getInitials(member.name)}
                                         </div>
                                     )}
-                                    <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
+                                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
                                 </div>
                                 <span className={`text-[10px] font-bold uppercase tracking-wider truncate max-w-[72px] ${selectedProfessionalFilter === member.id ? accent.text : colors.textMuted}`}>
-                                    {member.name}
+                                    {member.name.split(' ')[0]}
                                 </span>
                             </button>
                         ))}
@@ -1176,25 +1198,25 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
                 <div className="px-4 md:px-6 space-y-4">
-                    <BrutalCard className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} ${accent.bgDim}`}>
+                    <Card variant="outlined" className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} ${accent.bgDim}`}>
                         <div className="flex items-center gap-3">
                             <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
                             <div>
                                 <h3 className={`${colors.text} font-bold text-lg mb-1`}>
-                                    {publicBookings.length} Solicitação(ões) Pendente(s)
+                                    {publicBookings.length} SolicitaÃ§Ã£o(Ãµes) Pendente(s)
                                 </h3>
                                 <p className={`${colors.textSecondary} text-sm`}>
                                     {(() => {
                                         const edits = publicBookings.filter((b: any) => b.is_edit).length;
                                         const newOnes = publicBookings.length - edits;
-                                        if (edits > 0 && newOnes > 0) return `${newOnes} novo(s) e ${edits} alteração(ões) aguardando aprovação.`;
-                                        if (edits > 0) return `${edits} cliente(s) alteraram seu agendamento e aguardam aprovação.`;
-                                        return 'Os agendamentos abaixo foram feitos online e aguardam sua aprovação:';
+                                        if (edits > 0 && newOnes > 0) return `${newOnes} novo(s) e ${edits} alteraÃ§Ã£o(Ãµes) aguardando aprovaÃ§Ã£o.`;
+                                        if (edits > 0) return `${edits} cliente(s) alteraram seu agendamento e aguardam aprovaÃ§Ã£o.`;
+                                        return 'Os agendamentos abaixo foram feitos online e aguardam sua aprovaÃ§Ã£o:';
                                     })()}
                                 </p>
                             </div>
                         </div>
-                    </BrutalCard>
+                    </Card>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {publicBookings.map(booking => {
@@ -1208,14 +1230,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     {(booking as any).is_edit && (
                                         <div className="mb-3">
                                             <span className={`text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
-                                                ALTERAÇÃO DE AGENDAMENTO
+                                                ALTERAÃÃO DE AGENDAMENTO
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
                                             <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
-                                                {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} â¢ {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                         <div className="flex gap-2">
@@ -1226,13 +1248,15 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                             >
                                                 <Check className="w-3.5 h-3.5" /> Aceitar
                                             </button>
-                                            <button
-                                                onClick={() => handleRejectBooking(booking.id)}
-                                                className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
-                                                title="Recusar"
-                                            >
-                                                <X className="w-3.5 h-3.5" /> Recusar
-                                            </button>
+                                            {!isStaff && (
+                                                <button
+                                                    onClick={() => handleRejectBooking(booking.id)}
+                                                    className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
+                                                    title="Recusar"
+                                                >
+                                                    <X className="w-3.5 h-3.5" /> Recusar
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -1252,7 +1276,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
                                             <span className="font-medium">
-                                                {booking.service_ids?.length || 0} serviço(s) • <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
+                                                {booking.service_ids?.length || 0} serviÃ§o(s) â¢ <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">
@@ -1272,312 +1296,145 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 </div>
             )}
 
-            {/* Team Columns */}
+            {/* Grid Time View */}
             {teamMembers.length === 0 ? (
                 <div className="px-4 md:px-6">
-                    <BrutalCard>
+                    <Card variant="outlined">
                         <EmptyState
                             icon={User}
                             message="Nenhum profissional cadastrado. Adicione profissionais à sua equipe para começar a organizar agendamentos."
                             ctaLabel="Adicionar Profissionais"
                             onCta={() => navigate('/configuracoes/equipe')}
                         />
-                    </BrutalCard>
+                    </Card>
                 </div>
             ) : (
-                <div className={`flex flex-nowrap md:grid overflow-x-auto snap-x snap-mandatory gap-5 px-4 md:px-6 pb-4 scrollbar-hide ${selectedProfessionalFilter ? 'md:grid-cols-1 max-w-3xl mx-auto' : 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-
-                    {/* Unassigned Column (if any unassigned appointments exist) */}
-                    {appointments.some(apt => !apt.professional_id) && !selectedProfessionalFilter && (
-                        <div className="min-w-[300px] w-full snap-start flex flex-col">
-                            <div className={`${colors.surface} ${colors.border} rounded-t-2xl p-4 flex items-center justify-between`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${colors.border} ${colors.card}`}>
-                                        <Users className={`w-5 h-5 ${colors.textMuted}`} />
-                                    </div>
-                                    <div>
-                                        <h3 className={`font-bold ${colors.text} uppercase tracking-wider text-sm`}>A Distribuir</h3>
-                                        <span className={`text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full inline-block mt-1`}>
-                                            Sem profissional
-                                        </span>
-                                    </div>
+                <div className="px-4 md:px-6 overflow-x-auto scrollbar-hide pb-6">
+                    <div className="min-w-[800px]">
+                        {/* Header Row */}
+                        <div className="flex mb-4">
+                            <div className="w-20 flex-shrink-0 text-center">
+                                <span className={`text-xs font-bold ${colors.textMuted}`}>Horário</span>
+                            </div>
+                            {displayedMembers.map(member => (
+                                <div key={member.id} className="flex-1 text-center truncate px-2">
+                                    <span className={`text-sm font-bold ${colors.text}`}>{member.name}</span>
                                 </div>
-                            </div>
-                            <div className={`${colors.card} ${colors.border} rounded-b-2xl border-t-0 p-5 space-y-5 flex-1 overflow-y-auto max-h-[800px]`}>
-                                {appointments.filter(apt => !apt.professional_id).map(apt => {
-                                    const { hasDiscount } = getDiscountInfo(apt);
-                                    return (
-                                        <div
-                                            key={apt.id}
-                                            className={`${colors.surface} ${colors.border} rounded-xl p-5 transition-colors`}
-                                        >
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-xs font-mono font-bold ${colors.text}`}>
-                                                        {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                    <span className={`text-xs font-mono ${colors.textMuted}`}>
-                                                        {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    onClick={() => setEditingAppointment(apt)}
-                                                    className={`${colors.textMuted} hover:${colors.text} transition-colors`}
-                                                    title="Editar / Atribuir"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            <p className={`${colors.text} font-bold text-sm mb-1`}>{apt.clientName}</p>
-                                            <p className={`${colors.textSecondary} text-xs mb-1`}>{apt.service}</p>
-                                            <span className={`text-xs font-mono font-bold ${accent.text}`}>
-                                                {formatCurrency(apt.price, currencyRegion)}
-                                            </span>
-                                            <div className="mt-2 text-[10px] text-red-400 flex items-center gap-1">
-                                                <AlertTriangle className="w-3 h-3" /> Necessário atribuir profissional
-                                            </div>
-                                            {teamMembers.length === 1 && (
-                                                <button
-                                                    onClick={() => handleAssignToProfessional(apt.id, teamMembers[0].id)}
-                                                    className={`mt-3 w-full font-bold text-[10px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-1 ${classes.buttonSuccess}`}
-                                                >
-                                                    <Check className="w-3 h-3" /> ATRIBUIR A {teamMembers[0].name.toUpperCase()}
-                                                </button>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            ))}
                         </div>
-                    )}
-                    {displayedMembers.map(member => {
-                        const memberAppointments = getAppointmentsForProfessional(member.id);
-                        const memberPendingBookings = getPendingBookingsForProfessional(member.id);
 
-                        return (
-                            <div key={member.id} className="min-w-[300px] w-full snap-start flex flex-col gap-4">
-                                {/* Professional Header */}
-                                <div
-                                    onClick={() => {
-                                        setSelectedProfessional(member.id);
-                                        setShowNewAppointmentModal(true);
-                                    }}
-                                    className={`${colors.surface} ${colors.border} rounded-t-2xl p-4 flex items-center cursor-pointer transition-all group relative`}
-                                    title="Clique para agendar com este profissional"
-                                >
-                                    <div className="flex items-center gap-3 w-full">
-                                        <div className="relative flex-shrink-0">
-                                            {member.photo_url ? (
-                                                <img
-                                                    src={member.photo_url}
-                                                    alt={member.name}
-                                                    className={`w-12 h-12 rounded-full border-2 object-cover ${colors.border}`}
-                                                />
-                                            ) : (
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 text-sm font-bold ${colors.card} ${colors.border} ${colors.text}`}>
-                                                    {getInitials(member.name)}
-                                                </div>
+                        {/* Time Grid Rows */}
+                        <div className={`relative ${colors.surface} ${colors.border} border rounded-2xl overflow-hidden`}>
+                            {timeSlots.map((time, slotIdx) => {
+                                const isHour = time.endsWith(':00');
+                                return (
+                                    <div key={time} className={`flex min-h-[90px] border-b ${colors.divider} relative`}>
+                                        {/* Time Label */}
+                                        <div className={`w-20 flex-shrink-0 flex items-start justify-center pt-3 border-r ${colors.divider}`}>
+                                            {isHour && (
+                                                <span className={`text-sm font-bold ${colors.text}`}>{time}</span>
                                             )}
-                                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full" />
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className={`font-heading font-bold text-base truncate uppercase ${colors.text}`} title={member.name}>
-                                                {member.name}
-                                            </h3>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${accent.bgDim} ${accent.text}`}>
-                                                    {memberAppointments.length} agendamentos
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className={`${colors.card} p-1.5 rounded-full`}>
-                                            <Plus className={`w-4 h-4 ${colors.text}`} />
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Appointments Column */}
-                                <div className={`${colors.card} ${colors.border} rounded-b-2xl border-t-0 p-5 space-y-5 max-h-[600px] overflow-y-auto`}>
-                                    {/* Pending Public Bookings */}
-                                    {memberPendingBookings.map(booking => (
-                                        <div
-                                            key={booking.id}
-                                            className={`${colors.surface} rounded-xl p-5 border-2 ${
-                                                (booking as any).is_edit
-                                                    ? 'border-blue-400/40'
-                                                    : accent.borderDim
-                                            }`}
-                                        >
-                                            <div className="flex items-start justify-between mb-3">
-                                                <span className={`text-xs font-mono font-bold ${
-                                                    (booking as any).is_edit ? 'text-blue-400' : accent.text
-                                                }`}>
-                                                    {(booking as any).is_edit
-                                                        ? `✏️ ${booking.customer_name} alterou o agendamento`
-                                                        : 'SOLICITAÇÃO ONLINE'
-                                                    }
-                                                </span>
-                                            </div>
-                                            <p className={`${colors.text} font-bold text-sm mb-1`}>{booking.customer_name}</p>
-                                            <p className={`${colors.textSecondary} text-xs mb-1`}>
-                                                {booking.service_ids?.length} serviço(s)
-                                            </p>
-                                            <p className={`${colors.textMuted} text-xs mb-4`}>
-                                                {new Date(booking.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleAcceptBooking(booking)}
-                                                    disabled={isProcessing}
-                                                    className={`flex-1 ${isProcessing ? 'opacity-50 cursor-not-allowed' : classes.buttonSuccess} text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5`}
+                                        {/* Columns for each member at this timeslot */}
+                                        {displayedMembers.map((member, idx) => {
+                                            const aptsAtTime = getAppointmentsForProfessional(member.id).filter(a => {
+                                                const d = new Date(a.appointment_time);
+                                                const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                                return aptTime === time;
+                                            });
+                                            
+                                            // Handle Unassigned for the first column if no professional filter is active
+                                            const unassignedApts = (!selectedProfessionalFilter && idx === 0) 
+                                                ? appointments.filter(a => !a.professional_id).filter(a => {
+                                                    const d = new Date(a.appointment_time);
+                                                    const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                                    return aptTime === time;
+                                                }) : [];
+                                                
+                                            const allCellApts = [...unassignedApts, ...aptsAtTime];
+
+                                            return (
+                                                <div 
+                                                    key={`${member.id}-${time}`} 
+                                                    className={`flex-1 border-r ${colors.divider} last:border-r-0 relative p-2 transition-colors hover:bg-white/[0.02] flex flex-col gap-2`}
                                                 >
-                                                    {isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                                                    {isProcessing ? 'Aguarde...' : 'Confirmar'}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleRejectBooking(booking.id)}
-                                                    disabled={isProcessing}
-                                                    className={`flex-1 ${isProcessing ? 'opacity-50 cursor-not-allowed' : classes.buttonDanger} text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5`}
-                                                >
-                                                    <X className="w-3.5 h-3.5" />
-                                                    Recusar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {/* Confirmed Appointments */}
-                                    {memberAppointments.map(apt => {
-                                        const { hasDiscount, discountPercentage, isCustomPriceHigher } = getDiscountInfo(apt);
-                                        const isCompleted = apt.status === 'Completed';
-
-                                        return (
-                                            <div
-                                                key={apt.id}
-                                                className={`${isCompleted ? `${colors.card} opacity-70` : colors.surface} ${colors.border} rounded-xl p-5 transition-all hover:shadow-md ${accent.borderDim}`}
-                                            >
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`text-sm font-mono font-bold px-3 py-1 rounded-lg ${isCompleted ? 'bg-emerald-500/10 text-emerald-500 line-through decoration-2 border border-emerald-500/20' : `${accent.bgDim} ${accent.text} ${accent.borderDim}`}`}>
-                                                            {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Quick Actions Header */}
-                                                    <div className="flex items-center gap-1.5">
-                                                        {apt.notes && (
-                                                            <button onClick={() => setShowingDetailsAppointment(apt)} className={`p-1.5 rounded-md transition-colors ${colors.surface} ${colors.border} hover:border-blue-400/50`} title="Ver detalhes e observações">
-                                                                <Info className="w-3.5 h-3.5 text-blue-400" />
-                                                            </button>
-                                                        )}
-                                                        {apt.clientPhone && apt.status === 'Confirmed' && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    const waPhone = apt.clientPhone!.replace(/\D/g, '');
-                                                                    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent('Seu agendamento foi confirmado')}`, '_blank');
-                                                                }}
-                                                                className={`p-1.5 rounded-md transition-colors ${colors.surface} ${colors.border} hover:border-emerald-500/50`}
-                                                                title="WhatsApp"
+                                                    {allCellApts.map(apt => {
+                                                        const d = new Date(apt.appointment_time);
+                                                        const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                                        const isUnassigned = !apt.professional_id;
+                                                        
+                                                        return (
+                                                            <div 
+                                                                key={apt.id}
+                                                                onClick={() => setShowingDetailsAppointment(apt)}
+                                                                className={`cursor-pointer rounded-lg border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : `${colors.border} ${colors.surface}`} p-2.5 flex flex-col gap-1.5 transition-all hover:${colors.border} hover:shadow-lite-glass relative group overflow-hidden w-full h-full min-h-[75px] shadow-sm`}
                                                             >
-                                                                <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                                <div className="flex justify-between items-start">
+                                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isUnassigned ? 'text-red-400 bg-red-400/10 border-red-400/20' : `${accent.text} ${accent.bgDim} ${accent.borderDim}`} border`}>
+                                                                        {timeStr}
+                                                                    </span>
+                                                                    {apt.notes && (
+                                                                        <MessageCircle className="w-3.5 h-3.5 text-emerald-500/80" />
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                <h4 className={`text-xs font-bold ${colors.text} line-clamp-1 mt-0.5`}>
+                                                                    {apt.clientName}
+                                                                </h4>
+                                                                
+                                                                <div className={`flex items-center gap-1.5 ${colors.textMuted}`}>
+                                                                    <Scissors className="w-3 h-3" />
+                                                                    <span className="text-[10px] truncate">{apt.service}</span>
+                                                                </div>
+                                                                
+                                                                <div className={`text-[10px] font-mono font-medium ${colors.textMuted}`}>
+                                                                    {formatCurrency(apt.price, currencyRegion)}
+                                                                </div>
+                                                                
+                                                                {/* Status indicator line/dot */}
+                                                                <div className="absolute top-0 right-0 h-full w-0.5" />
+                                                                {apt.status === 'Confirmed' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" />}
+                                                                {apt.status === 'Pending' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]" />}
+                                                                {apt.status === 'InProgress' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.5)]" />}
+                                                                {apt.status === 'Completed' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-neutral-500" />}
+                                                            </div>
+                                                        )
+                                                    })}
                                                 </div>
-
-                                                <div className="space-y-2 mb-4 cursor-pointer group" onClick={() => setShowingDetailsAppointment(apt)} title="Ver detalhes do agendamento">
-                                                    <div className="flex items-center justify-between">
-                                                        <p className={`font-bold text-base truncate flex-1 ${isCompleted ? colors.textMuted : colors.text}`}>
-                                                            {apt.clientName}
-                                                        </p>
-                                                        <ChevronRight className={`w-4 h-4 transition-all duration-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 ${accent.text}`} />
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Scissors className={`w-3.5 h-3.5 ${colors.textMuted}`} />
-                                                        <p className={`text-sm truncate max-w-[180px] ${colors.textSecondary}`} title={apt.service}>
-                                                            {apt.service}
-                                                        </p>
-                                                    </div>
-                                                    {isCompleted && apt.payment_method && (
-                                                        <span className={`text-xs font-mono bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-md border border-emerald-500/20 inline-block mt-1`}>
-                                                            Pago via {apt.payment_method.toUpperCase()}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div className={`pt-4 ${colors.divider} border-t flex flex-col gap-3`}>
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex flex-col">
-                                                            {hasDiscount && apt.basePrice && (
-                                                                <span className={`text-[10px] ${colors.textMuted} line-through`}>
-                                                                    {formatCurrency(apt.basePrice, currencyRegion)}
-                                                                </span>
-                                                            )}
-                                                            <span className={`text-sm font-bold ${isCompleted ? colors.textMuted : colors.text}`}>
-                                                                {formatCurrency(apt.price, currencyRegion)}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1 items-end">
-                                                            {hasDiscount && (
-                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 border border-red-500/20`}>
-                                                                    -{discountPercentage}%
-                                                                </span>
-                                                            )}
-                                                            {isCustomPriceHigher && (
-                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20`}>
-                                                                    Custom
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {apt.status === 'Confirmed' && (
-                                                        <div className="flex items-center justify-between gap-2 mt-1">
-                                                            {!isCompleted && (
-                                                                <button
-                                                                    onClick={() => setCheckoutAppointment({ ...apt, time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status: apt.status as 'Confirmed' | 'Pending' | 'Completed' })}
-                                                                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${classes.buttonSuccess}`}
-                                                                >
-                                                                    <Check className="w-3.5 h-3.5" /> Concluir
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={() => setEditingAppointment(apt)}
-                                                                className={`px-3 py-2.5 rounded-xl transition-colors ${classes.buttonSecondary}`}
-                                                                title="Editar"
-                                                            >
-                                                                <Edit2 className="w-3.5 h-3.5" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleCancelAppointment(apt.id)}
-                                                                className={`px-3 py-2.5 rounded-xl transition-colors ${classes.buttonDanger}`}
-                                                                title="Cancelar"
-                                                            >
-                                                                <X className="w-3.5 h-3.5" />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-
-                                    {memberAppointments.length === 0 && memberPendingBookings.length === 0 && (
-                                        <EmptyState
-                                            icon={Calendar}
-                                            message="Nenhum agendamento para hoje"
-                                            className="py-8"
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             )}
+
+            {/* Legend (Bottom) */}
+            <div className={`px-4 md:px-6 mt-4 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-8`}>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" />
+                    <span>Confirmado</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]" />
+                    <span>Pendente</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.5)]" />
+                    <span>Em atendimento</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-neutral-500" />
+                    <span>Finalizado</span>
+                </div>
+                <div className="flex items-center gap-1.5 ml-4">
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-500/80" />
+                    <span>Com observação</span>
+                </div>
+            </div>
 
             {/* Appointment Details Modal */}
             {showingDetailsAppointment && createPortal(
@@ -1591,7 +1448,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         Detalhes do Agendamento
                                     </h3>
                                     <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block ${showingDetailsAppointment.status === 'Completed' ? classes.badgeSuccess : showingDetailsAppointment.status === 'Cancelled' ? classes.badgeDanger : classes.badgeWarning}`}>
-                                        {showingDetailsAppointment.status === 'Completed' ? 'Concluído' :
+                                        {showingDetailsAppointment.status === 'Completed' ? 'ConcluÃ­do' :
                                          showingDetailsAppointment.status === 'Cancelled' ? 'Cancelado' : 'Confirmado'}
                                     </span>
                                 </div>
@@ -1632,7 +1489,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Scissors className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Serviço</span>
+                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>ServiÃ§o</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>{showingDetailsAppointment.service}</p>
                                 </div>
@@ -1691,7 +1548,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Info className={`w-4 h-4 ${accent.text}`} />
-                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
+                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>ObservaÃ§Ãµes</span>
                                     </div>
                                     <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
                                         &quot;{showingDetailsAppointment.notes}&quot;
@@ -1702,8 +1559,8 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
                         {/* Footer Actions */}
                         <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex gap-3 rounded-b-2xl`}>
-                            {showingDetailsAppointment.status === 'Confirmed' && (
-                                <BrutalButton
+                            {showingDetailsAppointment.status === 'Confirmed' && !isStaff && (
+                                <Button
                                     variant="secondary"
                                     className="flex-1 flex justify-center items-center gap-2"
                                     onClick={() => {
@@ -1712,15 +1569,15 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     }}
                                 >
                                     <Edit2 className="w-4 h-4" /> Editar
-                                </BrutalButton>
+                                </Button>
                             )}
-                            <BrutalButton
+                            <Button
                                 variant="primary"
                                 className="flex-1 flex justify-center items-center gap-2"
                                 onClick={() => setShowingDetailsAppointment(null)}
                             >
                                 <Check className="w-4 h-4" /> Fechar
-                            </BrutalButton>
+                            </Button>
                         </div>
                     </div>
                 </div>, document.body
@@ -1739,7 +1596,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto ${colors.overlay}`}>
                     <div className={`w-full max-w-4xl p-6 my-8 transition-all ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
                         <div className={`flex items-center justify-between mb-6`}>
-                            <h3 className={`${colors.text} font-heading text-2xl uppercase`}>Histórico de Agendamentos</h3>
+                            <h3 className={`${colors.text} font-heading text-2xl uppercase`}>HistÃ³rico de Agendamentos</h3>
                             <button
                                 onClick={() => setShowHistoryModal(false)}
                                 className={`${colors.textMuted} hover:${colors.text} transition-colors`}
@@ -1776,7 +1633,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         {/* History List */}
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                             {historyAppointments.length === 0 ? (
-                                <EmptyState icon={History} message="Nenhum agendamento concluído ou cancelado neste mês" />
+                                <EmptyState icon={History} message="Nenhum agendamento concluÃ­do ou cancelado neste mÃªs" />
                             ) : (
                                 historyAppointments.map(apt => {
                                     const professional = teamMembers.find(m => m.id === apt.professional_id);
@@ -1791,10 +1648,10 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${apt.status === 'Completed' ? status.successBg + ' ' + status.success : status.dangerBg + ' ' + status.danger}`}>
-                                                            {apt.status === 'Completed' ? 'CONCLUÍDO' : 'CANCELADO'}
+                                                            {apt.status === 'Completed' ? 'CONCLUÃDO' : 'CANCELADO'}
                                                         </span>
                                                         <span className={`${colors.textMuted} text-xs`}>
-                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
                                                     <p className={`${colors.text} font-bold text-base mb-1`}>{apt.clientName}</p>
@@ -1829,16 +1686,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                     )}
                                                     {isCustomPriceHigher && (
                                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
-                                                            Preço Customizado
+                                                            PreÃ§o Customizado
                                                         </span>
                                                     )}
-                                                    <button
-                                                        onClick={() => handleDeleteHistoryAppointment(apt.id)}
-                                                        className={`p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors`}
-                                                        title="Excluir agendamento"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                                    {!isStaff && (
+                                                        <button
+                                                            onClick={() => handleDeleteHistoryAppointment(apt.id)}
+                                                            className={`p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors`}
+                                                            title="Excluir agendamento"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1848,13 +1707,13 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         </div>
 
                         <div className={`mt-6 pt-4 ${colors.divider} border-t`}>
-                            <BrutalButton
+                            <Button
                                 variant="secondary"
                                 className="w-full"
                                 onClick={() => setShowHistoryModal(false)}
                             >
                                 Fechar
-                            </BrutalButton>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -1895,7 +1754,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 />
             )}
 
-            {/* CheckoutModal — Fase 3 */}
+            {/* CheckoutModal â Fase 3 */}
             <CheckoutModal
                 appointment={checkoutAppointment}
                 teamMembers={checkoutTeamMembers}

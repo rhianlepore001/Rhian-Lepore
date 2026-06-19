@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { BrutalCard } from '../BrutalCard';
+import { Card } from '../ui/Card';
 import { CheckCircle2, Clock, Calendar, Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
@@ -40,14 +40,14 @@ const QuickActionItem: React.FC<{
 
     if (isCompleted) {
         return (
-            <li className={`p-3 md:p-4 ${themeStatus.successBg} border-l-4 ${themeStatus.successBorder} rounded-lg flex items-center justify-between group opacity-70 transition-all duration-500`}>
+            <li className={`p-3 md:p-4 ${themeStatus.successBg} border ${themeStatus.successBorder} rounded-lg flex items-center justify-between group opacity-70 transition-opacity duration-200`}>
                 <div className="flex items-center gap-3">
                     <div className={`${themeStatus.successBg} p-2 rounded-full`}>
                         <CheckCircle2 className={`w-6 h-6 ${themeStatus.success}`} />
                     </div>
                     <div>
                         <p className={`font-heading text-sm md:text-lg ${colors.text} line-through`}>{apt.clientName}</p>
-                        <p className={`text-[10px] md:text-xs ${themeStatus.success} font-mono`}>Concluído • {apt.service}</p>
+                        <p className={`text-xs md:text-xs ${themeStatus.success} font-mono`}>Concluído • {apt.service}</p>
                     </div>
                 </div>
             </li>
@@ -67,14 +67,14 @@ const QuickActionItem: React.FC<{
                 </div>
                 <div className="flex-1 truncate">
                     {isNext && (
-                        <p className={`text-[9px] font-mono uppercase tracking-widest mb-0.5 ${accent.text}`}>
+                        <p className={`text-xs font-mono uppercase tracking-widest mb-0.5 ${accent.text}`}>
                             Próximo
                         </p>
                     )}
                     <p className={`font-heading text-sm md:text-lg ${colors.text} truncate ${isNext ? '' : 'text-sm'}`}>{apt.clientName}</p>
                     <div className="flex justify-between w-full max-w-[200px]">
-                        <p className={`text-[10px] md:text-xs ${colors.textSecondary} font-mono truncate`}>{apt.service}</p>
-                        <p className={`text-[10px] md:text-xs ${accent.text} font-mono ml-2`}>{formatCurrency(apt.price, currencyRegion)}</p>
+                        <p className={`text-xs md:text-xs ${colors.textSecondary} font-mono truncate`}>{apt.service}</p>
+                        <p className={`text-xs md:text-xs ${accent.text} font-mono ml-2`}>{formatCurrency(apt.price, currencyRegion)}</p>
                     </div>
                 </div>
             </div>
@@ -106,7 +106,8 @@ export const MeuDiaWidget: React.FC = () => {
 
     return (
     <>
-        <BrutalCard
+        <Card
+          variant="outlined"
             id="dashboard-meu-dia"
             className={`${accent.borderDim} mb-6`}
             title={
@@ -119,15 +120,15 @@ export const MeuDiaWidget: React.FC = () => {
                 {/* Resumo Rápido */}
                 <div className={`grid grid-cols-3 gap-2 md:gap-4 p-4 rounded-xl border ${colors.divider} ${colors.surface}`}>
                     <div className="flex flex-col items-center text-center">
-                        <span className={`text-[10px] md:text-xs uppercase font-mono ${colors.textSecondary}`}>Concluídos</span>
+                        <span className={`text-xs md:text-xs uppercase font-mono ${colors.textSecondary}`}>Concluídos</span>
                         <span className={`text-xl md:text-3xl font-bold font-heading ${accent.text}`}>{summary.completed}</span>
                     </div>
                     <div className={`flex flex-col items-center text-center border-x ${colors.divider}`}>
-                        <span className={`text-[10px] md:text-xs uppercase font-mono ${colors.textSecondary}`}>Pendentes</span>
+                        <span className={`text-xs md:text-xs uppercase font-mono ${colors.textSecondary}`}>Pendentes</span>
                         <span className={`text-xl md:text-3xl font-bold font-heading ${colors.text}`}>{summary.pending}</span>
                     </div>
                     <div className="flex flex-col items-center text-center">
-                        <span className={`text-[10px] md:text-xs uppercase font-mono ${colors.textSecondary}`}>Faturamento</span>
+                        <span className={`text-xs md:text-xs uppercase font-mono ${colors.textSecondary}`}>Faturamento</span>
                         <span className={`text-xl md:text-3xl font-bold font-heading text-emerald-400`}>
                             {formatCurrency(summary.dailyEarnings, currencyRegion)}
                         </span>
@@ -177,12 +178,12 @@ export const MeuDiaWidget: React.FC = () => {
                         <div className={`text-center py-8 rounded-lg border ${colors.divider} border-dashed`}>
                             <Calendar className={`w-8 h-8 ${colors.textMuted} mx-auto mb-2`} />
                             <p className={`${colors.textSecondary} font-mono text-sm`}>Nenhum agendamento para hoje.</p>
-                            <p className="text-[10px] mt-2 opacity-50">Que tal agendar um novo cliente?</p>
+                            <p className="text-xs mt-2 opacity-50">Que tal agendar um novo cliente?</p>
                         </div>
                     )}
                 </div>
             </div>
-        </BrutalCard>
+        </Card>
 
         <Suspense fallback={null}>
             <AllAppointmentsModal

@@ -12,7 +12,7 @@ import { StepSuccess } from '../components/onboarding/StepSuccess';
 const TOTAL_STEPS = 5; // 4 etapas + tela de sucesso
 
 export const OnboardingWizard: React.FC = () => {
-    const { isBeauty } = useBrutalTheme();
+    const { isBeauty, colors } = useBrutalTheme();
     const navigate = useNavigate();
     const { step, loading, completed, goToStep } = useOnboardingState();
 
@@ -20,15 +20,11 @@ export const OnboardingWizard: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+            <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
                 <div className="text-center">
-                    <div className={
-                        isBeauty
-                            ? 'w-16 h-16 border-4 border-beauty-neon border-t-transparent rounded-full animate-spin mx-auto mb-4'
-                            : 'w-16 h-16 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto mb-4'
-                    } />
-                    <p className="text-white text-lg font-mono">Carregando...</p>
-                    <p className="text-neutral-500 text-sm mt-2">Preparando seu setup</p>
+                    <div className="w-16 h-16 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className={`${colors.text} text-lg`}>Carregando...</p>
+                    <p className={`${colors.textSecondary} text-sm mt-2`}>Preparando tudo para você...</p>
                 </div>
             </div>
         );

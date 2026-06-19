@@ -1,6 +1,7 @@
+import { Card, Button } from '../../components/ui';
 import React, { useState } from 'react';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
+
+
 import { Shield, Lock, Smartphone, Trash2, CheckCircle2 } from 'lucide-react';
 import { use2FA } from '../../hooks/use2FA';
 import { TwoFactorSetup } from '../../components/security/TwoFactorSetup';
@@ -43,7 +44,7 @@ export const SecuritySettings: React.FC = () => {
                 {/* Header dinâmico no SettingsLayout */}
 
                 {/* 2FA Section */}
-                <BrutalCard
+                <Card
                     title={
                         <div className="flex items-center gap-3">
                             <Smartphone className="w-5 h-5" />
@@ -76,13 +77,13 @@ export const SecuritySettings: React.FC = () => {
                                 <>
                                     {!isEnabled ? (
                                         <div className="h-full flex flex-col justify-center">
-                                            <BrutalButton
+                                            <Button
                                                 variant="primary"
                                                 onClick={() => setShowSetup(true)}
                                                 className="w-full"
                                             >
                                                 Configurar 2FA
-                                            </BrutalButton>
+                                            </Button>
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
@@ -107,13 +108,13 @@ export const SecuritySettings: React.FC = () => {
                                                     </button>
                                                 </div>
                                             ))}
-                                            <BrutalButton
+                                            <Button
                                                 variant="secondary"
                                                 onClick={() => setShowSetup(true)}
                                                 className="w-full text-xs"
                                             >
                                                 + Novo Dispositivo
-                                            </BrutalButton>
+                                            </Button>
                                         </div>
                                     )}
                                 </>
@@ -125,10 +126,10 @@ export const SecuritySettings: React.FC = () => {
                             )}
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
                 {/* Password Section */}
-                <BrutalCard className="opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                <Card className="opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
                     <div className="flex items-center gap-3 mb-4">
                         <Lock className="w-5 h-5 text-neutral-400" />
                         <h3 className="text-lg font-bold text-white">Alterar Senha</h3>
@@ -136,10 +137,10 @@ export const SecuritySettings: React.FC = () => {
                     <p className="text-neutral-400 text-sm mb-6 max-w-md">
                         Mantenha sua senha forte e atualizada para evitar acessos não autorizados.
                     </p>
-                    <BrutalButton variant="secondary" disabled className="text-xs">
+                    <Button variant="secondary" disabled className="text-xs">
                         Recuperação em Breve
-                    </BrutalButton>
-                </BrutalCard>
+                    </Button>
+                </Card>
             </div>
         </SettingsLayout>
     );

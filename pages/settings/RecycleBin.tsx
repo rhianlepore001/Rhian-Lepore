@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
+import { Card, Button } from '../../components/ui';
+import React, { useState } from 'react';
+
+
 import { SettingsLayout } from '../../components/SettingsLayout';
 import {
     Trash2, RefreshCw, Undo2, AlertTriangle,
@@ -8,70 +9,23 @@ import {
     Wallet, CheckCircle2
 } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { supabase } from '../../lib/supabase';
-
-interface DeletedItem {
-    id: string;
-    resource_type: string;
-    name: string;
-    deleted_at: string;
-    days_until_permanent: number;
-}
+import { useDeletedItems, useRestoreDeletedItem } from '../../hooks/useRecycleBin';
+import type { DeletedItem } from '@/types/recycleBin';
 
 export const RecycleBin: React.FC = () => {
     const { accent } = useBrutalTheme();
-    const [items, setItems] = useState<DeletedItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [restoring, setRestoring] = useState<string | null>(null);
     const [filter, setFilter] = useState<string>('');
-
-    useEffect(() => {
-        loadDeletedItems();
-    }, [filter]);
-
-    const loadDeletedItems = async () => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase.rpc('get_deleted_items', {
-                p_resource_type: filter || null
-            });
-
-            if (error) throw error;
-            setItems(data || []);
-        } catch (error) {
-            console.error('Erro ao carregar itens deletados:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { data: items = [], isLoading: loading, refetch } = useDeletedItems(filter || undefined);
+    const restoreMutation = useRestoreDeletedItem();
+    const [restoring, setRestoring] = useState<string | null>(null);
 
     const handleRestore = async (item: DeletedItem) => {
         setRestoring(item.id);
         try {
-            const resourceMap: Record<string, string> = {
-                'appointments': 'restore_appointment',
-                'clients': 'restore_client',
-                'services': 'restore_service',
-                'financial_records': 'restore_financial_record',
-                'team_members': 'restore_team_member'
-            };
-
-            const functionName = resourceMap[item.resource_type];
-
-            if (!functionName) {
-                throw new Error(`Tipo de recurso desconhecido: ${item.resource_type}`);
-            }
-
-            const { error } = await supabase.rpc(functionName, {
-                p_id: item.id
+            await restoreMutation.mutateAsync({
+                resourceType: item.resource_type,
+                itemId: item.id,
             });
-
-            if (error) throw error;
-
-            // Remover item da lista
-            setItems(items.filter(i => i.id !== item.id));
-
-            // Mostrar mensagem de sucesso
             alert('Item restaurado com sucesso!');
         } catch (error) {
             console.error('Erro ao restaurar item:', error);
@@ -112,7 +66,6 @@ export const RecycleBin: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="space-y-6">
-                {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-white/10 pb-4">
                     <div>
                         <h2 className="text-2xl md:text-4xl font-heading text-white uppercase flex items-center gap-3">
@@ -123,19 +76,18 @@ export const RecycleBin: React.FC = () => {
                             Recupere itens deletados nos últimos 30 dias
                         </p>
                     </div>
-                    <BrutalButton
+                    <Button
                         variant="secondary"
                         size="sm"
                         icon={<RefreshCw />}
-                        onClick={loadDeletedItems}
+                        onClick={() => { void refetch(); }}
                         disabled={loading}
                     >
                         Atualizar
-                    </BrutalButton>
+                    </Button>
                 </div>
 
-                {/* Alerta de Exclusão Permanente */}
-                <BrutalCard className="border-l-4 border-orange-500">
+                <Card className="border border-orange-500/30 bg-orange-500/5">
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-1" />
                         <div>
@@ -147,10 +99,9 @@ export const RecycleBin: React.FC = () => {
                             </p>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                {/* Filtros */}
-                <BrutalCard>
+                <Card>
                     <div className="flex flex-col md:flex-row gap-4 items-center">
                         <label className="text-white font-bold whitespace-nowrap">Filtrar por tipo:</label>
                         <select
@@ -166,10 +117,9 @@ export const RecycleBin: React.FC = () => {
                             <option value="team_members">Equipe</option>
                         </select>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                {/* Lista de Itens Deletados */}
-                <BrutalCard noPadding>
+                <Card noPadding>
                     {loading ? (
                         <div className="p-8 text-center">
                             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-neutral-400 mb-2" />
@@ -219,7 +169,7 @@ export const RecycleBin: React.FC = () => {
                                                     até exclusão
                                                 </p>
                                             </div>
-                                            <BrutalButton
+                                            <Button
                                                 variant="primary"
                                                 size="sm"
                                                 icon={<Undo2 />}
@@ -227,27 +177,26 @@ export const RecycleBin: React.FC = () => {
                                                 disabled={restoring === item.id}
                                             >
                                                 {restoring === item.id ? 'Restaurando...' : 'Restaurar'}
-                                            </BrutalButton>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
-                </BrutalCard>
+                </Card>
 
-                {/* Estatísticas */}
                 {items.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <BrutalCard className="text-center">
+                        <Card className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">
                                 Total na Lixeira
                             </p>
                             <p className={`text-3xl font-bold ${accent.text}`}>
                                 {items.length}
                             </p>
-                        </BrutalCard>
-                        <BrutalCard className="text-center">
+                        </Card>
+                        <Card className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">
                                 Expirando em Breve
                             </p>
@@ -257,15 +206,15 @@ export const RecycleBin: React.FC = () => {
                             <p className="text-xs text-neutral-500 mt-1">
                                 ({"<"} 7 dias)
                             </p>
-                        </BrutalCard>
-                        <BrutalCard className="text-center">
+                        </Card>
+                        <Card className="text-center">
                             <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">
                                 Período de Retenção
                             </p>
                             <p className="text-white text-sm font-mono mt-2">
                                 30 dias
                             </p>
-                        </BrutalCard>
+                        </Card>
                     </div>
                 )}
             </div>

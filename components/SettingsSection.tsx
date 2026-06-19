@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrutalCard } from './BrutalCard';
+import { Card } from './ui/Card';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface SettingsSectionProps {
@@ -24,7 +24,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   const { colors } = useBrutalTheme();
 
   return (
-    <BrutalCard
+    <Card
       title={
         <div className="flex items-center gap-2">
           <span>{title}</span>
@@ -32,7 +32,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
       }
       action={action}
       noPadding={noPadding}
-      accent={accentProp}
+      variant={accentProp ? 'elevated' : 'outlined'}
       className={`mb-4 md:mb-6 ${className}`}
     >
       {description && (
@@ -41,7 +41,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
         </p>
       )}
       {children}
-    </BrutalCard>
+    </Card>
   );
 };
 

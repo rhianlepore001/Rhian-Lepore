@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
+import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
 import { ClientWhatsAppFAB } from '../components/ClientWhatsAppFAB';
 import { PhoneInput } from '../components/PhoneInput';
@@ -28,18 +29,53 @@ const ITEMS_PER_PAGE = 8;
 
 export const ClientArea: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const { client, login, register, logout, loading: clientLoading } = usePublicClient();
+    const {
+        client,
+        login,
+        register,
+        logout,
+        loading: clientLoading,
+        hydrateFromStorage,
+    } = usePublicClient();
 
-    // Business
-    const [business, setBusiness] = useState<BusinessProfile | null>(null);
-    const [businessLoading, setBusinessLoading] = useState(true);
-    const [businessError, setBusinessError] = useState(false);
+    const { data: businessProfile, isLoading: loadingProfile, isError: profileError } = useBusinessProfileBySlug(slug ?? '');
+    const businessId = businessProfile?.id ?? null;
+    const { data: businessSettings, isLoading: loadingSettings } = useBusinessSettings(businessId);
+
+    const business = useMemo<BusinessProfile | null>(() => {
+        if (!businessProfile) return null;
+        const allowRescheduling = businessSettings?.enable_self_rescheduling ?? true;
+        return {
+            id: businessProfile.id,
+            business_name: businessProfile.business_name,
+            user_type: businessProfile.user_type,
+            phone: businessProfile.phone ?? null,
+            logo_url: businessProfile.logo_url ?? null,
+            cover_photo_url: businessProfile.cover_photo_url ?? null,
+            region: businessProfile.region,
+            allow_client_rescheduling: allowRescheduling,
+        };
+    }, [businessProfile, businessSettings]);
+
+    const businessLoading = loadingProfile || (!!businessId && loadingSettings);
+    const businessError = profileError || !business;
+
+    const sessionClient = useMemo(() => {
+        if (!client || !business) return null;
+        if (client.business_id !== business.id) return null;
+        return client;
+    }, [client, business]);
+
+    useEffect(() => {
+        if (business?.id && client?.business_id !== business.id) {
+            hydrateFromStorage(business.id);
+        }
+    }, [business?.id, hydrateFromStorage]);
 
     // Auth gate
     const [phone, setPhone] = useState('');
     const [gateStep, setGateStep] = useState<'phone' | 'register'>('phone');
     const [gateName, setGateName] = useState('');
-    const [gateEmail, setGateEmail] = useState('');
     const [gateError, setGateError] = useState('');
     const [gateSubmitting, setGateSubmitting] = useState(false);
 
@@ -60,45 +96,12 @@ export const ClientArea: React.FC = () => {
     const isBeauty = business?.user_type === 'beauty';
     const region = (business?.region as 'BR' | 'PT') ?? 'BR';
 
-    // Fetch business
-    useEffect(() => {
-        if (!slug) return;
-        const fetchBusiness = async () => {
-            setBusinessLoading(true);
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, business_name, user_type, phone, logo_url, cover_photo_url, region')
-                .eq('business_slug', slug)
-                .single();
-
-            if (error || !data) {
-                setBusinessError(true);
-            } else {
-                let allowRescheduling = true;
-                const { data: settings } = await supabase
-                    .from('business_settings')
-                    .select('enable_self_rescheduling')
-                    .eq('user_id', data.id)
-                    .maybeSingle();
-
-                if (settings && settings.enable_self_rescheduling !== null) {
-                    allowRescheduling = settings.enable_self_rescheduling;
-                }
-
-                setBusiness({ ...data, allow_client_rescheduling: allowRescheduling });
-            }
-            setBusinessLoading(false);
-        };
-        fetchBusiness();
-    }, [slug]);
-
-    // Fetch bookings when client authenticated
     const fetchBookings = useCallback(async () => {
-        if (!client || !business) return;
+        if (!sessionClient || !business) return;
         setBookingsLoading(true);
         try {
             const { data, error } = await supabase.rpc('get_client_bookings_history', {
-                p_phone: client.phone,
+                p_phone: sessionClient.phone,
                 p_business_id: business.id,
             });
             if (error) throw error;
@@ -108,33 +111,30 @@ export const ClientArea: React.FC = () => {
         } finally {
             setBookingsLoading(false);
         }
-    }, [client, business]);
+    }, [sessionClient, business]);
 
     useEffect(() => {
         fetchBookings();
     }, [fetchBookings]);
 
-    // Realtime subscriptions for status updates
     useEffect(() => {
-        if (!client || !business) return;
+        if (!sessionClient || !business) return;
 
         const channel = supabase
-            .channel(`public_bookings_${client.phone}`)
+            .channel(`public_bookings_${sessionClient.phone}`)
             .on(
                 'postgres_changes',
                 {
                     event: 'UPDATE',
                     schema: 'public',
                     table: 'public_bookings',
-                    filter: `customer_phone=eq.${client.phone}`,
+                    filter: `customer_phone=eq.${sessionClient.phone}`,
                 },
                 (payload) => {
                     const updated = payload.new;
-                    // Because public_bookings doesn't have the rich joined data, we just update what matters:
-                    // status, appointment_time, etc.
                     setBookings(prev =>
-                        prev.map(b => b.id === updated.id 
-                            ? { ...b, status: updated.status, appointment_time: updated.appointment_time } 
+                        prev.map(b => b.id === updated.id
+                            ? { ...b, status: updated.status, appointment_time: updated.appointment_time }
                             : b
                         )
                     );
@@ -145,16 +145,14 @@ export const ClientArea: React.FC = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [client, business]);
+    }, [sessionClient, business]);
 
-    // Handle booking cancelled in-page
     const handleBookingCancelled = (id: string) => {
         setBookings(prev =>
             prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b)
         );
     };
 
-    // Auth gate handlers
     const handlePhoneCheck = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!business) return;
@@ -167,7 +165,24 @@ export const ClientArea: React.FC = () => {
         setGateSubmitting(true);
         try {
             const found = await login(phone, business.id);
-            if (!found) setGateStep('register');
+            if (found) return;
+
+            const { data: bookingRows } = await supabase.rpc('get_active_booking_by_phone', {
+                p_phone: phone,
+                p_business_id: business.id,
+            });
+            const activeBooking = bookingRows?.[0] as { customer_name?: string } | undefined;
+            if (activeBooking?.customer_name) {
+                const recovered = await register({
+                    name: activeBooking.customer_name,
+                    phone,
+                    photo_url: null,
+                    business_id: business.id,
+                });
+                if (recovered) return;
+            }
+
+            setGateStep('register');
         } catch {
             setGateError('Erro ao verificar. Tente novamente.');
         } finally {
@@ -179,26 +194,21 @@ export const ClientArea: React.FC = () => {
         e.preventDefault();
         if (!business) return;
         setGateError('');
-        if (!gateName || !gateEmail) {
-            setGateError('Preencha nome e email');
+        if (!gateName.trim()) {
+            setGateError('Preencha seu nome');
             return;
         }
         setGateSubmitting(true);
         try {
             const newClient = await register({
-                name: gateName,
-                email: gateEmail,
+                name: gateName.trim(),
                 phone,
                 photo_url: null,
                 business_id: business.id,
             });
-            // Se o register() retornar null sem lançar exceção,
-            // significa que houve uma falha silenciosa — informar o usuário.
             if (!newClient) {
                 setGateError('Não foi possível criar o cadastro. Tente novamente.');
             }
-            // Caso bem-sucedido: o contexto já faz setClient(newClient),
-            // o que aciona o re-render e remove automaticamente este gate.
         } catch {
             setGateError('Erro ao cadastrar. Tente novamente.');
         } finally {
@@ -206,16 +216,17 @@ export const ClientArea: React.FC = () => {
         }
     };
 
-    // Profile update
     const handleSaveProfile = async () => {
-        if (!client) return;
+        if (!sessionClient) return;
         setProfileSaving(true);
         try {
-            const { error } = await supabase
-                .from('public_clients')
-                .update({ name: editName, email: editEmail })
-                .eq('id', client.id);
-            if (error) throw error;
+            await register({
+                name: editName,
+                phone: sessionClient.phone,
+                email: editEmail || null,
+                photo_url: sessionClient.photo_url ?? null,
+                business_id: sessionClient.business_id,
+            });
             setEditingProfile(false);
         } catch {
             // silently fail
@@ -225,12 +236,11 @@ export const ClientArea: React.FC = () => {
     };
 
     const startEdit = () => {
-        setEditName(client?.name ?? '');
-        setEditEmail(client?.email ?? '');
+        setEditName(sessionClient?.name ?? '');
+        setEditEmail(sessionClient?.email ?? '');
         setEditingProfile(true);
     };
 
-    // Derived data
     const upcomingBookings = bookings.filter(b =>
         ['pending', 'confirmed'].includes(b.status) &&
         new Date(b.appointment_time) >= new Date()
@@ -240,8 +250,6 @@ export const ClientArea: React.FC = () => {
         (b.status !== 'cancelled' && new Date(b.appointment_time) < new Date())
     );
     const historySlice = historyBookings.slice(0, historyPage * ITEMS_PER_PAGE);
-
-    // ─── Loading / Error states ───────────────────────────────────────────────
 
     if (businessLoading || clientLoading) {
         return (
@@ -261,12 +269,9 @@ export const ClientArea: React.FC = () => {
         );
     }
 
-    // ─── Auth gate ────────────────────────────────────────────────────────────
-
-    if (!client) {
+    if (!sessionClient) {
         return (
             <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
-                {/* Header */}
                 <header className={`px-6 py-5 border-b ${isBeauty ? 'border-stone-200 bg-white/60 backdrop-blur-sm' : 'border-zinc-900 bg-black/40 backdrop-blur-sm'}`}>
                     <Link
                         to={`/book/${slug}`}
@@ -279,7 +284,6 @@ export const ClientArea: React.FC = () => {
 
                 <div className="flex-1 flex items-center justify-center p-6">
                     <div className="w-full max-w-sm space-y-8">
-                        {/* Logo / Business name */}
                         <div className="text-center">
                             {business.logo_url
                                 ? <img src={business.logo_url} alt={business.business_name} className="w-16 h-16 rounded-2xl mx-auto mb-4 object-cover" />
@@ -297,7 +301,6 @@ export const ClientArea: React.FC = () => {
                             </p>
                         </div>
 
-                        {/* Gate card */}
                         <div className={`rounded-2xl p-6 ${isBeauty ? 'bg-white shadow-lg border border-stone-100' : 'bg-zinc-900 border border-zinc-800'}`}>
                             {gateStep === 'phone' ? (
                                 <form onSubmit={handlePhoneCheck} className="space-y-5">
@@ -350,7 +353,7 @@ export const ClientArea: React.FC = () => {
                                             Criar cadastro
                                         </h2>
                                         <p className={`text-xs mt-1 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`}>
-                                            Primeira vez? Precisamos de alguns dados.
+                                            Primeira vez? Informe seu nome.
                                         </p>
                                     </div>
 
@@ -359,29 +362,16 @@ export const ClientArea: React.FC = () => {
                                         <button type="button" onClick={() => setGateStep('phone')} className="underline">Alterar</button>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        <div className="relative">
-                                            <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
-                                            <input
-                                                type="text"
-                                                placeholder="Nome completo"
-                                                value={gateName}
-                                                onChange={e => setGateName(e.target.value)}
-                                                required
-                                                className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-colors ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800 focus:border-stone-400' : 'bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500'}`}
-                                            />
-                                        </div>
-                                        <div className="relative">
-                                            <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
-                                            <input
-                                                type="email"
-                                                placeholder="Email"
-                                                value={gateEmail}
-                                                onChange={e => setGateEmail(e.target.value)}
-                                                required
-                                                className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-colors ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800 focus:border-stone-400' : 'bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500'}`}
-                                            />
-                                        </div>
+                                    <div className="relative">
+                                        <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+                                        <input
+                                            type="text"
+                                            placeholder="Nome completo"
+                                            value={gateName}
+                                            onChange={e => setGateName(e.target.value)}
+                                            required
+                                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-colors ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800 focus:border-stone-400' : 'bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500'}`}
+                                        />
                                     </div>
 
                                     {gateError && <p className="text-red-400 text-xs text-center">{gateError}</p>}
@@ -412,11 +402,8 @@ export const ClientArea: React.FC = () => {
         );
     }
 
-    // ─── Authenticated: client area ───────────────────────────────────────────
-
     return (
         <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
-            {/* Header */}
             <header className={`sticky top-0 z-30 px-4 md:px-8 py-4 border-b ${isBeauty ? 'border-stone-200 bg-[#E2E1DA]/90 backdrop-blur-sm' : 'border-zinc-900 bg-[#050505]/90 backdrop-blur-sm'}`}>
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
                     <Link
@@ -428,10 +415,10 @@ export const ClientArea: React.FC = () => {
                     </Link>
                     <div className="flex items-center gap-3">
                         <span className={`text-sm font-semibold ${isBeauty ? 'text-stone-700' : 'text-zinc-300'}`}>
-                            {client.name.split(' ')[0]}
+                            {sessionClient.name.split(' ')[0]}
                         </span>
                         <button
-                            onClick={logout}
+                            onClick={() => logout(business.id)}
                             title="Sair"
                             className={`p-1.5 rounded-lg transition-colors ${isBeauty ? 'text-stone-400 hover:text-red-400 hover:bg-red-50' : 'text-zinc-600 hover:text-red-400 hover:bg-red-500/10'}`}
                         >
@@ -442,9 +429,7 @@ export const ClientArea: React.FC = () => {
             </header>
 
             <main className="flex-1 max-w-2xl mx-auto w-full px-4 md:px-8 py-6 space-y-6">
-                {/* Welcome hero */}
                 <div className={`relative overflow-hidden rounded-2xl p-6 ${isBeauty ? 'bg-stone-800 text-white' : 'bg-zinc-900 border border-zinc-800'}`}>
-                    {/* Subtle decorative circle */}
                     <div className={`absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10 ${isBeauty ? 'bg-white' : 'bg-white'}`} />
                     <div className="relative z-10 flex items-center justify-between gap-4">
                         <div>
@@ -452,7 +437,7 @@ export const ClientArea: React.FC = () => {
                                 {business.business_name}
                             </p>
                             <h1 className="text-2xl font-bold text-white">
-                                Olá, {client.name.split(' ')[0]}!
+                                Olá, {sessionClient.name.split(' ')[0]}!
                             </h1>
                             <p className={`text-xs mt-1 ${isBeauty ? 'text-stone-300' : 'text-zinc-400'}`}>
                                 {upcomingBookings.length > 0
@@ -470,7 +455,6 @@ export const ClientArea: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Tabs */}
                 <div className={`flex gap-1 p-1 rounded-xl ${isBeauty ? 'bg-stone-200/60' : 'bg-zinc-900 border border-zinc-800'}`}>
                     {([
                         { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
@@ -503,17 +487,14 @@ export const ClientArea: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Tab content */}
                 {bookingsLoading ? (
                     <div className="py-16 flex justify-center">
                         <Loader2 className={`w-6 h-6 animate-spin ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`} />
                     </div>
                 ) : (
                     <>
-                        {/* Upcoming */}
                         {activeTab === 'upcoming' && (
                             <div className="space-y-4 animate-in fade-in duration-200">
-                                {/* Pending analysis info banner */}
                                 {upcomingBookings.some(b => b.status === 'pending') && (
                                     <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${isBeauty ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-300'}`}>
                                         <Clock className="w-4 h-4 shrink-0 mt-0.5" />
@@ -541,7 +522,7 @@ export const ClientArea: React.FC = () => {
                                             isBeauty={isBeauty}
                                             businessPhone={business.phone}
                                             businessSlug={slug ?? ''}
-                                            clientName={client.name}
+                                            clientName={sessionClient.name}
                                             region={region}
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
@@ -551,7 +532,6 @@ export const ClientArea: React.FC = () => {
                             </div>
                         )}
 
-                        {/* History */}
                         {activeTab === 'history' && (
                             <div className="space-y-4 animate-in fade-in duration-200">
                                 {historyBookings.length === 0 ? (
@@ -571,7 +551,7 @@ export const ClientArea: React.FC = () => {
                                                 isBeauty={isBeauty}
                                                 businessPhone={business.phone}
                                                 businessSlug={slug ?? ''}
-                                                clientName={client.name}
+                                                clientName={sessionClient.name}
                                                 region={region}
                                                 onCancelled={handleBookingCancelled}
                                             />
@@ -589,7 +569,6 @@ export const ClientArea: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Profile */}
                         {activeTab === 'profile' && (
                             <div className="animate-in fade-in duration-200">
                                 <div className={`rounded-2xl p-6 space-y-5 ${isBeauty ? 'bg-white border border-stone-100 shadow-sm' : 'bg-zinc-900 border border-zinc-800'}`}>
@@ -626,7 +605,7 @@ export const ClientArea: React.FC = () => {
                                                     type="email"
                                                     value={editEmail}
                                                     onChange={e => setEditEmail(e.target.value)}
-                                                    placeholder="Email"
+                                                    placeholder="Email (opcional)"
                                                     className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800' : 'bg-zinc-800 border border-zinc-700 text-white'}`}
                                                 />
                                             </div>
@@ -648,15 +627,15 @@ export const ClientArea: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            <ProfileRow icon={<User className="w-4 h-4" />} label="Nome" value={client.name} isBeauty={isBeauty} />
-                                            <ProfileRow icon={<Phone className="w-4 h-4" />} label="Telefone" value={client.phone} isBeauty={isBeauty} />
-                                            {client.email && <ProfileRow icon={<Mail className="w-4 h-4" />} label="Email" value={client.email} isBeauty={isBeauty} />}
+                                            <ProfileRow icon={<User className="w-4 h-4" />} label="Nome" value={sessionClient.name} isBeauty={isBeauty} />
+                                            <ProfileRow icon={<Phone className="w-4 h-4" />} label="Telefone" value={sessionClient.phone} isBeauty={isBeauty} />
+                                            {sessionClient.email && <ProfileRow icon={<Mail className="w-4 h-4" />} label="Email" value={sessionClient.email} isBeauty={isBeauty} />}
                                         </div>
                                     )}
 
                                     <div className={`pt-4 border-t ${isBeauty ? 'border-stone-100' : 'border-zinc-800'}`}>
                                         <button
-                                            onClick={logout}
+                                            onClick={() => logout(business.id)}
                                             className={`flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-red-400 hover:text-red-500' : 'text-red-400 hover:text-red-300'}`}
                                         >
                                             <LogOut className="w-3.5 h-3.5" />
@@ -670,20 +649,17 @@ export const ClientArea: React.FC = () => {
                 )}
             </main>
 
-            {/* Floating WhatsApp */}
             {business.phone && (
                 <ClientWhatsAppFAB
                     phone={business.phone}
                     businessName={business.business_name}
-                    clientName={client.name}
+                    clientName={sessionClient.name}
                     isBeauty={isBeauty}
                 />
             )}
         </div>
     );
 };
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
 
 interface EmptyStateProps {
     icon: React.ReactNode;

@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { BrutalButton } from './BrutalButton';
+import { Button } from './ui/Button';
+import { useToast } from './ui';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
 
 import { SearchableSelect } from './SearchableSelect';
@@ -73,6 +74,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const { user } = useAuth();
     const { setModalOpen } = useUI();
     const { isBeauty, accent } = useBrutalTheme();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -242,12 +244,12 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
             if (error) throw error;
 
-            alert('Agendamento atualizado com sucesso!');
+            showToast('Agendamento atualizado com sucesso!', 'success');
             onSave();
             onClose();
         } catch (error: any) {
             console.error('Error updating appointment:', error);
-            alert(`Erro ao atualizar agendamento: ${error.message || JSON.stringify(error)}`);
+            showToast('Não foi possível salvar as alterações. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
@@ -257,7 +259,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const discountAmount = priceBeforeDiscount - (parseFloat(finalPriceInput) || 0);
 
     return createPortal(
-        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center z-[999] md:left-64 p-4`}>
+        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center md:left-64 p-4`} style={{ zIndex: 'var(--z-modal)' }}>
             <FocusTrap active={true}>
                 <div
                     className={`${modalStyles} w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}
@@ -454,22 +456,23 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     </div>
 
                     <div className="flex gap-3 pt-4">
-                        <BrutalButton
+                        <Button
                             variant="secondary"
                             className="flex-1"
                             onClick={onClose}
                             disabled={loading}
                         >
                             Cancelar
-                        </BrutalButton>
-                        <BrutalButton
+                        </Button>
+                        <Button
                             variant="primary"
                             className="flex-1"
                             onClick={handleSave}
                             disabled={loading}
+                            loading={loading}
                         >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar'}
-                        </BrutalButton>
+                            Salvar
+                        </Button>
                     </div>
                 </div>
                 </div>

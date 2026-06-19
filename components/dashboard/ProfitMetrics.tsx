@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrutalCard } from '../BrutalCard';
+import { Card } from '../ui/Card';
 import { DashboardKpiCard } from './DashboardKpiCard';
 import { MiniSparkline } from './MiniSparkline';
 import { DollarSign, TrendingUp, TrendingDown, Calendar, Send } from 'lucide-react';
@@ -54,7 +54,7 @@ export const ProfitMetrics = React.memo(({
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Card: Receita do Dia — custom render para preservar testes e empty state */}
-                <BrutalCard className="h-full" noPadding accent>
+                <Card variant="elevated" className="h-full" noPadding>
                     <div className="p-4 md:p-6 flex flex-col justify-between h-full relative z-10">
                         <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ export const ProfitMetrics = React.memo(({
                             </div>
                         )}
                     </div>
-                </BrutalCard>
+                </Card>
 
                 <DashboardKpiCard
                     title="Faturamento do Mês"

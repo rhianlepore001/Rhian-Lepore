@@ -39,7 +39,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     };
 
     const drawerContent = (
-        <div className="fixed inset-0 z-[999] flex flex-col justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 flex flex-col justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200" style={{ zIndex: 'var(--z-modal)' }}>
             <div
                 className="absolute inset-0"
                 onClick={onClose}

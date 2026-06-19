@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { BrutalButton } from '../components/BrutalButton';
+
 import { PhoneInput } from '../components/PhoneInput';
+import { Button } from '../components/ui';
 import { User, Scissors, Clock, Loader2, AlertTriangle, Users, Search, Sparkles, MapPin } from 'lucide-react';
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { joinQueue } from '../services/queue';
+import {
+  fetchBusinessProfileBySlug,
+  fetchPublicCategories,
+  fetchPublicProfessionals,
+  fetchPublicServices,
+} from '../services/publicBooking';
 
 interface Service {
     id: string;
@@ -63,41 +69,24 @@ export const QueueJoin: React.FC = () => {
         const fetchData = async () => {
             if (!slug) return;
             try {
-                // 1. Get Business
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('id, business_name, logo_url, cover_photo_url, user_type, region') // Fetch region
-                    .eq('business_slug', slug)
-                    .single();
-
-                if (profileError || !profile) throw new Error('Business not found');
+                const profile = await fetchBusinessProfileBySlug(slug);
                 setBusiness(profile);
 
-                // 2. Get Services
-                const { data: servicesData } = await supabase
-                    .from('services')
-                    .select('id, name, duration_minutes, price, category_id')
-                    .eq('user_id', profile.id)
-                    .eq('active', true)
-                    .order('price');
+                const [servicesData, catData, proData] = await Promise.all([
+                    fetchPublicServices(profile.id),
+                    fetchPublicCategories(profile.id),
+                    fetchPublicProfessionals(profile.id),
+                ]);
+
                 setServices(servicesData || []);
-
-                // 3. Get Categories
-                const { data: catData } = await supabase
-                    .from('service_categories')
-                    .select('id, name')
-                    .eq('user_id', profile.id)
-                    .order('name');
                 setCategories(catData || []);
-
-                // 4. Get Professionals
-                const { data: proData } = await supabase
-                    .from('team_members')
-                    .select('id, name, photo_url')
-                    .eq('user_id', profile.id)
-                    .eq('active', true);
-                setProfessionals(proData || []);
-
+                setProfessionals(
+                    (proData || []).map((pro: Professional) => ({
+                        id: pro.id,
+                        name: pro.name,
+                        photo_url: pro.photo_url,
+                    })),
+                );
             } catch (err) {
                 console.error('Error fetching data:', err);
             } finally {
@@ -301,14 +290,14 @@ export const QueueJoin: React.FC = () => {
                     </div>
 
                     <div className="pt-4">
-                        <BrutalButton
+                        <Button
                             loading={submitting}
                             disabled={!name || !phone || !selectedService}
                             onClick={handleJoin}
                             className={`w-full ${business.user_type === 'beauty' ? 'shadow-[0_0_20px_rgba(168,85,247,0.3)]' : ''}`}
                         >
                             Entrar na Fila
-                        </BrutalButton>
+                        </Button>
                         <p className="text-center text-xs text-neutral-500 mt-3">
                             Você receberá atualizações em tempo real nesta página.
                         </p>

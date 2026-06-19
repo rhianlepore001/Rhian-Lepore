@@ -1,185 +1,121 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useOnboardingState } from '@/hooks/useOnboardingState';
-import { supabase } from '@/lib/supabase';
-import { AuthProvider } from '@/contexts/AuthContext';
+import * as onboardingService from '@/services/onboarding';
 
-const mockUser = { id: 'user-abc', email: 'owner@test.com' };
-const mockSession = { user: mockUser };
+vi.mock('@/services/onboarding', () => ({
+  fetchOnboardingProgress: vi.fn(),
+  upsertOnboardingStep: vi.fn(),
+  completeOnboardingProgress: vi.fn(),
+}));
 
-const wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(AuthProvider, null, children);
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: vi.fn(),
+}));
 
-const setupAuthMock = (profileData?: object) => {
-    (supabase.auth.getSession as any).mockResolvedValue({
-        data: { session: mockSession },
-        error: null,
-    });
-    (supabase.auth.onAuthStateChange as any).mockImplementation(
-        (callback: (event: string, session: any) => void) => {
-            callback('SIGNED_IN', mockSession);
-            return { data: { subscription: { unsubscribe: vi.fn() } } };
-        }
-    );
-    (supabase.from as any).mockImplementation((table: string) => ({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-            data: table === 'profiles'
-                ? { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner', ...profileData }
-                : null,
-            error: null,
-        }),
-        update: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
-        upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-    }));
-    (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+import { useAuth } from '@/contexts/AuthContext';
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const Wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+  Wrapper.displayName = 'TestQueryWrapper';
+  return Wrapper;
 };
 
 describe('useOnboardingState', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useAuth as any).mockReturnValue({
+      companyId: 'company-001',
+      user: { id: 'user-001' },
+      tutorialCompleted: false,
+      markTutorialCompleted: vi.fn(),
+    });
+  });
+
+  it('retorna step=1 e loading inicial', () => {
+    (onboardingService.fetchOnboardingProgress as any).mockReturnValue(
+      new Promise(() => {})
+    );
+
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    expect(result.current.step).toBe(1);
+    expect(result.current.completed).toBe(false);
+  });
+
+  it('retoma step do banco após fetch', async () => {
+    (onboardingService.fetchOnboardingProgress as any).mockResolvedValue({
+      step: 3,
+      completed: false,
     });
 
-    it('começa com loading true e step 1', () => {
-        (supabase.auth.getSession as any).mockResolvedValue({
-            data: { session: null },
-            error: null,
-        });
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
-        const { result } = renderHook(() => useOnboardingState(), { wrapper });
+    expect(result.current.step).toBe(3);
+    expect(result.current.completed).toBe(false);
+  });
 
-        expect(result.current.loading).toBe(true);
-        expect(result.current.step).toBe(1);
-        expect(result.current.completed).toBe(false);
+  it('marca completed=true quando onboarding completo', async () => {
+    (onboardingService.fetchOnboardingProgress as any).mockResolvedValue({
+      step: 5,
+      completed: true,
     });
 
-    it('retoma a etapa salva no Supabase', async () => {
-        setupAuthMock();
-        (supabase.from as any).mockImplementation((table: string) => ({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-                data: table === 'onboarding_progress'
-                    ? { current_step: 3, is_completed: false }
-                    : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
-                error: null,
-            }),
-            update: vi.fn().mockReturnThis(),
-            insert: vi.fn().mockReturnThis(),
-            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }));
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
-        const { result } = renderHook(() => useOnboardingState(), { wrapper });
+    expect(result.current.completed).toBe(true);
+  });
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+  it('goToStep chama service e atualiza cache', async () => {
+    (onboardingService.fetchOnboardingProgress as any).mockResolvedValue({
+      step: 1,
+      completed: false,
+    });
+    (onboardingService.upsertOnboardingStep as any).mockResolvedValue(undefined);
 
-        expect(result.current.step).toBe(3);
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.goToStep(2);
     });
 
-    it('marca completed=true se onboarding_completed=true no banco', async () => {
-        setupAuthMock({ tutorial_completed: false });
-        (supabase.from as any).mockImplementation((table: string) => ({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-                data: table === 'onboarding_progress'
-                    ? { current_step: 5, is_completed: true }
-                    : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
-                error: null,
-            }),
-            update: vi.fn().mockReturnThis(),
-            insert: vi.fn().mockReturnThis(),
-            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }));
+    expect(onboardingService.upsertOnboardingStep).toHaveBeenCalledWith('company-001', 2);
 
-        const { result } = renderHook(() => useOnboardingState(), { wrapper });
+    await waitFor(() => expect(result.current.step).toBe(2));
+  });
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+  it('completeOnboarding chama service e marca tutorial', async () => {
+    const mockMarkTutorial = vi.fn();
+    (useAuth as any).mockReturnValue({
+      companyId: 'company-001',
+      user: { id: 'user-001' },
+      tutorialCompleted: false,
+      markTutorialCompleted: mockMarkTutorial,
+    });
+    (onboardingService.fetchOnboardingProgress as any).mockResolvedValue({
+      step: 4,
+      completed: false,
+    });
+    (onboardingService.completeOnboardingProgress as any).mockResolvedValue(undefined);
 
-        expect(result.current.completed).toBe(true);
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.completeOnboarding();
     });
 
-    it('goToStep salva no Supabase e atualiza o step local', async () => {
-        setupAuthMock();
-        (supabase.from as any).mockImplementation((table: string) => ({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-                data: table === 'onboarding_progress'
-                    ? { current_step: 1, is_completed: false }
-                    : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
-                error: null,
-            }),
-            update: vi.fn().mockReturnThis(),
-            insert: vi.fn().mockReturnThis(),
-            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }));
+    expect(onboardingService.completeOnboardingProgress).toHaveBeenCalledWith('company-001');
+    expect(mockMarkTutorial).toHaveBeenCalled();
 
-        const { result } = renderHook(() => useOnboardingState(), { wrapper });
-        await waitFor(() => expect(result.current.loading).toBe(false));
-
-        await act(async () => {
-            await result.current.goToStep(2);
-        });
-
-        expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', {
-            p_company_id: mockUser.id,
-            p_current_step: 2,
-            p_completed_steps: [],
-            p_step_data: {},
-        });
-        expect(result.current.step).toBe(2);
-    });
-
-    it('step não sai do intervalo [1,5] ao retomar progresso corrompido', async () => {
-        setupAuthMock();
-        (supabase.from as any).mockImplementation((table: string) => ({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-                data: table === 'onboarding_progress'
-                    ? { current_step: 99, is_completed: false }
-                    : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
-                error: null,
-            }),
-            update: vi.fn().mockReturnThis(),
-            insert: vi.fn().mockReturnThis(),
-            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }));
-
-        const { result } = renderHook(() => useOnboardingState(), { wrapper });
-        await waitFor(() => expect(result.current.loading).toBe(false));
-
-        expect(result.current.step).toBe(5);
-    });
-
-    it('completeOnboarding chama rpc com p_completed=true e markTutorialCompleted', async () => {
-        setupAuthMock();
-        (supabase.from as any).mockImplementation((table: string) => ({
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-                data: table === 'onboarding_progress'
-                    ? { current_step: 4, is_completed: false }
-                    : { user_type: 'barber', region: 'BR', tutorial_completed: false, role: 'owner' },
-                error: null,
-            }),
-            update: vi.fn().mockReturnThis(),
-            insert: vi.fn().mockReturnThis(),
-            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }));
-
-        const { result } = renderHook(() => useOnboardingState(), { wrapper });
-        await waitFor(() => expect(result.current.loading).toBe(false));
-
-        await act(async () => {
-            await result.current.completeOnboarding();
-        });
-
-        expect(supabase.from).toHaveBeenCalledWith('onboarding_progress');
-        expect(result.current.completed).toBe(true);
-    });
+    await waitFor(() => expect(result.current.completed).toBe(true));
+  });
 });

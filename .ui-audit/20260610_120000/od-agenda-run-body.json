@@ -1,0 +1,10 @@
+{
+  "projectId": "agendix-ui-audit",
+  "agentId": "opencode",
+  "pluginId": "example-dashboard",
+  "pluginInputs": {
+    "brief": "AgendiX AGENDA PT-BR. MATRIZ: barber-dark|barber-light|beauty-dark|beauty-light (NÃO compact/spacious). Barber accent gold (#C29B40 dark, #A07A2A light) — active nav/CTA SEMPRE dourado no barber light. Beauty purple. Copy token pattern from login.html + dashboard.html. PageHeader Agenda + Novo agendamento. TimeGrid 09-19h, Badge status, sticky bottom 44px. Mobile 390px + desktop shell. Output agenda.html. Sentence case, no UPPERCASE.",
+    "design_system": "cal"
+  },
+  "message": "Generate agenda.html. Read login.html and dashboard.html for correct 4-theme matrix and barber-light gold accent (#A07A2A). Follow UI-REMEDIATION-SPEC §7.3. Do not overwrite login.html or dashboard.html."
+}

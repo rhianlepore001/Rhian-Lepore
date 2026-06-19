@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
-import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface PublicBusinessHeaderProps {
     businessName: string;
@@ -35,6 +36,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     const isBeauty = userType === 'beauty';
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
     const { colors, accent, font, shadow } = useBrutalTheme({ override: themeOverride });
+    const { mode, toggleMode } = useTheme();
 
     // Links externos
     const whatsappLink = phone
@@ -92,12 +94,30 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                     </span>
                 </div>
 
-                {/* Badge de segmento no topo */}
-                <div className="absolute top-5 left-5 z-20">
+                {/* Badge de segmento + toggle dark/light */}
+                <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
                     <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-xl rounded-full border text-[10px] font-bold uppercase tracking-[0.18em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                         <SegmentIcon className="w-3 h-3" />
                         {segmentLabel}
                     </div>
+                    <button
+                        onClick={toggleMode}
+                        aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+                        title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                        className={`p-2 backdrop-blur-xl rounded-full border transition-all duration-300 ${colors.card} ${colors.border} ${colors.text} hover:brightness-110`}
+                    >
+                        <span
+                            style={{
+                                display: 'block',
+                                transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s',
+                                transform: mode === 'dark' ? 'rotate(0deg)' : 'rotate(180deg)',
+                            }}
+                        >
+                            {mode === 'dark'
+                                ? <Moon className="w-4 h-4" />
+                                : <Sun className="w-4 h-4" />}
+                        </span>
+                    </button>
                 </div>
 
                 {/* Sessão do Cliente (Canto Superior Direito) */}

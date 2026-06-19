@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
+import { Card, Button } from '../../components/ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Loader2 } from 'lucide-react';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
@@ -62,7 +61,7 @@ export const FinancialSettings: React.FC = () => {
           </p>
         </div>
 
-        <BrutalCard>
+        <Card>
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -117,12 +116,12 @@ export const FinancialSettings: React.FC = () => {
               </div>
             )}
           </div>
-        </BrutalCard>
+        </Card>
 
         <div className="flex justify-end">
-          <BrutalButton variant="primary" onClick={handleSave} loading={updateSettingsMutation.isPending}>
+          <Button variant="primary" onClick={handleSave} loading={updateSettingsMutation.isPending}>
             Salvar Configurações
-          </BrutalButton>
+          </Button>
         </div>
       </div>
     </SettingsLayout>

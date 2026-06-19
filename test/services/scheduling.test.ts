@@ -1,5 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { calcCheckoutNetAmount, calcMachineFee, completeAppointment, createAppointment, getMachineFeePercent } from '@/services/scheduling';
+import {
+  calcCheckoutNetAmount,
+  calcMachineFee,
+  completeAppointment,
+  createAppointment,
+  deleteAppointmentWithFinance,
+  getMachineFeePercent,
+  markAppointmentComplete,
+} from '@/services/scheduling';
 import { supabase } from '@/lib/supabase';
 
 vi.mock('@/lib/supabase', () => ({
@@ -118,6 +126,20 @@ describe('scheduling service', () => {
       p_notes: 'Preferencia por maquina 1',
       p_custom_service_name: null,
       p_payment_method: 'pix',
+    });
+  });
+
+  it('deleteAppointmentWithFinance chama RPC atomica G3', async () => {
+    await deleteAppointmentWithFinance({ appointmentId: 'apt-001' });
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_appointment_with_finance', {
+      p_appointment_id: 'apt-001',
+    });
+  });
+
+  it('markAppointmentComplete chama complete_appointment sem checkout', async () => {
+    await markAppointmentComplete({ appointmentId: 'apt-002' });
+    expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment', {
+      p_appointment_id: 'apt-002',
     });
   });
 });

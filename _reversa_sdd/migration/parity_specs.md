@@ -9,7 +9,7 @@ producedBy: inspector
 
 # Parity Specs
 
-> Especificacoes de paridade para a migracao Strangler Fig do AGENX.
+> Especificacoes de paridade para a migracao Strangler Fig do AgendiX.
 > Transicao de paradigma: procedural hibrido -> funcional leve (gap medio-baixo).
 
 ---

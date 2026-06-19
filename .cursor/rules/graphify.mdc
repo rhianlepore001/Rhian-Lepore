@@ -1,0 +1,23 @@
+---
+description: graphify knowledge graph — mapa da codebase
+alwaysApply: true
+---
+
+# graphify — mapa da codebase
+
+Este projeto tem um grafo de conhecimento em `graphify-out/` (2.246 nós, 4.133 arestas).
+
+## Antes de explorar código
+
+1. Leia `graphify-out/GRAPH_REPORT.md` — god nodes, comunidades, conexões surpreendentes
+2. Para "como X se relaciona com Y", use MCP graphify (`query_graph`, `get_node`, `shortest_path`) se disponível
+3. Só leia arquivos fonte quando for editar/debugar ou quando o grafo não tiver detalhe suficiente
+
+## Após mudanças em código
+
+Rode `graphify update .` (AST-only, sem custo de API) para manter o grafo atualizado.
+
+Fontes atuais:
+- Grafo: `graphify-out/`
+- Specs ativas: `specs/active/`
+- Arquitetura: `_reversa_sdd/`, `docs/architecture.md`

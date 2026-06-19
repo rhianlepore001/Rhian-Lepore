@@ -1,6 +1,6 @@
 # Components UI
 
-`components/ui/` e o contrato de componentes base do AGENX v1.
+`components/ui/` e o contrato de componentes base do AgendiX v1.
 
 ## Componentes obrigatorios
 

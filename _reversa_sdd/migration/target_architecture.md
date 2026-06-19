@@ -9,7 +9,7 @@ producedBy: designer
 
 # Target Architecture
 
-> Arquitetura alvo do AGENX v1, desenhada para Strangler Fig por dominio com paradigma funcional leve.
+> Arquitetura alvo do AgendiX v1, desenhada para Strangler Fig por dominio com paradigma funcional leve.
 
 ## Visao geral
 

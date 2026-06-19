@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AgendiX — Comparação Fundo Light Barber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ============ TOKENS COMPARTILHADOS (barber light) ============ */
+  :root {
+    --gold:          #C9A24A;   /* accent dark aprovado, usado como linha de marca */
+    --gold-light:    #8B6914;   /* accent light barber (texto/ícones sobre fundo claro) */
+    --gold-hover:    #A07A2A;
+    --gold-dim:      rgba(139,105,20,0.12);
+    --gold-border:   rgba(139,105,20,0.30);
+
+    --text:          #1A1610;
+    --text-sec:      #5A4D38;
+    --text-muted:    #8A7D65;
+
+    --success:       #059669;
+    --danger:        #DC2626;
+
+    --font-head: 'Chivo', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  /* ============ VARIANTE A — GREIGE QUENTE (sugestão) ============ */
+  .greige {
+    --bg:        #E6E4DE;
+    --surface:   #D8D5CD;
+    --card:      #FFFFFF;
+    --elevated:  #F4F3EF;
+    --divider:   rgba(120,100,60,0.14);
+    --card-shadow: 0 8px 24px -8px rgba(100,80,30,0.14), 0 2px 6px rgba(0,0,0,0.06);
+    --btn-shadow:  0 4px 16px rgba(139,105,20,0.25);
+    --overlay:   rgba(30,24,12,0.55);
+  }
+
+  /* ============ VARIANTE B — CINZA PURO #E5E5E5 (sua escolha) ============ */
+  .puro {
+    --bg:        #E5E5E5;
+    --surface:   #D8D8D8;
+    --card:      #FFFFFF;
+    --elevated:  #F4F4F4;
+    --divider:   rgba(0,0,0,0.10);
+    --card-shadow: 0 8px 24px -8px rgba(0,0,0,0.14), 0 2px 6px rgba(0,0,0,0.06);
+    --btn-shadow:  0 4px 16px rgba(0,0,0,0.18);
+    --overlay:   rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: #1c1c1c;
+    color: #fff;
+    padding: 28px 18px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 6px;
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: clamp(20px, 4vw, 30px);
+    letter-spacing: -0.02em;
+  }
+  .page-sub {
+    text-align: center;
+    color: #9a9a9a;
+    font-size: 13px;
+    margin-bottom: 30px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  @media (max-width: 820px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+
+  .frame-wrap { display: flex; flex-direction: column; gap: 12px; }
+
+  .frame-label {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: #cfcfcf;
+  }
+  .frame-label .hex {
+    background: #2a2a2a; border: 1px solid #3a3a3a;
+    padding: 3px 9px; border-radius: 6px; color: #fff;
+  }
+  .badge-reco { color: var(--gold); }
+  .badge-you  { color: #8ab4f8; }
+
+  /* ===== O MINI-APP ===== */
+  .app {
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    position: relative;
+    min-height: 620px;
+  }
+
+  /* topbar */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--divider);
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand .mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--gold);
+    display: grid; place-items: center;
+    color: #1A1610; font-family: var(--font-head); font-weight: 800; font-size: 16px;
+    box-shadow: var(--btn-shadow);
+  }
+  .brand .name { font-family: var(--font-head); font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+  .topbar .avatar {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--elevated); border: 1px solid var(--divider);
+    display: grid; place-items: center; color: var(--text-sec); font-weight: 700; font-size: 13px;
+  }
+
+  .body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+
+  .h-row { display: flex; align-items: baseline; justify-content: space-between; }
+  .h-row h2 { font-family: var(--font-head); font-weight: 700; font-size: 19px; letter-spacing: -0.01em; }
+  .h-row .date { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--divider);
+    border-radius: 14px;
+    padding: 13px 13px 14px;
+    box-shadow: var(--card-shadow);
+  }
+  .kpi .lbl { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .kpi .val { font-family: var(--font-head); font-weight: 800; font-size: 20px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .kpi .val.gold { color: var(--gold-light); }
+  .kpi .val.up   { color: var(--success); }
+  .kpi .delta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* appointment card */
+  .appt {
+    background: var(--card);
+    border: 1px solid var(--divider);
+    border-radius: 14px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+  .appt .head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 15px; border-bottom: 1px solid var(--divider);
+  }
+  .appt .head .t { font-family: var(--font-head); font-weight: 700; font-size: 14px; }
+  .chip {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 9px; border-radius: 999px;
+    background: var(--gold-dim); color: var(--gold-light);
+    border: 1px solid var(--gold-border);
+  }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 15px; border-bottom: 1px solid var(--divider);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .pic { width: 38px; height: 38px; border-radius: 10px; background: var(--surface); display:grid; place-items:center; color: var(--text-sec); font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .row .info { flex: 1; min-width: 0; }
+  .row .info .n { font-weight: 600; font-size: 14px; }
+  .row .info .s { font-size: 12px; color: var(--text-muted); }
+  .row .price { font-family: var(--font-mono); font-weight: 600; font-size: 14px; color: var(--gold-light); font-variant-numeric: tabular-nums; }
+
+  /* buttons */
+  .actions { display: flex; gap: 10px; }
+  .btn {
+    flex: 1; height: 44px; border-radius: 12px; border: 0; cursor: pointer;
+    font-family: var(--font-body); font-weight: 700; font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .btn:hover { filter: brightness(1.05); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--gold); color: #1A1610; box-shadow: var(--btn-shadow); }
+  .btn-ghost {
+    background: transparent; color: var(--gold-light);
+    border: 1px solid var(--gold-border);
+  }
+  .btn-open {
+    width: 100%; height: 42px; border-radius: 11px; cursor: pointer;
+    background: var(--surface); color: var(--text-sec);
+    border: 1px solid var(--divider); font-family: var(--font-mono);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+  }
+
+  /* MODAL */
+  .overlay {
+    position: absolute; inset: 0; background: var(--overlay);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 5;
+  }
+  .overlay.on { display: flex; }
+  .modal {
+    width: 100%; max-width: 340px;
+    background: var(--card);
+    border: 1px solid var(--gold-border);
+    border-radius: 18px;
+    box-shadow: 0 24px 64px -16px rgba(100,80,30,0.30), 0 8px 20px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  .modal .m-head {
+    display:flex; align-items:center; justify-content: space-between;
+    padding: 15px 18px; border-bottom: 1px solid var(--divider);
+  }
+  .modal .m-head .t { font-family: var(--font-head); font-weight: 700; font-size: 16px; }
+  .modal .m-head .x { cursor: pointer; color: var(--text-muted); background: none; border: 0; font-size: 20px; line-height: 1; }
+  .modal .m-body { padding: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; }
+  .field input {
+    width: 100%; height: 42px; border-radius: 10px; padding: 0 13px;
+    background: var(--elevated); border: 1px solid var(--divider); color: var(--text);
+    font-family: var(--font-body); font-size: 14px; outline: none;
+  }
+  .field input:focus { border-color: var(--gold-light); }
+  .m-foot { padding: 0 18px 18px; }
+
+  .note {
+    max-width: 1180px; margin: 26px auto 0; padding: 16px 18px;
+    background: #232323; border: 1px solid #333; border-radius: 12px;
+    font-size: 13px; line-height: 1.6; color: #cfcfcf;
+  }
+  .note b { color: #fff; }
+  .swatchline { display:flex; gap:8px; margin-top:10px; flex-wrap: wrap; }
+  .sw { display:flex; align-items:center; gap:7px; font-family: var(--font-mono); font-size: 11px; color:#bbb; }
+  .sw i { width: 16px; height: 16px; border-radius: 4px; border:1px solid rgba(255,255,255,.15); display:inline-block; }
+</style>
+</head>
+<body>
+  <h1 class="page-title">Fundo do Modo Light Barber</h1>
+  <p class="page-sub">Greige quente · vs · Cinza puro &nbsp;—&nbsp; ambos com dourado #C9A24A</p>
+
+  <div class="compare">
+    <!-- ============ GREIGE ============ -->
+    <div class="frame-wrap">
+      <div class="frame-label">
+        <span class="badge-reco">◆ versão A · greige quente (sugestão)</span>
+        <span class="hex">#E6E4DE</span>
+      </div>
+      <div class="app greige">
+        <div class="topbar">
+          <div class="brand"><div class="mark">A</div><div class="name">Barbearia do Léo</div></div>
+          <div class="avatar">LP</div>
+        </div>
+        <div class="body">
+          <div class="h-row"><h2>Hoje</h2><span class="date">Qui · 19 Jun</span></div>
+          <div class="kpis">
+            <div class="kpi"><div class="lbl">Faturamento</div><div class="val gold">R$ 840</div><div class="delta">+12% vs ontem</div></div>
+            <div class="kpi"><div class="lbl">Atendimentos</div><div class="val">14</div><div class="delta">3 na fila</div></div>
+            <div class="kpi"><div class="lbl">Meta do mês</div><div class="val up">68%</div><div class="delta">R$ 6.8k / 10k</div></div>
+          </div>
+          <div class="appt">
+            <div class="head"><span class="t">Próximos agendamentos</span><span class="chip">Ao vivo</span></div>
+            <div class="row"><div class="pic">JM</div><div class="info"><div class="n">João Mendes</div><div class="s">Corte + Barba · 14:30</div></div><div class="price">R$ 70</div></div>
+            <div class="row"><div class="pic">RS</div><div class="info"><div class="n">Rafael Souza</div><div class="s">Corte degradê · 15:15</div></div><div class="price">R$ 45</div></div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary">+ Novo agendamento</button>
+            <button class="btn btn-ghost">Ver agenda</button>
+          </div>
+          <button class="btn-open" onclick="document.getElementById('ov-greige').classList.add('on')">Abrir exemplo de modal ▾</button>
+        </div>
+        <div class="overlay" id="ov-greige">
+          <div class="modal">
+            <div class="m-head"><span class="t">Novo agendamento</span><button class="x" onclick="document.getElementById('ov-greige').classList.remove('on')">×</button></div>
+            <div class="m-body">
+              <div class="field"><label>Cliente</label><input value="João Mendes" /></div>
+              <div class="field"><label>Serviço</label><input value="Corte + Barba" /></div>
+              <div class="field"><label>Horário</label><input value="14:30" /></div>
+            </div>
+            <div class="m-foot"><button class="btn btn-primary" style="width:100%">Confirmar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ CINZA PURO ============ -->
+    <div class="frame-wrap">
+      <div class="frame-label">
+        <span class="badge-you">▸ versão B · cinza puro (sua escolha)</span>
+        <span class="hex">#E5E5E5</span>
+      </div>
+      <div class="app puro">
+        <div class="topbar">
+          <div class="brand"><div class="mark">A</div><div class="name">Barbearia do Léo</div></div>
+          <div class="avatar">LP</div>
+        </div>
+        <div class="body">
+          <div class="h-row"><h2>Hoje</h2><span class="date">Qui · 19 Jun</span></div>
+          <div class="kpis">
+            <div class="kpi"><div class="lbl">Faturamento</div><div class="val gold">R$ 840</div><div class="delta">+12% vs ontem</div></div>
+            <div class="kpi"><div class="lbl">Atendimentos</div><div class="val">14</div><div class="delta">3 na fila</div></div>
+            <div class="kpi"><div class="lbl">Meta do mês</div><div class="val up">68%</div><div class="delta">R$ 6.8k / 10k</div></div>
+          </div>
+          <div class="appt">
+            <div class="head"><span class="t">Próximos agendamentos</span><span class="chip">Ao vivo</span></div>
+            <div class="row"><div class="pic">JM</div><div class="info"><div class="n">João Mendes</div><div class="s">Corte + Barba · 14:30</div></div><div class="price">R$ 70</div></div>
+            <div class="row"><div class="pic">RS</div><div class="info"><div class="n">Rafael Souza</div><div class="s">Corte degradê · 15:15</div></div><div class="price">R$ 45</div></div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary">+ Novo agendamento</button>
+            <button class="btn btn-ghost">Ver agenda</button>
+          </div>
+          <button class="btn-open" onclick="document.getElementById('ov-puro').classList.add('on')">Abrir exemplo de modal ▾</button>
+        </div>
+        <div class="overlay" id="ov-puro">
+          <div class="modal">
+            <div class="m-head"><span class="t">Novo agendamento</span><button class="x" onclick="document.getElementById('ov-puro').classList.remove('on')">×</button></div>
+            <div class="m-body">
+              <div class="field"><label>Cliente</label><input value="João Mendes" /></div>
+              <div class="field"><label>Serviço</label><input value="Corte + Barba" /></div>
+              <div class="field"><label>Horário</label><input value="14:30" /></div>
+            </div>
+            <div class="m-foot"><button class="btn btn-primary" style="width:100%">Confirmar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>O que observar na comparação:</b> repare como o dourado <b>#C9A24A</b> (logo + botão) e o gold do texto reagem a cada fundo.
+    No <b>greige</b> (esquerda) o ouro parece "abraçado" pelo fundo — tudo lê como um conjunto quente.
+    No <b>cinza puro</b> (direita) o ouro fica mais isolado/contrastante e o fundo é mais frio/neutro.
+    Os cards brancos e os modais são idênticos nos dois — a única diferença é o fundo e a superfície (topbar/surface).
+    <div class="swatchline">
+      <span class="sw"><i style="background:#E6E4DE"></i>greige bg</span>
+      <span class="sw"><i style="background:#D8D5CD"></i>greige surface</span>
+      <span class="sw"><i style="background:#E5E5E5"></i>puro bg</span>
+      <span class="sw"><i style="background:#D8D8D8"></i>puro surface</span>
+      <span class="sw"><i style="background:#FFFFFF"></i>card</span>
+      <span class="sw"><i style="background:#C9A24A"></i>gold</span>
+      <span class="sw"><i style="background:#8B6914"></i>gold-light</span>
+    </div>
+  </div>
+</body>
+</html>

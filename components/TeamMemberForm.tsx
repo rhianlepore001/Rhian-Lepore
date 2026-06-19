@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { X, Upload, User, Loader2, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Upload, User, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { BrutalButton } from './BrutalButton';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -21,6 +22,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     isOwnerForm = false
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
+    const isBeauty = accentColor === 'beauty-neon';
+    const { colors, accent, font } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
+
     const [name, setName] = useState(initialData?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
     const [role, setRole] = useState(initialData?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
     const [slug, setSlug] = useState(initialData?.slug || '');
@@ -39,19 +43,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Bloqueia Scroll do Body e evita background scrolling atrás do modal
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, []);
-
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
 
-            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            if (file.size > 10 * 1024 * 1024) {
                 alert('A imagem deve ter no máximo 10MB.');
                 return;
             }
@@ -139,215 +135,180 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         }
     };
 
-    const isBeauty = accentColor === 'beauty-neon';
+    const inputClass = `w-full p-3 rounded-lg ${colors.text} transition-all outline-none ${colors.inputBg} ${colors.inputBorder} border focus:border-[var(--color-input-focus)]`;
+    const labelClass = `text-xs mb-1 block ${colors.textSecondary} ${font.label}`;
 
-    return createPortal(
-        <div className={`fixed inset-0 z-[10000] flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
-            <div className={`w-full max-w-md overflow-hidden transition-all shadow-2xl
-                ${isBeauty
-                    ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-                    : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
-            `}>
-                <div className={`flex items-center justify-between p-4 ${isBeauty ? 'border-b border-beauty-neon/20' : 'border-b border-neutral-800'}`}>
-                    <h3 className={`font-bold text-lg ${isBeauty ? 'text-white font-sans' : 'text-white font-heading uppercase'}`}>
-                        {initialData ? 'Editar Profissional' : 'Novo Profissional'}
-                    </h3>
-                    <button onClick={onClose} className={`transition-colors ${isBeauty ? 'text-beauty-neon/60 hover:text-beauty-neon' : 'text-neutral-400 hover:text-white'}`}>
-                        <X className="w-5 h-5" />
+    return (
+        <Modal
+            open
+            onClose={onClose}
+            title={initialData ? 'Editar Profissional' : 'Novo Profissional'}
+            size="md"
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {!initialData && (
+                    <button
+                        type="button"
+                        onClick={handleFillWithOwner}
+                        className={`w-full py-2 px-4 mb-4 border border-dashed rounded-lg transition-all text-xs ${font.mono} uppercase ${accent.borderDim} ${accent.text} hover:${accent.bgDim}`}
+                    >
+                        Sou eu quem atende (Usar meu perfil)
                     </button>
+                )}
+
+                <div className="flex justify-center mb-6">
+                    <div
+                        className={`relative w-24 h-24 rounded-full border-2 border-dashed ${photoPreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:border-current overflow-hidden group transition-colors ${accent.text} ${colors.surface}`}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        {photoPreview ? (
+                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <User className={`w-8 h-8 ${colors.textMuted}`} />
+                        )}
+
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload className="w-6 h-6 text-white" />
+                        </div>
+                    </div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                    />
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                    {!initialData && (
-                        <button
-                            type="button"
-                            onClick={handleFillWithOwner}
-                            className={`w-full py-2 px-4 mb-4 border border-dashed rounded-lg transition-all text-xs font-mono uppercase
-                                ${isBeauty
-                                    ? 'border-beauty-neon/50 text-beauty-neon hover:bg-beauty-neon/10'
-                                    : 'border-accent-gold/50 text-accent-gold hover:bg-accent-gold/10'}
-                            `}
-                        >
-                            ✨ Sou eu quem atendo (Usar meu perfil)
-                        </button>
-                    )}
-
-                    {/* Photo Upload */}
-                    <div className="flex justify-center mb-6">
-                        <div
-                            className={`relative w-24 h-24 rounded-full border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-current overflow-hidden group transition-colors 
-                            ${isBeauty ? 'hover:text-beauty-neon bg-beauty-dark/50' : 'hover:text-accent-gold bg-neutral-800'}`}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            {photoPreview ? (
-                                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                            ) : (
-                                <User className="w-8 h-8 text-neutral-500" />
-                            )}
-
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <Upload className="w-6 h-6 text-white" />
-                            </div>
-                        </div>
+                <div className="grid grid-cols-2 gap-4 items-center mb-2">
+                    <div className="flex items-center gap-2">
                         <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handlePhotoChange}
+                            type="checkbox"
+                            id="isOwner"
+                            checked={isOwner}
+                            onChange={e => setIsOwner(e.target.checked)}
+                            className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
                         />
+                        <label htmlFor="isOwner" className={`text-xs cursor-pointer ${colors.text} ${font.label}`}>
+                            É o Dono
+                        </label>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 items-center mb-2">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="isOwner"
-                                checked={isOwner}
-                                onChange={e => setIsOwner(e.target.checked)}
-                                className={`rounded bg-neutral-800 border-neutral-700 text-current focus:ring-0 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}
-                            />
-                            <label htmlFor="isOwner" className={`text-xs cursor-pointer ${isBeauty ? 'text-beauty-neon/80 font-medium' : 'text-white font-mono uppercase'}`}>
-                                É o Dono
-                            </label>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="active"
-                                checked={active}
-                                onChange={e => setActive(e.target.checked)}
-                                className={`rounded bg-neutral-800 border-neutral-700 text-current focus:ring-0 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}
-                            />
-                            <label htmlFor="active" className={`text-xs cursor-pointer ${isBeauty ? 'text-beauty-neon/80 font-medium' : 'text-white font-mono uppercase'}`}>
-                                Ativo
-                            </label>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="active"
+                            checked={active}
+                            onChange={e => setActive(e.target.checked)}
+                            className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
+                        />
+                        <label htmlFor="active" className={`text-xs cursor-pointer ${colors.text} ${font.label}`}>
+                            Ativo
+                        </label>
                     </div>
+                </div>
 
+                <div>
+                    <label className={labelClass}>Nome</label>
+                    <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        className={inputClass}
+                        placeholder="Ex: João Silva"
+                    />
+                </div>
+
+                <div className={`grid ${isOwner ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                     <div>
-                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Nome</label>
+                        <label className={labelClass}>Cargo</label>
                         <input
                             type="text"
                             required
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                ${isBeauty
-                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                            placeholder={isBeauty ? "Ex: Maria Souza" : "Ex: João Silva"}
+                            value={role}
+                            onChange={e => setRole(e.target.value)}
+                            className={inputClass}
+                            placeholder="Ex: Barbeiro"
                         />
                     </div>
 
-                    <div className={`grid ${isOwner ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
+                    {!isOwner && (
                         <div>
-                            <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Cargo</label>
+                            <label className={labelClass}>Comissão (%)</label>
                             <input
-                                type="text"
+                                type="number"
                                 required
-                                value={role}
-                                onChange={e => setRole(e.target.value)}
-                                className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                    ${isBeauty
-                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                                placeholder="Ex: Barbeiro"
+                                min="0"
+                                max="100"
+                                value={commissionRate}
+                                onChange={e => setCommissionRate(e.target.value)}
+                                className={inputClass}
                             />
                         </div>
+                    )}
+                </div>
 
-                        {!isOwner && (
-                            <div>
-                                <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Comissão (%)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    max="100"
-                                    value={commissionRate}
-                                    onChange={e => setCommissionRate(e.target.value)}
-                                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                        ${isBeauty
-                                            ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                                            : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Link Personalizado (Slug)</label>
-                        <div className="flex items-center gap-2">
-                            <span className="text-neutral-500 text-xs">.../pro/</span>
-                            <input
-                                type="text"
-                                value={slug}
-                                onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                                className={`flex-1 p-3 rounded-lg text-white transition-all outline-none
-                                    ${isBeauty
-                                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                        : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                                placeholder="joao-silva"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>CPF (Opcional)</label>
+                <div>
+                    <label className={labelClass}>Link Personalizado (Slug)</label>
+                    <div className="flex items-center gap-2">
+                        <span className={`${colors.textMuted} text-xs`}>.../pro/</span>
                         <input
                             type="text"
-                            value={cpf}
-                            onChange={e => setCpf(e.target.value)}
-                            className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                ${isBeauty
-                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                            placeholder="000.000.000-00"
-                            maxLength={14}
+                            value={slug}
+                            onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                            className={`flex-1 ${inputClass}`}
+                            placeholder="joao-silva"
                         />
                     </div>
+                </div>
 
-                    <div>
-                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Bio (Opcional)</label>
-                        <textarea
-                            value={bio}
-                            onChange={e => setBio(e.target.value)}
-                            rows={3}
-                            className={`w-full p-3 rounded-lg text-white transition-all outline-none resize-none
-                                ${isBeauty
-                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                            placeholder="Breve descrição..."
-                        />
-                    </div>
+                <div>
+                    <label className={labelClass}>CPF (Opcional)</label>
+                    <input
+                        type="text"
+                        value={cpf}
+                        onChange={e => setCpf(e.target.value)}
+                        className={inputClass}
+                        placeholder="000.000.000-00"
+                        maxLength={14}
+                    />
+                </div>
 
-                    <div>
-                        <label className={`text-xs mb-1 block ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'text-white font-mono'}`}>Especialidades (Separadas por vírgula)</label>
-                        <input
-                            type="text"
-                            value={specialties}
-                            onChange={e => setSpecialties(e.target.value)}
-                            className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                                ${isBeauty
-                                    ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                                    : 'bg-neutral-800 border border-neutral-700 focus:border-accent-gold'}`}
-                            placeholder="Ex: Corte, Barba, Coloração"
-                        />
-                    </div>
+                <div>
+                    <label className={labelClass}>Bio (Opcional)</label>
+                    <textarea
+                        value={bio}
+                        onChange={e => setBio(e.target.value)}
+                        rows={3}
+                        className={`${inputClass} resize-none`}
+                        placeholder="Breve descrição..."
+                    />
+                </div>
 
-                    <BrutalButton
-                        type="submit"
-                        disabled={loading}
-                        variant="primary"
-                        className="w-full mt-4"
-                        icon={loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                    >
-                        {loading ? 'Salvando...' : 'Salvar Profissional'}
-                    </BrutalButton>
-                </form>
-            </div>
-        </div>,
-        document.body
+                <div>
+                    <label className={labelClass}>Especialidades (Separadas por vírgula)</label>
+                    <input
+                        type="text"
+                        value={specialties}
+                        onChange={e => setSpecialties(e.target.value)}
+                        className={inputClass}
+                        placeholder="Ex: Corte, Barba, Coloração"
+                    />
+                </div>
+
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    variant="primary"
+                    fullWidth
+                    className="mt-4"
+                    loading={loading}
+                    icon={!loading ? <Check className="w-5 h-5" /> : undefined}
+                >
+                    {loading ? 'Salvando...' : 'Salvar Profissional'}
+                </Button>
+            </form>
+        </Modal>
     );
 };

@@ -1,7 +1,16 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
-import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { Card, type CardVariant } from './ui/Card';
+import type { ThemeVariant } from '../hooks/useBrutalTheme';
 
+/**
+ * @deprecated Use `Card` de `components/ui/Card`. Esta versão mapeia as props legadas
+ * para a API canônica e segue como wrapper apenas para minimizar regressão.
+ * Mapeamento:
+ * - `accent={true}` e `glow={true}` → `variant="elevated"` (DS Lock §3.3)
+ * - `animate` é ignorado (motion controlado por `prefers-reduced-motion`, DS Lock §2)
+ *
+ * Plano de migração: trocar imports para `import { Card } from 'components/ui/Card'`.
+ */
 interface BrutalCardProps {
   id?: string;
   children: React.ReactNode;
@@ -11,72 +20,44 @@ interface BrutalCardProps {
   noPadding?: boolean;
   accent?: boolean;
   glow?: boolean;
+  /** @deprecated motion é controlado globalmente — não passe mais animate */
   animate?: boolean;
-  forceTheme?: 'beauty' | 'barber';
+  forceTheme?: ThemeVariant;
   style?: React.CSSProperties;
 }
 
 export const BrutalCard: React.FC<BrutalCardProps> = ({
   id,
   children,
-  className = '',
+  className,
   title,
   action,
-  noPadding = false,
-  accent: accentProp = false,
-  glow: glowProp = false,
-  animate = false,
+  noPadding,
+  accent,
+  glow,
   forceTheme,
-  style
+  style,
 }) => {
-  const { classes, accent, colors, shadow } = useBrutalTheme({ override: forceTheme });
-  const location = useLocation();
-  const isSettings = location.pathname.startsWith('/configuracoes');
-
-  const containerClass = glowProp
-    ? `${classes.cardGlow} ${className}`
-    : accentProp
-      ? `${classes.cardAccent} ${className}`
-      : `${classes.card} ${className}`;
-  const animationClass = animate ? 'animate-in fade-in zoom-in-[99%] duration-300' : '';
-
-  const headerClass = `flex justify-between items-center px-6 py-5 md:px-8 md:py-6 border-b ${colors.divider} bg-white/[0.02]`;
-  const titleClass = `font-heading text-lg md:text-xl ${colors.text} tracking-tight font-bold`;
-  const contentClass = `${noPadding ? '' : 'p-6 md:p-8'} ${colors.textSecondary} relative z-10`;
+  if (import.meta.env.DEV) {
+    console.warn(
+      '[BrutalCard] deprecated — use `Card` de components/ui/Card. ' +
+        'props mapeadas automaticamente; animate é ignorado.'
+    );
+  }
+  const variant: CardVariant = accent || glow ? 'elevated' : 'outlined';
 
   return (
-    <div
+    <Card
       id={id}
-      className={`${containerClass} ${animationClass}`.trim()}
-      style={{
-        outline: 'none',
-        WebkitTapHighlightColor: 'transparent',
-        ...style
-      }}
-      tabIndex={-1}
+      className={className}
+      title={title}
+      action={action}
+      noPadding={noPadding}
+      variant={variant}
+      forceTheme={forceTheme}
+      style={style}
     >
-      {/* Camada sutil de profundidade */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none rounded-2xl" />
-
-      {/* Área do Cabeçalho */}
-      {(title || action) && (
-        <div className={headerClass}>
-          {title && (
-            <div className="flex-1">
-              {typeof title === 'string'
-                ? <h3 className={titleClass}>{title}</h3>
-                : <div className={titleClass}>{title}</div>
-              }
-            </div>
-          )}
-          {action && <div className="ml-4">{action}</div>}
-        </div>
-      )}
-
-      {/* Conteúdo com padding padronizado */}
-      <div className={contentClass}>
-        {children}
-      </div>
-    </div>
+      {children}
+    </Card>
   );
 };

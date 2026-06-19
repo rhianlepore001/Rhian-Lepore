@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="barber" data-mode="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgendiX — Agenda (artifact)</title>
+  <link rel="stylesheet" href="../shared/artifact-ds.css" />
+</head>
+<body>
+  <div class="theme-toolbar">
+    <span>UI Audit artifact</span>
+    <span class="tag" id="theme-tag">barber / dark</span>
+    <label>Tema <select id="theme-select"><option value="barber">Barber</option><option value="beauty">Beauty</option></select></label>
+    <label>Modo <select id="mode-select"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+  </div>
+
+  <div class="artifact-body app-shell">
+    <aside class="sidebar">
+      <div style="padding:8px 12px 20px;font-family:Chivo;font-weight:900;">AgendiX</div>
+      <a class="nav-item" href="#">Início</a>
+      <a class="nav-item active" href="#">Agenda</a>
+      <a class="nav-item" href="#">Clientes</a>
+      <a class="nav-item" href="#">Financeiro</a>
+    </aside>
+
+    <main class="main stack">
+      <header class="page-header">
+        <div>
+          <h1 class="h1">Agenda</h1>
+          <p class="text-secondary" style="margin-top:4px;">Quarta, 10 de junho · 8 horários</p>
+        </div>
+        <div class="page-header-actions">
+          <button type="button" class="btn btn-primary">Novo agendamento</button>
+        </div>
+      </header>
+
+      <!-- Day tabs -->
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;">
+        <button type="button" class="btn btn-primary" style="min-height:40px;padding:0 16px;">Hoje</button>
+        <button type="button" class="btn btn-secondary" style="min-height:40px;padding:0 16px;">Qui</button>
+        <button type="button" class="btn btn-secondary" style="min-height:40px;padding:0 16px;">Sex</button>
+        <button type="button" class="btn btn-secondary" style="min-height:40px;padding:0 16px;">Sáb</button>
+      </div>
+
+      <!-- Time grid — density B via --row-py -->
+      <section class="card">
+        <div class="card-body stack" style="gap:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-divider);">
+            <span class="text-mono text-muted" style="width:48px;">09:00</span>
+            <div style="flex:1;padding-left:12px;color:var(--color-text-muted);font-size:0.875rem;">— Livre —</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--row-py) 0;border-bottom:1px solid var(--color-divider);background:var(--color-accent-dim);margin:0 -16px;padding-left:16px;padding-right:16px;">
+            <span class="text-mono" style="width:48px;color:var(--color-accent);font-weight:600;">14:30</span>
+            <div style="flex:1;padding-left:12px;">
+              <strong>João Silva</strong>
+              <span class="text-secondary"> · Corte · 30 min</span>
+            </div>
+            <button type="button" class="btn btn-primary" style="min-height:36px;padding:0 12px;font-size:0.8125rem;">Concluir</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--row-py) 0;border-bottom:1px solid var(--color-divider);">
+            <span class="text-mono text-muted" style="width:48px;">15:00</span>
+            <div style="flex:1;padding-left:12px;"><strong>Maria Costa</strong> <span class="text-secondary">· Barba</span></div>
+            <button type="button" class="btn btn-ghost" style="min-height:36px;padding:0 10px;font-size:0.8125rem;">Editar</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--row-py) 0;">
+            <span class="text-mono text-muted" style="width:48px;">15:45</span>
+            <div style="flex:1;padding-left:12px;"><strong>Pedro Lima</strong> <span class="text-secondary">· Combo</span></div>
+            <button type="button" class="btn btn-ghost" style="min-height:36px;padding:0 10px;font-size:0.8125rem;">Editar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pending requests -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="h2">Pendentes de confirmação</h2>
+          <span class="badge">2</span>
+        </div>
+        <div class="card-body stack" style="gap:8px;">
+          <div class="banner-outlined" style="box-shadow:none;">
+            <span>Ana · Sáb 14:00 · Manicure</span>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="btn btn-primary" style="min-height:36px;padding:0 12px;font-size:0.8125rem;">Aceitar</button>
+              <button type="button" class="btn btn-ghost" style="min-height:36px;padding:0 12px;font-size:0.8125rem;">Recusar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navegação mobile">
+    <button type="button">Início</button>
+    <button type="button" class="active">Agenda</button>
+    <button type="button" style="color:var(--color-accent);">+</button>
+    <button type="button">Clientes</button>
+    <button type="button">Mais</button>
+  </nav>
+
+  <script src="../shared/artifact-theme.js"></script>
+  <script>initThemeToolbar('barber', 'dark');</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "project": "AgendiX",
+  "path": "c:/Users/User/Downloads/Rhian-Lepore-main",
+  "auditedAt": "2026-06-13T00:00:00Z",
+  "stack": {
+    "frontend": "React 19 + TypeScript 5.8 + Vite 6 + Tailwind",
+    "backend": "Supabase (Auth, PostgreSQL, RLS, Edge Functions, Realtime)",
+    "payments": "Stripe",
+    "ai": "OpenRouter",
+    "routing": "HashRouter"
+  },
+  "entryPoints": [
+    "App.tsx",
+    "contexts/AuthContext.tsx",
+    "lib/supabase.ts",
+    "supabase/functions/create-checkout-session/index.ts",
+    "supabase/functions/send-appointment-reminder/index.ts"
+  ],
+  "riskAreas": [
+    "multi-tenant RLS / company_id isolation",
+    "SECURITY DEFINER RPCs (public booking)",
+    "client-exposed VITE_* secrets",
+    "OwnerRouteGuard / DevRouteGuard vs RLS gaps",
+    "public routes /#/booking/:id and /#/queue/:id",
+    "Stripe checkout edge function",
+    "91+ SQL migrations with RLS history"
+  ],
+  "fileTags": {
+    "auth": ["contexts/AuthContext.tsx", "pages/Login.tsx", "pages/Register.tsx", "pages/UpdatePassword.tsx", "components/OwnerRouteGuard.tsx", "components/DevRouteGuard.tsx", "components/ProtectedLayout.tsx"],
+    "db": ["supabase/migrations/", "lib/supabase.ts", "services/", "hooks/"],
+    "config": [".env.example", "vite.config.ts", "vercel.json"],
+    "crypto": ["utils/passwordValidation.ts"],
+    "external": ["lib/openrouter.ts", "supabase/functions/"]
+  }
+}

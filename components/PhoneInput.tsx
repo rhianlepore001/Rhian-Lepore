@@ -150,8 +150,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                                     onChange('');
                                 }}
                                 className={`flex items-center gap-3 w-full px-4 py-3 transition-all text-left ${isBeauty
-                                    ? 'hover:bg-beauty-neon/10 border-l-2 border-transparent hover:border-beauty-neon'
-                                    : 'hover:bg-neutral-800 border-l-4 border-transparent hover:border-accent-gold'
+                                    ? 'hover:bg-beauty-neon/10'
+                                    : 'hover:bg-accent-gold/10'
                                     }`}
                             >
                                 <span className="text-xl">{REGIONS[r].flag}</span>

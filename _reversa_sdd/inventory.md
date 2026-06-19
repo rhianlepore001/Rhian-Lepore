@@ -6,7 +6,7 @@
 
 ## Visão Geral
 
-**agendix** (também referenciado como *Beauty OS* / *AgenX*) é um SaaS para gestão de barbearias e salões de beleza. Oferece agendamento, fila de espera, CRM de clientes, financeiro, comissões, marketing, onboarding wizard e dashboard com insights alimentados por IA.
+**agendix** (também referenciado como *Beauty OS* / *AgendiX*) é um SaaS para gestão de barbearias e salões de beleza. Oferece agendamento, fila de espera, CRM de clientes, financeiro, comissões, marketing, onboarding wizard e dashboard com insights alimentados por IA.
 
 ---
 

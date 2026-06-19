@@ -1,7 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '../utils/Logger';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
-import { BrutalButton } from './BrutalButton';
+import { Button } from './ui/Button';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 
 interface Props {
     children: ReactNode;
@@ -10,6 +11,48 @@ interface Props {
 interface State {
     hasError: boolean;
     error: Error | null;
+}
+
+function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
+    const { colors, font } = useBrutalTheme({ override: 'barber' as ThemeVariant });
+
+    return (
+        <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
+            <div className={`${colors.card} ${colors.border} border-4 border-red-600 p-8 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(220,38,38,0.5)]`}>
+                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-red-500/20">
+                    <AlertTriangle className="w-10 h-10 text-red-500" />
+                </div>
+
+                <h2 className={`text-2xl font-bold ${colors.text} mb-4 uppercase tracking-wider`}>
+                    Sistema Interrompido
+                </h2>
+
+                <p className={`${colors.textSecondary} mb-8 ${font.mono} text-sm leading-relaxed`}>
+                    Ocorreu um erro inesperado. Nossa equipe técnica foi notificada automaticamente.
+                </p>
+
+                {error && process.env.NODE_ENV === 'development' && (
+                    <div className="bg-black/50 p-4 rounded mb-6 text-left overflow-auto max-h-40">
+                        <code className="text-red-400 text-xs font-mono">
+                            {error.toString()}
+                        </code>
+                    </div>
+                )}
+
+                <div className="flex justify-center">
+                    <Button
+                        variant="danger"
+                        size="lg"
+                        onClick={onReset}
+                        icon={<RefreshCcw className="w-4 h-4" />}
+                        className="uppercase tracking-wider"
+                    >
+                        Recarregar Página
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -35,41 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public render() {
         if (this.state.hasError) {
-            return (
-                <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
-                    <div className="bg-neutral-900 border-4 border-red-600 p-8 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(220,38,38,0.5)]">
-                        <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-red-500/20">
-                            <AlertTriangle className="w-10 h-10 text-red-500" />
-                        </div>
-
-                        <h2 className="text-2xl font-bold text-white mb-4 uppercase tracking-wider">
-                            Sistema Interrompido
-                        </h2>
-
-                        <p className="text-neutral-400 mb-8 font-mono text-sm leading-relaxed">
-                            Ocorreu um erro inesperado. Nossa equipe técnica foi notificada automaticamente.
-                        </p>
-
-                        {this.state.error && process.env.NODE_ENV === 'development' && (
-                            <div className="bg-black/50 p-4 rounded mb-6 text-left overflow-auto max-h-40">
-                                <code className="text-red-400 text-xs font-mono">
-                                    {this.state.error.toString()}
-                                </code>
-                            </div>
-                        )}
-
-                        <div className="flex justify-center">
-                            <button
-                                onClick={this.handleReset}
-                                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95 border-2 border-transparent hover:border-black"
-                            >
-                                <RefreshCcw className="w-4 h-4" />
-                                Recarregar Página
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
+            return <ErrorFallback error={this.state.error} onReset={this.handleReset} />;
         }
 
         return this.props.children;

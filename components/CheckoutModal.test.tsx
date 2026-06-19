@@ -5,6 +5,8 @@ import { CheckoutModal } from './CheckoutModal';
 import type { Appointment } from '@/types';
 import { supabase } from '@/lib/supabase';
 
+const showToastMock = vi.fn();
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: vi.fn().mockReturnThis(),
@@ -31,21 +33,24 @@ vi.mock('@/contexts/UIContext', () => ({
   useUI: () => ({ setModalOpen: vi.fn() }),
 }));
 
-vi.mock('@/components/Modal', () => ({
-  Modal: ({ isOpen, children, title, footer }: { isOpen: boolean; children: React.ReactNode; title?: string; footer?: React.ReactNode }) =>
-    isOpen ? (
+vi.mock('@/components/ui', () => ({
+  Modal: ({ open, children, title, footer }: { open: boolean; children: React.ReactNode; title?: string; footer?: React.ReactNode }) =>
+    open ? (
       <div role="dialog" aria-modal="true">
         {title && <h2>{title}</h2>}
         {children}
         {footer}
       </div>
     ) : null,
+  Button: ({ children, onClick, disabled, loading }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; loading?: boolean }) => (
+    <button type="button" onClick={onClick} disabled={disabled || loading}>{children}</button>
+  ),
+  useToast: () => ({ showToast: showToastMock }),
 }));
 
-vi.mock('@/components/BrutalButton', () => ({
-  BrutalButton: ({ children, onClick, disabled, loading }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; loading?: boolean }) => (
-    <button onClick={onClick} disabled={disabled || loading}>{children}</button>
-  ),
+vi.mock('@/hooks/useCatalog', () => ({
+  useProducts: () => ({ data: [] }),
+  useSellProduct: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 const mockAppointment: Appointment = {
@@ -165,7 +170,6 @@ describe('CheckoutModal', () => {
   });
 
   it('quando RPC falha, exibe erro e nao faz update mais insert no client-side', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
     (supabase.rpc as any).mockResolvedValue({
       data: null,
       error: new Error('RPC indisponivel'),
@@ -178,11 +182,9 @@ describe('CheckoutModal', () => {
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('Erro ao concluir atendimento. Tente novamente.');
+      expect(showToastMock).toHaveBeenCalledWith('Erro ao concluir atendimento. Tente novamente.', 'error');
     });
     expect(supabase.from).not.toHaveBeenCalled();
     expect(defaultProps.onConfirm).not.toHaveBeenCalled();
-
-    alertSpy.mockRestore();
   });
 });

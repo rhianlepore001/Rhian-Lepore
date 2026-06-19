@@ -14,7 +14,7 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 
 const SIZE_MAP = {
   sm: 'h-9 text-xs px-3',
-  md: 'h-11 text-sm px-4',
+  md: 'h-11 text-base sm:text-sm px-4',
   lg: 'h-[52px] text-base px-4',
 } as const;
 

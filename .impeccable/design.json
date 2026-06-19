@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-13T00:00:00Z",
+  "title": "Design System: AgendiX",
+  "extensions": {
+    "colorMeta": {
+      "barber-bg": { "role": "neutral", "displayName": "Carvão Quente", "canonical": "oklch(13% 0.015 70)", "tonalRamp": ["#050404", "#12100E", "#1A1816", "#21201C", "#333333", "#6B6252", "#A89A82", "#D4D4D4", "#F0EBE0", "#F5F5F5"] },
+      "barber-card": { "role": "neutral", "displayName": "Painel Barbeado", "canonical": "oklch(19% 0.015 70)", "tonalRamp": ["#080707", "#12100E", "#1A1816", "#21201C", "#252525", "#2A2A2A", "#333333", "#6B6252", "#A89A82", "#D4D4D4"] },
+      "barber-accent": { "role": "primary", "displayName": "Ouro Barateado", "canonical": "oklch(55% 0.13 75)", "tonalRamp": ["#332810", "#4D3D18", "#6B5420", "#8A6D2A", "#A07A2A", "#C29B40", "#D4AF50", "#EDD49A", "#F5E8C8", "#FBF5E6"] },
+      "barber-text": { "role": "neutral", "displayName": "Branco Aquecido", "canonical": "oklch(93% 0.008 75)", "tonalRamp": ["#12100E", "#1A1610", "#333333", "#5A4D38", "#6B6252", "#8A7D65", "#A89A82", "#DDD6C6", "#E8E0D0", "#F0EBE0"] },
+      "beauty-bg": { "role": "neutral", "displayName": "Noite Profunda", "canonical": "oklch(15% 0.035 280)", "tonalRamp": ["#0D0B16", "#151228", "#17132A", "#221F35", "#2A2740", "#4C4860", "#6B6780", "#8A7DA8", "#B5A9D0", "#D8D0F0"] },
+      "beauty-accent": { "role": "primary", "displayName": "Violeta Neon", "canonical": "oklch(70% 0.18 290)", "tonalRamp": ["#2E1065", "#4C1D95", "#5B21B6", "#6D28D9", "#7C3AED", "#8B5CF6", "#B794F6", "#C9B8FF", "#E9D5FF", "#F5F3FF"] },
+      "beauty-text": { "role": "neutral", "displayName": "Branco Lilás", "canonical": "oklch(93% 0.01 285)", "tonalRamp": ["#1A1225", "#252236", "#2A2740", "#4A3D65", "#5B4D7A", "#7B6E95", "#8A7DA8", "#B5A9D0", "#DDD4EF", "#EBE5F5"] },
+      "success": { "role": "semantic", "displayName": "Esmeralda", "canonical": "oklch(55% 0.17 160)", "tonalRamp": ["#022C22", "#064E3B", "#065F46", "#047857", "#059669", "#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#D1FAE5"] },
+      "danger": { "role": "semantic", "displayName": "Vermelho Alerta", "canonical": "oklch(55% 0.22 25)", "tonalRamp": ["#450A0A", "#7F1D1D", "#991B1B", "#B91C1C", "#DC2626", "#EF4444", "#F87171", "#FCA5A5", "#FEE2E2", "#FEF2F2"] },
+      "warning": { "role": "semantic", "displayName": "Âmbar", "canonical": "oklch(70% 0.18 75)", "tonalRamp": ["#451A03", "#78350F", "#92400E", "#B45309", "#D97706", "#F59E0B", "#FBBF24", "#FCD34D", "#FDE68A", "#FEF3C7"] },
+      "info": { "role": "semantic", "displayName": "Azul Info", "canonical": "oklch(55% 0.18 260)", "tonalRamp": ["#1E3A5F", "#1E40AF", "#2563EB", "#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE", "#DBEAFE", "#EFF6FF", "#F0F9FF"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Título de página. Usado uma vez por tela no PageHeader." },
+      "h1": { "displayName": "Heading 1", "purpose": "Seção principal dentro de uma página." },
+      "h2": { "displayName": "Heading 2", "purpose": "Título de card ou sub-seção." },
+      "h3": { "displayName": "Heading 3", "purpose": "Sub-seção dentro de card." },
+      "body-lg": { "displayName": "Body Large", "purpose": "Texto corrido principal, 16px." },
+      "body": { "displayName": "Body", "purpose": "Texto secundário, labels, descrições. 14px." },
+      "caption": { "displayName": "Caption", "purpose": "Labels, timestamps, dados monetários. Monospace." }
+    },
+    "shadows": [
+      { "name": "rest-dark", "value": "0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,245,230,0.12)", "purpose": "Card em repouso no dark mode. Glass-border + profundidade mínima." },
+      { "name": "rest-light-barber", "value": "0 8px 24px -8px rgba(100,80,30,0.12), 0 2px 6px rgba(0,0,0,0.06)", "purpose": "Card em repouso no light mode (barber)." },
+      { "name": "rest-light-beauty", "value": "0 8px 24px -8px rgba(91,33,182,0.10), 0 2px 6px rgba(0,0,0,0.05)", "purpose": "Card em repouso no light mode (beauty)." },
+      { "name": "hover-dark", "value": "0 8px 24px rgba(194,155,64,0.08), 0 4px 8px rgba(0,0,0,0.4)", "purpose": "Card em hover/focus no dark mode." },
+      { "name": "hover-light-barber", "value": "0 4px 12px rgba(100,80,30,0.10)", "purpose": "Card em hover/focus no light mode (barber)." },
+      { "name": "hover-light-beauty", "value": "0 4px 12px rgba(91,33,182,0.08)", "purpose": "Card em hover/focus no light mode (beauty)." },
+      { "name": "elevated-barber", "value": "0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194,155,64,0.15)", "purpose": "Card com destaque. Inner border ganha cor do accent." },
+      { "name": "elevated-beauty", "value": "0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(167,139,250,0.15)", "purpose": "Card com destaque beauty. Inner border em violet." },
+      { "name": "modal-dark", "value": "0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,245,230,0.12)", "purpose": "Modal no dark mode." },
+      { "name": "modal-light-barber", "value": "0 24px 64px -16px rgba(100,80,30,0.18), 0 8px 20px rgba(0,0,0,0.08)", "purpose": "Modal no light mode (barber)." },
+      { "name": "modal-light-beauty", "value": "0 24px 64px -16px rgba(91,33,182,0.15), 0 8px 20px rgba(0,0,0,0.06)", "purpose": "Modal no light mode (beauty)." },
+      { "name": "glow-gold", "value": "0 0 10px rgba(194,155,64,0.4), 0 0 20px rgba(194,155,64,0.2)", "purpose": "Accent glow barber. Reservado para CTAs e estados ativos." },
+      { "name": "glow-violet", "value": "0 0 10px rgba(183,148,246,0.5), 0 0 20px rgba(183,148,246,0.3)", "purpose": "Accent glow beauty. Reservado para CTAs e estados ativos." },
+      { "name": "btn-gold", "value": "0 4px 20px rgba(194,155,64,0.25)", "purpose": "Botão primário barber." },
+      { "name": "btn-violet", "value": "0 4px 20px rgba(183,148,246,0.3)", "purpose": "Botão primário beauty." }
+    ],
+    "motion": [
+      { "name": "fast", "value": "150ms ease-out", "purpose": "Transições de estado rápido: hover, focus, toggle." },
+      { "name": "normal", "value": "200ms ease-out", "purpose": "Transições padrão: card hover, tab switch." },
+      { "name": "slow", "value": "300ms ease-out-quart", "purpose": "Entradas e revelações: modal enter, page transition." },
+      { "name": "enter", "value": "300ms ease-out-quart", "purpose": "Animação de entrada." },
+      { "name": "exit", "value": "200ms ease-in", "purpose": "Animação de saída." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px", "purpose": "Mobile landscape" },
+      { "name": "md", "value": "768px", "purpose": "Tablet — sidebar aparece, tables rendered" },
+      { "name": "lg", "value": "1024px", "purpose": "Desktop — full layout" },
+      { "name": "xl", "value": "1280px", "purpose": "Large desktop" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Barber)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "CTA principal no tema barber. Ouro sobre fundo escuro, texto preto.",
+      "html": "<button class=\"ds-btn-primary-barber\">Salvar</button>",
+      "css": ".ds-btn-primary-barber { background: #C29B40; color: #000000; font-family: 'Chivo', sans-serif; font-weight: 700; font-size: 14px; padding: 10px 20px; border: none; border-radius: 20px; min-height: 44px; cursor: pointer; transition: filter 150ms, transform 150ms; box-shadow: 0 4px 20px rgba(194,155,64,0.25); } .ds-btn-primary-barber:hover { filter: brightness(1.1); } .ds-btn-primary-barber:active { transform: scale(0.97); } .ds-btn-primary-barber:focus-visible { outline: none; box-shadow: 0 4px 20px rgba(194,155,64,0.25), 0 0 0 2px rgba(194,155,64,0.6); } .ds-btn-primary-barber:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Primary Button (Beauty)",
+      "kind": "button",
+      "refersTo": "button-primary-beauty",
+      "description": "CTA principal no tema beauty. Violeta sobre fundo escuro, texto branco.",
+      "html": "<button class=\"ds-btn-primary-beauty\">Salvar</button>",
+      "css": ".ds-btn-primary-beauty { background: #A78BFA; color: #FFFFFF; font-family: 'Chivo', sans-serif; font-weight: 700; font-size: 14px; padding: 10px 20px; border: none; border-radius: 20px; min-height: 44px; cursor: pointer; transition: filter 150ms, transform 150ms; box-shadow: 0 4px 20px rgba(167,139,250,0.3); } .ds-btn-primary-beauty:hover { filter: brightness(1.1); } .ds-btn-primary-beauty:active { transform: scale(0.97); } .ds-btn-primary-beauty:focus-visible { outline: none; box-shadow: 0 4px 20px rgba(167,139,250,0.3), 0 0 0 2px rgba(167,139,250,0.5); } .ds-btn-primary-beauty:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ação secundária. Transparente, texto accent, hover com bg sutil.",
+      "html": "<button class=\"ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: var(--color-accent); font-family: 'Inter', sans-serif; font-weight: 500; font-size: 14px; padding: 10px 20px; border: 1px solid transparent; border-radius: 20px; min-height: 44px; cursor: pointer; transition: background-color 150ms; } .ds-btn-ghost:hover { background: rgba(255,255,255,0.05); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-input-focus); }"
+    },
+    {
+      "name": "Card (Outlined)",
+      "kind": "card",
+      "refersTo": "card-outlined",
+      "description": "Card padrão em repouso. Borda de vidro, sem sombra.",
+      "html": "<div class=\"ds-card-outlined\"><div class=\"ds-card-header\"><h3 class=\"ds-card-title\">Título</h3></div><div class=\"ds-card-body\">Conteúdo</div></div>",
+      "css": ".ds-card-outlined { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; transition: box-shadow 200ms ease-out, transform 200ms ease-out; } .ds-card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--color-divider); } .ds-card-title { font-family: 'Chivo', sans-serif; font-weight: 700; font-size: 16px; color: var(--color-text); } .ds-card-body { padding: 20px 24px; } @media (max-width: 768px) { .ds-card-header { padding: 16px 20px; } .ds-card-body { padding: 16px 20px; } } .ds-card-outlined:hover { transform: translateY(-2px); }"
+    },
+    {
+      "name": "Input (Default)",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Campo de texto padrão. 44px touch target, inset bg, borda de tema.",
+      "html": "<div class=\"ds-input-wrapper\"><label class=\"ds-input-label\">Nome</label><input class=\"ds-input\" type=\"text\" placeholder=\"Digite o nome\" /></div>",
+      "css": ".ds-input-wrapper { display: flex; flex-direction: column; } .ds-input-label { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.05em; color: var(--color-text-secondary); margin-bottom: 6px; } .ds-input { width: 100%; height: 44px; padding: 0 16px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--color-text); background: var(--color-input-bg); border: 1px solid var(--color-input-border); border-radius: 12px; transition: border-color 200ms, box-shadow 200ms; } .ds-input::placeholder { color: var(--color-text-muted); } .ds-input:focus { outline: none; border-color: var(--color-input-focus); box-shadow: 0 0 0 1px var(--color-input-focus); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Badge (Accent)",
+      "kind": "chip",
+      "refersTo": "badge-accent",
+      "description": "Badge de destaque. Accent-dim bg, accent texto, accent borda.",
+      "html": "<span class=\"ds-badge-barber\">ATIVO</span>",
+      "css": ".ds-badge-barber { display: inline-flex; align-items: center; padding: 2px 8px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; letter-spacing: 0.05em; border-radius: 8px; border: 1px solid rgba(194,155,64,0.6); background: rgba(194,155,64,0.2); color: #C29B40; }"
+    },
+    {
+      "name": "Toggle Switch",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Switch de alternância. Track 44×24px, thumb 20px, transição 200ms.",
+      "html": "<label class=\"ds-toggle\"><input type=\"checkbox\" class=\"ds-toggle-input\" /><span class=\"ds-toggle-track\"></span></label>",
+      "css": ".ds-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; } .ds-toggle-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; } .ds-toggle-track { position: relative; width: 44px; height: 24px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); border-radius: 9999px; transition: background-color 200ms ease-out; box-shadow: inset 0 1px 2px rgba(0,0,0,0.25); } .ds-toggle-track::after { content: ''; position: absolute; top: 1px; left: 2px; width: 20px; height: 20px; background: #FFFFFF; border-radius: 9999px; transition: transform 200ms ease-out; } .ds-toggle-input:checked + .ds-toggle-track { background: var(--color-accent); border-color: var(--color-accent); } .ds-toggle-input:checked + .ds-toggle-track::after { transform: translateX(20px); } .ds-toggle-input:focus-visible + .ds-toggle-track { outline: none; box-shadow: 0 0 0 2px var(--color-input-focus); }"
+    },
+    {
+      "name": "Modal Overlay",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Modal com backdrop blur, card bg, radius-xl. Animação fade + scale.",
+      "html": "<div class=\"ds-modal-backdrop\"><div class=\"ds-modal-container\"><div class=\"ds-modal-header\"><h2 class=\"ds-modal-title\">Confirmar</h2><button class=\"ds-modal-close\" aria-label=\"Fechar\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/></svg></button></div><div class=\"ds-modal-body\">Conteúdo do modal</div></div></div>",
+      "css": ".ds-modal-backdrop { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); } .ds-modal-container { position: relative; width: 100%; max-width: 560px; max-height: calc(100vh - 24px); background: var(--color-card); border: 1px solid var(--color-border); border-radius: 20px; box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.08); display: flex; flex-direction: column; animation: modal-enter 300ms ease-out; } @keyframes modal-enter { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } } .ds-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--color-divider); } .ds-modal-title { font-family: 'Chivo', sans-serif; font-weight: 700; font-size: 18px; color: var(--color-text); } .ds-modal-close { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: none; background: transparent; color: var(--color-text-muted); border-radius: 12px; cursor: pointer; transition: background-color 150ms; } .ds-modal-close:hover { background: var(--color-card-hover); } .ds-modal-body { padding: 24px; overflow-y: auto; flex: 1; }"
+    },
+    {
+      "name": "Bottom Mobile Nav",
+      "kind": "nav",
+      "refersTo": "",
+      "description": "Navegação inferior mobile. Glass background com blur, rounded-2xl, botão central de ação.",
+      "html": "<nav class=\"ds-mobile-nav\"><a class=\"ds-mobile-nav-item ds-mobile-nav-item-active\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z\"/></svg><span class=\"ds-mobile-nav-label\">Início</span></a><button class=\"ds-mobile-nav-plus\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"/><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"/></svg></button><a class=\"ds-mobile-nav-item\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg><span class=\"ds-mobile-nav-label\">Agenda</span></a></nav>",
+      "css": ".ds-mobile-nav { position: fixed; bottom: 24px; left: 24px; right: 24px; z-index: 40; display: flex; align-items: center; justify-content: space-between; padding: 12px 12px calc(env(safe-area-inset-bottom) + 12px); background: rgba(18,18,18,0.4); backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.05); border-radius: 28px; box-shadow: 0 12px 40px -12px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.08); } .ds-mobile-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; color: var(--color-text-secondary); text-decoration: none; min-height: 44px; min-width: 44px; transition: color 150ms; } .ds-mobile-nav-item-active { color: var(--color-accent); } .ds-mobile-nav-label { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500; } .ds-mobile-nav-plus { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; min-height: 44px; min-width: 44px; border: none; border-radius: 20px; background: var(--color-accent); color: #000; cursor: pointer; box-shadow: 0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194,155,64,0.1); transition: transform 150ms, filter 150ms; } .ds-mobile-nav-plus:active { transform: scale(0.95); } .ds-mobile-nav-plus:hover { filter: brightness(1.1); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Banca",
+    "overview": "A bancada do profissional. Cada ferramenta no lugar certo, visível sem esforço, acessível sem excesso. O AgendiX não é um dashboard que impressiona — é o espelho do salão: reflete o que importa, sem distorção. O dono do salão olha de relance e sabe: quem está agendado, quanto faturou, se está no lucro.\n\nO sistema visual é contido e elegante. Cores accent carregam a identidade (ouro no barber, violeta no beauty) e aparecem apenas onde a ação acontece. O resto é superfície neutra e aquecida — nunca cinza puro, nunca frio. A tipografia é direta (Chivo para títulos, Inter para corpo) sem ornamento. Sombras existem para indicar camada, não para impressionar. A interface some e o serviço fica.\n\nCada tema é uma boca do salão: barbearia, beleza, tatuagem, clínica — todos compartilham a mesma bancada, cada um com sua cor. A arquitetura é extensível por design; adicionar um tema novo é trocar accent, superfície e tom, nunca reestruturar.",
+    "keyCharacteristics": [
+      "Committed color: accent carrega 30–60% da identidade, o resto é neutro aquecido",
+      "Contained elegance: componentes táteis sem peso excessivo, ações confiantes, dados contidos",
+      "Mobile-first e mobile-only para a maioria dos usuários",
+      "Glass-border elevation: bordas semi-transparentes definem camada; sombra sobe com interação",
+      "Extensible theming: data-theme + data-mode, sem hardcoded business logic",
+      "Progressive disclosure: configurações começam colapsadas, o usuário avança no seu ritmo"
+    ],
+    "rules": [
+      { "name": "The Extensível Rule", "body": "Cada tema de negócio define: accent, accent-hover, accent-dim, bg, card, surface, text, text-secondary, text-muted, border. Adicionar um tema (tatto, clínica) é adicionar um bloco de tokens — nunca modificar a estrutura.", "section": "colors" },
+      { "name": "The No-Pure-Gray Rule", "body": "Neutros são aquecidos pelo accent do tema. Cinza puro (#808080 sem desvio de hue) é proibido em texto ou superfície.", "section": "colors" },
+      { "name": "The Tabular Money Rule", "body": "Qualquer valor monetário usa font-variant-numeric: tabular-nums. Alinhamento de colunas em financeiro é funcional, não decorativo.", "section": "typography" },
+      { "name": "The Single-Display Rule", "body": "Display weight (800) aparece apenas no PageHeader h1. Qualquer outro título usa weight 600-700.", "section": "typography" },
+      { "name": "The Glass-By-Default Rule", "body": "Cards em repouso são definidos por tom + borda de vidro, não por sombra. Sombra aparece como resposta a interação (hover, focus, elevation).", "section": "elevation" },
+      { "name": "The No-Double-Shadow Rule", "body": "Nunca parear border: 1px solid com box-shadow de blur ≥ 16px no mesmo elemento. Escolha: borda de vidro OU sombra definida.", "section": "elevation" }
+    ],
+    "dos": [
+      "Usar accent color apenas em CTAs, estados ativos e indicadores — menos de 10% da superfície por tela",
+      "Manter contraste ≥4.5:1 para texto principal e ≥3:1 para texto grande",
+      "Usar glass-border (inset 0 0 0 1px rgba(...)) para definir cards em dark mode",
+      "Testar em 390px sem scroll — se o CTA principal não está visível, o layout está errado",
+      "Usar font-variant-numeric: tabular-nums em valores monetários ou numéricos em coluna",
+      "Garantir touch targets de 44×44px mínimo em todos os interativos mobile",
+      "Usar prefers-reduced-motion: reduce para desabilitar animações",
+      "Manter a diferença de radius entre temas: barber mais angular (8-16px), beauty mais suave (12-24px)",
+      "Repetir o mesmo vocabulário de componente entre telas"
+    ],
+    "donts": [
+      "Usar cinza puro (#808080) em texto ou superfície",
+      "Usar border-left ou border-right > 1px como faixa colorida em cards ou list items",
+      "Parear border: 1px solid com box-shadow de blur ≥ 16px no mesmo elemento",
+      "Usar glassmorphism como decoração — blur é para modais e overlays, nunca para cards em repouso",
+      "Usar display font (weight 800) fora do PageHeader h1",
+      "Mostrar big numbers + sparklines como hero-metric template",
+      "Criar identical-card grids com ícone + heading + texto repetidos infinitamente",
+      "Usar tiny uppercase tracked eyebrow acima de cada seção",
+      "Animar width, height, top ou left — apenas transform e opacity",
+      "Usar border-radius: 32px+ em cards, sections ou inputs"
+    ]
+  }
+}

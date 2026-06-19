@@ -50,28 +50,28 @@ describe('useBrutalTheme', () => {
     it('returns correct accent colors for barber dark', () => {
         const { result } = renderHook(() => useBrutalTheme());
 
-        expect(result.current.accent.text).toBe('text-accent-gold');
-        expect(result.current.accent.bg).toBe('bg-accent-gold');
-        expect(result.current.accent.hex).toBe('#C29B40');
-        expect(result.current.accent.hexHover).toBe('#D4AF50');
+        expect(result.current.accent.text).toBe('text-theme-accent');
+        expect(result.current.accent.bg).toBe('bg-theme-accent');
+        expect(result.current.accent.hex).toBe('var(--color-accent)');
+        expect(result.current.accent.hexHover).toBe('var(--color-accent-hover)');
     });
 
     it('returns correct accent colors for beauty dark', () => {
         const { result } = renderHook(() => useBrutalTheme({ override: 'beauty' }));
 
-        expect(result.current.accent.text).toBe('text-beauty-neon');
-        expect(result.current.accent.bg).toBe('bg-beauty-neon');
-        expect(result.current.accent.hex).toBe('#A78BFA');
-        expect(result.current.accent.hexHover).toBe('#C4B5FD');
+        expect(result.current.accent.text).toBe('text-theme-accent');
+        expect(result.current.accent.bg).toBe('bg-theme-accent');
+        expect(result.current.accent.hex).toBe('var(--color-accent)');
+        expect(result.current.accent.hexHover).toBe('var(--color-accent-hover)');
     });
 
     it('returns correct color tokens for barber dark', () => {
         const { result } = renderHook(() => useBrutalTheme());
 
-        expect(result.current.colors.bg).toBe('bg-obsidian-bg');
-        expect(result.current.colors.card).toBe('bg-obsidian-card');
-        expect(result.current.colors.surface).toBe('bg-obsidian-surface');
-        expect(result.current.colors.text).toBe('text-text-primary');
+        expect(result.current.colors.bg).toBe('bg-theme-bg');
+        expect(result.current.colors.card).toBe('bg-theme-card');
+        expect(result.current.colors.surface).toBe('bg-theme-surface');
+        expect(result.current.colors.text).toBe('text-theme-text');
     });
 
     it('returns correct font tokens for barber', () => {
@@ -90,32 +90,67 @@ describe('useBrutalTheme', () => {
         expect(result.current.font.body).toBe('font-sans');
     });
 
-    it('returns radius tokens', () => {
+    it('returns sharp radius tokens for barber (Decisão A)', () => {
         const { result } = renderHook(() => useBrutalTheme());
 
+        expect(result.current.radius.card).toBe('rounded-lg');
+        expect(result.current.radius.input).toBe('rounded-md');
+        expect(result.current.radius.button).toBe('rounded-lg');
+        expect(result.current.radius.badge).toBe('rounded-md');
+    });
+
+    it('returns soft radius tokens for beauty (Decisão A)', () => {
+        const { result } = renderHook(() => useBrutalTheme({ override: 'beauty' }));
+
         expect(result.current.radius.card).toBe('rounded-2xl');
-        expect(result.current.radius.input).toBe('rounded-xl');
-        expect(result.current.radius.button).toBe('rounded-2xl');
+        expect(result.current.radius.input).toBe('rounded-lg');
+        expect(result.current.radius.button).toBe('rounded-xl');
         expect(result.current.radius.badge).toBe('rounded-full');
     });
 
-    it('returns component classes', () => {
+    it('returns density tokens per theme (Decisão B)', () => {
+        const barber = renderHook(() => useBrutalTheme());
+        expect(barber.result.current.density.cardPadding).toBe('p-4 md:p-5');
+        expect(barber.result.current.density.tableRowPy).toBe('py-2.5');
+        expect(barber.result.current.density.touchMin).toContain('min-h-[44px]');
+
+        const beauty = renderHook(() => useBrutalTheme({ override: 'beauty' }));
+        expect(beauty.result.current.density.cardPadding).toBe('p-5 md:p-8');
+        expect(beauty.result.current.density.tableRowPy).toBe('py-3.5');
+    });
+
+    it('returns component classes without uppercase labels', () => {
         const { result } = renderHook(() => useBrutalTheme());
 
-        expect(result.current.classes.card).toContain('bg-obsidian-card');
-        expect(result.current.classes.card).toContain('rounded-2xl');
-        expect(result.current.classes.buttonPrimary).toContain('bg-accent-gold');
-        expect(result.current.classes.input).toContain('rounded-xl');
-        expect(result.current.classes.label).toContain('uppercase');
-        expect(result.current.classes.error).toContain('text-red-400');
+        expect(result.current.classes.card).toContain('bg-theme-card');
+        expect(result.current.classes.card).toContain('rounded-lg');
+        expect(result.current.classes.buttonPrimary).toContain('bg-theme-accent');
+        expect(result.current.classes.input).toContain('rounded-md');
+        expect(result.current.classes.label).not.toContain('uppercase');
+        expect(result.current.classes.badgeAccent).not.toContain('uppercase');
+        expect(result.current.classes.error).toContain('text-[var(--color-danger)]');
+    });
+
+    it('uses fast ease-out motion on cards and buttons (no duration-500)', () => {
+        const { result } = renderHook(() => useBrutalTheme());
+
+        expect(result.current.classes.card).not.toContain('duration-500');
+        expect(result.current.classes.card).toContain('duration-200');
+        expect(result.current.classes.buttonPrimary).toContain('duration-150');
+    });
+
+    it('drops the side-stripe from active sidebar item', () => {
+        const { result } = renderHook(() => useBrutalTheme());
+
+        expect(result.current.classes.sidebarItemActive).not.toContain('before:');
     });
 
     it('returns beauty component classes when theme is beauty', () => {
         const { result } = renderHook(() => useBrutalTheme({ override: 'beauty' }));
 
-        expect(result.current.classes.buttonPrimary).toContain('bg-beauty-neon');
-        expect(result.current.classes.buttonPrimary).toContain('text-white');
-        expect(result.current.classes.error).toContain('text-red-300');
+        expect(result.current.classes.buttonPrimary).toContain('bg-theme-accent');
+        expect(result.current.classes.buttonPrimary).toContain('text-[var(--color-bg)]');
+        expect(result.current.classes.error).toContain('text-[var(--color-danger)]');
     });
 });
 
@@ -123,9 +158,9 @@ describe('useAccentColor', () => {
     it('returns only accent tokens', () => {
         const { result } = renderHook(() => useAccentColor());
 
-        expect(result.current.text).toBe('text-accent-gold');
-        expect(result.current.bg).toBe('bg-accent-gold');
-        expect(result.current.hex).toBe('#C29B40');
+        expect(result.current.text).toBe('text-theme-accent');
+        expect(result.current.bg).toBe('bg-theme-accent');
+        expect(result.current.hex).toBe('var(--color-accent)');
     });
 });
 
@@ -133,8 +168,8 @@ describe('useComponentClasses', () => {
     it('returns only classes tokens', () => {
         const { result } = renderHook(() => useComponentClasses());
 
-        expect(result.current.card).toContain('bg-obsidian-card');
-        expect(result.current.buttonPrimary).toContain('bg-accent-gold');
+        expect(result.current.card).toContain('bg-theme-card');
+        expect(result.current.buttonPrimary).toContain('bg-theme-accent');
     });
 });
 

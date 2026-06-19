@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Users, Star, Scissors, Clock } from 'lucide-react';
-import { BrutalCard } from '../BrutalCard';
+import { Card } from '../ui/Card';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { FinancialDoctorData } from '../../hooks/useDashboardData';
 
@@ -97,7 +97,7 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
 
     if (!items) {
         return (
-            <BrutalCard className={`${accent.borderDim}`}>
+            <Card variant="outlined" className={`${accent.borderDim}`}>
                 <div className="flex items-center gap-2.5 mb-4">
                     <div className={`p-2 rounded-xl ${accent.bgDim}`}>
                         <Clock className={`w-4 h-4 ${accent.text}`} />
@@ -112,7 +112,7 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
                 <p className={`text-[11px] ${colors.textMuted} mt-1 leading-relaxed`}>
                     Continue registrando — os dados já estão sendo coletados.
                 </p>
-            </BrutalCard>
+            </Card>
         );
     }
 
@@ -142,7 +142,7 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
     const filledSegments = Math.round((totalScore / 100) * 5);
 
     return (
-        <BrutalCard className={`${accent.borderDim} ${scoreBorderClass} transition-all duration-300`}>
+        <Card variant="outlined" className={`${accent.borderDim} ${scoreBorderClass} transition-all duration-300`}>
             {/* Cabeçalho */}
             <div className="flex items-center gap-2.5 mb-4">
                 <div className={`p-2 rounded-xl ${accent.bgDim}`}>
@@ -197,6 +197,6 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
                     );
                 })}
             </div>
-        </BrutalCard>
+        </Card>
     );
 };

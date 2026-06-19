@@ -29,7 +29,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
     };
 
     const modalContent = (
-        <div className="fixed inset-0 z-[999] flex items-end justify-center sm:items-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 flex items-end justify-center sm:items-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" style={{ zIndex: 'var(--z-modal)' }}>
             <div
                 className="absolute inset-0"
                 onClick={onClose}

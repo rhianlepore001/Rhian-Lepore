@@ -1,0 +1,114 @@
+{
+
+  "locked": true,
+
+  "partial": false,
+
+  "screenCount": 4,
+
+  "approvedCount": 4,
+
+  "approvedAt": "2026-06-10T12:00:00Z",
+
+  "lockedAt": "2026-06-10T18:00:00Z",
+
+  "artifacts": {
+
+    "login": {
+
+      "status": "approved",
+
+      "path": "artifacts/screen-lock/login.html",
+
+      "odSource": "agendix-ui-audit/login.html",
+
+      "runId": "c92d6ea7-839b-4b64-9837-5e01ce412b4e",
+
+      "agent": "opencode",
+
+      "note": "Matriz dark/light correta. theme-nav = audit chrome only."
+
+    },
+
+    "dashboard": {
+
+      "status": "approved",
+
+      "path": "artifacts/screen-lock/dashboard.html",
+
+      "odSource": "agendix-ui-audit/dashboard.html",
+
+      "runId": "b8dd8804-3ad2-44e6-8bb2-a877657e74c5",
+
+      "agent": "opencode",
+
+      "note": "Matriz correta. Fix barber-light: nav ativa + bottom nav + logo usam --accent dourado (#A07A2A)."
+
+    },
+
+    "agenda": {
+
+      "status": "approved",
+
+      "path": "artifacts/screen-lock/agenda.html",
+
+      "odSource": "agendix-ui-audit/agenda.html",
+
+      "runId": "6ba64967-8467-4163-8c38-b0199b85a44c",
+
+      "agent": "opencode",
+
+      "note": "Matriz dark/light correta. Barber gold em nav ativa, bottom nav e logo."
+
+    },
+
+    "financeiro": {
+
+      "status": "approved",
+
+      "path": "artifacts/screen-lock/financeiro.html",
+
+      "odSource": "agendix-ui-audit/financeiro.html",
+
+      "runId": "11a9b3da-65ab-408c-b13b-c779490d3a3f",
+
+      "agent": "opencode",
+
+      "plugin": "example-dashboard",
+
+      "designSystemRef": "stripe",
+
+      "note": "Matriz dark/light correta. KPI Receita/Despesas/Lucro, tabela movimentações, comissões. Barber-light gold em nav/CTA/logo."
+
+    }
+
+  },
+
+  "rejected": [
+
+    {
+
+      "files": ["index.html", "agendix-login-4-themes.html"],
+
+      "runId": "9b5122c1-1366-48ae-964c-d21603f09308",
+
+      "reason": "Eixo compact/spacious; sem barber-light/beauty-dark"
+
+    },
+
+    {
+
+      "files": ["financeiro.html (v1 OD)"],
+
+      "reason": "Matriz compact/spacious — substituído por run 11a9b3da"
+
+    }
+
+  ],
+
+  "barberLightGoldRule": "Accent barber-light = #A07A2A; CTA, nav ativa, logo e ícones de destaque devem usar var(--accent), nunca roxo ou cinza neutro.",
+
+  "nextStep": "Gate pós-SPEC: Fase 8 (harness-planner) ou /ui-audit code — implementar S1→S8 em React contra UI-REMEDIATION-SPEC.md §7."
+
+}
+

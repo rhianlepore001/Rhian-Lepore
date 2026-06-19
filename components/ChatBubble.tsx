@@ -81,7 +81,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                     <div className={`
                         px-7 py-5 shadow-2xl transition-all duration-500
                         ${isAssistant
-                            ? (isBeauty ? 'bg-white border border-stone-100 text-stone-800 rounded-2xl rounded-bl-none shadow-silk-shadow' : 'fragment-obsidian text-white border-l-4 border-l-accent-gold')
+                            ? (isBeauty ? 'bg-white border border-stone-100 text-stone-800 rounded-2xl rounded-bl-none shadow-silk-shadow' : 'fragment-obsidian text-white border border-accent-gold/30')
                             : (isBeauty ? 'bg-stone-800 text-white rounded-2xl rounded-br-none shadow-lg' : 'bg-accent-gold text-black font-black border-4 border-black shadow-heavy-lg')
                         }
                     `}>

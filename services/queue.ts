@@ -13,7 +13,6 @@ import {
   type UpdateQueueStatusInput,
 } from '@/types/queue';
 
-const ACTIVE_QUEUE_STATUSES: QueueStatus[] = ['waiting', 'calling', 'serving'];
 const CALLING_TIMEOUT_MINUTES = 5;
 const ESTIMATED_WAIT_MINUTES_PER_POSITION = 20;
 
@@ -31,6 +30,18 @@ export function sanitizeQueuePhone(phone: string): string {
   return phone.replace(/\D/g, '');
 }
 
+export const QUEUE_PHONE_PROOF_KEY = (entryId: string) => `queue_proof_phone_${entryId}`;
+
+export function storeQueuePhoneProof(entryId: string, phone: string): void {
+  if (typeof sessionStorage === 'undefined') return;
+  sessionStorage.setItem(QUEUE_PHONE_PROOF_KEY(entryId), sanitizeQueuePhone(phone));
+}
+
+export function readQueuePhoneProof(entryId: string): string | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  return sessionStorage.getItem(QUEUE_PHONE_PROOF_KEY(entryId));
+}
+
 export async function findActiveQueueEntryByPhone(
   businessId: string,
   phone: string,
@@ -38,16 +49,14 @@ export async function findActiveQueueEntryByPhone(
   const normalizedPhone = sanitizeQueuePhone(phone);
   if (!normalizedPhone) return null;
 
-  const { data, error } = await supabase
-    .from('queue_entries')
-    .select('*')
-    .eq('business_id', businessId)
-    .in('status', ACTIVE_QUEUE_STATUSES)
-    .or(`client_phone.eq.${phone},client_phone.eq.${normalizedPhone}`)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc('find_active_queue_entry_by_phone', {
+    p_business_id: businessId,
+    p_phone: phone,
+  });
 
   if (error) throw error;
-  return data ? queueEntrySchema.parse(data) : null;
+  const entry = data?.[0];
+  return entry ? queueEntrySchema.parse(entry) : null;
 }
 
 export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
@@ -58,7 +67,7 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     throw new Error('Este telefone ja esta na fila.');
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('queue_entries')
     .insert({
       business_id: parsed.businessId,
@@ -67,12 +76,17 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
       service_id: parsed.serviceId ?? null,
       professional_id: parsed.professionalId ?? null,
       status: 'waiting',
-    })
-    .select()
-    .single();
+    });
 
   if (error) throw error;
-  return queueEntrySchema.parse(data);
+
+  const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
+  if (!created) {
+    throw new Error('Queue entry created but could not be retrieved');
+  }
+
+  storeQueuePhoneProof(created.id, parsed.clientPhone);
+  return created;
 }
 
 export async function addManualQueueEntry(input: ManualQueueInput): Promise<QueueRecord> {
@@ -145,4 +159,120 @@ export async function finishQueueEntry(input: FinishQueueEntryInput): Promise<vo
   });
 
   if (error) throw error;
+}
+
+export async function fetchQueueEntries(businessId: string) {
+  await resetExpiredCallingEntries(businessId);
+
+  const { data, error } = await supabase
+    .from('queue_entries')
+    .select('*')
+    .eq('business_id', businessId)
+    .in('status', ['waiting', 'calling', 'serving', 'completed'])
+    .gte('joined_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+    .order('joined_at', { ascending: true });
+
+  if (error) throw error;
+  return data as QueueRecord[];
+}
+
+export async function fetchBusinessSlug(businessId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('business_slug')
+    .eq('id', businessId)
+    .single();
+
+  if (error) throw error;
+  return data?.business_slug ?? null;
+}
+
+export async function fetchQueueTeamMembers(businessId: string) {
+  const { data, error } = await supabase
+    .from('team_members')
+    .select('id, name, commission_rate')
+    .eq('user_id', businessId)
+    .eq('active', true);
+
+  if (error) throw error;
+  return data as { id: string; name: string; commission_rate?: number }[];
+}
+
+export async function fetchServiceById(serviceId: string, businessId: string) {
+  const { data, error } = await supabase
+    .from('services')
+    .select('price, name')
+    .eq('id', serviceId)
+    .eq('user_id', businessId)
+    .single();
+
+  if (error) throw error;
+  return data as { price: number; name: string } | null;
+}
+
+export interface QueueBusinessProfile {
+  id: string;
+  business_name: string | null;
+  user_type: string | null;
+}
+
+export interface QueueStatusSnapshot {
+  entry: QueueRecord;
+  business: QueueBusinessProfile | null;
+  position: number | null;
+}
+
+export async function fetchQueueEntry(entryId: string, phone: string): Promise<QueueRecord> {
+  const { data, error } = await supabase.rpc('get_queue_entry_public', {
+    p_entry_id: entryId,
+    p_phone: phone,
+  });
+
+  if (error) throw error;
+  const entry = data?.[0];
+  if (!entry) {
+    throw new Error('Queue entry not found');
+  }
+  return queueEntrySchema.parse(entry);
+}
+
+export async function fetchQueueBusinessProfile(businessId: string): Promise<QueueBusinessProfile | null> {
+  const { data, error } = await supabase.rpc('get_public_business_profile_minimal', {
+    p_business_id: businessId,
+  });
+
+  if (error) throw error;
+  const profile = data?.[0];
+  return profile ? (profile as QueueBusinessProfile) : null;
+}
+
+export async function resolveQueuePosition(entry: QueueRecord): Promise<number | null> {
+  if (entry.status !== 'waiting') return null;
+
+  const { data: posData, error: rpcError } = await supabase.rpc('get_queue_position', {
+    p_queue_id: entry.id,
+    p_business_id: entry.business_id,
+  });
+
+  if (!rpcError && posData !== null) {
+    return posData as number;
+  }
+
+  const { count, error } = await supabase
+    .from('queue_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', entry.business_id)
+    .eq('status', 'waiting')
+    .lte('joined_at', entry.joined_at);
+
+  if (error) throw error;
+  return count;
+}
+
+export async function fetchQueueStatusSnapshot(entryId: string, phone: string): Promise<QueueStatusSnapshot> {
+  const entry = await fetchQueueEntry(entryId, phone);
+  const business = await fetchQueueBusinessProfile(entry.business_id);
+  const position = await resolveQueuePosition(entry);
+
+  return { entry, business, position };
 }

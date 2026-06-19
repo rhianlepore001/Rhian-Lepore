@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="barber" data-mode="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgendiX — Financeiro (artifact)</title>
+  <link rel="stylesheet" href="../shared/artifact-ds.css" />
+</head>
+<body>
+  <div class="theme-toolbar">
+    <span>UI Audit artifact</span>
+    <span class="tag" id="theme-tag">barber / dark</span>
+    <label>Tema <select id="theme-select"><option value="barber">Barber</option><option value="beauty">Beauty</option></select></label>
+    <label>Modo <select id="mode-select"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+  </div>
+
+  <div class="artifact-body app-shell">
+    <aside class="sidebar">
+      <div style="padding:8px 12px 20px;font-family:Chivo;font-weight:900;">AgendiX</div>
+      <a class="nav-item" href="#">Início</a>
+      <a class="nav-item" href="#">Agenda</a>
+      <a class="nav-item" href="#">Clientes</a>
+      <a class="nav-item active" href="#">Financeiro</a>
+    </aside>
+
+    <main class="main stack">
+      <header class="page-header">
+        <div>
+          <h1 class="h1">Financeiro</h1>
+          <p class="text-secondary" style="margin-top:4px;">Junho 2026</p>
+        </div>
+        <div class="page-header-actions">
+          <button type="button" class="btn btn-secondary">Exportar</button>
+          <button type="button" class="btn btn-primary">Registrar receita</button>
+        </div>
+      </header>
+
+      <!-- Summary row -->
+      <section class="kpi-grid">
+        <div class="card kpi-sm">
+          <p class="text-muted" style="font-size:0.75rem;">Receita</p>
+          <p class="value">R$ 18,4k</p>
+        </div>
+        <div class="card kpi-sm">
+          <p class="text-muted" style="font-size:0.75rem;">Despesas</p>
+          <p class="value">R$ 6,2k</p>
+        </div>
+        <div class="card kpi-sm card-elevated" style="border-color:var(--color-accent-border);">
+          <p class="text-muted" style="font-size:0.75rem;">Lucro</p>
+          <p class="value" style="color:var(--color-success);">R$ 12,2k</p>
+        </div>
+      </section>
+
+      <!-- ui/Table pattern — UI-028 -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="h2">Últimas movimentações</h2>
+          <button type="button" class="btn btn-ghost" style="min-height:36px;padding:0 12px;font-size:0.8125rem;">Ver todas</button>
+        </div>
+        <div class="table-wrap" style="border:none;border-radius:0;">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Descrição</th>
+                <th scope="col">Tipo</th>
+                <th scope="col" style="text-align:right;">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-mono text-muted">10/06</td>
+                <td>Corte — João Silva</td>
+                <td><span class="badge badge-success">Receita</span></td>
+                <td class="text-mono" style="text-align:right;font-weight:600;">+ R$ 45,00</td>
+              </tr>
+              <tr>
+                <td class="text-mono text-muted">10/06</td>
+                <td>Produto — Pomada</td>
+                <td><span class="badge badge-success">Receita</span></td>
+                <td class="text-mono" style="text-align:right;font-weight:600;">+ R$ 35,00</td>
+              </tr>
+              <tr>
+                <td class="text-mono text-muted">09/06</td>
+                <td>Aluguel equipamento</td>
+                <td><span class="badge" style="background:var(--color-danger-bg);color:var(--color-danger);border:none;">Despesa</span></td>
+                <td class="text-mono" style="text-align:right;font-weight:600;">− R$ 120,00</td>
+              </tr>
+              <tr>
+                <td class="text-mono text-muted">09/06</td>
+                <td>Comissão — Ana</td>
+                <td><span class="badge" style="background:var(--color-danger-bg);color:var(--color-danger);border:none;">Despesa</span></td>
+                <td class="text-mono" style="text-align:right;font-weight:600;">− R$ 280,00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Commissions card -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="h2">Comissões da equipe</h2>
+          <button type="button" class="btn btn-primary" style="min-height:36px;padding:0 14px;font-size:0.8125rem;">Pagar comissões</button>
+        </div>
+        <div class="card-body stack" style="gap:8px;">
+          <div class="banner-outlined" style="box-shadow:none;">
+            <div><strong>Ana Silva</strong> <span class="text-secondary">· 8 atendimentos</span></div>
+            <span class="text-mono" style="font-weight:700;">R$ 640,00</span>
+          </div>
+          <div class="banner-outlined" style="box-shadow:none;">
+            <div><strong>Lucas Souza</strong> <span class="text-secondary">· 12 atendimentos</span></div>
+            <span class="text-mono" style="font-weight:700;">R$ 920,00</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navegação mobile">
+    <button type="button">Início</button>
+    <button type="button">Agenda</button>
+    <button type="button" style="color:var(--color-accent);">+</button>
+    <button type="button">Clientes</button>
+    <button type="button" class="active">Financ.</button>
+  </nav>
+
+  <script src="../shared/artifact-theme.js"></script>
+  <script>initThemeToolbar('barber', 'dark');</script>
+</body>
+</html>

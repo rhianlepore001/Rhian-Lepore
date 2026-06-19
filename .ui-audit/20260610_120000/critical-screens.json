@@ -1,0 +1,57 @@
+{
+  "count": 4,
+  "selectedAt": "2026-06-10",
+  "confirmedByUser": true,
+  "screens": [
+    {
+      "id": "dashboard",
+      "route": "/#/",
+      "title": "Dashboard",
+      "files": ["pages/Dashboard.tsx", "components/dashboard/*"],
+      "why": "Primeira impressão pós-login; concentra UI-004 (hierarquia), UI-017 (KPI genérico), UI-018 (link quebrado); prova mobile-first 390px",
+      "findingIds": ["UI-004", "UI-017", "UI-018", "UI-003", "UI-011", "UI-025"],
+      "themeMatrix": ["barber-dark", "barber-light", "beauty-dark", "beauty-light"],
+      "priority": 1
+    },
+    {
+      "id": "agenda",
+      "route": "/#/agenda",
+      "title": "Agenda",
+      "files": ["pages/Agenda.tsx", "components/TimeGrid.tsx", "components/AppointmentWizard.tsx"],
+      "why": "Fluxo diário do barbeiro/staff no celular; UI-014 (erros expostos), UI-023 (toast sem retry); BrutalCard + BrutalButton heavy",
+      "findingIds": ["UI-003", "UI-006", "UI-014", "UI-023", "UI-013"],
+      "themeMatrix": ["barber-dark", "barber-light", "beauty-dark", "beauty-light"],
+      "priority": 2
+    },
+    {
+      "id": "login",
+      "route": "/#/login",
+      "title": "Login",
+      "files": ["pages/Login.tsx"],
+      "why": "Porta de entrada; escolha barber/beauty; UI-005 (light mode legado); prova identidade dourado/roxo sem mudar brand",
+      "findingIds": ["UI-005", "UI-001", "UI-029", "UI-030"],
+      "themeMatrix": ["barber-dark", "barber-light", "beauty-dark", "beauty-light"],
+      "priority": 3
+    },
+    {
+      "id": "financeiro",
+      "route": "/#/financeiro",
+      "title": "Financeiro",
+      "files": ["pages/Finance.tsx", "components/FinanceInsights.tsx"],
+      "why": "Dados críticos de negócio; ~24 BrutalCard; UI-003, UI-006, UI-016 (modais custom); alta densidade de tabelas",
+      "findingIds": ["UI-003", "UI-006", "UI-016", "UI-028", "UI-005"],
+      "themeMatrix": ["barber-dark", "barber-light", "beauty-dark", "beauty-light"],
+      "priority": 4
+    }
+  ],
+  "deferred": [
+    { "id": "public-booking", "route": "/#/book/:slug", "why": "Face pública importante — fase 2 de remediação" },
+    { "id": "clients", "route": "/#/clientes", "why": "UI-012 quick win empty state — baixo esforço, fora do N=4" },
+    { "id": "settings-geral", "route": "/#/configuracoes/geral", "why": "UI-010 ilha visual — herda fixes do shell pós-dashboard" }
+  ],
+  "constraints": {
+    "brandFixed": true,
+    "accentColorsFixed": true,
+    "focus": "craft em dark/light × barber/beauty — não rebranding"
+  }
+}

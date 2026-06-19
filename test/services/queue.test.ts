@@ -16,10 +16,14 @@ const maybeSingleMock = vi.fn();
 const singleMock = vi.fn();
 const orderMock = vi.fn(() => ({ limit: vi.fn(() => ({ single: singleMock })) }));
 const orMock = vi.fn(() => ({ maybeSingle: maybeSingleMock }));
-const inMock = vi.fn(() => ({ or: orMock }));
+let activeQueueData: any[] = [];
+const inMock = vi.fn(() => Promise.resolve({ data: activeQueueData, error: null }));
 const eqMock = vi.fn(() => ({ in: inMock, eq: eqMock, not: notMock, lte: lteMock, order: orderMock }));
 const selectMock = vi.fn(() => ({ eq: eqMock, single: singleMock }));
-const insertMock = vi.fn(() => ({ select: selectMock }));
+const insertMock = vi.fn(() => Object.assign(
+  Promise.resolve({ data: null, error: null }),
+  { select: selectMock },
+));
 const lteMock = vi.fn().mockResolvedValue({ error: null });
 const notMock = vi.fn(() => ({ lte: lteMock }));
 const updateEqMock = vi.fn(() => ({ eq: eqMock, not: notMock }));
@@ -39,6 +43,7 @@ vi.mock('@/lib/supabase', () => ({
 describe('queue service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    activeQueueData = [];
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
     singleMock.mockResolvedValue({
       data: {
@@ -74,35 +79,37 @@ describe('queue service', () => {
   });
 
   it('busca entrada ativa por telefone no mesmo negocio', async () => {
-    maybeSingleMock.mockResolvedValue({
-      data: {
+    (supabase.rpc as any).mockResolvedValue({
+      data: [{
         id: 'queue-001',
         business_id: 'business-001',
         client_name: 'Joao',
         client_phone: '11999999999',
         status: 'waiting',
         joined_at: '2026-05-30T10:00:00.000Z',
-      },
+      }],
       error: null,
     });
 
     const result = await findActiveQueueEntryByPhone('business-001', '(11) 99999-9999');
 
     expect(result?.id).toBe('queue-001');
-    expect(supabase.from).toHaveBeenCalledWith('queue_entries');
-    expect(orMock).toHaveBeenCalledWith('client_phone.eq.(11) 99999-9999,client_phone.eq.11999999999');
+    expect(supabase.rpc).toHaveBeenCalledWith('find_active_queue_entry_by_phone', {
+      p_business_id: 'business-001',
+      p_phone: '(11) 99999-9999',
+    });
   });
 
   it('bloqueia entrada duplicada por telefone', async () => {
-    maybeSingleMock.mockResolvedValue({
-      data: {
+    (supabase.rpc as any).mockResolvedValue({
+      data: [{
         id: 'queue-001',
         business_id: 'business-001',
         client_name: 'Joao',
         client_phone: '11999999999',
         status: 'waiting',
         joined_at: '2026-05-30T10:00:00.000Z',
-      },
+      }],
       error: null,
     });
 
@@ -118,7 +125,23 @@ describe('queue service', () => {
   });
 
   it('cria entrada publica com status waiting quando nao ha duplicata', async () => {
-    await joinQueue({
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({
+        data: [{
+          id: 'queue-001',
+          business_id: 'business-001',
+          client_name: 'Joao',
+          client_phone: '11999999999',
+          service_id: 'service-001',
+          professional_id: 'pro-001',
+          status: 'waiting',
+          joined_at: '2026-05-30T10:00:00.000Z',
+        }],
+        error: null,
+      });
+
+    const result = await joinQueue({
       businessId: 'business-001',
       clientName: 'Joao',
       clientPhone: '11999999999',
@@ -134,6 +157,7 @@ describe('queue service', () => {
       professional_id: 'pro-001',
       status: 'waiting',
     });
+    expect(result.id).toBe('queue-001');
   });
 
   it('cria entrada manual usando o tenant do owner', async () => {

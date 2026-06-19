@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { BrutalCard } from '../BrutalCard';
 import { RefreshCw, MessageCircle, Clock, ChevronRight, AlertCircle, Calendar, User } from 'lucide-react';
 import { useSmartRebooking, RebookingSuggestion } from '../../hooks/useSmartRebooking';
 import { useAuth } from '../../contexts/AuthContext';

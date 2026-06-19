@@ -1,4 +1,4 @@
-# AGENX
+# AgendiX
 
 SaaS para gestão de barbearias e salões de beleza. Agenda, financeiro, colaboradores e relatórios — tudo em um lugar.
 

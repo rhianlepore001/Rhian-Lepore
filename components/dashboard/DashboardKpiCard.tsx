@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrutalCard } from '../BrutalCard';
+import { Card } from '../ui/Card';
 import { MiniSparkline } from './MiniSparkline';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
@@ -45,7 +45,7 @@ export const DashboardKpiCard: React.FC<DashboardKpiCardProps> = ({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
     >
-      <BrutalCard className={`h-full transition-all duration-300 ${onClick ? `hover:-translate-y-0.5 ${shadow.cardHover}` : ''}`} noPadding accent={variant === 'accent'}>
+      <Card variant={variant === 'accent' ? 'elevated' : 'outlined'} className={`h-full transition-all duration-300 ${onClick ? `hover:-translate-y-0.5 ${shadow.cardHover}` : ''}`} noPadding>
         <div className="p-4 md:p-6 flex flex-col justify-between h-full relative z-10">
           <div className="flex justify-between items-start mb-3">
             <div>
@@ -93,7 +93,7 @@ export const DashboardKpiCard: React.FC<DashboardKpiCardProps> = ({
             )}
           </div>
         </div>
-      </BrutalCard>
+      </Card>
     </div>
   );
 };

@@ -1,0 +1,10 @@
+{
+  "projectId": "agendix-ui-audit",
+  "agentId": "opencode",
+  "pluginId": "example-dashboard",
+  "pluginInputs": {
+    "brief": "AgendiX FINANCEIRO PT-BR. MATRIZ OBRIGATÓRIA: barber-dark|barber-light|beauty-dark|beauty-light (NÃO compact/spacious). Tokens iguais login.html/dashboard.html/agenda.html. Barber accent gold: dark #C29B40, light #A07A2A — nav ativa, CTA, logo SEMPRE var(--accent) no barber light. PageHeader Financeiro + Registrar receita + filtro. KPI Receita/Despesas/Lucro. ui/Table Ultimas movimentacoes th scope, row hover. Secao Comissoes. Sidebar + bottom nav 44px. Output financeiro.html substituindo versao errada. Sentence case, no UPPERCASE, no brutal shadow.",
+    "design_system": "stripe"
+  },
+  "message": "Replace financeiro.html entirely. Read login.html, dashboard.html, agenda.html for correct 4-theme matrix pattern. WRONG: compact/spacious variants. MUST: barber-light with gold #A07A2A on all accent surfaces."
+}

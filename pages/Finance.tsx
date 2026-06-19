@@ -1,22 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BrutalCard } from '../components/BrutalCard';
-import { BrutalButton } from '../components/BrutalButton';
+import { Card } from '../components/ui/Card';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Button, Modal, Table, Badge, ConfirmModal, useToast } from '@/components/ui';
+import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { supabase } from '../lib/supabase';
-import { Wallet, TrendingUp, TrendingDown, DollarSign, Calendar, Download, Filter, Users, History, Trash2, Plus, X, Loader2, Clock, Check, BarChart2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, BarChart2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { InfoButton, AIAssistantButton } from '../components/HelpButtons';
+import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
-import { Modal } from '../components/Modal';
 import { TabNav } from '../components/TabNav';
 import { FinanceInsights } from '../components/FinanceInsights';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
+import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history' | 'insights';
 
@@ -45,6 +47,33 @@ interface MonthlyHistoryItem {
   growth: number;
 }
 
+interface FinanceKpiProps {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  iconClass: string;
+  minHeightClass: string;
+}
+
+const FinanceKpi: React.FC<FinanceKpiProps> = ({
+  title, value, subtitle, icon, iconClass, minHeightClass,
+}) => {
+  const { colors } = useBrutalTheme();
+  return (
+    <Card variant="outlined" className={minHeightClass}>
+      <div className="flex items-start gap-3">
+        <div className={iconClass}>{icon}</div>
+        <div className="min-w-0">
+          <p className={`text-sm font-semibold ${colors.textSecondary}`}>{title}</p>
+          <p className={`mt-3 font-mono text-2xl font-black tracking-tight tabular-nums ${colors.text}`}>{value}</p>
+          <p className={`mt-1 text-sm ${colors.textSecondary}`}>{subtitle}</p>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
@@ -61,7 +90,6 @@ const [searchParams, setSearchParams] = useSearchParams();
     pendingExpenses: 0
   });
   const [chartData, setChartData] = useState<any[]>([]);
-  const [monthlyHistory, setMonthlyHistory] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -84,25 +112,76 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [newTransactionClient, setNewTransactionClient] = useState('');
   const [newTransactionProfessional, setNewTransactionProfessional] = useState('');
   const [savingTransaction, setSavingTransaction] = useState(false);
-  const [services, setServices] = useState<any[]>([]);
-  const [clients, setClients] = useState<any[]>([]);
-  const [professionals, setProfessionals] = useState<any[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
+  const [pendingMarkPaid, setPendingMarkPaid] = useState<{ id: string; name: string } | null>(null);
 
   // Month/Year selection
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const { accent, colors, isBeauty, classes, font } = useBrutalTheme();
+  const { accent, colors, isBeauty, isDark, classes, font, density, status } = useBrutalTheme();
+
+  const chartTheme = useMemo(() => ({
+    grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
+    axis: isDark ? '#A0A0A0' : '#6B5E45',
+    tooltipBg: isDark ? '#1E1E1E' : '#FFFFFF',
+    tooltipBorder: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    tooltipText: isDark ? '#EAEAEA' : '#1A1A1A',
+    revenueStroke: '#34d399',
+    revenueFill: '#10B981',
+    expenseStroke: '#f87171',
+    expenseFill: '#EF4444',
+  }), [isDark]);
+  const { showToast } = useToast();
   const currencySymbol = region === 'PT' ? '€' : 'R$';
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+
+  const queryUserId = isStaff && companyId ? companyId : (user?.id || '');
+  const { data: monthlyHistoryData, refetch: refetchMonthlyHistory } = useMonthlyHistory(user?.id || '', 12);
+  const monthlyHistory = React.useMemo(() => {
+    if (!monthlyHistoryData) return [];
+    const translateMonth = (m: string) => {
+      const map: Record<string, string> = {
+        'January': 'Janeiro', 'February': 'Fevereiro', 'March': 'Março',
+        'April': 'Abril', 'May': 'Maio', 'June': 'Junho',
+        'July': 'Julho', 'August': 'Agosto', 'September': 'Setembro',
+        'October': 'Outubro', 'November': 'Novembro', 'December': 'Dezembro'
+      };
+      return map[m] || m;
+    };
+    return monthlyHistoryData.map((item: any, index: number, arr: any[]) => {
+      let growth = 0;
+      if (index > 0) {
+        const prevRevenue = arr[index - 1].revenue;
+        growth = prevRevenue > 0 ? ((item.revenue - prevRevenue) / prevRevenue) * 100 : 0;
+      }
+      return {
+        month: translateMonth(item.month_name?.trim() || ''),
+        year: item.year_num,
+        revenue: parseFloat(item.revenue),
+        expenses: parseFloat(item.expenses),
+        profit: parseFloat(item.profit),
+        growth,
+      };
+    }).reverse();
+  }, [monthlyHistoryData]);
+
+  const { data: dropdownData } = useFinanceDropdowns(queryUserId);
+  const dropdownServices = dropdownData?.services || [];
+  const dropdownClients = dropdownData?.clients || [];
+  const dropdownProfessionals = dropdownData?.professionals || [];
+
+  const deleteTransactionMutation = useDeleteFinanceTransaction();
+  const markExpensePaidMutation = useMarkExpenseAsPaid();
+  const createRecordMutation = useCreateFinanceRecord();
 
   const months = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  useEffect(() => {
+useEffect(() => {
     if (isStaff && activeTab !== 'overview') {
       setActiveTab('overview');
       return;
@@ -111,9 +190,9 @@ const [searchParams, setSearchParams] = useSearchParams();
     if (activeTab === 'overview') {
       fetchFinanceData();
     } else if (activeTab === 'history') {
-      fetchMonthlyHistory();
+      refetchMonthlyHistory();
     } else if (activeTab === 'insights') {
-      if (monthlyHistory.length === 0) fetchMonthlyHistory();
+      if (!monthlyHistoryData || monthlyHistoryData.length === 0) refetchMonthlyHistory();
       if (transactions.length === 0) fetchFinanceData();
     }
   }, [activeTab, selectedMonth, selectedYear, user, isStaff]);
@@ -217,101 +296,27 @@ const [searchParams, setSearchParams] = useSearchParams();
     }
   };
 
-  const fetchMonthlyHistory = async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase.rpc('get_monthly_finance_history', {
-        p_user_id: user.id,
-        p_months_count: 12
-      });
+  const fetchMonthlyHistory = useCallback(async () => {
+    await refetchMonthlyHistory();
+  }, [refetchMonthlyHistory]);
 
-      if (error) throw error;
-
-      if (data) {
-        const translateMonth = (m: string) => {
-          const map: Record<string, string> = {
-            'January': 'Janeiro', 'February': 'Fevereiro', 'March': 'Março',
-            'April': 'Abril', 'May': 'Maio', 'June': 'Junho',
-            'July': 'Julho', 'August': 'Agosto', 'September': 'Setembro',
-            'October': 'Outubro', 'November': 'Novembro', 'December': 'Dezembro'
-          };
-          return map[m] || m;
-        };
-
-        const history = data.map((item: any, index: number, arr: any[]) => {
-          let growth = 0;
-          if (index > 0) {
-            const prevRevenue = arr[index - 1].revenue;
-            growth = prevRevenue > 0 ? ((item.revenue - prevRevenue) / prevRevenue) * 100 : 0;
-          }
-
-          return {
-            month: translateMonth(item.month_name.trim()),
-            year: item.year_num,
-            revenue: parseFloat(item.revenue),
-            expenses: parseFloat(item.expenses),
-            profit: parseFloat(item.profit),
-            growth: growth
-          };
-        });
-
-        setMonthlyHistory(history.reverse()); // Recentes primeiro para a lista
-      }
-    } catch (error) {
-      logger.error('Error fetching monthly history', error);
-    }
+  const handleDeleteTransaction = (t: Transaction) => {
+    setPendingDelete(t);
   };
 
-  const handleDeleteTransaction = async (t: any) => {
-    // Receitas automáticas vêm da tabela appointments — avisar antes com uma única confirmação
-    const isAppointmentRevenue = t.type === 'revenue';
-    const confirmMsg = isAppointmentRevenue
-      ? `Excluir "${t.serviceName}"?\n\nEsta é uma receita gerada por agendamento. O agendamento vinculado também será removido. Esta ação é irreversível.`
-      : `Tem certeza que deseja excluir "${t.serviceName}"? Esta ação é irreversível.`;
-
-    if (!confirm(confirmMsg)) return;
-
+  const confirmDeleteTransaction = async () => {
+    if (!pendingDelete) return;
+    const t = pendingDelete;
     try {
-      // Verifica se existe em finance_records (despesa ou entrada manual)
-      const { data: record, error: findError } = await supabase
-        .from('finance_records')
-        .select('appointment_id')
-        .eq('id', t.id)
-        .maybeSingle();
-
-      if (findError) throw findError;
-
-      if (record) {
-        // Encontrado em finance_records — exclui também o agendamento vinculado, se houver
-        if (record.appointment_id) {
-          await supabase.from('appointments').delete().eq('id', record.appointment_id).eq('user_id', user.id);
-        }
-        const { error } = await supabase.from('finance_records').delete().eq('id', t.id).eq('user_id', user.id);
-        if (error) throw error;
-      } else {
-        // Não está em finance_records — é uma receita automática de agendamento
-        const { data: appt, error: apptFindError } = await supabase
-          .from('appointments')
-          .select('id')
-          .eq('id', t.id)
-          .maybeSingle();
-
-        if (apptFindError) throw apptFindError;
-
-        if (appt) {
-          const { error } = await supabase.from('appointments').delete().eq('id', t.id).eq('user_id', user.id);
-          if (error) throw error;
-        } else {
-          alert('Transação não encontrada. Pode já ter sido excluída.');
-          return;
-        }
-      }
-
-      alert('Transação excluída com sucesso!');
+      await deleteTransactionMutation.mutateAsync({ transactionId: t.id, companyId: queryUserId });
+      showToast('Transação excluída com sucesso!', 'success');
       fetchFinanceData();
-    } catch (error: any) {
-      console.error('Erro ao excluir transação', error);
-      alert(`Erro ao excluir transação: ${error.message || 'Erro desconhecido'}`);
+    } catch (error: unknown) {
+      logger.error('Erro ao excluir transação', error);
+      const ui = mapError(error, 'Não foi possível excluir a transação. Tente de novo.');
+      showToast(formatUserFacingError(ui), 'error');
+    } finally {
+      setPendingDelete(null);
     }
   };
 
@@ -353,25 +358,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   };
 
   // Fetch dropdown data for new transaction modal
-  const fetchDropdownData = async () => {
-    if (!user) return;
-    try {
-      const [servicesRes, clientsRes, professionalsRes] = await Promise.all([
-        supabase.from('services').select('id, name').eq('user_id', user.id),
-        supabase.from('clients').select('id, name').eq('user_id', user.id).order('name'),
-        supabase.from('team_members').select('id, name').eq('user_id', user.id).eq('active', true).order('name')
-      ]);
-
-      setServices(servicesRes.data || []);
-      setClients(clientsRes.data || []);
-      setProfessionals(professionalsRes.data || []);
-    } catch (error) {
-      logger.error('Error fetching dropdown data', error);
-    }
-  };
-
   const handleOpenNewTransaction = () => {
-    fetchDropdownData();
     setNewTransactionType('income');
     setNewTransactionDescription('');
     setNewTransactionAmount('');
@@ -385,7 +372,7 @@ const [searchParams, setSearchParams] = useSearchParams();
 
   const handleCreateTransaction = async () => {
     if (!user || !newTransactionAmount || !newTransactionDescription) {
-      alert('Por favor, preencha pelo menos a descrição e o valor.');
+      showToast('Por favor, preencha pelo menos a descrição e o valor.', 'warning');
       return;
     }
 
@@ -393,92 +380,180 @@ const [searchParams, setSearchParams] = useSearchParams();
     try {
       const amount = parseFloat(newTransactionAmount);
       if (isNaN(amount) || amount <= 0) {
-        alert('Por favor, insira um valor válido.');
+        showToast('Por favor, insira um valor válido.', 'warning');
         setSavingTransaction(false);
         return;
       }
 
-      // Find selected names for display
-      const serviceName = services.find(s => s.id === newTransactionService)?.name || '';
-      const clientName = clients.find(c => c.id === newTransactionClient)?.name || '';
-      const professionalName = professionals.find(p => p.id === newTransactionProfessional)?.name || 'Manual';
+      const serviceName = dropdownServices.find(s => s.id === newTransactionService)?.name || '';
+      const clientName = dropdownClients.find(c => c.id === newTransactionClient)?.name || '';
+      const professionalName = dropdownProfessionals.find(p => p.id === newTransactionProfessional)?.name || 'Manual';
 
-      // Create date with time if provided
       const transactionDateTime = new Date(newTransactionDate);
       if (newTransactionTime) {
         const [hours, minutes] = newTransactionTime.split(':');
         transactionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       }
 
-      const isExpense = newTransactionType === 'expense';
       const isPaid = newTransactionStatus === 'paid';
-      const transactionData: any = {
-        user_id: user.id,
-        barber_name: professionalName,
-        professional_id: newTransactionProfessional || null,
-        revenue: newTransactionType === 'income' ? amount : 0,
-        commission_value: newTransactionType === 'expense' ? amount : 0,
-        commission_rate: 0,
+
+      await createRecordMutation.mutateAsync({
+        companyId: queryUserId,
         type: newTransactionType === 'income' ? 'revenue' : 'expense',
+        amount: newTransactionType === 'income' ? amount : 0,
+        expense: newTransactionType === 'expense' ? amount : 0,
         description: newTransactionDescription,
-        created_at: transactionDateTime.toISOString(),
-        payment_method: newTransactionType === 'income' ? 'Dinheiro' : null, // Default for manual income
-        status: newTransactionStatus,
-        due_date: newTransactionStatus === 'pending' ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString()) : null,
-        commission_paid: isExpense ? isPaid : true,
-        commission_paid_at: isExpense && isPaid ? transactionDateTime.toISOString() : null
-      };
+        paymentMethod: newTransactionType === 'income' ? 'Dinheiro' : null,
+        professionalId: newTransactionProfessional || null,
+        professionalName,
+        clientId: newTransactionClient || null,
+        clientName,
+        serviceName,
+        appointmentId: null,
+        dueDate: newTransactionStatus === 'pending'
+          ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString())
+          : null,
+        commissionPaid: newTransactionType === 'expense' ? isPaid : true,
+      });
 
-      // Add optional fields if they have values
-      if (newTransactionService) {
-        transactionData.service_name = serviceName;
-      }
-      if (newTransactionClient) {
-        transactionData.client_name = clientName;
-      }
-
-      const { error } = await supabase
-        .from('finance_records')
-        .insert(transactionData);
-
-      if (error) throw error;
-
-      alert(`✅ ${newTransactionType === 'income' ? 'Receita' : 'Despesa'} registrada com sucesso!`);
+      showToast(`${newTransactionType === 'income' ? 'Receita' : 'Despesa'} registrada com sucesso!`, 'success');
       setShowNewTransactionModal(false);
       fetchFinanceData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error creating transaction', error);
-      alert(`❌ Erro ao registrar transação: ${error.message || JSON.stringify(error)}`);
+      const ui = mapError(error, 'Não foi possível registrar a transação. Verifique os dados e tente de novo.');
+      showToast(formatUserFacingError(ui), 'error');
     } finally {
       setSavingTransaction(false);
     }
   };
 
+  const periodLabel = `${months[selectedMonth]} ${selectedYear}`;
+  const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
+  const revenueCount = transactions.filter((t) => t.type === 'revenue').length;
+  const avgTicket = revenueCount > 0 ? (summary.revenue || 0) / revenueCount : 0;
+
+  const transactionColumns = useMemo<TableColumn<Transaction>[]>(() => [
+    {
+      key: 'datetime',
+      header: 'Data/hora',
+      render: (t) => (
+        <div className="flex flex-col">
+          <span className={`font-medium ${colors.text}`}>{t.date}</span>
+          <span className={`text-xs ${colors.textMuted}`}>{t.time}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'service',
+      header: 'Descrição / serviço',
+      render: (t) => <span className={`font-medium ${colors.text}`}>{t.serviceName}</span>,
+    },
+    {
+      key: 'professional',
+      header: 'Profissional',
+      render: (t) => <span className={`font-medium ${accent.text}`}>{t.professionalName}</span>,
+    },
+    {
+      key: 'client',
+      header: 'Cliente',
+      render: (t) => (
+        <span className={colors.textSecondary}>
+          {t.clientName || <span className={colors.textMuted}>—</span>}
+        </span>
+      ),
+    },
+    {
+      key: 'amount',
+      header: 'Valor',
+      align: 'right',
+      render: (t) => (
+        <span className={`font-mono font-bold tabular-nums ${t.type === 'expense' ? status.danger : status.success}`}>
+          {t.type === 'expense' ? '-' : '+'}
+          {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
+        </span>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Tipo',
+      align: 'center',
+      render: (t) => (
+        <div className="flex flex-col items-center gap-1">
+          <Badge variant={t.type === 'expense' ? 'danger' : 'success'}>
+            {t.type === 'expense' ? 'Despesa' : 'Receita'}
+          </Badge>
+          {t.status === 'pending' && <Badge variant="warning">Pendente</Badge>}
+        </div>
+      ),
+    },
+    {
+      key: 'payment',
+      header: 'Pagamento',
+      align: 'center',
+      render: (t) => (
+        <span className={`text-xs ${colors.textSecondary} ${colors.surface} px-2 py-1 rounded border ${colors.border}`}>
+          {t.payment_method || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Ações',
+      align: 'right',
+      render: (t) => (
+        <div className="flex justify-end gap-2">
+          {t.type === 'expense' && t.status === 'pending' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Check className="h-3.5 w-3.5" />}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' });
+              }}
+            >
+              Liquidar
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Trash2 className="h-3.5 w-3.5" />}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDeleteTransaction(t);
+            }}
+          >
+            Excluir
+          </Button>
+        </div>
+      ),
+    },
+  ], [accent.text, colors, currencyRegion, status.danger, status.success]);
+
   return (
-    <div className="space-y-6 md:space-y-8 pb-20">
-      {/* Header */}
-      <div className={`flex flex-col md:flex-row justify-between items-start md:items-end border-b ${colors.divider} pb-5 gap-4`}>
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className={`text-2xl md:text-4xl font-heading ${colors.text} uppercase`}>Financeiro</h2>
-            <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
+    <div className={`space-y-6 md:space-y-8 pb-20 ${density.pagePadding} md:px-0`}>
+      <PageHeader
+        title="Financeiro"
+        subtitle={periodLabel}
+        meta={<AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />}
+        action={
+          <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+            <Button variant="outline" size="sm" icon={<Filter className="h-4 w-4" />} onClick={() => setShowFilterModal(true)}>
+              Filtrar
+            </Button>
+            <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
+              Registrar receita
+            </Button>
+            <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
+              Exportar
+            </Button>
           </div>
-          <p className="text-text-secondary font-mono mt-1 md:mt-2 text-sm md:text-base">
-            Controle completo das suas entradas e saídas
-          </p>
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <BrutalButton variant="secondary" size="sm" icon={<Filter />} onClick={() => setShowFilterModal(true)}>
-            Filtrar
-          </BrutalButton>
-          <BrutalButton variant="primary" size="sm" icon={<Plus />} onClick={handleOpenNewTransaction}>
-            Nova Transação
-          </BrutalButton>
-          <BrutalButton variant="secondary" size="sm" icon={<Download />} onClick={handleExport}>
-            Exportar
-          </BrutalButton>
-        </div>
-      </div>
+        }
+      />
 
       {/* Month/Year Selector */}
       {activeTab === 'overview' && (
@@ -507,414 +582,207 @@ const [searchParams, setSearchParams] = useSearchParams();
 
       {activeTab === 'overview' && (
         <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <BrutalCard>
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-emerald-500/10">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">{isStaff ? 'Meu Giro' : 'Receita'}</p>
-                    <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
-                  </div>
-                </div>
-                <InfoButton text={isStaff ? `Total dos seus atendimentos em ${months[selectedMonth]} ${selectedYear}.` : `Total de vendas e serviços faturados em ${months[selectedMonth]} ${selectedYear}.`} />
-              </div>
-              <h3 className="text-2xl md:text-3xl font-bold font-mono text-emerald-400">
-                {formatCurrency(summary.revenue || 0, currencyRegion)}
-              </h3>
-              <div className={`flex items-center gap-1 ${summary.growth >= 0 ? 'text-green-500' : 'text-red-500'} text-xs font-mono mt-2`}>
-                {summary.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                <span>{summary.growth > 0 ? '+' : ''}{summary.growth.toFixed(1)}% vs mês anterior</span>
-              </div>
-            </BrutalCard>
-
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <FinanceKpi
+              icon={<TrendingUp className="h-5 w-5" />}
+              title={isStaff ? 'Meu giro' : 'Receita'}
+              value={formatCurrency(summary.revenue || 0, currencyRegion)}
+              subtitle={
+                isStaff
+                  ? `${revenueCount} atendimentos em ${periodLabel}`
+                  : `${summary.growth > 0 ? '+' : ''}${summary.growth.toFixed(1)}% vs mês anterior`
+              }
+              iconClass={iconClass}
+              minHeightClass={density.kpiMinHeight}
+            />
             {!isStaff && (
-              <BrutalCard>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-red-500/10">
-                      <TrendingDown className="w-5 h-5 text-red-400" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Despesas Pagas</p>
-                      <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
-                    </div>
-                  </div>
-                  <InfoButton text={`Soma de todos os custos efetivamente pagos (saída de caixa).`} />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold font-mono text-red-400">
-                  {formatCurrency(summary.expenses || 0, currencyRegion)}
-                </h3>
-                <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
-                  <DollarSign className="w-3 h-3" />
-                  <span>Comissões e custos liquidados</span>
-                </div>
-              </BrutalCard>
+              <>
+                <FinanceKpi
+                  icon={<TrendingDown className="h-5 w-5" />}
+                  title="Despesas"
+                  value={formatCurrency(summary.expenses || 0, currencyRegion)}
+                  subtitle="Comissões e custos liquidados"
+                  iconClass={iconClass}
+                  minHeightClass={density.kpiMinHeight}
+                />
+                <FinanceKpi
+                  icon={<Wallet className="h-5 w-5" />}
+                  title="Lucro"
+                  value={formatCurrency(summary.profit || 0, currencyRegion)}
+                  subtitle={
+                    summary.revenue > 0
+                      ? `${Math.round(((summary.profit || 0) / summary.revenue) * 100)}% margem`
+                      : 'Sem receita no período'
+                  }
+                  iconClass={iconClass}
+                  minHeightClass={density.kpiMinHeight}
+                />
+              </>
             )}
-
-            {!isStaff && (
-              <BrutalCard>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl ${accent.bgDim}`}>
-                      <Wallet className={`w-5 h-5 ${accent.text}`} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Lucro Líquido</p>
-                      <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
-                    </div>
-                  </div>
-                  <InfoButton text="O valor que sobra após subtrair as despesas pagas da receita. Seu lucro real no período." />
-                </div>
-                <h3 className={`text-2xl md:text-3xl font-bold font-mono ${accent.text}`}>
-                  {formatCurrency(summary.profit || 0, currencyRegion)}
-                </h3>
-                <div className={`flex items-center gap-1 ${accent.text} text-xs font-mono mt-2`}>
-                  <Wallet className="w-3 h-3" />
-                  <span>Margem: {summary.revenue > 0 ? Math.round(((summary.profit || 0) / summary.revenue) * 100) : 0}%</span>
-                </div>
-              </BrutalCard>
-            )}
-
-            {/* Atendimentos e Ticket Médio (Donos) */}
-            {!isStaff && (
-              <BrutalCard>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl ${colors.surface}`}>
-                      <Calendar className={`w-5 h-5 ${colors.text}`} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-mono">Atendimentos</p>
-                      <p className="text-[10px] text-neutral-600 font-mono mt-0.5">{months[selectedMonth]} {selectedYear}</p>
-                    </div>
-                  </div>
-                  <InfoButton text="Total de serviços prestados e faturados." />
-                </div>
-                <h3 className={`text-2xl md:text-3xl font-bold font-mono ${colors.text}`}>
-                  {transactions.filter(t => t.type === 'revenue').length}
-                </h3>
-                <div className="flex items-center gap-1 text-neutral-500 text-xs font-mono mt-2">
-                  <Calendar className="w-3 h-3" />
-                  <span>Ticket Médio: {formatCurrency(transactions.filter(t => t.type === 'revenue').length > 0 ? (summary.revenue || 0) / transactions.filter(t => t.type === 'revenue').length : 0, currencyRegion)}</span>
-                </div>
-              </BrutalCard>
-            )}
-
-            {/* Card de Atendimentos para staff */}
             {isStaff && (
-              <BrutalCard>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-text-secondary font-mono text-xs uppercase tracking-widest">Atendimentos</p>
-                    <p className="text-[10px] text-neutral-500 font-mono mt-1">{months[selectedMonth]} {selectedYear}</p>
-                  </div>
-                </div>
-                <h3 className={`text-2xl md:text-3xl font-heading ${accent.text}`}>
-                  {transactions.filter(t => t.type === 'revenue').length}
-                </h3>
-                <div className={`flex items-center gap-1 ${accent.text} text-xs font-mono mt-2`}>
-                  <Calendar className="w-3 h-3" />
-                  <span>Serviços realizados no mês</span>
-                </div>
-              </BrutalCard>
+              <FinanceKpi
+                icon={<Calendar className="h-5 w-5" />}
+                title="Atendimentos"
+                value={String(revenueCount)}
+                subtitle={`Ticket médio ${formatCurrency(avgTicket, currencyRegion)}`}
+                iconClass={iconClass}
+                minHeightClass={density.kpiMinHeight}
+              />
             )}
-          </div>
+          </section>
 
-          {/* Detailed Revenue Cards — apenas para donos */}
           {!isStaff && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <BrutalCard>
-                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">
+            <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Card variant="outlined">
+                <p className={`text-sm font-semibold ${colors.textSecondary}`}>
                   {region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix'}
                 </p>
-                <h4 className="text-xl font-heading text-green-400 mt-1">
+                <p className={`mt-2 font-mono text-xl font-bold tabular-nums ${status.success}`}>
                   {formatCurrency(region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0), currencyRegion)}
-                </h4>
-              </BrutalCard>
-              <BrutalCard>
-                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Dinheiro</p>
-                <h4 className="text-xl font-heading text-emerald-400 mt-1">
+                </p>
+              </Card>
+              <Card variant="outlined">
+                <p className={`text-sm font-semibold ${colors.textSecondary}`}>Receita via dinheiro</p>
+                <p className={`mt-2 font-mono text-xl font-bold tabular-nums ${status.success}`}>
                   {formatCurrency(summary.revenueByMethod.dinheiro || 0, currencyRegion)}
-                </h4>
-              </BrutalCard>
-              <BrutalCard>
-                <p className="text-text-secondary font-mono text-[10px] uppercase tracking-tighter">Receita via Cartão</p>
-                <h4 className="text-xl font-heading text-teal-400 mt-1">
+                </p>
+              </Card>
+              <Card variant="outlined">
+                <p className={`text-sm font-semibold ${colors.textSecondary}`}>Receita via cartão</p>
+                <p className={`mt-2 font-mono text-xl font-bold tabular-nums ${status.success}`}>
                   {formatCurrency(summary.revenueByMethod.cartao || 0, currencyRegion)}
-                </h4>
-              </BrutalCard>
-            </div>
+                </p>
+              </Card>
+            </section>
           )}
 
-          {/* Charts */}
           <div className="grid grid-cols-1 gap-6">
-            <BrutalCard title={`Entradas e Saídas - ${months[selectedMonth]} ${selectedYear}`}>
+            <Card title={`Entradas e saídas — ${periodLabel}`}>
               <div className="h-[350px] min-h-[300px] w-full mt-4">
                 <ResponsiveContainer width="99%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#34d399" stopOpacity={0.4} />
-                        <stop offset="50%" stopColor="#10B981" stopOpacity={0.15} />
-                        <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="0%" stopColor={chartTheme.revenueStroke} stopOpacity={0.35} />
+                        <stop offset="50%" stopColor={chartTheme.revenueFill} stopOpacity={0.12} />
+                        <stop offset="100%" stopColor={chartTheme.revenueFill} stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#f87171" stopOpacity={0.3} />
-                        <stop offset="50%" stopColor="#EF4444" stopOpacity={0.1} />
-                        <stop offset="100%" stopColor="#EF4444" stopOpacity={0} />
+                        <stop offset="0%" stopColor={chartTheme.expenseStroke} stopOpacity={0.28} />
+                        <stop offset="50%" stopColor={chartTheme.expenseFill} stopOpacity={0.1} />
+                        <stop offset="100%" stopColor={chartTheme.expenseFill} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                    <XAxis dataKey="name" stroke="#555" style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#555" style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+                    <XAxis dataKey="name" stroke={chartTheme.axis} style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} />
+                    <YAxis stroke={chartTheme.axis} style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} tickFormatter={(v) => `${currencyRegion === 'PT' ? '€' : 'R$'}${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', padding: '12px 16px' }}
-                      labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
+                      contentStyle={{ backgroundColor: chartTheme.tooltipBg, border: `1px solid ${chartTheme.tooltipBorder}`, borderRadius: '12px', boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.08)', padding: '12px 16px' }}
+                      labelStyle={{ color: chartTheme.tooltipText, fontWeight: 'bold', marginBottom: '4px' }}
                       itemStyle={{ fontSize: '13px', padding: '2px 0' }}
-                      formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, undefined]}
+                      formatter={(value: number) => [formatCurrency(value, currencyRegion), undefined]}
                     />
-                    <Area type="natural" dataKey="receita" stroke="#34d399" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" name="Entradas" animationDuration={1200} />
-                    <Area type="natural" dataKey="despesas" stroke="#f87171" strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" name="Saídas" animationDuration={1200} />
+                    <Area type="natural" dataKey="receita" stroke={chartTheme.revenueStroke} strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" name="Entradas" isAnimationActive={false} />
+                    <Area type="natural" dataKey="despesas" stroke={chartTheme.expenseStroke} strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" name="Saídas" isAnimationActive={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </BrutalCard>
+            </Card>
           </div>
 
-          {/* Recent Transactions */}
-          {/* Recent Transactions */}
-          <BrutalCard title="Transações Recentes">
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-neutral-800 text-text-secondary font-mono text-xs uppercase">
-                    <th className="p-3">Data/Hora</th>
-                    <th className="p-3">Descrição / Serviço</th>
-                    <th className="p-3">Profissional</th>
-                    <th className="p-3">Cliente</th>
-                    <th className="p-3 text-right">Valor</th>
-                    <th className="p-3 text-center">Tipo</th>
-                    <th className="p-3 text-center">Pagamento</th>
-                    <th className="p-3 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-800">
-                  {transactions.map((t) => (
-                    <tr key={t.id} className={`hover:bg-white/[0.04] transition-colors duration-150 ${t.status === 'pending' ? 'border-l-2 border-l-yellow-500/60' : ''}`}>
-                      <td className="p-3">
-                        <div className="flex flex-col">
-                          <span className="text-white font-medium text-sm">{t.date}</span>
-                          <span className="text-neutral-500 text-xs font-mono">{t.time}</span>
+          <Card title="Transações recentes" noPadding>
+            <div className={density.cardPadding}>
+              <Table<Transaction>
+                columns={transactionColumns}
+                data={transactions}
+                rowKey={(t) => t.id}
+                stickyHeader
+                getRowClassName={(t) => (t.status === 'pending' ? `${status.warningBg}` : '')}
+                emptyState={{
+                  icon: History,
+                  title: 'Nenhuma transação encontrada',
+                  description: 'Registre uma nova transação ou mude o filtro.',
+                  action: (
+                    <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
+                      Registrar receita
+                    </Button>
+                  ),
+                }}
+                mobileRender={(t) => (
+                  <div
+                    className={`rounded-xl border p-4 ${t.type === 'expense' ? `${status.dangerBg} ${status.dangerBorder}` : `${status.successBg} ${status.successBorder}`}`}
+                  >
+                    <div className="mb-3 flex items-start justify-between">
+                      <div className="flex flex-col">
+                        <span className={`text-base font-semibold ${colors.text}`}>{t.serviceName}</span>
+                        <div className={`mt-1 flex items-center gap-2 text-xs ${colors.textMuted}`}>
+                          <span>{t.date}</span>
+                          <span>•</span>
+                          <span>{t.time}</span>
                         </div>
-                      </td>
-                      <td className="p-3">
-                        <span className="text-white font-medium">
-                          {t.serviceName}
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className={`font-mono text-lg font-bold tabular-nums ${t.type === 'expense' ? status.danger : status.success}`}>
+                          {t.type === 'expense' ? '-' : '+'}
+                          {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
                         </span>
-                      </td>
-                      <td className="p-3">
-                        <span className={`font-medium ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
-                          {t.professionalName}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className="text-neutral-300">
-                          {t.clientName || <span className="text-neutral-600 italic">—</span>}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right font-mono">
-                        <span className={`font-bold ${t.type === 'expense' ? 'text-red-400' : 'text-emerald-400'}`}>
-                          {t.type === 'expense' ? '-' : '+'}{formatCurrency((t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)), currencyRegion, false)}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.type === 'expense' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                        <div className="mt-1 flex flex-col items-end gap-1">
+                          <Badge variant={t.type === 'expense' ? 'danger' : 'success'}>
                             {t.type === 'expense' ? 'Despesa' : 'Receita'}
-                          </span>
-                          {t.status === 'pending' && (
-                            <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                              Pendente
-                            </span>
-                          )}
+                          </Badge>
+                          {t.status === 'pending' && <Badge variant="warning">Pendente</Badge>}
                         </div>
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className="text-white text-xs font-mono bg-white/5 px-2 py-1 rounded border border-white/10 uppercase">
-                          {t.payment_method || '—'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          {t.type === 'expense' && t.status === 'pending' && (
-                            <button
-                              type="button"
-                              onClick={async (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (confirm(`Deseja marcar "${t.serviceName || 'Despesa'}" como paga?`)) {
-                                  try {
-                                    const { error } = await supabase.rpc('mark_expense_as_paid', {
-                                      p_record_id: t.id,
-                                      p_user_id: user?.id
-                                    });
-                                    if (error) throw error;
-                                    fetchFinanceData();
-                                  } catch (err) {
-                                    console.error('Erro ao liquidar despesa:', err);
-                                    alert('Erro ao liquidar despesa.');
-                                  }
-                                }
-                              }}
-                              className="flex items-center gap-2 px-3 py-1.5 text-green-500 text-xs font-bold uppercase bg-green-500/10 rounded-lg active:scale-95 transition-all relative z-50 cursor-pointer pointer-events-auto"
-                              title="Marcar como Pago"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              Liquidar
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleDeleteTransaction(t);
-                            }}
-                            className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg transition-all relative z-50 cursor-pointer pointer-events-auto"
-                            title="Excluir transação"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="md:hidden space-y-4">
-              {transactions.map((t) => (
-                <div
-                  key={t.id}
-                  className={`p-4 rounded-xl border-l-4 transition-all ${t.type === 'expense'
-                    ? 'bg-red-500/5 border-red-500/50 hover:bg-red-500/10'
-                    : 'bg-green-500/5 border-green-500/50 hover:bg-green-500/10'
-                    }`}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex flex-col">
-                      <span className="text-white font-heading text-base">{t.serviceName}</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-neutral-500 text-xs font-mono">{t.date}</span>
-                        <span className="text-neutral-700 text-xs">•</span>
-                        <span className="text-neutral-500 text-xs font-mono">{t.time}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end">
-                      <span className={`font-mono font-bold text-lg ${t.type === 'expense' ? 'text-red-500' : 'text-green-500'}`}>
-                        {t.type === 'expense' ? '-' : '+'}{formatCurrency((t.type === 'expense' ? (t.expense || 0) : (t.amount || 0)), currencyRegion, false)}
-                      </span>
-                      <div className="flex flex-col items-end gap-1 mt-1">
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${t.type === 'expense'
-                          ? 'bg-red-500/10 text-red-500'
-                          : 'bg-green-500/10 text-green-500'
-                          }`}>
-                          {t.type === 'expense' ? 'Despesa' : 'Receita'}
-                        </span>
-                        {t.status === 'pending' && (
-                          <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                            Pendente
-                          </span>
-                        )}
+                    <div className={`my-3 grid grid-cols-2 gap-2 border-y py-3 ${colors.divider}`}>
+                      <div>
+                        <p className={`text-xs ${colors.textMuted}`}>Profissional</p>
+                        <p className={`text-sm font-medium ${accent.text}`}>{t.professionalName}</p>
                       </div>
-                      {t.payment_method && (
-                        <span className="text-[10px] text-white/40 font-mono mt-1">
-                          PAG: {t.payment_method.toUpperCase()}
-                        </span>
+                      <div>
+                        <p className={`text-xs ${colors.textMuted}`}>Cliente</p>
+                        <p className={`truncate text-sm ${colors.textSecondary}`}>{t.clientName || '—'}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      {t.type === 'expense' && t.status === 'pending' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Check className="h-3.5 w-3.5" />}
+                          onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
+                        >
+                          Liquidar
+                        </Button>
                       )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 py-3 border-y border-white/5 my-3">
-                    <div>
-                      <p className="text-[10px] text-neutral-500 uppercase font-mono tracking-wider">Profissional</p>
-                      <p className={`text-sm font-medium ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>{t.professionalName}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-neutral-500 uppercase font-mono tracking-wider">Cliente</p>
-                      <p className="text-sm text-neutral-300 truncate">{t.clientName || '—'}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    {t.type === 'expense' && t.status === 'pending' && (
-                      <button
-                        onClick={async () => {
-                          if (confirm(`Deseja marcar "${t.serviceName || 'Despesa'}" como paga?`)) {
-                            try {
-                              const { error } = await supabase.rpc('mark_expense_as_paid', {
-                                p_record_id: t.id,
-                                p_user_id: user?.id
-                              });
-                              if (error) throw error;
-                              fetchFinanceData();
-                            } catch (err) {
-                              console.error('Erro ao liquidar despesa:', err);
-                              alert('Erro ao liquidar despesa.');
-                            }
-                          }
-                        }}
-                        className="flex items-center gap-2 px-3 py-1.5 text-green-500 text-xs font-bold uppercase bg-green-500/10 rounded-lg active:scale-95 transition-all"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={<Trash2 className="h-3.5 w-3.5" />}
+                        onClick={() => handleDeleteTransaction(t)}
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        Liquidar
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteTransaction(t); }}
-                      className="flex items-center gap-2 px-3 py-1.5 text-red-500 text-xs font-bold uppercase bg-red-500/10 rounded-lg transition-all relative z-20 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Excluir
-                    </button>
+                        Excluir
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )}
+              />
             </div>
-
-            {transactions.length === 0 && (
-              <div className="p-12 text-center">
-                <div className="bg-neutral-800/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <History className="w-8 h-8 text-neutral-500" />
-                </div>
-                <p className="text-text-secondary font-medium">Nenhuma transação encontrada</p>
-                <p className="text-neutral-500 text-sm mt-1">Registre uma nova transação ou mude o filtro.</p>
-              </div>
-            )}
-          </BrutalCard>
+          </Card>
         </>
       )
       }
 
       {
         activeTab === 'history' && (
-          <BrutalCard title="Histórico Mensal - Últimos 12 Meses">
+          <Card title="Histórico mensal — últimos 12 meses">
             <MonthlyHistory
               data={monthlyHistory}
               currencySymbol={currencySymbol}
               accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
               isBeauty={isBeauty}
             />
-          </BrutalCard>
+          </Card>
         )
       }
 
@@ -934,9 +802,6 @@ const [searchParams, setSearchParams] = useSearchParams();
           monthlyHistory={monthlyHistory}
           transactions={transactions}
           currencyRegion={currencyRegion}
-          isBeauty={isBeauty}
-accentBg={accent.bg}
-          accentText={accent.text}
         />
       )}
 
@@ -944,28 +809,24 @@ accentBg={accent.bg}
       {
         showNewTransactionModal && (
           <Modal
-            isOpen={showNewTransactionModal}
+            open={showNewTransactionModal}
             onClose={() => setShowNewTransactionModal(false)}
-            title="Nova Transação"
+            title="Nova transação"
             size="lg"
             footer={
               <div className="flex gap-3 w-full">
-                <BrutalButton
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => setShowNewTransactionModal(false)}
-                >
+                <Button variant="secondary" className="flex-1" onClick={() => setShowNewTransactionModal(false)}>
                   Cancelar
-                </BrutalButton>
-                <BrutalButton
+                </Button>
+                <Button
                   variant="primary"
                   className="flex-1"
                   onClick={handleCreateTransaction}
                   disabled={savingTransaction}
-                  icon={savingTransaction ? <Loader2 className="animate-spin" /> : undefined}
+                  loading={savingTransaction}
                 >
                   {savingTransaction ? 'Salvando...' : 'Registrar'}
-                </BrutalButton>
+                </Button>
               </div>
             }
           >
@@ -1108,7 +969,7 @@ accentBg={accent.bg}
                 `}
                 >
                   <option value="">Selecione um serviço</option>
-                  {services.map(s => (
+                  {dropdownServices.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
@@ -1127,7 +988,7 @@ accentBg={accent.bg}
                 `}
                 >
                   <option value="">Selecione um cliente</option>
-                  {clients.map(c => (
+                  {dropdownClients.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
@@ -1146,7 +1007,7 @@ accentBg={accent.bg}
                 `}
                 >
                   <option value="">Selecione um profissional</option>
-                  {professionals.map(p => (
+                  {dropdownProfessionals.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
@@ -1160,18 +1021,18 @@ accentBg={accent.bg}
       {
         showFilterModal && (
           <Modal
-            isOpen={showFilterModal}
+            open={showFilterModal}
             onClose={() => setShowFilterModal(false)}
-            title="Filtrar Transações"
+            title="Filtrar transações"
             size="md"
             footer={
               <div className="flex gap-3 w-full">
-                <BrutalButton variant="secondary" className="flex-1" onClick={handleClearFilter}>
+                <Button variant="secondary" className="flex-1" onClick={handleClearFilter}>
                   Limpar
-                </BrutalButton>
-                <BrutalButton variant="primary" className="flex-1" onClick={handleApplyFilter}>
+                </Button>
+                <Button variant="primary" className="flex-1" onClick={handleApplyFilter}>
                   Aplicar
-                </BrutalButton>
+                </Button>
               </div>
             }
           >
@@ -1215,6 +1076,41 @@ accentBg={accent.bg}
           </Modal>
         )
       }
+
+      <ConfirmModal
+        open={!!pendingDelete}
+        title="Excluir transação"
+        message={
+          pendingDelete?.type === 'revenue'
+            ? `Excluir "${pendingDelete.serviceName}"?\n\nEsta é uma receita gerada por agendamento. O agendamento vinculado também será removido. Esta ação é irreversível.`
+            : `Tem certeza que deseja excluir "${pendingDelete?.serviceName}"? Esta ação é irreversível.`
+        }
+        confirmLabel="Excluir"
+        variant="danger"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => void confirmDeleteTransaction()}
+      />
+
+      <ConfirmModal
+        open={!!pendingMarkPaid}
+        title="Liquidar despesa"
+        message={`Deseja marcar "${pendingMarkPaid?.name}" como paga?`}
+        confirmLabel="Liquidar"
+        onCancel={() => setPendingMarkPaid(null)}
+        onConfirm={async () => {
+          if (!pendingMarkPaid) return;
+          try {
+            await markExpensePaidMutation.mutateAsync({ recordId: pendingMarkPaid.id, companyId: queryUserId });
+            fetchFinanceData();
+          } catch (err) {
+            logger.error('Erro ao liquidar despesa:', err);
+            const ui = mapError(err, 'Não foi possível liquidar a despesa. Tente de novo.');
+            showToast(formatUserFacingError(ui), 'error');
+          } finally {
+            setPendingMarkPaid(null);
+          }
+        }}
+      />
     </div >
   );
 };

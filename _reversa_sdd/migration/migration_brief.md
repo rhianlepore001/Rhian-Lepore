@@ -14,7 +14,7 @@ producedBy: orchestrator
 
 ## Objetivo da migracao
 
-Transformar o AGENX de um produto funcional, porem acumulado por evolucao rapida, em uma plataforma SaaS profissional, escalavel, confiavel e visualmente premium para lancamento comercial.
+Transformar o AgendiX de um produto funcional, porem acumulado por evolucao rapida, em uma plataforma SaaS profissional, escalavel, confiavel e visualmente premium para lancamento comercial.
 
 O sistema atual ja possui diferenciais importantes: agenda, booking publico, fila digital, financeiro, comissoes, CRM, onboarding, IA e futuramente produtos. Porem a base cresceu de forma pouco estruturada, com logica espalhada entre frontend, Supabase, RPCs e componentes grandes. A experiencia visual nao transmite a confianca esperada de um SaaS moderno.
 
@@ -28,7 +28,7 @@ Ganhos esperados:
 - Melhor retencao e confianca comercial
 - Capacidade de evoluir diferenciais sem aumentar desordem
 
-Objetivo final: v1 profissional do AGENX -- segura, consistente, premium, multi-tenant confiavel, visualmente coesa, centrada em operacao, receita, retencao e controle para barbearias e studios.
+Objetivo final: v1 profissional do AgendiX -- segura, consistente, premium, multi-tenant confiavel, visualmente coesa, centrada em operacao, receita, retencao e controle para barbearias e studios.
 
 ## Metricas de sucesso
 

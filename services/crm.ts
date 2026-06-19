@@ -102,10 +102,15 @@ export async function syncPublicClientsToCrm(companyId: string): Promise<number>
 
   if (clientError) throw clientError;
 
+  const seenPhones = new Set<string>();
   const newClients = (publicClients as PublicClientRecord[])
     .filter(publicClient => {
       if (!publicClient.phone) return false;
-      return !findClientByPhoneInList(existingClients || [], publicClient.phone);
+      const normalizedPhone = normalizePhone(publicClient.phone);
+      if (!normalizedPhone || seenPhones.has(normalizedPhone)) return false;
+      if (findClientByPhoneInList(existingClients || [], publicClient.phone)) return false;
+      seenPhones.add(normalizedPhone);
+      return true;
     })
     .map(publicClient => ({
       user_id: companyId,

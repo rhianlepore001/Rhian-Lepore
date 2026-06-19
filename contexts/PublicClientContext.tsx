@@ -1,13 +1,28 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { upsertPublicClientSession } from '../services/publicBooking';
 import { PublicClient } from '../types';
+
+const LEGACY_STORAGE_KEY = 'rhian_public_client';
+
+const storageKey = (businessId: string) => `rhian_public_client_${businessId}`;
+
+const parseStoredClient = (raw: string): PublicClient | null => {
+    try {
+        return JSON.parse(raw) as PublicClient;
+    } catch {
+        return null;
+    }
+};
 
 interface PublicClientContextType {
     client: PublicClient | null;
     loading: boolean;
     login: (phone: string, businessId: string) => Promise<PublicClient | null>;
     register: (data: Omit<PublicClient, 'id'>) => Promise<PublicClient | null>;
-    logout: () => void;
+    establishSession: (client: PublicClient) => void;
+    hydrateFromStorage: (businessId: string) => PublicClient | null;
+    logout: (businessId?: string) => void;
 }
 
 const PublicClientContext = createContext<PublicClientContextType>({} as PublicClientContextType);
@@ -18,11 +33,45 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const [client, setClient] = useState<PublicClient | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const persistClient = useCallback((next: PublicClient) => {
+        setClient(next);
+        localStorage.setItem(storageKey(next.business_id), JSON.stringify(next));
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+    }, []);
+
+    const establishSession = useCallback((next: PublicClient) => {
+        persistClient(next);
+    }, [persistClient]);
+
+    const hydrateFromStorage = useCallback((businessId: string): PublicClient | null => {
+        const scoped = localStorage.getItem(storageKey(businessId));
+        if (scoped) {
+            const parsed = parseStoredClient(scoped);
+            if (parsed && parsed.business_id === businessId) {
+                setClient(parsed);
+                return parsed;
+            }
+        }
+
+        const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (legacy) {
+            const parsed = parseStoredClient(legacy);
+            if (parsed && parsed.business_id === businessId) {
+                persistClient(parsed);
+                return parsed;
+            }
+        }
+
+        return null;
+    }, [persistClient]);
+
     useEffect(() => {
-        // Hydrate from local storage on mount
-        const storedClient = localStorage.getItem('rhian_public_client');
-        if (storedClient) {
-            setClient(JSON.parse(storedClient));
+        const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (legacy) {
+            const parsed = parseStoredClient(legacy);
+            if (parsed) {
+                setClient(parsed);
+            }
         }
         setLoading(false);
     }, []);
@@ -30,20 +79,24 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const login = async (phone: string, businessId: string) => {
         setLoading(true);
         try {
-            // Use the secure RPC function if available, or direct query if RLS allows
             const { data, error } = await supabase.rpc('get_public_client_by_phone', {
                 p_business_id: businessId,
-                p_phone: phone
+                p_phone: phone,
             });
 
             if (error) throw error;
 
-            if (data && data.length > 0) {
-                const foundClient = data[0];
-                // Enrich with business_id since RPC might not return it
-                const fullClient = { ...foundClient, business_id: businessId };
-                setClient(fullClient);
-                localStorage.setItem('rhian_public_client', JSON.stringify(fullClient));
+            const foundClient = data?.[0];
+            if (foundClient) {
+                const fullClient: PublicClient = {
+                    id: foundClient.id,
+                    name: foundClient.name,
+                    phone: foundClient.phone,
+                    email: foundClient.email ?? null,
+                    photo_url: foundClient.photo_url ?? null,
+                    business_id: foundClient.business_id ?? businessId,
+                };
+                persistClient(fullClient);
                 return fullClient;
             }
             return null;
@@ -58,124 +111,43 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const register = async (data: Omit<PublicClient, 'id'>) => {
         setLoading(true);
         try {
-            // Check if already exists first using RPC to avoid RLS issues
-            const { data: existingClients, error: searchError } = await supabase.rpc('get_public_client_by_phone', {
-                p_business_id: data.business_id,
-                p_phone: data.phone
+            const fullClient = await upsertPublicClientSession({
+                businessId: data.business_id,
+                name: data.name,
+                phone: data.phone,
+                photoUrl: data.photo_url,
+                email: data.email,
             });
-
-            if (searchError) {
-                console.warn('Error searching client via RPC, falling back to insert:', searchError);
-            }
-
-            const existing = existingClients?.[0];
-
-            if (existing) {
-                // Update existing client with new info
-                const { data: updatedClient, error: updateError } = await supabase
-                    .from('public_clients')
-                    .update({
-                        name: data.name,
-                        photo_url: data.photo_url || existing.photo_url
-                    })
-                    .eq('id', existing.id)
-                    .select()
-                    .single();
-
-                if (updateError) throw updateError;
-
-                if (updatedClient) {
-                    // Espelhar atualização para a tabela 'clients' (CRM do dono)
-                    // Usa SECURITY DEFINER RPC para contornar RLS da tabela clients (anon não tem uid())
-                    try {
-                        const { error: mirrorError } = await supabase.rpc('mirror_public_client_to_crm', {
-                            p_user_id: data.business_id,
-                            p_name: data.name,
-                            p_phone: data.phone,
-                            p_email: data.email ?? null,
-                            p_photo_url: data.photo_url ?? null,
-                        });
-                        if (mirrorError) {
-                            console.warn('Falha ao espelhar cliente para CRM:', mirrorError);
-                        }
-                    } catch (err) {
-                        console.warn('Falha ao espelhar cliente para CRM:', err);
-                    }
-
-                    setClient(updatedClient);
-                    localStorage.setItem('rhian_public_client', JSON.stringify(updatedClient));
-                    return updatedClient;
-                }
-            }
-
-            // Create new client
-            const { data: newClient, error } = await supabase
-                .from('public_clients')
-                .insert([data])
-                .select()
-                .single();
-
-            if (error) {
-                // If error is unique constraint violation (code 23505), the client already exists.
-                // Try to find them via the login RPC and return that instead of throwing.
-                if (error.code === '23505') {
-                    const { data: loginData } = await supabase.rpc('get_public_client_by_phone', {
-                        p_business_id: data.business_id,
-                        p_phone: data.phone
-                    });
-                    const found = loginData?.[0];
-                    if (found) {
-                        const fullClient = { ...found, business_id: data.business_id };
-                        setClient(fullClient);
-                        localStorage.setItem('rhian_public_client', JSON.stringify(fullClient));
-                        return fullClient;
-                    }
-                    // Still not found — silently ignore so booking can proceed
-                    return null;
-                }
-                throw error;
-            }
-
-            if (newClient) {
-                // Espelhar cliente para a tabela 'clients' (CRM do dono do negócio)
-                // Usa SECURITY DEFINER RPC para contornar RLS da tabela clients (anon não tem uid())
-                try {
-                    const { error: mirrorError } = await supabase.rpc('mirror_public_client_to_crm', {
-                        p_user_id: data.business_id,
-                        p_name: data.name,
-                        p_phone: data.phone,
-                        p_email: data.email ?? null,
-                        p_photo_url: data.photo_url ?? null,
-                    });
-                    if (mirrorError) {
-                        console.warn('Falha ao espelhar cliente para CRM:', mirrorError);
-                    }
-                } catch (err) {
-                    // Log erro mas não falha o fluxo principal
-                    console.warn('Falha ao espelhar cliente para CRM:', err);
-                }
-
-                setClient(newClient);
-                localStorage.setItem('rhian_public_client', JSON.stringify(newClient));
-                return newClient;
-            }
-
-            return null;
+            persistClient(fullClient);
+            return fullClient;
         } catch (error) {
             console.error('Error registering public client:', error);
-            throw error; // Re-throw to be caught by the caller
+            throw error;
         } finally {
             setLoading(false);
         }
     };
 
-    const logout = () => {
+    const logout = (businessId?: string) => {
+        const bid = businessId ?? client?.business_id;
         setClient(null);
-        localStorage.removeItem('rhian_public_client');
+        if (bid) {
+            localStorage.removeItem(storageKey(bid));
+        }
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
     };
 
     return (
-        <PublicClientContext.Provider value={{ client, loading, login, register, logout }}>
+        <PublicClientContext.Provider value={{
+            client,
+            loading,
+            login,
+            register,
+            establishSession,
+            hydrateFromStorage,
+            logout,
+        }}
+        >
             {children}
         </PublicClientContext.Provider>
     );

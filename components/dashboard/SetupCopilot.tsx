@@ -3,7 +3,7 @@ import { Check, ChevronRight, Scissors, Users, Clock, Link2, Calendar, Rocket, X
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getOnboardingProgress, saveOnboardingStep, getSetupStatus } from '../../lib/onboarding';
+import { getOnboardingProgress, saveOnboardingStep, getSetupStatus } from '@/services/onboarding';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
 interface SetupStep {
@@ -17,16 +17,19 @@ interface SetupStep {
 
 /* O SetupCopilot faz suas próprias queries para verificar cada step com precisão,
    pois o dataMaturity.hasPublicBookings não reflete corretamente o estado de configuração. */
-export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
+export const SetupCopilot: React.FC = () => {
     const navigate = useNavigate();
     const { user, companyId } = useAuth();
     const { accent, colors, classes } = useBrutalTheme();
-    const [dismissed, setDismissed] = useState(false);
+    const getDismissedKey = () => `setup_copilot_dismissed_${user?.id ?? 'anon'}`;
+    const [dismissed, setDismissed] = useState(() => {
+        if (typeof window === 'undefined' || !user?.id) return false;
+        return localStorage.getItem(`setup_copilot_dismissed_${user.id}`) === 'true';
+    });
     const [loading, setLoading] = useState(true);
     const [resumeStepId, setResumeStepId] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
 
-    // Chave para persistir se o usuário já viu e dispensou a mensagem de "Sistema Ativado!"
     const getActivationSeenKey = () => `setup_copilot_activated_seen_${user?.id ?? 'anon'}`;
 
     // Estado de conclusão de cada step
@@ -325,8 +328,7 @@ export const SetupCopilot: React.FC<{ isBeauty: boolean }> = ({ isBeauty }) => {
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setDismissed(true);
-                                        // Se o sistema está ativado, persistir no localStorage
-                                        // para nunca mais mostrar a mensagem "Sistema Ativado!"
+                                        localStorage.setItem(getDismissedKey(), 'true');
                                         if (isActivated) {
                                             localStorage.setItem(getActivationSeenKey(), 'true');
                                         }

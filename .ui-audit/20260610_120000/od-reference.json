@@ -1,0 +1,73 @@
+{
+  "references": [
+    {
+      "id": "stripe",
+      "forTheme": "barber",
+      "borrow": [
+        "table-row-density",
+        "numeric-tabular-alignment",
+        "form-field-compact-height",
+        "status-badge-minimal"
+      ],
+      "doNotCopy": ["color-palette", "typography-family", "border-radius-soft"]
+    },
+    {
+      "id": "linear-app",
+      "forTheme": "barber",
+      "borrow": [
+        "sidebar-item-density",
+        "page-header-with-primary-action",
+        "list-row-hover-state",
+        "keyboard-first-focus-rings"
+      ],
+      "doNotCopy": ["monochrome-palette", "purple-accent", "typography-scale"]
+    },
+    {
+      "id": "notion",
+      "forTheme": "beauty",
+      "borrow": [
+        "section-vertical-rhythm",
+        "card-padding-generous",
+        "soft-page-header-hierarchy",
+        "empty-state-with-guidance"
+      ],
+      "doNotCopy": ["warm-gray-palette", "serif-typography", "minimal-chrome"]
+    }
+  ],
+  "compositionRules": {
+    "barber": {
+      "density": "compact-stripe-linear",
+      "radius": "sharp-lg-md",
+      "layoutBorrow": "linear-app sidebar + stripe tables"
+    },
+    "beauty": {
+      "density": "breathable-notion",
+      "radius": "soft-2xl-xl",
+      "layoutBorrow": "notion section spacing + card rhythm"
+    }
+  },
+  "doNotCopyGlobal": [
+    "color-palette",
+    "typography-family",
+    "logo",
+    "accent-hues"
+  ],
+  "brandPreserved": [
+    "barber-gold-accent",
+    "beauty-purple-accent",
+    "chivo-inter-fonts",
+    "agendix-logo"
+  ],
+  "criticalScreens": [
+    "login",
+    "dashboard",
+    "agenda",
+    "financeiro"
+  ],
+  "themeMatrix": [
+    "barber-dark",
+    "barber-light",
+    "beauty-dark",
+    "beauty-light"
+  ]
+}

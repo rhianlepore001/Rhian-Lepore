@@ -1,0 +1,10 @@
+{
+  "projectId": "agendix-ui-audit",
+  "agentId": "opencode",
+  "pluginId": "example-dashboard",
+  "pluginInputs": {
+    "brief": "Projeto AgendiX UI Audit — remediação craft PT-BR. MATRIZ OBRIGATÓRIA: barber-dark | barber-light | beauty-dark | beauty-light (NÃO compact/spacious). Cores DS Lock: barber-dark bg #121212 accent #C29B40; barber-light bg #F5F1E8 accent #A07A2A; beauty-dark bg #1F1B2E accent #A78BFA; beauty-light bg #F7F5FF accent #7C3AED. Radius: barber 8/8/6px compact; beauty 16/12/8px respirado. Fonts Chivo/Inter/JetBrains Mono. BANS: no UPPERCASE labels, no brutal shadow, no ghost gradient, no side-stripe. Tela Dashboard (/#/): PageHeader Olá Marina + data + CTA; HERO Faturamento hoje R$ 1.840 tabular + delta; 3 KPIs secundários; Card Seu dia; banner comissões outlined; sidebar + bottom nav 44px. Skeleton nos KPIs, never R$ 0 placeholder. Output dashboard.html with 4-theme matrix like login.html (theme-nav audit chrome OK). Sentence case PT-BR.",
+    "design_system": "linear-app"
+  },
+  "message": "Generate dashboard.html for AgendiX UI Audit. Read login.html in this project for the correct 4-theme matrix pattern (barber-dark, barber-light, beauty-dark, beauty-light). Follow the plugin brief exactly. Self-contained HTML, mobile-first 390px, then desktop 2x2 matrix grid. Do NOT use compact/spacious axis. Do NOT overwrite login.html."
+}

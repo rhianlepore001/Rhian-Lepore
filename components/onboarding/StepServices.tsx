@@ -12,7 +12,8 @@ interface StepServicesProps {
 }
 
 export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, accentColor }) => {
-    const { user, region } = useAuth();
+    const { user, companyId, region } = useAuth();
+    const effectiveCompanyId = companyId ?? user?.id ?? null;
     const [services, setServices] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -125,8 +126,9 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                 </button>
             </div>
 
-            {isModalOpen && (
+            {isModalOpen && effectiveCompanyId && (
                 <ServiceModal
+                    companyId={effectiveCompanyId}
                     categories={categories}
                     allServices={services}
                     onClose={() => setIsModalOpen(false)}

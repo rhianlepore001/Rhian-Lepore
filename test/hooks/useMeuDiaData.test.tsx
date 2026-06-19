@@ -25,11 +25,13 @@ const createWrapper = () => {
             },
         },
     });
-    return ({ children }: { children: React.ReactNode }) => (
+    const Wrapper = ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
             {children}
         </QueryClientProvider>
     );
+    Wrapper.displayName = 'MeuDiaDataTestWrapper';
+    return Wrapper;
 };
 
 describe('useMeuDiaData', () => {

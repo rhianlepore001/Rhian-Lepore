@@ -21,7 +21,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { isTrial, isExpired } = useSubscription();
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBillingRoute = pathname === '/configuracoes/assinatura';
-  const { colors } = useBrutalTheme();
+  const { colors, density } = useBrutalTheme();
 
   const showBanner = !isBillingRoute && (isTrial || isExpired);
   const headerTop = showBanner ? '40px' : '0px';
@@ -45,7 +45,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <Header />
 
       <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-24 md:pb-8 relative z-10`} style={{ willChange: 'transform' }}>
-        <div className={`${!isSettingsRoute ? 'p-3 md:p-8 max-w-7xl mx-auto' : ''} space-y-4 md:space-y-8 animate-in fade-in duration-500`}>
+        <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}>
           {children}
         </div>
       </main>

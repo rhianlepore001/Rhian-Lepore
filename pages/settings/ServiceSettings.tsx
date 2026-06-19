@@ -1,79 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Card, Button } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import {
+    useCreateServiceCategory,
+    useDeleteServiceCategory,
+    useServiceSettings,
+} from '../../hooks/useServiceSettings';
 import { ServiceModal } from '../../components/ServiceModal';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
 import { Modal } from '../../components/Modal';
 import { formatCurrency } from '../../utils/formatters';
+import type { ServiceItem } from '@/types/serviceSettings';
 
 export const ServiceSettings: React.FC = () => {
-    const { user, region } = useAuth();
+    const { companyId, user, region } = useAuth();
+    const effectiveCompanyId = companyId ?? user?.id ?? null;
     const { accent, colors, classes, isBeauty } = useBrutalTheme();
-    const [categories, setCategories] = useState<any[]>([]);
-    const [services, setServices] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { categories, services, loading, refetch } = useServiceSettings(effectiveCompanyId);
+    const createCategory = useCreateServiceCategory();
+    const deleteCategory = useDeleteServiceCategory();
 
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
-    const [editingService, setEditingService] = useState<any>(null);
+    const [editingService, setEditingService] = useState<ServiceItem | null>(null);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
 
-    useEffect(() => {
-        fetchData();
-    }, [user]);
-
-    const fetchData = async () => {
-        if (!user) return;
-        try {
-            const [catRes, servRes] = await Promise.all([
-                supabase.from('service_categories').select('*').eq('user_id', user.id).order('display_order'),
-                supabase.from('services').select('*').eq('user_id', user.id)
-            ]);
-
-            setCategories(catRes.data || []);
-            setServices(servRes.data || []);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleAddCategory = async () => {
-        if (!newCategoryName.trim() || !user) return;
+        if (!newCategoryName.trim() || !effectiveCompanyId) return;
         try {
-            await supabase.from('service_categories').insert({
-                user_id: user.id,
+            await createCategory.mutateAsync({
+                companyId: effectiveCompanyId,
                 name: newCategoryName,
-                display_order: categories.length
+                displayOrder: categories.length,
             });
             setNewCategoryName('');
             setIsCategoryModalOpen(false);
-            fetchData();
         } catch (error) {
             console.error('Error adding category:', error);
         }
     };
 
-    const handleDeleteService = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir este serviço?')) return;
-        try {
-            await supabase.from('services').delete().eq('id', id).eq('user_id', user.id);
-            fetchData();
-        } catch (error) {
-            console.error('Error deleting service:', error);
-        }
-    };
-
     const handleDeleteCategory = async (id: string) => {
-        if (!confirm('Tem certeza? Isso pode afetar serviços vinculados.')) return;
+        if (!confirm('Tem certeza? Isso pode afetar serviços vinculados.') || !effectiveCompanyId) return;
         try {
-            await supabase.from('service_categories').delete().eq('id', id).eq('user_id', user.id);
-            fetchData();
+            await deleteCategory.mutateAsync({ companyId: effectiveCompanyId, categoryId: id });
         } catch (error) {
             console.error('Error deleting category:', error);
         }
@@ -85,15 +57,15 @@ export const ServiceSettings: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div className="flex-1" />
                     <div className="flex gap-3">
-                        <BrutalButton
+                        <Button
                             variant="secondary"
                             onClick={() => setIsCategoryModalOpen(true)}
                             className="flex-1 md:flex-none"
                         >
                             <FolderPlus className="w-5 h-5 mr-2" />
                             <span>Categoria</span>
-                        </BrutalButton>
-                        <BrutalButton
+                        </Button>
+                        <Button
                             id="btn-add-service"
                             onClick={() => {
                                 if (categories.length === 0) {
@@ -108,7 +80,7 @@ export const ServiceSettings: React.FC = () => {
                         >
                             <Plus className="w-5 h-5 mr-2" />
                             <span>Serviço</span>
-                        </BrutalButton>
+                        </Button>
                     </div>
                 </div>
 
@@ -137,7 +109,7 @@ export const ServiceSettings: React.FC = () => {
                         {categories.map(category => {
                             const categoryServices = services.filter(s => s.category_id === category.id);
                             return (
-                                <BrutalCard
+                                <Card
                                     key={category.id}
                                     noPadding
                                     title={
@@ -211,7 +183,7 @@ export const ServiceSettings: React.FC = () => {
                                             ))
                                         )}
                                     </div>
-                                </BrutalCard>
+                                </Card>
                             );
                         })}
                     </div>
@@ -259,13 +231,14 @@ export const ServiceSettings: React.FC = () => {
                     />
                 </Modal>
 
-                {isServiceModalOpen && (
+                {isServiceModalOpen && effectiveCompanyId && (
                     <ServiceModal
+                        companyId={effectiveCompanyId}
                         service={editingService}
                         categories={categories}
                         allServices={services}
                         onClose={() => setIsServiceModalOpen(false)}
-                        onSave={fetchData}
+                        onSave={() => { void refetch(); }}
                     />
                 )}
             </div>

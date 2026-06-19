@@ -2,15 +2,33 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   calcCommission,
   calcSettlementDate,
+  deleteFinanceTransaction,
+  fetchDropdownOptions,
   fetchFinanceStats,
+  fetchMonthlyHistory,
   filterStaffTransactions,
   mapFinanceTransaction,
+  markExpenseAsPaid,
 } from '@/services/finance';
 import { supabase } from '@/lib/supabase';
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     rpc: vi.fn().mockResolvedValue({ data: {}, error: null }),
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      }),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    }),
   },
 }));
 
@@ -119,5 +137,53 @@ describe('finance service', () => {
     ];
 
     expect(filterStaffTransactions(transactions, 'pro-001').map(t => t.id)).toEqual(['fin-001']);
+  });
+
+  it('chama get_monthly_finance_history com companyId', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({
+      data: [{ month_name: 'Maio', year_num: 2026, revenue: 5000, expenses: 1000, profit: 4000 }],
+      error: null,
+    });
+
+    const result = await fetchMonthlyHistory('company-001', 6);
+    expect(result).toHaveLength(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('get_monthly_finance_history', {
+      p_user_id: 'company-001',
+      p_months_count: 6,
+    });
+  });
+
+  it('chama mark_expense_as_paid com recordId e companyId', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: null });
+    await markExpenseAsPaid('rec-001', 'company-001');
+    expect(supabase.rpc).toHaveBeenCalledWith('mark_expense_as_paid', {
+      p_record_id: 'rec-001',
+      p_user_id: 'company-001',
+    });
+  });
+
+  it('deleteFinanceTransaction exclui finance_record com appointment vinculado', async () => {
+    const mockFrom = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { appointment_id: 'apt-001' },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ error: null }),
+        }),
+      }),
+    });
+    (supabase.from as any).mockImplementation(mockFrom);
+
+    await deleteFinanceTransaction('fin-001', 'company-001');
+    expect(supabase.from).toHaveBeenCalledWith('finance_records');
+    expect(supabase.from).toHaveBeenCalledWith('appointments');
   });
 });

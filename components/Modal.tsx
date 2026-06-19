@@ -67,7 +67,7 @@ export const Modal: React.FC<ModalProps> = ({
     };
 
     const modalContent = (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 md:p-4">
+        <div className="fixed inset-0 flex items-center justify-center p-3 md:p-4" style={{ zIndex: 'var(--z-modal)' }}>
             {/* Backdrop */}
             <div
                 className={`

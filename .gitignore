@@ -47,7 +47,8 @@ Thumbs.db
 .idea/
 *.swp
 
-# Claude Code local settings
+# Claude Code settings (contém API keys)
+.claude/settings.json
 .claude/settings.local.json
 
 .vercel
@@ -85,11 +86,29 @@ write_file.cjs
 .codex/
 .ai/
 .gemini/
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 .squads/
 .vercel/
 .testsprite/
 testsprite_tests/tmp/
+
+# Agent frameworks & tooling (nao versionar)
+.aiox-core/
+.aiox/
+.agent/
+.opencode/
+.reversa/
+.planning/
+.specs/
+.lionclaw/
+.playwright-mcp/
+.harness/
+.interface-design/
+impeccable/
+skills-lock.json
+opencode.json
 
 # Lixo gerado / Artefatos de teste
 *.backup
@@ -108,3 +127,5 @@ relatorio/
 impeccable/
 
 
+
+testsprite_tests\tmp\config.json

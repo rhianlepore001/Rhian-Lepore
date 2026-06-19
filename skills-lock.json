@@ -1,11 +1,11 @@
 {
   "version": 1,
   "skills": {
-    "huashu-design": {
-      "source": "alchaincyf/huashu-design",
+    "impeccable": {
+      "source": "pbakaus/impeccable",
       "sourceType": "github",
-      "skillPath": "SKILL.md",
-      "computedHash": "ff11eb1138deff68d52244fc64554db4218d42ec6ed039a8ea0fc030af51b28c"
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "ec3199f460c3a6fade94e753d5dfe2b46d0c770e64670a5954260d94b39311dd"
     }
   }
 }

@@ -1,0 +1,48 @@
+{
+  "framework": "react-vite",
+  "reactVersion": "19",
+  "router": "react-router-dom-hash",
+  "uiLibrary": "custom",
+  "styling": "tailwind-cdn",
+  "stateManagement": ["react-context", "tanstack-query"],
+  "icons": "lucide-react",
+  "charts": "recharts",
+  "componentDirs": [
+    "components/",
+    "components/ui/",
+    "components/dashboard/",
+    "components/onboarding/",
+    "components/appointment/",
+    "components/marketing/",
+    "pages/",
+    "pages/settings/"
+  ],
+  "tokenFiles": [
+    "design-system/tokens.css",
+    "hooks/useBrutalTheme.ts",
+    "index.html"
+  ],
+  "themeSystem": {
+    "variants": ["barber", "beauty"],
+    "modes": ["dark", "light"],
+    "domAttributes": ["data-theme", "data-mode"],
+    "hook": "useBrutalTheme",
+    "provider": "DesignSystemProvider / ThemeContext"
+  },
+  "branding": {
+    "barberAccent": "gold (#C29B40 dark / #A07A2A light)",
+    "beautyAccent": "purple (#A78BFA / violet palette)",
+    "fonts": {
+      "heading": "Chivo",
+      "body": "Inter",
+      "mono": "JetBrains Mono"
+    }
+  },
+  "pwa": true,
+  "mobileFirst": true,
+  "notes": [
+    "Tailwind carregado via CDN em index.html — config inline, não tailwind.config.js separado",
+    "tokens.css existe mas convive com classes Tailwind hardcoded e useBrutalTheme",
+    "UiPreview em /configuracoes/ui-preview cataloga components/ui/ — subutilizado no app real"
+  ]
+}

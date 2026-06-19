@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
 import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
@@ -12,10 +13,12 @@ import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { BookingModeToggle } from '../components/booking/BookingModeToggle';
-import { getActiveBookingByPhone, submitPublicBooking } from '../services/publicBooking';
+import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
+import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
+import { ConfirmModal, useToast } from '@/components/ui';
 
 interface Message {
     id: string;
@@ -68,23 +71,33 @@ interface BusinessProfile {
 
 export const PublicBooking: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
     const rebookParam = searchParams.get('rebook');
     const editParam = searchParams.get('edit');
 
-    const [business, setBusiness] = useState<BusinessProfile | null>(null);
-    const [businessId, setBusinessId] = useState<string | null>(null);
-    const [businessSettings, setBusinessSettings] = useState<any>(null);
-    const [services, setServices] = useState<Service[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
+    const cancelBookingMutation = useCancelPublicBooking();
+    const findActiveBookingMutation = useFindActivePublicBooking();
+    const submitBookingMutation = useSubmitPublicBooking();
+    const queryClient = useQueryClient();
+    const { showToast } = useToast();
+    const [pendingCancelBookingId, setPendingCancelBookingId] = useState<string | null>(null);
+
+    const { data: businessProfile, isLoading: loadingProfile, isError: profileError } = useBusinessProfileBySlug(slug ?? '');
+    const business = useMemo(() => businessProfile as BusinessProfile | null ?? null, [businessProfile]);
+    const businessId = business?.id ?? null;
+    const { data: businessSettings } = useBusinessSettings(businessId);
+    const { data: servicesData = [] } = usePublicServices(businessId);
+    const { data: categoriesData = [] } = usePublicCategories(businessId);
+    const { data: professionalsData = [] } = usePublicProfessionals(businessId);
+    const { data: galleryData = [] } = usePublicGallery(businessId);
+
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
-    const [professionals, setProfessionals] = useState<Professional[]>([]);
-    const [gallery, setGallery] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    
     const [step, setStep] = useState<'edit_options' | 'services' | 'datetime' | 'contact' | 'edit_confirm' | 'success'>('services');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
@@ -108,11 +121,29 @@ export const PublicBooking: React.FC = () => {
     const [editMode, setEditMode] = useState<'time' | 'service' | 'both' | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
 
+    const services = useMemo(() => servicesData as Service[], [servicesData]);
+    const categories = useMemo(() => {
+        const cats = categoriesData as Category[];
+        if (services.some(s => !(s as any).category_id)) {
+            return [...cats, { id: 'no-category', name: 'Outros' }];
+        }
+        return cats;
+    }, [categoriesData, servicesData]);
+    const professionals = useMemo(() =>
+        (professionalsData as any[] || []).map((p: any) => ({
+            ...p,
+            name: p.full_name || p.name,
+            specialties: Array.isArray(p.specialties) ? p.specialties : (p.specialties ? [p.specialties] : []),
+        })),
+        [professionalsData]
+    );
+    const gallery = useMemo(() => galleryData as any[] ?? [], [galleryData]);
+
     // NEW: booking mode and quick flow step
     const [bookingMode, setBookingMode] = useState<'chat' | 'quick'>('quick');
     const [quickStep, setQuickStep] = useState<'services' | 'professional' | 'datetime' | 'contact' | 'success'>('services');
 
-    const { client, register } = usePublicClient();
+    const { client, register, login, establishSession } = usePublicClient();
 
     const isBeauty = business?.user_type === 'beauty';
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
@@ -134,22 +165,10 @@ export const PublicBooking: React.FC = () => {
         const phone = client?.phone || customerPhone;
         if (!phone) return;
 
-        const fetchEditBooking = async () => {
+        const fetchEdit = async () => {
             try {
                 logger.info('Buscando agendamento para edição:', { editParam, phone });
-                const { data, error } = await supabase
-                    .from('public_bookings')
-                    .select('*')
-                    .eq('id', editParam)
-                    .eq('business_id', businessId)
-                    .in('status', ['pending', 'confirmed'])
-                    .maybeSingle();
-
-                if (error) {
-                    logger.error('Erro ao buscar agendamento para edição:', error);
-                    return;
-                }
-
+                const data = await fetchEditBooking(editParam, businessId, phone);
                 if (data) {
                     logger.info('Agendamento encontrado para edição:', data);
                     handleEditBooking(data);
@@ -161,7 +180,7 @@ export const PublicBooking: React.FC = () => {
             }
         };
 
-        fetchEditBooking();
+        fetchEdit();
     }, [editParam, businessId, client?.phone]);
 
     // Detecta clientes existentes pelo telefone e busca agendamento ativo (fluxo normal, sem edição)
@@ -169,26 +188,14 @@ export const PublicBooking: React.FC = () => {
         const fetchExistingClient = async () => {
             if (customerPhone.length >= 12 && businessId) {
                 try {
-                    const { data: publicClient } = await supabase
-                        .from('public_clients')
-                        .select('name, photo_url')
-                        .eq('phone', customerPhone)
-                        .eq('business_id', businessId)
-                        .maybeSingle();
-
+                    const publicClient = await fetchPublicClientByPhone(customerPhone, businessId);
                     if (publicClient) {
                         if (publicClient.name && !customerName) setCustomerName(publicClient.name);
                         if (publicClient.photo_url) setExistingPhotoUrl(publicClient.photo_url);
                         return;
                     }
 
-                    const { data: mainClient } = await supabase
-                        .from('clients')
-                        .select('name, photo_url')
-                        .eq('phone', customerPhone)
-                        .eq('user_id', businessId)
-                        .maybeSingle();
-
+                    const mainClient = await fetchClientByPhone(customerPhone, businessId);
                     if (mainClient) {
                         if (mainClient.name && !customerName) setCustomerName(mainClient.name);
                         if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
@@ -196,7 +203,7 @@ export const PublicBooking: React.FC = () => {
 
                     // Fluxo normal (sem edição): busca agendamento ativo pelo telefone
                     if (!editParam) {
-                        const loadedBooking = await getActiveBookingByPhone(customerPhone, businessId);
+                        const loadedBooking = await findActiveBookingMutation.mutateAsync({ phone: customerPhone, businessId: businessId! });
                         if (loadedBooking && ['pending', 'confirmed'].includes(loadedBooking.status)) {
                             setActiveBooking(loadedBooking);
                             setStep('success');
@@ -214,12 +221,11 @@ export const PublicBooking: React.FC = () => {
     }, [customerPhone, businessId, editParam]);
 
     const fetchFreshActiveBooking = async (bookingId: string) => {
+        const phone = client?.phone || customerPhone || activeBooking?.customer_phone;
+        if (!businessId || !phone) return;
+
         try {
-            const { data: booking } = await supabase
-                .from('public_bookings')
-                .select('id, customer_name, customer_phone, appointment_time, service_ids, status, business_id, professional_id, total_price, duration_minutes')
-                .eq('id', bookingId)
-                .single();
+            const booking = await fetchPublicBookingById(bookingId, businessId, phone);
             if (booking) {
                 setActiveBooking(booking);
             }
@@ -268,15 +274,11 @@ export const PublicBooking: React.FC = () => {
                 const dateStr = `${year}-${month}-${day}`;
                 const duration = calculateDuration();
 
-                const { data, error } = await supabase.rpc('get_available_slots', {
-                    p_business_id: businessId,
-                    p_date: dateStr,
-                    p_professional_id: selectedProfessional === 'any' ? null : selectedProfessional,
-                    p_duration_min: duration
-                });
-
-                if (!error) {
-                    setAvailableSlots(data.slots || []);
+                try {
+                    const slots = await fetchAvailableSlots(businessId, dateStr, selectedProfessional === 'any' ? null : selectedProfessional, duration);
+                    setAvailableSlots(slots);
+                } catch {
+                    setAvailableSlots([]);
                 }
             }
         };
@@ -284,122 +286,29 @@ export const PublicBooking: React.FC = () => {
     }, [selectedDate, businessId, selectedProfessional]);
 
     useEffect(() => {
-        const fetchFullDates = async () => {
+        const fetchFullDatesAsync = async () => {
             if (businessId) {
                 const now = new Date();
                 const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                 const end = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
                 const endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
 
-                const { data, error } = await supabase.rpc('get_full_dates', {
-                    p_business_id: businessId,
-                    p_start_date: startDate,
-                    p_end_date: endDate,
-                    p_professional_id: selectedProfessional === 'any' ? null : selectedProfessional,
-                    p_duration_min: calculateDuration()
-                });
-
-                if (!error && data) {
-                    setFullDates(data);
-                }
+                try {
+                    const dates = await fetchFullDates(businessId, startDate, endDate, selectedProfessional === 'any' ? null : selectedProfessional, calculateDuration());
+                    if (dates) setFullDates(dates);
+                } catch { /* full dates fetch failed silently */ }
             }
         };
-        fetchFullDates();
+        fetchFullDatesAsync();
     }, [businessId, selectedProfessional]);
 
+    
+
     useEffect(() => {
-        const fetchBusinessData = async () => {
-            try {
-                const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('id, business_name, user_type, google_rating, total_reviews, phone, enable_upsells, enable_professional_selection, logo_url, cover_photo_url, address_street, instagram_handle, region, business_slug')
-                    .eq('business_slug', slug)
-                    .single();
-
-                if (profileError) throw profileError;
-
-                if (profileData) {
-                    setBusiness(profileData);
-                    setBusinessId(profileData.id);
-
-                    try {
-                        const { data: settings, error: sErr } = await supabase
-                            .from('business_settings')
-                            .select('*')
-                            .eq('user_id', profileData.id)
-                            .maybeSingle();
-                        if (sErr) console.warn('PublicBooking: Error loading settings:', sErr);
-                        if (settings) setBusinessSettings(settings);
-                    } catch (e) { console.error('Settings fetch failed', e); }
-
-                    try {
-                        const { data: servicesData, error: svErr } = await supabase
-                            .from('services')
-                            .select('*')
-                            .eq('user_id', profileData.id)
-                            .eq('active', true)
-                            .order('price', { ascending: true });
-                        if (svErr) logger.error('PublicBooking: Error loading services:', svErr);
-                        logger.info('PublicBooking: Services loaded:', { count: servicesData?.length || 0 });
-                        setServices(servicesData || []);
-
-                        const { data: categoriesData, error: catErr } = await supabase
-                            .from('service_categories')
-                            .select('id, name')
-                            .eq('user_id', profileData.id)
-                            .order('display_order');
-                        if (catErr) logger.error('PublicBooking: Error loading categories:', catErr);
-                        logger.info('PublicBooking: Categories loaded:', { count: categoriesData?.length || 0 });
-
-                        let finalCategories = categoriesData || [];
-                        if ((servicesData || []).some(s => !s.category_id)) {
-                            finalCategories = [...finalCategories, { id: 'no-category', name: 'Outros' }];
-                        }
-                        setCategories(finalCategories);
-                    } catch (e) { console.error('Services/Categories fetch failed', e); }
-
-                    try {
-                        const { data: professionalsData, error: pErr } = await supabase
-                            .from('team_members')
-                            .select('*')
-                            .eq('user_id', profileData.id)
-                            .eq('active', true)
-                            .order('display_order');
-                        if (pErr) console.warn('PublicBooking: Error loading professionals:', pErr);
-
-                        const mappedPros = (professionalsData || []).map((p: any) => ({
-                            ...p,
-                            name: p.full_name || p.name,
-                            specialties: Array.isArray(p.specialties)
-                                ? p.specialties
-                                : (p.specialties ? [p.specialties] : [])
-                        }));
-                        setProfessionals(mappedPros);
-                    } catch (e) { console.error('Professionals fetch failed', e); }
-
-                    try {
-                        const { data: galleryData } = await supabase
-                            .from('business_galleries')
-                            .select('*')
-                            .eq('user_id', profileData.id)
-                            .eq('is_active', true)
-                            .order('display_order');
-                        setGallery(galleryData || []);
-                    } catch (e) { console.error('Gallery fetch failed', e); }
-
-                    setIsDataReady(true);
-                }
-            } catch (error) {
-                console.error('PublicBooking: Critical error in fetchBusinessData:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (slug) {
-            fetchBusinessData();
+        if (business && services.length >= 0 && categories.length >= 0) {
+            setIsDataReady(true);
         }
-    }, [slug]);
+    }, [business, services, categories]);
 
     useEffect(() => {
         if (business) {
@@ -453,7 +362,7 @@ export const PublicBooking: React.FC = () => {
                     } else {
                         const welcomeText = client
                             ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
-                            : `Olá! Seja bem-vindo à ${business.business_name}. Eu sou seu assistente virtual de agendamento.`;
+                            : `Olá! Seja bem-vindo à ${business.business_name}. Vou te ajudar a agendar em poucos passos.`;
 
                         setMessages([
                             {
@@ -534,18 +443,20 @@ export const PublicBooking: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleCancelBooking = async (bookingId: string) => {
-        if (!confirm('Tem certeza que deseja cancelar sua solicitação de agendamento?')) return;
         try {
-            const { error } = await supabase.from('public_bookings').delete().eq('id', bookingId);
-            if (error) throw error;
+            await cancelBookingMutation.mutateAsync({ bookingId, businessId: businessId! });
             setActiveBooking(null);
             setStep('services');
             setQuickStep('services');
-            alert('Agendamento cancelado com sucesso.');
+            showToast('Agendamento cancelado com sucesso.', 'success');
         } catch (error) {
             logger.error('Error cancelling booking', error);
-            alert('Erro ao cancelar agendamento.');
+            showToast('Erro ao cancelar agendamento.', 'error');
         }
+    };
+
+    const requestCancelBooking = (bookingId: string) => {
+        setPendingCancelBookingId(bookingId);
     };
 
     const handleEditBooking = (booking: any) => {
@@ -576,27 +487,71 @@ export const PublicBooking: React.FC = () => {
         setStep('edit_options');
     };
 
+    const establishClientSession = async (photoUrl: string | null): Promise<boolean> => {
+        if (!businessId || !customerName || !customerPhone) return false;
+
+        try {
+            const sessionClient = await upsertPublicClientSession({
+                businessId,
+                name: customerName,
+                phone: customerPhone,
+                photoUrl,
+            });
+            establishSession(sessionClient);
+            return true;
+        } catch (upsertError) {
+            logger.warn('upsertPublicClientSession falhou após agendamento, tentando register/login:', upsertError);
+        }
+
+        try {
+            const registered = await register({
+                name: customerName,
+                phone: customerPhone,
+                photo_url: photoUrl,
+                business_id: businessId,
+            });
+            if (registered) return true;
+        } catch (registerError) {
+            logger.warn('register() falhou após agendamento, tentando login:', registerError);
+        }
+
+        try {
+            const loggedIn = await login(customerPhone, businessId);
+            if (loggedIn) return true;
+        } catch (loginError) {
+            logger.warn('login() falhou após agendamento:', loginError);
+        }
+
+        establishSession({
+            id: client?.id ?? crypto.randomUUID(),
+            name: customerName,
+            phone: customerPhone,
+            email: client?.email ?? null,
+            photo_url: photoUrl,
+            business_id: businessId,
+        });
+        return true;
+    };
+
+    const handleOpenClientArea = () => {
+        if (!slug) return;
+        navigate(`/minha-area/${slug}`);
+    };
+
     const handleSubmit = async () => {
         if (!businessId || !customerName || !customerPhone || !selectedDate || !selectedTime || !acceptedPolicy) {
-            alert('Por favor, preencha todos os campos e aceite a política de cancelamento.');
+            showToast('Por favor, preencha todos os campos e aceite a política de cancelamento.', 'warning');
             return;
         }
         setIsSubmitting(true);
         try {
             let photoUrl = client?.photo_url || null;
             if (customerPhoto) {
-                const fileExt = customerPhoto.name.split('.').pop();
-                const fileName = `public_${businessId}_${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage.from('client_photos').upload(fileName, customerPhoto);
-                if (!uploadError) {
-                    const { data: { publicUrl } } = supabase.storage.from('client_photos').getPublicUrl(fileName);
-                    photoUrl = publicUrl;
+                try {
+                    photoUrl = await uploadClientPhoto(businessId, customerPhoto);
+                } catch (uploadErr) {
+                    logger.warn('Photo upload failed, continuing without photo', uploadErr);
                 }
-            }
-            try {
-                await register({ name: customerName, phone: customerPhone, photo_url: photoUrl, business_id: businessId });
-            } catch (registerError) {
-                logger.warn('register() falhou mas continuando com o agendamento:', registerError);
             }
             const year = selectedDate.getFullYear();
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -608,9 +563,10 @@ export const PublicBooking: React.FC = () => {
             const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
 
             if (!editingBookingId) {
-                const existingBooking = await getActiveBookingByPhone(customerPhone, businessId);
+                const existingBooking = await findActiveBookingMutation.mutateAsync({ phone: customerPhone, businessId });
                 if (existingBooking && existingBooking.id !== editingBookingId) {
                     setActiveBooking(existingBooking);
+                    await establishClientSession(photoUrl);
                     setStep('success');
                     setQuickStep('success');
                     setIsSubmitting(false);
@@ -620,11 +576,11 @@ export const PublicBooking: React.FC = () => {
 
             let finalProfessionalId = selectedProfessional === 'any' ? null : selectedProfessional;
             if (selectedProfessional === 'any') {
-                const { data: autoProId } = await supabase.rpc('get_first_available_professional', { p_business_id: businessId, p_appointment_time: appointmentTimeISO, p_duration_min: duration });
+                const autoProId = await getFirstAvailableProfessional(businessId, appointmentTimeISO, duration);
                 if (autoProId) finalProfessionalId = autoProId;
             }
 
-            const booking = await submitPublicBooking({
+            const booking = await submitBookingMutation.mutateAsync({
                 businessId,
                 customerName,
                 customerPhone,
@@ -639,11 +595,12 @@ export const PublicBooking: React.FC = () => {
 
             setActiveBooking(booking);
 
+            await establishClientSession(photoUrl);
             setStep('success');
             setQuickStep('success');
         } catch (error: any) {
             logger.error('Error creating booking', error);
-            alert(`Erro ao criar agendamento: ${error.message || error}`);
+            showToast('Não foi possível concluir seu agendamento agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -689,20 +646,20 @@ export const PublicBooking: React.FC = () => {
         }
     };
 
-    if (loading) {
+    if (loadingProfile) {
         return (
             <div className={`h-screen flex items-center justify-center ${colors.bg}`}>
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className={`w-10 h-10 ${accent.text} animate-spin`} />
-                    <p className={`${colors.textMuted} font-black text-[10px] uppercase tracking-[0.2em]`}>
-                        Carregando Experiência...
+                    <p className={`${colors.textMuted} font-black text-xs uppercase tracking-[0.2em]`}>
+                        Preparando os horários...
                     </p>
                 </div>
             </div>
         );
     }
 
-    if (!business) {
+    if (!business || profileError) {
         return (
             <div className={`h-screen flex items-center justify-center ${colors.bg}`}>
                 <div className="flex flex-col items-center gap-6 text-center px-8">
@@ -710,8 +667,8 @@ export const PublicBooking: React.FC = () => {
                         <Sparkles className={`w-10 h-10 ${colors.textMuted}`} />
                     </div>
                     <div>
-                        <p className={`${colors.text} font-black text-xl uppercase tracking-widest mb-2`} style={{ fontFamily: 'Chivo,sans-serif' }}>Não encontrado</p>
-                        <p className={`${colors.textMuted} text-sm`}>O estabelecimento não existe ou o link está incorreto.</p>
+                        <p className={`${colors.text} font-black text-xl uppercase tracking-widest mb-2`} style={{ fontFamily: 'Chivo,sans-serif' }}>Página indisponível</p>
+                        <p className={`${colors.textMuted} text-sm`}>Este link pode estar incorreto ou fora do ar. Confira o endereço com o estabelecimento.</p>
                     </div>
                 </div>
             </div>
@@ -758,7 +715,7 @@ export const PublicBooking: React.FC = () => {
                             {quickSteps.map((qs, idx) => (
                                 <React.Fragment key={qs.key}>
                                     <div className="flex flex-col items-center gap-1">
-                                        <div className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-black transition-all duration-500 ${idx < currentQuickStepIndex
+                                        <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-500 ${idx < currentQuickStepIndex
                                                 ? `${accent.bg} ${accentTextOnAccent}`
                                                 : idx === currentQuickStepIndex
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
@@ -766,7 +723,7 @@ export const PublicBooking: React.FC = () => {
                                             }`}>
                                             {idx < currentQuickStepIndex ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                                         </div>
-                                        <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
+                                        <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
                                     </div>
                                     {idx < quickSteps.length - 1 && (
                                         <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentQuickStepIndex ? `${accent.bg} opacity-50` : colors.divider}`} />
@@ -789,7 +746,7 @@ export const PublicBooking: React.FC = () => {
                                 <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                     <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
                                         <button onClick={() => setActiveCategory('all')}
-                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
+                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                     : `${colors.textMuted} hover:bg-white/5`
                                                 }`}>
@@ -797,7 +754,7 @@ export const PublicBooking: React.FC = () => {
                                         </button>
                                         {categories.map(cat => (
                                             <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
+                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                         : `${colors.textMuted} ${colors.border} hover:bg-white/5`
                                                     }`}>
@@ -839,8 +796,8 @@ export const PublicBooking: React.FC = () => {
                                                     </div>
                                                 )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
-                                                    {categories.find(c => c.id === service.category_id)?.name || 'Especial'}
+                                                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                                                    {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
                                                 </div>
                                                 <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent} scale-110 rotate-12` : 'bg-black/20 border-white/20 text-transparent'}`}>
                                                     <Check className="w-6 h-6" />
@@ -862,7 +819,7 @@ export const PublicBooking: React.FC = () => {
                                                                 {formatCurrency(service.price, currencyRegion)}
                                                             </span>
                                                             <div className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
-                                                            <span className={`text-[11px] font-bold ${colors.textMuted} flex items-center gap-1.5`}>
+                                                            <span className={`text-xs font-bold ${colors.textMuted} flex items-center gap-1.5`}>
                                                                 <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
                                                             </span>
                                                         </div>
@@ -883,8 +840,8 @@ export const PublicBooking: React.FC = () => {
                                         <Sparkles className={`w-10 h-10 ${colors.textMuted}`} />
                                     </div>
                                     <div>
-                                        <p className={`font-black text-lg uppercase tracking-widest mb-2 ${colors.textMuted}`}>Em Breve</p>
-                                        <p className={`text-sm ${colors.textMuted}`}>Nossos serviços serão apresentados em breve.<br />Entre em contato diretamente para agendar.</p>
+                                        <p className={`font-black text-lg uppercase tracking-widest mb-2 ${colors.textMuted}`}>Agenda online chegando</p>
+                                        <p className={`text-sm ${colors.textMuted}`}>Ainda estamos preparando os serviços por aqui.<br />Fale com a gente pelo WhatsApp para agendar agora.</p>
                                     </div>
                                     {whatsappLink && (
                                         <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
@@ -908,12 +865,12 @@ export const PublicBooking: React.FC = () => {
                             {professionalCategories.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     <button onClick={() => setActiveProfessionalCategory('all')}
-                                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                        className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                         Todos
                                     </button>
                                     {professionalCategories.map((cat) => (
                                         <button key={cat} onClick={() => setActiveProfessionalCategory(cat)}
-                                            className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                            className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                             {cat}
                                         </button>
                                     ))}
@@ -926,7 +883,7 @@ export const PublicBooking: React.FC = () => {
                                     <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                         <Users className="w-8 h-8" />
                                     </div>
-                                    <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
+                                    <span className={`text-xs font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
                                 </button>
 
                                 {filteredProfessionals.map((pro, pIdx) => (
@@ -940,7 +897,7 @@ export const PublicBooking: React.FC = () => {
                                                 <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
                                             )}
                                         </div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${selectedProfessional === pro.id ? accentTextOnAccent : colors.text}`}>
+                                        <span className={`text-xs font-bold uppercase tracking-widest text-center ${selectedProfessional === pro.id ? accentTextOnAccent : colors.text}`}>
                                             {pro.name.split(' ')[0]}
                                         </span>
                                     </button>
@@ -978,34 +935,34 @@ export const PublicBooking: React.FC = () => {
                             {/* Summary Card */}
                             <div className={`p-6 ${colors.card} ${colors.border} border rounded-2xl ${shadow.card}`}>
                                 <div className="flex justify-between items-center border-b pb-4 mb-4 ${colors.divider}">
-                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                    <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
                                     <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                         <Star className="w-4 h-4" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 md:gap-8 mb-4">
                                     <div className="space-y-1">
-                                        <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
+                                        <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
                                         <p className={`text-lg font-black tracking-tight ${colors.text}`}>
                                             {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
                                         </p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
+                                        <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
                                         <p className={`text-lg font-black tracking-tight ${accent.text}`}>
                                             {formatCurrency(calculateTotal(), currencyRegion)}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
+                                    <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
                                     <p className={`text-sm font-bold ${colors.textSecondary}`}>
                                         {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
                                     </p>
                                 </div>
                                 {selectedProfessional && selectedProfessional !== 'any' && (
                                     <div className="space-y-1 mt-4 pt-4 border-t ${colors.divider}">
-                                        <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Profissional</p>
+                                        <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Profissional</p>
                                         <p className={`text-sm font-bold ${colors.textSecondary}`}>
                                             {professionals.find(p => p.id === selectedProfessional)?.name || 'Qualquer disponível'}
                                         </p>
@@ -1080,7 +1037,7 @@ export const PublicBooking: React.FC = () => {
 
             {/* Quick Flow Bottom Navigation */}
             {bookingMode === 'quick' && quickStep !== 'success' && (
-                <div className={`fixed bottom-0 left-0 right-0 z-[200] w-full transition-all duration-500 ease-out`}>
+                <div className="fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-out" style={{ zIndex: 'var(--z-modal)' }}>
                     <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
                         <div className="flex items-center gap-3 max-w-3xl mx-auto pb-4">
                             {quickStep !== 'services' && (
@@ -1111,7 +1068,7 @@ export const PublicBooking: React.FC = () => {
                                 {stepLabels.map((label, idx) => (
                                     <React.Fragment key={label}>
                                         <div className="flex flex-col items-center gap-1">
-                                            <div className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-black transition-all duration-500 ${idx < currentStepNum
+                                            <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-500 ${idx < currentStepNum
                                                     ? `${accent.bg} ${accentTextOnAccent}`
                                                     : idx === currentStepNum
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
@@ -1119,7 +1076,7 @@ export const PublicBooking: React.FC = () => {
                                                 }`}>
                                                 {idx < currentStepNum ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                                             </div>
-                                            <span className={`text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentStepNum ? accent.text : colors.textMuted}`}>{label}</span>
+                                            <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentStepNum ? accent.text : colors.textMuted}`}>{label}</span>
                                         </div>
                                         {idx < stepLabels.length - 1 && (
                                             <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentStepNum ? `${accent.bg} opacity-50` : colors.divider}`} />
@@ -1135,7 +1092,7 @@ export const PublicBooking: React.FC = () => {
                             <div className="mb-16 animate-reveal-fragment">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className={`w-12 h-[2px] ${accent.bg}`}></div>
-                                    <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${accent.text}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-[0.2em] ${accent.text}`}>
                                         Grade de Serviços: {professionals.find(p => p.id === proIdParam)?.name.split(' ')[0] || 'Profissional'}
                                     </span>
                                 </div>
@@ -1198,7 +1155,7 @@ export const PublicBooking: React.FC = () => {
                                                         <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                                             <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
                                                                 <button onClick={() => setActiveCategory('all')}
-                                                                    className={`px-5 md:px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
+                                                                    className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
                                                                             ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
                                                                             : `${colors.textMuted} hover:bg-white/5`
                                                                         }`}>
@@ -1206,7 +1163,7 @@ export const PublicBooking: React.FC = () => {
                                                                 </button>
                                                                 {categories.map(cat => (
                                                                     <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                                        className={`px-5 md:px-8 py-2.5 rounded-xl border text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
+                                                                        className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
                                                                                 ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
                                                                                 : `${colors.textMuted} ${colors.border} hover:bg-white/5`
                                                                             }`}>
@@ -1261,8 +1218,8 @@ export const PublicBooking: React.FC = () => {
                                                                             </div>
                                                                         )}
                                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                                                        <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-[10px] font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
-                                                                            {categories.find(c => c.id === service.category_id)?.name || 'Especial'}
+                                                                        <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                                                                            {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
                                                                         </div>
                                                                         <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent} scale-110 rotate-12` : 'bg-black/20 border-white/20 text-transparent'}`}>
                                                                             <Check className="w-6 h-6" />
@@ -1284,7 +1241,7 @@ export const PublicBooking: React.FC = () => {
                                                                                         {formatCurrency(service.price, currencyRegion)}
                                                                                     </span>
                                                                                     <div className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
-                                                                                    <span className={`text-[11px] font-bold ${colors.textMuted} flex items-center gap-1.5`}>
+                                                                                    <span className={`text-xs font-bold ${colors.textMuted} flex items-center gap-1.5`}>
                                                                                         <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
                                                                                     </span>
                                                                                 </div>
@@ -1306,12 +1263,12 @@ export const PublicBooking: React.FC = () => {
                                                     {professionalCategories.length > 0 && (
                                                         <div className="flex flex-wrap gap-2">
                                                             <button onClick={() => setActiveProfessionalCategory('all')}
-                                                                className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                                                className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                                                 Todos
                                                             </button>
                                                             {professionalCategories.map((cat) => (
                                                                 <button key={cat} onClick={() => setActiveProfessionalCategory(cat)}
-                                                                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
+                                                                    className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                                                     {cat}
                                                                 </button>
                                                             ))}
@@ -1324,7 +1281,7 @@ export const PublicBooking: React.FC = () => {
                                                             <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                                                 <Users className="w-8 h-8" />
                                                             </div>
-                                                            <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
+                                                            <span className={`text-xs font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
                                                         </button>
 
                                                         {filteredProfessionals.map((pro, pIdx) => (
@@ -1338,7 +1295,7 @@ export const PublicBooking: React.FC = () => {
                                                                         <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
                                                                     )}
                                                                 </div>
-                                                                <span className={`text-[10px] font-bold uppercase tracking-widest text-center ${colors.text}`}>
+                                                                <span className={`text-xs font-bold uppercase tracking-widest text-center ${colors.text}`}>
                                                                     {pro.name.split(' ')[0]}
                                                                 </span>
                                                             </button>
@@ -1414,27 +1371,27 @@ export const PublicBooking: React.FC = () => {
                                     <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
                                         <div className="relative z-10 flex flex-col gap-6">
                                             <div className={`flex justify-between items-center border-b pb-4 ${colors.divider}`}>
-                                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                                <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
                                                 <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                                     <Star className="w-4 h-4" />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 md:gap-8">
                                                 <div className="space-y-1">
-                                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
+                                                    <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
                                                     <p className={`text-lg font-black tracking-tight ${colors.text}`}>
                                                         {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
                                                     </p>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
+                                                    <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
                                                     <p className={`text-lg font-black tracking-tight ${accent.text}`}>
                                                         {formatCurrency(calculateTotal(), currencyRegion)}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="space-y-1">
-                                                <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
+                                                <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
                                                 <p className={`text-sm font-bold ${colors.textSecondary}`}>
                                                     {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
                                                 </p>
@@ -1453,8 +1410,10 @@ export const PublicBooking: React.FC = () => {
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
                                         </a>
 
-                                        <Link to={`/minha-area/${slug}`}
-                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                                        <button
+                                            type="button"
+                                            onClick={handleOpenClientArea}
+                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`p-2.5 rounded-xl ${colors.surface}`}>
@@ -1473,12 +1432,12 @@ export const PublicBooking: React.FC = () => {
                                                     { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
                                                     { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
                                                 ].map(tag => (
-                                                    <span key={tag.label} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${colors.surface} ${colors.textMuted}`}>
+                                                    <span key={tag.label} className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${colors.surface} ${colors.textMuted}`}>
                                                         {tag.icon}{tag.label}
                                                     </span>
                                                 ))}
                                             </div>
-                                        </Link>
+                                        </button>
 
                                         <button onClick={() => window.location.reload()}
                                             className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${colors.text} underline decoration-2 underline-offset-8 ${accent.text}`}>
@@ -1499,8 +1458,8 @@ export const PublicBooking: React.FC = () => {
 
             {/* Chat Flow: Modal/Bottom Sheet de Contato e Resumo */}
             {bookingMode === 'chat' && step === 'contact' && (
-                <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-2xl overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
+                <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
+                    <div className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
                             <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:${colors.text} transition-colors rounded-full p-2 hover:bg-white/5`}>
@@ -1589,7 +1548,10 @@ export const PublicBooking: React.FC = () => {
 
             {/* Chat Flow: Botão Flutuante "Avançar" */}
             {bookingMode === 'chat' && step === 'services' && (
-                <div className={`fixed bottom-0 left-0 right-0 z-[200] w-full transition-all duration-500 ease-out ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+                <div
+                  className={`fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-out ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
+                  style={{ zIndex: 'var(--z-modal)' }}
+                >
                     <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
                         <button id="next-button" onClick={() => {
                             const serviceNames = services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', ');
@@ -1607,8 +1569,8 @@ export const PublicBooking: React.FC = () => {
                             className={`w-full flex items-center justify-between overflow-hidden group relative py-4 sm:py-5 px-6 sm:px-8 rounded-2xl ${classes.buttonPrimary} transition-all duration-200`}>
                             <div className="flex flex-col items-start z-10">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold uppercase opacity-60">Total</span>
-                                    <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black bg-black/15`}>
+                                    <span className="text-xs font-bold uppercase opacity-60">Total</span>
+                                    <span className={`px-1.5 py-0.5 rounded-md text-xs font-black bg-black/15`}>
                                         {selectedServices.length} {selectedServices.length === 1 ? 'ITEM' : 'ITENS'}
                                     </span>
                                 </div>
@@ -1657,27 +1619,27 @@ export const PublicBooking: React.FC = () => {
                     <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
                         <div className="relative z-10 flex flex-col gap-6">
                             <div className={`flex justify-between items-center border-b pb-4 ${colors.divider}`}>
-                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
                                 <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                     <Star className="w-4 h-4" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4 md:gap-8">
                                 <div className="space-y-1">
-                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
+                                    <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
                                     <p className={`text-lg font-black tracking-tight ${colors.text}`}>
                                         {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
+                                    <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
                                     <p className={`text-lg font-black tracking-tight ${accent.text}`}>
                                         {formatCurrency(calculateTotal(), currencyRegion)}
                                     </p>
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <p className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
+                                <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
                                 <p className={`text-sm font-bold ${colors.textSecondary}`}>
                                     {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
                                 </p>
@@ -1696,8 +1658,10 @@ export const PublicBooking: React.FC = () => {
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
                         </a>
 
-                        <Link to={`/minha-area/${slug}`}
-                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                        <button
+                            type="button"
+                            onClick={handleOpenClientArea}
+                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2.5 rounded-xl ${colors.surface}`}>
@@ -1716,12 +1680,12 @@ export const PublicBooking: React.FC = () => {
                                     { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
                                     { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
                                 ].map(tag => (
-                                    <span key={tag.label} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full ${colors.surface} ${colors.textMuted}`}>
+                                    <span key={tag.label} className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${colors.surface} ${colors.textMuted}`}>
                                         {tag.icon}{tag.label}
                                     </span>
                                 ))}
                             </div>
-                        </Link>
+                        </button>
 
                         <button onClick={() => window.location.reload()}
                             className={`text-xs font-black uppercase tracking-[0.3em] py-4 transition-all opacity-40 hover:opacity-100 ${colors.text} underline decoration-2 underline-offset-8 ${accent.text}`}>
@@ -1739,7 +1703,7 @@ export const PublicBooking: React.FC = () => {
             {gallery.length > 0 && quickStep !== 'success' && step !== 'success' && (
                 <div className="fixed bottom-10 left-10 z-[60] hidden xl:block animate-fade-in">
                     <div className={`p-4 ${colors.card} ${colors.border} border ${shadow.elevated} rounded-2xl w-72`}>
-                        <p className={`text-[10px] uppercase tracking-[0.2em] mb-4 ${colors.textMuted} font-medium`}>Atmosfera & Arte</p>
+                        <p className={`text-xs uppercase tracking-[0.2em] mb-4 ${colors.textMuted} font-medium`}>Atmosfera & Arte</p>
                         <div className="grid grid-cols-2 gap-2">
                             {gallery.slice(0, 4).map((item) => (
                                 <div key={item.id} className={`aspect-square overflow-hidden rounded-lg border ${colors.border}`}>
@@ -1753,8 +1717,8 @@ export const PublicBooking: React.FC = () => {
 
             {/* Policy Modal */}
             {showPolicyModal && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-2xl overflow-hidden rounded-3xl`}>
+                <div className="fixed inset-0 flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
+                    <div className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
                         <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:${colors.text} transition-colors z-30`}><X className="w-8 h-8" /></button>
                         <div className="relative z-10 space-y-6">
                             <h3 className={`text-2xl ${colors.text} flex items-center gap-3`}>
@@ -1775,6 +1739,19 @@ export const PublicBooking: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                open={!!pendingCancelBookingId}
+                title="Cancelar agendamento"
+                message="Tem certeza que deseja cancelar sua solicitação de agendamento?"
+                confirmLabel="Cancelar agendamento"
+                variant="danger"
+                onCancel={() => setPendingCancelBookingId(null)}
+                onConfirm={() => {
+                    if (pendingCancelBookingId) void handleCancelBooking(pendingCancelBookingId);
+                    setPendingCancelBookingId(null);
+                }}
+            />
         </div>
     );
 };

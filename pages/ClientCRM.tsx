@@ -1,8 +1,9 @@
+import { Card, Button } from '../components/ui';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { BrutalCard } from '../components/BrutalCard';
-import { BrutalButton } from '../components/BrutalButton';
+
+
 import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft, Trash2, Edit2, Save, X, Tag, MessageCircle } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -253,7 +254,7 @@ const { id } = useParams<{ id: string }>();
       </button>
 
       {/* Top Header Profile */}
-      <BrutalCard className="overflow-hidden">
+      <Card className="overflow-hidden">
         <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
           {/* Avatar & Tier */}
           <div className="flex flex-row md:flex-col items-center gap-4 w-full md:w-auto">
@@ -344,7 +345,7 @@ const { id } = useParams<{ id: string }>();
                 </div>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
-                <BrutalButton
+                <Button
                   variant="ghost"
                   size="sm"
                   className="border-red-900 text-red-500 hover:bg-red-900/20 hover:text-red-400"
@@ -352,8 +353,8 @@ const { id } = useParams<{ id: string }>();
                   disabled={deleting}
                 >
                   <Trash2 className="w-4 h-4" />
-                </BrutalButton>
-                <BrutalButton
+                </Button>
+                <Button
                   variant="ghost"
                   size="sm"
                   className={`border-green-900/50 ${isBeauty ? 'text-green-400 hover:text-green-300 hover:bg-green-400/10' : 'text-green-600 hover:text-green-500 hover:bg-green-500/10'}`}
@@ -361,8 +362,8 @@ const { id } = useParams<{ id: string }>();
                   title="Abrir WhatsApp"
                 >
                   <MessageCircle className="w-4 h-4" />
-                </BrutalButton>
-                <BrutalButton
+                </Button>
+                <Button
                   variant="primary"
                   icon={<Scissors />}
                   size="sm"
@@ -370,7 +371,7 @@ const { id } = useParams<{ id: string }>();
                   onClick={() => navigate(`/agenda?clientId=${client.id}`)}
                 >
                   {isBeauty ? 'Novo Serviço' : 'Novo Corte'}
-                </BrutalButton>
+                </Button>
               </div>
             </div>
 
@@ -389,7 +390,7 @@ const { id } = useParams<{ id: string }>();
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
               </div>
-              <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border border-neutral-800 border-l-4 ${isBeauty ? 'border-l-beauty-neon' : 'border-l-yellow-500'}`}>
+              <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border ${isBeauty ? 'border-beauty-neon/40' : 'border-accent-gold/40'}`}>
                 <p className={`text-[10px] md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
                   <Sparkles className="w-3 h-3" /> Próxima Visita
                 </p>
@@ -398,10 +399,10 @@ const { id } = useParams<{ id: string }>();
             </div>
           </div>
         </div>
-      </BrutalCard>
+      </Card>
 
       {/* Visual History - Now using Real Appointments */}
-      <BrutalCard title={isBeauty ? "Histórico de Visitas" : "Histórico de Cortes"}>
+      <Card title={isBeauty ? "Histórico de Visitas" : "Histórico de Cortes"}>
         {client.hairHistory.length === 0 && (!client.appointmentsHistory || client.appointmentsHistory.length === 0) ? (
           <div className="text-center py-12 text-neutral-500">
             <p className="text-sm">{isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}</p>
@@ -475,12 +476,12 @@ const { id } = useParams<{ id: string }>();
             </div>
           </div>
         )}
-      </BrutalCard>
+      </Card>
 
       {/* Notes & Preferences */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <div className="md:col-span-2 h-full">
-          <BrutalCard title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
+          <Card title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
             <textarea
               className={`w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:${accent.border} resize-none`}
               value={notes}
@@ -488,20 +489,20 @@ const { id } = useParams<{ id: string }>();
               placeholder="Digite observações sobre o cliente..."
             />
             <div className="flex justify-end mt-2">
-              <BrutalButton
+              <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleSaveSemanticNote}
                 disabled={savingNotes}
               >
                 {savingNotes ? 'Salvando...' : 'Salvar Observação'}
-              </BrutalButton>
+              </Button>
             </div>
-          </BrutalCard>
+          </Card>
         </div>
 
         {/* AI Insight Mini Card */}
-        <BrutalCard
+        <Card
           className={`bg-gradient-to-br from-brutal-card to-neutral-900 overflow-hidden relative ${isBeauty ? 'border-beauty-neon/50 shadow-neon-soft' : 'border-accent-gold/50 shadow-heavy'}`}
         >
           {isAtRisk ? (
@@ -525,7 +526,7 @@ const { id } = useParams<{ id: string }>();
                   <p className="text-xs italic text-white/80">&quot;Enviar mensagem de saudades e oferecer um horário prioritário para esta semana.&quot;</p>
                 </div>
 
-                <BrutalButton
+                <Button
                   variant="primary"
                   size="md"
                   className="w-full shadow-lg"
@@ -533,7 +534,7 @@ const { id } = useParams<{ id: string }>();
                   icon={<MessageCircle className="w-4 h-4" />}
                 >
                   Mandar Mensagem
-                </BrutalButton>
+                </Button>
               </div>
             </div>
           ) : (
@@ -544,7 +545,7 @@ const { id } = useParams<{ id: string }>();
 
           {/* Subtle background icon */}
           <Sparkles className={`absolute -bottom-4 -right-4 w-24 h-24 opacity-5 ${accent.text}`} />
-        </BrutalCard>
+        </Card>
       </div>
       {/* Edit Modal */}
       {showEditModal && (

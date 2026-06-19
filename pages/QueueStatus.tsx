@@ -1,49 +1,31 @@
+import { Button } from '../components/ui';
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { BrutalButton } from '../components/BrutalButton';
-import { Loader2, User, Clock, CheckCircle, AlertOctagon, AlertTriangle, ArrowLeft, Send } from 'lucide-react';
-import { QueueEntry } from '../types';
+
+import { Loader2, User, Clock, CheckCircle, AlertOctagon, AlertTriangle } from 'lucide-react';
+import { useQueueStatusSnapshot } from '../hooks/useQueueStatus';
+import type { QueueRecord } from '@/types/queue';
 
 export const QueueStatus: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
-    const [entry, setEntry] = useState<QueueEntry | null>(null);
-    const [position, setPosition] = useState<number | null>(null);
-    const [business, setBusiness] = useState<any>(null); // Store full business profile for styling
-    const [loading, setLoading] = useState(true);
+    const { data: snapshot, isLoading: loading, refetch } = useQueueStatusSnapshot(id);
+    const entry = snapshot?.entry ?? null;
+    const business = snapshot?.business ?? null;
+    const position = snapshot?.position ?? null;
 
-    // Countdown Logic (Moved to Top Level)
-    const [timeLeft, setTimeLeft] = useState<number | null>(null); // State declared here
-
-    // Notification refs
-
-    // Notification refs
-    const hasNotified = useRef(false);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
-        // Initialize Audio
         audioRef.current = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
     }, []);
 
-    // Countdown Effect (Moved to Top Level)
     useEffect(() => {
         if (!position || entry?.status !== 'waiting') {
             setTimeLeft(null);
             return;
         }
-
-        // Calculate target time: NOW + (Position * 20 minutes)
-        // Ideally this should be server-side or fixed start time, but for estimation:
-        // We really want "Time until turn". Only relative to NOW makes sense if we don't have a specific slot.
-        // But if I reload, it resets? 
-        // Better: Calculate estimated completion time based on queue joining or just keep it simple as requested: "Countdown".
-        // Let's assume the user wants to see 20min * pos counting down.
-        // To avoid reset on refresh, we could store 'targetTime' in local storage or calculate from 'joined_at' + (pos * 20)? 
-        // But pos changes.
-        // Let's stick to a simple countdown from (Pos * 20) for now, reducing 1 sec every sec.
-        // FIX: The user wants it to go negative.
 
         const seconds = position * 20 * 60;
         setTimeLeft(seconds);
@@ -55,88 +37,31 @@ export const QueueStatus: React.FC = () => {
         return () => clearInterval(timer);
     }, [position, entry?.status]);
 
-    const fetchStatus = async () => {
-        if (!id) return;
-        try {
-            // Get Entry
-            const { data: entryData, error } = await supabase
-                .from('queue_entries')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error) throw error;
-            setEntry(entryData);
-
-            // Get Business Profile
-            const { data: businessData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', entryData.business_id)
-                .single();
-
-            if (businessData) setBusiness(businessData);
-
-            // Get Position (Try RPC first, fallback to client-side calc)
-            if (entryData.status === 'waiting') {
-                const { data: posData, error: rpcError } = await supabase.rpc('get_queue_position', {
-                    p_queue_id: id,
-                    p_business_id: entryData.business_id
-                });
-
-                if (!rpcError && posData !== null) {
-                    setPosition(posData);
-                } else {
-                    // Fallback: Client-side calculation
-                    // Count people ahead including self
-                    const { count } = await supabase
-                        .from('queue_entries')
-                        .select('id', { count: 'exact', head: true })
-                        .eq('business_id', entryData.business_id)
-                        .eq('status', 'waiting')
-                        .lte('joined_at', entryData.joined_at);
-
-                    setPosition(count);
-                }
-            } else {
-                setPosition(null);
-            }
-
-        } catch (err) {
-            console.error('Error fetching status:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchStatus();
+        if (!id) return;
 
-        // Realtime subscription
         const channel = supabase.channel(`queue_${id}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'queue_entries', filter: `id=eq.${id}` },
-                payload => {
-                    const newEntry = payload.new as QueueEntry;
-                    setEntry(newEntry);
-                    // If status changed to wait, fetch position again?
-                    // Better to just re-fetch everything to be safe on rules
-                    fetchStatus();
+                () => {
+                    void refetch();
                 })
             .subscribe();
 
-        // Polling fallback
-        const interval = setInterval(fetchStatus, 10000);
-
         return () => {
             supabase.removeChannel(channel);
-            clearInterval(interval);
+        };
+    }, [id, refetch]);
+
+    const prevStatusRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (entry?.status === 'calling' && prevStatusRef.current !== 'calling') {
+            void audioRef.current?.play().catch(() => undefined);
         }
-    }, [id]);
+        prevStatusRef.current = entry?.status ?? null;
+    }, [entry?.status]);
 
     if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>;
     if (!entry) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Entrada não encontrada</div>;
-
-
 
     const formatTime = (seconds: number) => {
         const isNegative = seconds < 0;
@@ -152,8 +77,8 @@ export const QueueStatus: React.FC = () => {
 
     const isBeauty = business?.user_type === 'beauty';
 
-    const getStatusDisplay = () => {
-        switch (entry.status) {
+    const getStatusDisplay = (queueEntry: QueueRecord) => {
+        switch (queueEntry.status) {
             case 'waiting':
                 return {
                     color: isBeauty ? 'text-beauty-neon' : 'text-accent-gold',
@@ -202,12 +127,10 @@ export const QueueStatus: React.FC = () => {
         }
     };
 
-    const statusUI = getStatusDisplay();
-    // Remove static estimatedMinutes in favor of dynamic timeLeft
+    const statusUI = getStatusDisplay(entry);
 
     return (
         <div className="min-h-screen bg-neutral-950 font-sans text-white p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            {/* Background blobs */}
             {isBeauty ? (
                 <>
                     <div className={`absolute top-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-green-500/20' : 'bg-beauty-acid/20'} blur-[100px] pointer-events-none`}></div>
@@ -257,9 +180,9 @@ export const QueueStatus: React.FC = () => {
                 </div>
 
                 <div className="mt-8 space-y-3">
-                    <BrutalButton variant="outline" onClick={() => window.location.reload()} className="w-full">
+                    <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
                         Atualizar Status
-                    </BrutalButton>
+                    </Button>
 
                     {['waiting', 'calling'].includes(entry.status) && (
                         <button className="text-sm font-medium text-red-500 opacity-60 hover:opacity-100 transition-opacity p-4 min-w-[120px]">
@@ -270,4 +193,4 @@ export const QueueStatus: React.FC = () => {
             </div>
         </div>
     );
-}
+};

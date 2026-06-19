@@ -7,7 +7,7 @@ import { WizardProgress } from '@/components/onboarding/WizardProgress';
 import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrutalTheme } from '@/hooks/useBrutalTheme';
-import { saveOnboardingStep, completeOnboarding } from '@/lib/onboarding';
+import { saveOnboardingStep, completeOnboarding } from '@/services/onboarding';
 
 // Fluxo simplificado: apenas boas-vindas + cadastro de serviço
 const StepWelcome = React.lazy(

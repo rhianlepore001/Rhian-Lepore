@@ -28,7 +28,7 @@ export const ForgotPassword: React.FC = () => {
             setDone(true);
         } catch (err: any) {
             console.error('Error requesting password reset:', err);
-            setError(err.message || 'Erro ao enviar e-mail de recuperação.');
+            setError('Não conseguimos enviar o e-mail agora. Confira o endereço digitado e tente de novo.');
         } finally {
             setLoading(false);
         }

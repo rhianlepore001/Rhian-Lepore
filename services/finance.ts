@@ -85,3 +85,126 @@ export function filterStaffTransactions(
   if (!teamMemberId) return [];
   return transactions.filter(transaction => transaction.professionalId === teamMemberId);
 }
+
+export async function fetchMonthlyHistory(companyId: string, monthsCount: number = 12): Promise<any[]> {
+  const { data, error } = await supabase.rpc('get_monthly_finance_history', {
+    p_user_id: companyId,
+    p_months_count: monthsCount,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function deleteFinanceTransaction(transactionId: string, companyId: string): Promise<void> {
+  const { data: record, error: findError } = await supabase
+    .from('finance_records')
+    .select('appointment_id')
+    .eq('id', transactionId)
+    .eq('user_id', companyId)
+    .maybeSingle();
+
+  if (findError) throw findError;
+
+  if (record) {
+    if (record.appointment_id) {
+      const { error: aptError } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', record.appointment_id)
+        .eq('user_id', companyId);
+      if (aptError) throw aptError;
+    }
+    const { error } = await supabase
+      .from('finance_records')
+      .delete()
+      .eq('id', transactionId)
+      .eq('user_id', companyId);
+    if (error) throw error;
+  } else {
+    const { data: appt, error: apptFindError } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('id', transactionId)
+      .eq('user_id', companyId)
+      .maybeSingle();
+
+    if (apptFindError) throw apptFindError;
+
+    if (appt) {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', transactionId)
+        .eq('user_id', companyId);
+      if (error) throw error;
+    } else {
+      throw new Error('Transacao nao encontrada. Pode ja ter sido excluida.');
+    }
+  }
+}
+
+export async function markExpenseAsPaid(recordId: string, companyId: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_expense_as_paid', {
+    p_record_id: recordId,
+    p_user_id: companyId,
+  });
+  if (error) throw error;
+}
+
+export async function createFinanceRecord(input: {
+  companyId: string;
+  type: string;
+  amount: number;
+  expense: number;
+  description: string;
+  paymentMethod: string;
+  professionalId: string | null;
+  professionalName: string;
+  clientId: string | null;
+  clientName: string;
+  serviceName: string;
+  appointmentId: string | null;
+  dueDate: string | null;
+  commissionPaid: boolean;
+}): Promise<void> {
+  const record: Record<string, any> = {
+    user_id: input.companyId,
+    type: input.type,
+    amount: input.amount,
+    expense: input.expense,
+    description: input.description,
+    payment_method: input.paymentMethod,
+    professional_id: input.professionalId,
+    barber_name: input.professionalName,
+    client_id: input.clientId,
+    client_name: input.clientName,
+    service_name: input.serviceName,
+    appointment_id: input.appointmentId,
+    due_date: input.dueDate,
+    commission_paid: input.commissionPaid,
+  };
+  const { error } = await supabase.from('finance_records').insert(record);
+  if (error) throw error;
+}
+
+export async function fetchDropdownOptions(companyId: string): Promise<{
+  services: { id: string; name: string }[];
+  clients: { id: string; name: string }[];
+  professionals: { id: string; name: string }[];
+}> {
+  const [servicesRes, clientsRes, professionalsRes] = await Promise.all([
+    supabase.from('services').select('id, name').eq('user_id', companyId),
+    supabase.from('clients').select('id, name').eq('user_id', companyId).order('name'),
+    supabase.from('team_members').select('id, name').eq('user_id', companyId).eq('active', true).order('name'),
+  ]);
+
+  if (servicesRes.error) throw servicesRes.error;
+  if (clientsRes.error) throw clientsRes.error;
+  if (professionalsRes.error) throw professionalsRes.error;
+
+  return {
+    services: servicesRes.data || [],
+    clients: clientsRes.data || [],
+    professionals: professionalsRes.data || [],
+  };
+}

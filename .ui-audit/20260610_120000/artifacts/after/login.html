@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="barber" data-mode="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgendiX — Login (artifact)</title>
+  <link rel="stylesheet" href="../shared/artifact-ds.css" />
+</head>
+<body>
+  <div class="theme-toolbar">
+    <span>UI Audit artifact</span>
+    <span class="tag" id="theme-tag">barber / dark</span>
+    <label>Tema <select id="theme-select"><option value="barber">Barber</option><option value="beauty">Beauty</option></select></label>
+    <label>Modo <select id="mode-select"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+  </div>
+
+  <div class="artifact-body" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--page-pad);">
+    <!-- Logo -->
+    <div style="margin-bottom:32px;display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--color-accent);display:flex;align-items:center;justify-content:center;font-family:Chivo;font-weight:900;color:#121212;font-size:14px;">AX</div>
+      <span class="h2">AgendiX</span>
+    </div>
+
+    <p class="text-muted" style="text-align:center;margin-bottom:24px;max-width:28ch;">O sistema que trabalha enquanto você atende.</p>
+    <h1 class="h-display" style="text-align:center;margin-bottom:32px;">Escolha o seu negócio</h1>
+
+    <!-- Segment gateway — resolves UI-005, no hardcoded #0A0A0A -->
+    <div class="grid-2" style="width:100%;max-width:720px;margin-bottom:32px;">
+      <button type="button" class="segment-card" aria-label="Barbearias">
+        <div class="content" style="background:linear-gradient(to top, color-mix(in srgb, var(--color-bg) 90%, black), transparent);">
+          <h2>Barbearias</h2>
+          <p class="text-secondary" style="font-size:0.875rem;margin-bottom:16px;">Gestão direta, visual industrial</p>
+          <span class="btn btn-primary" style="width:fit-content;pointer-events:none;">Entrar →</span>
+        </div>
+      </button>
+      <button type="button" class="segment-card" aria-label="Salões e spas">
+        <div class="content" style="background:linear-gradient(to top, color-mix(in srgb, var(--color-bg) 90%, black), transparent);">
+          <h2>Salões e spas</h2>
+          <p class="text-secondary" style="font-size:0.875rem;margin-bottom:16px;">Agenda elegante, fluxo calmo</p>
+          <span class="btn btn-primary" style="width:fit-content;pointer-events:none;">Entrar →</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Login form preview -->
+    <div class="card" style="width:100%;max-width:400px;">
+      <div class="card-body stack">
+        <h2 class="h2">Entrar na conta</h2>
+        <div>
+          <label class="label" for="email">E-mail</label>
+          <input class="input" id="email" type="email" placeholder="seu@email.com" />
+        </div>
+        <div>
+          <label class="label" for="pass">Senha</label>
+          <input class="input" id="pass" type="password" placeholder="••••••••" />
+        </div>
+        <button type="button" class="btn btn-primary" style="width:100%;">Entrar</button>
+        <p class="text-muted" style="text-align:center;">Primeira vez? <a href="#" style="color:var(--color-accent);">Criar conta — 14 dias grátis</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/artifact-theme.js"></script>
+  <script>initThemeToolbar('barber', 'dark');</script>
+</body>
+</html>

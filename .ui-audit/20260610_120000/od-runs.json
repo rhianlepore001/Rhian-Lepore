@@ -1,0 +1,128 @@
+{
+  "projectId": "agendix-ui-audit",
+  "projectName": "AgendiX UI Audit",
+  "conversationId": "2cbc4a12-943f-4f97-b3b5-3bcaa54bb5c6",
+  "startedAt": "2026-06-10",
+  "checkedAt": "2026-06-10",
+  "daemonUrl": "http://127.0.0.1:61890",
+  "mcpNote": "MCP user-open-design falha em 127.0.0.1:63603 quando sidecar IPC não conecta. Config mcp.json está correta — reinicie MCP após Open Design desktop subir. Runs via POST /api/runs na porta do desktop funcionam.",
+  "runs": [
+    {
+      "screen": "login",
+      "runId": "dabb0040-16b4-4582-9bee-f8fe370c2203",
+      "plugin": "example-mobile-onboarding",
+      "status": "failed",
+      "errorCode": "AGENT_AUTH_REQUIRED",
+      "error": "Claude Code could not authenticate. Run `claude`, use `/login`, then retry."
+    },
+    {
+      "screen": "dashboard",
+      "runId": "6893635b-3bca-4d1b-b54d-9221a190bcf1",
+      "plugin": "example-dashboard",
+      "designSystemRef": "linear-app",
+      "status": "failed",
+      "errorCode": "AGENT_AUTH_REQUIRED",
+      "error": "Claude Code could not authenticate. Run `claude`, use `/login`, then retry."
+    },
+    {
+      "screen": "agenda",
+      "runId": "07466c41-d74f-4af9-b55f-d62800f86d8b",
+      "plugin": "example-dashboard",
+      "designSystemRef": "cal",
+      "status": "failed",
+      "errorCode": "AGENT_AUTH_REQUIRED",
+      "error": "Claude Code could not authenticate. Run `claude`, use `/login`, then retry."
+    },
+    {
+      "screen": "financeiro",
+      "runId": "cdfd9aff-c26e-47a4-9405-01fefedfa8dd",
+      "plugin": "example-finance-report",
+      "designSystemRef": "stripe",
+      "status": "failed",
+      "errorCode": "AGENT_AUTH_REQUIRED",
+      "error": "Claude Code could not authenticate. Run `claude`, use `/login`, then retry."
+    },
+    {
+      "screen": "login",
+      "runId": "9b5122c1-1366-48ae-964c-d21603f09308",
+      "agent": "cursor-agent",
+      "model": "composer-2.5-fast",
+      "plugin": "example-finance-report",
+      "status": "rejected",
+      "artifacts": ["index.html", "agendix-login-4-themes.html", "DESIGN.md"],
+      "errorCode": "WRONG_THEME_MATRIX",
+      "error": "Gerou barber/beauty × compact/spacious em vez de dark/light. UPPERCASE barber, sombra brutalista, layout split-pane.",
+      "note": "Não promover — ver screen-lock.json rejected"
+    },
+    {
+      "screen": "login",
+      "runId": "c92d6ea7-839b-4b64-9837-5e01ce412b4e",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.1",
+      "plugin": "example-finance-report",
+      "status": "approved_partial",
+      "artifacts": ["login.html"],
+      "screenLockPath": "artifacts/screen-lock/login.html",
+      "errorCode": null,
+      "note": "Run cancelado SIGTERM após entrega do artifact. Matriz correta (4 modos dark/light). theme-nav = audit chrome only."
+    },
+    {
+      "screen": "dashboard",
+      "runId": "b8dd8804-3ad2-44e6-8bb2-a877657e74c5",
+      "agent": "opencode",
+      "plugin": "example-dashboard",
+      "designSystemRef": "linear-app",
+      "status": "approved",
+      "startedVia": "REST POST /api/runs",
+      "briefFile": "od-briefs.md#run-1--dashboard",
+      "screenLockPath": "artifacts/screen-lock/dashboard.html",
+      "note": "Matriz correta. Fix barber-light: nav/CTA/logo com --accent dourado #A07A2A."
+    },
+    {
+      "screen": "agenda",
+      "runId": "6ba64967-8467-4163-8c38-b0199b85a44c",
+      "agent": "opencode",
+      "plugin": "example-dashboard",
+      "designSystemRef": "cal",
+      "status": "approved",
+      "startedVia": "REST POST /api/runs",
+      "briefFile": "od-briefs.md#run-2--agenda",
+      "artifacts": ["agenda.html"],
+      "screenLockPath": "artifacts/screen-lock/agenda.html",
+      "note": "Run cancelado SIGTERM após entrega. Matriz dark/light correta. Barber gold em nav/bottom nav/logo."
+    },
+    {
+      "screen": "financeiro",
+      "runId": "11a9b3da-65ab-408c-b13b-c779490d3a3f",
+      "agent": "opencode",
+      "plugin": "example-dashboard",
+      "designSystemRef": "stripe",
+      "status": "approved",
+      "startedVia": "REST POST /api/runs",
+      "briefFile": "od-briefs.md#run-3--financeiro",
+      "artifacts": ["financeiro.html"],
+      "screenLockPath": "artifacts/screen-lock/financeiro.html",
+      "note": "example-dashboard + stripe. Matriz 4 temas, barber-light gold, KPI + tabela + comissões."
+    }
+  ],
+  "retryCodex": [
+    {
+      "screen": "login",
+      "runId": "72710df8-3dab-4864-b149-bcd853ea4501",
+      "agent": "codex",
+      "status": "failed",
+      "errorCode": "RATE_LIMITED",
+      "error": "Codex usage limit hit; resets Jul 6th 2026 3:51 PM",
+      "note": "Auth OK — bloqueio é cota. Usar opencode/cursor-agent até reset."
+    }
+  ],
+  "nextStep": "Screen-lock 4/4 locked. Próximo: harness-planner (Fase 8) ou /ui-audit code para implementar S1→S8."
+  "fallbackArtifacts": [
+    "artifacts/after/login.html",
+    "artifacts/after/dashboard.html",
+    "artifacts/after/agenda.html",
+    "artifacts/after/financeiro.html"
+  ],
+  "fallbackNote": "Protótipo local descartável — substituído por screen-lock parcial (login) + contratos §7 SPEC.",
+  "nextStep": "Screen-lock 4/4 locked. Próximo: harness-planner (Fase 8) ou /ui-audit code para implementar S1→S8."
+}

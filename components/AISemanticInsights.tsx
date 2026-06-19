@@ -68,7 +68,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                 {insights.map((insight, idx) => (
                     <div
                         key={insight.id}
-                        className={`p-3 border-l-4 ${accent.border} ${accent.bgDim} relative group overflow-hidden`}
+                        className={`p-3 border ${accent.border} ${accent.bgDim} relative group overflow-hidden`}
                     >
                         <div className="flex items-start gap-3">
                             <div className={`mt-1 ${accent.text}`}>

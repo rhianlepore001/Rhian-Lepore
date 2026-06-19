@@ -1,7 +1,7 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { BrutalButton } from './BrutalButton';
+import { Button } from './ui/Button';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -36,9 +36,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         </p>
       )}
       {ctaLabel && onCta && (
-        <BrutalButton size="sm" onClick={onCta} className="mt-2">
+        <Button size="sm" onClick={onCta} className="mt-2">
           {ctaLabel}
-        </BrutalButton>
+        </Button>
       )}
     </div>
   );

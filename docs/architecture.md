@@ -1,4 +1,4 @@
-# AGENX — Arquitetura
+# AgendiX — Arquitetura
 
 ## Stack
 - **Frontend:** React 19 + TypeScript + Vite

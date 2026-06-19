@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrutalCard } from './BrutalCard';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
 import { Link as LinkIcon, Copy, ExternalLink, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -14,17 +15,14 @@ interface PublicLinkCardProps {
 export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, publicBookingEnabled = true, onSlugCreated }) => {
     const { user } = useAuth();
     const [copied, setCopied] = useState(false);
-
-    // Slug configuration states
     const [slugInput, setSlugInput] = useState('');
     const [slugError, setSlugError] = useState<string | null>(null);
     const [slugAvailable, setSlugAvailable] = useState(false);
     const [checkingAvailability, setCheckingAvailability] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    const { isBeauty, accent } = useBrutalTheme();
+    const { colors, accent, font, status } = useBrutalTheme();
 
-    // Debounced availability check
     useEffect(() => {
         if (!slugInput || slugError) {
             setSlugAvailable(false);
@@ -49,12 +47,9 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
 
     const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value.toLowerCase();
-        // Remove caracteres inválidos
         value = value.replace(/[^a-z0-9-]/g, '');
         setSlugInput(value);
-
-        const error = validateSlug(value);
-        setSlugError(error);
+        setSlugError(validateSlug(value));
     };
 
     const checkSlugAvailability = async (slug: string) => {
@@ -67,10 +62,8 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                 .single();
 
             if (error && error.code === 'PGRST116') {
-                // No rows found - slug is available
                 setSlugAvailable(true);
             } else if (data) {
-                // Slug already exists
                 setSlugError('Este link já está em uso');
                 setSlugAvailable(false);
             }
@@ -93,41 +86,38 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
 
             if (error) throw error;
 
-            alert('✅ Link criado com sucesso!');
             if (onSlugCreated) onSlugCreated();
-            window.location.reload(); // Reload to update the UI
+            window.location.reload();
         } catch (error) {
             console.error('Error saving slug:', error);
-            alert('❌ Erro ao criar link. Tente novamente.');
         } finally {
             setSaving(false);
         }
     };
 
-    // Configuration form when no slug exists
     if (!businessSlug) {
         return (
-            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-accent-gold">
+            <Card variant="outlined" className="mb-6">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                        <AlertTriangle className="w-6 h-6 text-accent-gold flex-shrink-0 mt-1" />
+                        <AlertTriangle className={`w-6 h-6 ${accent.text} flex-shrink-0 mt-1`} />
                         <div className="flex-1">
-                            <h3 className="text-white font-heading text-lg uppercase mb-1">
+                            <h3 className={`${colors.text} ${font.heading} text-lg uppercase mb-1`}>
                                 Configure seu Link de Agendamento
                             </h3>
-                            <p className="text-neutral-400 text-sm">
+                            <p className={`${colors.textSecondary} text-sm`}>
                                 Crie um link personalizado para seus clientes agendarem online
                             </p>
                         </div>
                     </div>
 
-                    <div className="space-y-3 bg-neutral-800/50 p-4 rounded-lg border border-neutral-700">
-                        <label className="text-white font-mono text-sm block">
+                    <div className={`space-y-3 ${colors.surface} p-4 rounded-lg ${colors.border} border`}>
+                        <label className={`${colors.text} ${font.mono} text-sm block`}>
                             Escolha seu identificador único
                         </label>
 
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                            <span className="text-neutral-500 text-sm font-mono whitespace-nowrap">
+                            <span className={`${colors.textMuted} text-sm ${font.mono} whitespace-nowrap`}>
                                 {window.location.origin}/#/book/
                             </span>
                             <input
@@ -135,74 +125,63 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                                 value={slugInput}
                                 onChange={handleSlugChange}
                                 placeholder="minha-barbearia"
-                                className="flex-1 w-full sm:w-auto p-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-accent-gold font-mono text-sm"
+                                className={`flex-1 w-full sm:w-auto p-3 ${colors.inputBg} ${colors.inputBorder} border rounded-lg ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)] ${font.mono} text-sm`}
                                 disabled={saving}
                             />
                         </div>
 
-                        {/* Preview */}
                         {slugInput && !slugError && (
-                            <div className="bg-neutral-900 p-3 rounded border border-neutral-700">
-                                <p className="text-xs text-neutral-500 mb-1">Preview do seu link:</p>
-                                <code className={`text-sm ${accent.text} font-mono break-all`}>
+                            <div className={`${colors.card} p-3 rounded ${colors.border} border`}>
+                                <p className={`text-xs ${colors.textMuted} mb-1`}>Preview do seu link:</p>
+                                <code className={`text-sm ${accent.text} ${font.mono} break-all`}>
                                     {window.location.origin}/#/book/{slugInput}
                                 </code>
                             </div>
                         )}
 
-                        {/* Validation feedback */}
                         {checkingAvailability && (
-                            <div className="flex items-center gap-2 text-neutral-400 text-sm">
+                            <div className={`flex items-center gap-2 ${colors.textSecondary} text-sm`}>
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 Verificando disponibilidade...
                             </div>
                         )}
 
                         {slugError && !checkingAvailability && (
-                            <p className="text-red-500 text-sm flex items-center gap-2">
+                            <p className={`${status.danger} text-sm flex items-center gap-2`}>
                                 <span>❌</span> {slugError}
                             </p>
                         )}
 
                         {slugAvailable && !checkingAvailability && slugInput && (
-                            <p className="text-green-500 text-sm flex items-center gap-2">
+                            <p className={`${status.success} text-sm flex items-center gap-2`}>
                                 <Check className="w-4 h-4" />
                                 Disponível! Este link pode ser usado.
                             </p>
                         )}
 
-                        <button
+                        <Button
+                            variant="primary"
+                            fullWidth
                             onClick={handleSaveSlug}
                             disabled={!slugAvailable || saving || checkingAvailability}
-                            className={`w-full ${accent.bg} text-black font-bold py-3 px-4 rounded-lg uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 flex items-center justify-center gap-2`}
+                            loading={saving}
+                            icon={!saving ? <LinkIcon className="w-4 h-4" /> : undefined}
                         >
-                            {saving ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Salvando...
-                                </>
-                            ) : (
-                                <>
-                                    <LinkIcon className="w-4 h-4" />
-                                    Criar Link
-                                </>
-                            )}
-                        </button>
+                            {saving ? 'Salvando...' : 'Criar Link'}
+                        </Button>
 
-                        <p className="text-xs text-neutral-500 text-center">
-                            💡 Dica: Use o nome da sua barbearia/salão sem espaços
+                        <p className={`text-xs ${colors.textMuted} text-center`}>
+                            Dica: Use o nome da sua barbearia/salão sem espaços
                         </p>
                     </div>
                 </div>
-            </BrutalCard>
+            </Card>
         );
     }
 
-    // Existing link display
     const publicLink = `${window.location.origin}/#/book/${businessSlug}`;
 
     const handleCopy = async () => {
-        // Se for mobile e suportar o share API, usa ele primeiro
         if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 await navigator.share({
@@ -246,60 +225,51 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
         }
     };
 
-    // Show disabled state when public booking is off
     if (!publicBookingEnabled) {
         return (
-            <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6 border-l-4 border-accent-gold">
+            <Card variant="outlined" className="mb-6">
                 <div className="flex items-start gap-4">
-                    <div className="p-3 bg-accent-gold/10 rounded-lg">
-                        <AlertTriangle className="w-6 h-6 text-accent-gold" />
+                    <div className={`p-3 ${accent.bgDim} rounded-lg`}>
+                        <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
                     </div>
                     <div>
-                        <h3 className="text-white font-heading text-lg uppercase mb-1">Agendamento Público Desativado</h3>
-                        <p className="text-neutral-400 text-sm">
+                        <h3 className={`${colors.text} ${font.heading} text-lg uppercase mb-1`}>Agendamento Público Desativado</h3>
+                        <p className={`${colors.textSecondary} text-sm`}>
                             Ative o agendamento público acima para permitir que clientes agendem através do seu link.
                         </p>
                     </div>
                 </div>
-            </BrutalCard>
+            </Card>
         );
     }
 
     return (
-        <BrutalCard className="bg-gradient-to-r from-neutral-900 to-neutral-800 mb-6">
+        <Card variant="outlined" className="mb-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start gap-4">
-                    <div className={`p-3 ${isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10'} rounded-lg`}>
+                    <div className={`p-3 ${accent.bgDim} rounded-lg`}>
                         <LinkIcon className={`w-6 h-6 ${accent.text}`} />
                     </div>
                     <div>
-                        <h3 className="text-white font-heading text-lg uppercase mb-1">Seu Link de Agendamento</h3>
-                        <p className="text-neutral-400 text-sm mb-3">Compartilhe este link com seus clientes para agendamentos online.</p>
+                        <h3 className={`${colors.text} ${font.heading} text-lg uppercase mb-1`}>Seu Link de Agendamento</h3>
+                        <p className={`${colors.textSecondary} text-sm mb-3`}>Compartilhe este link com seus clientes para agendamentos online.</p>
                         <div className="flex items-center gap-2 flex-wrap">
-                            <code className={`${isBeauty ? 'bg-white/5 border border-white/10 rounded-lg' : 'bg-black/40 border-2 border-neutral-800'} px-3 py-2 ${accent.text} text-sm font-mono break-all`}>
+                            <code className={`${colors.surface} ${colors.border} border rounded-lg px-3 py-2 ${accent.text} text-sm ${font.mono} break-all`}>
                                 {publicLink}
                             </code>
-                            <button
+                            <Button
+                                variant="primary"
+                                size="sm"
                                 onClick={handleCopy}
-                                className={`flex items-center gap-2 px-4 py-2 ${accent.bg} ${isBeauty ? 'hover:bg-beauty-neonHover rounded-lg' : accent.bgHover} text-black text-sm font-bold uppercase tracking-wider transition-all`}
+                                icon={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                             >
-                                {copied ? (
-                                    <>
-                                        <Check className="w-4 h-4" />
-                                        Copiado!
-                                    </>
-                                ) : (
-                                    <>
-                                        <Copy className="w-4 h-4" />
-                                        Copiar
-                                    </>
-                                )}
-                            </button>
+                                {copied ? 'Copiado!' : 'Copiar'}
+                            </Button>
                             <a
                                 href={publicLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-bold uppercase tracking-wider transition-all rounded-lg"
+                                className={`flex items-center gap-2 px-4 py-2 ${colors.surfaceHover} ${colors.border} border ${colors.text} text-sm font-bold uppercase tracking-wider transition-all rounded-lg`}
                             >
                                 <ExternalLink className="w-4 h-4" />
                                 Visualizar
@@ -308,6 +278,6 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                     </div>
                 </div>
             </div>
-        </BrutalCard>
+        </Card>
     );
 };

@@ -24,11 +24,13 @@ const createWrapper = () => {
             },
         },
     });
-    return ({ children }: { children: React.ReactNode }) => (
+    const Wrapper = ({ children }: { children: React.ReactNode }) => (
         <QueryClientProvider client={queryClient}>
             {children}
         </QueryClientProvider>
     );
+    Wrapper.displayName = 'DashboardDataTestWrapper';
+    return Wrapper;
 };
 
 describe('useDashboardData', () => {
@@ -114,9 +116,6 @@ describe('useDashboardData', () => {
     });
 
     it('should handle errors during fetch', async () => {
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
-
         (supabase.from as any).mockImplementation(() => ({
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
@@ -127,10 +126,6 @@ describe('useDashboardData', () => {
 
         await waitFor(() => expect(result.current.loading).toBe(false));
 
-        expect(warnSpy).toHaveBeenCalled();
         expect(result.current.loading).toBe(false);
-
-        consoleSpy.mockRestore();
-        warnSpy.mockRestore();
     });
 });

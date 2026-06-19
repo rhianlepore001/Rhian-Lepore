@@ -9,13 +9,13 @@ producedBy: designer
 
 # Data Migration Plan
 
-> Plano de migracao de dados para o AGENX v1.
+> Plano de migracao de dados para o AgendiX v1.
 
 ---
 
 ## Contexto
 
-A migracao do AGENX e **in-place**: mesma stack, mesmo banco, mesmo schema na maioria das tabelas. Portanto, nao ha ETL tradicional. A migracao de dados e composta por:
+A migracao do AgendiX e **in-place**: mesma stack, mesmo banco, mesmo schema na maioria das tabelas. Portanto, nao ha ETL tradicional. A migracao de dados e composta por:
 
 1. **Migrations incrementais** (novas tabelas, colunas, RPCs)
 2. **Backfills** (correcao de dados existentes)

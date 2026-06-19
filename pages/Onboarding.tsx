@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WizardProvider, useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { WizardEngine } from '@/components/onboarding/WizardEngine';
-import { getOnboardingProgress } from '@/lib/onboarding';
+import { getOnboardingProgress } from '@/services/onboarding';
 import { useAuth } from '@/contexts/AuthContext';
 
 function OnboardingInner() {

@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { saveOnboardingStep, getOnboardingProgress } from '../lib/onboarding';
+import { saveOnboardingStep, getOnboardingProgress } from '@/services/onboarding';
 import { WizardStepId, WizardTarget, WIZARD_TARGETS } from '../constants/WIZARD_TARGETS';
 
 const SESSION_KEY = 'guided_mode_state';

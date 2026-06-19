@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
-import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 
@@ -174,14 +174,14 @@ export const PublicBookingSettings: React.FC = () => {
                 </SettingsSection>
 
                 <div className="flex justify-end pt-4">
-                    <BrutalButton
+                    <Button
                         onClick={handleSave}
                         loading={saveStatus === 'saving'}
                         className="w-full md:w-auto min-w-[200px]"
                     >
                         <Save className="w-5 h-5 mr-2" />
                         {saveStatus === 'saved' ? 'Salvo!' : 'Salvar Alterações'}
-                    </BrutalButton>
+                    </Button>
                 </div>
             </div>
         </SettingsLayout>

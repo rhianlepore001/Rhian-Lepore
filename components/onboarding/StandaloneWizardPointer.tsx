@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useGuidedMode } from '../../contexts/GuidedModeContext';
 import { WizardPointer } from './WizardPointer';
 import { Check, ChevronRight } from 'lucide-react';
-import { getSetupStatus } from '../../lib/onboarding';
+import { getSetupStatus } from '@/services/onboarding';
 import { useAuth } from '../../contexts/AuthContext';
 import { WIZARD_TARGETS, WizardStepId } from '../../constants/WIZARD_TARGETS';
 import { useNavigate, useLocation } from 'react-router-dom';

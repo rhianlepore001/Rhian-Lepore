@@ -15,6 +15,22 @@ import { useAuth } from '../contexts/AuthContext';
 export type ThemeVariant = 'barber' | 'beauty';
 export type ColorMode = 'dark' | 'light';
 
+/**
+ * Tokens de densidade por tema (Decisão B do DS Lock).
+ * barber = compacto/operacional; beauty = respirado/premium.
+ * Sempre classes estáticas (Tailwind não processa interpolação dinâmica).
+ */
+export interface DensityTokens {
+  pagePadding: string;
+  cardPadding: string;
+  sectionGap: string;
+  inlineGap: string;
+  tableRowPy: string;
+  navItemPy: string;
+  kpiMinHeight: string;
+  touchMin: string;
+}
+
 export interface BrutalThemeTokens {
   theme: ThemeVariant;
   mode: ColorMode;
@@ -67,6 +83,8 @@ export interface BrutalThemeTokens {
     avatar: string;
     modal: string;
   };
+
+  density: DensityTokens;
 
   shadow: {
     card: string;
@@ -142,126 +160,33 @@ function getThemeFromDOM(): ThemeVariant {
   return (document.documentElement.getAttribute('data-theme') as ThemeVariant) || 'barber';
 }
 
-const ACCENT_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['accent']>> = {
-  barber: {
-    dark: {
-      text: 'text-accent-gold',
-      bg: 'bg-accent-gold',
-      bgDim: 'bg-accent-gold/20',
-      bgHover: 'hover:bg-accent-goldHover',
-      border: 'border-accent-gold/60',
-      borderDim: 'border-accent-gold/20',
-      shadow: 'shadow-gold',
-      shadowStrong: 'shadow-promax-depth',
-      ring: 'ring-accent-gold/30',
-      hex: '#C29B40',
-      hexHover: '#D4AF50',
-    },
-    light: {
-      text: 'text-accent-gold',
-      bg: 'bg-accent-gold',
-      bgDim: 'bg-accent-gold/15',
-      bgHover: 'hover:bg-accent-goldHover',
-      border: 'border-accent-gold/40',
-      borderDim: 'border-accent-gold/15',
-      shadow: 'shadow-gold',
-      shadowStrong: 'shadow-promax-depth',
-      ring: 'ring-accent-gold/20',
-      hex: '#A07A2A',
-      hexHover: '#B8892F',
-    },
-  },
-  beauty: {
-    dark: {
-      text: 'text-beauty-neon',
-      bg: 'bg-beauty-neon',
-      bgDim: 'bg-beauty-neon/20',
-      bgHover: 'hover:bg-beauty-neonHover',
-      border: 'border-beauty-neon/50',
-      borderDim: 'border-beauty-neon/20',
-      shadow: 'shadow-neon',
-      shadowStrong: 'shadow-neon-strong',
-      ring: 'ring-beauty-neon/30',
-      hex: '#A78BFA',
-      hexHover: '#C4B5FD',
-    },
-    light: {
-      text: 'text-beauty-neon',
-      bg: 'bg-beauty-neon',
-      bgDim: 'bg-beauty-neon/12',
-      bgHover: 'hover:bg-beauty-neonHover',
-      border: 'border-beauty-neon/30',
-      borderDim: 'border-beauty-neon/12',
-      shadow: 'shadow-neon',
-      shadowStrong: 'shadow-neon-strong',
-      ring: 'ring-beauty-neon/20',
-      hex: '#7C3AED',
-      hexHover: '#6D28D9',
-    },
-  },
+const accent: BrutalThemeTokens['accent'] = {
+  text: 'text-theme-accent',
+  bg: 'bg-theme-accent',
+  bgDim: 'bg-[var(--color-accent-dim)]',
+  bgHover: 'hover:bg-theme-accentHover',
+  border: 'border-[var(--color-accent-border)]',
+  borderDim: 'border-[var(--color-accent-dim)]',
+  shadow: 'shadow-[var(--shadow-card-accent)]',
+  shadowStrong: 'shadow-[var(--shadow-card-glow)]',
+  ring: 'ring-[var(--color-input-focus)]',
+  hex: 'var(--color-accent)',
+  hexHover: 'var(--color-accent-hover)',
 };
 
-const COLOR_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['colors']>> = {
-  barber: {
-    dark: {
-      bg: 'bg-obsidian-bg',
-      card: 'bg-obsidian-card',
-      surface: 'bg-obsidian-surface',
-      surfaceHover: 'hover:bg-white/[0.03]',
-      text: 'text-text-primary',
-      textSecondary: 'text-text-secondary',
-      textMuted: 'text-white/40',
-      border: 'border-white/[0.06]',
-      divider: 'border-white/[0.06]',
-      overlay: 'bg-black/80',
-      inputBg: 'bg-white/[0.03]',
-      inputBorder: 'border-white/10',
-    },
-    light: {
-      bg: 'bg-silk-bg',
-      card: 'bg-silk-card',
-      surface: 'bg-silk-surface',
-      surfaceHover: 'hover:bg-black/[0.03]',
-      text: 'text-[#1A1A1A]',
-      textSecondary: 'text-[#6B5E45]',
-      textMuted: 'text-black/40',
-      border: 'border-black/[0.08]',
-      divider: 'border-black/[0.08]',
-      overlay: 'bg-[#1F180A]/45',
-      inputBg: 'bg-black/[0.04]',
-      inputBorder: 'border-black/10',
-    },
-  },
-  beauty: {
-    dark: {
-      bg: 'bg-beauty-dark',
-      card: 'bg-beauty-card',
-      surface: 'bg-[#3D3A4D]',
-      surfaceHover: 'hover:bg-white/[0.03]',
-      text: 'text-text-primary',
-      textSecondary: 'text-[#B8AED4]',
-      textMuted: 'text-[#7B6F96]',
-      border: 'border-white/10',
-      divider: 'border-white/8',
-      overlay: 'bg-black/70',
-      inputBg: 'bg-white/5',
-      inputBorder: 'border-white/10',
-    },
-    light: {
-      bg: 'bg-[#F7F5FF]',
-      card: 'bg-white',
-      surface: 'bg-[#EDE8FF]',
-      surfaceHover: 'hover:bg-black/[0.03]',
-      text: 'text-[#1A1225]',
-      textSecondary: 'text-[#5B4D7A]',
-      textMuted: 'text-black/35',
-      border: 'border-[#7C3AED]/12',
-      divider: 'border-[#7C3AED]/10',
-      overlay: 'bg-[#1F1B2E]/45',
-      inputBg: 'bg-[#7C3AED]/4',
-      inputBorder: 'border-[#7C3AED]/15',
-    },
-  },
+const colors: BrutalThemeTokens['colors'] = {
+  bg: 'bg-theme-bg',
+  card: 'bg-theme-card',
+  surface: 'bg-theme-surface',
+  surfaceHover: 'hover:bg-[var(--color-card-hover)]',
+  text: 'text-theme-text',
+  textSecondary: 'text-theme-textSecondary',
+  textMuted: 'text-[var(--color-text-muted)]',
+  border: 'border-theme-border',
+  divider: 'border-[var(--color-divider)]',
+  overlay: 'bg-[var(--color-overlay)]',
+  inputBg: 'bg-theme-input',
+  inputBorder: 'border-[var(--color-input-border)]',
 };
 
 const FONT_MAP: Record<ThemeVariant, BrutalThemeTokens['font']> = {
@@ -279,126 +204,74 @@ const FONT_MAP: Record<ThemeVariant, BrutalThemeTokens['font']> = {
   },
 };
 
-const RADIUS_MAP: BrutalThemeTokens['radius'] = {
-  card: 'rounded-2xl',
-  input: 'rounded-xl',
-  button: 'rounded-2xl',
-  badge: 'rounded-full',
-  avatar: 'rounded-xl',
-  modal: 'rounded-2xl',
-};
-
-const SHADOW_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['shadow']>> = {
+// Decisão A do DS Lock — barber sharp / beauty soft (antes era flat para os dois temas)
+const RADIUS_MAP: Record<ThemeVariant, BrutalThemeTokens['radius']> = {
   barber: {
-    dark: {
-      card: 'shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]',
-      cardHover: 'hover:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)]',
-      elevated: 'shadow-[0_16px_48px_-12px_rgba(0,0,0,0.7)]',
-      modal: 'shadow-[0_24px_64px_-16px_rgba(0,0,0,0.8)]',
-      glow: 'shadow-gold',
-      button: 'shadow-gold',
-    },
-    light: {
-      card: 'shadow-soft',
-      cardHover: 'hover:shadow-soft-lg',
-      elevated: 'shadow-soft-lg',
-      modal: 'shadow-soft-lg',
-      glow: 'shadow-gold',
-      button: 'shadow-gold',
-    },
+    card: 'rounded-lg',
+    button: 'rounded-lg',
+    input: 'rounded-md',
+    modal: 'rounded-xl',
+    badge: 'rounded-md',
+    avatar: 'rounded-lg',
   },
   beauty: {
-    dark: {
-      card: 'shadow-promax-glass',
-      cardHover: 'hover:shadow-neon',
-      elevated: 'shadow-neon-strong',
-      modal: 'shadow-promax-glass',
-      glow: 'shadow-neon-strong',
-      button: 'shadow-neon',
-    },
-    light: {
-      card: 'shadow-soft',
-      cardHover: 'hover:shadow-soft-lg',
-      elevated: 'shadow-soft-lg',
-      modal: 'shadow-soft-lg',
-      glow: 'shadow-neon',
-      button: 'shadow-neon',
-    },
+    card: 'rounded-2xl',
+    button: 'rounded-xl',
+    input: 'rounded-lg',
+    modal: 'rounded-2xl',
+    badge: 'rounded-full',
+    avatar: 'rounded-full',
   },
 };
 
-const STATUS_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['status']>> = {
+// Decisão B do DS Lock — densidade por tema (novo: não existia)
+const DENSITY_MAP: Record<ThemeVariant, DensityTokens> = {
   barber: {
-    dark: {
-      success: 'text-emerald-400',
-      successBg: 'bg-emerald-500/10',
-      successBorder: 'border-emerald-500/20',
-      danger: 'text-red-400',
-      dangerBg: 'bg-red-500/10',
-      dangerBorder: 'border-red-500/20',
-      warning: 'text-amber-400',
-      warningBg: 'bg-amber-500/10',
-      warningBorder: 'border-amber-500/20',
-    },
-    light: {
-      success: 'text-emerald-600',
-      successBg: 'bg-emerald-500/10',
-      successBorder: 'border-emerald-500/20',
-      danger: 'text-red-600',
-      dangerBg: 'bg-red-500/10',
-      dangerBorder: 'border-red-500/20',
-      warning: 'text-amber-600',
-      warningBg: 'bg-amber-500/10',
-      warningBorder: 'border-amber-500/20',
-    },
+    pagePadding: 'p-3 md:p-6',
+    cardPadding: 'p-4 md:p-5',
+    sectionGap: 'space-y-4 md:space-y-5',
+    inlineGap: 'gap-2 md:gap-3',
+    tableRowPy: 'py-2.5',
+    navItemPy: 'py-2 px-3',
+    kpiMinHeight: 'min-h-[140px]',
+    touchMin: 'min-h-[44px] min-w-[44px]',
   },
   beauty: {
-    dark: {
-      success: 'text-emerald-300',
-      successBg: 'bg-emerald-500/20',
-      successBorder: 'border-emerald-500/20',
-      danger: 'text-red-300',
-      dangerBg: 'bg-red-500/20',
-      dangerBorder: 'border-red-500/20',
-      warning: 'text-amber-300',
-      warningBg: 'bg-amber-500/20',
-      warningBorder: 'border-amber-500/20',
-    },
-    light: {
-      success: 'text-emerald-600',
-      successBg: 'bg-emerald-500/10',
-      successBorder: 'border-emerald-500/15',
-      danger: 'text-red-600',
-      dangerBg: 'bg-red-500/10',
-      dangerBorder: 'border-red-500/15',
-      warning: 'text-amber-600',
-      warningBg: 'bg-amber-500/10',
-      warningBorder: 'border-amber-500/15',
-    },
+    pagePadding: 'p-4 md:p-8',
+    cardPadding: 'p-5 md:p-8',
+    sectionGap: 'space-y-6 md:space-y-8',
+    inlineGap: 'gap-3 md:gap-4',
+    tableRowPy: 'py-3.5',
+    navItemPy: 'py-2.5 px-4',
+    kpiMinHeight: 'min-h-[160px]',
+    touchMin: 'min-h-[44px] min-w-[44px]',
   },
 };
 
-const FOCUS_MAP: Record<ThemeVariant, Record<ColorMode, BrutalThemeTokens['focus']>> = {
-  barber: {
-    dark: {
-      ring: 'ring-accent-gold/30',
-      ringOffset: 'ring-offset-2 ring-offset-brutal-card',
-    },
-    light: {
-      ring: 'ring-accent-gold/40',
-      ringOffset: 'ring-offset-2 ring-offset-white',
-    },
-  },
-  beauty: {
-    dark: {
-      ring: 'ring-beauty-neon/30',
-      ringOffset: 'ring-offset-2 ring-offset-beauty-card',
-    },
-    light: {
-      ring: 'ring-beauty-neon/30',
-      ringOffset: 'ring-offset-2 ring-offset-white',
-    },
-  },
+const shadow: BrutalThemeTokens['shadow'] = {
+  card: 'shadow-[var(--shadow-card)]',
+  cardHover: 'hover:shadow-[var(--shadow-card-hover)]',
+  elevated: 'shadow-[var(--shadow-modal)]',
+  modal: 'shadow-[var(--shadow-modal)]',
+  glow: 'shadow-[var(--shadow-card-glow)]',
+  button: 'shadow-[var(--shadow-btn-primary)]',
+};
+
+const status: BrutalThemeTokens['status'] = {
+  success: 'text-[var(--color-success)]',
+  successBg: 'bg-[var(--color-success-bg)]',
+  successBorder: 'border-[var(--color-success-border)]',
+  danger: 'text-[var(--color-danger)]',
+  dangerBg: 'bg-[var(--color-danger-bg)]',
+  dangerBorder: 'border-[var(--color-danger-border)]',
+  warning: 'text-[var(--color-warning)]',
+  warningBg: 'bg-[var(--color-warning-bg)]',
+  warningBorder: 'border-[var(--color-warning-border)]',
+};
+
+const focus: BrutalThemeTokens['focus'] = {
+  ring: 'ring-[var(--color-input-focus)]',
+  ringOffset: 'ring-offset-2 ring-offset-[var(--color-card)]',
 };
 
 export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeTokens {
@@ -410,56 +283,52 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
   const isDark = mode === 'dark';
   const isLight = mode === 'light';
 
-  const accent = ACCENT_MAP[theme][mode];
-  const colors = COLOR_MAP[theme][mode];
   const font = FONT_MAP[theme];
-  const radius = RADIUS_MAP;
-  const shadow = SHADOW_MAP[theme][mode];
-  const focus = FOCUS_MAP[theme][mode];
-  const status = STATUS_MAP[theme][mode];
+  const radius = RADIUS_MAP[theme];
+  const density = DENSITY_MAP[theme];
 
   const classes = useMemo<BrutalThemeTokens['classes']>(() => {
     const commonCard = `${colors.card} ${colors.border} ${radius.card} overflow-hidden select-none touch-pan-y`;
     const commonMobileShadow = isMobile() ? 'shadow-lite-glass' : 'shadow-promax-glass';
 
     return {
-      card: `${commonCard} ${commonMobileShadow} transition-all duration-500`,
-      cardAccent: `${commonCard} ${commonMobileShadow} ${accent.border} ${accent.shadow} transition-all duration-500`,
-      cardGlow: `${commonCard} ${commonMobileShadow} ${accent.shadowStrong} ${accent.ring} transition-all duration-500`,
+      card: `bg-theme-card border-theme-border border ${radius.card} overflow-hidden select-none touch-pan-y shadow-[var(--shadow-card)] transition-[box-shadow,transform] duration-200 ease-out`,
+      cardAccent: `bg-theme-card border-[var(--color-accent-border)] border ${radius.card} overflow-hidden select-none touch-pan-y shadow-[var(--shadow-card-accent)] transition-[box-shadow,transform] duration-200 ease-out`,
+      cardGlow: `bg-theme-card border-theme-border border ${radius.card} overflow-hidden select-none touch-pan-y shadow-[var(--shadow-card-glow)] ring-[var(--color-input-focus)] transition-[box-shadow,transform] duration-200 ease-out`,
 
-      buttonPrimary: `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} font-bold ${radius.button} ${accent.shadow} hover:brightness-110 active:scale-[0.97] transition-all duration-300`,
-      buttonSecondary: `${isBeauty ? 'bg-white/10 text-white border-white/10 hover:bg-white/20' : 'bg-white/[0.06] text-text-primary border-white/15 hover:bg-white/10'} font-bold ${radius.button} transition-all duration-300`,
-      buttonGhost: `bg-transparent border-transparent ${accent.text} hover:bg-white/5 transition-all duration-300`,
-      buttonDanger: `${isBeauty ? 'bg-red-500/20 text-red-300' : 'bg-red-500/10 text-red-400'} border border-red-500/20 ${radius.button} hover:brightness-110 transition-all duration-300`,
-      buttonSuccess: `${isBeauty ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'} ${radius.button} hover:brightness-110 transition-all duration-300`,
-      buttonOutline: `${isBeauty ? 'bg-transparent border-white/20 text-white hover:bg-white/5' : 'bg-transparent border-accent-gold/30 text-accent-gold hover:bg-accent-gold/5'} ${radius.button} transition-all duration-300`,
+      buttonPrimary: `bg-theme-accent text-[var(--color-bg)] font-bold ${radius.button} shadow-[var(--shadow-btn-primary)] hover:brightness-110 active:scale-[0.97] transition-all duration-150 ease-out`,
+      buttonSecondary: `bg-[var(--color-card-hover)] text-theme-text border-[var(--color-border)] border font-bold ${radius.button} hover:bg-[var(--color-divider)] transition-all duration-150 ease-out`,
+      buttonGhost: `bg-transparent border-transparent text-theme-accent hover:bg-[var(--color-card-hover)] transition-all duration-150 ease-out`,
+      buttonDanger: `bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
+      buttonSuccess: `bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
+      buttonOutline: `bg-transparent border border-[var(--color-accent-border)] text-theme-accent hover:bg-[var(--color-accent-dim)] ${radius.button} transition-all duration-150 ease-out`,
 
-      input: `w-full px-4 py-3 ${radius.input} text-sm ${colors.text} ${colors.inputBg} ${colors.inputBorder} focus:outline-none focus:${accent.border} focus:bg-black/50 transition-all`,
-      inputFocus: `focus:outline-none focus:${accent.border} focus:ring-0`,
-      label: `text-xs font-semibold uppercase tracking-wider ${colors.textMuted} ${font.label}`,
-      error: `p-3.5 ${radius.input} text-xs ${isBeauty ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-red-500/8 text-red-400 border-red-500/30'} font-mono`,
+      input: `w-full px-4 py-3 ${radius.input} text-sm text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:bg-black/50 transition-all`,
+      inputFocus: `focus:outline-none focus:border-theme-accent focus:ring-0`,
+      label: `text-xs font-semibold text-theme-textSecondary ${font.label}`,
+      error: `p-3.5 ${radius.input} text-xs bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] font-mono`,
 
-      badgeAccent: `px-2 py-0.5 ${radius.badge} text-xs font-bold uppercase ${accent.bgDim} ${accent.text} ${accent.borderDim}`,
-      badgeDanger: `px-2 py-0.5 ${radius.badge} text-xs font-bold uppercase bg-red-500/10 text-red-400 border-red-500/20`,
-      badgeSuccess: `px-2 py-0.5 ${radius.badge} text-xs font-bold uppercase bg-emerald-500/10 text-emerald-400 border-emerald-500/20`,
-      badgeWarning: `px-2 py-0.5 ${radius.badge} text-xs font-bold uppercase bg-amber-500/10 text-amber-400 border-amber-500/20`,
-      badgeNeutral: `px-2 py-0.5 ${radius.badge} text-xs font-bold uppercase bg-white/5 text-text-secondary border-white/10`,
+      badgeAccent: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-accent-dim)] text-theme-accent border border-[var(--color-accent-border)]`,
+      badgeDanger: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]`,
+      badgeSuccess: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]`,
+      badgeWarning: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]`,
+      badgeNeutral: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-card-hover)] text-theme-textSecondary border border-[var(--color-divider)]`,
 
-      tableRow: `rounded-lg ${colors.border} hover:bg-white/[0.03] transition-colors`,
-      tableHeader: `text-xs ${font.mono} uppercase tracking-wider text-neutral-500`,
-      section: `space-y-4 md:space-y-6`,
-      pageContainer: `min-h-screen ${colors.bg} text-text-primary`,
-      sidebar: `${isBeauty ? 'bg-beauty-dark/95 backdrop-blur-xl' : 'bg-obsidian-bg'} border-r ${colors.divider}`,
-      sidebarItem: `group relative flex items-center px-4 py-3 font-sans font-medium text-sm transition-all duration-200 rounded-xl`,
-      sidebarItemActive: `${accent.bgDim} ${accent.text} ${accent.borderDim} before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-0.5 before:rounded-full before:${accent.bg.replace('bg-', '')}`,
-      sidebarItemInactive: `text-text-secondary hover:${colors.text} hover:bg-white/[0.04]`,
+      tableRow: `${radius.input} border-theme-border hover:bg-[var(--color-card-hover)] ${density.tableRowPy} transition-colors`,
+      tableHeader: `text-xs ${font.mono} tracking-wide text-theme-textSecondary`,
+      section: density.sectionGap,
+      pageContainer: `min-h-screen bg-theme-bg text-theme-text`,
+      sidebar: `bg-theme-bg border-r border-[var(--color-divider)]`,
+      sidebarItem: `group relative flex items-center ${density.navItemPy} font-sans font-medium text-sm transition-all duration-200 ${radius.button}`,
+      sidebarItemActive: `bg-[var(--color-accent-dim)] text-theme-accent border border-[var(--color-accent-border)]`,
+      sidebarItemInactive: `text-theme-textSecondary hover:text-theme-text hover:bg-[var(--color-card-hover)]`,
 
-      modalOverlay: `${isBeauty ? 'bg-beauty-dark/80' : 'bg-black/80'} backdrop-blur-md transition-opacity duration-300`,
-      modalContainer: `${colors.card} ${colors.border} ${radius.modal} ${shadow.modal} transform transition-all duration-300 animate-in fade-in zoom-in-95`,
-      modalHeader: `flex items-center justify-between border-b ${colors.divider} px-6 py-4`,
-      focusRing: `focus:outline-none focus:ring-2 ${focus.ring} ${focus.ringOffset} transition-shadow`,
+      modalOverlay: `bg-[var(--color-overlay)] backdrop-blur-md transition-opacity duration-200`,
+      modalContainer: `bg-[var(--color-modal-bg)] border-[var(--color-modal-border)] border ${radius.modal} shadow-[var(--shadow-modal)] transition-[opacity,transform] duration-200 ease-out`,
+      modalHeader: `flex items-center justify-between border-b border-[var(--color-divider)] px-6 py-4`,
+      focusRing: `focus:outline-none focus:ring-2 focus:ring-[var(--color-input-focus)] focus:ring-offset-2 focus:ring-offset-theme-card transition-shadow`,
     };
-  }, [theme, mode, accent, colors, font, radius, shadow, focus]);
+  }, [theme, mode, accent, colors, font, radius, density, shadow, focus, isBeauty]);
 
   return {
     theme,
@@ -472,6 +341,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
     accent,
     font,
     radius,
+    density,
     shadow,
     focus,
     status,

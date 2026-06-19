@@ -47,7 +47,7 @@ Use este arquivo para evitar ambiguidade ao discutir features e implementar cód
 | **Fidelidade (loyalty)** | Tier de fidelidade do cliente (`loyalty_tier` no `clients`). |
 | **Horário comercial** | Configurado em `business_hours` (JSONB) no `business_settings`. Define slots disponíveis. |
 | **Slug** | Identificador público legível (ex: `joao-barbeiro`). Usado em URLs de booking e queue. |
-| **AIOS** | Sistema de agentes IA do AGENX. Features pós-MVP — não priorizar no momento. |
+| **AIOS** | Sistema de agentes IA do AgendiX. Features pós-MVP — não priorizar no momento. |
 
 ---
 

@@ -1,24 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { BrutalCard } from './BrutalCard';
-import { BrutalButton } from './BrutalButton';
+import React, { useState } from 'react';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { usePublicClient } from '../contexts/PublicClientContext';
-import { Phone, User, Mail, Camera, ArrowRight, Loader2, LogOut, Check } from 'lucide-react';
+import { Phone, User, Mail, ArrowRight, LogOut, Check } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
 
 interface ClientAuthModalProps {
     businessId: string;
     onSuccess: () => void;
+    /** @deprecated use isBeauty */
     accentColor?: string;
+    isBeauty?: boolean;
 }
 
 export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
     businessId,
     onSuccess,
-    accentColor = 'accent-gold'
+    accentColor: _accentColor,
+    isBeauty = false,
 }) => {
-    const { client, login, register, logout, loading } = usePublicClient();
+    const { client, login, register, logout, loading: _loading } = usePublicClient();
+    const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
 
-    // Form States
     const [step, setStep] = useState<'phone' | 'register'>('phone');
     const [phone, setPhone] = useState('');
     const [name, setName] = useState('');
@@ -26,37 +30,36 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
 
-    // If client is already logged in, show welcome back screen
     if (client) {
         return (
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 mb-8">
+            <Card variant="outlined" className="mb-8">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-heading text-lg">Seus Dados</h3>
+                    <h3 className={`${colors.text} ${font.heading} text-lg`}>Seus Dados</h3>
                     <button
-                        onClick={logout}
-                        className="text-neutral-500 hover:text-red-400 text-xs flex items-center gap-1"
+                        onClick={() => logout(businessId)}
+                        className={`${colors.textMuted} hover:${status.danger} text-xs flex items-center gap-1`}
                     >
                         <LogOut className="w-3 h-3" /> Sair
                     </button>
                 </div>
 
-                <div className="flex items-center gap-4 bg-black/30 p-4 rounded-lg border border-neutral-800">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-${accentColor}/10 border border-${accentColor}/20`}>
-                        <User className={`w-6 h-6 text-${accentColor}`} />
+                <div className={`flex items-center gap-4 ${colors.surface} p-4 rounded-lg ${colors.border} border`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${accent.bgDim} ${accent.borderDim} border`}>
+                        <User className={`w-6 h-6 ${accent.text}`} />
                     </div>
                     <div>
-                        <p className="text-white font-bold">{client.name}</p>
-                        <p className="text-neutral-400 text-sm">{client.phone}</p>
+                        <p className={`${colors.text} font-bold`}>{client.name}</p>
+                        <p className={`${colors.textSecondary} text-sm`}>{client.phone}</p>
                     </div>
-                    <div className={`ml-auto w-8 h-8 rounded-full bg-${accentColor} flex items-center justify-center`}>
+                    <div className={`ml-auto w-8 h-8 rounded-full ${accent.bg} flex items-center justify-center`}>
                         <Check className="w-5 h-5 text-black" />
                     </div>
                 </div>
 
-                <p className="text-neutral-500 text-xs mt-3 text-center">
+                <p className={`${colors.textMuted} text-xs mt-3 text-center`}>
                     Você está logged in como {client.name}. O agendamento continuará com estes dados.
                 </p>
-            </div>
+            </Card>
         );
     }
 
@@ -79,10 +82,8 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
         try {
             const foundClient = await login(phone, businessId);
             if (foundClient) {
-                // Client found and set in context
                 onSuccess();
             } else {
-                // Not found, go to register
                 setStep('register');
             }
         } catch (err) {
@@ -106,8 +107,8 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
             const newClient = await register({
                 name,
                 email,
-                phone, // already set from previous step
-                photo_url: null, // placeholder for now
+                phone,
+                photo_url: null,
                 business_id: businessId
             });
 
@@ -124,19 +125,18 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
     };
 
     return (
-        <BrutalCard className="mb-8 overflow-hidden relative">
-            {/* Background Accent */}
-            <div className={`absolute top-0 left-0 w-full h-1 bg-${accentColor} opacity-50`}></div>
+        <Card variant="outlined" className="mb-8 overflow-hidden relative">
+            <div className={`absolute top-0 left-0 w-full h-1 ${accent.bg} opacity-50`}></div>
 
             <div className="p-2">
-                <h3 className="text-xl font-heading text-white uppercase mb-6 text-center">
+                <h3 className={`text-xl ${font.heading} ${colors.text} uppercase mb-6 text-center`}>
                     {step === 'phone' ? 'Identificação' : 'Criar Cadastro'}
                 </h3>
 
                 {step === 'phone' ? (
                     <form onSubmit={handleCheckPhone} className="space-y-4">
                         <div>
-                            <label className="text-neutral-400 text-sm font-mono block mb-2">Seu Telefone / WhatsApp</label>
+                            <label className={`${colors.textSecondary} text-sm ${font.mono} block mb-2`}>Seu Telefone / WhatsApp</label>
                             <PhoneInput
                                 value={phone}
                                 onChange={handlePhoneChange}
@@ -144,77 +144,80 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                             />
                         </div>
 
-                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                        {error && <p className={`${status.danger} text-sm text-center`}>{error}</p>}
 
-                        <BrutalButton
-                            className={`w-full bg-${accentColor} hover:bg-${accentColor}Hover text-black`}
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            fullWidth
                             disabled={isSubmitting || !phone || phone.replace(/\D/g, '').length < 10}
+                            loading={isSubmitting}
+                            iconRight={!isSubmitting ? <ArrowRight className="w-4 h-4" /> : undefined}
                         >
-                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (
-                                <span className="flex items-center justify-center gap-2">
-                                    Continuar <ArrowRight className="w-4 h-4" />
-                                </span>
-                            )}
-                        </BrutalButton>
+                            {isSubmitting ? '' : 'Continuar'}
+                        </Button>
 
-                        <p className="text-neutral-500 text-xs text-center mt-4">
+                        <p className={`${colors.textMuted} text-xs text-center mt-4`}>
                             Usamos seu telefone para identificar seus agendamentos anteriores.
                         </p>
                     </form>
                 ) : (
                     <form onSubmit={handleRegister} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="bg-black/30 p-3 rounded-lg border border-neutral-800 mb-4 flex items-center justify-between">
-                            <span className="text-white font-mono">{phone}</span>
+                        <div className={`${colors.surface} p-3 rounded-lg ${colors.border} border mb-4 flex items-center justify-between`}>
+                            <span className={`${colors.text} ${font.mono}`}>{phone}</span>
                             <button
                                 type="button"
                                 onClick={() => setStep('phone')}
-                                className="text-xs text-neutral-400 hover:text-white underline"
+                                className={`text-xs ${colors.textSecondary} hover:${colors.text} underline`}
                             >
                                 Alterar
                             </button>
                         </div>
 
                         <div>
-                            <label className="text-neutral-400 text-sm font-mono block mb-2">Seu Nome Completo</label>
+                            <label className={`${colors.textSecondary} text-sm ${font.mono} block mb-2`}>Seu Nome Completo</label>
                             <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+                                <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Ex: João Silva"
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-white transition-colors"
+                                    className={`w-full ${colors.inputBg} ${colors.inputBorder} border rounded-lg py-3 pl-10 pr-4 ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)] transition-colors`}
                                     required
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="text-neutral-400 text-sm font-mono block mb-2">Seu Email</label>
+                            <label className={`${colors.textSecondary} text-sm ${font.mono} block mb-2`}>Seu Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+                                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Ex: joao@email.com"
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-white transition-colors"
+                                    className={`w-full ${colors.inputBg} ${colors.inputBorder} border rounded-lg py-3 pl-10 pr-4 ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)] transition-colors`}
                                     required
                                 />
                             </div>
                         </div>
 
-                        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                        {error && <p className={`${status.danger} text-sm text-center`}>{error}</p>}
 
-                        <BrutalButton
-                            className={`w-full bg-${accentColor} hover:bg-${accentColor}Hover text-black`}
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            fullWidth
                             disabled={isSubmitting}
+                            loading={isSubmitting}
                         >
-                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Finalizar Cadastro'}
-                        </BrutalButton>
+                            {isSubmitting ? '' : 'Finalizar Cadastro'}
+                        </Button>
                     </form>
                 )}
             </div>
-        </BrutalCard>
+        </Card>
     );
 };

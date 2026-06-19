@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { BrutalButton } from './BrutalButton';
+import { Button } from './ui/Button';
+import { mapError, formatUserFacingError } from '../utils/mapError';
 import {
     X, ChevronLeft, Loader2, Plus, Check
 } from 'lucide-react';
@@ -21,6 +22,8 @@ import { logger } from '../utils/Logger';
 import { combineDateAndTime } from '../utils/date';
 import { useCreateAppointment } from '../hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '../types/scheduling';
+import { getFirstAvailableProfessional } from '../services/publicBooking';
+import { useToast } from '@/components/ui';
 
 
 export const AppointmentWizard: React.FC<WizardProps> = ({
@@ -37,6 +40,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const { setModalOpen } = useUI();
     const { isBeauty, accent } = useBrutalTheme();
     const createAppointment = useCreateAppointment();
+    const { showToast } = useToast();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
 
@@ -65,6 +69,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [notes, setNotes] = useState<string>('');
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState<string>('');
+    const [autoAssigningPro, setAutoAssigningPro] = useState(false);
 
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
@@ -106,6 +111,58 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         }
     }, [step, basePrice, customServicePrice, isCustomService]);
 
+    // Auto-select professional when entering schedule step (parity: 1 pro or RPC)
+    useEffect(() => {
+        if (step !== 3 || selectedProId) return;
+        if (teamMembers.length === 1) {
+            setSelectedProId(teamMembers[0].id);
+        }
+    }, [step, teamMembers, selectedProId]);
+
+    useEffect(() => {
+        if (step !== 3 || !selectedTime || selectedProId || teamMembers.length <= 1) return;
+        const businessId = companyId ?? user?.id;
+        if (!businessId) return;
+
+        let cancelled = false;
+        setAutoAssigningPro(true);
+
+        (async () => {
+            try {
+                const duration = services
+                    .filter(s => selectedServiceIds.includes(s.id))
+                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
+                const dateStr = selectedDate.toISOString().split('T')[0];
+                const offset = region === 'PT' ? '+00:00' : '-03:00';
+                const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
+                const proId = await getFirstAvailableProfessional(
+                    businessId,
+                    appointmentTimeISO,
+                    duration || 30
+                );
+                if (!cancelled && proId) setSelectedProId(proId);
+            } finally {
+                if (!cancelled) setAutoAssigningPro(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+            setAutoAssigningPro(false);
+        };
+    }, [
+        step,
+        selectedTime,
+        selectedProId,
+        teamMembers.length,
+        companyId,
+        user?.id,
+        selectedDate,
+        selectedServiceIds,
+        services,
+        region,
+    ]);
+
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
 
     const handleSubmit = async () => {
@@ -142,7 +199,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             }) as { success?: boolean; message?: string };
 
             if (!result.success) {
-                alert(result.message);
+                showToast(result.message || 'Horário indisponível', 'warning');
                 setLoading(false);
                 // In original, it called fetchSlots(). But here fetchSlots is in child component.
                 // We might need to trigger reload in child? Or just alert.
@@ -190,14 +247,21 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             onClose();
         } catch (error) {
             logger.error('Erro ao criar agendamento:', error);
-            alert('Erro ao criar agendamento');
+            const ui = mapError(error, 'Não foi possível criar o agendamento. Verifique sua conexão e tente de novo.');
+            showToast(formatUserFacingError(ui), {
+                type: 'error',
+                action: {
+                    label: 'Tentar novamente',
+                    onClick: () => { void handleSubmit(); },
+                },
+            });
         } finally {
             setLoading(false);
         }
     };
 
     return createPortal(
-        <div className={`fixed inset-0 z-[999] md:left-64 flex items-center justify-center p-0 md:p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} backdrop-blur-sm`}>
+        <div className={`fixed inset-0 md:left-64 flex items-center justify-center p-0 md:p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
             <div className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-promax-depth transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
 
                 {/* HEADER */}
@@ -383,27 +447,27 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
 
                     <div className="flex gap-2">
                         {step < 4 ? (
-                            <BrutalButton
+                            <Button
                                 variant="primary"
                                 onClick={() => setStep(prev => (prev + 1) as any)}
                                 disabled={
                                     (step === 1 && !selectedClientId) ||
                                     (step === 2 && selectedServiceIds.length === 0 && !(isCustomService && customServiceName.trim())) ||
-                                    (step === 3 && (!selectedProId || !selectedTime))
+                                    (step === 3 && (!selectedTime || (!selectedProId && autoAssigningPro) || (!selectedProId && teamMembers.length === 0)))
                                 }
                                 className="px-8"
                             >
                                 Continuar
-                            </BrutalButton>
+                            </Button>
                         ) : (
-                            <BrutalButton
+                            <Button
                                 variant="primary"
                                 onClick={handleSubmit}
                                 disabled={loading}
                                 className="px-8"
                             >
                                 {loading ? <Loader2 className="animate-spin" /> : 'Confirmar Atendimento'}
-                            </BrutalButton>
+                            </Button>
                         )}
                     </div>
                 </div>

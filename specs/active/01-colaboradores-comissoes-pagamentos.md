@@ -1,5 +1,5 @@
 # SPEC — Colaboradores, Comissões e Pagamentos
-**Agenx MVP | Origem: Áudio tio + respostas Rhian | 12/04/2026**
+**AgendiX MVP | Origem: Áudio tio + respostas Rhian | 12/04/2026**
 
 ---
 

@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { Modal } from '@/components/Modal';
-import { BrutalButton } from '@/components/BrutalButton';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Modal, Button, useToast } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBrutalTheme } from '@/hooks/useBrutalTheme';
 import { logger } from '@/utils/Logger';
-import { Banknote, CreditCard, Smartphone } from 'lucide-react';
+import { Banknote, CreditCard, Minus, Package, Plus, Smartphone } from 'lucide-react';
 import type { Appointment } from '@/types';
 import { calcCheckoutNetAmount, calcMachineFee, getMachineFeePercent } from '@/services/scheduling';
 import { useCheckout } from '@/hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
+import { useProducts, useSellProduct } from '@/hooks/useCatalog';
+import type { Product } from '@/types/catalog';
 
 interface TeamMember {
   id: string;
@@ -19,6 +21,11 @@ interface FinancialSettings {
   machine_fee_enabled: boolean;
   debit_fee_percent: number;
   credit_fee_percent: number;
+}
+
+interface CartLine {
+  productId: string;
+  quantity: number;
 }
 
 export interface CheckoutModalProps {
@@ -37,7 +44,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   onConfirm,
 }) => {
   const { companyId, region } = useAuth();
+  const { showToast } = useToast();
+  const { colors, accent, font, status } = useBrutalTheme();
   const checkout = useCheckout();
+  const sellProductMutation = useSellProduct();
   const { isPending, mutateAsync, reset } = checkout;
 
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
@@ -45,8 +55,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [machineFeePercent, setMachineFeePercent] = useState<string>('');
   const [finalPrice, setFinalPrice] = useState<number>(0);
   const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string }>({});
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState('');
 
-  void companyId;
+  const { data: products = [] } = useProducts({
+    companyId: companyId ?? '',
+    includeInactive: false,
+  });
+
+  const availableProducts = useMemo(
+    () => products.filter((p: Product) => p.is_active && p.stock_quantity > 0),
+    [products]
+  );
 
   useEffect(() => {
     if (appointment) {
@@ -55,6 +75,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setMachineFeePercent('');
       setFinalPrice(appointment.price ?? 0);
       setErrors({});
+      setCart([]);
+      setSelectedProductId('');
       reset();
     }
   }, [appointment?.id, reset]);
@@ -72,7 +94,56 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const feePercent = parseFloat(machineFeePercent) || 0;
   const feeAmount = paymentMethod ? calcMachineFee(finalPrice, paymentMethod, feePercent) : 0;
   const netAmount = calcCheckoutNetAmount(finalPrice, feeAmount);
-  const loading = isPending;
+  const loading = isPending || sellProductMutation.isPending;
+
+  const getProductById = (id: string) => availableProducts.find(p => p.id === id);
+
+  const addProductToCart = () => {
+    if (!selectedProductId) return;
+    const product = getProductById(selectedProductId);
+    if (!product) return;
+
+    setCart(prev => {
+      const existing = prev.find(line => line.productId === selectedProductId);
+      if (existing) {
+        const nextQty = existing.quantity + 1;
+        if (nextQty > product.stock_quantity) {
+          showToast(`Estoque insuficiente. Disponível: ${product.stock_quantity} un.`, 'warning');
+          return prev;
+        }
+        return prev.map(line =>
+          line.productId === selectedProductId ? { ...line, quantity: nextQty } : line
+        );
+      }
+      return [...prev, { productId: selectedProductId, quantity: 1 }];
+    });
+    setSelectedProductId('');
+  };
+
+  const updateCartQuantity = (productId: string, delta: number) => {
+    setCart(prev => {
+      const product = getProductById(productId);
+      if (!product) return prev;
+
+      return prev
+        .map(line => {
+          if (line.productId !== productId) return line;
+          const nextQty = line.quantity + delta;
+          if (nextQty <= 0) return null;
+          if (nextQty > product.stock_quantity) {
+            showToast(`Estoque insuficiente. Disponível: ${product.stock_quantity} un.`, 'warning');
+            return line;
+          }
+          return { ...line, quantity: nextQty };
+        })
+        .filter((line): line is CartLine => line !== null);
+    });
+  };
+
+  const productsTotal = cart.reduce((sum, line) => {
+    const product = getProductById(line.productId);
+    return sum + (product ? product.sale_price * line.quantity : 0);
+  }, 0);
 
   const handleConfirm = async () => {
     const newErrors: { paymentMethod?: string; receivedBy?: string } = {};
@@ -96,6 +167,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setErrors({});
 
     try {
+      for (const line of cart) {
+        await sellProductMutation.mutateAsync({
+          productId: line.productId,
+          quantity: line.quantity,
+          appointmentId: appointment.id,
+        });
+      }
+
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
 
       await mutateAsync({
@@ -112,7 +191,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       logger.error('Erro ao concluir atendimento via checkout', { error: errorMessage });
-      alert('Erro ao concluir atendimento. Tente novamente.');
+      if (errorMessage.includes('insufficient_stock')) {
+        showToast('Estoque insuficiente para um dos produtos.', 'error');
+      } else {
+        showToast('Erro ao concluir atendimento. Tente novamente.', 'error');
+      }
     }
   };
 
@@ -136,33 +219,100 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         { value: 'credit', label: 'Crédito' },
       ];
 
+  const currencyLabel = region === 'PT' ? '€' : 'R$';
+
   return (
     <Modal
-      isOpen={!!appointment}
+      open={!!appointment}
       onClose={onClose}
       title="Concluir Atendimento"
-      size="md"
+      size="lg"
       preventClose={loading}
       footer={
         <div className="flex items-center justify-between w-full">
-          <BrutalButton variant="ghost" onClick={onClose} disabled={loading}>
+          <Button variant="ghost" onClick={onClose} disabled={loading}>
             Cancelar
-          </BrutalButton>
-          <BrutalButton variant="primary" onClick={handleConfirm} loading={loading}>
+          </Button>
+          <Button variant="primary" onClick={handleConfirm} loading={loading}>
             Confirmar Pagamento
-          </BrutalButton>
+          </Button>
         </div>
       }
     >
       <div className="space-y-5">
-        <div className="bg-white/[0.03] rounded-xl p-4 space-y-1 border border-white/[0.08] backdrop-blur-md">
-          <p className="text-xs font-mono uppercase text-neutral-400">Serviço</p>
-          <p className="text-white font-medium">{appointment?.service}</p>
+        <div className={`${colors.surface} rounded-xl p-4 space-y-1 ${colors.border} border backdrop-blur-md`}>
+          <p className={`text-xs ${font.mono} uppercase ${colors.textSecondary}`}>Serviço</p>
+          <p className={`${colors.text} font-medium`}>{appointment?.service}</p>
         </div>
 
+        {availableProducts.length > 0 && (
+          <div className="space-y-3">
+            <p className={`text-xs ${font.mono} uppercase ${colors.textSecondary} flex items-center gap-2`}>
+              <Package size={14} /> Produtos (opcional)
+            </p>
+            <div className="flex gap-2">
+              <select
+                aria-label="Adicionar produto"
+                value={selectedProductId}
+                onChange={(e) => setSelectedProductId(e.target.value)}
+                className={`flex-1 ${colors.inputBg} ${colors.inputBorder} border rounded-xl px-3 py-2.5 ${colors.text} text-sm focus:outline-none focus:border-[var(--color-input-focus)]`}
+              >
+                <option value="">Selecionar produto...</option>
+                {availableProducts.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} — {currencyLabel} {product.sale_price.toFixed(2)} ({product.stock_quantity} un.)
+                  </option>
+                ))}
+              </select>
+              <Button variant="secondary" onClick={addProductToCart} disabled={!selectedProductId}>
+                Adicionar
+              </Button>
+            </div>
+            {cart.length > 0 && (
+              <ul className={`space-y-2 rounded-xl ${colors.border} border p-3 ${colors.surface}`}>
+                {cart.map(line => {
+                  const product = getProductById(line.productId);
+                  if (!product) return null;
+                  return (
+                    <li key={line.productId} className="flex items-center justify-between gap-2 text-sm">
+                      <span className={`${colors.text} truncate`}>{product.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          aria-label="Diminuir quantidade"
+                          onClick={() => updateCartQuantity(line.productId, -1)}
+                          className={`p-1 rounded-lg hover:${colors.surfaceHover} ${colors.textSecondary}`}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className={`${font.mono} ${colors.text} w-6 text-center`}>{line.quantity}</span>
+                        <button
+                          type="button"
+                          aria-label="Aumentar quantidade"
+                          onClick={() => updateCartQuantity(line.productId, 1)}
+                          className={`p-1 rounded-lg hover:${colors.surfaceHover} ${colors.textSecondary}`}
+                        >
+                          <Plus size={14} />
+                        </button>
+                        <span className={`${font.mono} ${accent.text} w-16 text-right`}>
+                          {currencyLabel} {(product.sale_price * line.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+                <li className={`flex justify-between pt-2 border-t ${colors.divider} text-xs ${font.mono} uppercase ${colors.textSecondary}`}>
+                  <span>Total produtos</span>
+                  <span className={colors.text}>{currencyLabel} {productsTotal.toFixed(2)}</span>
+                </li>
+              </ul>
+            )}
+          </div>
+        )}
+
         <div>
-          <label htmlFor="checkout-price" className="block text-xs font-mono uppercase text-neutral-400 mb-1">
-            Valor Final (R$)
+          <label htmlFor="checkout-price" className={`block text-xs ${font.mono} uppercase ${colors.textSecondary} mb-1`}>
+            Valor Final ({currencyLabel})
           </label>
           <input
             id="checkout-price"
@@ -171,13 +321,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             min="0"
             value={finalPrice}
             onChange={(event) => setFinalPrice(parseFloat(event.target.value) || 0)}
-            className="w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold"
+            className={`w-full ${colors.inputBg} ${colors.inputBorder} border rounded-xl px-3 py-2.5 ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)]`}
           />
         </div>
 
         <div>
-          <p className={`block text-xs font-mono uppercase mb-2 ${errors.paymentMethod ? 'text-red-400' : 'text-neutral-400'}`}>
-            Forma de Pagamento <span className="text-red-500">*</span>
+          <p className={`block text-xs ${font.mono} uppercase mb-2 ${errors.paymentMethod ? status.danger : colors.textSecondary}`}>
+            Forma de Pagamento <span className={status.danger}>*</span>
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {paymentMethods.map(({ value, label }) => (
@@ -185,10 +335,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 key={value}
                 className={`flex items-center gap-2 cursor-pointer rounded-xl px-3 py-2.5 border transition-all duration-200 ${
                   paymentMethod === value
-                    ? 'border-accent-gold bg-accent-gold/10 text-accent-gold shadow-[0_0_12px_rgba(194,155,64,0.15)]'
+                    ? `${accent.border} ${accent.bgDim} ${accent.text} ${accent.shadow}`
                     : errors.paymentMethod
-                    ? 'border-red-500/50 text-neutral-300 hover:border-red-400'
-                    : 'border-white/10 bg-white/[0.02] text-neutral-300 hover:border-white/20 hover:bg-white/[0.03]'
+                    ? `${status.dangerBorder} ${colors.textSecondary} hover:${status.dangerBorder}`
+                    : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:${colors.border} hover:${colors.surfaceHover}`
                 }`}
               >
                 <input
@@ -209,14 +359,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             ))}
           </div>
           {errors.paymentMethod && (
-            <p className="text-red-500 text-xs mt-1">{errors.paymentMethod}</p>
+            <p className={`${status.danger} text-xs mt-1`}>{errors.paymentMethod}</p>
           )}
         </div>
 
         {showMachineFee && (
           <div className="space-y-2">
             <div>
-              <label htmlFor="checkout-fee" className="block text-xs font-mono uppercase text-neutral-400 mb-1">
+              <label htmlFor="checkout-fee" className={`block text-xs ${font.mono} uppercase ${colors.textSecondary} mb-1`}>
                 Taxa de Maquininha (%)
               </label>
               <input
@@ -229,13 +379,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 placeholder="Ex: 2.5"
                 value={machineFeePercent}
                 onChange={(event) => setMachineFeePercent(event.target.value)}
-                className="w-full bg-white/[0.04] border border-white/[0.10] rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold"
+                className={`w-full ${colors.inputBg} ${colors.inputBorder} border rounded-xl px-3 py-2.5 ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)]`}
               />
             </div>
-            <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex justify-between items-center">
-              <span className="text-xs text-neutral-400 font-mono uppercase">Valor que você recebe</span>
-              <span className="text-emerald-400 font-mono font-bold">
-                R$ {netAmount.toFixed(2).replace('.', ',')}
+            <div className={`p-3 rounded-xl ${status.successBg} ${status.successBorder} border flex justify-between items-center`}>
+              <span className={`text-xs ${colors.textSecondary} ${font.mono} uppercase`}>Valor que você recebe</span>
+              <span className={`${status.success} ${font.mono} font-bold`}>
+                {currencyLabel} {netAmount.toFixed(2).replace('.', ',')}
               </span>
             </div>
           </div>
@@ -244,9 +394,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         <div>
           <label
             htmlFor="checkout-received-by"
-            className={`block text-xs font-mono uppercase mb-1 ${errors.receivedBy ? 'text-red-400' : 'text-neutral-400'}`}
+            className={`block text-xs ${font.mono} uppercase mb-1 ${errors.receivedBy ? status.danger : colors.textSecondary}`}
           >
-            Recebido Por <span className="text-red-500">*</span>
+            Recebido Por <span className={status.danger}>*</span>
           </label>
           <select
             id="checkout-received-by"
@@ -256,8 +406,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               setReceivedBy(event.target.value);
               setErrors((prev) => ({ ...prev, receivedBy: undefined }));
             }}
-            className={`w-full bg-white/[0.04] border rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-accent-gold ${
-              errors.receivedBy ? 'border-red-500' : 'border-white/[0.10]'
+            className={`w-full ${colors.inputBg} border rounded-xl px-3 py-2.5 ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)] ${
+              errors.receivedBy ? status.dangerBorder : colors.inputBorder
             }`}
           >
             <option value="">Selecionar...</option>
@@ -269,7 +419,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             ))}
           </select>
           {errors.receivedBy && (
-            <p className="text-red-500 text-xs mt-1">{errors.receivedBy}</p>
+            <p className={`${status.danger} text-xs mt-1`}>{errors.receivedBy}</p>
           )}
         </div>
       </div>

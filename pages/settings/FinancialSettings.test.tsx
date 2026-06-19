@@ -33,14 +33,10 @@ vi.mock('../../components/SettingsLayout', () => ({
   SettingsLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
-vi.mock('../../components/BrutalCard', () => ({
-  BrutalCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
-}));
-
-vi.mock('../../components/BrutalButton', () => ({
-  BrutalButton: ({ children, onClick, loading }: { children: React.ReactNode; onClick?: () => void; loading?: boolean }) => (
-    <button onClick={onClick} disabled={loading}>{children}</button>
-  )
+vi.mock('../../components/SettingsSection', () => ({
+  SettingsSection: ({ children, title }: { children: React.ReactNode; title?: React.ReactNode }) => (
+    <section><h2>{title}</h2>{children}</section>
+  ),
 }));
 
 vi.mock('../../components/SettingsSwitch', () => ({
@@ -53,8 +49,11 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
     isBeauty: false,
     accent: { text: 'text-amber-400', bgDim: 'bg-amber-400/10', borderDim: 'border-amber-400/30' },
-    colors: { text: 'text-white', textMuted: 'text-neutral-400', inputBg: 'bg-neutral-900', border: 'border-neutral-700' },
+    colors: { text: 'text-white', textSecondary: 'text-neutral-400', textMuted: 'text-neutral-400', inputBg: 'bg-neutral-900', border: 'border-neutral-700', divider: 'border-neutral-800' },
     classes: { label: 'text-sm font-bold', input: 'w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl' },
+    radius: { card: 'rounded-xl', button: 'rounded-xl', input: 'rounded-xl', badge: 'rounded-md', avatar: 'rounded-xl', modal: 'rounded-xl' },
+    density: { cardPadding: 'p-4' },
+    shadow: { card: 'shadow-sm' },
   })
 }));
 

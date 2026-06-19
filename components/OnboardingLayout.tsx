@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { AgenXLogo } from './AgenXLogo';
+import { AgendiXLogo } from './AgendiXLogo';
 
 interface OnboardingLayoutProps {
     children: React.ReactNode;
@@ -43,7 +43,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             {/* Header */}
             <header className="border-b border-white/5 bg-black/30 backdrop-blur-sm z-50 flex-shrink-0">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <AgenXLogo size={28} isBeauty={isBeauty} showText={true} />
+                    <AgendiXLogo size={28} isBeauty={isBeauty} showText={true} />
                     <div className="text-xs text-neutral-500 font-mono tracking-widest uppercase">
                         {currentStep < totalSteps ? `${currentStep} de ${progressSteps}` : 'Concluído'}
                     </div>

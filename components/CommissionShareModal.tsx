@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { X, MessageCircle, Download, Loader2, Copy, Check as CheckIcon } from 'lucide-react';
-import { BrutalButton } from './BrutalButton';
+import { MessageCircle, Download, Loader2, Copy, Check as CheckIcon } from 'lucide-react';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface CommissionShareModalProps {
     professionalName: string;
@@ -19,11 +21,11 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     netAmount,
     currencySymbol,
     onClose,
-    reportRef
 }) => {
     const [downloading, setDownloading] = useState(false);
     const [copied, setCopied] = useState(false);
     const summaryRef = useRef<HTMLDivElement>(null);
+    const { colors, accent, font } = useBrutalTheme();
 
     const fmtAmount = netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
@@ -36,7 +38,7 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
         ``,
         `*Valor a receber: ${currencySymbol} ${fmtAmount}*`,
         ``,
-        `_Gerado pelo AGENX_`
+        `_Gerado pelo AgendiX_`
     ].filter(Boolean).join('\n');
 
     const handleWhatsApp = () => {
@@ -45,7 +47,6 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     };
 
     const handleCopyText = async () => {
-        // Se for mobile e suportar share, tenta share primeiro
         if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 await navigator.share({
@@ -67,7 +68,6 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
                 throw new Error('Clipboard API unavailable');
             }
         } catch {
-            // Fallback para ambientes sem clipboard API
             try {
                 const el = document.createElement('textarea');
                 el.value = whatsappText;
@@ -112,63 +112,61 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[120] p-4 backdrop-blur-md">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-sm shadow-2xl">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800">
-                    <h3 className="text-white font-heading text-base uppercase tracking-tight">Compartilhar Resumo</h3>
-                    <button onClick={onClose} className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg transition-all">
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
-
-                {/* Summary card (used for PDF capture) */}
-                <div ref={summaryRef} className="p-5 bg-neutral-900">
-                    <div className="bg-neutral-800/60 rounded-xl p-4 space-y-3 border border-neutral-700">
-                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-widest">Resumo de Comissões</p>
+        <Modal
+            open
+            onClose={onClose}
+            title="Compartilhar Resumo"
+            size="sm"
+        >
+            <div className="space-y-4">
+                <div ref={summaryRef} className={`${colors.card} p-4`}>
+                    <div className={`${colors.surface} rounded-xl p-4 space-y-3 ${colors.border} border`}>
+                        <p className={`${colors.textMuted} text-[10px] ${font.mono} uppercase tracking-widest`}>Resumo de Comissões</p>
                         <div className="space-y-1">
-                            <p className="text-white font-bold text-lg leading-tight">{professionalName}</p>
-                            {cpf && <p className="text-neutral-400 text-xs font-mono">CPF: {cpf}</p>}
+                            <p className={`${colors.text} font-bold text-lg leading-tight`}>{professionalName}</p>
+                            {cpf && <p className={`${colors.textSecondary} text-xs ${font.mono}`}>CPF: {cpf}</p>}
                         </div>
-                        <div className="border-t border-neutral-700 pt-3">
-                            <p className="text-neutral-500 text-[10px] font-mono">Período</p>
-                            <p className="text-white text-sm font-mono">{periodLabel}</p>
+                        <div className={`border-t ${colors.divider} pt-3`}>
+                            <p className={`${colors.textMuted} text-[10px] ${font.mono}`}>Período</p>
+                            <p className={`${colors.text} text-sm ${font.mono}`}>{periodLabel}</p>
                         </div>
-                        <div className="border-t border-neutral-700 pt-3">
-                            <p className="text-neutral-500 text-[10px] font-mono uppercase">Valor a receber</p>
-                            <p className="text-2xl font-mono font-bold text-accent-gold">{currencySymbol} {fmtAmount}</p>
+                        <div className={`border-t ${colors.divider} pt-3`}>
+                            <p className={`${colors.textMuted} text-[10px] ${font.mono} uppercase`}>Valor a receber</p>
+                            <p className={`text-2xl ${font.mono} font-bold ${accent.text}`}>{currencySymbol} {fmtAmount}</p>
                         </div>
-                        <p className="text-neutral-600 text-[9px] font-mono">Gerado pelo AGENX</p>
+                        <p className={`${colors.textMuted} opacity-60 text-[9px] ${font.mono}`}>Gerado pelo AgendiX</p>
                     </div>
                 </div>
 
-                <div className="px-5 pb-5 flex flex-col gap-3">
-                    <BrutalButton
+                <div className="flex flex-col gap-3">
+                    <Button
                         variant="primary"
-                        className="w-full h-11"
+                        fullWidth
                         icon={<MessageCircle className="w-4 h-4" />}
                         onClick={handleWhatsApp}
                     >
                         Compartilhar via WhatsApp
-                    </BrutalButton>
-                    <BrutalButton
+                    </Button>
+                    <Button
                         variant="secondary"
-                        className="w-full h-11"
+                        fullWidth
                         icon={copied ? <CheckIcon className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         onClick={handleCopyText}
                     >
                         {copied ? 'Copiado!' : 'Copiar texto'}
-                    </BrutalButton>
-                    <BrutalButton
+                    </Button>
+                    <Button
                         variant="secondary"
-                        className="w-full h-11"
-                        icon={downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        fullWidth
+                        loading={downloading}
+                        icon={!downloading ? <Download className="w-4 h-4" /> : undefined}
                         onClick={handlePDF}
                         disabled={downloading}
                     >
                         {downloading ? 'Gerando...' : 'Baixar Imagem'}
-                    </BrutalButton>
+                    </Button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 };

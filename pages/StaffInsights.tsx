@@ -1,9 +1,10 @@
+import { Card } from '../components/ui';
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { TrendingUp, Calendar, Users, DollarSign, Clock, Scissors } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { BrutalCard } from '../components/BrutalCard';
+
 import { formatCurrency } from '../utils/formatters';
 
 type Period = 'day' | 'week' | 'month';
@@ -72,7 +73,8 @@ export const StaffInsights: React.FC = () => {
                     .order('appointment_time', { ascending: true }),
                 supabase
                     .from('finance_records')
-                    .select('amount')
+                    .select('commission_value')
+                    .eq('professional_id', teamMemberId)
                     .gte('created_at', start)
                     .lte('created_at', end)
             ]);
@@ -80,7 +82,7 @@ export const StaffInsights: React.FC = () => {
             if (aptRes.data) setAppointments(aptRes.data);
             if (todayRes.data) setTodayAppointments(todayRes.data);
             if (commRes.data) {
-                const total = commRes.data.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+                const total = commRes.data.reduce((sum: number, r: any) => sum + (Number(r.commission_value) || 0), 0);
                 setCommissions(total);
             }
             setLoading(false);
@@ -107,7 +109,7 @@ export const StaffInsights: React.FC = () => {
                 <h1 className="font-heading text-2xl uppercase text-white tracking-tight mb-6">
                     Meus Resultados
                 </h1>
-                <BrutalCard>
+                <Card>
                     <div className="text-center py-10">
                         <TrendingUp className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
                         <p className="text-white font-heading uppercase text-lg mb-2">Vinculação pendente</p>
@@ -116,7 +118,7 @@ export const StaffInsights: React.FC = () => {
                             Aguarde o owner vincular seu perfil à equipe.
                         </p>
                     </div>
-                </BrutalCard>
+                </Card>
             </div>
         );
     }
@@ -150,7 +152,7 @@ export const StaffInsights: React.FC = () => {
 
             {/* Hero Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <BrutalCard accent>
+                <Card variant="elevated">
                     <div className="flex items-start gap-4">
                         <div className="p-2.5 bg-accent-gold/10 rounded-xl">
                             <Calendar className="w-5 h-5 text-accent-gold" />
@@ -163,9 +165,9 @@ export const StaffInsights: React.FC = () => {
                             <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                <BrutalCard>
+                <Card>
                     <div className="flex items-start gap-4">
                         <div className="p-2.5 bg-white/5 rounded-xl">
                             <Users className="w-5 h-5 text-neutral-400" />
@@ -178,9 +180,9 @@ export const StaffInsights: React.FC = () => {
                             <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                <BrutalCard accent>
+                <Card variant="elevated">
                     <div className="flex items-start gap-4">
                         <div className="p-2.5 bg-accent-gold/10 rounded-xl">
                             <DollarSign className="w-5 h-5 text-accent-gold" />
@@ -193,12 +195,12 @@ export const StaffInsights: React.FC = () => {
                             <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Próximos agendamentos do dia */}
-                <BrutalCard title="Próximos Hoje">
+                <Card title="Próximos Hoje">
                     {loading ? (
                         <p className="text-neutral-600 font-mono text-sm">Carregando...</p>
                     ) : todayAppointments.length === 0 ? (
@@ -223,10 +225,10 @@ export const StaffInsights: React.FC = () => {
                             ))}
                         </ul>
                     )}
-                </BrutalCard>
+                </Card>
 
                 {/* Top serviços do mês */}
-                <BrutalCard title="Top Serviços do Mês">
+                <Card title="Top Serviços do Mês">
                     {loading ? (
                         <p className="text-neutral-600 font-mono text-sm">Carregando...</p>
                     ) : topServices.length === 0 ? (
@@ -249,7 +251,7 @@ export const StaffInsights: React.FC = () => {
                             ))}
                         </ol>
                     )}
-                </BrutalCard>
+                </Card>
             </div>
         </div>
     );

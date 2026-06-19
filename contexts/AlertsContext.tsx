@@ -19,12 +19,13 @@ interface AlertsContextType {
 const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, role } = useAuth();
+    const { user, role, companyId } = useAuth();
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
 
     const generateSmartAlerts = async (createdAt: Date | null) => {
         if (!user) return [];
+        const tenantId = companyId || user.id;
         const generatedAlerts: Alert[] = [];
 
         try {
@@ -63,13 +64,20 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             // --- ALERTA: Acerto de Comissões ---
-            const { data: settings } = await supabase
-                .from('business_settings')
-                .select('commission_settlement_day_of_month, onboarding_completed')
-                .eq('user_id', user.id)
-                .single();
+            const [{ data: settings }, { data: onboardingProgress }] = await Promise.all([
+                supabase
+                    .from('business_settings')
+                    .select('commission_settlement_day_of_month')
+                    .eq('user_id', tenantId)
+                    .single(),
+                supabase
+                    .from('onboarding_progress')
+                    .select('is_completed')
+                    .eq('company_id', tenantId)
+                    .maybeSingle()
+            ]);
 
-            const onboardingCompleted = settings?.onboarding_completed ?? false;
+            const onboardingCompleted = onboardingProgress?.is_completed ?? false;
 
             if (settings?.commission_settlement_day_of_month) {
                 const settlementDay = settings.commission_settlement_day_of_month;
@@ -86,7 +94,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
 
                 // Check if there are commissions due
-                const { data: commissionsDue } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
+                const { data: commissionsDue } = await supabase.rpc('get_commissions_due', { p_user_id: tenantId });
                 const totalDue = (commissionsDue || []).reduce((sum: number, r: any) => sum + (r.total_due || 0), 0);
 
                 if (totalDue > 0) {
@@ -119,9 +127,9 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     { count: teamCount, error: teamError },
                     { data: profile, error: profileError }
                 ] = await Promise.all([
-                    supabase.from('services').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-                    supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-                    supabase.from('profiles').select('business_name, logo_url').eq('id', user.id).maybeSingle()
+                    supabase.from('services').select('id', { count: 'exact', head: true }).eq('user_id', tenantId),
+                    supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('user_id', tenantId),
+                    supabase.from('profiles').select('business_name, logo_url').eq('id', tenantId).maybeSingle()
                 ]);
 
                 // 1. Services Check
@@ -240,7 +248,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             supabase.removeChannel(subscription);
             supabase.removeChannel(updateSubscription);
         };
-    }, [user, role]);
+    }, [user, role, companyId]);
 
     return (
         <AlertsContext.Provider value={{ alerts, loading, refreshAlerts }}>

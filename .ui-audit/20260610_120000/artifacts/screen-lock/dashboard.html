@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendiX — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;background:#131316}
+
+:root{
+  --font-display:'Chivo',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --sidebar-w:56px;
+  --bottom-nav-h:44px;
+}
+
+[data-theme="barber-dark"]{
+  --bg:#121212;--card:#1E1E1E;--card-alt:#252520;--text-primary:#EAEAEA;--text-secondary:#A8A8A0;
+  --accent:#C29B40;--accent-hover:#D4AE52;--accent-foreground:#121212;--accent-subtle:rgba(194,155,64,0.10);
+  --input-bg:#2A2A2A;--input-border:#404040;--input-focus:rgba(194,155,64,0.45);
+  --border:#333;--hover-overlay:rgba(255,255,255,0.04);
+  --shadow:0 1px 3px rgba(0,0,0,0.4);
+  --success:#4ADE80;--danger:#F87171;
+  --radius-card:8px;--radius-button:8px;--radius-input:6px;--radius-segment:8px;
+  --py:20px;--px:16px;--card-py:20px;--card-px:16px;--gap:12px;--field-gap:8px;
+  --sidebar-bg:#0E0E0E;--sidebar-active:rgba(194,155,64,0.12);
+  --bottom-nav-bg:#0E0E0E;--kpi-bg:#252520;
+}
+[data-theme="barber-light"]{
+  --bg:#F5F1E8;--card:#FFFFFF;--card-alt:#F0EDE4;--text-primary:#1A1A1A;--text-secondary:#6B6B5E;
+  --accent:#A07A2A;--accent-hover:#B8902E;--accent-foreground:#000000;--accent-subtle:rgba(160,122,42,0.08);
+  --input-bg:#FFFFFF;--input-border:#D4D0C6;--input-focus:rgba(160,122,42,0.40);
+  --border:#E5E1D6;--hover-overlay:rgba(0,0,0,0.03);
+  --shadow:0 1px 3px rgba(0,0,0,0.07);
+  --success:#16A34A;--danger:#DC2626;
+  --radius-card:8px;--radius-button:8px;--radius-input:6px;--radius-segment:8px;
+  --py:20px;--px:16px;--card-py:20px;--card-px:16px;--gap:12px;--field-gap:8px;
+  --sidebar-bg:#EDE9E0;--sidebar-active:rgba(160,122,42,0.10);
+  --bottom-nav-bg:#EDE9E0;--kpi-bg:#F0EDE4;
+}
+[data-theme="beauty-dark"]{
+  --bg:#1F1B2E;--card:#2E2B3B;--card-alt:#363246;--text-primary:#EAEAEA;--text-secondary:#B0AAC0;
+  --accent:#A78BFA;--accent-hover:#B9A0FB;--accent-foreground:#1F1B2E;--accent-subtle:rgba(167,139,250,0.10);
+  --input-bg:#3A3650;--input-border:#4E4A64;--input-focus:rgba(167,139,250,0.40);
+  --border:#443F5A;--hover-overlay:rgba(255,255,255,0.04);
+  --shadow:0 2px 8px rgba(0,0,0,0.3);
+  --success:#4ADE80;--danger:#F87171;
+  --radius-card:16px;--radius-button:12px;--radius-input:8px;--radius-segment:16px;
+  --py:24px;--px:20px;--card-py:24px;--card-px:20px;--gap:16px;--field-gap:12px;
+  --sidebar-bg:#16132A;--sidebar-active:rgba(167,139,250,0.10);
+  --bottom-nav-bg:#16132A;--kpi-bg:#363246;
+}
+[data-theme="beauty-light"]{
+  --bg:#F7F5FF;--card:#FFFFFF;--card-alt:#F0EDFC;--text-primary:#1A1A1A;--text-secondary:#6B6580;
+  --accent:#7C3AED;--accent-hover:#8B49F0;--accent-foreground:#FFFFFF;--accent-subtle:rgba(124,58,237,0.08);
+  --input-bg:#FFFFFF;--input-border:#DDD8F0;--input-focus:rgba(124,58,237,0.40);
+  --border:#E5E0F5;--hover-overlay:rgba(0,0,0,0.03);
+  --shadow:0 2px 8px rgba(0,0,0,0.06);
+  --success:#16A34A;--danger:#DC2626;
+  --radius-card:16px;--radius-button:12px;--radius-input:8px;--radius-segment:16px;
+  --py:24px;--px:20px;--card-py:24px;--card-px:20px;--gap:16px;--field-gap:12px;
+  --sidebar-bg:#EDE9FC;--sidebar-active:rgba(124,58,237,0.08);
+  --bottom-nav-bg:#EDE9FC;--kpi-bg:#F0EDFC;
+}
+
+.theme-nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;gap:4px;padding:12px 16px;
+  background:var(--nav-bg,#111);border-bottom:1px solid rgba(255,255,255,0.08);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.theme-nav::-webkit-scrollbar{display:none}
+.theme-nav-btn{
+  font-family:var(--font-mono);font-size:12px;font-weight:500;
+  letter-spacing:0.02em;
+  padding:8px 14px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+  background:transparent;color:rgba(255,255,255,0.55);cursor:pointer;
+  white-space:nowrap;
+  transition:all 180ms ease-out;
+}
+.theme-nav-btn:hover{color:rgba(255,255,255,0.85);border-color:rgba(255,255,255,0.25)}
+.theme-nav-btn:focus-visible{outline:2px solid #e0e0e0;outline-offset:2px}
+.theme-nav-btn.active{color:#fff;border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.08)}
+.theme-nav-btn[data-theme="barber-dark"].active{border-color:#C29B40;color:#C29B40}
+.theme-nav-btn[data-theme="barber-light"].active{border-color:#A07A2A;color:#A07A2A;background:rgba(160,122,42,0.12)}
+.theme-nav-btn[data-theme="beauty-dark"].active{border-color:#A78BFA;color:#A78BFA}
+.theme-nav-btn[data-theme="beauty-light"].active{border-color:#7C3AED;color:#7C3AED;background:rgba(124,58,237,0.12)}
+
+.matrix-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  min-height:calc(100dvh - 49px);
+}
+.panel{
+  display:none;
+  background:var(--bg);
+  min-height:100dvh;
+  position:relative;
+}
+.panel.active{
+  display:flex;flex-direction:column;
+  min-height:100dvh;height:100dvh;overflow:hidden;
+}
+
+.panel-label{
+  font-family:var(--font-mono);font-size:10px;font-weight:500;
+  letter-spacing:0.04em;
+  color:var(--text-secondary);opacity:0.45;
+  padding:var(--py) var(--px) 0;
+  text-transform:none;
+}
+
+.dashboard-shell{
+  display:flex;flex-direction:column;
+  flex:1;
+  min-height:0;
+}
+
+.sidebar{
+  display:none;
+  flex-direction:column;
+  width:var(--sidebar-w);
+  background:var(--sidebar-bg);
+  border-right:1px solid var(--border);
+  padding:12px 0;
+  align-items:center;
+  gap:4px;
+  flex-shrink:0;
+}
+.sidebar-logo{
+  width:32px;height:32px;border-radius:var(--radius-input);
+  background:var(--card-alt);color:var(--text-primary);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  line-height:1;margin-bottom:12px;
+}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;width:100%;align-items:center;flex:1}
+.sidebar-link{
+  width:36px;height:36px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-secondary);background:transparent;
+  border:none;cursor:pointer;
+  transition:all 150ms ease-out;
+}
+.sidebar-link:hover{background:var(--hover-overlay);color:var(--text-primary)}
+.sidebar-link.active{background:var(--sidebar-active);color:var(--accent)}
+[data-theme^="barber"] .sidebar-logo{
+  background:var(--accent);color:var(--accent-foreground);border-color:transparent;
+}
+.sidebar-link svg{width:20px;height:20px}
+.sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:4px;align-items:center;padding-top:8px}
+.sidebar-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--card-alt);color:var(--text-secondary);
+  border:1px solid var(--border);
+  font-family:var(--font-body);font-size:11px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.main-area{
+  display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;
+  overflow:hidden;
+}
+
+.top-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px var(--px);
+  gap:8px;
+  flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:5;
+  background:var(--bg);
+}
+.top-bar-left{display:flex;flex-direction:column;gap:2px;min-width:0}
+.top-bar-greeting{
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  color:var(--text-primary);letter-spacing:-0.01em;
+  text-transform:none;
+}
+.top-bar-date{
+  font-family:var(--font-mono);font-size:11px;font-weight:400;
+  color:var(--text-secondary);letter-spacing:0.01em;
+  text-transform:none;
+}
+.top-bar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.top-bar-cta{
+  font-family:var(--font-body);font-size:13px;font-weight:600;
+  padding:8px 14px;border-radius:var(--radius-button);
+  background:var(--accent);color:var(--accent-foreground);
+  border:none;cursor:pointer;white-space:nowrap;
+  min-height:36px;
+  transition:background 150ms ease-out;
+  text-transform:none;
+}
+.top-bar-cta:hover{background:var(--accent-hover)}
+.top-bar-cta:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top-bar-search{
+  width:32px;height:32px;border-radius:var(--radius-input);
+  background:transparent;border:none;
+  color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:color 150ms ease-out;
+}
+.top-bar-search:hover{color:var(--text-primary)}
+.top-bar-search svg{width:18px;height:18px}
+.top-bar-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--card-alt);color:var(--text-secondary);
+  border:1px solid var(--border);
+  font-family:var(--font-body);font-size:11px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.content-scroll{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:var(--py) var(--px);
+  display:flex;flex-direction:column;gap:var(--gap);
+  padding-bottom:calc(var(--bottom-nav-h) + 16px);
+}
+
+.hero-kpi{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);
+  padding:var(--card-py) var(--card-px);box-shadow:var(--shadow);
+}
+.hero-kpi-label{
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  color:var(--text-secondary);letter-spacing:0;text-transform:none;
+  margin-bottom:4px;
+}
+.hero-kpi-value{
+  font-family:var(--font-mono);font-size:28px;font-weight:700;
+  color:var(--text-primary);letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.hero-kpi-delta{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--font-mono);font-size:12px;font-weight:500;
+  color:var(--success);margin-top:8px;
+  text-transform:none;
+}
+.hero-kpi-delta svg{width:14px;height:14px;flex-shrink:0}
+
+.kpi-row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:var(--gap);
+}
+
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);
+  padding:var(--card-py) var(--card-px);box-shadow:var(--shadow);
+}
+.kpi-card-label{
+  font-family:var(--font-body);font-size:12px;font-weight:500;
+  color:var(--text-secondary);letter-spacing:0;text-transform:none;
+  margin-bottom:6px;
+}
+.kpi-card-value{
+  font-family:var(--font-mono);font-size:22px;font-weight:700;
+  color:var(--text-primary);letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.kpi-card-delta{
+  font-family:var(--font-mono);font-size:11px;font-weight:500;
+  margin-top:4px;
+  text-transform:none;
+}
+.kpi-card-delta.up{color:var(--success)}
+.kpi-card-delta.down{color:var(--danger)}
+
+.day-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);
+  padding:var(--card-py) var(--card-px);box-shadow:var(--shadow);
+}
+.day-card-title{
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  color:var(--text-primary);letter-spacing:-0.01em;
+  margin-bottom:12px;
+  text-transform:none;
+}
+.day-card-list{display:flex;flex-direction:column;gap:0}
+.day-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.day-item:last-child{border-bottom:none}
+.day-time{
+  font-family:var(--font-mono);font-size:12px;font-weight:500;
+  color:var(--text-secondary);min-width:44px;
+  font-variant-numeric:tabular-nums;
+  text-transform:none;
+}
+.day-info{flex:1;min-width:0}
+.day-name{
+  font-family:var(--font-body);font-size:13px;font-weight:600;
+  color:var(--text-primary);
+  text-transform:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.day-service{
+  font-family:var(--font-body);font-size:11px;font-weight:400;
+  color:var(--text-secondary);
+  text-transform:none;
+}
+.day-badge{
+  font-family:var(--font-mono);font-size:10px;font-weight:500;
+  padding:3px 8px;border-radius:4px;
+  background:var(--card-alt);color:var(--text-secondary);
+  border:1px solid var(--border);
+  text-transform:none;white-space:nowrap;
+}
+
+.commission-banner{
+  border:2px solid var(--accent);
+  border-radius:var(--radius-card);
+  padding:var(--card-py) var(--card-px);
+  background:transparent;
+  display:flex;align-items:center;gap:10px;
+}
+.commission-icon{
+  width:32px;height:32px;border-radius:var(--radius-input);
+  background:var(--card-alt);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  color:var(--text-secondary);
+}
+.commission-icon svg{width:18px;height:18px}
+.commission-text{min-width:0}
+.commission-title{
+  font-family:var(--font-display);font-size:14px;font-weight:700;
+  color:var(--text-primary);
+  text-transform:none;
+}
+.commission-sub{
+  font-family:var(--font-body);font-size:12px;font-weight:400;
+  color:var(--text-secondary);
+  text-transform:none;
+}
+
+.bottom-nav{
+  display:flex;
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--bottom-nav-h);
+  background:var(--bottom-nav-bg);
+  border-top:1px solid var(--border);
+  align-items:center;justify-content:space-around;
+  padding:0 8px;z-index:50;
+}
+.bottom-nav-link{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:4px 12px;border:none;background:transparent;
+  color:var(--text-secondary);cursor:pointer;
+  min-width:48px;min-height:36px;
+  transition:color 150ms ease-out;
+}
+.bottom-nav-link:hover{color:var(--text-primary)}
+.bottom-nav-link.active{color:var(--accent);font-weight:600}
+[data-theme^="barber"] .commission-icon{color:var(--accent)}
+.bottom-nav-link svg{width:20px;height:20px}
+.bottom-nav-link-label{
+  font-family:var(--font-body);font-size:10px;font-weight:500;
+  text-transform:none;letter-spacing:0;
+}
+
+.skeleton{
+  background:linear-gradient(90deg,var(--card-alt) 25%,var(--border) 50%,var(--card-alt) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s ease-in-out infinite;
+  border-radius:4px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+@media(min-width:768px){
+  .theme-nav{
+    gap:6px;padding:14px 24px;
+    background:rgba(15,15,15,0.95);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    justify-content:center;
+  }
+  .theme-nav-btn{font-size:13px;padding:9px 18px}
+  .matrix-grid{
+    grid-template-columns:1fr 1fr;
+    min-height:calc(100dvh - 58px);
+  }
+  .panel{
+    display:flex!important;
+    min-height:auto;
+    height:calc(100dvh - 58px);
+    max-height:calc(100dvh - 58px);
+    position:relative;
+    border-right:1px solid rgba(128,128,128,0.08);
+    border-bottom:1px solid rgba(128,128,128,0.08);
+    overflow:hidden;
+  }
+  .panel.active{height:calc(100dvh - 58px)}
+  .panel:nth-child(2n){border-right:none}
+  .panel:nth-child(n+3){border-bottom:none}
+  .panel-label{
+    position:relative;top:auto;left:auto;transform:none;
+    padding:6px 10px 0;
+  }
+  .dashboard-shell{flex-direction:row;height:100%;overflow:hidden}
+  .sidebar{
+    display:flex;
+    position:sticky;top:0;
+    height:100%;max-height:100%;
+    align-self:stretch;
+    overflow-y:auto;
+  }
+  .bottom-nav{display:none}
+  .content-scroll{padding-bottom:var(--py)}
+  .kpi-row{grid-template-columns:1fr 1fr 1fr}
+  .hero-kpi-value{font-size:24px}
+  .top-bar-greeting{font-size:14px}
+  .hero-kpi-label{font-size:11px}
+  .kpi-card-value{font-size:18px}
+  .day-card-title{font-size:14px}
+  .commission-banner{padding:14px 16px}
+}
+
+@media(min-width:1100px){
+  .hero-kpi-value{font-size:28px}
+  .top-bar-greeting{font-size:16px}
+  .content-scroll{gap:var(--gap)}
+}
+
+@media(max-width:420px){
+  .top-bar-cta{font-size:12px;padding:6px 10px;min-height:32px}
+  .top-bar-avatar{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    transition-duration:0.01ms!important;
+    animation-duration:0.01ms!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<nav class="theme-nav" id="themeNav">
+  <button class="theme-nav-btn active" data-theme="barber-dark" data-target="barber-dark">Barber Dark</button>
+  <button class="theme-nav-btn" data-theme="barber-light" data-target="barber-light">Barber Light</button>
+  <button class="theme-nav-btn" data-theme="beauty-dark" data-target="beauty-dark">Beauty Dark</button>
+  <button class="theme-nav-btn" data-theme="beauty-light" data-target="beauty-light">Beauty Light</button>
+</nav>
+
+<main class="matrix-grid" id="matrixGrid">
+
+  <!-- ==================== BARBER DARK ==================== -->
+  <section class="panel active" data-theme="barber-dark" id="barber-dark" data-od-id="panel-barber-dark">
+    <span class="panel-label">Barber · Dark</span>
+    <div class="dashboard-shell">
+      <aside class="sidebar" data-od-id="sidebar-bd">
+        <span class="sidebar-logo">A</span>
+        <nav class="sidebar-nav">
+          <button class="sidebar-link active" aria-label="Dashboard" title="Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Agenda" title="Agenda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Clientes" title="Clientes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Serviços" title="Serviços">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Financeiro" title="Financeiro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <button class="sidebar-link" aria-label="Configurações" title="Configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <span class="sidebar-avatar">M</span>
+        </div>
+      </aside>
+      <div class="main-area">
+        <header class="top-bar" data-od-id="topbar-bd">
+          <div class="top-bar-left">
+            <span class="top-bar-greeting">Olá, Marina</span>
+            <span class="top-bar-date">qua, 10 jun 2026</span>
+          </div>
+          <div class="top-bar-right">
+            <button class="top-bar-cta" type="button">Novo agendamento</button>
+            <button class="top-bar-search" aria-label="Buscar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <span class="top-bar-avatar">M</span>
+          </div>
+        </header>
+        <div class="content-scroll" data-od-id="content-bd">
+          <div class="hero-kpi" data-od-id="hero-kpi-bd">
+            <div class="hero-kpi-label">Faturamento hoje</div>
+            <div class="hero-kpi-value">R$&nbsp;1.840</div>
+            <span class="hero-kpi-delta up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              +12% vs ontem
+            </span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-card" data-od-id="kpi-appointments-bd">
+              <div class="kpi-card-label">Agendamentos hoje</div>
+              <div class="kpi-card-value">14</div>
+              <div class="kpi-card-delta up">+3 vs ontem</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-new-clients-bd">
+              <div class="kpi-card-label">Clientes novos</div>
+              <div class="kpi-card-value">3</div>
+              <div class="kpi-card-delta up">+1 semanal</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-rejection-bd">
+              <div class="kpi-card-label">Taxa de rejeição</div>
+              <div class="kpi-card-value">8%</div>
+              <div class="kpi-card-delta down">−2% semanal</div>
+            </div>
+          </div>
+
+          <div class="day-card" data-od-id="day-card-bd">
+            <div class="day-card-title">Seu dia</div>
+            <div class="day-card-list">
+              <div class="day-item">
+                <span class="day-time">09:00</span>
+                <div class="day-info">
+                  <div class="day-name">Carlos Eduardo</div>
+                  <div class="day-service">Corte + barba</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">10:30</span>
+                <div class="day-info">
+                  <div class="day-name">Rafael Mendes</div>
+                  <div class="day-service">Corte degradê</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">13:00</span>
+                <div class="day-info">
+                  <div class="day-name">Felipe Santos</div>
+                  <div class="day-service">Corte simples</div>
+                </div>
+                <span class="day-badge" style="opacity:0.7">Pendente</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">15:00</span>
+                <div class="day-info">
+                  <div class="day-name">Thiago Almeida</div>
+                  <div class="day-service">Corte + sobrancelha</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="commission-banner" data-od-id="commission-bd">
+            <div class="commission-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="commission-text">
+              <div class="commission-title">Comissões do mês</div>
+              <div class="commission-sub">R$&nbsp;2.340 acumulado · ver detalhes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="bottom-nav" data-od-id="bottomnav-bd">
+        <button class="bottom-nav-link active" aria-label="Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="bottom-nav-link-label">Home</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Agenda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="bottom-nav-link-label">Agenda</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Clientes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="bottom-nav-link-label">Clientes</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Financeiro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span class="bottom-nav-link-label">Finanças</span>
+        </button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ==================== BARBER LIGHT ==================== -->
+  <section class="panel" data-theme="barber-light" id="barber-light" data-od-id="panel-barber-light">
+    <span class="panel-label">Barber · Light</span>
+    <div class="dashboard-shell">
+      <aside class="sidebar" data-od-id="sidebar-bl">
+        <span class="sidebar-logo">A</span>
+        <nav class="sidebar-nav">
+          <button class="sidebar-link active" aria-label="Dashboard" title="Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Agenda" title="Agenda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Clientes" title="Clientes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Serviços" title="Serviços">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Financeiro" title="Financeiro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <button class="sidebar-link" aria-label="Configurações" title="Configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <span class="sidebar-avatar">M</span>
+        </div>
+      </aside>
+      <div class="main-area">
+        <header class="top-bar" data-od-id="topbar-bl">
+          <div class="top-bar-left">
+            <span class="top-bar-greeting">Olá, Marina</span>
+            <span class="top-bar-date">qua, 10 jun 2026</span>
+          </div>
+          <div class="top-bar-right">
+            <button class="top-bar-cta" type="button">Novo agendamento</button>
+            <button class="top-bar-search" aria-label="Buscar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <span class="top-bar-avatar">M</span>
+          </div>
+        </header>
+        <div class="content-scroll" data-od-id="content-bl">
+          <div class="hero-kpi" data-od-id="hero-kpi-bl">
+            <div class="hero-kpi-label">Faturamento hoje</div>
+            <div class="hero-kpi-value">R$&nbsp;1.840</div>
+            <span class="hero-kpi-delta up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              +12% vs ontem
+            </span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-card" data-od-id="kpi-appointments-bl">
+              <div class="kpi-card-label">Agendamentos hoje</div>
+              <div class="kpi-card-value">14</div>
+              <div class="kpi-card-delta up">+3 vs ontem</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-new-clients-bl">
+              <div class="kpi-card-label">Clientes novos</div>
+              <div class="kpi-card-value">3</div>
+              <div class="kpi-card-delta up">+1 semanal</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-rejection-bl">
+              <div class="kpi-card-label">Taxa de rejeição</div>
+              <div class="kpi-card-value">8%</div>
+              <div class="kpi-card-delta down">−2% semanal</div>
+            </div>
+          </div>
+
+          <div class="day-card" data-od-id="day-card-bl">
+            <div class="day-card-title">Seu dia</div>
+            <div class="day-card-list">
+              <div class="day-item">
+                <span class="day-time">09:00</span>
+                <div class="day-info">
+                  <div class="day-name">Carlos Eduardo</div>
+                  <div class="day-service">Corte + barba</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">10:30</span>
+                <div class="day-info">
+                  <div class="day-name">Rafael Mendes</div>
+                  <div class="day-service">Corte degradê</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">13:00</span>
+                <div class="day-info">
+                  <div class="day-name">Felipe Santos</div>
+                  <div class="day-service">Corte simples</div>
+                </div>
+                <span class="day-badge" style="opacity:0.7">Pendente</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">15:00</span>
+                <div class="day-info">
+                  <div class="day-name">Thiago Almeida</div>
+                  <div class="day-service">Corte + sobrancelha</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="commission-banner" data-od-id="commission-bl">
+            <div class="commission-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="commission-text">
+              <div class="commission-title">Comissões do mês</div>
+              <div class="commission-sub">R$&nbsp;2.340 acumulado · ver detalhes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="bottom-nav" data-od-id="bottomnav-bl">
+        <button class="bottom-nav-link active" aria-label="Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="bottom-nav-link-label">Home</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Agenda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="bottom-nav-link-label">Agenda</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Clientes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="bottom-nav-link-label">Clientes</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Financeiro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span class="bottom-nav-link-label">Finanças</span>
+        </button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ==================== BEAUTY DARK ==================== -->
+  <section class="panel" data-theme="beauty-dark" id="beauty-dark" data-od-id="panel-beauty-dark">
+    <span class="panel-label">Beauty · Dark</span>
+    <div class="dashboard-shell">
+      <aside class="sidebar" data-od-id="sidebar-bdd">
+        <span class="sidebar-logo">A</span>
+        <nav class="sidebar-nav">
+          <button class="sidebar-link active" aria-label="Dashboard" title="Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Agenda" title="Agenda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Clientes" title="Clientes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Serviços" title="Serviços">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Financeiro" title="Financeiro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <button class="sidebar-link" aria-label="Configurações" title="Configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <span class="sidebar-avatar">M</span>
+        </div>
+      </aside>
+      <div class="main-area">
+        <header class="top-bar" data-od-id="topbar-bdd">
+          <div class="top-bar-left">
+            <span class="top-bar-greeting">Olá, Marina</span>
+            <span class="top-bar-date">qua, 10 jun 2026</span>
+          </div>
+          <div class="top-bar-right">
+            <button class="top-bar-cta" type="button">Novo agendamento</button>
+            <button class="top-bar-search" aria-label="Buscar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <span class="top-bar-avatar">M</span>
+          </div>
+        </header>
+        <div class="content-scroll" data-od-id="content-bdd">
+          <div class="hero-kpi" data-od-id="hero-kpi-bdd">
+            <div class="hero-kpi-label">Faturamento hoje</div>
+            <div class="hero-kpi-value">R$&nbsp;1.840</div>
+            <span class="hero-kpi-delta up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              +12% vs ontem
+            </span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-card" data-od-id="kpi-appointments-bdd">
+              <div class="kpi-card-label">Agendamentos hoje</div>
+              <div class="kpi-card-value">14</div>
+              <div class="kpi-card-delta up">+3 vs ontem</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-new-clients-bdd">
+              <div class="kpi-card-label">Clientes novos</div>
+              <div class="kpi-card-value">3</div>
+              <div class="kpi-card-delta up">+1 semanal</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-rejection-bdd">
+              <div class="kpi-card-label">Taxa de rejeição</div>
+              <div class="kpi-card-value">8%</div>
+              <div class="kpi-card-delta down">−2% semanal</div>
+            </div>
+          </div>
+
+          <div class="day-card" data-od-id="day-card-bdd">
+            <div class="day-card-title">Seu dia</div>
+            <div class="day-card-list">
+              <div class="day-item">
+                <span class="day-time">09:00</span>
+                <div class="day-info">
+                  <div class="day-name">Larissa Ferreira</div>
+                  <div class="day-service">Mechas + corte</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">10:30</span>
+                <div class="day-info">
+                  <div class="day-name">Amanda Costa</div>
+                  <div class="day-service">Progressiva</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">14:00</span>
+                <div class="day-info">
+                  <div class="day-name">Juliana Rocha</div>
+                  <div class="day-service">Corte + escova</div>
+                </div>
+                <span class="day-badge" style="opacity:0.7">Pendente</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">16:00</span>
+                <div class="day-info">
+                  <div class="day-name">Beatriz Lima</div>
+                  <div class="day-service">Hidratação</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="commission-banner" data-od-id="commission-bdd">
+            <div class="commission-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="commission-text">
+              <div class="commission-title">Comissões do mês</div>
+              <div class="commission-sub">R$&nbsp;3.180 acumulado · ver detalhes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="bottom-nav" data-od-id="bottomnav-bdd">
+        <button class="bottom-nav-link active" aria-label="Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="bottom-nav-link-label">Home</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Agenda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="bottom-nav-link-label">Agenda</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Clientes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="bottom-nav-link-label">Clientes</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Financeiro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span class="bottom-nav-link-label">Finanças</span>
+        </button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ==================== BEAUTY LIGHT ==================== -->
+  <section class="panel" data-theme="beauty-light" id="beauty-light" data-od-id="panel-beauty-light">
+    <span class="panel-label">Beauty · Light</span>
+    <div class="dashboard-shell">
+      <aside class="sidebar" data-od-id="sidebar-blt">
+        <span class="sidebar-logo">A</span>
+        <nav class="sidebar-nav">
+          <button class="sidebar-link active" aria-label="Dashboard" title="Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Agenda" title="Agenda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Clientes" title="Clientes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Serviços" title="Serviços">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </button>
+          <button class="sidebar-link" aria-label="Financeiro" title="Financeiro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <button class="sidebar-link" aria-label="Configurações" title="Configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <span class="sidebar-avatar">M</span>
+        </div>
+      </aside>
+      <div class="main-area">
+        <header class="top-bar" data-od-id="topbar-blt">
+          <div class="top-bar-left">
+            <span class="top-bar-greeting">Olá, Marina</span>
+            <span class="top-bar-date">qua, 10 jun 2026</span>
+          </div>
+          <div class="top-bar-right">
+            <button class="top-bar-cta" type="button">Novo agendamento</button>
+            <button class="top-bar-search" aria-label="Buscar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <span class="top-bar-avatar">M</span>
+          </div>
+        </header>
+        <div class="content-scroll" data-od-id="content-blt">
+          <div class="hero-kpi" data-od-id="hero-kpi-blt">
+            <div class="hero-kpi-label">Faturamento hoje</div>
+            <div class="hero-kpi-value">R$&nbsp;1.840</div>
+            <span class="hero-kpi-delta up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              +12% vs ontem
+            </span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-card" data-od-id="kpi-appointments-blt">
+              <div class="kpi-card-label">Agendamentos hoje</div>
+              <div class="kpi-card-value">14</div>
+              <div class="kpi-card-delta up">+3 vs ontem</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-new-clients-blt">
+              <div class="kpi-card-label">Clientes novos</div>
+              <div class="kpi-card-value">3</div>
+              <div class="kpi-card-delta up">+1 semanal</div>
+            </div>
+            <div class="kpi-card" data-od-id="kpi-rejection-blt">
+              <div class="kpi-card-label">Taxa de rejeição</div>
+              <div class="kpi-card-value">8%</div>
+              <div class="kpi-card-delta down">−2% semanal</div>
+            </div>
+          </div>
+
+          <div class="day-card" data-od-id="day-card-blt">
+            <div class="day-card-title">Seu dia</div>
+            <div class="day-card-list">
+              <div class="day-item">
+                <span class="day-time">09:00</span>
+                <div class="day-info">
+                  <div class="day-name">Larissa Ferreira</div>
+                  <div class="day-service">Mechas + corte</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">10:30</span>
+                <div class="day-info">
+                  <div class="day-name">Amanda Costa</div>
+                  <div class="day-service">Progressiva</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">14:00</span>
+                <div class="day-info">
+                  <div class="day-name">Juliana Rocha</div>
+                  <div class="day-service">Corte + escova</div>
+                </div>
+                <span class="day-badge" style="opacity:0.7">Pendente</span>
+              </div>
+              <div class="day-item">
+                <span class="day-time">16:00</span>
+                <div class="day-info">
+                  <div class="day-name">Beatriz Lima</div>
+                  <div class="day-service">Hidratação</div>
+                </div>
+                <span class="day-badge">Confirmado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="commission-banner" data-od-id="commission-blt">
+            <div class="commission-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="commission-text">
+              <div class="commission-title">Comissões do mês</div>
+              <div class="commission-sub">R$&nbsp;3.180 acumulado · ver detalhes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="bottom-nav" data-od-id="bottomnav-blt">
+        <button class="bottom-nav-link active" aria-label="Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="bottom-nav-link-label">Home</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Agenda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="bottom-nav-link-label">Agenda</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Clientes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="bottom-nav-link-label">Clientes</span>
+        </button>
+        <button class="bottom-nav-link" aria-label="Financeiro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span class="bottom-nav-link-label">Finanças</span>
+        </button>
+      </nav>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var nav=document.getElementById('themeNav');
+  var grid=document.getElementById('matrixGrid');
+  var isMobile=function(){return window.innerWidth<768};
+
+  function showPanel(id){
+    var panels=grid.querySelectorAll('.panel');
+    panels.forEach(function(p){p.classList.remove('active')});
+    var target=document.getElementById(id);
+    if(target)target.classList.add('active');
+    var btns=nav.querySelectorAll('.theme-nav-btn');
+    btns.forEach(function(b){b.classList.remove('active')});
+    var activeBtn=nav.querySelector('[data-target="'+id+'"]');
+    if(activeBtn)activeBtn.classList.add('active');
+  }
+
+  nav.addEventListener('click',function(e){
+    var btn=e.target.closest('.theme-nav-btn');
+    if(!btn)return;
+    var target=btn.getAttribute('data-target');
+    if(!target)return;
+    showPanel(target);
+    if(isMobile()){
+      var panel=document.getElementById(target);
+      if(panel){
+        var y=panel.offsetTop;
+        window.scrollTo({top:y,behavior:'smooth'});
+      }
+    }
+  });
+
+  function syncNav(){
+    if(!isMobile()){
+      var panels=grid.querySelectorAll('.panel');
+      panels.forEach(function(p){p.classList.add('active')});
+      var btns=nav.querySelectorAll('.theme-nav-btn');
+      btns.forEach(function(b){b.classList.remove('active')});
+      btns[0].classList.add('active');
+    }
+  }
+
+  window.addEventListener('resize',syncNav);
+  syncNav();
+})();
+</script>
+</body>
+</html>

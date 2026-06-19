@@ -6,7 +6,7 @@
   <meta name="google" content="notranslate" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Sistema de Gestão</title>
+  <title>AgendiX — Gestão do seu salão</title>
   <meta name="description" content="Sistema profissional de gestão e agendamento">
   <meta name="theme-color" content="#121212">
   <link rel="icon" href="/logo-agendix-app.png" type="image/png">
@@ -29,6 +29,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AgendiX">
+  <link rel="stylesheet" href="/design-system/tokens.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,13 +42,15 @@
       theme: {
         extend: {
           colors: {
-            // PRO-MAX THEMES
+            // Theme colors: canonical hex lives in /design-system/tokens.css.
+            // Keep obsidian/silk/brutal keys for legacy Tailwind classes; gold/violet/neutral
+            // duplicates below reference token primitives instead of repeating hex.
             obsidian: {
-              bg: '#050505',
-              card: '#0A0A0A',
-              border: '#111111',
-              accent: '#C29B40', // Deep Gold
-              surface: '#0D0D0D',
+              bg: '#12100E',
+              card: '#1A1816',
+              border: 'rgba(255, 245, 230, 0.08)',
+              accent: '#C29B40',
+              surface: '#21201C',
             },
             silk: {
               bg: '#E2E1DA',
@@ -67,17 +70,17 @@
               surface: '#252525'
             },
             accent: {
-              gold: '#C29B40',
-              goldHover: '#D4AF50',
-              goldDim: '#8a6d2a',
+              gold: '#C9A24A',
+              goldHover: '#DFC066',
+              goldDim: '#8A6D2A',
             },
             beauty: {
-              neon: '#A78BFA',     /* Lavender 400 - Brand Purple */
-              neonHover: '#C4B5FD', /* Lavender 300 */
-              acid: '#8B5CF6',     /* Violet 500 */
-              silver: '#E9D5FF',   /* Purple 200 */
-              dark: '#1F1B2E',     /* Deep Purple Black */
-              card: '#2E2B3B',     /* Soft Purple Card */
+              neon: '#A78BFA',
+              neonHover: '#C4B5FD',
+              acid: '#8B5CF6',
+              silver: '#E9D5FF',
+              dark: '#17132A',
+              card: '#221F35',
             },
             text: {
               primary: '#EAEAEA',
@@ -107,13 +110,13 @@
             'heavy-sm': '2px 2px 0px 0px #000000',
             'heavy-lg': '8px 8px 0px 0px #000000',
             'inner-heavy': 'inset 0 0 20px rgba(0,0,0,0.8)',
-            'neon': '0 0 10px rgba(167, 139, 250, 0.5), 0 0 20px rgba(167, 139, 250, 0.3)',
-            'neon-strong': '0 0 15px rgba(167, 139, 250, 0.6), 0 0 30px rgba(167, 139, 250, 0.4), 0 0 45px rgba(167, 139, 250, 0.2)',
+            'neon': '0 0 10px rgba(183, 148, 246, 0.5), 0 0 20px rgba(183, 148, 246, 0.3)',
+            'neon-strong': '0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(167, 139, 250, 0.15)',
             'soft': '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
             'soft-lg': '0 20px 40px -15px rgba(0, 0, 0, 0.6)',
             'gold': '0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2)',
-            'promax-glass': '0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08)',
-            'promax-depth': '0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.1)',
+            'promax-glass': '0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 245, 230, 0.12)',
+            'promax-depth': '0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.15)',
             'silk-shadow': '0 10px 30px -10px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05)',
             'silk-glow': '0 0 20px rgba(212, 175, 55, 0.1)',
             // Lite versions for mobile performance
@@ -122,10 +125,10 @@
           },
           backgroundImage: {
             'noise': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJub2lzZUZpbHRlciI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjbm9pc2VGaWx0ZXIpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+')",
-            'gradient-beauty': 'linear-gradient(135deg, #1F1B2E 0%, #2E2B3B 50%, #1F1B2E 100%)',
-            'gradient-brutal': 'linear-gradient(135deg, #121212 0%, #1E1E1E 50%, #121212 100%)',
+            'gradient-beauty': 'linear-gradient(135deg, #17132A 0%, #221F35 50%, #17132A 100%)',
+            'gradient-brutal': 'linear-gradient(135deg, #12100E 0%, #1A1816 50%, #12100E 100%)',
             'gradient-promax': 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)',
-            'gradient-obsidian': 'linear-gradient(180deg, #050505 0%, #080808 100%)',
+            'gradient-obsidian': 'linear-gradient(180deg, #12100E 0%, #1A1816 100%)',
             'gradient-silk-premium': 'linear-gradient(135deg, #F5F5F1 0%, #FAF9F6 100%)',
           },
           animation: {
@@ -425,7 +428,7 @@
     /* Previne flash branco/escuro na rota pública — aplicado ANTES do React montar */
     html[data-public-theme="obsidian"] body,
     html[data-public-theme="obsidian"] {
-      background-color: #050505 !important;
+      background-color: #12100E !important;
     }
 
     html[data-public-theme="silk"] body,
@@ -436,7 +439,7 @@
 
     /* Classes aplicadas via JS no useEffect do PublicBooking */
     body.public-booking-root {
-      background-color: #050505;
+      background-color: #12100E;
     }
 
     body.public-booking-root.beauty-theme {
@@ -446,101 +449,111 @@
 
     /* Theming Variables (Dual Mode) */
     :root, html[data-theme="barber"][data-mode="dark"] {
-      --color-bg: #050505;
-      --color-card: #0A0A0A;
-      --color-card-elevated: #111111;
-      --color-card-hover: rgba(255, 255, 255, 0.03);
-      --color-surface: #0D0D0D;
-      --color-divider: rgba(255, 255, 255, 0.06);
-      --color-overlay: rgba(0, 0, 0, 0.8);
-      --color-accent: #C29B40;
-      --color-accent-hover: #D4AF50;
-      --color-text: #EAEAEA;
-      --color-text-muted: #888888;
-      --color-text-secondary: #A0A0A0;
-      --color-border: rgba(255, 255, 255, 0.06);
-      --color-input-bg: rgba(255, 255, 255, 0.03);
-      --color-focus-ring: rgba(194, 155, 64, 0.25);
+      --color-bg: #12100E;
+      --color-card: #1A1816;
+      --color-card-elevated: #21201C;
+      --color-card-hover: rgba(255, 255, 255, 0.04);
+      --color-surface: #21201C;
+      --color-divider: rgba(255, 255, 255, 0.08);
+      --color-overlay: rgba(0, 0, 0, 0.72);
+      --color-accent: #C9A24A;
+      --color-accent-hover: #DFC066;
+      --color-modal-bg: #201D1A;
+      --color-modal-border: rgba(201, 162, 74, 0.15);
+      --color-text: #F0EBE0;
+      --color-text-muted: #6B6252;
+      --color-text-secondary: #A89A82;
+      --color-border: rgba(255, 245, 230, 0.08);
+      --color-input-bg: rgba(20, 16, 10, 0.5);
+      --color-focus-ring: rgba(201, 162, 74, 0.25);
       --shadow-brutal: 8px 8px 0 0 #000000;
       --shadow-brutal-sm: 2px 2px 0 0 #000000;
       --shadow-brutal-md: 4px 4px 0 0 #000000;
-      --bg-gradient: radial-gradient(circle at 10% 90%, rgba(194, 155, 64, 0.08) 0%, transparent 40%),
-                     radial-gradient(circle at 90% 10%, rgba(194, 155, 64, 0.06) 0%, transparent 30%),
+      --bg-gradient: radial-gradient(circle at 10% 90%, rgba(194, 155, 64, 0.08) 0%, transparent 50%),
+                     radial-gradient(circle at 90% 10%, rgba(194, 155, 64, 0.05) 0%, transparent 40%),
                      var(--color-bg);
       --particle-color: rgba(194, 155, 64, 0.20);
     }
 
     html[data-theme="barber"][data-mode="light"] {
-      --color-bg: #E2E1DA;
+      --color-bg: #E5E5E5;
       --color-card: #FFFFFF;
-      --color-card-elevated: #F5F4F0;
-      --color-card-hover: rgba(0, 0, 0, 0.03);
-      --color-surface: #F5F4F0;
-      --color-divider: rgba(0, 0, 0, 0.08);
-      --color-overlay: rgba(31, 24, 10, 0.45);
-      --color-accent: #A07A2A;
-      --color-accent-hover: #B8892F;
-      --color-text: #1A1A1A;
-      --color-text-muted: #6B5E45;
-      --color-text-secondary: #5A5040;
-      --color-border: rgba(0, 0, 0, 0.08);
+      --color-card-elevated: #F4F4F4;
+      --color-card-hover: rgba(0, 0, 0, 0.05);
+      --color-surface: #D8D8D8;
+      --color-divider: rgba(0, 0, 0, 0.10);
+      --color-overlay: rgba(20, 20, 20, 0.55);
+      --color-accent: #8B6914;
+      --color-accent-hover: #A07A2A;
+      --color-modal-bg: #FFFFFF;
+      --color-modal-border: rgba(0, 0, 0, 0.08);
+      --color-text: #1A1610;
+      --color-text-muted: #7A7A75;
+      --color-text-secondary: #55524C;
+      --color-border: rgba(0, 0, 0, 0.10);
       --color-input-bg: rgba(0, 0, 0, 0.04);
-      --color-focus-ring: rgba(160, 122, 42, 0.25);
-      --shadow-brutal: 6px 6px 0 0 rgba(160, 122, 42, 0.35);
-      --shadow-brutal-sm: 2px 2px 0 0 rgba(160, 122, 42, 0.25);
-      --shadow-brutal-md: 4px 4px 0 0 rgba(160, 122, 42, 0.28);
-      --bg-gradient: radial-gradient(circle at 20% 80%, rgba(160, 122, 42, 0.03) 0%, transparent 40%),
+      --color-focus-ring: rgba(139, 105, 20, 0.45);
+      --shadow-brutal: 6px 6px 0 0 rgba(139, 105, 20, 0.30);
+      --shadow-brutal-sm: 2px 2px 0 0 rgba(139, 105, 20, 0.22);
+      --shadow-brutal-md: 4px 4px 0 0 rgba(139, 105, 20, 0.26);
+      --bg-gradient: radial-gradient(circle at 15% 85%, rgba(139, 105, 20, 0.08) 0%, transparent 50%),
+                     radial-gradient(circle at 85% 15%, rgba(139, 105, 20, 0.05) 0%, transparent 40%),
                      var(--color-bg);
-      --particle-color: rgba(160, 122, 42, 0.06);
+      --particle-color: rgba(139, 105, 20, 0.08);
     }
 
     html[data-theme="beauty"][data-mode="dark"] {
-      --color-bg: #1F1B2E;
-      --color-card: #2E2B3B;
-      --color-card-elevated: #3A3548;
+      --color-bg: #17132A;
+      --color-card: #221F35;
+      --color-card-elevated: #2A2740;
       --color-card-hover: rgba(255, 255, 255, 0.04);
-      --color-surface: #3D3A4D;
+      --color-surface: #2A2740;
       --color-divider: rgba(255, 255, 255, 0.08);
-      --color-overlay: rgba(0, 0, 0, 0.7);
+      --color-overlay: rgba(0, 0, 0, 0.72);
       --color-accent: #A78BFA;
       --color-accent-hover: #C4B5FD;
-      --color-text: #EAEAEA;
-      --color-text-muted: #B8AED4;
-      --color-text-secondary: #A78BFA;
-      --color-border: rgba(255, 255, 255, 0.10);
-      --color-input-bg: rgba(255, 255, 255, 0.05);
-      --color-focus-ring: rgba(167, 139, 250, 0.25);
+      --color-modal-bg: #2A2740;
+      --color-modal-border: rgba(167, 139, 250, 0.15);
+      --color-text: #EEE8FF;
+      --color-text-muted: #8A7DA8;
+      --color-text-secondary: #B5A9D0;
+      --color-border: rgba(200, 180, 255, 0.10);
+      --color-input-bg: rgba(167, 139, 250, 0.06);
+      --color-focus-ring: rgba(183, 148, 246, 0.25);
       --shadow-brutal: 8px 8px 0 0 #000000;
       --shadow-brutal-sm: 2px 2px 0 0 #000000;
       --shadow-brutal-md: 4px 4px 0 0 #000000;
-      --bg-gradient: radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.12) 0%, transparent 40%),
-                     radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.10) 0%, transparent 30%),
+      --bg-gradient: radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.10) 0%, transparent 50%),
+                     radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
                      var(--color-bg);
       --particle-color: rgba(167, 139, 250, 0.25);
     }
 
-    html[data-theme="beauty"][data-mode="light"] {
-      --color-bg: #F7F5FF;
+html[data-theme="beauty"][data-mode="light"] {
+      --color-bg: #EBE5F5;
       --color-card: #FFFFFF;
-      --color-card-elevated: #FFFFFF;
-      --color-card-hover: rgba(124, 58, 237, 0.04);
-      --color-surface: #EDE8FF;
-      --color-divider: rgba(124, 58, 237, 0.10);
-      --color-overlay: rgba(31, 27, 46, 0.45);
+      --color-card-elevated: #F3F0FA;
+      --color-card-hover: rgba(91, 33, 182, 0.08);
+      --color-surface: #DDD4EF;
+      --color-divider: rgba(124, 58, 237, 0.14);
+      --color-overlay: rgba(23, 19, 42, 0.55);
       --color-accent: #7C3AED;
       --color-accent-hover: #6D28D9;
+      --color-modal-bg: #FFFFFF;
+      --color-modal-border: rgba(124, 58, 237, 0.12);
       --color-text: #1A1225;
-      --color-text-muted: #6B5E85;
-      --color-text-secondary: #5B4D7A;
-      --color-border: rgba(124, 58, 237, 0.12);
-      --color-input-bg: rgba(124, 58, 237, 0.04);
-      --color-focus-ring: rgba(124, 58, 237, 0.25);
-      --shadow-brutal: 6px 6px 0 0 rgba(124, 58, 237, 0.25);
-      --shadow-brutal-sm: 2px 2px 0 0 rgba(124, 58, 237, 0.18);
-      --shadow-brutal-md: 4px 4px 0 0 rgba(124, 58, 237, 0.22);
-      --bg-gradient: radial-gradient(circle at 15% 85%, rgba(124, 58, 237, 0.03) 0%, transparent 40%),
-                     var(--color-bg);
-      --particle-color: rgba(124, 58, 237, 0.05);
+      --color-text-muted: #7B6E95;
+      --color-text-secondary: #4A3D65;
+      --color-border: rgba(124, 58, 237, 0.16);
+      --color-input-bg: rgba(124, 58, 237, 0.05);
+      --color-focus-ring: rgba(124, 58, 237, 0.40);
+      --shadow-brutal: 6px 6px 0 0 rgba(91, 33, 182, 0.25);
+      --shadow-brutal-sm: 2px 2px 0 0 rgba(91, 33, 182, 0.18);
+      --shadow-brutal-md: 4px 4px 0 0 rgba(91, 33, 182, 0.22);
+      --bg-gradient: radial-gradient(circle at 15% 85%, rgba(91, 33, 182, 0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 85% 10%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+                      var(--color-bg);
+      --particle-color: rgba(91, 33, 182, 0.06);
     }
 
     /* ====== OVERRIDE HARD-CODED DARK COLORS (Barber Dark) ====== */
@@ -586,14 +599,14 @@
     }
     html[data-theme="barber"][data-mode="dark"] .bg-neutral-900,
     html[data-theme="barber"][data-mode="dark"] .bg-neutral-800 {
-      background-color: #0A0A0A !important;
+      background-color: #1A1816 !important;
     }
     html[data-theme="barber"][data-mode="dark"] .bg-neutral-950 {
-      background-color: #050505 !important;
+      background-color: #12100E !important;
     }
     html[data-theme="barber"][data-mode="dark"] .hover\:bg-neutral-800:hover,
     html[data-theme="barber"][data-mode="dark"] .hover\:bg-neutral-900:hover {
-      background-color: #0D0D0D !important;
+      background-color: #21201C !important;
     }
 
     /* Utilitárias dual-mode (consomem tokens) */
@@ -1059,15 +1072,41 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      /* Substituir bounce/pulse por fade estático */
+      /* DS Lock §2 / UI-027: disable entrance animations, bounce, and long transitions */
+      [class*="wizard-pointer-bounce"],
+      [class*="wizard-pulse"],
+      [class*="animate-in"],
+      .animate-in,
+      .animate-bounce,
+      .animate-fade-in,
+      .modal-enter,
+      .skeleton,
+      .skeleton-beauty,
+      body::before {
+        animation: none !important;
+      }
       [class*="wizard-pointer-bounce"],
       [class*="wizard-pulse"] {
-        animation: none !important;
         opacity: 0.9;
       }
-      /* Encurtar transições de sucesso */
       .animate-check-complete {
         animation-duration: 50ms !important;
+      }
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      html,
+      body {
+        transition: none !important;
+      }
+      .stat-card-brutal::before,
+      .brutal-button-premium::before {
+        display: none !important;
       }
     }
   </style>
@@ -1087,8 +1126,8 @@
         // Rotas públicas usam HashRouter: #/book/, #/queue/, #/pro/, #/minha-area/
         if (/^#\/(book|queue|queue-status|pro|minha-area)\//.test(hash)) {
           document.documentElement.setAttribute('data-public-theme', 'obsidian');
-          document.documentElement.style.backgroundColor = '#050505';
-          document.body && (document.body.style.backgroundColor = '#050505');
+          document.documentElement.style.backgroundColor = '#12100E';
+          document.body && (document.body.style.backgroundColor = '#12100E');
           // Em rotas públicas, não aplicar data-mode do usuário
           document.documentElement.removeAttribute('data-mode');
         }

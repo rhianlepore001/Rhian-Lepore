@@ -1,7 +1,9 @@
 import React from 'react';
-import { BrutalCard } from '../BrutalCard';
-import { BrutalButton } from '../BrutalButton';
-import { LucideIcon, Zap, ArrowRight, TrendingUp, Star } from 'lucide-react';
+import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
+import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { LucideIcon, ArrowRight, TrendingUp } from 'lucide-react';
 
 interface OpportunityCardProps {
     title: string;
@@ -14,6 +16,12 @@ interface OpportunityCardProps {
     type?: 'emergency' | 'high-value' | 'strategy';
 }
 
+const TYPE_BADGE_VARIANT: Record<NonNullable<OpportunityCardProps['type']>, 'danger' | 'accent' | 'neutral'> = {
+    'emergency': 'danger',
+    'high-value': 'accent',
+    'strategy': 'neutral',
+};
+
 export const OpportunityCard: React.FC<OpportunityCardProps> = ({
     title,
     description,
@@ -24,53 +32,54 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({
     onAction,
     type = 'strategy'
 }) => {
-    const typeColors = {
-        emergency: 'border-red-500 bg-red-500/5',
-        'high-value': 'border-accent-gold bg-accent-gold/5',
-        strategy: 'border-blue-500 bg-blue-500/5'
-    };
+    const { colors, font, accent, status } = useBrutalTheme();
 
-    const badgeColors = {
-        emergency: 'bg-red-500 text-white',
-        'high-value': 'bg-accent-gold text-black',
-        strategy: 'bg-blue-500 text-white'
-    };
+    const typeBorderClass = type === 'emergency' ? status.dangerBorder : type === 'high-value' ? accent.border : colors.border;
+    const iconWrapClass = type === 'emergency' ? status.dangerBg : 'bg-[var(--color-card-hover)]';
+    const iconColorClass = type === 'emergency' ? status.danger : colors.text;
+    const btnVariant = type === 'emergency' ? 'primary' : 'outline';
 
     return (
-        <BrutalCard className={`relative border-l-4 ${typeColors[type]} transition-all hover:translate-x-1`}>
+        <Card
+            variant="outlined"
+            className={`relative border-2 ${typeBorderClass} transition-all hover:translate-x-1`}
+        >
             {badge && (
-                <span className={`absolute top-0 right-0 px-2 py-0.5 text-[9px] font-mono font-bold uppercase ${badgeColors[type]}`}>
+                <Badge
+                    variant={TYPE_BADGE_VARIANT[type]}
+                    className="absolute top-0 right-0 rounded-none rounded-bl-lg text-[9px] font-mono font-bold uppercase"
+                >
                     {badge}
-                </span>
+                </Badge>
             )}
 
             <div className="flex gap-4">
-                <div className={`p-3 h-fit rounded-lg ${type === 'emergency' ? 'bg-red-500/10' : 'bg-white/5'}`}>
-                    <Icon className={`w-6 h-6 ${type === 'emergency' ? 'text-red-500' : 'text-white'}`} />
+                <div className={`p-3 h-fit rounded-lg ${iconWrapClass}`}>
+                    <Icon className={`w-6 h-6 ${iconColorClass}`} />
                 </div>
 
                 <div className="flex-1">
-                    <h4 className="text-white font-bold font-heading mb-1">{title}</h4>
-                    <p className="text-text-secondary text-xs mb-3 leading-relaxed">{description}</p>
+                    <h4 className={`${colors.text} font-bold ${font.heading} mb-1`}>{title}</h4>
+                    <p className={`${colors.textSecondary} text-xs mb-3 leading-relaxed`}>{description}</p>
 
                     {impact && (
-                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-green-500 mb-4">
+                        <div className={`flex items-center gap-1.5 text-[10px] ${font.mono} ${status.success} mb-4`}>
                             <TrendingUp className="w-3 h-3" />
                             <span>Impacto: {impact}</span>
                         </div>
                     )}
 
-                    <BrutalButton
-                        variant={type === 'emergency' ? 'primary' : 'outline'}
+                    <Button
+                        variant={btnVariant}
                         size="sm"
                         className="w-full text-[10px] h-8"
                         onClick={onAction}
                         icon={<ArrowRight className="w-3 h-3" />}
                     >
                         {actionLabel}
-                    </BrutalButton>
+                    </Button>
                 </div>
             </div>
-        </BrutalCard>
+        </Card>
     );
 };

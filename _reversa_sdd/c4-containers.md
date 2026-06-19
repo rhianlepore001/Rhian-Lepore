@@ -1,6 +1,6 @@
 # Diagrama C4 — Containers (Nível 2)
 
-> agendix (Beauty OS / AgenX)
+> agendix (Beauty OS / AgendiX)
 > Gerado pelo Architect em 2026-05-06
 > Nível de confiança: 🟢 Confirmado | 🟡 Inferido | 🔴 Lacuna
 

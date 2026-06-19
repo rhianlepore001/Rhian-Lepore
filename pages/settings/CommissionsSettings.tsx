@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Card, Button } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useTeamMembers } from '../../hooks/useTeam';
 import { useBusinessSettings } from '../../hooks/useSettings';
 import { useQueryClient } from '@tanstack/react-query';
-import { BrutalCard } from '../../components/BrutalCard';
-import { BrutalButton } from '../../components/BrutalButton';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import {
@@ -213,7 +212,7 @@ export const CommissionsSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="space-y-6">
-                <BrutalCard className={`border-l-4 ${accent.border}`}>
+                <Card className={`border ${accent.border}`}>
                     <div className="flex items-start gap-4">
                         <div className={`p-3 ${accent.bg} bg-opacity-10 rounded-lg`}>
                             <DollarSign className={`w-8 h-8 ${accent.text}`} />
@@ -228,9 +227,9 @@ export const CommissionsSettings: React.FC = () => {
                             </p>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                <BrutalCard title="Dia de Acerto Mensal">
+                <Card title="Dia de Acerto Mensal">
                     <div className="space-y-4">
                         <p className={`${colors.textMuted} text-sm`}>
                             Escolha o dia do mês em que você faz o acerto de comissões com sua equipe.
@@ -258,19 +257,19 @@ export const CommissionsSettings: React.FC = () => {
                                 </p>
                             </div>
 
-                            <BrutalButton
+                            <Button
                                 variant="primary"
                                 onClick={handleSaveSettlementDay}
                                 disabled={saving}
                                 className="mt-6"
                             >
                                 {saving ? 'Salvando...' : 'Salvar Dia'}
-                            </BrutalButton>
+                            </Button>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                <BrutalCard title="Taxas de Comissão por Profissional">
+                <Card title="Taxas de Comissão por Profissional">
                     {teamMembers.length === 0 ? (
                         <div className="text-center py-8">
                             <Users className={`w-12 h-12 ${colors.textMuted} mx-auto mb-3`} />
@@ -399,7 +398,7 @@ export const CommissionsSettings: React.FC = () => {
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-2">
-                                                        <BrutalButton
+                                                        <Button
                                                             variant="primary"
                                                             size="sm"
                                                             onClick={() => handleSaveCommissionRate(member.id)}
@@ -408,9 +407,9 @@ export const CommissionsSettings: React.FC = () => {
                                                             icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                                         >
                                                             {saving ? 'Salvando' : 'Salvar'}
-                                                        </BrutalButton>
+                                                        </Button>
 
-                                                        <BrutalButton
+                                                        <Button
                                                             variant="secondary"
                                                             size="sm"
                                                             className="flex-1"
@@ -418,7 +417,7 @@ export const CommissionsSettings: React.FC = () => {
                                                             disabled={saving}
                                                         >
                                                             Cancelar
-                                                        </BrutalButton>
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -430,13 +429,13 @@ export const CommissionsSettings: React.FC = () => {
                                                             : ` Dia ${member.commission_payment_day || 5}`
                                                         }
                                                     </div>
-                                                    <BrutalButton
+                                                    <Button
                                                         variant="secondary"
                                                         size="sm"
                                                         onClick={() => setEditingMember(member.id)}
                                                     >
                                                         Editar Perfil @ Comissões
-                                                    </BrutalButton>
+                                                    </Button>
                                                 </div>
                                             )}
                                         </div>
@@ -445,9 +444,9 @@ export const CommissionsSettings: React.FC = () => {
                             })}
                         </div>
                     )}
-                </BrutalCard>
+                </Card>
 
-                <BrutalCard title="Taxa de Maquininha">
+                <Card title="Taxa de Maquininha">
                     <div className="space-y-4">
                         <p className={`${colors.textMuted} text-sm`}>
                             Configure se a taxa de maquininha é repassada ao colaborador no cálculo da comissão.
@@ -513,18 +512,18 @@ export const CommissionsSettings: React.FC = () => {
                             </div>
                         </div>
 
-                        <BrutalButton
+                        <Button
                             variant="primary"
                             onClick={handleSaveMachineFee}
                             disabled={savingMachineFee}
                             icon={savingMachineFee ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                         >
                             {savingMachineFee ? 'Salvando...' : 'Salvar Taxa'}
-                        </BrutalButton>
+                        </Button>
                     </div>
-                </BrutalCard>
+                </Card>
 
-                <BrutalCard className={`${colors.inputBg} ${colors.border}`}>
+                <Card className={`${colors.inputBg} ${colors.border}`}>
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                         <div className={`text-sm ${colors.textMuted} space-y-2`}>
@@ -537,7 +536,7 @@ export const CommissionsSettings: React.FC = () => {
                             </ul>
                         </div>
                     </div>
-                </BrutalCard>
+                </Card>
             </div>
         </SettingsLayout>
     );

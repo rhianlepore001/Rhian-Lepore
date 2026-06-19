@@ -1,8 +1,9 @@
+import { Card, Button } from '../components/ui';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { BrutalCard } from '../components/BrutalCard';
-import { BrutalButton } from '../components/BrutalButton';
+
+
 import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight } from 'lucide-react';
 
 export const ProfessionalPortfolio: React.FC = () => {
@@ -53,7 +54,7 @@ export const ProfessionalPortfolio: React.FC = () => {
         return (
             <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-white">
                 <h1 className="text-2xl font-bold mb-4">Profissional não encontrado</h1>
-                <BrutalButton onClick={() => navigate('/')}>Voltar</BrutalButton>
+                <Button onClick={() => navigate('/')}>Voltar</Button>
             </div>
         );
     }
@@ -138,20 +139,20 @@ export const ProfessionalPortfolio: React.FC = () => {
 
             {/* CTA Section */}
             <div className="max-w-4xl mx-auto px-4 -mt-10 relative z-20 pb-20">
-                <BrutalCard className={`border-t-4 border-${accentColor} p-8 flex flex-col md:flex-row items-center justify-between gap-6`}>
+                <Card className={`border-t-4 border-${accentColor} p-8 flex flex-col md:flex-row items-center justify-between gap-6`}>
                     <div>
                         <h3 className="text-2xl font-bold uppercase mb-2">Pronto para transformar seu visual?</h3>
                         <p className="text-neutral-400">Agende agora com {professional.name.split(' ')[0]} e garanta seu horário.</p>
                     </div>
-                    <BrutalButton
+                    <Button
                         onClick={() => navigate(`/book/${business.business_slug}?pro=${professional.id}`)}
                         className={`w-full md:w-auto px-8 py-4 text-lg bg-${accentColor} hover:bg-${accentColor}Hover text-black font-bold whitespace-nowrap`}
                     >
                         <span className="flex items-center gap-2">
                             <Calendar className="w-5 h-5" /> Agendar Horário
                         </span>
-                    </BrutalButton>
-                </BrutalCard>
+                    </Button>
+                </Card>
 
                 {/* Portfolio / Services Preview could go here */}
                 {/* For MVP, we stick to the main CTA */}

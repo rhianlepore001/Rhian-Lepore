@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
 import { DesignSystemProvider } from './contexts/DesignSystemProvider';
+import { ToastProvider } from './components/ui';
 
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -45,6 +46,7 @@ const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(mo
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
+const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
 
 const LoadingFull = () => (
   <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
@@ -72,7 +74,7 @@ const ProtectedLayout = () => {
     if (role === 'staff') {
       return <Navigate to="/staff-onboarding" replace />;
     }
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/onboarding-wizard" replace />;
   }
 
   return (
@@ -177,7 +179,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/fila" element={<OwnerRouteGuard><QueueManagement /></OwnerRouteGuard>} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientCRM />} />
-          <Route path="/financeiro" element={<OwnerRouteGuard><Finance /></OwnerRouteGuard>} />
+          <Route path="/produtos" element={<Products />} />
+          <Route path="/financeiro" element={<Finance />} />
           <Route path="/marketing" element={<OwnerRouteGuard><Marketing /></OwnerRouteGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
@@ -221,13 +224,15 @@ const App: React.FC = () => {
     <HashRouter>
       <DesignSystemProvider>
         <AuthProvider>
-          <DynamicBranding />
-          <PublicClientProvider>
-            <AlertsProvider>
-                <AppRoutes />
-                <ActivationBanner />
-            </AlertsProvider>
-          </PublicClientProvider>
+          <ToastProvider>
+            <DynamicBranding />
+            <PublicClientProvider>
+              <AlertsProvider>
+                  <AppRoutes />
+                  <ActivationBanner />
+              </AlertsProvider>
+            </PublicClientProvider>
+          </ToastProvider>
         </AuthProvider>
       </DesignSystemProvider>
     </HashRouter>

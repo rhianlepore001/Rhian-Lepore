@@ -8,11 +8,12 @@
 
 ## Crítico (bloqueiam reimplementação ou causam inconsistência de dados)
 
-### G1 — Dual Onboarding System Não Sincronizado
+### G1 — Dual Onboarding System Não Sincronizado — Resolvido em v1
 - **Spec afetada:** `sdd/onboarding.md`, `sdd/auth.md`
 - **Descrição:** Login verifica apenas `business_settings.onboarding_completed` (wizard legado). Se owner completou wizard novo (`onboarding_progress.is_completed=true`) mas legado está `false`, entra em loop de redirect.
 - **Impacto:** Usuário preso em loop de onboarding mesmo após completar.
-- **Mitigação sugerida:** Sincronizar flags ou depreciar wizard legado.
+- **Mitigação aplicada:** `onboarding_progress.is_completed` é a fonte canônica. A migration `supabase/migrations/20260607_sync_onboarding_flags.sql` sincroniza dados existentes, cria trigger para espelhar `business_settings.onboarding_completed` como compatibilidade temporária e endurece a RPC legada `update_onboarding_step` com validação de tenant.
+- **Evidência:** `contexts/AlertsContext.tsx` passou a consultar `onboarding_progress.is_completed`; validação MCP em transação com rollback zerou divergências entre as duas flags.
 - **Confiança:** 🟢
 
 ### G2 — Transação Não-Atômica na Finalização da Fila
@@ -27,6 +28,17 @@
 - **Descrição:** Fallback client-side do checkout faz UPDATE + INSERT separadamente. Mesmo risco de G2.
 - **Impacto:** Appointment completed sem finance_record.
 - **Mitigação sugerida:** Fallback deve ser uma única RPC ou transação.
+- **Confiança:** 🟢
+
+### G16 — StaffInsights soma faturamento bruto como "Comissões" (vazamento) — Resolvido em v1
+- **Spec afetada:** `sdd/finance.md`, `sdd/staff-team.md`, `specs/active/01-colaboradores-comissoes-pagamentos.md`
+- **Origem:** auditoria O3 (UI), 2026-06-07. Relacionado ao G4.
+- **Descrição:** `pages/StaffInsights.tsx` (L73-78) consulta `finance_records.select('amount')` filtrando só por `created_at`, **sem `professional_id`**, e soma `amount` (bruto do serviço) rotulando como "Comissões". `StaffEarningsCard` faz correto: `.eq('professional_id', teamMemberId)` + `commission_value`.
+- **Impacto:** Staff vê faturamento bruto do período (potencial vazamento entre profissionais / da barbearia, dependente só do RLS). Viola Feature 1 da spec 01 ("colaborador NUNCA vê faturamento bruto").
+- **Mitigação aplicada:**
+  - A2 (Composer): query corrigida → filtrar `professional_id = teamMemberId` + usar `commission_value`.
+  - A3 (EAGLE/GPT): RLS cross-tenant OK; intra-tenant defense-in-depth documentado em `docs/v1/EAGLE-REVIEW.md` (P0 pos-launch).
+  - A1: `/financeiro` mantido acessível a staff com visão restrita (decisão EAGLE-REVIEW §2 — sem OwnerRouteGuard).
 - **Confiança:** 🟢
 
 ---
@@ -127,10 +139,10 @@
 
 | Severidade | Quantidade |
 |------------|------------|
-| Crítico | 3 |
+| Crítico | 4 |
 | Moderado | 7 |
 | Cosmético | 5 |
-| **Total** | **15** |
+| **Total** | **16** |
 
 ---
 

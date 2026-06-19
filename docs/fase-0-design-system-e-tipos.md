@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Criar a fundacao minima para a migracao Strangler Fig do AGENX v1 sem alterar fluxos existentes. A Fase 0 estabelece contratos de design system, tipos, services e hooks para que as proximas fases migrem dominios sem decidir arquitetura global de novo.
+Criar a fundacao minima para a migracao Strangler Fig do AgendiX v1 sem alterar fluxos existentes. A Fase 0 estabelece contratos de design system, tipos, services e hooks para que as proximas fases migrem dominios sem decidir arquitetura global de novo.
 
 Esta fase deve permitir que Agenda, Checkout, Booking Publico, Fila, Financeiro, CRM, Configuracoes e Produtos consumam os mesmos padroes de UI, server state e validacao runtime.
 

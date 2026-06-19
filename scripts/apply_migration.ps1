@@ -1,8 +1,18 @@
 param(
     [string]$SqlFile,
-    [string]$Token = 'sbp_02d0fa71fc41fd65ed9363e4175c05888e4c6963',
-    [string]$ProjectRef = 'lcqwrngscsziysyfhpfj'
+    # Segredos vêm SEMPRE do ambiente — nunca hardcode no script (vai para o git).
+    [string]$Token = $env:SUPABASE_ACCESS_TOKEN,
+    [string]$ProjectRef = $env:SUPABASE_PROJECT_REF
 )
+
+if (-not $Token) {
+    Write-Host "ERROR: defina a variavel de ambiente SUPABASE_ACCESS_TOKEN (PAT do Supabase) ou use -Token." -ForegroundColor Red
+    exit 1
+}
+if (-not $ProjectRef) {
+    Write-Host "ERROR: defina SUPABASE_PROJECT_REF ou use -ProjectRef." -ForegroundColor Red
+    exit 1
+}
 
 $sql  = [System.IO.File]::ReadAllText($SqlFile, [System.Text.Encoding]::UTF8)
 # Serializa só a string do SQL como JSON e envolve no objeto

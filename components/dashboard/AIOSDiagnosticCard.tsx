@@ -50,7 +50,7 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                         iconRight={<ArrowRight className="w-4 h-4" />}
                         fullWidth
                         className="md:w-auto"
-                        onClick={() => window.location.href = '/crm'}
+                        onClick={() => window.location.href = '/#/clientes'}
                     >
                         Recuperar Agora
                     </Button>

@@ -57,8 +57,6 @@ export async function getSemanticCache(query: string, threshold = 0.92): Promise
 
         if (error) throw error;
         if (data && data.length > 0) {
-            // eslint-disable-next-line no-console
-            console.log('💎 AIOS Semantic Cache Match! Similarity:', data[0].similarity);
             return data[0].content;
         }
         return null;

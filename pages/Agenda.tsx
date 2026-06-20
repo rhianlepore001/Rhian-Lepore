@@ -13,6 +13,7 @@ import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointm
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
+import { deleteAppointmentWithFinance } from '../services/scheduling';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
@@ -67,9 +68,9 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
     const dateParam = searchParams.get('date');
     if (dateParam) {
         const date = new Date(dateParam);
-        // Verifica se a data Ã© vÃ¡lida e nÃ£o Ã© NaN
+        // Verifica se a data é válida e não é NaN
         if (!isNaN(date.getTime())) {
-            // Ajusta para o fuso horÃ¡rio local para evitar problemas de dia
+            // Ajusta para o fuso horário local para evitar problemas de dia
             const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
             return localDate;
         }
@@ -83,7 +84,7 @@ export const Agenda: React.FC = () => {
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    useAppTour(); // Instancia para detectar continuaÃ§Ã£o do tour
+    useAppTour(); // Instancia para detectar continuação do tour
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -142,7 +143,7 @@ export const Agenda: React.FC = () => {
             .slice(0, 2);
     };
 
-    // Atualiza selectedDate se o parÃ¢metro de URL mudar
+    // Atualiza selectedDate se o parâmetro de URL mudar
     useEffect(() => {
         setSelectedDate(getInitialDate(searchParams));
     }, [searchParams]);
@@ -269,7 +270,7 @@ export const Agenda: React.FC = () => {
 
         if (isNewQuery) {
             setShowNewAppointmentModal(true);
-            // Limpar o parÃ¢metro da URL para evitar reabrir ao atualizar
+            // Limpar o parâmetro da URL para evitar reabrir ao atualizar
             searchParams.delete('new');
             navigate({ search: searchParams.toString() }, { replace: true });
         } else if (showNewAppointmentModal) {
@@ -320,7 +321,7 @@ export const Agenda: React.FC = () => {
             .order('name');
         setCheckoutTeamMembers(membersData || []);
 
-        // Buscar configuraÃ§Ãµes financeiras para prÃ©-preencher taxa
+        // Buscar configurações financeiras para pré-preencher taxa
         const { data: finSettings } = await supabase
             .from('business_settings')
             .select('machine_fee_enabled, debit_fee_percent, credit_fee_percent')
@@ -528,21 +529,18 @@ export const Agenda: React.FC = () => {
             alert('Apenas o dono pode excluir agendamentos do histórico.');
             return;
         }
-        if (!confirm('Tem certeza que deseja excluir este agendamento do histÃ³rico? Esta aÃ§Ã£o Ã© irreversÃ­vel e removerÃ¡ tambÃ©m o registro financeiro associado.')) return;
+        if (!confirm('Tem certeza que deseja excluir este agendamento do histórico? Esta ação é irreversível e removerá também o registro financeiro associado.')) return;
 
         try {
-            // Delete associated finance records first (if any)
-            await supabase.from('finance_records').delete().eq('appointment_id', appointmentId);
+            // Exclusão atômica (agendamento + registro financeiro) via RPC transacional, com escopo de tenant no banco.
+            await deleteAppointmentWithFinance({ appointmentId });
 
-            // Then delete the appointment
-            await supabase.from('appointments').delete().eq('id', appointmentId).eq('user_id', user.id);
-
-            alert('Agendamento e registro financeiro excluÃ­dos com sucesso!');
+            alert('Agendamento e registro financeiro excluídos com sucesso!');
             fetchHistoryAppointments(); // Refresh history
             fetchData(); // Also refresh main agenda data in case it affects counts/stats
         } catch (error) {
             logger.error('Error deleting history appointment', error);
-            alert('Erro ao excluir agendamento do histÃ³rico.');
+            alert('Erro ao excluir agendamento do histórico.');
         }
     };
 
@@ -691,30 +689,30 @@ export const Agenda: React.FC = () => {
             const waPhone = phone.replace(/\D/g, '');
             const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
 
-            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmaÃ§Ã£o para o cliente via WhatsApp?')) {
+            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
                 const dateObj = new Date(booking.appointment_time);
                 const formattedDate = dateObj.toLocaleDateString('pt-BR');
                 const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 const establishment = businessName;
 
-                const currencySymbol = currencyRegion === 'PT' ? 'â‚¬' : 'R$';
+                const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
                 const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
 
                 const message = isBeauty
-                    ? `OlÃ¡ ${booking.customer_name}! Tudo bem? âœ¨\n` +
-                    `Sua reserva na *${establishment || 'EstÃ©tica'}* estÃ¡ confirmada!\n` +
-                    `ðŸ“… *${formattedDate}* Ã s *${formattedTime}*\n` +
-                    `ðŸ’¼ *ServiÃ§o*: ${serviceNames}\n` +
-                    `ðŸ’° *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `ðŸ“  Local: estamos te esperando!\n\n` +
-                    `Estamos preparando tudo para te receber com a melhor experiÃªncia. AtÃ© logo! ðŸ’–`
-                    : `Fala, ${booking.customer_name}! Seu horÃ¡rio estÃ¡ garantido! ðŸ›¡ï¸ \n` +
+                    ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
+                    `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
+                    `📅 *${formattedDate}* às *${formattedTime}*\n` +
+                    `💼 *Serviço*: ${serviceNames}\n` +
+                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                    `📍  Local: estamos te esperando!\n\n` +
+                    `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
+                    : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️ \n` +
                     `Marque na sua agenda:\n` +
-                    `ðŸ—“ï¸  *${formattedDate}* Ã s *${formattedTime}*\n` +
-                    `âœ‚ï¸  *ServiÃ§o*: ${serviceNames}\n` +
-                    `ðŸ’° *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `ðŸ“  Onde: *${establishment || 'Barbearia'}*.\n\n` +
-                    `Prepare-se para o trato! Nos vemos em breve. ðŸ‘‹`;
+                    `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
+                    `✂️  *Serviço*: ${serviceNames}\n` +
+                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                    `📍  Onde: *${establishment || 'Barbearia'}*.\n\n` +
+                    `Prepare-se para o trato! Nos vemos em breve. 👋`;
 
                 const waMessage = encodeURIComponent(message);
                 window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
@@ -764,13 +762,13 @@ export const Agenda: React.FC = () => {
             alert('Apenas o dono pode cancelar agendamentos.');
             return;
         }
-        if (!confirm('Cancelar este agendamento? Ele serÃ¡ movido para o histÃ³rico.')) return;
+        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
         try {
             await supabase
                 .from('appointments')
                 .update({ status: 'Cancelled' })
                 .eq('id', appointmentId);
-            alert('Agendamento cancelado e movido para o histÃ³rico!');
+            alert('Agendamento cancelado e movido para o histórico!');
             if (isOverdue) {
                 fetchOverdueAppointments();
             } else {
@@ -818,7 +816,7 @@ export const Agenda: React.FC = () => {
         try {
             const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
             if (selectedServicesDetails.length === 0) {
-                alert('ServiÃ§o invÃ¡lido.');
+                alert('Serviço inválido.');
                 return;
             }
 
@@ -827,7 +825,7 @@ export const Agenda: React.FC = () => {
             // Use manually edited price
             const finalPrice = parseFloat(finalPriceInput);
             if (isNaN(finalPrice)) {
-                alert('PreÃ§o invÃ¡lido!');
+                alert('Preço inválido!');
                 return;
             }
 
@@ -859,22 +857,22 @@ export const Agenda: React.FC = () => {
                 const waPhone = client.phone.replace(/\D/g, '');
                 const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
 
-                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmaÃ§Ã£o para o cliente via WhatsApp?')) {
+                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
                     const dateObj = dateTime;
                     const formattedDate = dateObj.toLocaleDateString('pt-BR');
                     const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     const establishment = businessName;
 
-                    const currencySymbol = currencyRegion === 'PT' ? 'â‚¬' : 'R$';
+                    const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
                     const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
 
-                    const message = `Agendamento confirmado! âœ¨
+                    const message = `Agendamento confirmado! ✨
 Data: ${formattedDate}
-HorÃ¡rio: ${formattedTime}
-ServiÃ§o: ${serviceNames}
+Horário: ${formattedTime}
+Serviço: ${serviceNames}
 Valor: ${currencySymbol} ${formattedPrice}
 
-Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
+Obrigada pela confiança! Te espero no ${establishment}.`;
 
                     const waMessage = encodeURIComponent(message);
                     window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
@@ -1050,7 +1048,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                     Agendamentos Atrasados ({overdueAppointments.length})
                                 </h3>
                                 <p className={`${colors.textSecondary} text-sm mb-4`}>
-                                    Estes agendamentos estÃ£o no passado e precisam ser marcados como ConcluÃ­dos (para faturamento) ou Cancelados.
+                                    Estes agendamentos estão no passado e precisam ser marcados como Concluídos (para faturamento) ou Cancelados.
                                 </p>
 
                                 {isOverdueLoading ? (
@@ -1069,7 +1067,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                                         <p className={`${colors.text} font-bold text-sm`}>{apt.clientName}</p>
                                                         <p className={`${colors.textSecondary} text-xs`}>{apt.service}</p>
                                                         <p className={`${colors.textMuted} text-xs`}>
-                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                             {professional && ` | Profissional: ${professional.name}`}
                                                         </p>
                                                     </div>
@@ -1077,7 +1075,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                                         <button
                                                             onClick={() => setShowingDetailsAppointment(apt)}
                                                             className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
-                                                            title="InformaÃ§Ãµes"
+                                                            title="Informações"
                                                         >
                                                             <Info className="w-4 h-4" /> Info
                                                         </button>
@@ -1203,15 +1201,15 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                             <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
                             <div>
                                 <h3 className={`${colors.text} font-bold text-lg mb-1`}>
-                                    {publicBookings.length} SolicitaÃ§Ã£o(Ãµes) Pendente(s)
+                                    {publicBookings.length} Solicitação(ões) Pendente(s)
                                 </h3>
                                 <p className={`${colors.textSecondary} text-sm`}>
                                     {(() => {
                                         const edits = publicBookings.filter((b: any) => b.is_edit).length;
                                         const newOnes = publicBookings.length - edits;
-                                        if (edits > 0 && newOnes > 0) return `${newOnes} novo(s) e ${edits} alteraÃ§Ã£o(Ãµes) aguardando aprovaÃ§Ã£o.`;
-                                        if (edits > 0) return `${edits} cliente(s) alteraram seu agendamento e aguardam aprovaÃ§Ã£o.`;
-                                        return 'Os agendamentos abaixo foram feitos online e aguardam sua aprovaÃ§Ã£o:';
+                                        if (edits > 0 && newOnes > 0) return `${newOnes} novo(s) e ${edits} alteração(ões) aguardando aprovação.`;
+                                        if (edits > 0) return `${edits} cliente(s) alteraram seu agendamento e aguardam aprovação.`;
+                                        return 'Os agendamentos abaixo foram feitos online e aguardam sua aprovação:';
                                     })()}
                                 </p>
                             </div>
@@ -1230,7 +1228,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                     {(booking as any).is_edit && (
                                         <div className="mb-3">
                                             <span className={`text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
-                                                ALTERAÃÃO DE AGENDAMENTO
+                                                ALTERAÇÃO DE AGENDAMENTO
                                             </span>
                                         </div>
                                     )}
@@ -1276,7 +1274,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                                 <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
                                             <span className="font-medium">
-                                                {booking.service_ids?.length || 0} serviÃ§o(s) â¢ <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
+                                                {booking.service_ids?.length || 0} serviço(s) â¢ <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">
@@ -1448,7 +1446,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                         Detalhes do Agendamento
                                     </h3>
                                     <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block ${showingDetailsAppointment.status === 'Completed' ? classes.badgeSuccess : showingDetailsAppointment.status === 'Cancelled' ? classes.badgeDanger : classes.badgeWarning}`}>
-                                        {showingDetailsAppointment.status === 'Completed' ? 'ConcluÃ­do' :
+                                        {showingDetailsAppointment.status === 'Completed' ? 'Concluído' :
                                          showingDetailsAppointment.status === 'Cancelled' ? 'Cancelado' : 'Confirmado'}
                                     </span>
                                 </div>
@@ -1489,7 +1487,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Scissors className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>ServiÃ§o</span>
+                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Serviço</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>{showingDetailsAppointment.service}</p>
                                 </div>
@@ -1548,7 +1546,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                 <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Info className={`w-4 h-4 ${accent.text}`} />
-                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>ObservaÃ§Ãµes</span>
+                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
                                     </div>
                                     <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
                                         &quot;{showingDetailsAppointment.notes}&quot;
@@ -1596,7 +1594,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                 <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto ${colors.overlay}`}>
                     <div className={`w-full max-w-4xl p-6 my-8 transition-all ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
                         <div className={`flex items-center justify-between mb-6`}>
-                            <h3 className={`${colors.text} font-heading text-2xl uppercase`}>HistÃ³rico de Agendamentos</h3>
+                            <h3 className={`${colors.text} font-heading text-2xl uppercase`}>Histórico de Agendamentos</h3>
                             <button
                                 onClick={() => setShowHistoryModal(false)}
                                 className={`${colors.textMuted} hover:${colors.text} transition-colors`}
@@ -1633,7 +1631,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                         {/* History List */}
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                             {historyAppointments.length === 0 ? (
-                                <EmptyState icon={History} message="Nenhum agendamento concluÃ­do ou cancelado neste mÃªs" />
+                                <EmptyState icon={History} message="Nenhum agendamento concluído ou cancelado neste mês" />
                             ) : (
                                 historyAppointments.map(apt => {
                                     const professional = teamMembers.find(m => m.id === apt.professional_id);
@@ -1648,10 +1646,10 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${apt.status === 'Completed' ? status.successBg + ' ' + status.success : status.dangerBg + ' ' + status.danger}`}>
-                                                            {apt.status === 'Completed' ? 'CONCLUÃDO' : 'CANCELADO'}
+                                                            {apt.status === 'Completed' ? 'CONCLUÍDO' : 'CANCELADO'}
                                                         </span>
                                                         <span className={`${colors.textMuted} text-xs`}>
-                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} Ã s {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
                                                     <p className={`${colors.text} font-bold text-base mb-1`}>{apt.clientName}</p>
@@ -1686,7 +1684,7 @@ Obrigada pela confianÃ§a! Te espero no ${establishment}.`;
                                                     )}
                                                     {isCustomPriceHigher && (
                                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
-                                                            PreÃ§o Customizado
+                                                            Preço Customizado
                                                         </span>
                                                     )}
                                                     {!isStaff && (

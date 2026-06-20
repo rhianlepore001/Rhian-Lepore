@@ -61,7 +61,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
                     <div className="flex items-center gap-2 shrink-0">
                         {!loading && hasOpportunity && (
                             <button
-                                onClick={() => navigate('/crm')}
+                                onClick={() => navigate('/clientes')}
                                 className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono ${classes.badgeSuccess} hover:brightness-110 transition-all`}
                             >
                                 <TrendingUp size={12} />

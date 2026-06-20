@@ -101,6 +101,14 @@ specs/
 
 ---
 
+## Memória do projeto
+
+**Sempre leia `MEMORY.md` (raiz do projeto) no início de uma sessão.** É a memória compartilhada do estado atual do projeto entre máquinas (local + VPS) — status de deploy, trabalho recente, pendências e lições aprendidas. Mantenha-o atualizado ao concluir trabalho relevante.
+
+⚠️ Repo é **público**: nunca commite segredos, chaves, tokens ou detalhes exploráveis de segurança no `MEMORY.md` (nem em qualquer arquivo versionado).
+
+---
+
 ## graphify
 
 Este projeto tem um grafo de conhecimento em `graphify-out/` com god nodes, comunidades e relações cross-file.

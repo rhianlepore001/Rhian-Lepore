@@ -129,3 +129,6 @@ impeccable/
 
 
 testsprite_tests\tmp\config.json
+
+# Supabase CLI local metadata (nao versionar)
+supabase/.temp/

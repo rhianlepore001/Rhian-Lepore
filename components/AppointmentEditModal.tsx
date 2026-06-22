@@ -237,7 +237,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     service: finalServiceString,
                     appointment_time: dateTime.toISOString(),
                     price: finalPriceValue,
-                    notes: notes
+                    notes: notes,
+                    edited_at: new Date().toISOString()
                 })
                 .eq('id', appointment.id)
                 .eq('user_id', user.id);

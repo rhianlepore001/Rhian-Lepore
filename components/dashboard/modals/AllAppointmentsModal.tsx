@@ -10,6 +10,7 @@ import { logger } from '../../../utils/Logger';
 import { useBrutalTheme } from '../../../hooks/useBrutalTheme';
 import { EmptyState } from '../../EmptyState';
 import { Scissors, Clock, User, Calendar, Trash2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../../../utils/appointmentStatus';
 
 interface AllAppointmentsModalProps {
     isOpen: boolean;
@@ -104,9 +105,14 @@ export const AllAppointmentsModal: React.FC<AllAppointmentsModalProps> = ({
                                     </div>
                                 </div>
                                 <div className="hidden sm:block">
-                                    <span className={`px-2 py-1 text-xs font-mono uppercase tracking-wider ${apt.status === 'Confirmed' ? classes.badgeSuccess : classes.badgeWarning}`}>
-                                        {apt.status}
-                                    </span>
+                                    {(() => {
+                                        const v = getVisualStatus(apt);
+                                        return (
+                                            <span className={`px-2 py-1 text-xs font-mono uppercase tracking-wider rounded-full border ${VISUAL_STATUS_CLASSES[v].card} ${VISUAL_STATUS_CLASSES[v].text}`}>
+                                                {VISUAL_STATUS_LABEL[v]}
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
                             </li>
                         ))}

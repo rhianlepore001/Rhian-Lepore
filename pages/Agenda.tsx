@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -20,6 +21,16 @@ import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime } from '../utils/date';
+import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../utils/appointmentStatus';
+
+// Ícone por estado visual — indicador secundário (forma + cor) para daltônicos/baixa visão.
+const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?: string }>> = {
+    completed: Check,
+    overdue: AlertTriangle,
+    normal: Clock,
+    noshow: Ban,
+    cancelled: X,
+};
 
 
 interface Appointment {
@@ -35,6 +46,8 @@ interface Appointment {
     clientPhone?: string;
     notes?: string;
     payment_method?: string | null;
+    duration_minutes?: number;
+    edited_at?: string | null;
 }
 
 interface TeamMember {
@@ -79,7 +92,7 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 };
 
 export const Agenda: React.FC = () => {
-    const { user, region, role, companyId } = useAuth();
+    const { user, region, role, companyId, teamMemberId } = useAuth();
     const isStaff = role === 'staff';
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
@@ -98,7 +111,10 @@ export const Agenda: React.FC = () => {
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
     const [historyMonth, setHistoryMonth] = useState(new Date());
-    const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState<string | null>(null);
+    // Filtro de profissionais (multi-select). [] = "Todos" (apenas owner).
+    // Staff inicia com o próprio teamMemberId e nunca enxerga "Todos".
+    const [selectedProfessionalIds, setSelectedProfessionalIds] = useState<string[]>([]);
+    const staffFilterInitialized = useRef(false);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
     const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
@@ -249,18 +265,28 @@ export const Agenda: React.FC = () => {
 
 
     // Update selectedAppointmentDate when modal opens or selectedDate changes
+    // Staff inicia vendo apenas a própria agenda (R27).
+    useEffect(() => {
+        if (isStaff && teamMemberId && !staffFilterInitialized.current) {
+            setSelectedProfessionalIds([teamMemberId]);
+            staffFilterInitialized.current = true;
+        }
+    }, [isStaff, teamMemberId]);
+
     useEffect(() => {
         if (showNewAppointmentModal) {
             setSelectedAppointmentDate(formatDateForInput(selectedDate));
 
-            // Auto-select professional if filter is active or only one exists
-            if (selectedProfessionalFilter) {
-                setSelectedProfessional(selectedProfessionalFilter);
+            // Auto-select professional: 1 selecionado → ele; staff → o próprio; senão único do time
+            if (selectedProfessionalIds.length === 1) {
+                setSelectedProfessional(selectedProfessionalIds[0]);
+            } else if (isStaff && teamMemberId) {
+                setSelectedProfessional(teamMemberId);
             } else if (teamMembers.length === 1) {
                 setSelectedProfessional(teamMembers[0].id);
             }
         }
-    }, [showNewAppointmentModal, selectedDate, selectedProfessionalFilter, teamMembers]);
+    }, [showNewAppointmentModal, selectedDate, selectedProfessionalIds, teamMembers, isStaff, teamMemberId]);
 
     // Handle clientId and service from URL (coming from CRM history)
     useEffect(() => {
@@ -364,7 +390,7 @@ export const Agenda: React.FC = () => {
             .eq('user_id', effectiveUserId)
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
-            .in('status', ['Confirmed', 'Pending', 'Completed']) // Include Completed for badge (Fase 3)
+            .in('status', ['Confirmed', 'Pending', 'Completed', 'Cancelled', 'NoShow']) // Agenda v2: todos os status visíveis na grade com cores
             .order('appointment_time');
 
         if (data) {
@@ -383,7 +409,9 @@ export const Agenda: React.FC = () => {
                     professional_id: apt.professional_id,
                     basePrice: basePrice,
                     notes: apt.notes,
-                    payment_method: apt.payment_method
+                    payment_method: apt.payment_method,
+                    duration_minutes: apt.duration_minutes,
+                    edited_at: apt.edited_at
                 };
             }));
         }
@@ -780,6 +808,27 @@ export const Agenda: React.FC = () => {
         }
     };
 
+    const handleNoShowAppointment = async (appointmentId: string) => {
+        if (isStaff) {
+            alert('Apenas o dono pode marcar como não compareceu.');
+            return;
+        }
+        if (!confirm('Marcar como "Não compareceu"? O agendamento permanece no histórico.')) return;
+        try {
+            const { error } = await supabase
+                .from('appointments')
+                .update({ status: 'NoShow' })
+                .eq('id', appointmentId)
+                .eq('user_id', effectiveUserId);
+            if (error) throw error;
+            setShowingDetailsAppointment(null);
+            fetchData();
+        } catch (error) {
+            logger.error('Error marking appointment as no-show', error);
+            alert('Erro ao marcar como não compareceu.');
+        }
+    };
+
     const handleAssignToProfessional = async (appointmentId: string, professionalId: string) => {
         try {
             const { error } = await supabase
@@ -933,10 +982,37 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
         }
     }
 
-    // Filtrar profissionais exibidos
-    const displayedMembers = selectedProfessionalFilter
-        ? teamMembers.filter(m => m.id === selectedProfessionalFilter)
-        : teamMembers;
+    // Filtrar profissionais exibidos (R27)
+    // selectedProfessionalIds = [] significa "Todos" — disponível só para owner.
+    // Staff sem seleção (ainda não inicializado ou sem teamMemberId) NUNCA vê todos: fallback seguro vazio.
+    const displayedMembers = selectedProfessionalIds.length > 0
+        ? teamMembers.filter(m => selectedProfessionalIds.includes(m.id))
+        : (isStaff ? [] : teamMembers);
+
+    // Coluna de "não atribuídos" só faz sentido para o owner em modo "Todos".
+    const showUnassigned = !isStaff && selectedProfessionalIds.length === 0;
+
+    const toggleProfessional = (id: string) => {
+        setSelectedProfessionalIds(prev => {
+            const has = prev.includes(id);
+            if (isStaff) {
+                // O próprio staff é fixo (não removível); colegas são opcionais.
+                if (id === teamMemberId) return prev;
+                if (has) {
+                    const next = prev.filter(p => p !== id);
+                    return next.length > 0 ? next : (teamMemberId ? [teamMemberId] : []);
+                }
+                return [...prev, id];
+            }
+            // Owner: multi-select simples; lista vazia volta a "Todos".
+            return has ? prev.filter(p => p !== id) : [...prev, id];
+        });
+    };
+
+    // Modal de detalhes: re-deriva do state por id para não exibir dado stale (realtime/refetch).
+    const detailsApt = showingDetailsAppointment
+        ? (appointments.find(a => a.id === showingDetailsAppointment.id) ?? showingDetailsAppointment)
+        : null;
 
     // Prepare options for SearchableSelect
     const clientOptions = clients.map(c => ({
@@ -1120,10 +1196,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                 </button>
                 
-                <div className="flex-1 flex items-center gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-1">
-                    {Array.from({ length: 7 }).map((_, i) => {
+                {/* Date strip: 5 dias fixos (sem scroll) — as setas navegam além da janela.
+                    Carrossel horizontal único da tela fica para os avatares de profissionais. */}
+                <div className="flex-1 flex items-center gap-2 py-1">
+                    {Array.from({ length: 5 }).map((_, i) => {
                         const d = new Date(selectedDate);
-                        d.setDate(d.getDate() - 3 + i);
+                        d.setDate(d.getDate() - 2 + i);
                         const isSelected = d.toDateString() === selectedDate.toDateString();
                         const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
                         const dayNum = d.getDate();
@@ -1134,10 +1212,10 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     const newDateStr = d.toISOString().split('T')[0];
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-col items-center justify-center min-w-[70px] h-[80px] rounded-2xl snap-start transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text}`}`}
                             >
-                                <span className="text-sm font-medium capitalize mb-1">{dayName}</span>
-                                <span className={`text-2xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
+                                <span className="text-xs font-medium capitalize mb-0.5">{dayName}</span>
+                                <span className={`text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
                     })}
@@ -1154,41 +1232,49 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             {/* Professional Filter - Avatars */}
             {teamMembers.length > 0 && (
                 <div className="px-4 md:px-6">
-                    <div className={`flex items-center gap-6 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scrollbar-hide`}>
-                        <button
-                            onClick={() => setSelectedProfessionalFilter(null)}
-                            className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
-                        >
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalFilter === null ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
-                                <Users className="w-5 h-5" />
-                            </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalFilter === null ? accent.text : colors.textMuted}`}>Todos</span>
-                        </button>
-                        {teamMembers.map(member => (
+                    <div className={`flex items-center gap-5 overflow-x-auto pb-3 pt-1 snap-x snap-mandatory scrollbar-hide`}>
+                        {/* "Todos" só para owner — staff nunca vê agenda completa de uma vez (R27) */}
+                        {!isStaff && (
                             <button
-                                key={member.id}
-                                onClick={() => setSelectedProfessionalFilter(member.id)}
+                                onClick={() => setSelectedProfessionalIds([])}
                                 className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                             >
-                                <div className="relative">
-                                    {member.photo_url ? (
-                                        <img
-                                            src={member.photo_url}
-                                            alt={member.name}
-                                            className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${selectedProfessionalFilter === member.id ? `${accent.border} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : colors.border}`}
-                                        />
-                                    ) : (
-                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${selectedProfessionalFilter === member.id ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
-                                            {getInitials(member.name)}
-                                        </div>
-                                    )}
-                                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                    <Users className="w-5 h-5" />
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider truncate max-w-[72px] ${selectedProfessionalFilter === member.id ? accent.text : colors.textMuted}`}>
-                                    {member.name.split(' ')[0]}
-                                </span>
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
                             </button>
-                        ))}
+                        )}
+                        {teamMembers.map(member => {
+                            const isSelected = selectedProfessionalIds.includes(member.id);
+                            const isSelf = isStaff && member.id === teamMemberId;
+                            return (
+                                <button
+                                    key={member.id}
+                                    onClick={() => toggleProfessional(member.id)}
+                                    aria-pressed={isSelected}
+                                    className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
+                                >
+                                    <div className="relative">
+                                        {member.photo_url ? (
+                                            <img
+                                                src={member.photo_url}
+                                                alt={member.name}
+                                                className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : colors.border}`}
+                                            />
+                                        ) : (
+                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                                {getInitials(member.name)}
+                                            </div>
+                                        )}
+                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
+                                    </div>
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
+                                        {isSelf ? 'Você' : member.name.split(' ')[0]}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -1306,6 +1392,15 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         />
                     </Card>
                 </div>
+            ) : displayedMembers.length === 0 ? (
+                <div className="px-4 md:px-6">
+                    <Card variant="outlined">
+                        <EmptyState
+                            icon={User}
+                            message="Não foi possível identificar o seu perfil de profissional. Fale com o dono da barbearia para vincular a sua conta à equipe."
+                        />
+                    </Card>
+                </div>
             ) : (
                 <div className="px-4 md:px-6 overflow-x-auto scrollbar-hide pb-6">
                     <div className="min-w-[800px]">
@@ -1325,10 +1420,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         <div className={`relative ${colors.surface} ${colors.border} border rounded-2xl overflow-hidden`}>
                             {timeSlots.map((time, slotIdx) => {
                                 const isHour = time.endsWith(':00');
+                                const matchesTime = (a: Appointment) => {
+                                    const d = new Date(a.appointment_time);
+                                    const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                    return aptTime === time;
+                                };
+                                // Slots vazios ficam finos; slots com agendamento mantêm altura legível.
+                                const hasApt = displayedMembers.some(m => getAppointmentsForProfessional(m.id).some(matchesTime))
+                                    || (showUnassigned && appointments.some(a => !a.professional_id && matchesTime(a)));
                                 return (
-                                    <div key={time} className={`flex min-h-[90px] border-b ${colors.divider} relative`}>
+                                    <div key={time} className={`flex ${hasApt ? 'min-h-[84px]' : 'min-h-[36px]'} border-b ${colors.divider} relative transition-[min-height]`}>
                                         {/* Time Label */}
-                                        <div className={`w-20 flex-shrink-0 flex items-start justify-center pt-3 border-r ${colors.divider}`}>
+                                        <div className={`w-20 flex-shrink-0 flex items-start justify-center pt-2 border-r ${colors.divider}`}>
                                             {isHour && (
                                                 <span className={`text-sm font-bold ${colors.text}`}>{time}</span>
                                             )}
@@ -1336,20 +1439,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
                                         {/* Columns for each member at this timeslot */}
                                         {displayedMembers.map((member, idx) => {
-                                            const aptsAtTime = getAppointmentsForProfessional(member.id).filter(a => {
-                                                const d = new Date(a.appointment_time);
-                                                const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                                                return aptTime === time;
-                                            });
-                                            
+                                            const aptsAtTime = getAppointmentsForProfessional(member.id).filter(matchesTime);
+
                                             // Handle Unassigned for the first column if no professional filter is active
-                                            const unassignedApts = (!selectedProfessionalFilter && idx === 0) 
-                                                ? appointments.filter(a => !a.professional_id).filter(a => {
-                                                    const d = new Date(a.appointment_time);
-                                                    const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                                                    return aptTime === time;
-                                                }) : [];
-                                                
+                                            const unassignedApts = (showUnassigned && idx === 0)
+                                                ? appointments.filter(a => !a.professional_id).filter(matchesTime) : [];
+
                                             const allCellApts = [...unassignedApts, ...aptsAtTime];
 
                                             return (
@@ -1361,41 +1456,50 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         const d = new Date(apt.appointment_time);
                                                         const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
                                                         const isUnassigned = !apt.professional_id;
-                                                        
+                                                        const visual = getVisualStatus(apt);
+                                                        const vc = VISUAL_STATUS_CLASSES[visual];
+                                                        const StatusIcon = VISUAL_STATUS_ICON[visual];
+
                                                         return (
-                                                            <div 
+                                                            <div
                                                                 key={apt.id}
                                                                 onClick={() => setShowingDetailsAppointment(apt)}
-                                                                className={`cursor-pointer rounded-lg border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : `${colors.border} ${colors.surface}`} p-2.5 flex flex-col gap-1.5 transition-all hover:${colors.border} hover:shadow-lite-glass relative group overflow-hidden w-full h-full min-h-[75px] shadow-sm`}
+                                                                className={`cursor-pointer rounded-lg border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : vc.card} p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-lite-glass relative group overflow-hidden w-full h-full min-h-[75px] shadow-sm`}
                                                             >
                                                                 <div className="flex justify-between items-start">
                                                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isUnassigned ? 'text-red-400 bg-red-400/10 border-red-400/20' : `${accent.text} ${accent.bgDim} ${accent.borderDim}`} border`}>
                                                                         {timeStr}
                                                                     </span>
-                                                                    {apt.notes && (
-                                                                        <MessageCircle className="w-3.5 h-3.5 text-emerald-500/80" />
-                                                                    )}
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {apt.edited_at && (
+                                                                            <Edit2 className={`w-3 h-3 ${colors.textMuted}`} aria-label="Editado" />
+                                                                        )}
+                                                                        {/* Indicador de status: forma (ícone) + cor — distinguível por daltônicos */}
+                                                                        <span role="img" aria-label={VISUAL_STATUS_LABEL[visual]} title={VISUAL_STATUS_LABEL[visual]} className="inline-flex">
+                                                                            <StatusIcon className={`w-3.5 h-3.5 ${vc.text}`} />
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
-                                                                
+
                                                                 <h4 className={`text-xs font-bold ${colors.text} line-clamp-1 mt-0.5`}>
                                                                     {apt.clientName}
                                                                 </h4>
-                                                                
+
                                                                 <div className={`flex items-center gap-1.5 ${colors.textMuted}`}>
-                                                                    <Scissors className="w-3 h-3" />
+                                                                    <Scissors className="w-3 h-3 flex-shrink-0" />
                                                                     <span className="text-[10px] truncate">{apt.service}</span>
                                                                 </div>
-                                                                
+
                                                                 <div className={`text-[10px] font-mono font-medium ${colors.textMuted}`}>
                                                                     {formatCurrency(apt.price, currencyRegion)}
                                                                 </div>
-                                                                
-                                                                {/* Status indicator line/dot */}
-                                                                <div className="absolute top-0 right-0 h-full w-0.5" />
-                                                                {apt.status === 'Confirmed' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" />}
-                                                                {apt.status === 'Pending' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]" />}
-                                                                {apt.status === 'InProgress' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.5)]" />}
-                                                                {apt.status === 'Completed' && <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-neutral-500" />}
+
+                                                                {apt.notes && (
+                                                                    <div className={`flex items-start gap-1 ${colors.textMuted}`}>
+                                                                        <MessageCircle className="w-3 h-3 flex-shrink-0 mt-0.5 text-emerald-500/80" />
+                                                                        <span className="text-[10px] leading-snug line-clamp-2">{apt.notes}</span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )
                                                     })}
@@ -1412,43 +1516,49 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
             {/* Legend (Bottom) */}
             <div className={`px-4 md:px-6 mt-4 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-8`}>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" />
-                    <span>Confirmado</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.5)]" />
-                    <span>Pendente</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.5)]" />
-                    <span>Em atendimento</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-neutral-500" />
-                    <span>Finalizado</span>
-                </div>
+                {(['normal', 'overdue', 'completed', 'noshow', 'cancelled'] as VisualStatus[]).map(v => {
+                    const LegendIcon = VISUAL_STATUS_ICON[v];
+                    return (
+                        <div key={v} className="flex items-center gap-1.5">
+                            <LegendIcon className={`w-3.5 h-3.5 ${VISUAL_STATUS_CLASSES[v].text}`} />
+                            <span>{VISUAL_STATUS_LABEL[v]}</span>
+                        </div>
+                    );
+                })}
                 <div className="flex items-center gap-1.5 ml-4">
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-500/80" />
                     <span>Com observação</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                    <Edit2 className={`w-3 h-3 ${colors.textMuted}`} />
+                    <span>Editado</span>
+                </div>
             </div>
 
             {/* Appointment Details Modal */}
-            {showingDetailsAppointment && createPortal(
+            {detailsApt && createPortal(
                 <div className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${colors.overlay} md:left-64`}>
-                    <div className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300 ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: true, clickOutsideDeactivates: true, onDeactivate: () => setShowingDetailsAppointment(null) }}>
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="appointment-details-title"
+                        className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300 ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
                         {/* Header */}
                         <div className={`p-6 border-b ${colors.divider} ${colors.surface}`}>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className={`font-heading text-xl uppercase mb-1 ${colors.text}`}>
+                                    <h3 id="appointment-details-title" className={`font-heading text-xl uppercase mb-1 ${colors.text}`}>
                                         Detalhes do Agendamento
                                     </h3>
-                                    <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block ${showingDetailsAppointment.status === 'Completed' ? classes.badgeSuccess : showingDetailsAppointment.status === 'Cancelled' ? classes.badgeDanger : classes.badgeWarning}`}>
-                                        {showingDetailsAppointment.status === 'Completed' ? 'Concluído' :
-                                         showingDetailsAppointment.status === 'Cancelled' ? 'Cancelado' : 'Confirmado'}
-                                    </span>
+                                    {(() => {
+                                        const v = getVisualStatus(detailsApt);
+                                        return (
+                                            <span className={`text-xs font-mono font-bold px-3 py-0.5 rounded-full inline-block border ${VISUAL_STATUS_CLASSES[v].card} ${VISUAL_STATUS_CLASSES[v].text}`}>
+                                                {VISUAL_STATUS_LABEL[v]}
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
                                 <button
                                     onClick={() => setShowingDetailsAppointment(null)}
@@ -1464,16 +1574,16 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             {/* Client Info */}
                             <div className="flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${accent.bgDim} ${accent.text} ${accent.borderDim}`}>
-                                    {showingDetailsAppointment.clientName.charAt(0).toUpperCase()}
+                                    {detailsApt.clientName.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
                                     <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-0.5`}>Cliente</p>
-                                    <h4 className={`text-lg font-bold ${colors.text} leading-tight`}>{showingDetailsAppointment.clientName}</h4>
-                                    {showingDetailsAppointment.clientPhone && (
+                                    <h4 className={`text-lg font-bold ${colors.text} leading-tight`}>{detailsApt.clientName}</h4>
+                                    {detailsApt.clientPhone && (
                                         <div className="flex items-center gap-1 mt-1">
                                             <Phone className={`w-3 h-3 ${colors.textMuted}`} />
                                             <span className={`text-xs ${colors.textMuted} font-mono`}>
-                                                {formatPhone(showingDetailsAppointment.clientPhone, currencyRegion)}
+                                                {formatPhone(detailsApt.clientPhone, currencyRegion)}
                                             </span>
                                         </div>
                                     )}
@@ -1489,7 +1599,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         <Scissors className="w-4 h-4" />
                                         <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Serviço</span>
                                     </div>
-                                    <p className={`${colors.text} font-medium text-sm`}>{showingDetailsAppointment.service}</p>
+                                    <p className={`${colors.text} font-medium text-sm`}>{detailsApt.service}</p>
                                 </div>
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
@@ -1497,7 +1607,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Profissional</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>
-                                        {teamMembers.find(m => m.id === showingDetailsAppointment.professional_id)?.name || 'N/A'}
+                                        {teamMembers.find(m => m.id === detailsApt.professional_id)?.name || 'N/A'}
                                     </p>
                                 </div>
                             </div>
@@ -1510,10 +1620,10 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Data e Hora</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>
-                                        {new Date(showingDetailsAppointment.appointment_time).toLocaleDateString('pt-BR')}
+                                        {new Date(detailsApt.appointment_time).toLocaleDateString('pt-BR')}
                                     </p>
                                     <p className={`font-mono font-bold mt-0.5 ${accent.text}`}>
-                                        {new Date(showingDetailsAppointment.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(detailsApt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
                                 <div>
@@ -1523,7 +1633,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     </div>
                                     <div className="flex flex-col">
                                         {(() => {
-                                            const { hasDiscount, basePrice } = getDiscountInfo(showingDetailsAppointment);
+                                            const { hasDiscount, basePrice } = getDiscountInfo(detailsApt);
                                             return (
                                                 <>
                                                     {hasDiscount && basePrice && (
@@ -1532,7 +1642,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         </span>
                                                     )}
                                                     <span className={`text-xl font-bold font-mono ${isBeauty ? colors.text : accent.text}`}>
-                                                        {formatCurrency(showingDetailsAppointment.price, currencyRegion)}
+                                                        {formatCurrency(detailsApt.price, currencyRegion)}
                                                     </span>
                                                 </>
                                             );
@@ -1542,31 +1652,40 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             </div>
 
                             {/* Notes Section - Prominent */}
-                            {showingDetailsAppointment.notes && (
+                            {detailsApt.notes && (
                                 <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Info className={`w-4 h-4 ${accent.text}`} />
                                         <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
                                     </div>
                                     <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
-                                        &quot;{showingDetailsAppointment.notes}&quot;
+                                        &quot;{detailsApt.notes}&quot;
                                     </p>
                                 </div>
                             )}
                         </div>
 
                         {/* Footer Actions */}
-                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex gap-3 rounded-b-2xl`}>
-                            {showingDetailsAppointment.status === 'Confirmed' && !isStaff && (
+                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-wrap gap-3 rounded-b-2xl`}>
+                            {detailsApt.status === 'Confirmed' && !isStaff && (
                                 <Button
                                     variant="secondary"
                                     className="flex-1 flex justify-center items-center gap-2"
                                     onClick={() => {
-                                        setEditingAppointment(showingDetailsAppointment);
+                                        setEditingAppointment(detailsApt);
                                         setShowingDetailsAppointment(null);
                                     }}
                                 >
                                     <Edit2 className="w-4 h-4" /> Editar
+                                </Button>
+                            )}
+                            {!isStaff && (detailsApt.status === 'Confirmed' || detailsApt.status === 'Pending') && (
+                                <Button
+                                    variant="secondary"
+                                    className="flex-1 flex justify-center items-center gap-2"
+                                    onClick={() => handleNoShowAppointment(detailsApt.id)}
+                                >
+                                    <X className="w-4 h-4" /> Faltou
                                 </Button>
                             )}
                             <Button
@@ -1578,6 +1697,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             </Button>
                         </div>
                     </div>
+                    </FocusTrap>
                 </div>, document.body
             )}
 

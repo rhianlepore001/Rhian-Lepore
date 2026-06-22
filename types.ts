@@ -31,12 +31,14 @@ export interface Appointment {
   service: string;
   time: string;
   appointment_time: string;
-  status: 'Confirmed' | 'Pending' | 'Completed';
+  status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled' | 'NoShow';
   price: number;
   basePrice?: number;
   professional_id?: string;
   notes?: string;
   user_id?: string;
+  duration_minutes?: number;
+  edited_at?: string | null;        // setada só na edição real (badge "Editado")
   payment_method?: string | null;        // 'pix' | 'cash' | 'debit' | 'credit' | null
   received_by?: string | null;           // UUID → team_members.id — quem recebeu o pagamento
   machine_fee_applied?: boolean;         // se taxa de maquininha foi aplicada

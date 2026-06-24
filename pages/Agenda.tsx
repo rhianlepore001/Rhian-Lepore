@@ -809,10 +809,6 @@ export const Agenda: React.FC = () => {
     };
 
     const handleNoShowAppointment = async (appointmentId: string) => {
-        if (isStaff) {
-            alert('Apenas o dono pode marcar como não compareceu.');
-            return;
-        }
         if (!confirm('Marcar como "Não compareceu"? O agendamento permanece no histórico.')) return;
         try {
             const { error } = await supabase
@@ -1190,19 +1186,23 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
             {/* Date Navigator */}
             <div className="px-4 md:px-6 flex items-center justify-between gap-2">
                 <button
-                    onClick={() => changeDate(-1)}
+                    onClick={() => changeDate(-7)}
+                    aria-label="Semana anterior"
                     className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                 </button>
-                
-                {/* Date strip: 5 dias fixos (sem scroll) — as setas navegam além da janela.
-                    Carrossel horizontal único da tela fica para os avatares de profissionais. */}
-                <div className="flex-1 flex items-center gap-2 py-1">
-                    {Array.from({ length: 5 }).map((_, i) => {
+
+                {/* Faixa semanal (seg–dom da data selecionada). Clicar num dia só TROCA a seleção
+                    — a faixa não desliza. As setas avançam/voltam uma semana inteira.
+                    Único carrossel horizontal da tela é o dos avatares de profissionais. */}
+                <div className="flex-1 flex items-center gap-1.5 py-1">
+                    {Array.from({ length: 7 }).map((_, i) => {
                         const d = new Date(selectedDate);
-                        d.setDate(d.getDate() - 2 + i);
+                        const dow = (d.getDay() + 6) % 7; // segunda = 0
+                        d.setDate(d.getDate() - dow + i);
                         const isSelected = d.toDateString() === selectedDate.toDateString();
+                        const isToday = d.toDateString() === new Date().toDateString();
                         const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
                         const dayNum = d.getDate();
                         return (
@@ -1212,17 +1212,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     const newDateStr = d.toISOString().split('T')[0];
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text} ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
-                                <span className="text-xs font-medium capitalize mb-0.5">{dayName}</span>
-                                <span className={`text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
+                                <span className="text-[10px] sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
+                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
                     })}
                 </div>
 
                 <button
-                    onClick={() => changeDate(1)}
+                    onClick={() => changeDate(7)}
+                    aria-label="Próxima semana"
                     className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronRight className={`w-5 h-5 ${colors.text}`} />
@@ -1402,116 +1403,165 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     </Card>
                 </div>
             ) : (
-                <div className="px-4 md:px-6 overflow-x-auto scrollbar-hide pb-6">
-                    <div className="min-w-[800px]">
-                        {/* Header Row */}
-                        <div className="flex mb-4">
-                            <div className="w-20 flex-shrink-0 text-center">
-                                <span className={`text-xs font-bold ${colors.textMuted}`}>Horário</span>
-                            </div>
-                            {displayedMembers.map(member => (
-                                <div key={member.id} className="flex-1 text-center truncate px-2">
-                                    <span className={`text-sm font-bold ${colors.text}`}>{member.name}</span>
-                                </div>
-                            ))}
-                        </div>
+                <>
+                    {/* ===== MOBILE: lista corrida do dia (sem scroll lateral) ===== */}
+                    <div className="md:hidden px-4 pb-6">
+                        {(() => {
+                            const dayApts = [
+                                ...(showUnassigned ? appointments.filter(a => !a.professional_id) : []),
+                                ...displayedMembers.flatMap(m => getAppointmentsForProfessional(m.id)),
+                            ].sort((a, b) => new Date(a.appointment_time).getTime() - new Date(b.appointment_time).getTime());
 
-                        {/* Time Grid Rows */}
-                        <div className={`relative ${colors.surface} ${colors.border} border rounded-2xl overflow-hidden`}>
-                            {timeSlots.map((time, slotIdx) => {
-                                const isHour = time.endsWith(':00');
-                                const matchesTime = (a: Appointment) => {
-                                    const d = new Date(a.appointment_time);
-                                    const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                                    return aptTime === time;
-                                };
-                                // Slots vazios ficam finos; slots com agendamento mantêm altura legível.
-                                const hasApt = displayedMembers.some(m => getAppointmentsForProfessional(m.id).some(matchesTime))
-                                    || (showUnassigned && appointments.some(a => !a.professional_id && matchesTime(a)));
+                            if (dayApts.length === 0) {
                                 return (
-                                    <div key={time} className={`flex ${hasApt ? 'min-h-[84px]' : 'min-h-[36px]'} border-b ${colors.divider} relative transition-[min-height]`}>
-                                        {/* Time Label */}
-                                        <div className={`w-20 flex-shrink-0 flex items-start justify-center pt-2 border-r ${colors.divider}`}>
-                                            {isHour && (
-                                                <span className={`text-sm font-bold ${colors.text}`}>{time}</span>
-                                            )}
-                                        </div>
-
-                                        {/* Columns for each member at this timeslot */}
-                                        {displayedMembers.map((member, idx) => {
-                                            const aptsAtTime = getAppointmentsForProfessional(member.id).filter(matchesTime);
-
-                                            // Handle Unassigned for the first column if no professional filter is active
-                                            const unassignedApts = (showUnassigned && idx === 0)
-                                                ? appointments.filter(a => !a.professional_id).filter(matchesTime) : [];
-
-                                            const allCellApts = [...unassignedApts, ...aptsAtTime];
-
-                                            return (
-                                                <div 
-                                                    key={`${member.id}-${time}`} 
-                                                    className={`flex-1 border-r ${colors.divider} last:border-r-0 relative p-2 transition-colors hover:bg-white/[0.02] flex flex-col gap-2`}
-                                                >
-                                                    {allCellApts.map(apt => {
-                                                        const d = new Date(apt.appointment_time);
-                                                        const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                                                        const isUnassigned = !apt.professional_id;
-                                                        const visual = getVisualStatus(apt);
-                                                        const vc = VISUAL_STATUS_CLASSES[visual];
-                                                        const StatusIcon = VISUAL_STATUS_ICON[visual];
-
-                                                        return (
-                                                            <div
-                                                                key={apt.id}
-                                                                onClick={() => setShowingDetailsAppointment(apt)}
-                                                                className={`cursor-pointer rounded-lg border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : vc.card} p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-lite-glass relative group overflow-hidden w-full h-full min-h-[75px] shadow-sm`}
-                                                            >
-                                                                <div className="flex justify-between items-start">
-                                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isUnassigned ? 'text-red-400 bg-red-400/10 border-red-400/20' : `${accent.text} ${accent.bgDim} ${accent.borderDim}`} border`}>
-                                                                        {timeStr}
-                                                                    </span>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        {apt.edited_at && (
-                                                                            <Edit2 className={`w-3 h-3 ${colors.textMuted}`} aria-label="Editado" />
-                                                                        )}
-                                                                        {/* Indicador de status: forma (ícone) + cor — distinguível por daltônicos */}
-                                                                        <span role="img" aria-label={VISUAL_STATUS_LABEL[visual]} title={VISUAL_STATUS_LABEL[visual]} className="inline-flex">
-                                                                            <StatusIcon className={`w-3.5 h-3.5 ${vc.text}`} />
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <h4 className={`text-xs font-bold ${colors.text} line-clamp-1 mt-0.5`}>
-                                                                    {apt.clientName}
-                                                                </h4>
-
-                                                                <div className={`flex items-center gap-1.5 ${colors.textMuted}`}>
-                                                                    <Scissors className="w-3 h-3 flex-shrink-0" />
-                                                                    <span className="text-[10px] truncate">{apt.service}</span>
-                                                                </div>
-
-                                                                <div className={`text-[10px] font-mono font-medium ${colors.textMuted}`}>
-                                                                    {formatCurrency(apt.price, currencyRegion)}
-                                                                </div>
-
-                                                                {apt.notes && (
-                                                                    <div className={`flex items-start gap-1 ${colors.textMuted}`}>
-                                                                        <MessageCircle className="w-3 h-3 flex-shrink-0 mt-0.5 text-emerald-500/80" />
-                                                                        <span className="text-[10px] leading-snug line-clamp-2">{apt.notes}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    <Card variant="outlined">
+                                        <EmptyState icon={Calendar} message="Nenhum agendamento neste dia." ctaLabel="Novo Agendamento" onCta={() => navigate('?new=true')} />
+                                    </Card>
                                 );
-                            })}
+                            }
+
+                            return (
+                                <div className="space-y-2.5">
+                                    {dayApts.map(apt => {
+                                        const d = new Date(apt.appointment_time);
+                                        const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                        const isUnassigned = !apt.professional_id;
+                                        const professional = teamMembers.find(m => m.id === apt.professional_id);
+                                        const visual = getVisualStatus(apt);
+                                        const vc = VISUAL_STATUS_CLASSES[visual];
+                                        const StatusIcon = VISUAL_STATUS_ICON[visual];
+                                        return (
+                                            <button
+                                                key={apt.id}
+                                                onClick={() => setShowingDetailsAppointment(apt)}
+                                                className={`w-full text-left flex items-stretch gap-3 rounded-2xl border ${colors.card} ${colors.border} p-3 transition-transform active:scale-[0.99]`}
+                                            >
+                                                {/* Barra lateral de status */}
+                                                <span className={`w-1.5 rounded-full flex-shrink-0 ${isUnassigned ? 'bg-red-500' : vc.dot}`} />
+                                                {/* Horário + ícone de status */}
+                                                <div className="flex flex-col items-center justify-center min-w-[48px]">
+                                                    <span className={`text-sm font-bold ${colors.text}`}>{timeStr}</span>
+                                                    <StatusIcon className={`w-4 h-4 mt-1 ${vc.text}`} aria-label={VISUAL_STATUS_LABEL[visual]} />
+                                                </div>
+                                                {/* Cliente / serviço / profissional */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className={`text-sm font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
+                                                        {apt.edited_at && <Edit2 className={`w-3 h-3 flex-shrink-0 ${colors.textMuted}`} aria-label="Editado" />}
+                                                        {apt.notes && <MessageCircle className="w-3 h-3 flex-shrink-0 text-emerald-500/80" aria-label="Com observação" />}
+                                                    </div>
+                                                    <div className={`flex items-center gap-1.5 mt-0.5 ${colors.textMuted}`}>
+                                                        <Scissors className="w-3 h-3 flex-shrink-0" />
+                                                        <span className="text-xs truncate">{apt.service}</span>
+                                                    </div>
+                                                    <div className={`flex items-center gap-1.5 mt-0.5 ${isUnassigned ? 'text-red-400' : colors.textMuted}`}>
+                                                        <User className="w-3 h-3 flex-shrink-0" />
+                                                        <span className="text-xs truncate">{isUnassigned ? 'Não atribuído' : (professional?.name || '—')}</span>
+                                                    </div>
+                                                </div>
+                                                {/* Preço + rótulo de status */}
+                                                <div className="flex flex-col items-end justify-center flex-shrink-0">
+                                                    <span className={`text-sm font-mono font-bold ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
+                                                    <span className={`text-[10px] font-medium mt-0.5 ${vc.text}`}>{VISUAL_STATUS_LABEL[visual]}</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
+                    </div>
+
+                    {/* ===== DESKTOP: grade por profissional (alturas uniformes) ===== */}
+                    <div className="hidden md:block px-6 overflow-x-auto scrollbar-hide pb-6">
+                        <div className="min-w-[640px]">
+                            {/* Cabeçalho */}
+                            <div className={`flex border-b ${colors.divider} pb-2 mb-1`}>
+                                <div className="w-16 flex-shrink-0 text-center">
+                                    <span className={`text-xs font-bold ${colors.textMuted}`}>Horário</span>
+                                </div>
+                                {displayedMembers.map(member => (
+                                    <div key={member.id} className="flex-1 min-w-0 text-center truncate px-2">
+                                        <span className={`text-sm font-bold ${colors.text}`}>{member.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Linhas — cada slot de 30min tem a MESMA altura (sem saltos, sem sobreposição) */}
+                            <div className={`relative ${colors.surface} ${colors.border} border rounded-2xl overflow-hidden`}>
+                                {timeSlots.map((time) => {
+                                    const isHour = time.endsWith(':00');
+                                    const matchesTime = (a: Appointment) => {
+                                        const d = new Date(a.appointment_time);
+                                        const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                                        return aptTime === time;
+                                    };
+                                    return (
+                                        <div key={time} className={`flex h-[60px] border-b ${colors.divider} last:border-b-0`}>
+                                            {/* Rótulo de horário */}
+                                            <div className={`w-16 flex-shrink-0 flex items-start justify-center pt-1.5 border-r ${colors.divider}`}>
+                                                {isHour && (
+                                                    <span className={`text-xs font-bold ${colors.text}`}>{time}</span>
+                                                )}
+                                            </div>
+
+                                            {displayedMembers.map((member, idx) => {
+                                                const aptsAtTime = getAppointmentsForProfessional(member.id).filter(matchesTime);
+                                                const unassignedApts = (showUnassigned && idx === 0)
+                                                    ? appointments.filter(a => !a.professional_id).filter(matchesTime) : [];
+                                                const allCellApts = [...unassignedApts, ...aptsAtTime];
+
+                                                return (
+                                                    <div
+                                                        key={`${member.id}-${time}`}
+                                                        className={`flex-1 min-w-0 border-r ${colors.divider} last:border-r-0 p-1 flex flex-col gap-1 hover:bg-white/[0.02]`}
+                                                    >
+                                                        {allCellApts.map(apt => {
+                                                            const isUnassigned = !apt.professional_id;
+                                                            const visual = getVisualStatus(apt);
+                                                            const vc = VISUAL_STATUS_CLASSES[visual];
+                                                            const StatusIcon = VISUAL_STATUS_ICON[visual];
+                                                            return (
+                                                                <div
+                                                                    key={apt.id}
+                                                                    onClick={() => setShowingDetailsAppointment(apt)}
+                                                                    className={`cursor-pointer rounded-md border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : vc.card} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden hover:shadow-lite-glass shadow-sm`}
+                                                                >
+                                                                    <div className="flex items-center justify-between gap-1">
+                                                                        <h4 className={`text-[11px] font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
+                                                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                                                            {apt.edited_at && <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />}
+                                                                            {apt.notes && <MessageCircle className="w-2.5 h-2.5 text-emerald-500/80" aria-label="Com observação" />}
+                                                                            <StatusIcon className={`w-3 h-3 ${vc.text}`} aria-label={VISUAL_STATUS_LABEL[visual]} />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center justify-between gap-1">
+                                                                        <span className={`text-[10px] truncate ${colors.textMuted}`}>{apt.service}</span>
+                                                                        <span className={`text-[10px] font-mono font-medium flex-shrink-0 ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Empty state do dia (desktop) */}
+                            {(() => {
+                                const total = (showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
+                                    + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0);
+                                if (total > 0) return null;
+                                return (
+                                    <p className={`text-center text-xs ${colors.textMuted} mt-3`}>Nenhum agendamento neste dia.</p>
+                                );
+                            })()}
                         </div>
                     </div>
-                </div>
+                </>
             )}
 
             {/* Legend (Bottom) */}
@@ -1537,12 +1587,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
             {/* Appointment Details Modal */}
             {detailsApt && createPortal(
-                <div className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${colors.overlay} md:left-64`}>
-                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: true, clickOutsideDeactivates: true, onDeactivate: () => setShowingDetailsAppointment(null) }}>
+                <div
+                    className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${colors.overlay} md:left-64`}
+                    onClick={() => setShowingDetailsAppointment(null)}
+                >
+                    {/* clickOutsideDeactivates desligado: ele fechava o modal no MESMO clique que o abria
+                        (corrida) — o "clico no agendamento e nada abre". O fundo escuro fecha via onClick acima. */}
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: true, clickOutsideDeactivates: false, onDeactivate: () => setShowingDetailsAppointment(null) }}>
                     <div
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="appointment-details-title"
+                        onClick={(e) => e.stopPropagation()}
                         className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300 ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
                         {/* Header */}
                         <div className={`p-6 border-b ${colors.divider} ${colors.surface}`}>
@@ -1667,34 +1723,57 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
                         {/* Footer Actions */}
                         <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-wrap gap-3 rounded-b-2xl`}>
-                            {detailsApt.status === 'Confirmed' && !isStaff && (
+                            {(detailsApt.status === 'Confirmed' || detailsApt.status === 'Pending') ? (
+                                <>
+                                    {/* Confirmar e cobrar — disponível para dono E colaborador (abre o checkout) */}
+                                    <Button
+                                        variant="primary"
+                                        className="flex-1 flex justify-center items-center gap-2"
+                                        onClick={() => {
+                                            setCheckoutAppointment(detailsApt as unknown as import('../types').Appointment);
+                                            setShowingDetailsAppointment(null);
+                                        }}
+                                    >
+                                        <DollarSign className="w-4 h-4" /> Confirmar e cobrar
+                                    </Button>
+                                    {/* Faltou — dono E colaborador */}
+                                    <Button
+                                        variant="secondary"
+                                        className="flex-1 flex justify-center items-center gap-2"
+                                        onClick={() => handleNoShowAppointment(detailsApt.id)}
+                                    >
+                                        <Ban className="w-4 h-4" /> Faltou
+                                    </Button>
+                                    {/* Editar — apenas o dono */}
+                                    {!isStaff && detailsApt.status === 'Confirmed' && (
+                                        <Button
+                                            variant="secondary"
+                                            className="flex-1 flex justify-center items-center gap-2"
+                                            onClick={() => {
+                                                setEditingAppointment(detailsApt);
+                                                setShowingDetailsAppointment(null);
+                                            }}
+                                        >
+                                            <Edit2 className="w-4 h-4" /> Editar
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        className="flex-1 flex justify-center items-center gap-2"
+                                        onClick={() => setShowingDetailsAppointment(null)}
+                                    >
+                                        Fechar
+                                    </Button>
+                                </>
+                            ) : (
                                 <Button
-                                    variant="secondary"
+                                    variant="primary"
                                     className="flex-1 flex justify-center items-center gap-2"
-                                    onClick={() => {
-                                        setEditingAppointment(detailsApt);
-                                        setShowingDetailsAppointment(null);
-                                    }}
+                                    onClick={() => setShowingDetailsAppointment(null)}
                                 >
-                                    <Edit2 className="w-4 h-4" /> Editar
+                                    <Check className="w-4 h-4" /> Fechar
                                 </Button>
                             )}
-                            {!isStaff && (detailsApt.status === 'Confirmed' || detailsApt.status === 'Pending') && (
-                                <Button
-                                    variant="secondary"
-                                    className="flex-1 flex justify-center items-center gap-2"
-                                    onClick={() => handleNoShowAppointment(detailsApt.id)}
-                                >
-                                    <X className="w-4 h-4" /> Faltou
-                                </Button>
-                            )}
-                            <Button
-                                variant="primary"
-                                className="flex-1 flex justify-center items-center gap-2"
-                                onClick={() => setShowingDetailsAppointment(null)}
-                            >
-                                <Check className="w-4 h-4" /> Fechar
-                            </Button>
                         </div>
                     </div>
                     </FocusTrap>

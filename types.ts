@@ -188,3 +188,77 @@ export interface DashboardStats {
   monthly_goal?: number;
   ai_insights?: ActionItem[];
 }
+
+// Bug Reporter — ver docs/features/bug-reporter.md
+
+export type BugReportType = 'bug' | 'ux' | 'backend' | 'frontend' | 'idea' | 'question';
+
+export type BugReportSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export type BugReportStatus = 'new' | 'triaged' | 'planned' | 'in_progress' | 'fixed' | 'wontfix';
+
+export type BugReportCategory =
+  | 'agenda'
+  | 'login'
+  | 'clients'
+  | 'finance'
+  | 'queue'
+  | 'settings'
+  | 'modal'
+  | 'other';
+
+export type BugReportMode = 'simple' | 'advanced';
+
+export interface BugReport {
+  id: string;
+  company_id: string;
+  user_id: string;
+  type: BugReportType;
+  severity: BugReportSeverity;
+  status: BugReportStatus;
+  category: BugReportCategory;
+  mode: BugReportMode;
+  title: string;
+  description: string;
+  steps_to_reproduce?: string[] | null;
+  expected_behavior?: string | null;
+  actual_behavior?: string | null;
+  context: BugReportContext;
+  screenshot_url?: string | null;
+  is_dev?: boolean | null;
+  tags?: string[] | null;
+  assignee_id?: string | null;
+  internal_notes?: string | null;
+  resolved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BugReportContext {
+  route: string;
+  viewport: { w: number; h: number };
+  userAgent: string;
+  themeMode: string;
+  themeVariant: string;
+  consoleErrors: string[];
+  buildSha: string | null;
+}
+
+export interface BugReportInput {
+  company_id: string;
+  user_id: string;
+  type?: BugReportType;
+  severity?: BugReportSeverity;
+  status?: BugReportStatus;
+  category?: BugReportCategory;
+  mode: BugReportMode;
+  title: string;
+  description: string;
+  steps_to_reproduce?: string[];
+  expected_behavior?: string;
+  actual_behavior?: string;
+  context?: BugReportContext;
+  screenshot_url?: string | null;
+  is_dev?: boolean;
+  tags?: string[];
+}

@@ -292,7 +292,7 @@ export const Login: React.FC = () => {
                             <Input
                                 id="login-email"
                                 type="email"
-                                label="Email"
+                                label="E-mail"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="seu@email.com"

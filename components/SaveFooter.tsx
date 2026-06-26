@@ -72,7 +72,7 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
                         w-16 h-16 flex items-center justify-center rounded-full font-bold shadow-lg transition-all transform hover:scale-105
                         ${disabled
                             ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                            : `${accent.bg} text-black hover:brightness-110`
+                            : `${accent.bg} text-[var(--color-bg)] hover:brightness-110`
                         }
                     `}
                     aria-label="Salvar Alterações"
@@ -90,7 +90,7 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
                         w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all
                         ${disabled
                             ? 'bg-neutral-800 text-neutral-500'
-                            : `${accent.bg} text-black`
+                            : `${accent.bg} text-[var(--color-bg)]`
                         }
                     `}
                 >

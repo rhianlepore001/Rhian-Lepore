@@ -9,7 +9,7 @@ interface BookingModeToggleProps {
 }
 
 export const BookingModeToggle: React.FC<BookingModeToggleProps> = ({ mode, onChange, forceTheme }) => {
-  const { colors, accent, isBeauty } = useBrutalTheme({ override: forceTheme });
+  const { colors, accent } = useBrutalTheme({ override: forceTheme });
 
   const baseBtn = `flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300`;
 
@@ -18,8 +18,8 @@ export const BookingModeToggle: React.FC<BookingModeToggleProps> = ({ mode, onCh
       <button
         onClick={() => onChange('quick')}
         className={`${baseBtn} ${mode === 'quick'
-            ? `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} shadow-lg scale-105`
-            : `${colors.textSecondary} hover:${colors.text} hover:bg-white/5`
+            ? `${accent.bg} text-[var(--color-bg)] shadow-lg scale-105`
+            : `${colors.textSecondary} hover:${colors.text} hover:bg-[var(--color-card-hover)]`
           }`}
         aria-pressed={mode === 'quick'}
       >
@@ -29,8 +29,8 @@ export const BookingModeToggle: React.FC<BookingModeToggleProps> = ({ mode, onCh
       <button
         onClick={() => onChange('chat')}
         className={`${baseBtn} ${mode === 'chat'
-            ? `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} shadow-lg scale-105`
-            : `${colors.textSecondary} hover:${colors.text} hover:bg-white/5`
+            ? `${accent.bg} text-[var(--color-bg)] shadow-lg scale-105`
+            : `${colors.textSecondary} hover:${colors.text} hover:bg-[var(--color-card-hover)]`
           }`}
         aria-pressed={mode === 'chat'}
       >

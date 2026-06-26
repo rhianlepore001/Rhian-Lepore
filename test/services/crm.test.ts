@@ -79,7 +79,7 @@ describe('crm service', () => {
       phone: '11987654321',
       email: '',
       origin: 'Novo',
-    })).rejects.toThrow('Ja existe um cliente com este telefone.');
+    })).rejects.toThrow('Já existe um cliente com este telefone.');
 
     expect(insertMock).not.toHaveBeenCalled();
   });

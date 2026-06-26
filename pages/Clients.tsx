@@ -216,7 +216,7 @@ export const Clients: React.FC = () => {
                 'px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap min-h-[44px]',
                 radius.button,
                 filterType === type
-                  ? `${accent.bg} text-black`
+                  ? `${accent.bg} text-[var(--color-bg)]`
                   : `${colors.surface} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
               ].join(' ')}
             >
@@ -269,7 +269,7 @@ export const Clients: React.FC = () => {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {totalVisits >= 5 && (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${accent.bg} text-black`}>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${accent.bg} text-[var(--color-bg)]`}>
                           VIP
                         </span>
                       )}
@@ -349,7 +349,7 @@ export const Clients: React.FC = () => {
             </div>
           </div>
           <Input
-            label="Email (opcional)"
+            label="E-mail (opcional)"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

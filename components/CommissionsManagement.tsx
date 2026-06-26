@@ -345,7 +345,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         onClick={() => setActiveTab(tab)}
                         className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                             activeTab === tab
-                                ? `${accent.bg} text-black`
+                                ? `${accent.bg} text-[var(--color-bg)]`
                                 : `${colors.textMuted} hover:${colors.text}`
                         }`}
                     >

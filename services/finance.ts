@@ -62,7 +62,7 @@ export function mapFinanceTransaction(item: any): FinanceTransaction {
 
   return {
     id: item.id,
-    serviceName: item.service_name || item.description || 'Servico',
+    serviceName: item.service_name || item.description || 'Serviço',
     professionalName: item.barber_name || 'Manual',
     professionalId: item.professional_id ?? null,
     clientName: item.client_name || '',
@@ -138,7 +138,7 @@ export async function deleteFinanceTransaction(transactionId: string, companyId:
         .eq('user_id', companyId);
       if (error) throw error;
     } else {
-      throw new Error('Transacao nao encontrada. Pode ja ter sido excluida.');
+      throw new Error('Transação não encontrada. Pode já ter sido excluída.');
     }
   }
 }

@@ -29,7 +29,7 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                 noPadding
             >
                 <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-6">
-                    <div className={`${accent.bg} p-4 rounded-xl text-black`}>
+                    <div className={`${accent.bg} p-4 rounded-xl text-[var(--color-bg)]`}>
                         <Sparkles className="w-8 h-8" />
                     </div>
 

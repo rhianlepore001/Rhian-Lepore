@@ -64,7 +64,7 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
   const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
 
   if (duplicate) {
-    throw new Error('Este telefone ja esta na fila.');
+    throw new Error('Este telefone já está na fila.');
   }
 
   const { error } = await supabase
@@ -94,7 +94,7 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
   const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
 
   if (duplicate) {
-    throw new Error('Este telefone ja esta na fila.');
+    throw new Error('Este telefone já está na fila.');
   }
 
   const { data, error } = await supabase

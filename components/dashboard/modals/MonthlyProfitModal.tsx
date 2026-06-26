@@ -152,7 +152,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                                             {item.month} <span className={`${colors.textSecondary} font-mono`}>{item.year}</span>
                                         </p>
                                         {idx === 0 && (
-                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-black`}>
+                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-[var(--color-bg)]`}>
                                                 Atual
                                             </span>
                                         )}

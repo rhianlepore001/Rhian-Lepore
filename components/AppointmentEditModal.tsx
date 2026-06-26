@@ -73,7 +73,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 }) => {
     const { user } = useAuth();
     const { setModalOpen } = useUI();
-    const { isBeauty, accent } = useBrutalTheme();
+    const { colors, accent, classes, status, radius } = useBrutalTheme();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
 
@@ -83,25 +83,15 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     }, [setModalOpen]);
 
     // Theme Styles
-    const modalStyles = isBeauty
-        ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-        : 'bg-brutal-card border border-white/5 rounded-2xl shadow-promax-depth';
+    const modalStyles = classes.modalContainer;
 
-    const headerStyles = isBeauty
-        ? 'border-b border-beauty-neon/20 bg-gradient-to-r from-beauty-neon/10 to-transparent'
-        : 'border-b border-white/5 bg-white/[0.02]';
+    const headerStyles = `${classes.modalHeader} bg-[var(--color-card-hover)]`;
 
-    const inputStyles = isBeauty
-        ? 'w-full px-4 py-3 rounded-xl text-sm text-white bg-white/5 border border-white/10 focus:outline-none focus:border-beauty-neon/50 focus:bg-white/8 transition-all font-sans placeholder:text-beauty-neon/30'
-        : 'w-full px-4 py-3 rounded-xl text-sm text-white bg-black/30 border border-neutral-700/60 focus:outline-none focus:border-accent-gold/60 focus:bg-black/50 transition-all font-mono placeholder:text-neutral-500';
+    const inputStyles = `w-full px-4 py-3 ${radius.input} text-sm ${colors.text} ${colors.inputBg} border ${colors.inputBorder} focus:outline-none focus:border-theme-accent transition-all font-sans placeholder:${colors.textMuted}`;
 
-    const labelStyles = isBeauty
-        ? 'text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1 block'
-        : 'text-xs font-semibold uppercase tracking-wider text-neutral-500 font-mono mb-1 block';
+    const labelStyles = `${classes.label} uppercase tracking-wider mb-1 block`;
 
-    const closeButtonStyles = isBeauty
-        ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5 transition-all'
-        : 'text-neutral-400 hover:text-white transition-colors';
+    const closeButtonStyles = `${colors.textMuted} hover:${colors.text} hover:bg-[var(--color-card-hover)] rounded-full p-1.5 transition-all`;
 
     // Initial state setup
     const initialDate = formatDateForInput(appointment.appointment_time);
@@ -260,7 +250,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const discountAmount = priceBeforeDiscount - (parseFloat(finalPriceInput) || 0);
 
     return createPortal(
-        <div className={`fixed inset-0 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} flex items-center justify-center md:left-64 p-4`} style={{ zIndex: 'var(--z-modal)' }}>
+        <div className={`fixed inset-0 ${colors.overlay} flex items-center justify-center md:left-64 p-4`} style={{ zIndex: 'var(--z-modal)' }}>
             <FocusTrap active={true}>
                 <div
                     className={`${modalStyles} w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col`}
@@ -269,7 +259,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     aria-labelledby="appointment-modal-title"
                 >
                 <div className={`flex items-center justify-between p-6 ${headerStyles}`}>
-                    <h3 id="appointment-modal-title" className={`font-heading text-xl uppercase ${isBeauty ? 'text-white' : 'text-white'}`}>Editar Agendamento</h3>
+                    <h3 id="appointment-modal-title" className={`font-heading text-xl uppercase ${colors.text}`}>Editar Agendamento</h3>
                     <button
                         onClick={onClose}
                         className={closeButtonStyles}
@@ -282,7 +272,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                 <div className="p-6 space-y-4">
                     {/* Seção: Cliente */}
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Cliente</p>
+                    <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted}`}>Cliente</p>
                     <div>
                         <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select
@@ -317,8 +307,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     </div>
 
                     {/* Seção: Serviços */}
-                    <div className="pt-4 border-t border-white/5">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-3">Serviços</p>
+                    <div className={`pt-4 border-t ${colors.divider}`}>
+                        <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Serviços</p>
                     </div>
                     {/* Service */}
                     <SearchableSelect
@@ -337,13 +327,13 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     />
 
                     {/* Custom Service Edit */}
-                    <div className={`p-4 rounded-xl border transition-all ${isCustomService ? (isBeauty ? 'border-beauty-neon/60 bg-beauty-card/30' : 'border-accent-gold/60 bg-brutal-surface') : 'border-white/5 bg-transparent'}`}>
+                    <div className={`p-4 rounded-xl border transition-all ${isCustomService ? `border-[var(--color-accent-border)] bg-[var(--color-surface)]` : `${colors.border} bg-transparent`}`}>
                         <div className="flex items-center gap-3 mb-2">
                             <input
                                 type="checkbox"
                                 checked={isCustomService}
                                 onChange={e => setIsCustomService(e.target.checked)}
-                                className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                className={`w-4 h-4 rounded ${colors.inputBorder} ${accent.text} focus:ring-theme-accent`}
                             />
                             <label className={`text-xs uppercase font-bold ${accent.text}`}>Serviço Personalizado</label>
                         </div>
@@ -372,8 +362,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     </div>
 
                     {/* Seção: Horário */}
-                    <div className="pt-4 border-t border-white/5">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-3">Horário</p>
+                    <div className={`pt-4 border-t ${colors.divider}`}>
+                        <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Horário</p>
                     </div>
                     {/* Date & Time */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -406,8 +396,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     </div>
 
                     {/* Seção: Preço */}
-                    <div className="pt-4 border-t border-white/5">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 mb-3">Preço</p>
+                    <div className={`pt-4 border-t ${colors.divider}`}>
+                        <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Preço</p>
                     </div>
                     {/* Price and Discount */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -425,9 +415,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                     placeholder="0.00"
                                     disabled={loading}
                                 />
-                                <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`}>{currencySymbol}</span>
+                                <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${colors.textMuted}`}>{currencySymbol}</span>
                             </div>
-                            <p className="text-xs text-neutral-500 mt-1">
+                            <p className={`text-xs ${colors.textMuted} mt-1`}>
                                 Preço base: {currencySymbol} {basePrice.toFixed(2)}
                             </p>
                         </div>
@@ -446,10 +436,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                     placeholder="0"
                                     disabled={loading}
                                 />
-                                <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${isBeauty ? 'text-beauty-neon/50' : 'text-neutral-500'}`}>%</span>
+                                <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${colors.textMuted}`}>%</span>
                             </div>
                             {discountAmount > 0 && (
-                                <p className="text-xs text-emerald-400 mt-1 font-mono">
+                                <p className={`text-xs ${status.success} mt-1 font-mono`}>
                                     -{currencySymbol} {discountAmount.toFixed(2)} · Final: {currencySymbol} {(parseFloat(finalPriceInput) || 0).toFixed(2)}
                                 </p>
                             )}

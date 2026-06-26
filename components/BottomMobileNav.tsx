@@ -64,7 +64,7 @@ export const BottomMobileNav: React.FC = () => {
                         type="button"
                         onClick={() => setShowQuickActions(true)}
                         className={`w-16 h-16 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-promax-depth transform transition-all active:scale-95 group relative overflow-hidden
-                        ${accent.bg} ${font.body === 'font-sans' ? 'text-white' : 'text-black'}`}
+                        ${accent.bg} text-[var(--color-bg)]`}
                         aria-label="Ações rápidas"
                         title="Ações rápidas"
                     >

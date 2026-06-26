@@ -144,7 +144,7 @@ export const Agenda: React.FC = () => {
 
 
     const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
-    const currencySymbol = region === 'PT' ? 'â¬' : 'R$';
+    const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
@@ -1240,7 +1240,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 onClick={() => setSelectedProfessionalIds([])}
                                 className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                             >
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
                                     <Users className="w-5 h-5" />
                                 </div>
                                 <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
@@ -1264,7 +1264,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : colors.border}`}
                                             />
                                         ) : (
-                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent ${isBeauty ? 'text-white' : 'text-black'} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
                                                 {getInitials(member.name)}
                                             </div>
                                         )}
@@ -1321,8 +1321,8 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
-                                            <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
-                                                {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} â¢ {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                            <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-bg)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
+                                                {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                         <div className="flex gap-2">
@@ -1361,7 +1361,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
                                             <span className="font-medium">
-                                                {booking.service_ids?.length || 0} serviço(s) â¢ <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
+                                                {booking.service_ids?.length || 0} serviço(s) • <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3 text-xs text-neutral-300">

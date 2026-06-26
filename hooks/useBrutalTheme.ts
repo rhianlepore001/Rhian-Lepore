@@ -11,9 +11,10 @@
 
 import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useColorMode, type ColorMode } from './useColorMode';
 
 export type ThemeVariant = 'barber' | 'beauty';
-export type ColorMode = 'dark' | 'light';
+export type { ColorMode };
 
 /**
  * Tokens de densidade por tema (Decisão B do DS Lock).
@@ -150,11 +151,6 @@ interface UseBrutalThemeOptions {
   override?: ThemeVariant;
 }
 
-function getMode(): ColorMode {
-  if (typeof document === 'undefined') return 'dark';
-  return (document.documentElement.getAttribute('data-mode') as ColorMode) || 'dark';
-}
-
 function getThemeFromDOM(): ThemeVariant {
   if (typeof document === 'undefined') return 'barber';
   return (document.documentElement.getAttribute('data-theme') as ThemeVariant) || 'barber';
@@ -277,7 +273,7 @@ const focus: BrutalThemeTokens['focus'] = {
 export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeTokens {
   const { userType } = useAuth();
   const theme: ThemeVariant = options?.override || userType || getThemeFromDOM();
-  const mode: ColorMode = getMode();
+  const mode: ColorMode = useColorMode();
   const isBeauty = theme === 'beauty';
   const isBarber = theme === 'barber';
   const isDark = mode === 'dark';

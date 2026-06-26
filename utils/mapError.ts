@@ -27,7 +27,7 @@ const CODE_MAP: Record<string, string> = {
   network_error: 'Sem conexão com o servidor. Verifique sua internet e tente de novo.',
   auth_expired: 'Sua sessão expirou. Faça login novamente.',
   permission_denied: 'Você não tem permissão para essa ação.',
-  invalid_login: 'Email ou senha incorretos. Verifique e tente de novo.',
+  invalid_login: 'E-mail ou senha incorretos. Verifique e tente de novo.',
   rate_limit_login: 'Muitas tentativas de login. Por segurança, aguarde 1 minuto.',
 
   // Postgres

@@ -61,7 +61,7 @@ export async function createClient(input: CreateClientInput): Promise<void> {
   if (parsed.phone) {
     const existingClient = await findClientByPhone(parsed.companyId, parsed.phone);
     if (existingClient) {
-      throw new Error('Ja existe um cliente com este telefone.');
+      throw new Error('Já existe um cliente com este telefone.');
     }
   }
 

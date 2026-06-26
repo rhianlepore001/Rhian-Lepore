@@ -438,7 +438,7 @@ const { id } = useParams<{ id: string }>();
                       {/* Badges */}
                       <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {index === 0 && (
-                          <span className={`${accent.bg} ${isBeauty ? 'text-white' : 'text-black'} text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
+                          <span className={`${accent.bg} text-[var(--color-bg)] text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
                         )}
                         {hasDiscount && (
                           <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-1 flex items-center gap-1">
@@ -450,7 +450,7 @@ const { id } = useParams<{ id: string }>();
                     {/* Repeat Service Button for each card */}
                     <button
                       onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-neutral-800 ${accent.bgHover} ${isBeauty ? 'hover:text-white' : 'hover:text-black'} text-text-primary py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
+                      className={`w-full mt-3 bg-neutral-800 ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>

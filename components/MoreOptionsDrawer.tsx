@@ -14,7 +14,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     const navigate = useNavigate();
     const { logout, fullName, businessName, avatarUrl, role } = useAuth();
     const { setModalOpen } = useUI();
-    const { isBeauty } = useBrutalTheme();
+    const { colors, accent, classes, status } = useBrutalTheme();
     const isStaff = role === 'staff';
 
     useEffect(() => {
@@ -39,37 +39,35 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     };
 
     const drawerContent = (
-        <div className="fixed inset-0 flex flex-col justify-end bg-black/80 backdrop-blur-md animate-in fade-in duration-200" style={{ zIndex: 'var(--z-modal)' }}>
+        <div className={`fixed inset-0 flex flex-col justify-end ${colors.overlay} backdrop-blur-md animate-in fade-in duration-200`} style={{ zIndex: 'var(--z-modal)' }}>
             <div
                 className="absolute inset-0"
                 onClick={onClose}
             />
 
-            <div className={`relative w-full rounded-t-[32px] shadow-promax-depth overflow-hidden animate-in slide-in-from-bottom-full duration-500 max-h-[90vh] pb-8 backdrop-blur-3xl
-          ${isBeauty ? 'bg-beauty-dark/80 border-t border-white/10' : 'bg-brutal-main/90 border-t-2 border-accent-gold/30'}
-      `}>
+            <div className={`relative w-full rounded-t-[32px] shadow-promax-depth overflow-hidden animate-in slide-in-from-bottom-full duration-500 max-h-[90vh] pb-8 backdrop-blur-3xl border-t-2
+                ${colors.card} border-[var(--color-accent-border)]
+            `}>
                 {/* Header with User Info */}
-                <div className={`p-6 border-b relative ${isBeauty ? 'border-white/10 bg-white/5' : 'border-neutral-800 bg-black/20'}`}>
+                <div className={`p-6 border-b relative ${colors.divider} bg-[var(--color-surface)]`}>
                     <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden border-2 shadow-lg ${isBeauty ? 'bg-white/10 border-white/20' : 'bg-neutral-800 border-neutral-700'}`}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden border-2 shadow-lg bg-[var(--color-card-hover)] ${colors.border}`}>
                             {avatarUrl ? (
                                 <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
                             ) : (
-                                <User className={`w-7 h-7 ${isBeauty ? 'text-white/60' : 'text-neutral-500'}`} />
+                                <User className={`w-7 h-7 ${colors.textMuted}`} />
                             )}
                         </div>
                         <div>
-                            <h3 className={`font-heading text-lg leading-tight uppercase tracking-tight ${isBeauty ? 'text-white' : 'text-white'}`}>{businessName || 'Seu Negócio'}</h3>
-                            <p className={`text-sm font-mono uppercase tracking-wider ${isBeauty ? 'text-white/60' : 'text-neutral-500'}`}>{fullName}</p>
+                            <h3 className={`font-heading text-lg leading-tight uppercase tracking-tight ${colors.text}`}>{businessName || 'Seu Negócio'}</h3>
+                            <p className={`text-sm font-mono uppercase tracking-wider ${colors.textSecondary}`}>{fullName}</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
                         className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg border transition-all active:scale-90
-                ${isBeauty
-                                ? 'bg-white/10 border-white/10 text-white/60 hover:text-white hover:bg-white/20'
-                                : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white'}
-            `}
+                            ${colors.textSecondary} ${colors.border} bg-[var(--color-card-hover)] hover:bg-[var(--color-divider)] hover:${colors.text}
+                        `}
                         aria-label="Fechar menu"
                         title="Fechar"
                     >
@@ -84,15 +82,13 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
                             key={item.path}
                             onClick={() => handleNavigate(item.path)}
                             className={`flex flex-col items-start p-5 rounded-2xl border transition-all active:scale-95 group
-                ${isBeauty
-                                    ? 'bg-white/5 border-white/10 hover:bg-white/10'
-                                    : 'bg-black/40 border-neutral-800 hover:border-accent-gold/50'}
-              `}
+                                ${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)] hover:border-[var(--color-accent-border)]
+                            `}
                         >
-                            <div className={`p-3 rounded-xl mb-4 transition-all group-hover:scale-110 ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon group-hover:bg-beauty-neon/20' : 'bg-neutral-800 text-accent-gold group-hover:bg-accent-gold/20 group-hover:text-white'}`}>
+                            <div className={`p-3 rounded-xl mb-4 transition-all group-hover:scale-110 bg-[var(--color-accent-dim)] ${accent.text} group-hover:bg-[var(--color-accent-border)]`}>
                                 <item.icon className="w-6 h-6" />
                             </div>
-                            <span className={`font-heading text-sm uppercase tracking-wide transition-colors ${isBeauty ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>{item.name}</span>
+                            <span className={`font-heading text-sm uppercase tracking-wide transition-colors ${colors.text}`}>{item.name}</span>
                         </button>
                     ))}
 
@@ -100,20 +96,18 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
                     <button
                         onClick={handleLogout}
                         className={`flex flex-col items-start p-5 rounded-2xl border transition-all active:scale-95 col-span-2
-                ${isBeauty
-                                ? 'bg-red-500/10 border-red-500/20 hover:bg-red-500/20'
-                                : 'bg-red-950/20 border-red-900/30 hover:bg-red-900/40'}
-              `}
+                            ${classes.buttonDanger}
+                        `}
                     >
-                        <div className={`p-3 rounded-xl mb-4 ${isBeauty ? 'bg-red-500/20 text-red-400' : 'bg-red-900/40 text-red-500'}`}>
+                        <div className={`p-3 rounded-xl mb-4 bg-[var(--color-danger-bg)] ${status.danger}`}>
                             <LogOut className="w-6 h-6" />
                         </div>
-                        <span className={`font-heading text-sm uppercase tracking-wide ${isBeauty ? 'text-red-400' : 'text-red-500'}`}>Sair da Conta</span>
+                        <span className={`font-heading text-sm uppercase tracking-wide ${status.danger}`}>Sair da Conta</span>
                     </button>
                 </div>
 
                 <div className="p-6 pt-2 pb-8 flex justify-center">
-                    <div className={`w-12 h-1 rounded-full ${isBeauty ? 'bg-white/10' : 'bg-gray-200'}`} />
+                    <div className={`w-12 h-1 rounded-full bg-[var(--color-divider)]`} />
                 </div>
             </div>
         </div>

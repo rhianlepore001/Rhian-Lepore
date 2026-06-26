@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Search, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft, Scissors, Sparkles, Sun, Moon } from 'lucide-react';
+import { BugReportButton } from './BugReportButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -119,10 +120,10 @@ export const Header: React.FC = () => {
             {isDev && (
               <button
                 onClick={() => setDevUserType(isBeauty ? 'barber' : 'beauty')}
-className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-all shadow-lg hover:scale-105 active:scale-95
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono uppercase transition-all shadow-lg hover:scale-105 active:scale-95
                       ${isBeauty
-                    ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold/50'
-                    : 'bg-beauty-neon/20 text-beauty-neon border border-beauty-neon/50'}
+                    ? 'bg-[var(--color-accent-dim)] text-theme-accent border border-[var(--color-accent-border)]'
+                    : 'bg-[var(--color-accent-dim)] text-theme-accent border border-[var(--color-accent-border)]'}
                   `}
                 title="Trocar Estilo (Modo DEV)"
               >
@@ -137,7 +138,7 @@ className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono upp
               onClick={toggleMode}
               aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
               title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              className={`p-2 rounded border border-transparent hover:border-neutral-700 transition-colors relative overflow-hidden
+              className={`p-2 rounded border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
                 ${colors.card} hover:${colors.surface}`}
               style={{ transition: 'background 0.2s' }}
             >
@@ -159,14 +160,14 @@ className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono upp
               <button
                 id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2 hover:${colors.surface} rounded border border-transparent hover:border-neutral-700 transition-colors`}
+                className={`relative p-2 hover:${colors.surface} rounded border border-transparent hover:border-[var(--color-divider)] transition-colors`}
                 aria-label="Abrir notificações"
                 title="Notificações"
               >
                 <Bell className={`w-5 h-5 md:w-6 md:h-6 ${colors.text}`} />
                 {alertCount > 0 && (
                   <span
-                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 ${colors.bg} animate-pulse flex items-center justify-center text-[9px] font-mono font-bold text-black leading-none`}
+                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 ${colors.bg} animate-pulse flex items-center justify-center text-[9px] font-mono font-bold text-[var(--color-bg)] leading-none`}
                   >
                     {alertCount > 9 ? '9+' : alertCount}
                   </span>
@@ -216,6 +217,9 @@ className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-mono upp
                 </div>
               )}
             </div>
+
+            {/* Bug Report / Help */}
+            <BugReportButton />
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileMenuRef}>

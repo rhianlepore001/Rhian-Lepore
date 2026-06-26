@@ -153,7 +153,7 @@ export const Register: React.FC = () => {
                   <PhoneInput value={phone} onChange={setPhone} forceTheme={userType} />
                 </div>
 
-                <Input id="staff-email" type="email" label="Email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@email.com" forceTheme={userType} />
+                <Input id="staff-email" type="email" label="E-mail" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@email.com" forceTheme={userType} />
 
                 <Input
                     id="staff-password"
@@ -321,7 +321,7 @@ export const Register: React.FC = () => {
                     forceTheme={userType}
                   />
 
-                  <Input id="reg-email" type="email" label="Email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@empresa.com" forceTheme={userType} />
+                  <Input id="reg-email" type="email" label="E-mail" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@empresa.com" forceTheme={userType} />
 
                   <Input
                       id="reg-password"

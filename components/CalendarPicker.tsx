@@ -21,7 +21,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     const { colors, accent, font, shadow, isBeauty } = useBrutalTheme({ override: forceTheme });
 
     const hoverBg = `hover:${accent.bgDim}`;
-    const selectedClass = `${accent.bg} ${isBeauty ? 'text-white' : 'text-black'}`;
+    const selectedClass = `${accent.bg} text-[var(--color-bg)]`;
     const todayClass = `border-2 ${accent.border}`;
 
     // Get days in month

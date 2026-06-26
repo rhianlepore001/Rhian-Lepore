@@ -605,7 +605,7 @@ export const ClientArea: React.FC = () => {
                                                     type="email"
                                                     value={editEmail}
                                                     onChange={e => setEditEmail(e.target.value)}
-                                                    placeholder="Email (opcional)"
+                                                    placeholder="E-mail (opcional)"
                                                     className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800' : 'bg-zinc-800 border border-zinc-700 text-white'}`}
                                                 />
                                             </div>
@@ -629,7 +629,7 @@ export const ClientArea: React.FC = () => {
                                         <div className="space-y-4">
                                             <ProfileRow icon={<User className="w-4 h-4" />} label="Nome" value={sessionClient.name} isBeauty={isBeauty} />
                                             <ProfileRow icon={<Phone className="w-4 h-4" />} label="Telefone" value={sessionClient.phone} isBeauty={isBeauty} />
-                                            {sessionClient.email && <ProfileRow icon={<Mail className="w-4 h-4" />} label="Email" value={sessionClient.email} isBeauty={isBeauty} />}
+                                            {sessionClient.email && <ProfileRow icon={<Mail className="w-4 h-4" />} label="E-mail" value={sessionClient.email} isBeauty={isBeauty} />}
                                         </div>
                                     )}
 

@@ -50,7 +50,7 @@ export const AIAssistantChat: React.FC = () => {
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[60] w-14 h-14 rounded-full ${accent.bg} text-black shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center`}
+                className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[60] w-14 h-14 rounded-full ${accent.bg} text-[var(--color-bg)] shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center`}
                 aria-label="Abrir assistente IA"
             >
                 {isOpen ? (
@@ -62,16 +62,16 @@ export const AIAssistantChat: React.FC = () => {
 
             {/* Chat Panel */}
             {isOpen && (
-                <div className="fixed bottom-36 md:bottom-24 right-4 md:right-6 z-[59] w-[calc(100vw-2rem)] md:w-96 max-h-[70vh] bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+                <div className="fixed bottom-36 md:bottom-24 right-4 md:right-6 z-[59] w-[calc(100vw-2rem)] md:w-96 max-h-[70vh] bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
                     {/* Header */}
-                    <div className={`px-4 py-3 border-b border-neutral-800 flex items-center justify-between`}>
+                    <div className={`px-4 py-3 border-b border-[var(--color-divider)] flex items-center justify-between`}>
                         <div className="flex items-center gap-2">
                             <div className={`w-8 h-8 rounded-full ${accent.bg} flex items-center justify-center`}>
-                                <Sparkles className="w-4 h-4 text-black" />
+                                <Sparkles className="w-4 h-4 text-[var(--color-bg)]" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-sm">Assistente IA</h3>
-                                <p className="text-neutral-500 text-[10px] font-mono">
+                                <h3 className="text-[var(--color-text)] font-bold text-sm">Assistente IA</h3>
+                                <p className="text-[var(--color-text-muted)] text-[10px] font-mono">
                                     {businessName || 'Seu negócio'}
                                 </p>
                             </div>
@@ -79,7 +79,7 @@ export const AIAssistantChat: React.FC = () => {
                         {messages.length > 0 && (
                             <button
                                 onClick={clearMessages}
-                                className="text-neutral-500 hover:text-neutral-300 transition-colors p-1"
+                                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors p-1"
                                 title="Limpar conversa"
                                 aria-label="Limpar conversa"
                             >
@@ -93,7 +93,7 @@ export const AIAssistantChat: React.FC = () => {
                         {messages.length === 0 ? (
                             <div className="text-center py-6">
                                 <Sparkles className={`w-10 h-10 mx-auto mb-3 ${accent.text} opacity-50`} />
-                                <p className="text-neutral-400 text-sm mb-4">
+                                <p className="text-[var(--color-text-secondary)] text-sm mb-4">
                                     Pergunte qualquer coisa sobre seu negócio!
                                 </p>
                                 <div className="space-y-2">
@@ -101,7 +101,7 @@ export const AIAssistantChat: React.FC = () => {
                                         <button
                                             key={i}
                                             onClick={() => sendMessage(q)}
-                                            className="block w-full text-left px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-sm transition-colors"
+                                            className="block w-full text-left px-3 py-2 rounded-lg bg-[var(--color-surface)] hover:bg-[var(--color-card-hover)] text-[var(--color-text-secondary)] text-sm transition-colors"
                                         >
                                             {q}
                                         </button>
@@ -117,8 +117,8 @@ export const AIAssistantChat: React.FC = () => {
                                     <div
                                         className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
                                             msg.role === 'user'
-                                                ? `${accent.bg} text-black`
-                                                : 'bg-neutral-800 text-neutral-200'
+                                                ? `${accent.bg} text-[var(--color-bg)]`
+                                                : 'bg-[var(--color-surface)] text-[var(--color-text)]'
                                         }`}
                                     >
                                         {msg.content}
@@ -129,9 +129,9 @@ export const AIAssistantChat: React.FC = () => {
 
                         {loading && (
                             <div className="flex justify-start">
-                                <div className="bg-neutral-800 px-4 py-3 rounded-xl flex items-center gap-2">
+                                <div className="bg-[var(--color-surface)] px-4 py-3 rounded-xl flex items-center gap-2">
                                     <Loader2 className={`w-4 h-4 animate-spin ${accent.text}`} />
-                                    <span className="text-neutral-400 text-sm">Analisando...</span>
+                                    <span className="text-[var(--color-text-secondary)] text-sm">Analisando...</span>
                                 </div>
                             </div>
                         )}
@@ -140,7 +140,7 @@ export const AIAssistantChat: React.FC = () => {
                     </div>
 
                     {/* Input */}
-                    <div className="p-3 border-t border-neutral-800">
+                    <div className="p-3 border-t border-[var(--color-divider)]">
                         <div className="flex gap-2">
                             <input
                                 ref={inputRef}
@@ -149,13 +149,13 @@ export const AIAssistantChat: React.FC = () => {
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Pergunte sobre seu negócio..."
-                                className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-neutral-500 placeholder-neutral-500"
+                                className="flex-1 bg-[var(--color-input-bg)] border border-[var(--color-input-border)] rounded-lg px-3 py-2 text-[var(--color-text)] text-sm focus:outline-none focus:border-[var(--color-accent)] placeholder-[var(--color-text-muted)]"
                                 disabled={loading}
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || loading}
-                                className={`${accent.bg} text-black p-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
+                                className={`${accent.bg} text-[var(--color-bg)] p-2 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed`}
                                 aria-label="Enviar mensagem"
                                 title="Enviar"
                             >

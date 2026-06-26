@@ -104,7 +104,7 @@ export const BrandIdentitySection: React.FC<BrandIdentitySectionProps> = ({
                         onLogoRemove();
                     }}
                     icon={<ImageIcon className={`w-6 h-6 ${colors.textMuted} mx-auto`} />}
-                    label="Logo"
+                    label="Logotipo"
                     helper="Recomendado: 500x500px"
                     aspect="square"
                 />

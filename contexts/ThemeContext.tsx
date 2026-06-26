@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useCallback, useSyncExternalStore } from 'react';
-
-type ColorMode = 'dark' | 'light';
+import React, { createContext, useContext, useCallback } from 'react';
+import { useColorMode, type ColorMode } from '../hooks/useColorMode';
 
 interface ThemeContextValue {
   mode: ColorMode;
@@ -9,21 +8,8 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function getSnapshot(): ColorMode {
-  return (document.documentElement.getAttribute('data-mode') as ColorMode) || 'dark';
-}
-
-function subscribe(callback: () => void): () => void {
-  const observer = new MutationObserver(callback);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['data-mode'],
-  });
-  return () => observer.disconnect();
-}
-
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const mode = useSyncExternalStore<ColorMode>(subscribe, getSnapshot, () => 'dark');
+  const mode = useColorMode();
 
   const toggleMode = useCallback(() => {
     const next: ColorMode = document.documentElement.getAttribute('data-mode') === 'dark' ? 'light' : 'dark';

@@ -119,7 +119,7 @@ describe('queue service', () => {
       clientPhone: '11999999999',
       serviceId: 'service-001',
       professionalId: null,
-    })).rejects.toThrow('Este telefone ja esta na fila.');
+    })).rejects.toThrow('Este telefone já está na fila.');
 
     expect(insertMock).not.toHaveBeenCalled();
   });

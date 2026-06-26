@@ -1046,7 +1046,7 @@ useEffect(() => {
                       onClick={() => setFilterType(type)}
                       className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterType === type
-                          ? `${accent.bg} text-black`
+                          ? `${accent.bg} text-[var(--color-bg)]`
                           : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
                     >
                       {type === 'all' ? 'Tudo' : type === 'revenue' ? 'Entradas' : 'Saídas'}
@@ -1064,7 +1064,7 @@ useEffect(() => {
                       onClick={() => setFilterPaymentMethod(method)}
                       className={`px-3 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterPaymentMethod === method
-                          ? `${accent.bg} text-black`
+                          ? `${accent.bg} text-[var(--color-bg)]`
                           : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
                     >
                       {method === 'all' ? 'Todas' : method}

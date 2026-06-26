@@ -99,7 +99,7 @@ export const ServiceSettings: React.FC = () => {
                         </p>
                         <button
                             onClick={() => setIsCategoryModalOpen(true)}
-                            className={`px-6 py-3 ${accent.bg} text-black font-bold rounded-xl ${accent.bgHover} transition-colors`}
+                            className={`px-6 py-3 ${accent.bg} text-[var(--color-bg)] font-bold rounded-xl ${accent.bgHover} transition-colors`}
                         >
                             Criar Primeira Categoria
                         </button>

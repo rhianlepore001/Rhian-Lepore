@@ -42,13 +42,13 @@ describe('Login page', () => {
     );
 
     await userEvent.click(screen.getByTestId('category-barber'));
-    await userEvent.type(screen.getByLabelText('Email'), 'owner@test.com');
+    await userEvent.type(screen.getByLabelText('E-mail'), 'owner@test.com');
     await userEvent.type(screen.getByLabelText('Senha'), 'wrong-password');
     await userEvent.click(screen.getByRole('button', { name: /^entrar$/i }));
 
     const alert = await screen.findByRole('alert');
 
-    expect(alert).toHaveTextContent('Email ou senha incorretos');
+    expect(alert).toHaveTextContent('E-mail ou senha incorretos');
     expect(alert).toHaveTextContent('#invalidl');
 
     await waitFor(() => {

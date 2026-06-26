@@ -79,7 +79,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
 
                         <button
                             onClick={() => navigate('/agenda')}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-bold text-black transition-all hover:brightness-110 active:scale-95 ${accent.bg}`}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-bold text-[var(--color-bg)] transition-all hover:brightness-110 active:scale-95 ${accent.bg}`}
                         >
                             <Clock size={13} />
                             <span className="hidden sm:inline">Agendar</span>

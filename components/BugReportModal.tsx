@@ -12,7 +12,6 @@ import {
   captureScreenshot,
   captureContext,
   inferType,
-  inferCategory,
   createBugReport,
   uploadBugScreenshot,
   type BugContext,
@@ -21,6 +20,10 @@ import {
 interface BugReportModalProps {
   reportType: 'bug' | 'idea' | 'question';
   onClose: () => void;
+  /** Print capturado ANTES do modal abrir (sem o modal/menu na frente). */
+  screenshot?: string | null;
+  /** Contexto técnico capturado no mesmo instante do print. */
+  capturedContext?: BugContext | null;
 }
 
 const TITLES: Record<'bug' | 'idea' | 'question', string> = {
@@ -35,34 +38,44 @@ const PLACEHOLDERS: Record<'bug' | 'idea' | 'question', string> = {
   question: 'Escreva sua dúvida (opcional) e enviaremos junto com o print da tela.',
 };
 
-export const BugReportModal: React.FC<BugReportModalProps> = ({ reportType, onClose }) => {
+export const BugReportModal: React.FC<BugReportModalProps> = ({
+  reportType,
+  onClose,
+  screenshot: screenshotProp,
+  capturedContext,
+}) => {
   const { classes, colors, accent, radius } = useBrutalTheme();
   const { user, companyId } = useAuth();
   const { setModalOpen } = useUI();
   const { showToast } = useToast();
 
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [capturing, setCapturing] = useState(true);
-  const [context, setContext] = useState<BugContext | null>(null);
+  // Quando o pai já capturou o print por fora (fluxo correto), usamos o que veio
+  // por prop e NÃO recapturamos — evita fotografar o próprio modal na frente.
+  const preCaptured = capturedContext !== undefined;
+  const [screenshot, setScreenshot] = useState<string | null>(screenshotProp ?? null);
+  const [capturing, setCapturing] = useState(!preCaptured);
+  const [context, setContext] = useState<BugContext | null>(capturedContext ?? null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setModalOpen(true);
     let active = true;
-    (async () => {
-      setContext(captureContext());
-      const shot = await captureScreenshot();
-      if (active) {
-        setScreenshot(shot);
-        setCapturing(false);
-      }
-    })();
+    if (!preCaptured) {
+      (async () => {
+        setContext(captureContext());
+        const shot = await captureScreenshot();
+        if (active) {
+          setScreenshot(shot);
+          setCapturing(false);
+        }
+      })();
+    }
     return () => {
       active = false;
       setModalOpen(false);
     };
-  }, [setModalOpen]);
+  }, [setModalOpen, preCaptured]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -96,7 +109,6 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({ reportType, onCl
       companyId,
       userId: user.id,
       type: inferType(reportType),
-      category: inferCategory(reportType),
       description: description.trim() || null,
       context: context ?? captureContext(),
       screenshotPath,

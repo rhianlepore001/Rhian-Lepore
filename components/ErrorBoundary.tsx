@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '../utils/Logger';
+import { captureRenderError } from '../lib/autoBugCapture';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
@@ -69,6 +70,8 @@ export class ErrorBoundary extends Component<Props, State> {
         logger.error('Uncaught Error in React Component', error, {
             componentStack: errorInfo.componentStack
         });
+        // Registra automaticamente como bug (crash de tela → o agente classifica o nível).
+        captureRenderError(error, errorInfo.componentStack);
     }
 
     private handleReset = () => {

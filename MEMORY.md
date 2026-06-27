@@ -55,6 +55,20 @@
   - **Console error buffer:** singleton IIFE que envolve `console.error` e guarda últimos 10 com stack. Incluído no `BugContext` automaticamente.
   - **Supabase:** tabela `bug_reports` com RLS via `get_auth_company_id()` (mesmo padrão do projeto), bucket `bug-screenshots` com policies isolando por pasta `(storage.foldername(name))[1] = get_auth_company_id()`. Migration: `supabase/migrations/20260626000001_bug_reports.sql`.
   - **Multi-tenant:** `company_id` (TEXT) sempre exigido; INSERT só passa com `auth.uid()` correto. Modo avançado (com anotações, crop, network errors) e botão flutuante DEV ficam pra **Sprint 2**. Pipeline cron Bob pra triagem/fix/PR fica pra **Sprint 3**.
+- **Bug Reporter — Captura automática + Triagem 1-5 (27 Jun 2026):**
+  - **Fix de schema mismatch (latente do Sprint 1):** `lib/bugReport.ts` mandava `status:'open'` (banco só aceita `'new'`), sem `title` (NOT NULL), `screenshot_path` (coluna é `screenshot_url`), category inválida e bucket `bug-reports` (correto: `bug-screenshots`). Tudo alinhado ao schema. `createBugReport` agora deriva `title`/`category` da rota (`buildTitle`/`categoryFromRoute`) e `source='manual'`.
+  - **Captura automática (`lib/autoBugCapture.ts`):** listeners `window.error`/`unhandledrejection` + hook no `ErrorBoundary.componentDidCatch` → cria bug sozinho (`source='auto'`). Init em `index.tsx`. **Anti-spam 3 camadas:** dedup_key (normaliza números/hex), cooldown 1h no localStorage, teto 20/sessão; + RPC server-side incrementa `occurrences` em vez de duplicar. Só registra com sessão ativa.
+  - **Migration `20260626000002_bug_reports_triage.sql`:** colunas `level (1-5)`, `source`, `dedup_key`, `occurrences`, `last_seen_at`, `triage_summary`, `triage_plan`, `triaged_at` + RPC `upsert_auto_bug_report` (SECURITY DEFINER, tenant via `get_auth_company_id()`). `level` NULL = não triado.
+  - **Níveis 1-5 (oficial):** 1=cosmético · 2=componente quebrado · 3=erro de dados/banco · 4=fluxo interrompido · 5=crítico. Doc da ponte do agente: `docs/features/bug-triage-agent.md` (taxonomia + contrato SQL da fila + UPDATE de triagem + esqueleto do prompt).
+  - **Decisão do agente:** só **triagem + plano** (não corrige/PR). *Onde roda* (cron nuvem `/schedule` vs. lionclaw) = **Parte B, a decidir.**
+  - Verde: `typecheck`/`lint`/**275 testes** (+12)/`build`.
+- **Bug Reporter — Print fix + Modo admin de marcação (27 Jun 2026):**
+  - **Fix do print (todos):** o screenshot era capturado DEPOIS do modal abrir → saía com o modal/menu na frente. Agora `BugReportButton` fecha o menu, captura a tela limpa (2x `requestAnimationFrame`) e passa o print pronto via prop pro `BugReportModal` (que só recaptura se `capturedContext===undefined`). Botão "?" mostra spinner durante a captura.
+  - **Modo admin (`is_dev`, mode='advanced'):** `DevBugButton` (flutuante vermelho, só `isDev`, atalho `Ctrl+Shift+B`) esconde o próprio botão antes de fotografar e abre `BugAnnotateModal` → desenhar **retângulos** (frações 0..1, pointer events, touch-none) destacando o problema + comentário. Submit "queima" os retângulos no PNG via canvas (`burnAnnotations`, strokeStyle `#ef4444`) e grava com `mode='advanced'`, `is_dev=true`. Montado em `App.tsx`.
+  - `createBugReport` agora aceita `mode` + `isDev`. Sem migration (colunas `mode`/`is_dev` já existiam).
+  - **Decisões de produto:** admin só dev · marcação **destaca** (não recorta) · só **retângulo + comentário** · abre por **botão flutuante + atalho**.
+  - **Pra Sprint 2+ (futuro):** caneta livre, texto NA imagem, recorte por área, network errors, performance metrics, component stack.
+  - Verde: `typecheck`/`lint`/**275 testes**/`build`.
 
 ## 📋 Pendências / próximos passos
 
@@ -64,7 +78,8 @@
 - [ ] **Tela de Auditoria** (`settings/AuditLogs.tsx`): depende de uma migration de sistema de auditoria corrigida. A migration antiga `20260214_audit_system.sql` tem bugs e **NÃO deve ser aplicada como está** (referencia tabela inexistente `financial_records`, trigger com `action='INSERT'` que viola CHECK, join de tipos incompatíveis).
 - [ ] **Bug Reporter — Sprint 2:** modal avançado (anotações com caneta/texto/retângulo, crop por área, network errors, performance metrics, component stack) + botão flutuante DEV (`isDev=true`, atalho `Ctrl+Shift+B`).
 - [ ] **Bug Reporter — Sprint 3:** pipeline cron Bob (lê `bug_reports` WHERE status='new', triagem Lionclaw, plano de fix, branch por sprint, PR, atualização de status). Skills em `~/.hermes/skills/agendix/bug-report-flow.md` e `lionclaw-sprint.md`.
-- [ ] **Aplicar migration `20260626000001_bug_reports.sql` no Supabase de produção** + criar bucket `bug-screenshots` via service role (a migration tem DO block com instrução).
+- [x] **Migrations do Bug Reporter APLICADAS em produção (27 Jun 2026, via MCP):** tabela `bug_reports`, bucket `bug-screenshots`, colunas de triagem 1-5, RPC `upsert_auto_bug_report` (EXECUTE só `authenticated` — revogado de anon/public após advisor). ⚠️ Descoberta: `update_updated_at_column()` **não existia** no banco vivo (migration 20260218 nunca aplicada) — criada junto na migration 1 (arquivo do repo atualizado pra criá-la de forma idempotente).
+- [ ] **Bug Reporter — Parte B (cron de triagem):** decidir onde roda — agente agendado na nuvem (`/schedule`) ou plugar no lionclaw. Contrato pronto em `docs/features/bug-triage-agent.md` (fila `status='new' AND level IS NULL`; agente grava `level`+`triage_summary`+`triage_plan`+`status='triaged'`). Agente usa service role.
 - [ ] **Preencher WhatsApp/email de suporte** no `BugReportButton.tsx` (atualmente placeholder `#`).
 - [ ] **Dívida técnica (registrada por Claude Code review):** comentário em `useBrutalTheme.ts` diz "NUNCA use interpolação dinâmica — Tailwind não processa". Hoje funciona por causa do CDN (`cdn.tailwindcss.com` no `index.html`). Se migrarem para o build estático do Vite (Tailwind v4 no `package.json`), dezenas de `hover:${...}` espalhados pelo código quebram. Vai precisar de tokens `*Hover` no design system antes da migração.
 

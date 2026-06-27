@@ -1,102 +1,118 @@
 {
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\App.tsx": {
-    "mtime": 1781633785.2578988,
-    "hash": "2546c085c3cbb7d4490826842afec0c2"
+    "mtime": 1782579534.8089366,
+    "hash": "ae429851feb8ffd0cbef6a7fa97d7b86"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\constants.ts": {
-    "mtime": 1781633785.3623188,
+    "mtime": 1781964299.1990294,
     "hash": "db35e597b8aaca233bd7a1fad22f246b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\index.tsx": {
-    "mtime": 1780149045.4848044,
-    "hash": "4f80c69de926f2cc2209a73b863cb214"
+    "mtime": 1782495235.8482995,
+    "hash": "2ff5250bb7b138e761d1ace47a5ca749"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types.ts": {
-    "mtime": 1777661749.057638,
-    "hash": "8ac5545d756bda3f397db5c18ab23b11"
+    "mtime": 1782492569.4627776,
+    "hash": "139784e4b53ef65c7fe71833a2ea4997"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\vite.config.ts": {
     "mtime": 1777661749.0597153,
     "hash": "211c6e220e73f88513c6f7426c42bd26"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\vitest.config.ts": {
-    "mtime": 1779908570.1597674,
+    "mtime": 1781964302.7076557,
     "hash": "47a5fb555d58cfad52588b960634d892"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\AgendiXLogo.tsx": {
-    "mtime": 1780833588.0726194,
+    "mtime": 1781964298.6008265,
     "hash": "44eb0734cb89b307ba6952a19599f18e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\AIAssistantChat.tsx": {
-    "mtime": 1778092470.9031231,
-    "hash": "acf0bdfdf946f27e31c4ae4fb6a35df0"
+    "mtime": 1782492569.346109,
+    "hash": "56c3b17dae10231b4b1c9f0e5fd7cecd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\AISemanticInsights.tsx": {
-    "mtime": 1781633785.2791378,
+    "mtime": 1781964298.5989072,
     "hash": "58a02023d99605adab7fb7a0913d0896"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\AppointmentEditModal.tsx": {
-    "mtime": 1781891457.18975,
-    "hash": "7ab6729b30e5f58e2f242eb8401518a8"
+    "mtime": 1782492569.3497324,
+    "hash": "fc87b06d3c5a6feacd5bfe184cf184a0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\AppointmentWizard.tsx": {
-    "mtime": 1781633785.1564176,
+    "mtime": 1781964298.6073608,
     "hash": "f11d7d96a087de191a6240b76485d92a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BottomMobileNav.tsx": {
-    "mtime": 1781633785.2842488,
-    "hash": "607d831441e6cccccc88d148d69b8fb2"
+    "mtime": 1782492569.3522775,
+    "hash": "d9c92916f6e092086c9e72029ad5a7c8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BrandIdentitySection.tsx": {
-    "mtime": 1778424498.0541854,
-    "hash": "acfb5227a937605529e7257563756b11"
+    "mtime": 1782492569.3553011,
+    "hash": "e746a362e66ebd3b04407e8ad5fe595c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BrutalBackground.tsx": {
-    "mtime": 1777662797.4175377,
+    "mtime": 1781964298.6335435,
     "hash": "ab5c2cae60337141ac7f6e3bd68dfd7a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BrutalButton.tsx": {
-    "mtime": 1781633785.546307,
-    "hash": "f22d195df574ee871bc4a18376c04ea6"
+    "mtime": 1781964298.6370628,
+    "hash": "e2d98ff3450d3d38aca1dbc4a97a5059"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BrutalCard.tsx": {
-    "mtime": 1781633785.3623188,
-    "hash": "7bfcc0a0a260cb3611af504970d7a274"
+    "mtime": 1781964298.640081,
+    "hash": "a2521ec0de0218e594c646e9d8e92f37"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BugAnnotateModal.tsx": {
+    "mtime": 1782579470.6482291,
+    "hash": "579577fd00b6d435174fc93a41454a47"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BugReportButton.tsx": {
+    "mtime": 1782579359.4495103,
+    "hash": "860701ae43fe0df2eb7f833a8a5a5644"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BugReportMenu.tsx": {
+    "mtime": 1782492569.3599029,
+    "hash": "ea15b5a62c557fe1ac45e6ffc28d67c9"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BugReportModal.tsx": {
+    "mtime": 1782579341.3082492,
+    "hash": "2916e114e14b4d88b3a65d0a9103a718"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BusinessGalleryManager.tsx": {
     "mtime": 1767190163.3563888,
     "hash": "3cf687da73f0e51ab19800af880496c0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BusinessHoursEditor.tsx": {
-    "mtime": 1778424465.1186287,
-    "hash": "682e0f6b54cb6658ffe49340fc0f9e45"
+    "mtime": 1781964298.6430871,
+    "hash": "7c03f6e407f21ab44b24472c2dbf6275"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CalendarPicker.tsx": {
-    "mtime": 1778424626.5898514,
-    "hash": "85d9c24330d93d2f882d1eaae743e9ac"
+    "mtime": 1782492569.365438,
+    "hash": "a1bca1a97db5ed3b0c0326104cc001c3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ChatBubble.tsx": {
-    "mtime": 1781633785.276142,
+    "mtime": 1781964298.6501894,
     "hash": "6c39974925a193656f359fda803c3517"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CheckoutModal.test.tsx": {
-    "mtime": 1781633785.0951252,
-    "hash": "38f888b1dc6de21f9366b0385280b030"
+    "mtime": 1781964298.6537206,
+    "hash": "29f28bd316fb666b252736dc4eb4d4c6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CheckoutModal.tsx": {
-    "mtime": 1781891072.8534229,
-    "hash": "a424fcb2b040684141fcba1c2e6b86c2"
+    "mtime": 1781964298.656776,
+    "hash": "b7fab191c51caba074a9098c8d6a978e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ChurnRadar.tsx": {
-    "mtime": 1781889856.7491884,
-    "hash": "04b762980605db142ab8f77c3e8f5625"
+    "mtime": 1781964298.6597705,
+    "hash": "dedc892d131b65af4db201b058ff0dda"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ClientAuthModal.tsx": {
-    "mtime": 1781890590.1833723,
-    "hash": "c6ae76884ee1853855bf499c602e1f44"
+    "mtime": 1781964298.6637702,
+    "hash": "059c70d4c21713e0565f8fe9289245b0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ClientBookingCard.tsx": {
-    "mtime": 1777662797.427055,
+    "mtime": 1781964298.6682558,
     "hash": "be7bb5bb8b43f21cbcd8039e783e36a6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ClientWhatsAppFAB.tsx": {
@@ -104,60 +120,64 @@
     "hash": "7037c80c9c5367ef8b8c997d6ec2e7cd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CommissionDetailReport.tsx": {
-    "mtime": 1781890831.201453,
-    "hash": "40ecf451c42ff277c4f0c2f505106d54"
+    "mtime": 1781964298.6718576,
+    "hash": "1eaf47de293492f0dacee8230b61dd61"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CommissionPaymentHistory.tsx": {
-    "mtime": 1781890865.8555624,
-    "hash": "69f2553b2cb2265476896ce8433815b0"
+    "mtime": 1781964298.6748872,
+    "hash": "d40bc87b8ba2e9e97d98c588d8c6dcc7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CommissionShareModal.tsx": {
-    "mtime": 1781890039.629309,
-    "hash": "812213b37cd0cb91f394f8d520088395"
+    "mtime": 1781964298.6808622,
+    "hash": "1d6cd32a513fa9b3eb2233c80299170c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\CommissionsManagement.tsx": {
-    "mtime": 1781891333.6013832,
-    "hash": "245d6470261bc7015a86fcdf93a78890"
+    "mtime": 1782492569.367433,
+    "hash": "8f548a8eeb544489d1a53381fd0527a9"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\DevBugButton.tsx": {
+    "mtime": 1782579514.417783,
+    "hash": "730bf13747724024294fe96df07e27b8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\DynamicBranding.tsx": {
     "mtime": 1771098670.7097383,
     "hash": "e65a4aea55ff1bf0cc45eaf8cb79e01f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\EmptyState.tsx": {
-    "mtime": 1781889891.5775762,
-    "hash": "b9190a1f5561a092a2ee1f19db502dec"
+    "mtime": 1781964298.690508,
+    "hash": "cd30d94fe7e6ce09bd3e40e91497e8ab"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ErrorBoundary.tsx": {
-    "mtime": 1781889907.8036616,
-    "hash": "abf23ab8e8335d03d4358a7062512983"
+    "mtime": 1782495176.7425206,
+    "hash": "1f0ed479daacc7b36d51aea2dc0f71d4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\FinanceInsights.tsx": {
-    "mtime": 1781633785.278137,
+    "mtime": 1781964298.697695,
     "hash": "7c17f0af85e99b665fda697f80df48f6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\GoalHistory.tsx": {
-    "mtime": 1777662797.4416528,
+    "mtime": 1781964298.7017083,
     "hash": "fc815bcc8a41f95b6251d6a4bf711793"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\GoogleReviewPrompt.tsx": {
-    "mtime": 1781889922.3463929,
-    "hash": "6eea581d4573bccba2eca4ff2e33b69e"
+    "mtime": 1781964298.7054038,
+    "hash": "28748f1d7d60c7a944421c4e6806f747"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Header.tsx": {
-    "mtime": 1781360592.4359825,
-    "hash": "a2bdba0e0260fb645cfc2b35746e5481"
+    "mtime": 1782492569.3715236,
+    "hash": "ce3b676067858e633af4b5f9d7669e11"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\HelpButtons.tsx": {
-    "mtime": 1778092368.2149715,
+    "mtime": 1781964298.772258,
     "hash": "a853570c32f45b0cd822205a5da73659"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Layout.tsx": {
-    "mtime": 1781633785.0976417,
+    "mtime": 1781964298.7762535,
     "hash": "49a8ead47ff7645646c18918ed63b3a8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Modal.tsx": {
-    "mtime": 1781633785.2568932,
-    "hash": "79af6934bea82102e69125107e005881"
+    "mtime": 1781964298.7792554,
+    "hash": "3cb5384e239c67cf56e8c2a8b30d452e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\MonthlyHistory.tsx": {
     "mtime": 1771619128.4870076,
@@ -168,48 +188,48 @@
     "hash": "47cb4cddd24630b34238e1cfd0a4d590"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\MoreOptionsDrawer.tsx": {
-    "mtime": 1781633785.1423209,
-    "hash": "4508d92d03702ee70d4992c1b4c69f08"
+    "mtime": 1782492569.3761823,
+    "hash": "05c83f5a6204fc252416b7df846db4db"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\OnboardingLayout.tsx": {
-    "mtime": 1780833598.67391,
+    "mtime": 1781964298.7868347,
     "hash": "fa61329c5fedbeea9f53750b0357409f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\PaywallModal.tsx": {
-    "mtime": 1778092683.5457523,
+    "mtime": 1781964298.7898574,
     "hash": "3c8f846e860017d443362cdb7055cc21"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\PhoneInput.tsx": {
-    "mtime": 1781633785.422159,
-    "hash": "c0c00804542bab0c53da4c3a32c4db4b"
+    "mtime": 1781964298.792877,
+    "hash": "00df457cb7200a9b95580ca34198bd1c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ProfessionalCommissionDetails.tsx": {
-    "mtime": 1781890995.3946118,
-    "hash": "b1704ccbc94064ede4ccea77794f6a00"
+    "mtime": 1781964298.7968822,
+    "hash": "e086a097f30c73698dd9659bf0aa2d1b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ProfessionalSelector.tsx": {
     "mtime": 1767190163.4074583,
     "hash": "35f0d8b5a1fb44629103e8a713550e33"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ProfileModal.tsx": {
-    "mtime": 1777819822.1882591,
-    "hash": "0b841f1de6c57f8a709a474d1635a402"
+    "mtime": 1781964298.7994294,
+    "hash": "0097f1679df842b667fb5abcb92e6488"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\PublicBusinessHeader.tsx": {
-    "mtime": 1781450668.1594162,
-    "hash": "24aafc9b9f51759af1a86d62137234d9"
+    "mtime": 1781964298.8034284,
+    "hash": "87e320b95198d1ab69a7e65f01228e48"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\PublicLinkCard.tsx": {
-    "mtime": 1781890628.636883,
-    "hash": "e62a35330ffd1e091dc9c38620699d73"
+    "mtime": 1781964298.9094205,
+    "hash": "de82bf8d04fffe8432c376a908081825"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\QuickActionsModal.tsx": {
-    "mtime": 1781633785.2872498,
+    "mtime": 1781964298.912969,
     "hash": "8322a86d640fb50df2ba27ce2bb4fffc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SaveFooter.tsx": {
-    "mtime": 1778424523.6393251,
-    "hash": "8fe719cb017a25994f30e01c5ad87470"
+    "mtime": 1782492569.3797307,
+    "hash": "a010710d9b328580b92308dac8d5d05f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Screw.tsx": {
     "mtime": 1763889992.9146354,
@@ -220,55 +240,55 @@
     "hash": "f4872533db76079dfd4e340859908b5d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ServiceModal.tsx": {
-    "mtime": 1781633785.2791378,
+    "mtime": 1781964298.919971,
     "hash": "3b6d9c52d658052bce3eda47f10cccd6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SettingsLayout.tsx": {
-    "mtime": 1777819812.5432281,
-    "hash": "b033f19c5134a0acaa1b5d5e3d7f147d"
+    "mtime": 1781964298.923512,
+    "hash": "c312134a7436f8b2a432c7f8c671f9d9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SettingsSection.tsx": {
-    "mtime": 1781633785.7663999,
-    "hash": "30d16772f4e66e7d164a9ad3a6d71dd9"
+    "mtime": 1781964298.925511,
+    "hash": "f4d8938fa53ba7ed53aee56936b888e1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SettingsSwitch.tsx": {
-    "mtime": 1778424386.490517,
-    "hash": "4520132502fe54652144bc9e43f49286"
+    "mtime": 1781964298.9285104,
+    "hash": "0a165bcdceaf50ee8ba493615ca1b34a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Sidebar.tsx": {
-    "mtime": 1781366376.2214925,
-    "hash": "2737c6ef56d24489b01175fd0f8b7e06"
+    "mtime": 1781964298.934059,
+    "hash": "2831d090b65205fba428c9ff221d7f20"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SkeletonLoader.tsx": {
     "mtime": 1771697303.339809,
     "hash": "030eac6e2d8f84b1c6760fc7c93a819b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SmartNotifications.tsx": {
-    "mtime": 1777919324.7945137,
-    "hash": "45756db35adea6b2d47d844e3228a782"
+    "mtime": 1782492569.3827505,
+    "hash": "223f39937474b29bbefcc258d75700b4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\StaffEarningsCard.tsx": {
-    "mtime": 1781636849.0147905,
-    "hash": "40f92fa036d8dfe54b45afc963d8f0c2"
+    "mtime": 1781964298.9408023,
+    "hash": "e8ae110146f2db2e9ef3611b03d3e5f0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\TabNav.tsx": {
-    "mtime": 1778096829.0448606,
+    "mtime": 1781964298.9443274,
     "hash": "acae7c7585c363e0af4fc860badc1f84"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\TeamMemberCard.tsx": {
-    "mtime": 1778093741.3021085,
+    "mtime": 1781964298.9491458,
     "hash": "f1dbfdb64a1efe0792fef94fc4702344"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\TeamMemberForm.tsx": {
-    "mtime": 1781890733.735297,
-    "hash": "f2ec4123d25e6369d31824a591f169ad"
+    "mtime": 1781964298.9535003,
+    "hash": "430837ab19b544654cf62beb498321ff"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\TimeGrid.tsx": {
-    "mtime": 1781633785.5347502,
-    "hash": "f31d7560b6b82b4f28dbb4ac07871b54"
+    "mtime": 1781964298.9560564,
+    "hash": "b26811c4e0cf592f6d0427139630c00f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\TrialBanner.tsx": {
-    "mtime": 1778092969.7660577,
+    "mtime": 1781964298.9590614,
     "hash": "ea9d1f801b66746a5aca7df8438454af"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\UpsellSection.tsx": {
@@ -276,7 +296,7 @@
     "hash": "3f97790f1d2eb431e2a376311f85f525"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\appointment\\AppointmentReview.test.tsx": {
-    "mtime": 1777662797.4829419,
+    "mtime": 1781964298.964777,
     "hash": "7932969d5718784b52357354380204a5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\appointment\\AppointmentReview.tsx": {
@@ -296,7 +316,7 @@
     "hash": "4e9f11948cb71265ebc8c3222416b9a8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\appointment\\ServiceList.tsx": {
-    "mtime": 1777662797.485503,
+    "mtime": 1781964298.9673214,
     "hash": "2ecc2f3796758bd6aa5c8d5969048e8d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\appointment\\ServiceSearchBar.tsx": {
@@ -308,123 +328,123 @@
     "hash": "ef44d03d17bd8cc75d51e7709b4ae14a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\booking\\BookingModeToggle.tsx": {
-    "mtime": 1778874350.0704439,
-    "hash": "42bd73437c32efcbb585fad33f57890f"
+    "mtime": 1782492569.3847513,
+    "hash": "34a3188be9bf4f06df9d70d074af3458"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\ActionCenter.tsx": {
-    "mtime": 1781889944.2592115,
-    "hash": "9382e3526e713d049c53112d4c0ddc65"
+    "mtime": 1781964299.001153,
+    "hash": "e8782f18cfc9a2790d1aa5d85e5d5f47"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\AIOSCampaignStats.tsx": {
-    "mtime": 1781889975.5034728,
-    "hash": "d15b5b802472a3571c35f7c9b89abec5"
+    "mtime": 1781964298.973889,
+    "hash": "e5a7b2fbffbf990e7b43aa799ad42076"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\AIOSDiagnosticCard.tsx": {
-    "mtime": 1781889960.610819,
-    "hash": "3dfa93e9b3786165d555ab37ad2ae2f6"
+    "mtime": 1782492569.3882916,
+    "hash": "f47119a24ce4f7dbcacdf191265b6d6a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\BusinessHealthCard.tsx": {
-    "mtime": 1781633785.2872498,
-    "hash": "e761a7d96d6b3d0876e513da26e02df5"
+    "mtime": 1781964299.006273,
+    "hash": "0c98d594d554ba9a2440ee3008b58d56"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\ComandoDoDia.tsx": {
-    "mtime": 1778950569.3380947,
-    "hash": "132428560fe178c13ec44e932f27a7cb"
+    "mtime": 1781964299.0098505,
+    "hash": "81fb4e0a0bf5cfb8de6a85e71872c891"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\DashboardHero.tsx": {
-    "mtime": 1778950569.3396094,
-    "hash": "5ecb83293b38198aff8a64f6e0fe95ec"
+    "mtime": 1782492569.3918295,
+    "hash": "1c1f61a56b0428710f8668e2fd213c54"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\DashboardKpiCard.tsx": {
-    "mtime": 1781633785.2852557,
-    "hash": "5aa8a23b48debbd8b4c5c0e120c30c58"
+    "mtime": 1781964299.0161788,
+    "hash": "b6473d8cc70e97e92ae87802fa845c95"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\DataMaturityBadge.tsx": {
-    "mtime": 1781890018.3338969,
-    "hash": "c0d0ea2334ff3ebecb56d686877f0fac"
+    "mtime": 1781964299.0191813,
+    "hash": "0d2c76f79d65435ab0e548225bf222b8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\FinancialDoctorPanel.tsx": {
     "mtime": 1777661748.7985673,
     "hash": "99d8ca7f05bcf17c0075a90c301a1dfc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\MeuDiaWidget.tsx": {
-    "mtime": 1781633785.081848,
-    "hash": "e9a104b487aaa3a93f5bf2d71a0c9028"
+    "mtime": 1781964299.022727,
+    "hash": "04664a00a8ab897df6848fc8bbb8b765"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\MiniSparkline.tsx": {
-    "mtime": 1778426061.7156396,
-    "hash": "10bca68d0c3e75991a67c39d80d14d7a"
+    "mtime": 1781964299.0267384,
+    "hash": "ccfef0f1f1bd24a525719aeedfcde245"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\ProfitMetrics.tsx": {
-    "mtime": 1781633785.1933906,
-    "hash": "a49a2aa3450d5ecebea271b4db1c24f5"
+    "mtime": 1781964299.0307262,
+    "hash": "6b6e1282418e0143d52a9ae2b7bc6f00"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\SetupCopilot.tsx": {
-    "mtime": 1781633785.7683966,
-    "hash": "3bbf7f0c6e966d5f4a9be3376497cfa3"
+    "mtime": 1781964299.0353901,
+    "hash": "28f4a5e6b3aa5eb61da00ce5dcddf7d2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\SmartRebooking.tsx": {
-    "mtime": 1781633785.3623188,
+    "mtime": 1781964299.0404267,
     "hash": "6cfe3584a5e53ac9bb2242fddcd0b93c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\modals\\AIOSStrategyModal.tsx": {
-    "mtime": 1777662797.512875,
+    "mtime": 1781964299.045491,
     "hash": "cb1f0285b4913e3e22f3335bc1a6233a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\modals\\AllAppointmentsModal.tsx": {
-    "mtime": 1778421725.871406,
-    "hash": "cee35a6f8f0f0398dd26e04941d66aa9"
+    "mtime": 1782314599.9345763,
+    "hash": "1529a7fd72b3b876d3dc1c71adb03945"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\modals\\GoalHistoryModal.tsx": {
-    "mtime": 1778421913.1962764,
-    "hash": "06f3073c8191b29be0ed2daf123087ef"
+    "mtime": 1782492569.393831,
+    "hash": "859bcde3f673c80c609bcf64885cb2d7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\modals\\GoalSettingsModal.tsx": {
-    "mtime": 1778421667.0554118,
+    "mtime": 1781964299.0594778,
     "hash": "23712c62ba8d3f319150d7a0e41e6afc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\modals\\MonthlyProfitModal.tsx": {
-    "mtime": 1778421808.1807566,
-    "hash": "ddc45bd658700472ed8c8183168542c1"
+    "mtime": 1782492569.397748,
+    "hash": "8eff9f667c0d492d4bdd9b43223502e1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\marketing\\CampaignModal.tsx": {
-    "mtime": 1777919471.4710953,
+    "mtime": 1781964299.0643618,
     "hash": "55a62441dfd61c9ea255a927cb1c5c83"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\marketing\\OpportunityCard.tsx": {
-    "mtime": 1781889872.1157765,
-    "hash": "9b5a492ce7f62a74357541a3a0f4e6ee"
+    "mtime": 1781964299.0669067,
+    "hash": "96f486924146f245c952d2f19d9dc2b7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\ActivationBanner.tsx": {
     "mtime": 1775926554.1609104,
     "hash": "98adb8e869a94f5797c59508906a5dc5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StandaloneWizardPointer.tsx": {
-    "mtime": 1781633785.2852557,
+    "mtime": 1781964299.0704184,
     "hash": "d744f82b61a524d433128cc0776d9f90"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StepBusinessHours.tsx": {
-    "mtime": 1779908570.1351013,
+    "mtime": 1781964299.0724406,
     "hash": "4c966d8660145920865d7dd4b6ce4e8d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StepBusinessInfo.tsx": {
-    "mtime": 1778946246.3786962,
-    "hash": "ad019222e67bd11a5511dcfba168f8dd"
+    "mtime": 1781964299.0894063,
+    "hash": "79066a0d082fa804ae9ba692e27ea6ac"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StepMonthlyGoal.tsx": {
-    "mtime": 1777662797.5240924,
+    "mtime": 1781964299.092403,
     "hash": "b2f52883e0e196f49b94281fdd952123"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StepServices.tsx": {
-    "mtime": 1781633785.4418218,
-    "hash": "ceb63f5eb2e04b52f8db59dc0cf5a178"
+    "mtime": 1781964299.1098254,
+    "hash": "7921dfbd2f1af62d49eb00d49a934a6f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StepSuccess.tsx": {
-    "mtime": 1777662797.5286956,
+    "mtime": 1781964299.1144073,
     "hash": "57f0dc3f0c0c704f9511ff271949ee1e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\StepTeam.tsx": {
-    "mtime": 1777662797.5303924,
+    "mtime": 1781964299.1174698,
     "hash": "589a83f1bbeafe424ace63ec5e9c7a03"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\WizardContext.tsx": {
@@ -432,120 +452,120 @@
     "hash": "68e57fd420f9c1f0f0edda6b2d0e5d7a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\WizardEngine.tsx": {
-    "mtime": 1781633785.0961306,
-    "hash": "141c8c52ab73845a3544fee17790a353"
+    "mtime": 1781964299.120019,
+    "hash": "40e264ae9c6693643055ef9f18d966d2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\WizardOverlay.tsx": {
-    "mtime": 1778946186.1568842,
-    "hash": "2c7c1333685c383523bcb2252b6de9d4"
+    "mtime": 1781964299.1230745,
+    "hash": "b36ff0aa1d1fb56831678ace8da9bfcd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\WizardPointer.tsx": {
     "mtime": 1777661748.8558426,
     "hash": "5e90c8a16e1d35eee1f0c95451da8f90"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\onboarding\\WizardProgress.tsx": {
-    "mtime": 1778876659.94276,
-    "hash": "3c07b121e040533362cee97d8e7994a0"
+    "mtime": 1781964299.126071,
+    "hash": "a687547a21a048a1d82019e58b3f242b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\security\\TwoFactorSetup.tsx": {
-    "mtime": 1778093077.5468812,
+    "mtime": 1781964299.1300714,
     "hash": "95d678db4c3b1c10191e7d73c073964d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Badge.tsx": {
-    "mtime": 1779215960.8200285,
-    "hash": "64cff5c54221a80dac2fe09e63e90456"
+    "mtime": 1781964299.1336286,
+    "hash": "d1bd180f8f343c472606c002eefdca9a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Button.tsx": {
-    "mtime": 1781633785.1564176,
-    "hash": "1a62e2cb209aae2c9dc87a7d995dac5b"
+    "mtime": 1781964299.135145,
+    "hash": "5209eb4b8c41cc6e561751f8764d98ae"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Card.tsx": {
-    "mtime": 1781633785.0565994,
-    "hash": "0bcca915a819b27921d01507035adfeb"
+    "mtime": 1781964299.1377006,
+    "hash": "83912f38472387e4cfbc39bdade5c26c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Checkbox.tsx": {
-    "mtime": 1781633785.278137,
+    "mtime": 1781964299.139699,
     "hash": "72d3aa71c384abf766c5e9bc1a5dbfb1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\ConfirmModal.tsx": {
-    "mtime": 1781633785.2842488,
+    "mtime": 1781964299.1412778,
     "hash": "b721f2712f320b94e7e89d9e45b20e87"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\EmptyState.tsx": {
-    "mtime": 1779215971.5670204,
-    "hash": "68f731b5ee7486a3c20e8f8c27f9d618"
+    "mtime": 1781964299.143816,
+    "hash": "4917d03cb102b196b3b60774613f0019"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\ErrorState.tsx": {
-    "mtime": 1779215998.586816,
-    "hash": "f2c7da66ef0a98a3fbb9999aabd8be06"
+    "mtime": 1781964299.1463635,
+    "hash": "32c266729dcfbc4dd50b14074f940ab8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\index.ts": {
-    "mtime": 1781633785.422159,
-    "hash": "aecf72a4e641bf26c4ba4efde75577fb"
+    "mtime": 1781964299.194914,
+    "hash": "773c144b9c5e5fa4133ee0b6ce995044"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Input.tsx": {
-    "mtime": 1781633785.4408197,
-    "hash": "baad901032ddb4847c8de7d557c5d751"
+    "mtime": 1781964299.1482556,
+    "hash": "906dcfca4a159f27df4af40aa2392dfa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Modal.tsx": {
-    "mtime": 1781633785.2146482,
-    "hash": "9f78f56440c284428095a101a367eb73"
+    "mtime": 1781964299.1507998,
+    "hash": "b8b400245bb46ea3e9ecfafd3d9829d0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\PageHeader.tsx": {
-    "mtime": 1781633785.4418218,
+    "mtime": 1781964299.1528878,
     "hash": "4efcc3a2c6e47e6d1907589e6230e1ec"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Select.tsx": {
-    "mtime": 1779215875.6918914,
-    "hash": "ddc44262eb3721572075f011b5885253"
+    "mtime": 1781964299.157503,
+    "hash": "9aa59586d5ca754a8c35da37a19803ef"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Skeleton.tsx": {
-    "mtime": 1779215985.1896904,
-    "hash": "0a7ab8f547fa7cbc1e63aa05cff1127a"
+    "mtime": 1781964299.1601467,
+    "hash": "e47c373d0ee6b44f42c80e5b9cd743ca"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Table.tsx": {
-    "mtime": 1781633785.2842488,
-    "hash": "111ad08d494ac243071fc6d68c5be2cd"
+    "mtime": 1781964299.1631467,
+    "hash": "5996b5f8f7b2d327f3e41e466152d727"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Tabs.tsx": {
-    "mtime": 1779216027.433747,
-    "hash": "9c8ba0d8dfc84dcb5e4d3a0e2c1ec470"
+    "mtime": 1781964299.1648731,
+    "hash": "3879218a8aa225574e6bfd26bbddfebd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Toast.tsx": {
-    "mtime": 1781633785.535273,
+    "mtime": 1781964299.1683261,
     "hash": "e4d93e6b91d63ee7987d2ab5fae4325e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Button.test.tsx": {
-    "mtime": 1779303591.9358473,
-    "hash": "cf505f944bb75a998fb091589c8f5377"
+    "mtime": 1781964299.171237,
+    "hash": "640be68b8e575e323d20b5fd106520f7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Checkbox.test.tsx": {
-    "mtime": 1781633785.0951252,
+    "mtime": 1781964299.1742191,
     "hash": "7c1a29581e470a605d1462524fc6b42f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Input.test.tsx": {
-    "mtime": 1779303594.9601905,
-    "hash": "58256ace6ec2f8fd76b4d6d3f4c9efaf"
+    "mtime": 1781964299.1763442,
+    "hash": "08357e779276163277f0770a65a1aadf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Modal.test.tsx": {
-    "mtime": 1779303602.2976215,
-    "hash": "e08326a79704de52d64c0e40bc762746"
+    "mtime": 1781964299.1827412,
+    "hash": "1293e6e0d808545ba34d09bd8cfe4f4b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Select.test.tsx": {
-    "mtime": 1779303599.212255,
-    "hash": "3a90cefdbf27eb03a6694edd44b075a0"
+    "mtime": 1781964299.1848025,
+    "hash": "84952d9237237d33cdabc4227477df96"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\SmokeTests.test.tsx": {
-    "mtime": 1779303657.774987,
-    "hash": "dee682ce85496b4e7d219ba2fda78263"
+    "mtime": 1781964299.187401,
+    "hash": "59811ff2f9331552ba71460fdc27c5b6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Table.test.tsx": {
-    "mtime": 1779303606.0360014,
-    "hash": "ceb22ef27b170320a3a38ef433b87b91"
+    "mtime": 1781964299.1896994,
+    "hash": "9519c883743b8e7ee561b5309b044286"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\__tests__\\Tabs.test.tsx": {
-    "mtime": 1779303609.312111,
-    "hash": "6c6efbb1d1d1fe72e372d10abc1c823f"
+    "mtime": 1781964299.1931167,
+    "hash": "ded2d4c70dd85a1f94b11105d57d1f23"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\constants\\i18n-glossary.ts": {
     "mtime": 1771098718.8421173,
@@ -556,43 +576,43 @@
     "hash": "1e7f0ac7f66871c3ca4a35150256620a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\AlertsContext.tsx": {
-    "mtime": 1781633785.274136,
+    "mtime": 1781964299.2024896,
     "hash": "acada14b85d29c39f62e19b6f1981325"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\AuthContext.tsx": {
-    "mtime": 1781451639.4009223,
+    "mtime": 1781964299.20611,
     "hash": "5343ca772c80b4fb9933d0077f864bff"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\DesignSystemProvider.tsx": {
-    "mtime": 1777814174.0682447,
-    "hash": "5a20cfefe3fa7c8bef9ae3f5cea72dad"
+    "mtime": 1781964299.215356,
+    "hash": "b440483ada2b9c4f7f60052588d14b98"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\GuidedModeContext.tsx": {
-    "mtime": 1781633785.2872498,
+    "mtime": 1781964299.218245,
     "hash": "dd73eb94f2c63da6d761097ac7d37b8b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\PublicClientContext.tsx": {
-    "mtime": 1781636454.2214139,
+    "mtime": 1781964299.2211423,
     "hash": "8f7dbc76d6a92df4e93a5d4ab93d14dd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\ThemeContext.tsx": {
-    "mtime": 1777662797.5472138,
-    "hash": "b760bf6a336e9da0f0e5d1eb2f0fa815"
+    "mtime": 1782492569.3998995,
+    "hash": "8c4ecea5593824779ecddbf3c75ade0e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\contexts\\UIContext.tsx": {
     "mtime": 1777661748.8727674,
     "hash": "dd88b4b5f6a994f9388d200ed0205171"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\index.ts": {
-    "mtime": 1777743914.2194443,
-    "hash": "1e193fabe3a6868ed209c8c7b32e074b"
+    "mtime": 1781964301.8770182,
+    "hash": "df12ed87992d82838c20e9c5334a8e86"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\use2FA.ts": {
     "mtime": 1771619493.8905363,
     "hash": "6165e349e9982ebb266fc86803cff652"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useAIAssistant.ts": {
-    "mtime": 1777662797.5553882,
+    "mtime": 1781964301.8800175,
     "hash": "c7cad0857292c31ae79a85f834484b06"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useAIOSDiagnostic.ts": {
@@ -600,43 +620,47 @@
     "hash": "eba46908460efc5413199f0e660097ff"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useAppTour.ts": {
-    "mtime": 1777662797.5594084,
+    "mtime": 1781964301.8825743,
     "hash": "bcf67a7d25720f40daf525d3055451bd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useBrutalTheme.ts": {
-    "mtime": 1781633785.1403103,
-    "hash": "a1ae2a4824fc7f98c04ff8e3bd986a0e"
+    "mtime": 1782492569.4034564,
+    "hash": "419f61155b874b5db1cff394a9538e44"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useCampaignHistory.ts": {
     "mtime": 1773258566.8302836,
     "hash": "a20273531f67dcfcd8528a4967aec8f4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useCatalog.ts": {
-    "mtime": 1780507452.8815093,
-    "hash": "1a4c0fdfeccc48c334f7f47a4e945667"
+    "mtime": 1781964301.885481,
+    "hash": "b84e8ac93ed7d2e20a4de6a21239728d"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useColorMode.ts": {
+    "mtime": 1782492569.405458,
+    "hash": "3567b9858fa23e4999dea6f6edae3d0e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useContentCalendar.ts": {
-    "mtime": 1777662797.5615518,
+    "mtime": 1781964301.8905807,
     "hash": "215fdb590dd4b7e822bf15a43a53598c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useCrm.ts": {
-    "mtime": 1780155127.6965518,
-    "hash": "e11c1bd5a087102a510c6f2c1f190061"
+    "mtime": 1781964301.8921268,
+    "hash": "adc76cc9fe055e8fcc2c7429ea96eb1a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useDashboardData.ts": {
-    "mtime": 1780157288.8014276,
-    "hash": "43edc8a36bb99acdef858ac6e9d74477"
+    "mtime": 1781964301.894863,
+    "hash": "aaad16ad0bdef9dacf2971019f029f6f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useDynamicBranding.ts": {
-    "mtime": 1780833531.5911744,
+    "mtime": 1781964301.8968916,
     "hash": "a942b55eb9b62c4ed937d847167dc694"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useFinance.ts": {
-    "mtime": 1780759610.1292944,
-    "hash": "2b2ed343a2d0cbb0c138e9ca9fc65978"
+    "mtime": 1781964301.8988984,
+    "hash": "b233a8dc1292c503be2886c774a646cc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useFinancialDoctor.ts": {
-    "mtime": 1777662797.569753,
+    "mtime": 1781964301.9106064,
     "hash": "9ceca1388e190c811bfbd677bc39b871"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useMarketingOpportunities.ts": {
@@ -644,48 +668,48 @@
     "hash": "140bc4900f0aea8bb8c754ee9ffd48d3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useMeuDiaData.ts": {
-    "mtime": 1780156949.381981,
-    "hash": "f9b13eb3c4d6f9242760e704b78c3b1f"
+    "mtime": 1781964301.9126353,
+    "hash": "e451a46981e65608755a1b982856b22f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useOnboardingState.ts": {
-    "mtime": 1780759749.189787,
-    "hash": "39a20e063cb12ce4779e1b69d937d505"
+    "mtime": 1781964301.915631,
+    "hash": "147474e9e6f7aadb8a3956e6b117d4be"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\usePublicBooking.ts": {
-    "mtime": 1780828311.298406,
-    "hash": "edf03dc884acd1735387c55ab35b763b"
+    "mtime": 1781964301.9176323,
+    "hash": "32abb2ee4120f729987e9f6dee033995"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useQueue.ts": {
-    "mtime": 1780762365.5066404,
-    "hash": "039f8efa8c9d0f984cbf54c9eda13d6a"
+    "mtime": 1781964301.9196315,
+    "hash": "261188659d67e4acaa68ed9a3a98e7db"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useQueueStatus.ts": {
-    "mtime": 1781633785.5327234,
+    "mtime": 1781964301.921633,
     "hash": "19733a5d2a82f3765c09fb6ec1b74d1d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useRecycleBin.ts": {
-    "mtime": 1781633785.074292,
+    "mtime": 1781964301.9236555,
     "hash": "a9ff39891648f16a75b2554b7a7f36f3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useReports.ts": {
-    "mtime": 1781633785.0371652,
+    "mtime": 1781964301.926656,
     "hash": "1e54d2dc8059ca76ef611c0614663315"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useScheduling.ts": {
-    "mtime": 1781633785.3623188,
-    "hash": "477dfc80ccf29ad247f08460c3155c7d"
+    "mtime": 1781964301.9286604,
+    "hash": "27ce3415b98caad1b300dd0dabe5b6af"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useSemanticMemory.ts": {
     "mtime": 1771784200.172909,
     "hash": "cebe780f608181e3ba3a7dbf0bc2c400"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useServiceSettings.ts": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964301.9315805,
     "hash": "c1e351fcf6215e84c788c1ffb6fc3fe1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useSettings.ts": {
-    "mtime": 1780158115.57673,
-    "hash": "1584476f9b69a97f6b04b02b6fa6a42c"
+    "mtime": 1781964301.932614,
+    "hash": "0ea83215585d7dbd32824a378a45bd3b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useSmartNotifications.ts": {
     "mtime": 1772913744.937338,
@@ -696,20 +720,20 @@
     "hash": "3e50ec8cfba0a568d80561deca688093"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useStaffEarnings.ts": {
-    "mtime": 1781636805.405456,
-    "hash": "ea71d2173d1efd6ee5df840629511eaf"
+    "mtime": 1781964301.9346147,
+    "hash": "87a9926a3150ecd8742d803b3c5b85a6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useSubscription.ts": {
     "mtime": 1767730313.4975636,
     "hash": "41fbd0cb87b157a45fcebf025a296eb2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useTeam.ts": {
-    "mtime": 1780158069.1821764,
-    "hash": "11013447f5f56ae749de7760c765538a"
+    "mtime": 1781964301.9366188,
+    "hash": "7fc754c8d2ee525359f13bd5d43d05c3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\useThemeTokens.ts": {
-    "mtime": 1777743843.0351121,
-    "hash": "c75a2d99138cd5d24f872852f96a064e"
+    "mtime": 1781964301.9391546,
+    "hash": "55a4c14b32c09b3726a73dcf28adb944"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\ai-assistant-prompts.ts": {
     "mtime": 1777661748.9066346,
@@ -719,172 +743,184 @@
     "mtime": 1777661748.9092293,
     "hash": "422a52bb1d0bbca7b9f0da41481b6e5c"
   },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\autoBugCapture.ts": {
+    "mtime": 1782494846.4903994,
+    "hash": "37ab17fe8d7a3e7bc96eca22fd917fe0"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\bugReport.ts": {
+    "mtime": 1782579409.3206925,
+    "hash": "5a69ffac18e7b9c848393f1f06a1f476"
+  },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\gemini.ts": {
-    "mtime": 1772379699.9990523,
-    "hash": "2ddc3452e178ad146c160acfb86f2796"
+    "mtime": 1781964301.9487095,
+    "hash": "4f6e8625cc93e40796254a7686d00eea"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\openrouter.ts": {
     "mtime": 1775926962.7391663,
     "hash": "e0834ae3b8fe6b383c11323f6f0498df"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\supabase.ts": {
-    "mtime": 1781447631.3259718,
+    "mtime": 1781964301.9517157,
     "hash": "361bd6332189d49b57270134d488ec2b"
   },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\lib\\supabaseStorage.ts": {
+    "mtime": 1782492569.4116125,
+    "hash": "a9562b786f75cd40991284c938722d5a"
+  },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Agenda.tsx": {
-    "mtime": 1781891772.505118,
-    "hash": "3e53d754b623f8d20c38080748871bb8"
+    "mtime": 1782492569.4156332,
+    "hash": "6bc10fe4d1b5f7c0997d6b526e3a9da3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ClientArea.tsx": {
-    "mtime": 1781636528.1339896,
-    "hash": "f8846a2c802c6ec53d746563bd297739"
+    "mtime": 1782492569.419152,
+    "hash": "8bc89f1be5863a3086c24cd378f76a1c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ClientCRM.tsx": {
-    "mtime": 1781633785.7663999,
-    "hash": "b6525b6e3609a79ab24c688166df8247"
+    "mtime": 1782492569.4226995,
+    "hash": "e7ae19a7269c7e492f6c0a3c275edffa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Clients.tsx": {
-    "mtime": 1781633785.278137,
-    "hash": "70914d3c3446b1791bb66210ba3b6b65"
+    "mtime": 1782492569.4262805,
+    "hash": "cd8ae0dba9f289274895e7b8a19f2276"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Dashboard.tsx": {
-    "mtime": 1781633785.530971,
-    "hash": "705a33991312d9e0a21ed1999cf9b9d0"
+    "mtime": 1781964301.983922,
+    "hash": "8ae8cb30ab441c8a8d93dfc9732471d0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Finance.tsx": {
-    "mtime": 1781633785.6215715,
-    "hash": "febae9faeaefb365131282e081ccb69f"
+    "mtime": 1782492569.4292905,
+    "hash": "205092212d88ed3496f31eb949b16e13"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ForgotPassword.tsx": {
-    "mtime": 1770495887.7948916,
-    "hash": "cc754b0930abec46f5944c30d365c53b"
+    "mtime": 1781964301.9947562,
+    "hash": "5f7e1dd97fbc2ca3b341ef1cd3d3a5a4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Login.tsx": {
-    "mtime": 1781633785.1423209,
-    "hash": "92c61a7b580ab44491ebfcb98d0c7e5a"
+    "mtime": 1782492569.4312937,
+    "hash": "d2d2ebd7e05c4d51fa91066f74da9f47"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Marketing.tsx": {
-    "mtime": 1779303629.3929644,
-    "hash": "af1cc08ed264afa4685dbd263efb8df0"
+    "mtime": 1781964302.0005872,
+    "hash": "21ac4ed8139af7a63434cdee8ce284e9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Onboarding.tsx": {
-    "mtime": 1781633785.0391724,
+    "mtime": 1781964302.0035925,
     "hash": "a566abe5ffdd80bd5f496c8665325850"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\OnboardingWizard.tsx": {
-    "mtime": 1781633784.9854097,
-    "hash": "3753a8e15353f1cd75de985e618da8b6"
+    "mtime": 1781964302.006586,
+    "hash": "bae7a92c43263437aa65b1815964a75d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Placeholder.tsx": {
-    "mtime": 1781107623.5500784,
-    "hash": "09c51aa5b00e585e9c93c8ccaf89ceb7"
+    "mtime": 1781964302.0095909,
+    "hash": "fb8d2f1be7acb11013ae02013af1844e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Products.tsx": {
-    "mtime": 1781633785.074292,
+    "mtime": 1781964302.0125852,
     "hash": "14b9e7f807ee39973e780f9650ea81b3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ProfessionalPortfolio.tsx": {
-    "mtime": 1781107623.557087,
-    "hash": "22dd62ec4bf184e471b07ae2059dfda8"
+    "mtime": 1781964302.0155869,
+    "hash": "3e8020f85effe32045e08ec82aab70f9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\PublicBooking.tsx": {
-    "mtime": 1781633785.1413145,
-    "hash": "6040f77226196b6fa4d385b53c685f69"
+    "mtime": 1781964302.0193615,
+    "hash": "8751f6f6927659ea1c95f85c5bb976ca"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\QueueJoin.tsx": {
-    "mtime": 1781633785.2892497,
+    "mtime": 1781964302.0233636,
     "hash": "e5c80c914d29c00ca4244eb55f8eb801"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\QueueManagement.tsx": {
-    "mtime": 1781633785.6205702,
-    "hash": "a2c8ff08bd12dc1ba91ccd98a1258e00"
+    "mtime": 1781964302.0273604,
+    "hash": "23492550ebfc926949356d915e58a2cb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\QueueStatus.tsx": {
-    "mtime": 1781633785.374597,
+    "mtime": 1781964302.0303676,
     "hash": "5d6f951066f237024a1681f70f7f7124"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Register.tsx": {
-    "mtime": 1781633785.1423209,
-    "hash": "95917b547500afdaa6a9fadc7e23d19c"
+    "mtime": 1782492569.433829,
+    "hash": "12a25f8ebb2531bb7141a1163e80a2ba"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Reports.tsx": {
-    "mtime": 1781633785.2146482,
+    "mtime": 1781964302.0362444,
     "hash": "ea4f70d34af3e28d69ad7b66b52cf648"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\StaffInsights.tsx": {
-    "mtime": 1781633785.0773106,
+    "mtime": 1781964302.03925,
     "hash": "7688a7e53bc4ace4cd3246e8f84ef085"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\StaffOnboarding.tsx": {
-    "mtime": 1778947756.639523,
-    "hash": "4147276273ba4761b370f93383fd4036"
+    "mtime": 1781964302.0432472,
+    "hash": "42debc622125fc4d1fec9e2b116552b4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\UpdatePassword.tsx": {
-    "mtime": 1771099870.34813,
-    "hash": "904e96951339a0c7916c2da90ff431cf"
+    "mtime": 1781964302.0456266,
+    "hash": "1da61c6fa48bc2cf3ce61516307abba0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\AuditLogs.tsx": {
-    "mtime": 1781107951.510901,
-    "hash": "7674064b4a54592e18c0258fec6c169d"
+    "mtime": 1781964302.0486517,
+    "hash": "3e5cec4befa6fe99715d756c9202418d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\CommissionsSettings.tsx": {
-    "mtime": 1781633785.4408197,
-    "hash": "41db8dbad68b108a88b27f25d087cb34"
+    "mtime": 1781964302.0516539,
+    "hash": "f8a161b03a9ef1c4945c4769957fe078"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\FinancialSettings.test.tsx": {
-    "mtime": 1781633785.0467556,
-    "hash": "74485507e0dd40c3f47699c78859192f"
+    "mtime": 1781964302.0551994,
+    "hash": "3d5d67ff1735fa7a8495311b96ce88f2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\FinancialSettings.tsx": {
-    "mtime": 1781107951.5476027,
-    "hash": "d4eefaff221f36b83b3a415f5727955e"
+    "mtime": 1781964302.058758,
+    "hash": "fa6688b7c6c59c6616ee7822a0241205"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\GeneralSettings.tsx": {
-    "mtime": 1781107951.5615926,
-    "hash": "5f67cfe307f897bf8273a199104fd92b"
+    "mtime": 1781964302.0617602,
+    "hash": "414baa9456bd14338c4d2e437989e02a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\PublicBookingSettings.tsx": {
-    "mtime": 1781107951.5676084,
-    "hash": "a4ae3ec35fda61fd0e7861927ca6f8f7"
+    "mtime": 1781964302.0647569,
+    "hash": "18347aa63cf7dc7f7d81f254c5532bc9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\RecycleBin.tsx": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964302.0673058,
     "hash": "19dbeba90a3a4fc9b8dec281d81f477a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\SecuritySettings.tsx": {
-    "mtime": 1781107951.6132836,
-    "hash": "6432fe13f2713d063fa51a885d8aa63d"
+    "mtime": 1781964302.069311,
+    "hash": "160220bac65276bb81fcefe623565f37"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\ServiceSettings.tsx": {
-    "mtime": 1781633785.2791378,
-    "hash": "0bf25b940d9454dc592f82315b0ba765"
+    "mtime": 1782492569.4388914,
+    "hash": "47bb1d8ef83d04567bafb37ebd5b9952"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\SubscriptionSettings.tsx": {
-    "mtime": 1781447653.91237,
-    "hash": "dc87726ec468d1d6549a4247962bc2f9"
+    "mtime": 1781964302.0922663,
+    "hash": "6062f2f769ee9f30190e36ad308ca4b0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\SystemLogs.tsx": {
     "mtime": 1781107951.6455586,
     "hash": "f77f8e7f44a2f087854cdc1e5f98f829"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\TeamSettings.tsx": {
-    "mtime": 1781107951.662136,
-    "hash": "3ed5d41c9f734404bcbb3ea632c64ad4"
+    "mtime": 1781964302.0958111,
+    "hash": "fa5e9dd48e64ba3009ca1f517d5a69ba"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\UiPreview.tsx": {
-    "mtime": 1781633785.40638,
-    "hash": "bbe699bda4e4a4bc76fe76f2451fef61"
+    "mtime": 1782492569.4419093,
+    "hash": "2ac4d2919cca6bbe717e66fe30b601b4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\verify-brutal-theme.js": {
     "mtime": 1768508566.8945148,
     "hash": "302553713776856ba5bb4a6929c5cee2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\apply_migration.ps1": {
-    "mtime": 1772381765.1816037,
-    "hash": "3986fd572115633d8118793eb877bec4"
+    "mtime": 1781964302.24708,
+    "hash": "65c85e9b6758ad69f5df9075bfcd2bab"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\apply_migration_remote.mjs": {
-    "mtime": 1781633785.2842488,
+    "mtime": 1781964302.299444,
     "hash": "c43422d47be48d5df777107a1e88cacd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\backup-supabase.js": {
@@ -892,16 +928,16 @@
     "hash": "d87b392548a149226a4869626ce6b446"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\capture-v2.ts": {
-    "mtime": 1778875847.4775329,
-    "hash": "79e681c6bdd844d0c3d060af75b25a16"
+    "mtime": 1781964302.3047688,
+    "hash": "7dd8e365a8e0d8a3d12fb1ecf6657e88"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\capture-v3.ts": {
-    "mtime": 1778876483.8450835,
-    "hash": "55e6cb08d8138917265c3aec4cebf6c7"
+    "mtime": 1781964302.3065453,
+    "hash": "23f12651c3b8066f76e15a482d6b8365"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\capture-v4.ts": {
-    "mtime": 1778876905.623335,
-    "hash": "b286250f7926461c26b018c3120af51e"
+    "mtime": 1781964302.309572,
+    "hash": "92409135ada9109090fed9c0b5c6261a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\check_migrations.ts": {
     "mtime": 1771618826.060779,
@@ -916,11 +952,11 @@
     "hash": "adcbdc10645dc4c0f3fb42ab0d93fac3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\migrate-brutal-pages.mjs": {
-    "mtime": 1781633785.1933906,
+    "mtime": 1781964302.3111215,
     "hash": "e51d1ea07206ccbcf49fc55b8d1747c0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\validate_s2_migration.mjs": {
-    "mtime": 1781633785.1112103,
+    "mtime": 1781964302.3131204,
     "hash": "d2ca3db503388743cec3f524321b8262"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\verify_rls.ts": {
@@ -928,52 +964,52 @@
     "hash": "0ed78abc990368c32cd3868b94cd3a49"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\catalog.ts": {
-    "mtime": 1780507865.612368,
-    "hash": "a0b5a331925ee48c235aff76ed8f52ec"
+    "mtime": 1781964302.3792531,
+    "hash": "a6e4f7f1b2d3df632193e691390d5ea8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\crm.ts": {
-    "mtime": 1780427132.8341742,
-    "hash": "5530f913215470c20f5904fa265c59d0"
+    "mtime": 1782492569.4434228,
+    "hash": "e327a2405f7d8ee924926ba79bbecfe4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\dashboard.ts": {
-    "mtime": 1781636767.5547152,
-    "hash": "fd28c4828cf0a14d968136f4a8cd45c3"
+    "mtime": 1781964302.3848023,
+    "hash": "5d8bd2d0989fa2b85074a77fd0f5089a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\finance.ts": {
-    "mtime": 1780760466.2122474,
-    "hash": "cf67e97cb30a68fa9066312c164aa978"
+    "mtime": 1782492569.445962,
+    "hash": "f13761d9f106eff8675b2c5a920526ab"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\onboarding.ts": {
-    "mtime": 1781633785.597776,
-    "hash": "5bf3ec05d3a48de149e6bba6c35897b7"
+    "mtime": 1781964302.390347,
+    "hash": "daf642df02b5dff4151325e9850bcd64"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\publicBooking.ts": {
-    "mtime": 1781633785.2578988,
-    "hash": "7ef337ce6525a0ca04deb494ff2f82c4"
+    "mtime": 1781964302.3927462,
+    "hash": "3b1b75a371602304bc4d4bb615698bb0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\queue.ts": {
-    "mtime": 1781633785.2232275,
-    "hash": "440087d387a20c6341563fb7efacef71"
+    "mtime": 1782492569.4479673,
+    "hash": "27eec59fc2842a60a480c19c450316f7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\recycleBin.ts": {
-    "mtime": 1781633785.1403103,
+    "mtime": 1781964302.3973825,
     "hash": "d338a1b5c3fd80b4bc1a969c7698108a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\scheduling.ts": {
-    "mtime": 1781796099.5216181,
-    "hash": "d926e3b6f28e4c844a8ed283a312755c"
+    "mtime": 1781964302.399399,
+    "hash": "2d0a6ddc03053ac7e501ccce8b8a10f8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\serviceSettings.ts": {
-    "mtime": 1781633785.094103,
+    "mtime": 1781964302.401852,
     "hash": "90753aceccff41dade4c241847540371"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\settings.ts": {
-    "mtime": 1780159376.1226168,
-    "hash": "2f465b0528d970050616978ad65a3a89"
+    "mtime": 1781964302.403381,
+    "hash": "0fd7a19d2167a407f18976f176c328d6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\team.ts": {
-    "mtime": 1780158875.171421,
-    "hash": "9ffb66e57e248d060f226b7755f255e2"
+    "mtime": 1781964302.4063923,
+    "hash": "c3f53c61db8c447b12218d8f28c2624c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\functions\\create-checkout-session\\index.ts": {
     "mtime": 1767885803.8937364,
@@ -1384,52 +1420,80 @@
     "hash": "4a79480c7a644d136f4a49422952e4af"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260530_complete_appointment_atomic_price.sql": {
-    "mtime": 1780149595.6628973,
-    "hash": "818440b4e12933939e9fdf2cd2c121d0"
+    "mtime": 1781964302.4324124,
+    "hash": "78e706bb7fe3169b0b4efaee9346ec58"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260530_finance_stats_professional_filter.sql": {
-    "mtime": 1780154807.011804,
-    "hash": "de1438670f07b599389e85f6cb6ad3b1"
+    "mtime": 1781964302.435419,
+    "hash": "f713138b17f272e76fd2401b74b3756f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260530_finish_queue_entry_atomic.sql": {
-    "mtime": 1780154139.2796564,
-    "hash": "03a9b6d9b96082a313188bd937d8c651"
+    "mtime": 1781964302.4374192,
+    "hash": "21977837c48b30834adafb62be84d8c9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260530_team_add_is_owner.sql": {
-    "mtime": 1780159382.1499493,
-    "hash": "586f448eacfa9dc5935978d315984e2f"
+    "mtime": 1781964302.4400468,
+    "hash": "55df4be18f992cf9f4f186bf4afc592d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260602_harden_queue_phone_dedup.sql": {
-    "mtime": 1780427238.8803115,
-    "hash": "c6ce7c3e1c7fade970c0f0b13ef36978"
+    "mtime": 1781964302.442041,
+    "hash": "4ffe5be5116c253efe5098d12f863710"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260603_products_v1.sql": {
-    "mtime": 1781633785.361284,
-    "hash": "e767e8be80c73e8fb4932b52931dbc57"
+    "mtime": 1781964302.4446027,
+    "hash": "b02c3e21411b13d5ebc438b5d38dea01"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260607_delete_appointment_with_finance.sql": {
-    "mtime": 1781633785.1403103,
+    "mtime": 1781964302.4674633,
     "hash": "25093d0781105f4bb390dceb491c1f26"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260607_sync_onboarding_flags.sql": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964302.4704912,
     "hash": "f1459f483ed7dc1c0aab2f411b64fae7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260613_security_s2_public_rls.sql": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964302.4734492,
     "hash": "efcb385e60b2b647d5377738fe5da5f4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260614_security_s2_profiles_policy_patch.sql": {
-    "mtime": 1781633785.0976417,
+    "mtime": 1781964302.4755132,
     "hash": "becd8d7d504524c247f58085acd98cdf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260615_fix_active_booking_phone_text_cast.sql": {
-    "mtime": 1781633785.1423209,
+    "mtime": 1781964302.4775186,
     "hash": "98d422cdd2e3e5c49d4042cf994b05f2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260616_public_client_session_rpcs.sql": {
-    "mtime": 1781633785.2578988,
+    "mtime": 1781964302.480516,
     "hash": "b23d8ef845e61848f5671d933d90f1ab"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260620_security_s2_mirror_crm_tenant_guard.sql": {
+    "mtime": 1781964302.482519,
+    "hash": "9923f1ade67547886202e3fb6f9e10c5"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260621_agenda_v2_edited_at.sql": {
+    "mtime": 1782314599.9541507,
+    "hash": "b0c5c420e3f1bae15e5ada182c4f3c29"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260626000001_bug_reports.sql": {
+    "mtime": 1782577909.4098918,
+    "hash": "b68db47be396390d404ed441b7fa63f1"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260626000002_bug_reports_triage.sql": {
+    "mtime": 1782577918.3766737,
+    "hash": "929bb3b1a5062af8cd26c88df48a1103"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260626120000_fix_dashboard_stats_text_user_id.sql": {
+    "mtime": 1782577214.3190145,
+    "hash": "b03e76bc9033f290d0cfc588dc86ead8"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260626120001_fix_client_insights_text_user_id.sql": {
+    "mtime": 1782577983.4601154,
+    "hash": "6b5c2499b876b014a9099e73652727d0"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\supabase\\migrations\\20260626120002_fix_finance_rpcs_text_user_id.sql": {
+    "mtime": 1782580077.144114,
+    "hash": "4dc65f01f28dbce672e8349f0fc93a07"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\templates\\component.tsx": {
     "mtime": 1776364758.6648898,
@@ -1444,8 +1508,8 @@
     "hash": "b05ac854ebd106cde7ccbcc54d3dc7f7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\templates\\page.tsx": {
-    "mtime": 1778092945.2690341,
-    "hash": "59b7460f50dbbc863685ebc9b67e0fe3"
+    "mtime": 1781964302.4855156,
+    "hash": "c873bf5fc056f0ae8a47cccaadb82036"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\config.test.ts": {
     "mtime": 1771339026.1357653,
@@ -1456,88 +1520,104 @@
     "hash": "3782dfdc91e4d5849177b5e65825002b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\components\\BrutalButton.test.tsx": {
-    "mtime": 1781633785.2791378,
-    "hash": "1a7604d2e222491b74a283cda5048d84"
+    "mtime": 1781964302.4880483,
+    "hash": "1d83fab745a5e3d3349ed667cf185875"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\components\\BrutalCard.test.tsx": {
-    "mtime": 1781633785.2578988,
+    "mtime": 1781964302.4910738,
     "hash": "b8439d6a05c0ae58e98b77a1ad0f864b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\components\\Modal.test.tsx": {
-    "mtime": 1777811230.3578396,
+    "mtime": 1781964302.493079,
     "hash": "ef9a1bc14c0e8bbf1b30cf070dc78a7c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\components\\ProfitMetrics.test.tsx": {
-    "mtime": 1779908570.1739457,
+    "mtime": 1781964302.4961505,
     "hash": "39a8d0692d16168b69434c5d19c024e8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\contexts\\AuthContext.test.tsx": {
-    "mtime": 1780147823.4583027,
-    "hash": "99b1e4323dcf5855005334fa90e42fc1"
+    "mtime": 1781964302.4991755,
+    "hash": "b69b087d472f7fedcaab61dba387fb71"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\useBrutalTheme.test.ts": {
-    "mtime": 1781633785.3623188,
-    "hash": "50b756e5efeb7e2d00c3c3bf05455472"
+    "mtime": 1781964302.5103154,
+    "hash": "238b8c12d0424b7cbbe5a74f6e44c39d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\useDashboardData.test.tsx": {
-    "mtime": 1780427248.5258236,
-    "hash": "81d125eae33035e5c3b4fd6186ff78b5"
+    "mtime": 1781964302.5123403,
+    "hash": "9693b34f1fb01dae302e8c7838f5eb9a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\useMeuDiaData.test.tsx": {
-    "mtime": 1780427248.8767834,
-    "hash": "3a7bd1f4f3767d456d047f6b42e5749d"
+    "mtime": 1781964302.515341,
+    "hash": "a2dc8faa13bee7d73c26c81eb000c25c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\useOnboardingState.test.ts": {
-    "mtime": 1780760172.6509533,
-    "hash": "4832822edd58721ff8097a028bc527b7"
+    "mtime": 1781964302.518225,
+    "hash": "c6963b8afd468777144ba25ed98fb41c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\usePublicBooking.test.ts": {
-    "mtime": 1781633785.2791378,
+    "mtime": 1781964302.5192301,
     "hash": "f297bc700e7013b3e228578fb43b2b4c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\useQueue.test.ts": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964302.5222263,
     "hash": "d935112b03560921825a817fda06003f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\hooks\\useScheduling.test.ts": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964302.5252259,
     "hash": "af5c20e6198b4db64e93f30fe6483404"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\lib\\autoBugCapture.test.ts": {
+    "mtime": 1782576909.0167756,
+    "hash": "3b4be71db4541ed3fa5d1ef2c590eded"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\lib\\bugReport.test.ts": {
+    "mtime": 1782576889.5071487,
+    "hash": "13f29147669b145a9aedbd2d92b9a0da"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\lib\\gemini.test.ts": {
     "mtime": 1772485539.7643218,
     "hash": "720aa47bf97f883a6b716bab5a698cf9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\pages\\Login.test.tsx": {
-    "mtime": 1781633785.1933906,
-    "hash": "246a385373c7332a6d9899ddd99a4472"
+    "mtime": 1782492569.4546032,
+    "hash": "6c35fad207f619faa56a3acb9a66a4b3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\catalog.test.ts": {
-    "mtime": 1780507665.076463,
-    "hash": "5d5c92dc498c674c001dde66ad2da648"
+    "mtime": 1781964302.5312479,
+    "hash": "281089130ee6657be859fd513af5c668"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\crm.test.ts": {
-    "mtime": 1780155227.9477856,
-    "hash": "7625941ea811ded69597ee24706630b6"
+    "mtime": 1782492569.4571662,
+    "hash": "29d9d88d4765d405b8e0358210f0a965"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\finance.test.ts": {
-    "mtime": 1780759702.0952442,
-    "hash": "d3c826b0d5c9236bfca60c4e2de94139"
+    "mtime": 1781964302.5352528,
+    "hash": "7fa19b393fc4da0e9d01f5951b1a157f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\onboarding.test.ts": {
-    "mtime": 1781633785.4408197,
-    "hash": "9677bd4b0e1df8d00b5059fe381dccb0"
+    "mtime": 1781964302.5609832,
+    "hash": "8b0b3a1900a4a3d4f98e2374e7579ef5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\publicBooking.test.ts": {
-    "mtime": 1781633785.4408197,
-    "hash": "dd65b593204841bc1e1fbe33bb0a047d"
+    "mtime": 1781964302.563042,
+    "hash": "1cef985f33849d5aaccd66675114dba7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\queue.test.ts": {
-    "mtime": 1781633785.4408197,
-    "hash": "50363fdcdb4baeecaf22fbd7ce3c4f3c"
+    "mtime": 1782492569.4602325,
+    "hash": "957af8b30f453c131a16a4033718103c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\services\\scheduling.test.ts": {
-    "mtime": 1781633785.7663999,
-    "hash": "0567a4ba96357043aa691db1d40fe4a1"
+    "mtime": 1781964302.5675845,
+    "hash": "45c260732b49a7f1bc3e22fbecc53963"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\utils\\appointmentStatus.edge.test.ts": {
+    "mtime": 1782314599.9556737,
+    "hash": "91eb1a4ea109b13ff706fc1d6b24b9fa"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\utils\\appointmentStatus.test.ts": {
+    "mtime": 1782314599.9578397,
+    "hash": "60cfeae88c50a2474937337e223135fa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\utils\\date.test.ts": {
     "mtime": 1771346038.4122775,
@@ -1548,160 +1628,164 @@
     "hash": "0e0d01985409620bcd2d19cfa7c23bd5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\test\\utils\\mapError.test.ts": {
-    "mtime": 1781633785.2791378,
+    "mtime": 1781964302.569592,
     "hash": "faad86f3e2de6ad5629ef83309de3fcc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC001_Access_the_dashboard_after_signing_in.py": {
-    "mtime": 1781083733.1621566,
-    "hash": "1510a9f8326e7fe954e2f29fac8507cc"
+    "mtime": 1781964302.5725887,
+    "hash": "46209d4502b377a8cb3fff1e7eccb65d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC002_Sign_in_and_reach_the_dashboard.py": {
-    "mtime": 1781083733.1657574,
-    "hash": "0ad3dc130e31e8a7072fb96ec44289b6"
+    "mtime": 1781964302.5746188,
+    "hash": "cbb57a7d54fb63775a5f6eda9a31a782"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC003_Book_an_appointment_publicly.py": {
-    "mtime": 1781083733.1703649,
-    "hash": "e8f85c79eaf5fcc5ec7884231c304bed"
+    "mtime": 1781964302.5776153,
+    "hash": "4d227824eb4835a1142a387846f874a5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC004_Create_an_appointment_from_the_agenda.py": {
-    "mtime": 1781083733.1734684,
-    "hash": "f6cd3bd9a8b5e5db5e4ab862787f57d4"
+    "mtime": 1781964302.5826132,
+    "hash": "372ab1c0d0c46a1310bf22c0924993bf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC005_View_the_dashboard_after_logging_in.py": {
-    "mtime": 1781083733.17548,
-    "hash": "7af67a4842114f5d9bd2da09f20507ec"
+    "mtime": 1781964302.5863333,
+    "hash": "c88628293ebc9c816afe662065055535"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC006_Update_an_appointment_status_from_the_agenda.py": {
-    "mtime": 1781083733.1784773,
-    "hash": "baf8ab2e975b95d88442472fc54e075a"
+    "mtime": 1781964302.588872,
+    "hash": "6b7ea58daa2c9d7367f99d3bc59e954f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC007_Open_the_agenda_from_the_dashboard.py": {
-    "mtime": 1781083733.180475,
-    "hash": "fb4922d05bc6009e95e30a388168bbf8"
+    "mtime": 1781964302.5919008,
+    "hash": "f8cbbb7b84ed5ab775873b42448245a1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC008_Open_an_appointment_from_the_calendar.py": {
-    "mtime": 1781083733.1844676,
-    "hash": "79a2265b7c0dd241e5e7da5b4dc9a6a8"
+    "mtime": 1781964302.5951648,
+    "hash": "570882d012580f47891ba259fdf1c5d1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC009_Owner_advances_a_queued_client.py": {
-    "mtime": 1781083733.1875644,
-    "hash": "a23ac220de272d5c7981dbd952f901ba"
+    "mtime": 1781964302.5972552,
+    "hash": "45caaee35a093a41a4daf681b9114ef3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC010_Owner_removes_a_client_from_the_queue.py": {
-    "mtime": 1781083733.1896229,
-    "hash": "42e05be87a3ca3c59ef24686e071a3b7"
+    "mtime": 1781964302.5992649,
+    "hash": "61057d366aed39ec37ef0ebca1ef4c18"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC011_Sign_in_and_continue_to_onboarding.py": {
-    "mtime": 1781083733.192616,
-    "hash": "aa7e7c849be8008edacdd30882285b98"
+    "mtime": 1781964302.6018753,
+    "hash": "8c0e3101d46ca5a5a2153230f707be8f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC012_Search_and_open_a_client_record.py": {
-    "mtime": 1781083733.194626,
-    "hash": "7972202f9f68d2764107d26a58d5d0fa"
+    "mtime": 1781964302.6044402,
+    "hash": "a95ef75b36b148f37c10e6d778cb8973"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC013_See_a_pending_reservation_after_public_booking.py": {
-    "mtime": 1781083733.1973417,
-    "hash": "5ded728e0b1c6ae86068c6e24826b18d"
+    "mtime": 1781964302.6079855,
+    "hash": "0970bd53cba866484255a8758a322a9b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC014_Owner_opens_the_finance_overview.py": {
-    "mtime": 1781083733.200419,
-    "hash": "68278d24e24f89d3d2531c66d6e69acf"
+    "mtime": 1781964302.6106029,
+    "hash": "70e3354a5440b3a0f3de5605803ffc7b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC015_Owner_adds_a_service_to_the_catalog.py": {
-    "mtime": 1781083733.2024412,
-    "hash": "cc34364c852c5aa45867c4f0770c1c73"
+    "mtime": 1781964302.6126096,
+    "hash": "d42f1c6cd1907ccf5b14d2eeb968a291"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC016_Review_client_CRM_details_after_browsing_the_list.py": {
-    "mtime": 1781083733.205539,
-    "hash": "3c7d012b55a8ba07a7b783c9321d7418"
+    "mtime": 1781964302.6146014,
+    "hash": "a80529cc4bc4f036b3b6bbc3cb45552a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC017_Owner_edits_a_service_and_changes_its_active_status.py": {
-    "mtime": 1781083733.207563,
-    "hash": "0e6058a6e8e9da349fa1dc8e858f074b"
+    "mtime": 1781964302.6173408,
+    "hash": "cf3ade787219cdbb6f4e90142d55602b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC018_Owner_filters_finance_transactions_by_period.py": {
-    "mtime": 1781083733.2105606,
-    "hash": "8b7da45aad8e795ad73ed2b08410e1a0"
+    "mtime": 1781964302.618893,
+    "hash": "99854d795564bff31c26be7012b597eb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC019_Owner_opens_the_payment_checkout_modal_from_finance.py": {
-    "mtime": 1781083733.214562,
-    "hash": "f598b0e00071f9af58744408c3e9585c"
+    "mtime": 1781964302.6262112,
+    "hash": "ec293eb1e90f2dd04db5413cf7660c84"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC020_Show_an_error_for_invalid_login_credentials.py": {
-    "mtime": 1781083733.2195868,
-    "hash": "d015d758f9e38a2ac66615331f0a4eb0"
+    "mtime": 1781964302.6281154,
+    "hash": "9bd75b0bbf33ab8d68945426229c76f2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC021_Handle_an_empty_client_search_result.py": {
-    "mtime": 1781083733.2247128,
-    "hash": "2ab557e3ef60a24911828bb4e08fa18f"
+    "mtime": 1781964302.635078,
+    "hash": "7d7c83ab9977687c10b493481956db2a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC022_Owner_sees_service_validation_when_required_fields_are_incomplete.py": {
-    "mtime": 1781083733.2274485,
-    "hash": "30ab06b7b85117eab76c760823ec04a6"
+    "mtime": 1781964302.6407259,
+    "hash": "c4a0fc3d6a880efcd1f8149d6a2273fc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC023_Choose_the_barber_login_path.py": {
-    "mtime": 1781083733.2300115,
-    "hash": "e9d81f97782b732dedc9959b6b30c5d4"
+    "mtime": 1781964302.6423001,
+    "hash": "893e54aa86e8df191c1a3475b0024f07"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\TC024_Choose_the_beauty_login_path.py": {
-    "mtime": 1781083733.238625,
-    "hash": "2cc19ad80e5f6119d44566cd63e0363a"
+    "mtime": 1781964302.6457853,
+    "hash": "696535dc308ee30fd1878322f630eccb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\catalog.ts": {
-    "mtime": 1780507865.3678753,
-    "hash": "a499827122bdb6c4e094ebbf0379a01c"
+    "mtime": 1781964302.6625552,
+    "hash": "9bb543133dc2dd4869fcab8a3435cd2f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\crm.ts": {
-    "mtime": 1780155098.6139789,
-    "hash": "084604b7075a27cfe9f1a0f59f46782d"
+    "mtime": 1781964302.666164,
+    "hash": "66bdf75cac13d6292e9c9348802d017a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\dashboard.ts": {
-    "mtime": 1781633785.2842488,
-    "hash": "4d3fc3910f869ab7ab2d2f838049a0cb"
+    "mtime": 1781964302.6681595,
+    "hash": "c51fb214e56ae7415fbbc3efe938b6e4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\finance.ts": {
-    "mtime": 1780154643.9370887,
-    "hash": "01183593ca34d539609d3958216a3950"
+    "mtime": 1781964302.6706817,
+    "hash": "a6acbb74f483d2381703fc2d53061978"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\onboarding.ts": {
-    "mtime": 1780759731.3492534,
-    "hash": "b0519ccaa1312dbd253b75196080bce0"
+    "mtime": 1781964302.673431,
+    "hash": "4ea7bb5606667505a4db0eddb6f314cb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\publicBooking.ts": {
-    "mtime": 1780152641.2285037,
-    "hash": "4e1df2a9f34028d5959ed1e21119e753"
+    "mtime": 1781964302.6822693,
+    "hash": "5f17a5031620cc7ccb8df46c2e13713c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\queue.ts": {
-    "mtime": 1780154116.6317594,
-    "hash": "1582958fbd0157e0ad3283a938923153"
+    "mtime": 1781964302.6842785,
+    "hash": "c843d45ae31d1a064bdbf0d5e97fe7cf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\recycleBin.ts": {
-    "mtime": 1781633785.7653737,
+    "mtime": 1781964302.6868064,
     "hash": "665d7e8c42d66784ed59634c9c318d10"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\scheduling.ts": {
-    "mtime": 1781633785.278137,
-    "hash": "43f95e4a77b359caa1fa2d935b3f20f8"
+    "mtime": 1781964302.6904092,
+    "hash": "6a7a4a39d5e6657de7c09ed1bd0d84d3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\serviceSettings.ts": {
-    "mtime": 1781633785.7663999,
+    "mtime": 1781964302.692962,
     "hash": "2f4d8d1988e50104675cf7ae16866729"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\settings.ts": {
-    "mtime": 1780159367.289554,
-    "hash": "25f0afd7c5574a5616f6a291b7a719cb"
+    "mtime": 1781964302.6965349,
+    "hash": "e39f022f9aeb536283015fe4400c587d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\shared.ts": {
-    "mtime": 1779215011.6293607,
-    "hash": "5ea112257bf7d5c6828b542b6bfc85f2"
+    "mtime": 1781964302.6995316,
+    "hash": "aed8437bcee3e52ee89a9f530909cfa9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\team.ts": {
-    "mtime": 1780158858.5331187,
-    "hash": "b788213c750e7859d3dd98d98ea954c9"
+    "mtime": 1781964302.7015364,
+    "hash": "86b87ef4a7926ae216e23f881a1f80bb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\utils\\aiosCopywriter.ts": {
     "mtime": 1772902463.920675,
     "hash": "5508eea830af909c34bc0b61ecb890dd"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\utils\\appointmentStatus.ts": {
+    "mtime": 1782314599.9625607,
+    "hash": "18a48ed96d868b6c04679552652c4013"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\utils\\brazilianHolidays.ts": {
     "mtime": 1772913420.8879056,
@@ -1720,8 +1804,8 @@
     "hash": "2d0b1fcadbfacc1b589e546bd769a435"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\utils\\mapError.ts": {
-    "mtime": 1781633785.3623188,
-    "hash": "726107c566c8adb77d2c7b3356f5fddf"
+    "mtime": 1782492569.466978,
+    "hash": "d86dea7d917dfc20cb0037c527bdab91"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\utils\\passwordValidation.ts": {
     "mtime": 1771099849.1752799,
@@ -1732,140 +1816,148 @@
     "hash": "4f100e6a1c61f585894437099196250b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\AGENTS.md": {
-    "mtime": 1781633785.2568932,
+    "mtime": 1781964298.2708356,
     "hash": "77a1abea92fcc7175870ef32fdab2e05"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\CLAUDE.md": {
-    "mtime": 1781633785.4418218,
-    "hash": "4e1a5d64bd62a9b33dbff2a9bc6c9019"
+    "mtime": 1781968660.944867,
+    "hash": "c58401673d4fb08f70e1868902e68234"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\DECISIONS.md": {
     "mtime": 1777661748.6909614,
     "hash": "7896f11e9387379fd0fd8421480a0bf0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\DESIGN.md": {
-    "mtime": 1781363570.593779,
-    "hash": "fedcd13f6615583eea5deb0f80fe0844"
+    "mtime": 1781964298.2814412,
+    "hash": "e11b3235296a1cf3f8b4513ecbb28eca"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\GLOSSARY.md": {
-    "mtime": 1780833517.1992986,
+    "mtime": 1781964298.284514,
     "hash": "67308d3b2c83f8e67d5bb36c73b22200"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\index.html": {
-    "mtime": 1781633785.278137,
-    "hash": "191a7210cf37085a3efeb705db0eb42b"
+    "mtime": 1781964301.9431598,
+    "hash": "1b0d31b5028dd67ab181630ada9ec0ea"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\MEMORY.md": {
+    "mtime": 1782579917.6385405,
+    "hash": "9ad2472f3e9263c9dfd0e1e4dfcd337b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\PRODUCT.md": {
-    "mtime": 1778419522.8347585,
-    "hash": "0d4baa2417d4f4e90d2cf54a8e3e0553"
+    "mtime": 1781964298.2870684,
+    "hash": "c8add7ce6909237ec313aa88c768df31"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\README.md": {
-    "mtime": 1780833514.033168,
+    "mtime": 1781964298.290093,
     "hash": "589d9472abb40ce6a303ecedacd79241"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\README.md": {
-    "mtime": 1780833530.1401956,
-    "hash": "fcd04a474abc193cc5ed580b07abf618"
+    "mtime": 1781964299.1552253,
+    "hash": "18bf0dd106a838322acf10a5985b1f43"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\design-system\\barber-light-preview.html": {
-    "mtime": 1781891550.215,
-    "hash": "f6fc8c0753a420831f860cbedebe4ad7"
+    "mtime": 1781964299.229539,
+    "hash": "554750ce7cc0ed858d4bc964acef25e7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\design-system\\MASTER.md": {
-    "mtime": 1777811230.3486345,
+    "mtime": 1781964299.2256887,
     "hash": "d8736315d5a598349fb7ea1a0e4620fd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\design-system\\visuals\\components-reference.html": {
-    "mtime": 1777812818.6725008,
-    "hash": "0d63f35d35463a943550e3359c82bb00"
+    "mtime": 1781964299.318177,
+    "hash": "978a724b0940ed76ca917df17fc8f860"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\design-system\\visuals\\dashboard-reference.html": {
-    "mtime": 1777812430.6252692,
-    "hash": "b84661b23cdba4206157cb4eb71be908"
+    "mtime": 1781964299.321174,
+    "hash": "2d8262c2796c16c2addd41d6bcd6d094"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\design-system\\visuals\\index.html": {
-    "mtime": 1777812870.2021854,
-    "hash": "8fc2377185a22e5af4b776c91df5533c"
+    "mtime": 1781964299.323171,
+    "hash": "a4b0b54fc9c7ad20e93c824c0e839d68"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\architecture.md": {
-    "mtime": 1780833517.2013626,
+    "mtime": 1781964299.3261688,
     "hash": "6457ffee95db692457f758dd0c604c5b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-0-design-system-e-tipos.md": {
-    "mtime": 1780833517.8784013,
-    "hash": "33ef387c71871ddc8ba5e51073869420"
+    "mtime": 1781964299.3352907,
+    "hash": "531a6ca4fc5a767dce44cdb8460cfe85"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-1-auth-onboarding.md": {
-    "mtime": 1780147869.3922248,
-    "hash": "43491ba7b9ac19c1313fa003f41fb7fe"
+    "mtime": 1781964299.3382907,
+    "hash": "776a346853afbfb5ca9a9c14852ff2e5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-2-agenda-checkout.md": {
-    "mtime": 1780152161.5937457,
-    "hash": "da6ef36dddb7c3b5dabb290f17c5d9c8"
+    "mtime": 1781964299.34029,
+    "hash": "da41b3905d7cb9323d5bf58a139fdab1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-3-booking-publico.md": {
-    "mtime": 1780152888.9518278,
-    "hash": "275346b246de9be1329a29366b5c5cfb"
+    "mtime": 1781964299.3419626,
+    "hash": "a6b31935456db4f6c65cf5d26beac7c2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-4-fila-digital.md": {
-    "mtime": 1780154423.9119353,
-    "hash": "c6ea981f7cf23341ede289e0004b38ce"
+    "mtime": 1781964299.3487833,
+    "hash": "932a78b51863584a96151ab26ad89862"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-5-financeiro-comissoes.md": {
-    "mtime": 1780154923.3826041,
-    "hash": "d021edb9c26ebc5a3de914321cbade28"
+    "mtime": 1781964299.3528037,
+    "hash": "1708ba193b0fdbc32ec538390b17bc7e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-6-crm-clientes.md": {
-    "mtime": 1780155378.3728719,
-    "hash": "4bd7a42910d73345b7c31ba35e18af1c"
+    "mtime": 1781964299.3548043,
+    "hash": "0b0d16f538e215d62a701458f82e2240"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-7-dashboard.md": {
-    "mtime": 1780159566.2527308,
-    "hash": "fe4204c70b88d2dd0acb0fba936c5747"
+    "mtime": 1781964299.3568058,
+    "hash": "8c2bb2df8c6a0b57574704271448a70c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\fase-8-config-team.md": {
-    "mtime": 1780213433.0482676,
-    "hash": "66516b071b3b30d83508cc2286871501"
+    "mtime": 1781964299.359346,
+    "hash": "a56673175a103b4fe1eee6e04ab09690"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\archive\\v1\\prompts\\README.md": {
-    "mtime": 1781633785.0421627,
+    "mtime": 1781964299.3332992,
     "hash": "4fa341095826f3988c45184576bc952a"
   },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\features\\bug-triage-agent.md": {
+    "mtime": 1782495287.8342996,
+    "hash": "24c7c14549e1f48e90145c4e79fb5de5"
+  },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\stories\\v1-hooks-migration-completion.md": {
-    "mtime": 1781633785.1584163,
-    "hash": "03c1aef555b9403a087e8bd24e15b62a"
+    "mtime": 1781964299.3643467,
+    "hash": "ac001f9ffe31a30d91ae8cdef4207cdb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\EAGLE-REVIEW.md": {
-    "mtime": 1780846654.7180796,
-    "hash": "1179dde62795f051de8188198a7be569"
+    "mtime": 1781964299.3683481,
+    "hash": "d55155c307439caffae22c090e9d93a6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\PARITY-REPORT.md": {
-    "mtime": 1781633785.1393147,
+    "mtime": 1781964299.3713658,
     "hash": "f1e7d4b82ef8550aa79a9c0aa67a9ae2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\Q2-POLISH-HANDOFF.md": {
-    "mtime": 1781633785.4408197,
+    "mtime": 1781964299.373367,
     "hash": "2550fe12985a82071dd2adc8052b09a0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\security-products.md": {
-    "mtime": 1781633785.0255947,
+    "mtime": 1781964299.3833659,
     "hash": "33a6818e22063dc6d318121432b11a7c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\supabase-direct-pages.md": {
-    "mtime": 1781633785.7663999,
+    "mtime": 1781964299.3859243,
     "hash": "94d1aaf5cc86fbe3ae2a109ef89369e3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\TASKBOARD.md": {
-    "mtime": 1781633785.0184994,
+    "mtime": 1781964299.3763666,
     "hash": "c18ebda84af15701098508290d8899f5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\v1\\prompts\\README.md": {
-    "mtime": 1781633785.2578988,
+    "mtime": 1781964299.3803735,
     "hash": "8cf6e593b078d4cca9c749d24fbbe2d3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\hooks\\README.md": {
-    "mtime": 1779215010.74602,
-    "hash": "252781b453675cd7856c3a2506a5c259"
+    "mtime": 1781964301.8754213,
+    "hash": "cc3d4f8fc9069591bb3a8781a01570cf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\beauty-theme-demo.html": {
     "mtime": 1768601438.8283367,
@@ -1880,51 +1972,67 @@
     "hash": "e4a54c68e12dedcdadd287ca48410ad6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\services\\README.md": {
-    "mtime": 1779215010.482677,
-    "hash": "3f10a13f05cbacc0273f0943ba3b8402"
+    "mtime": 1781964302.3782532,
+    "hash": "7cedcd32cfdfce32ac09947aadc84580"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\_template.md": {
     "mtime": 1775926962.7752588,
     "hash": "1b007dc171a5b2e3a51e693babd3b5c9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\01-colaboradores-comissoes-pagamentos.md": {
-    "mtime": 1780833530.778655,
+    "mtime": 1781964302.4104016,
     "hash": "9c89b2679fc6aec6467f14fe7036aabc"
   },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\PRD-agenda-v2-visao-completa-e-status.md": {
+    "mtime": 1782314599.9435859,
+    "hash": "54313607d2ddd3f6d677bd0b5ea3e837"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-agenda-v2-sprints.md": {
+    "mtime": 1782314599.946603,
+    "hash": "b7974f62a27849ee7b83c74f99c8a4bc"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-agenda-v2.md": {
+    "mtime": 1782314599.9491317,
+    "hash": "bb5189b96067f4f9776fa451699be48f"
+  },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-appointment-wizard-ux.md": {
-    "mtime": 1777662797.6936011,
+    "mtime": 1781964302.4124029,
     "hash": "d881d974dfff9e5f0f142a23ac272409"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-dashboard-colaborador-wireflow.md": {
-    "mtime": 1781633785.2508974,
+    "mtime": 1781964302.4174137,
     "hash": "b1e38f06cd54f01bdad3a60d2fcc4d77"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-finance-insights.md": {
-    "mtime": 1777662797.6951284,
+    "mtime": 1781964302.4194198,
     "hash": "4b1a8f15b5ae4eef521b745594c80175"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-mobile-first-audit.md": {
-    "mtime": 1781633785.7663999,
+    "mtime": 1781964302.4224143,
     "hash": "8a24aa7764eb0b1fe05db96978fa1d4f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-products-v1-ui.md": {
-    "mtime": 1781633785.3566747,
+    "mtime": 1781964302.4244168,
     "hash": "cd7502963ec1cd55b239b1d2249b9da3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-tabnav.md": {
-    "mtime": 1777662797.696128,
+    "mtime": 1781964302.4264126,
     "hash": "ed012493d80a47fda605cda824eda992"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\SPEC-ui-audit.md": {
-    "mtime": 1781633785.0976417,
+    "mtime": 1781964302.429415,
     "hash": "2546082c7d8291e4a0d2992459026098"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\TECH-DEBT.md": {
+    "mtime": 1782314599.9516735,
+    "hash": "0aa33b5933f93c80f94cb48768cf9cc3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\specs\\active\\ui-modernizacao-tema-barber.md": {
     "mtime": 1777661749.0375097,
     "hash": "5b7c989fe8ed2ed0fb2a9173f65282d4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\testsprite-mcp-test-report.md": {
-    "mtime": 1781633785.176299,
+    "mtime": 1781964302.6498044,
     "hash": "0432105b51daba5f78adab93ea3b0d85"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\testsprite_tests\\tmp\\code_summary.yaml": {
@@ -1940,283 +2048,291 @@
     "hash": "c4328ad4a35aa47fe054049c05e94eb3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\types\\README.md": {
-    "mtime": 1779215011.0360415,
-    "hash": "75ac74c6168671b5c4e5a8c995f939cd"
+    "mtime": 1781964302.6604583,
+    "hash": "3e3998c150086c31a204ce5e6908b1b6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\architecture.md": {
-    "mtime": 1780833565.878524,
+    "mtime": 1781964298.2972877,
     "hash": "7a7034be40a86a7e2936d6371078240e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\c4-components.md": {
-    "mtime": 1780833556.1555345,
+    "mtime": 1781964298.299833,
     "hash": "136cd0dedcf97b38e535f420a277f733"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\c4-containers.md": {
-    "mtime": 1780833559.2284288,
+    "mtime": 1781964298.317123,
     "hash": "c22f46344f777fb7c305a748c92ca4cc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\c4-context.md": {
-    "mtime": 1780833565.80827,
+    "mtime": 1781964298.3191211,
     "hash": "3a87a2a1a1c1d7aafcea5c2bba8f4f9a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\code-analysis.md": {
-    "mtime": 1780833082.8231485,
+    "mtime": 1781964298.3251958,
     "hash": "4858acfcec779efcff6b4c3bca530e28"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\confidence-report.md": {
-    "mtime": 1780833082.8282075,
+    "mtime": 1781964298.3277404,
     "hash": "c8a6c395cbd1a26495faa967f8f64902"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\data-dictionary.md": {
-    "mtime": 1780833082.8312347,
+    "mtime": 1781964298.330747,
     "hash": "f85c95e1b671c202f296f918a68e986c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\dependencies.md": {
-    "mtime": 1780833082.834772,
+    "mtime": 1781964298.3337476,
     "hash": "ba399e3ea4908027fbf766d9979c5207"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\deployment.md": {
-    "mtime": 1780833082.8362963,
+    "mtime": 1781964298.3367436,
     "hash": "1cfc1b7151abeaaa4b9dcbdfe9b4e722"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\domain.md": {
-    "mtime": 1780833082.8408718,
+    "mtime": 1781964298.3403013,
     "hash": "dd685a57e431248182eb2790207dd1ca"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\erd-complete.md": {
-    "mtime": 1780833082.8433988,
+    "mtime": 1781964298.3434162,
     "hash": "70c587b55273c0826251fe5398363e5c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\gaps.md": {
-    "mtime": 1781633785.2578988,
+    "mtime": 1781964298.4037595,
     "hash": "3eef4948049aac825ddff0879fff3ecd"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\inventory.md": {
-    "mtime": 1780833561.0149448,
+    "mtime": 1781964298.4055982,
     "hash": "cf31727d1a1fc45337320d1f982f4ce1"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\permissions.md": {
-    "mtime": 1780833083.035304,
+    "mtime": 1781964298.5122762,
     "hash": "1321ad8b1faab0c2b94c535d01579826"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\questions.md": {
-    "mtime": 1780833083.0413122,
+    "mtime": 1781964298.514277,
     "hash": "22da143c56b7cda17fe956a874503f88"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\state-machines.md": {
-    "mtime": 1780833083.1494899,
+    "mtime": 1781964298.5764709,
     "hash": "d6f5aa8b1efdee438acf3d6a5f398be9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\adrs\\retrospective-adrs.md": {
-    "mtime": 1780833082.8049095,
+    "mtime": 1781964298.2946217,
     "hash": "7bf3193df6e7d7de2f37ffd2acdf94a8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\agenda.md": {
-    "mtime": 1780833082.8479834,
+    "mtime": 1781964298.3464506,
     "hash": "f0bd8a1a939eb429bdbfc8a663ccd64a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\ai-assistant.md": {
-    "mtime": 1780833082.8499794,
+    "mtime": 1781964298.351575,
     "hash": "dac409b5ca9135b6b95e411195d2fee5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\auth.md": {
-    "mtime": 1780833082.8539765,
+    "mtime": 1781964298.354102,
     "hash": "a07abf7682ab89bac8c8f96b5d3fc388"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\clients-crm.md": {
-    "mtime": 1780833082.8641176,
+    "mtime": 1781964298.378519,
     "hash": "fc48c082ce312b69c4ba474ab97ccf26"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\dashboard.md": {
-    "mtime": 1780833082.8671498,
+    "mtime": 1781964298.3815317,
     "hash": "c747fd538e7fc2d6638c2c56fe916a69"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\finance.md": {
-    "mtime": 1780833082.8701487,
+    "mtime": 1781964298.3840575,
     "hash": "98c1ab79a6dc8032a91ed63bfa9a739c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\marketing.md": {
-    "mtime": 1780833082.8776891,
+    "mtime": 1781964298.3866305,
     "hash": "eda44dbfc978ac6891e86ddae6e4cd5a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\onboarding.md": {
-    "mtime": 1780833082.8975549,
+    "mtime": 1781964298.389166,
     "hash": "0e525706b4c7da0d8f33f8958471cd88"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\security-audit.md": {
-    "mtime": 1780833082.9005532,
+    "mtime": 1781964298.3927124,
     "hash": "7e12d131d884bc7703155b2ff38ac69d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\settings.md": {
-    "mtime": 1780833082.9025595,
+    "mtime": 1781964298.3948743,
     "hash": "6bb53bc5739dfe7de8aa55915146266f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\staff-team.md": {
-    "mtime": 1780833082.907548,
+    "mtime": 1781964298.398707,
     "hash": "1afc8ece9d29da4ab3dfcfb089b786c2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\flowcharts\\supabase-backend.md": {
-    "mtime": 1780833082.9111013,
+    "mtime": 1781964298.4012115,
     "hash": "9327bbfcb92fcf209ef4e8bd63c08ea2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\ambiguity_log.md": {
-    "mtime": 1780833082.9444168,
+    "mtime": 1781964298.4173164,
     "hash": "eb1ff14a9c4f093bdf30d6ca316bf775"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\cutover_plan.md": {
-    "mtime": 1780833082.9475543,
+    "mtime": 1781964298.4208822,
     "hash": "f46587743f270bcb15142e284fe00180"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\data_migration_plan.md": {
-    "mtime": 1780833566.4009082,
+    "mtime": 1781964298.4229045,
     "hash": "c663596ff208992688df60027c423fab"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\discard_log.md": {
-    "mtime": 1780833082.9535613,
+    "mtime": 1781964298.426445,
     "hash": "e6c81f909d5289761b5d8e01d1e5786c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\handoff.md": {
-    "mtime": 1780833082.9585526,
+    "mtime": 1781964298.4299994,
     "hash": "a43810cca6d78750d9def5074fdc1a9e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\migration_brief.md": {
-    "mtime": 1780833567.7927175,
+    "mtime": 1781964298.4330232,
     "hash": "adbb0ee2398291b753f5cbf76a36cab8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\migration_strategy.md": {
-    "mtime": 1780833082.9646773,
+    "mtime": 1781964298.4366615,
     "hash": "c018c74edb6ee3ce331e81fd04b6fbdc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\paradigm_decision.md": {
-    "mtime": 1780833082.9676807,
+    "mtime": 1781964298.439047,
     "hash": "8211dd493c1148bd06f1f768a699d7e7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\parity_specs.md": {
-    "mtime": 1780833566.3046417,
+    "mtime": 1781964298.4413967,
     "hash": "d65d34628ad7d46722e881c2972cadfc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\relatorio_sessao_agendix_1.0.md": {
-    "mtime": 1780833332.4817443,
-    "hash": "b4e3483e75f7fb7968416c050de716fe"
+    "mtime": 1781964298.494939,
+    "hash": "74d8847347291be96d022277fccb1088"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\risk_register.md": {
-    "mtime": 1780833083.0118499,
+    "mtime": 1781964298.497496,
     "hash": "b1df4166b135089a407f1a55d5ea15b2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\target_architecture.md": {
-    "mtime": 1780833568.752212,
+    "mtime": 1781964298.49949,
     "hash": "87c5863ea3a74ad3bd99eb182b3441cc"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\target_business_rules.md": {
-    "mtime": 1780833083.0178812,
+    "mtime": 1781964298.5024962,
     "hash": "5bbc292402833667c58a11ffadf19d11"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\target_data_model.md": {
-    "mtime": 1780833083.019874,
+    "mtime": 1781964298.5050423,
     "hash": "69f440e2ea3bc0550af4584a69eaea60"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\migration\\target_domain_model.md": {
-    "mtime": 1780833083.0229042,
+    "mtime": 1781964298.5072184,
     "hash": "08fc18031dd6bb828f2e3956ae26a2f4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\openapi\\supabase-api.yaml": {
-    "mtime": 1780833083.0317552,
+    "mtime": 1781964298.5102644,
     "hash": "84bceddf2ae0cadb5f64c43ab7aa3657"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\agenda.md": {
-    "mtime": 1780833083.0448897,
+    "mtime": 1781964298.5178425,
     "hash": "901595e5b519064ab00e457c6fed49c0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\ai-assistant.md": {
-    "mtime": 1780833083.0489147,
+    "mtime": 1781964298.52036,
     "hash": "aa766af7c6b48822bf51515ce51c2657"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\auth.md": {
-    "mtime": 1780833083.0519142,
+    "mtime": 1781964298.522419,
     "hash": "99c6acc8c6f4f5c5c19782abf8a27faa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\clients-crm.md": {
-    "mtime": 1780833083.054912,
+    "mtime": 1781964298.5249379,
     "hash": "4e1e5a46db9e7142a7e4ec0a623a32d0"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\dashboard.md": {
-    "mtime": 1780833083.057918,
+    "mtime": 1781964298.549407,
     "hash": "9641fc84da316935bb53fe7132343b10"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\finance.md": {
-    "mtime": 1780833083.0639393,
+    "mtime": 1781964298.551788,
     "hash": "76a8e9a28359a31d702c9eef6e80a784"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\marketing.md": {
-    "mtime": 1780833083.0665028,
+    "mtime": 1781964298.5543416,
     "hash": "aefeb884d12b9ca2a8ca3fba13894ec2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\onboarding.md": {
-    "mtime": 1780833083.126759,
+    "mtime": 1781964298.5573695,
     "hash": "891651a8df8f3045f63c4bfabeb02392"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\public-booking.md": {
-    "mtime": 1780833083.1293578,
+    "mtime": 1781964298.5593688,
     "hash": "9cae8b322c47d008adbb24c123ad8410"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\queue.md": {
-    "mtime": 1780833083.132358,
+    "mtime": 1781964298.56237,
     "hash": "aec832e6b045681c3941a30d30cf4fcf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\security-audit.md": {
-    "mtime": 1780833083.134357,
+    "mtime": 1781964298.5659082,
     "hash": "3eadeecb07dc65d52f349165204d7460"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\settings.md": {
-    "mtime": 1780833083.1363556,
+    "mtime": 1781964298.5689344,
     "hash": "1e77a86c3689618d6190d816b05f06df"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\staff-team.md": {
-    "mtime": 1780833083.1433537,
+    "mtime": 1781964298.571467,
     "hash": "60f7b51f4f67153ea74c9665bb737b79"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\sdd\\supabase-backend.md": {
-    "mtime": 1780833083.1463687,
+    "mtime": 1781964298.573462,
     "hash": "a4825d528dcda37e46f53d3a3102cc76"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\traceability\\code-spec-matrix.md": {
-    "mtime": 1780833083.156883,
+    "mtime": 1781964298.5810428,
     "hash": "ec588e593ec3b017549f78251f262f67"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\traceability\\spec-impact-matrix.md": {
-    "mtime": 1780833083.1644425,
+    "mtime": 1781964298.5835903,
     "hash": "a07017e6080dff849e5f739ee00de589"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\user-stories\\client-workflow.md": {
-    "mtime": 1780833083.1684484,
+    "mtime": 1781964298.5866225,
     "hash": "90c7b9033f1c559393a42e54e023f850"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\user-stories\\owner-workflow.md": {
-    "mtime": 1780833083.1750371,
+    "mtime": 1781964298.5891697,
     "hash": "0567bc119319fc451da2129bb88af0b7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\_reversa_sdd\\user-stories\\staff-workflow.md": {
-    "mtime": 1780833083.177599,
+    "mtime": 1781964298.5917337,
     "hash": "65d6ff3e98486fb95d914cb264dc3d97"
   },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\prod-dashboard-corrigido.png": {
+    "mtime": 1782577590.9605412,
+    "hash": "7e1a7c29fa35eee0e75e91869518288f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\prod-dashboard-estado.png": {
+    "mtime": 1782494012.542513,
+    "hash": "77f80ca2ded3754bef02b218eb79358b"
+  },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\logo icon.png": {
-    "mtime": 1777662797.6546192,
+    "mtime": 1781964302.1139123,
     "hash": "b07778cae4aee24b2f35d03988c88d39"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\logo-agendix-app.png": {
-    "mtime": 1781360057.698698,
+    "mtime": 1781964302.191357,
     "hash": "d505c12e7c9f41f91b71c08ab8972ef3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\logo-agendix-icon.png": {
-    "mtime": 1781365340.4300659,
+    "mtime": 1781964302.2036893,
     "hash": "632a01e45a96a925822ef69718cbfb8d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\logo-agendix-light.png": {
-    "mtime": 1781364996.279501,
+    "mtime": 1781964302.2193532,
     "hash": "9628a65decce98424dd424f857af17d4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\mulher-studio.png": {
-    "mtime": 1781358845.300881,
+    "mtime": 1781964302.243973,
     "hash": "69f25e7c3bf019c595afe74627fe10c6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\assets\\barber\\icon-minimal.svg": {

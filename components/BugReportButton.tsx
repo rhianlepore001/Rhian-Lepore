@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Loader2 } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useUI } from '../contexts/UIContext';
 import { BugReportMenu } from './BugReportMenu';
 import { BugReportModal } from './BugReportModal';
+import { captureScreenshot, captureContext, type BugContext } from '../lib/bugReport';
 
 type ReportType = 'bug' | 'idea' | 'question';
 
@@ -16,6 +17,9 @@ export const BugReportButton: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [reportType, setReportType] = useState<ReportType>('bug');
+  const [capturing, setCapturing] = useState(false);
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [capturedContext, setCapturedContext] = useState<BugContext | null>(null);
 
   const closeMenu = useCallback(() => {
     setShowMenu(false);
@@ -24,11 +28,25 @@ export const BugReportButton: React.FC = () => {
 
   const openModal = useCallback(
     (type: ReportType) => {
+      // Fecha o menu e fotografa a tela LIMPA antes de abrir o modal.
+      // Dois requestAnimationFrame garantem que o menu já saiu do DOM e a tela
+      // foi repintada — senão o print sairia com o menu/modal na frente.
       setShowMenu(false);
       setReportType(type);
-      setShowModal(true);
+      setCapturing(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(async () => {
+          const ctx = captureContext();
+          const shot = await captureScreenshot();
+          setCapturedContext(ctx);
+          setScreenshot(shot);
+          setCapturing(false);
+          setModalOpen(true);
+          setShowModal(true);
+        });
+      });
     },
-    []
+    [setModalOpen]
   );
 
   const handleReportBug = useCallback(() => openModal('bug'), [openModal]);
@@ -42,18 +60,26 @@ export const BugReportButton: React.FC = () => {
   }, [setModalOpen]);
 
   const handleToggleMenu = useCallback(() => {
+    if (capturing) return;
     setShowMenu((prev) => {
       const next = !prev;
       if (!next) setModalOpen(false);
       return next;
     });
-  }, [setModalOpen]);
+  }, [setModalOpen, capturing]);
+
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+    setScreenshot(null);
+    setCapturedContext(null);
+  }, []);
 
   return (
     <>
       <button
         type="button"
         onClick={handleToggleMenu}
+        disabled={capturing}
         aria-label="Ajuda e reportar problema"
         aria-expanded={showMenu}
         aria-haspopup="menu"
@@ -65,7 +91,11 @@ export const BugReportButton: React.FC = () => {
           radius.button,
         ].join(' ')}
       >
-        <HelpCircle className={`w-5 h-5 md:w-6 md:h-6 ${accent.text}`} aria-hidden="true" />
+        {capturing ? (
+          <Loader2 className={`w-5 h-5 md:w-6 md:h-6 ${accent.text} animate-spin`} aria-hidden="true" />
+        ) : (
+          <HelpCircle className={`w-5 h-5 md:w-6 md:h-6 ${accent.text}`} aria-hidden="true" />
+        )}
       </button>
 
       {showMenu && (
@@ -80,7 +110,9 @@ export const BugReportButton: React.FC = () => {
       {showModal && (
         <BugReportModal
           reportType={reportType}
-          onClose={() => setShowModal(false)}
+          onClose={closeModal}
+          screenshot={screenshot}
+          capturedContext={capturedContext}
         />
       )}
     </>

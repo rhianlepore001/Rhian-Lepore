@@ -92,21 +92,68 @@ export async function captureScreenshot(): Promise<string | null> {
   }
 }
 
+export type BugCategory =
+  | 'agenda'
+  | 'login'
+  | 'clients'
+  | 'finance'
+  | 'queue'
+  | 'settings'
+  | 'modal'
+  | 'other';
+
+const TYPE_LABEL: Record<BugReportType, string> = {
+  bug: 'Problema',
+  idea: 'Sugestão',
+  question: 'Dúvida',
+};
+
 export function inferType(reportType: BugReportType): BugReportType {
   if (reportType === 'idea' || reportType === 'question') return reportType;
   return 'bug';
 }
 
-export function inferCategory(reportType: BugReportType): string {
-  switch (reportType) {
-    case 'idea':
-      return 'feature_request';
-    case 'question':
-      return 'support';
-    case 'bug':
-    default:
-      return 'bug_report';
+/**
+ * Deriva a área do app a partir da rota (hash do HashRouter).
+ * Os valores precisam casar com o CHECK de `category` da tabela bug_reports.
+ */
+export function categoryFromRoute(route: string): BugCategory {
+  const r = (route || '').toLowerCase();
+  if (r.includes('agenda')) return 'agenda';
+  if (r.includes('financ')) return 'finance';
+  if (r.includes('client')) return 'clients';
+  if (r.includes('fila') || r.includes('queue')) return 'queue';
+  if (r.includes('config') || r.includes('settings')) return 'settings';
+  if (
+    r.includes('login') ||
+    r.includes('register') ||
+    r.includes('password') ||
+    r.includes('forgot')
+  ) {
+    return 'login';
   }
+  return 'other';
+}
+
+const MAX_TITLE = 90;
+
+/**
+ * Título é obrigatório no banco. Usa a 1ª linha da descrição quando há texto;
+ * senão, gera um padrão a partir do tipo + área da rota.
+ */
+export function buildTitle(
+  reportType: BugReportType,
+  description: string | null | undefined,
+  route: string
+): string {
+  const desc = (description ?? '').trim();
+  if (desc) {
+    const firstLine = desc.split('\n')[0].trim();
+    return firstLine.length > MAX_TITLE
+      ? `${firstLine.slice(0, MAX_TITLE - 1)}…`
+      : firstLine;
+  }
+  return `${TYPE_LABEL[reportType]} em ${categoryFromRoute(route)}`;
 }
 
 function decodeBase64(base64: string): Uint8Array {
@@ -135,7 +182,7 @@ export async function uploadBugScreenshot(
   const path = `${companyId}/${userId}/${fileName ?? `screenshot-${Date.now()}.png`}`;
   try {
     const { error } = await db.storage
-      .from('bug-reports')
+      .from('bug-screenshots')
       .upload(path, decodeBase64(base64), {
         contentType: 'image/png',
         upsert: false,
@@ -155,10 +202,13 @@ export interface CreateBugReportParams {
   companyId: string;
   userId: string;
   type: BugReportType;
-  category: string;
   description?: string | null;
   context: BugContext;
   screenshotPath?: string | null;
+  /** 'advanced' = report do admin com marcações no print. Default 'simple'. */
+  mode?: 'simple' | 'advanced';
+  /** Marca o report como feito pelo admin/dev. */
+  isDev?: boolean;
 }
 
 export interface BugReportResult {
@@ -166,19 +216,18 @@ export interface BugReportResult {
   error: string | null;
 }
 
+/**
+ * Report manual (cliente clicou no "?"). Monta um insert que respeita o schema
+ * de bug_reports: title/description NOT NULL, status 'new', category pela rota,
+ * source 'manual'. `level` fica nulo — quem classifica 1-5 é o agente de triagem.
+ */
 export async function createBugReport(
   params: CreateBugReportParams
 ): Promise<BugReportResult> {
-  const {
-    supabase: db,
-    companyId,
-    userId,
-    type,
-    category,
-    description,
-    context,
-    screenshotPath,
-  } = params;
+  const { supabase: db, companyId, userId, type, description, context, screenshotPath, mode, isDev } = params;
+  const route = context.route || context.pathname || '';
+  const desc = (description ?? '').trim();
+  const title = buildTitle(type, desc, route);
   try {
     const { data, error } = await db
       .from('bug_reports')
@@ -186,11 +235,15 @@ export async function createBugReport(
         company_id: companyId,
         user_id: userId,
         type,
-        category,
-        description: description ?? null,
+        source: 'manual',
+        status: 'new',
+        category: categoryFromRoute(route),
+        mode: mode ?? 'simple',
+        is_dev: isDev ?? null,
+        title,
+        description: desc || title,
         context,
-        screenshot_path: screenshotPath ?? null,
-        status: 'open',
+        screenshot_url: screenshotPath ?? null,
       })
       .select('id')
       .single();
@@ -200,6 +253,45 @@ export async function createBugReport(
     return {
       id: null,
       error: err instanceof Error ? err.message : 'Falha ao registrar o report.',
+    };
+  }
+}
+
+export interface ReportAutoBugParams {
+  supabase: SupabaseClient;
+  title: string;
+  description: string;
+  context: BugContext;
+  dedupKey: string;
+  screenshotUrl?: string | null;
+}
+
+/**
+ * Report automático (o app capturou um erro sozinho). Usa a RPC
+ * upsert_auto_bug_report, que faz o anti-spam: se já existe um bug automático
+ * aberto com a mesma assinatura (dedupKey) naquele tenant, só incrementa a
+ * contagem de ocorrências em vez de criar duplicata.
+ */
+export async function reportAutoBug(
+  params: ReportAutoBugParams
+): Promise<BugReportResult> {
+  const { supabase: db, title, description, context, dedupKey, screenshotUrl } = params;
+  const route = context.route || context.pathname || '';
+  try {
+    const { data, error } = await db.rpc('upsert_auto_bug_report', {
+      p_title: title,
+      p_description: description,
+      p_category: categoryFromRoute(route),
+      p_context: context,
+      p_dedup_key: dedupKey,
+      p_screenshot_url: screenshotUrl ?? null,
+    });
+    if (error) return { id: null, error: error.message };
+    return { id: (data as string | null) ?? null, error: null };
+  } catch (err) {
+    return {
+      id: null,
+      error: err instanceof Error ? err.message : 'Falha ao registrar erro automático.',
     };
   }
 }

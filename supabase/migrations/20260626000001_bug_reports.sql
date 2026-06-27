@@ -48,14 +48,15 @@ CREATE INDEX IF NOT EXISTS idx_bug_reports_created
   ON public.bug_reports (created_at DESC);
 
 -- ========================================
--- 2. updated_at TRIGGER (reaproveita funcao existente)
+-- 2. updated_at TRIGGER
 -- ========================================
--- update_updated_at_column() ja existe (20260218_add_updated_at_column.sql).
--- Se ela nao existir por algum motivo, descomente o bloco abaixo:
--- CREATE OR REPLACE FUNCTION public.update_updated_at_column()
--- RETURNS TRIGGER AS $$
--- BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
--- $$ LANGUAGE plpgsql;
+-- IMPORTANTE: em produção (Supabase) a função update_updated_at_column() NÃO
+-- existia (a migration 20260218 que a criaria nunca foi aplicada ao banco vivo).
+-- Por isso criamos aqui de forma idempotente — sem isso o CREATE TRIGGER falha.
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS update_bug_reports_updated_at ON public.bug_reports;
 CREATE TRIGGER update_bug_reports_updated_at

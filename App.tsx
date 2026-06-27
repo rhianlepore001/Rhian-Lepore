@@ -10,6 +10,7 @@ import { ToastProvider } from './components/ui';
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DynamicBranding } from './components/DynamicBranding';
+import { DevBugButton } from './components/DevBugButton';
 
 
 // Lazy Load Pages
@@ -230,6 +231,7 @@ const App: React.FC = () => {
               <AlertsProvider>
                   <AppRoutes />
                   <ActivationBanner />
+                  <DevBugButton />
               </AlertsProvider>
             </PublicClientProvider>
           </ToastProvider>

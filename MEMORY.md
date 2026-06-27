@@ -12,7 +12,8 @@
 ## 📊 Status atual (atualizado 26 Jun 2026)
 
 - **Primeiro deploy de produção CONCLUÍDO.** Branch `main` em produção.
-- **Produção:** https://promptdeelite.com (Vercel, projeto `rhian-lepore`). Deploy automático via integração GitHub no push para `main`.
+- **Produção:** Vercel, projeto `rhian-lepore`. Deploy automático via integração GitHub no push para `main`.
+  - Aliases confirmados pela Vercel em 27 Jun 2026: https://agendixstudio.com, https://www.agendixstudio.com, https://rhian-lepore.vercel.app.
 - **Vercel env vars configuradas** (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) em production + preview + development. Próximos deploys já sobem corretos.
   - ⚠️ Lição: o código exige essas `VITE_*` (não há mais fallback hardcoded). Qualquer ambiente novo precisa delas configuradas, senão `lib/supabase.ts` lança erro e dá tela preta.
 - **Banco de produção (Supabase) alinhado ao código:** migrations do release aplicadas; dos RPCs chamados pelo app, todos os críticos existem em produção. (As 2 funções de auditoria `create_audit_log`/`get_audit_logs` não existem em prod, mas a tela `settings/AuditLogs.tsx` trata o erro e mostra lista vazia — não quebra.)
@@ -69,6 +70,10 @@
   - **Decisões de produto:** admin só dev · marcação **destaca** (não recorta) · só **retângulo + comentário** · abre por **botão flutuante + atalho**.
   - **Pra Sprint 2+ (futuro):** caneta livre, texto NA imagem, recorte por área, network errors, performance metrics, component stack.
   - Verde: `typecheck`/`lint`/**275 testes**/`build`.
+- **Deploy produção Bug Reporter Parte A/B parcial (27 Jun 2026):**
+  - Commit `5b3938c` (`adiciona captura automatica e triagem de bugs`) enviado para `origin/main`.
+  - Vercel criou deploy de produção `dpl_8TKZJFGcxLRKyKbV4xb1eAj9ZBRZ`, URL `https://rhian-lepore-eej98tewq-rhians-projects-df168429.vercel.app`, status `Ready`, criado em 27 Jun 2026 18:26:50 BST.
+  - Verificações locais antes do push: `npm run typecheck`, `npm run lint`, `npm run build`, `npm test -- --run` (275 testes) e `graphify update .`.
 
 ## 📋 Pendências / próximos passos
 

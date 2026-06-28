@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 import { createPortal } from 'react-dom';
 import { Loader2, X, Camera } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useUI } from '../contexts/UIContext';
 import { useToast } from './ui';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
+import { ScreenshotAnnotator, type ScreenshotAnnotatorRef } from './ScreenshotAnnotator';
 import {
   captureScreenshot,
   captureContext,
@@ -57,6 +58,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
   const [context, setContext] = useState<BugContext | null>(capturedContext ?? null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const annotatorRef = useRef<ScreenshotAnnotatorRef>(null);
 
   useEffect(() => {
     setModalOpen(true);
@@ -91,13 +93,16 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
       return;
     }
     setSubmitting(true);
+
+    const annotatedScreenshot = annotatorRef.current?.getAnnotatedDataUrl() ?? screenshot;
+
     let screenshotPath: string | null = null;
-    if (screenshot) {
+    if (annotatedScreenshot) {
       const uploaded = await uploadBugScreenshot({
         supabase,
         companyId,
         userId: user.id,
-        dataUrl: screenshot,
+        dataUrl: annotatedScreenshot,
       });
       screenshotPath = uploaded.path;
       if (uploaded.error) {
@@ -195,10 +200,11 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
                     Capturando tela…
                   </span>
                 ) : screenshot ? (
-                  <img
-                    src={screenshot}
-                    alt="Pré-visualização do print enviado"
-                    className="w-full h-full object-cover object-top"
+                  <ScreenshotAnnotator
+                    ref={annotatorRef}
+                    imageUrl={screenshot}
+                    disabled={submitting}
+                    className="w-full"
                   />
                 ) : (
                   <span className={`inline-flex flex-col items-center gap-2 text-xs ${colors.textMuted}`}>

@@ -45,6 +45,7 @@ const QueueManagement = React.lazy(() => import('./pages/QueueManagement').then(
 const ClientArea = React.lazy(() => import('./pages/ClientArea').then(module => ({ default: module.ClientArea })));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
+const PlaywrightBugReporterDemo = React.lazy(() => import('./pages/PlaywrightBugReporterDemo').then(module => ({ default: module.PlaywrightBugReporterDemo })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
 const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
@@ -148,6 +149,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
+        <Route path="/playwright-bug-reporter-demo" element={<PlaywrightBugReporterDemo />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />

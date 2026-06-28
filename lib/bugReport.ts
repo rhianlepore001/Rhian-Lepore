@@ -75,7 +75,38 @@ export function captureContext(): BugContext {
   };
 }
 
-export async function captureScreenshot(): Promise<string | null> {
+function getTopModalElement(): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(
+    '[role="dialog"], [role="alertdialog"], [data-modal="true"], [data-sheet="true"], .modal-container, .sheet-container'
+  ));
+  if (candidates.length === 0) return null;
+
+  let best: HTMLElement | null = null;
+  let bestZ = -Infinity;
+  for (const el of candidates) {
+    if (el.getAttribute('aria-hidden') === 'true') continue;
+    if (el.hasAttribute('data-bug-report-dialog')) continue;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) continue;
+    const style = window.getComputedStyle(el);
+    const z = parseInt(style.zIndex || '0', 10) || 0;
+    if (z > bestZ) {
+      bestZ = z;
+      best = el;
+    }
+  }
+  return best;
+}
+
+export interface CaptureScreenshotOptions {
+  /** Alvo específico; se omitido, usa o viewport atual (com fallback para o body). */
+  target?: HTMLElement | null;
+  /** Padding em pixels ao redor do alvo quando se captura um modal/card. */
+  padding?: number;
+}
+
+export async function captureScreenshot(options?: CaptureScreenshotOptions): Promise<string | null> {
   if (typeof document === 'undefined' || !document.body) return null;
   try {
     const mod = await import('html2canvas');
@@ -85,7 +116,46 @@ export async function captureScreenshot(): Promise<string | null> {
         opts?: Record<string, unknown>
       ) => PromiseLike<HTMLCanvasElement>;
     }).default;
-    const canvas = await render(document.body, { useCORS: true, logging: false });
+
+    const modal = options?.target ?? getTopModalElement();
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+
+    if (modal) {
+      const rect = modal.getBoundingClientRect();
+      const padding = options?.padding ?? 16;
+      const x = Math.max(0, rect.left - padding);
+      const y = Math.max(0, rect.top - padding);
+      const width = Math.min(window.innerWidth - x, rect.width + padding * 2);
+      const height = Math.min(window.innerHeight - y, rect.height + padding * 2);
+
+      const canvas = await render(document.documentElement, {
+        x,
+        y,
+        width,
+        height,
+        useCORS: true,
+        logging: false,
+        scale: dpr,
+        ignoreElements: (el: Element) => el.closest('[data-bug-report-dialog]') !== null,
+      });
+      return canvas.toDataURL('image/png');
+    }
+
+    const x = typeof window !== 'undefined' ? window.scrollX : 0;
+    const y = typeof window !== 'undefined' ? window.scrollY : 0;
+    const width = typeof window !== 'undefined' ? window.innerWidth : document.documentElement.clientWidth;
+    const height = typeof window !== 'undefined' ? window.innerHeight : document.documentElement.clientHeight;
+
+    const canvas = await render(document.documentElement, {
+      x,
+      y,
+      width,
+      height,
+      useCORS: true,
+      logging: false,
+      scale: dpr,
+      ignoreElements: (el: Element) => el.closest('[data-bug-report-dialog]') !== null,
+    });
     return canvas.toDataURL('image/png');
   } catch {
     return null;

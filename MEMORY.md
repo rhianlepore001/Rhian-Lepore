@@ -55,6 +55,33 @@
   - **Console error buffer:** singleton IIFE que envolve `console.error` e guarda últimos 10 com stack. Incluído no `BugContext` automaticamente.
   - **Supabase:** tabela `bug_reports` com RLS via `get_auth_company_id()` (mesmo padrão do projeto), bucket `bug-screenshots` com policies isolando por pasta `(storage.foldername(name))[1] = get_auth_company_id()`. Migration: `supabase/migrations/20260626000001_bug_reports.sql`.
   - **Multi-tenant:** `company_id` (TEXT) sempre exigido; INSERT só passa com `auth.uid()` correto. Modo avançado (com anotações, crop, network errors) e botão flutuante DEV ficam pra **Sprint 2**. Pipeline cron Bob pra triagem/fix/PR fica pra **Sprint 3**.
+- **Sprint 0 — Claude Code sênior (27 Jun 2026):** setup de "desenvolvedor sênior" via skills procedurais + MCPs do stack + hooks. Não toca código de runtime.
+  - **3 skills AgendiX criadas** em `.claude/skills/`:
+    - `agendix-component-standards` (8.9kb) — padrões React/Tailwind/a11y/lazy/multi-tenant, 12 anti-patterns, ref canônica `components/ui/Modal.tsx`
+    - `agendix-supabase-patterns` (12.8kb) — migrations/RLS/auth.uid()/4 políticas, 8 anti-patterns, ref canônica `supabase/migrations/20260626000001_bug_reports.sql`
+    - `agendix-workflow-lionclaw` (17.5kb) — playbook operacional completo (backup branch, gate, commit sob pedido, PR via gh, 12 proibições reforçadas, ASCII art do loop)
+  - **`CLAUDE.md` atualizado** com seção "Sistema de agentes" (mapa das skills + subagentes futuros + regra de ouro)
+  - **`.claude/settings.json` reescrito:** removido TestSprite (key vazia), 5 MCPs novos (github, supabase remote, vercel, filesystem, playwright headless), permissions allow/ask/deny explícitas, 1 hook PreToolUse bloqueando `rm -rf`/`--force`/`--no-verify` (exit 2).
+  - **Backup branch** `backup/sprint0-claude-senior-2026-06-27` contém estado pré-mudança. Branch de trabalho `feature/sprint0-claude-senior`.
+  - **Pendente:** Fase 2 (4 subagentes) + Fase 3 (skill `agendix-review-loop` + sprint real de validação). Aguardando Rhian validar ganho da Fase 1.
+  - **Tokens necessários pra MCPs funcionarem:** `GITHUB_TOKEN`, `SUPABASE_ACCESS_TOKEN`, `VERCEL_TOKEN` no shell. Sem eles, MCPs aparecem como "configured" mas falham na 1ª chamada.
+- **Bug Reporter — ajuste de captura + ferramenta de demarcação (28 Jun 2026):**
+  - `captureScreenshot()` agora captura o **viewport atual** (`window.scrollX/Y`, `innerWidth/Height`) em vez de `document.body` inteiro, respeitando a posição de scroll da câmera.
+  - Detecção automática de modal/card aberto (`[role="dialog"]`, `[data-modal]`, `[data-sheet]`, `.modal-container`, `.sheet-container`) com maior z-index; captura a área do elemento + padding de 16px, centralizando o foco no componente em primeiro plano.
+  - Modal do próprio bug reporter é ignorado (`data-bug-report-dialog`) para não fotografar ele mesmo.
+  - Preview no `BugReportModal` usa `object-contain object-center`, garantindo que a imagem apareça centralizada dentro do container.
+  - Nova ferramenta de demarcação: `components/ScreenshotAnnotator.tsx` com lápis freehand, 6 cores, 4 espessuras, desfazer e limpar. As anotações são mescladas ao screenshot no submit.
+  - 263 testes continuam verdes; `typecheck`, `lint`, `build` OK.
+- **Bug Reporter — testes Playwright + fix do annotator (28 Jun 2026):**
+  - Configuração do Playwright (`playwright.config.ts`) com projetos desktop e mobile (chromium).
+  - Página de demo `pages/PlaywrightBugReporterDemo.tsx` + rota `/#/playwright-bug-reporter-demo` para testar o modal sem autenticação.
+  - Testes E2E em `e2e/bug-reporter-demo.spec.ts`: abertura do modal, screenshot do viewport centralizado, ferramenta de lápis e desenho sobre o print (validado via pixels no canvas).
+  - Teste de fluxo real com login em `e2e/bug-reporter.spec.ts` (depende de credenciais de teste; falha se senha incorreta).
+  - Fix no `ScreenshotAnnotator`: uso de refs durante o desenho (`isDrawingRef`, `currentStrokeRef`) para evitar perda de traços em eventos rápidos / não sincronizados com React.
+  - Ajuste em `captureScreenshot()`: agora usa `ignoreElements` do html2canvas para descartar qualquer elemento dentro de `[data-bug-report-dialog]`, garantindo que o próprio modal de report não apareça no print.
+  - Screenshots gerados em `e2e/screenshots/` para evidência visual.
+  - 263 testes unitários verdes; `typecheck`, `lint`, `build` OK.
+  - **Pendente de validação visual:** Rhian vai testar em desktop; fluxo de login real com Playwright depende de credenciais de teste válidas.
 
 ## 📋 Pendências / próximos passos
 
@@ -62,8 +89,11 @@
 - [ ] **Validar ao vivo a Agenda v2 (clique real):** abrir o modal de detalhes e testar o fluxo staff **"Confirmar e cobrar"**. ⚠️ O staff fechar atendimento depende de permissão de banco — se der erro ao concluir/registrar financeiro como staff, ajustar a policy. (Não foi possível validar via automação: a sessão do navegador caiu durante o teste.)
 - [ ] **Hardening pós-deploy** (não bloqueante; detalhes nas notas privadas): checkout transacional único (atendimento + produtos), RLS role-based para staff, rate-limit/captcha em endpoints públicos.
 - [ ] **Tela de Auditoria** (`settings/AuditLogs.tsx`): depende de uma migration de sistema de auditoria corrigida. A migration antiga `20260214_audit_system.sql` tem bugs e **NÃO deve ser aplicada como está** (referencia tabela inexistente `financial_records`, trigger com `action='INSERT'` que viola CHECK, join de tipos incompatíveis).
-- [ ] **Bug Reporter — Sprint 2:** modal avançado (anotações com caneta/texto/retângulo, crop por área, network errors, performance metrics, component stack) + botão flutuante DEV (`isDev=true`, atalho `Ctrl+Shift+B`).
+- [ ] **Bug Reporter — Sprint 2 (parcialmente iniciado):** modal avançado — anotações/caneta já implementadas; falta crop por área, network errors, performance metrics, component stack e botão flutuante DEV (`isDev=true`, atalho `Ctrl+Shift+B`).
 - [ ] **Bug Reporter — Sprint 3:** pipeline cron Bob (lê `bug_reports` WHERE status='new', triagem Lionclaw, plano de fix, branch por sprint, PR, atualização de status). Skills em `~/.hermes/skills/agendix/bug-report-flow.md` e `lionclaw-sprint.md`.
+- [ ] **Sprint 0 — Claude Code sênior Fase 2:** após validar Fase 1, criar 4 subagentes (`agendix-react-builder`, `agendix-supabase-builder`, `agendix-ui-reviewer`, `bob-bug-triage`) em `.claude/agents/`.
+- [ ] **Sprint 0 — Claude Code sênior Fase 3:** skill `agendix-review-loop` (2-pass critical review: spec → quality, max 3 iterações) + 1 sprint real ponta-a-ponta de validação.
+- [ ] **Setar env vars dos MCPs:** `export GITHUB_TOKEN=...`, `export SUPABASE_ACCESS_TOKEN=...`, `export VERCEL_TOKEN=...` no shell antes de testar os 3 MCPs remotos.
 - [ ] **Aplicar migration `20260626000001_bug_reports.sql` no Supabase de produção** + criar bucket `bug-screenshots` via service role (a migration tem DO block com instrução).
 - [ ] **Preencher WhatsApp/email de suporte** no `BugReportButton.tsx` (atualmente placeholder `#`).
 - [ ] **Dívida técnica (registrada por Claude Code review):** comentário em `useBrutalTheme.ts` diz "NUNCA use interpolação dinâmica — Tailwind não processa". Hoje funciona por causa do CDN (`cdn.tailwindcss.com` no `index.html`). Se migrarem para o build estático do Vite (Tailwind v4 no `package.json`), dezenas de `hover:${...}` espalhados pelo código quebram. Vai precisar de tokens `*Hover` no design system antes da migração.

@@ -115,6 +115,7 @@ opencode.json
 *.tmp
 test-results/
 playwright-report/
+e2e/screenshots/
 
 # AIOX Local (AIOX)
 .aiox-core/local/

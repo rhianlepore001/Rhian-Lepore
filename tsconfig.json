@@ -3,6 +3,7 @@
     "clerk-migration",
     "impeccable",
     "node_modules",
+    "scripts",
     "supabase",
     "vitest.config.ts"
   ],

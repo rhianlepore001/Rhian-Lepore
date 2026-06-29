@@ -139,7 +139,8 @@ export const PublicBooking: React.FC = () => {
     );
     const gallery = useMemo(() => galleryData as any[] ?? [], [galleryData]);
 
-    // NEW: booking mode and quick flow step
+    // Modo único: fluxo guiado (sem chat). Decisão de produto: cliente quer agendar rápido.
+    // Mantido estado interno para compatibilidade com componentes legados, mas sempre 'quick'.
     const [bookingMode, setBookingMode] = useState<'chat' | 'quick'>('quick');
     const [quickStep, setQuickStep] = useState<'services' | 'professional' | 'datetime' | 'contact' | 'success'>('services');
 
@@ -472,7 +473,9 @@ export const PublicBooking: React.FC = () => {
         if (booking.customer_name) setCustomerName(booking.customer_name);
         const phone = booking.customer_phone || booking.phone || client?.phone || '';
         if (phone) setCustomerPhone(phone);
-        setAcceptedPolicy(true);
+        // Em modo edição o cliente já aceitou política no agendamento original;
+        // re-confirmação seria fricção desnecessária.
+        if (editParam) setAcceptedPolicy(true);
 
         setMessages(prev => [
             ...prev,

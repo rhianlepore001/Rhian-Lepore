@@ -21,7 +21,9 @@ export const Register: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
-  const [userType, setUserType] = useState<UserType>((searchParams.get('type') as UserType) || 'barber');
+  const typeFromUrl = searchParams.get('type');
+  const validType: UserType = typeFromUrl === 'beauty' ? 'beauty' : 'barber';
+  const [userType, setUserType] = useState<UserType>(validType);
   const [region, setRegion] = useState<Region>('BR');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

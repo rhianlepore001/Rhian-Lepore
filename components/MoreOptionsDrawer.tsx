@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutDashboard, Settings, LogOut, X, User, Users } from 'lucide-react';
+import { LayoutDashboard, Settings, LogOut, X, User, Users, Calendar, Package, BarChart3, DollarSign, MessageSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -24,8 +24,17 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
 
     const menuItems = [
         { name: 'Início', icon: LayoutDashboard, path: '/' },
-        { name: 'Fila Digital', icon: Users, path: '/fila' },
-        ...(!isStaff ? [{ name: 'Ajustes', icon: Settings, path: '/configuracoes' }] : []),
+        { name: 'Agenda', icon: Calendar, path: '/agenda' },
+        { name: 'Clientes', icon: Users, path: '/clientes' },
+        ...(isStaff
+            ? [{ name: 'Meus Insights', icon: BarChart3, path: '/meus-insights' }]
+            : [
+                  { name: 'Financeiro', icon: DollarSign, path: '/financeiro' },
+                  { name: 'Marketing', icon: MessageSquare, path: '/marketing' },
+                  { name: 'Produtos', icon: Package, path: '/produtos' },
+                  { name: 'Fila Digital', icon: Users, path: '/fila' },
+                  { name: 'Ajustes', icon: Settings, path: '/configuracoes' },
+              ]),
     ];
 
     const handleNavigate = (path: string) => {

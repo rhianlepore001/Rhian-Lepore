@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LucideIcon, LayoutDashboard, Calendar, Users, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert } from 'lucide-react';
+import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/', ownerOnly: false },
@@ -25,6 +25,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Equipe', path: '/configuracoes/equipe', icon: Users },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
   { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
+  { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell },
   { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
   { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield },
   { label: 'Preview UI', path: '/configuracoes/ui-preview', icon: ClipboardList, devOnly: true },

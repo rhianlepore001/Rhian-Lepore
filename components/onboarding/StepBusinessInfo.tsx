@@ -93,5 +93,5 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor })
     );
 };
 
-// Compatibilidade retroativa: StepBusinessInfo exportado para rota legada /onboarding-wizard
+// Alias retroativo: rota legada /onboarding-wizard referenciava este nome
 export { StepWelcome as StepBusinessInfo };

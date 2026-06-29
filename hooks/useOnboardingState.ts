@@ -6,7 +6,7 @@ import {
   completeOnboardingProgress,
 } from '@/services/onboarding';
 
-export type OnboardingStep = 1 | 2 | 3 | 4 | 5;
+export type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 interface UseOnboardingStateReturn {
   step: OnboardingStep;
@@ -58,7 +58,7 @@ export const useOnboardingState = (): UseOnboardingStateReturn => {
   const isCompleted = progress?.completed ?? false;
 
   return {
-    step: Math.min(Math.max(currentStep, 1), 5) as OnboardingStep,
+    step: Math.min(Math.max(currentStep, 1), 6) as OnboardingStep,
     loading: isLoading,
     completed: isCompleted,
     goToStep: (nextStep) => goToStepMutation.mutateAsync(nextStep),

@@ -6,10 +6,11 @@ import { OnboardingLayout } from '../components/OnboardingLayout';
 import { StepBusinessInfo } from '../components/onboarding/StepBusinessInfo';
 import { StepServices } from '../components/onboarding/StepServices';
 import { StepTeam } from '../components/onboarding/StepTeam';
+import { StepBusinessHours } from '../components/onboarding/StepBusinessHours';
 import { StepMonthlyGoal } from '../components/onboarding/StepMonthlyGoal';
 import { StepSuccess } from '../components/onboarding/StepSuccess';
 
-const TOTAL_STEPS = 5; // 4 etapas + tela de sucesso
+const TOTAL_STEPS = 6; // 5 etapas + tela de sucesso (welcome, services, team, hours, goal, success)
 
 export const OnboardingWizard: React.FC = () => {
     const { isBeauty, colors } = useBrutalTheme();
@@ -69,13 +70,24 @@ export const OnboardingWizard: React.FC = () => {
             ),
         },
         {
+            title: 'Horário de Funcionamento',
+            description: 'Quando você atende? Configure para o cliente ver no link público.',
+            component: (
+                <StepBusinessHours
+                    onNext={() => goToStep(5 as OnboardingStep)}
+                    onBack={() => goToStep(3 as OnboardingStep)}
+                    accentColor={accentColor}
+                />
+            ),
+        },
+        {
             title: 'Sua Meta',
             description: 'Defina quanto quer faturar este mês — acompanhe seu progresso no painel.',
             component: (
                 <StepMonthlyGoal
-                    onNext={() => goToStep(5 as OnboardingStep)}
-                    onBack={() => goToStep(3 as OnboardingStep)}
-                    onSkip={() => goToStep(5 as OnboardingStep)}
+                    onNext={() => goToStep(6 as OnboardingStep)}
+                    onBack={() => goToStep(4 as OnboardingStep)}
+                    onSkip={() => goToStep(6 as OnboardingStep)}
                     accentColor={accentColor}
                 />
             ),

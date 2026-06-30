@@ -1,357 +1,466 @@
-import { Card, Button } from '../../components/ui';
-import React, { useState, useEffect } from 'react';
-
-
-import { SettingsLayout } from '../../components/SettingsLayout';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Shield, Download, Filter, Calendar,
-    User, Activity, RefreshCw, ChevronDown,
-    ChevronUp, Eye, FileText, Clock
+  ShieldAlert, RefreshCw, Plus, Cpu, User, Wrench,
+  ChevronDown, ChevronUp, Image as ImageIcon, Loader2, AlertCircle,
+  CheckCircle2, Clock, RotateCcw, Trash2, Eraser,
 } from 'lucide-react';
-import {
-    AuditLog,
-    getAuditLogs,
-    formatAction,
-    formatResourceType,
-    downloadLogsAsCSV,
-    calculateDiff
-} from '../../lib/auditLogs';
+import { SettingsLayout } from '../../components/SettingsLayout';
+import { AddAuditEntryModal } from '../../components/AddAuditEntryModal';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useToast } from '../../components/ui';
+import { supabase } from '../../lib/supabase';
+import {
+  listAuditEntries,
+  getBugScreenshotUrl,
+  updateAuditStatus,
+  deleteAuditEntry,
+  deleteResolvedAuditEntries,
+  statusGroup,
+  type AuditEntry,
+  type AuditSource,
+  type AuditStatusGroup,
+} from '../../lib/bugReport';
+
+type SourceFilter = 'all' | AuditSource;
+type LevelFilter = 'all' | 1 | 2 | 3 | 4 | 5;
+type StatusFilter = 'all' | AuditStatusGroup;
+
+const SOURCE_META: Record<AuditSource, { label: string; icon: React.ElementType }> = {
+  auto: { label: 'Automático', icon: Cpu },
+  user: { label: 'Usuário', icon: User },
+  admin: { label: 'Adm', icon: Wrench },
+};
+
+const SOURCE_TABS: Array<{ value: SourceFilter; label: string }> = [
+  { value: 'all', label: 'Todos' },
+  { value: 'auto', label: '🤖 Automático' },
+  { value: 'user', label: '🙋 Usuário' },
+  { value: 'admin', label: '🛠️ Adm' },
+];
+
+const STATUS_TABS: Array<{ value: StatusFilter; label: string }> = [
+  { value: 'all', label: 'Todos' },
+  { value: 'open', label: 'Aberto' },
+  { value: 'progress', label: '🟡 Em andamento' },
+  { value: 'done', label: '🟢 Resolvido' },
+];
+
+interface StatusMeta {
+  label: string;
+  badge: string;
+  stripe: string;
+  icon: React.ElementType;
+}
+
+/** Cor/etiqueta por estado: verde resolvido, amarelo em andamento, neutro aberto. */
+function statusMeta(group: AuditStatusGroup): StatusMeta {
+  switch (group) {
+    case 'done':
+      return {
+        label: 'Resolvido',
+        badge: 'bg-[var(--color-success-bg)] text-[var(--color-success)] border-[var(--color-success-border)]',
+        stripe: 'border-l-4 border-l-[var(--color-success)]',
+        icon: CheckCircle2,
+      };
+    case 'progress':
+      return {
+        label: 'Em andamento',
+        badge: 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)]',
+        stripe: 'border-l-4 border-l-[var(--color-warning)]',
+        icon: Clock,
+      };
+    default:
+      return {
+        label: 'Aberto',
+        badge: 'bg-[var(--color-card-hover)] text-theme-textSecondary border-[var(--color-divider)]',
+        stripe: '',
+        icon: AlertCircle,
+      };
+  }
+}
+
+/** Cor da etiqueta de gravidade (1 leve → 5 crítico). */
+function levelClasses(level: number | null): string {
+  switch (level) {
+    case 5: return 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger-border)]';
+    case 4: return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+    case 3: return 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)]';
+    case 2: return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+    case 1: return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+    default: return 'bg-[var(--color-card-hover)] text-theme-textSecondary border-[var(--color-divider)]';
+  }
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+  } catch {
+    return iso;
+  }
+}
 
 export const AuditLogs: React.FC = () => {
-    const [logs, setLogs] = useState<AuditLog[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [expandedLog, setExpandedLog] = useState<string | null>(null);
+  const { colors, accent, radius, classes } = useBrutalTheme();
+  const { showToast } = useToast();
 
-    // Filtros
-    const [actionFilter, setActionFilter] = useState<string>('');
-    const [resourceFilter, setResourceFilter] = useState<string>('');
-    const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-        start: '',
-        end: ''
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [shots, setShots] = useState<Record<string, string | null>>({});
+  const [showAdd, setShowAdd] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingClear, setPendingClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  const resolvedCount = entries.filter((e) => statusGroup(e.status) === 'done').length;
+
+  const loadEntries = useCallback(async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    const { entries: data, error } = await listAuditEntries({
+      supabase,
+      source: sourceFilter === 'all' ? undefined : sourceFilter,
+      level: levelFilter === 'all' ? undefined : levelFilter,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      limit: 100,
     });
+    if (error) setErrorMsg(error);
+    setEntries(data);
+    setLoading(false);
+  }, [sourceFilter, levelFilter, statusFilter]);
 
-    const { accent } = useBrutalTheme();
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
 
-    useEffect(() => {
-        loadLogs();
-    }, []);
+  const toggleExpand = useCallback(async (entry: AuditEntry) => {
+    const next = expandedId === entry.id ? null : entry.id;
+    setExpandedId(next);
+    if (next && entry.screenshot_url && shots[entry.id] === undefined) {
+      const url = await getBugScreenshotUrl(supabase, entry.screenshot_url);
+      setShots((prev) => ({ ...prev, [entry.id]: url }));
+    }
+  }, [expandedId, shots]);
 
-    const loadLogs = async () => {
-        setLoading(true);
-        try {
-            const data = await getAuditLogs({
-                action: actionFilter || undefined,
-                resource_type: resourceFilter || undefined,
-                start_date: dateRange.start || undefined,
-                end_date: dateRange.end || undefined,
-                limit: 100
-            });
-            setLogs(data);
-        } catch (error) {
-            console.error('Erro ao carregar logs:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleExport = () => {
-        downloadLogsAsCSV(logs, `audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
-    };
-
-    const toggleLogDetails = (logId: string) => {
-        setExpandedLog(expandedLog === logId ? null : logId);
-    };
-
-    const getActionColor = (action: string) => {
-        const colorMap: Record<string, string> = {
-            'CREATE': 'text-green-500',
-            'UPDATE': 'text-blue-500',
-            'DELETE': 'text-red-500',
-            'LOGIN': 'text-purple-500',
-            'LOGOUT': 'text-gray-500',
-            'LOGIN_FAILED': 'text-orange-500'
-        };
-        return colorMap[action] || 'text-neutral-400';
-    };
-
-    const getActionIcon = (action: string) => {
-        switch (action) {
-            case 'LOGIN':
-            case 'LOGOUT':
-                return <User className="w-4 h-4" />;
-            case 'CREATE':
-            case 'UPDATE':
-            case 'DELETE':
-                return <FileText className="w-4 h-4" />;
-            default:
-                return <Activity className="w-4 h-4" />;
-        }
-    };
-
-    return (
-        <SettingsLayout>
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-white/10 pb-4">
-                    <div>
-                        <h2 className="text-2xl md:text-4xl font-heading text-white uppercase flex items-center gap-3">
-                            <Shield className={`w-8 h-8 ${accent.text}`} />
-                            Logs de Auditoria
-                        </h2>
-                        <p className="text-text-secondary font-mono mt-2 text-sm">
-                            Rastreamento completo de todas as ações no sistema
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            icon={<RefreshCw />}
-                            onClick={loadLogs}
-                            disabled={loading}
-                        >
-                            Atualizar
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            icon={<Download />}
-                            onClick={handleExport}
-                            disabled={logs.length === 0}
-                        >
-                            Exportar CSV
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Filtros */}
-                <Card>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Filter className="w-5 h-5 text-neutral-400" />
-                        <h3 className="text-white font-bold">Filtros</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label className="block text-sm text-neutral-400 mb-2">Ação</label>
-                            <select
-                                value={actionFilter}
-                                onChange={(e) => setActionFilter(e.target.value)}
-                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-white/30"
-                            >
-                                <option value="">Todas</option>
-                                <option value="CREATE">Criar</option>
-                                <option value="UPDATE">Atualizar</option>
-                                <option value="DELETE">Deletar</option>
-                                <option value="LOGIN">Login</option>
-                                <option value="LOGOUT">Logout</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-neutral-400 mb-2">Recurso</label>
-                            <select
-                                value={resourceFilter}
-                                onChange={(e) => setResourceFilter(e.target.value)}
-                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-white/30"
-                            >
-                                <option value="">Todos</option>
-                                <option value="appointments">Agendamentos</option>
-                                <option value="clients">Clientes</option>
-                                <option value="financial_records">Financeiro</option>
-                                <option value="services">Serviços</option>
-                                <option value="team_members">Equipe</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-neutral-400 mb-2">Data Início</label>
-                            <input
-                                type="date"
-                                value={dateRange.start}
-                                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-white/30"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm text-neutral-400 mb-2">Data Fim</label>
-                            <input
-                                type="date"
-                                value={dateRange.end}
-                                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-white/30"
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={loadLogs}
-                        >
-                            Aplicar Filtros
-                        </Button>
-                    </div>
-                </Card>
-
-                {/* Lista de Logs */}
-                <Card noPadding>
-                    {loading ? (
-                        <div className="p-8 text-center">
-                            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-neutral-400 mb-2" />
-                            <p className="text-neutral-400">Carregando logs...</p>
-                        </div>
-                    ) : logs.length === 0 ? (
-                        <div className="p-8 text-center">
-                            <Activity className="w-12 h-12 mx-auto text-neutral-600 mb-2" />
-                            <p className="text-neutral-400">Nenhum log encontrado</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-neutral-800">
-                            {logs.map((log) => {
-                                const isExpanded = expandedLog === log.id;
-                                const diff = calculateDiff(log.old_values, log.new_values);
-
-                                return (
-                                    <div key={log.id} className="hover:bg-white/5 transition-colors">
-                                        <div
-                                            className="p-4 cursor-pointer"
-                                            onClick={() => toggleLogDetails(log.id)}
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-start gap-3 flex-1">
-                                                    <div className={`p-2 rounded-lg bg-neutral-800 ${getActionColor(log.action)}`}>
-                                                        {getActionIcon(log.action)}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`font-bold ${getActionColor(log.action)}`}>
-                                                                {formatAction(log.action)}
-                                                            </span>
-                                                            <span className="text-neutral-400">•</span>
-                                                            <span className="text-white">
-                                                                {formatResourceType(log.resource_type)}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-                                                            <span className="flex items-center gap-1">
-                                                                <User className="w-3 h-3" />
-                                                                {log.user_name || 'Sistema'}
-                                                            </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="w-3 h-3" />
-                                                                {new Date(log.created_at).toLocaleString('pt-BR')}
-                                                            </span>
-                                                            {log.resource_id && (
-                                                                <span className="font-mono">
-                                                                    ID: {log.resource_id.substring(0, 8)}...
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button className="p-2 hover:bg-neutral-800 rounded-lg transition-colors">
-                                                    {isExpanded ? (
-                                                        <ChevronUp className="w-4 h-4 text-neutral-400" />
-                                                    ) : (
-                                                        <ChevronDown className="w-4 h-4 text-neutral-400" />
-                                                    )}
-                                                </button>
-                                            </div>
-
-                                            {/* Detalhes Expandidos */}
-                                            {isExpanded && (
-                                                <div className="mt-4 pl-12 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                                                    {diff.length > 0 && (
-                                                        <div className="p-3 bg-neutral-900 rounded-lg">
-                                                            <h4 className="text-xs font-bold text-neutral-400 uppercase mb-2">
-                                                                Mudanças
-                                                            </h4>
-                                                            <div className="space-y-2">
-                                                                {diff.map((change, idx) => (
-                                                                    <div key={idx} className="text-sm">
-                                                                        <span className="text-neutral-500 font-mono">
-                                                                            {change.field}:
-                                                                        </span>
-                                                                        <div className="flex gap-2 mt-1">
-                                                                            <div className="flex-1 bg-red-500/10 border border-red-500/30 rounded px-2 py-1">
-                                                                                <span className="text-red-400 text-xs">Antes: </span>
-                                                                                <span className="text-white text-xs">
-                                                                                    {JSON.stringify(change.old)}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="flex-1 bg-green-500/10 border border-green-500/30 rounded px-2 py-1">
-                                                                                <span className="text-green-400 text-xs">Depois: </span>
-                                                                                <span className="text-white text-xs">
-                                                                                    {JSON.stringify(change.new)}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {log.metadata && Object.keys(log.metadata).length > 0 && (
-                                                        <div className="p-3 bg-neutral-900 rounded-lg">
-                                                            <h4 className="text-xs font-bold text-neutral-400 uppercase mb-2">
-                                                                Metadados
-                                                            </h4>
-                                                            <pre className="text-xs text-neutral-300 font-mono overflow-x-auto">
-                                                                {JSON.stringify(log.metadata, null, 2)}
-                                                            </pre>
-                                                        </div>
-                                                    )}
-
-                                                    {(log.ip_address || log.user_agent) && (
-                                                        <div className="p-3 bg-neutral-900 rounded-lg">
-                                                            <h4 className="text-xs font-bold text-neutral-400 uppercase mb-2">
-                                                                Informações Técnicas
-                                                            </h4>
-                                                            {log.ip_address && (
-                                                                <p className="text-xs text-neutral-300">
-                                                                    <span className="text-neutral-500">IP:</span> {log.ip_address}
-                                                                </p>
-                                                            )}
-                                                            {log.user_agent && (
-                                                                <p className="text-xs text-neutral-300 mt-1">
-                                                                    <span className="text-neutral-500">User Agent:</span>{' '}
-                                                                    {log.user_agent.substring(0, 100)}...
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </Card>
-
-                {/* Rodapé com Estatísticas */}
-                {logs.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card className="text-center">
-                            <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Total de Eventos</p>
-                            <p className={`text-3xl font-bold ${accent.text}`}>{logs.length}</p>
-                        </Card>
-                        <Card className="text-center">
-                            <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Período</p>
-                            <p className="text-white text-sm font-mono">
-                                {logs.length > 0 && new Date(logs[logs.length - 1].created_at).toLocaleDateString('pt-BR')}
-                                {' - '}
-                                {logs.length > 0 && new Date(logs[0].created_at).toLocaleDateString('pt-BR')}
-                            </p>
-                        </Card>
-                        <Card className="text-center">
-                            <p className="text-neutral-400 text-sm uppercase tracking-wider mb-1">Retenção</p>
-                            <p className="text-white text-sm">180 dias</p>
-                        </Card>
-                    </div>
-                )}
-            </div>
-        </SettingsLayout>
+  const handleSetStatus = useCallback(async (entry: AuditEntry, status: 'new' | 'in_progress' | 'fixed') => {
+    setBusyId(entry.id);
+    const { error } = await updateAuditStatus(supabase, entry.id, status);
+    setBusyId(null);
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
+    showToast(
+      status === 'fixed' ? 'Marcado como resolvido.' : status === 'in_progress' ? 'Marcado como em andamento.' : 'Reaberto.',
+      'success'
     );
+    loadEntries();
+  }, [showToast, loadEntries]);
+
+  const handleDelete = useCallback(async (entry: AuditEntry) => {
+    setBusyId(entry.id);
+    const { error } = await deleteAuditEntry(supabase, entry.id, entry.screenshot_url);
+    setBusyId(null);
+    setPendingDeleteId(null);
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
+    showToast('Problema removido.', 'success');
+    loadEntries();
+  }, [showToast, loadEntries]);
+
+  const handleClearResolved = useCallback(async () => {
+    setClearing(true);
+    const { count, error } = await deleteResolvedAuditEntries(supabase);
+    setClearing(false);
+    setPendingClear(false);
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
+    showToast(count > 0 ? `${count} resolvido(s) apagado(s).` : 'Nenhum resolvido para limpar.', 'success');
+    loadEntries();
+  }, [showToast, loadEntries]);
+
+  const actionBtn = 'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-40';
+
+  return (
+    <SettingsLayout>
+      <div className="space-y-5">
+        {/* Cabeçalho */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className={`text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2 ${colors.text}`}>
+              <ShieldAlert className={`w-6 h-6 ${accent.text}`} />
+              Auditoria
+            </h1>
+            <p className={`text-xs md:text-sm mt-1 ${colors.textMuted}`}>
+              Erros automáticos, problemas reportados e os que você registra manualmente — tudo num lugar só.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadEntries}
+              className={[classes.buttonSecondary, 'inline-flex items-center justify-center px-3 py-2'].join(' ')}
+              aria-label="Atualizar"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => setShowAdd(true)}
+              className={[classes.buttonPrimary, 'inline-flex items-center gap-2 px-3 py-2 text-sm'].join(' ')}
+            >
+              <Plus className="w-4 h-4" /> Adicionar problema
+            </button>
+          </div>
+        </div>
+
+        {/* Limpar resolvidos */}
+        {resolvedCount > 0 && (
+          pendingClear ? (
+            <div className={`flex flex-wrap items-center gap-2 p-2.5 ${radius.card} ${colors.card} ${colors.border} border`}>
+              <span className={`text-xs ${colors.textSecondary}`}>Apagar os {resolvedCount} resolvido(s) de forma permanente?</span>
+              <div className="flex gap-2 ml-auto">
+                <button onClick={handleClearResolved} disabled={clearing} className={`${actionBtn} bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger-border)]`}>
+                  {clearing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Sim, apagar
+                </button>
+                <button onClick={() => setPendingClear(false)} disabled={clearing} className={`${actionBtn} ${colors.border} ${colors.textSecondary}`}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setPendingClear(true)}
+              className={`${actionBtn} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`}
+            >
+              <Eraser className="w-3.5 h-3.5" /> Limpar resolvidos ({resolvedCount})
+            </button>
+          )
+        )}
+
+        {/* Filtros: origem */}
+        <div className="flex flex-wrap items-center gap-2">
+          {SOURCE_TABS.map((tab) => {
+            const active = sourceFilter === tab.value;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setSourceFilter(tab.value)}
+                className={[
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  active ? `${accent.bg} ${accent.border} text-[var(--color-bg)]` : `${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Filtros: estado + gravidade */}
+        <div className="flex flex-wrap items-center gap-2">
+          {STATUS_TABS.map((tab) => {
+            const active = statusFilter === tab.value;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setStatusFilter(tab.value)}
+                className={[
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  active ? `${accent.bg} ${accent.border} text-[var(--color-bg)]` : `${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+          <span className={`mx-1 ${colors.textMuted}`}>·</span>
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value === 'all' ? 'all' : Number(e.target.value) as LevelFilter)}
+            className={[classes.input, 'w-auto py-1.5 text-xs'].join(' ')}
+            aria-label="Filtrar por gravidade"
+          >
+            <option value="all">Todas as gravidades</option>
+            <option value="5">Nível 5 — Crítico</option>
+            <option value="4">Nível 4 — Fluxo interrompido</option>
+            <option value="3">Nível 3 — Erro de dados</option>
+            <option value="2">Nível 2 — Componente quebrado</option>
+            <option value="1">Nível 1 — Cosmético</option>
+          </select>
+        </div>
+
+        {/* Estado de erro */}
+        {errorMsg && (
+          <div className={`flex items-start gap-2 p-3 ${radius.card} ${classes.error}`}>
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>Não consegui carregar a auditoria: {errorMsg}</span>
+          </div>
+        )}
+
+        {/* Lista */}
+        {loading ? (
+          <div className={`flex items-center justify-center gap-2 py-16 ${colors.textMuted}`}>
+            <Loader2 className="w-5 h-5 animate-spin" /> Carregando…
+          </div>
+        ) : entries.length === 0 ? (
+          <div className={`flex flex-col items-center justify-center gap-2 py-16 text-center ${colors.textMuted}`}>
+            <ShieldAlert className="w-10 h-10 opacity-40" />
+            <p className="text-sm">Nenhum problema registrado por aqui. 🎉</p>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {entries.map((entry) => {
+              const SourceIcon = SOURCE_META[entry.source].icon;
+              const group = statusGroup(entry.status);
+              const sMeta = statusMeta(group);
+              const StatusIcon = sMeta.icon;
+              const expanded = expandedId === entry.id;
+              const shot = shots[entry.id];
+              const busy = busyId === entry.id;
+              return (
+                <li key={entry.id} className={[colors.card, colors.border, 'border', radius.card, 'overflow-hidden', sMeta.stripe].join(' ')}>
+                  <button
+                    onClick={() => toggleExpand(entry)}
+                    className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[var(--color-card-hover)] transition-colors"
+                    aria-expanded={expanded}
+                  >
+                    <span className={`inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-lg ${colors.surface} ${colors.textSecondary}`}>
+                      <SourceIcon className="w-4 h-4" />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="flex items-center gap-2 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${sMeta.badge}`}>
+                          <StatusIcon className="w-3 h-3" /> {sMeta.label}
+                        </span>
+                        <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${levelClasses(entry.level)}`}>
+                          {entry.level ? `N${entry.level}` : '—'}
+                        </span>
+                        <span className={`text-[10px] uppercase tracking-wide ${colors.textMuted}`}>
+                          {SOURCE_META[entry.source].label}
+                        </span>
+                        {entry.occurrences && entry.occurrences > 1 && (
+                          <span className={`text-[10px] ${colors.textMuted}`}>×{entry.occurrences}</span>
+                        )}
+                        {entry.screenshot_url && <ImageIcon className={`w-3 h-3 ${colors.textMuted}`} />}
+                      </span>
+                      <span className={`block text-sm font-medium truncate mt-0.5 ${colors.text}`}>{entry.title}</span>
+                      <span className={`block text-[11px] truncate ${colors.textMuted}`}>
+                        {entry.category ?? 'other'} · {entry.context?.route || '—'} · {formatDate(entry.last_seen_at ?? entry.created_at)}
+                      </span>
+                    </span>
+                    <span className={`shrink-0 ${colors.textMuted}`}>
+                      {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </span>
+                  </button>
+
+                  {expanded && (
+                    <div className={`px-4 pb-4 pt-1 border-t ${colors.divider} space-y-3`}>
+                      {entry.description && (
+                        <p className={`text-xs whitespace-pre-wrap break-words ${colors.textSecondary}`}>{entry.description}</p>
+                      )}
+
+                      {entry.context && (
+                        <dl className={`grid grid-cols-2 gap-y-1.5 gap-x-3 ${colors.textMuted}`}>
+                          <Ctx label="Rota" value={entry.context.route || '—'} />
+                          <Ctx label="Tela" value={`${entry.context.viewportWidth}×${entry.context.viewportHeight}`} />
+                          <Ctx label="Tema" value={`${entry.context.theme ?? '—'}/${entry.context.mode ?? '—'}`} />
+                          <Ctx label="Quando" value={formatDate(entry.created_at)} />
+                        </dl>
+                      )}
+
+                      {entry.context?.consoleErrors && entry.context.consoleErrors.length > 0 && (
+                        <pre className={`text-[10px] font-mono whitespace-pre-wrap break-words p-2 ${radius.input} ${colors.surface} ${colors.textMuted} max-h-40 overflow-auto`}>
+                          {entry.context.consoleErrors.join('\n')}
+                        </pre>
+                      )}
+
+                      {entry.triage_summary && (
+                        <div className={`text-xs p-2 ${radius.input} ${accent.bgDim} ${colors.textSecondary}`}>
+                          <strong className={accent.text}>Triagem:</strong> {entry.triage_summary}
+                        </div>
+                      )}
+
+                      {entry.screenshot_url && (
+                        shot === undefined ? (
+                          <div className={`flex items-center gap-2 text-xs ${colors.textMuted}`}>
+                            <Loader2 className="w-4 h-4 animate-spin" /> Carregando imagem…
+                          </div>
+                        ) : shot ? (
+                          <a href={shot} target="_blank" rel="noopener noreferrer" className="block">
+                            <img src={shot} alt="Imagem do problema" className={`w-full max-h-72 object-contain ${radius.input} border ${colors.border} bg-black/20`} />
+                          </a>
+                        ) : (
+                          <span className={`text-xs ${colors.textMuted}`}>Não consegui carregar a imagem.</span>
+                        )
+                      )}
+
+                      {/* Ações */}
+                      <div className={`flex flex-wrap items-center gap-2 pt-1`}>
+                        {group !== 'progress' && group !== 'done' && (
+                          <button onClick={() => handleSetStatus(entry, 'in_progress')} disabled={busy} className={`${actionBtn} ${colors.border} text-[var(--color-warning)]`}>
+                            <Clock className="w-3.5 h-3.5" /> Em andamento
+                          </button>
+                        )}
+                        {group !== 'done' && (
+                          <button onClick={() => handleSetStatus(entry, 'fixed')} disabled={busy} className={`${actionBtn} border-[var(--color-success-border)] text-[var(--color-success)] bg-[var(--color-success-bg)]`}>
+                            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />} Resolver
+                          </button>
+                        )}
+                        {group !== 'open' && (
+                          <button onClick={() => handleSetStatus(entry, 'new')} disabled={busy} className={`${actionBtn} ${colors.border} ${colors.textSecondary}`}>
+                            <RotateCcw className="w-3.5 h-3.5" /> Reabrir
+                          </button>
+                        )}
+
+                        {pendingDeleteId === entry.id ? (
+                          <span className="flex items-center gap-2 ml-auto">
+                            <span className={`text-[11px] ${colors.textMuted}`}>Apagar?</span>
+                            <button onClick={() => handleDelete(entry)} disabled={busy} className={`${actionBtn} bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger-border)]`}>
+                              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Sim
+                            </button>
+                            <button onClick={() => setPendingDeleteId(null)} disabled={busy} className={`${actionBtn} ${colors.border} ${colors.textSecondary}`}>
+                              Não
+                            </button>
+                          </span>
+                        ) : (
+                          <button onClick={() => setPendingDeleteId(entry.id)} disabled={busy} className={`${actionBtn} ml-auto ${colors.border} text-[var(--color-danger)]`}>
+                            <Trash2 className="w-3.5 h-3.5" /> Remover
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {showAdd && (
+        <AddAuditEntryModal
+          onClose={() => setShowAdd(false)}
+          onCreated={loadEntries}
+        />
+      )}
+    </SettingsLayout>
+  );
 };
+
+const Ctx: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <div className="min-w-0">
+    <dt className="text-[9px] uppercase tracking-wide opacity-70">{label}</dt>
+    <dd className="text-[11px] font-mono break-words">{value}</dd>
+  </div>
+);

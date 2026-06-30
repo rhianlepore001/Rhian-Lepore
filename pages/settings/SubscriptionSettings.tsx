@@ -8,17 +8,6 @@ import { useSubscription } from '../../hooks/useSubscription';
 
 import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-
-if (!stripePublishableKey) {
-    throw new Error(
-        'VITE_STRIPE_PUBLISHABLE_KEY é obrigatória. Configure-a no arquivo .env.local.'
-    );
-}
-
-const stripePromise = loadStripe(stripePublishableKey);
 
 export const SubscriptionSettings: React.FC = () => {
     const { businessName, region } = useAuth();

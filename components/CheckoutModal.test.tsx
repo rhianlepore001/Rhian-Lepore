@@ -184,7 +184,9 @@ describe('CheckoutModal', () => {
     await waitFor(() => {
       expect(showToastMock).toHaveBeenCalledWith('Erro ao concluir atendimento. Tente novamente.', 'error');
     });
-    expect(supabase.from).not.toHaveBeenCalled();
+    // Sprint D+1: useSubscriptionDiscount faz query em 'services' para mapear preços
+    // (não relacionado ao fluxo de checkout do appointment em si)
+    expect(supabase.from).not.toHaveBeenCalledWith('appointments');
     expect(defaultProps.onConfirm).not.toHaveBeenCalled();
   });
 });

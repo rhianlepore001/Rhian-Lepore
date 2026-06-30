@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Check, X, MessageCircle, Search, Crown, Calendar, CreditCard, ChevronRight } from 'lucide-react';
+import { Users, Check, X, MessageCircle, Search, Crown, Calendar, ChevronRight, Zap } from 'lucide-react';
 import { Card } from '../components/ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
@@ -10,8 +10,11 @@ import {
     useConfirmMembershipPayment,
     useCancelMembership,
     useMembershipStats,
+    usePixPaymentByMembership,
+    useSimulatePixPaid,
 } from '../hooks/useMemberships';
 import { MembershipBadge } from '../components/membership/MembershipBadge';
+import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
 import { formatCurrency } from '../utils/formatters';
 
@@ -244,6 +247,9 @@ export const MembersList: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
+                                {m.status === 'pending' && m.payment_method === 'pix' && (
+                                    <PixActions membershipId={m.id} />
+                                )}
                             </Card>
                         );
                     })}

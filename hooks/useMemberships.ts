@@ -14,6 +14,10 @@ import {
     fetchBusinessPixConfig,
     updateBusinessPixConfig,
     fetchMembershipStats,
+    fetchPixPaymentByMembership,
+    simulatePixPaid,
+    cancelPixPayment,
+    createPixPayment,
     UpsertMembershipPlanInput,
     CreateMembershipInput,
     UpdateBusinessPixInput,
@@ -22,6 +26,7 @@ import {
     MembershipWithPlan,
     MembershipPayment,
     MembershipStatus,
+    PixPayment,
 } from '../services/memberships';
 
 const KEYS = {
@@ -32,6 +37,7 @@ const KEYS = {
     payments: (companyId: string, membershipId: string) => ['membership-payments', companyId, membershipId] as const,
     pixConfig: (companyId: string) => ['business-pix-config', companyId] as const,
     stats: (companyId: string) => ['membership-stats', companyId] as const,
+    pixPayment: (companyId: string, membershipId: string) => ['pix-payment', companyId, membershipId] as const,
 };
 
 export function useMembershipPlans() {
@@ -168,6 +174,57 @@ export function useMembershipStats() {
         queryKey: KEYS.stats(companyId!),
         queryFn: () => fetchMembershipStats(companyId!),
         enabled: !!companyId,
+    });
+}
+
+// =============================================================================
+// Sprint D+1: Hooks de Pix
+// =============================================================================
+
+export function usePixPaymentByMembership(membershipId: string | null) {
+    const { companyId } = useAuth();
+    return useQuery({
+        queryKey: KEYS.pixPayment(companyId!, membershipId ?? ''),
+        queryFn: () => fetchPixPaymentByMembership(companyId!, membershipId!),
+        enabled: !!companyId && !!membershipId,
+    });
+}
+
+export function useCreatePixPayment() {
+    const { companyId } = useAuth();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (input: Parameters<typeof createPixPayment>[1]) =>
+            createPixPayment(companyId!, input),
+        onSuccess: (_data, vars) => {
+            qc.invalidateQueries({ queryKey: KEYS.pixPayment(companyId!, vars.membership_id) });
+        },
+    });
+}
+
+export function useSimulatePixPaid() {
+    const { companyId } = useAuth();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (input: { pixPaymentId: string; membershipId: string; confirmedByUserId: string }) =>
+            simulatePixPaid(companyId!, input),
+        onSuccess: (_data, vars) => {
+            qc.invalidateQueries({ queryKey: KEYS.memberships(companyId!) });
+            qc.invalidateQueries({ queryKey: KEYS.pixPayment(companyId!, vars.membershipId) });
+            qc.invalidateQueries({ queryKey: KEYS.stats(companyId!) });
+        },
+    });
+}
+
+export function useCancelPixPayment() {
+    const { companyId } = useAuth();
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ pixPaymentId, membershipId }: { pixPaymentId: string; membershipId: string }) =>
+            cancelPixPayment(companyId!, pixPaymentId),
+        onSuccess: (_data, vars) => {
+            qc.invalidateQueries({ queryKey: KEYS.pixPayment(companyId!, vars.membershipId) });
+        },
     });
 }
 

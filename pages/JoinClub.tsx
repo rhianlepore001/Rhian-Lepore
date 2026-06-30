@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, MessageCircle, Store, ArrowRight, Crown } from 'lucide-react';
-import { useActiveMembershipPlans, useBusinessPixConfig } from '../hooks/useMemberships';
+import { Check, MessageCircle, Store, ArrowRight, Crown, Zap } from 'lucide-react';
+import { useActiveMembershipPlans, useBusinessPixConfig, useCreateMembershipRequest, useCreatePixPayment } from '../hooks/useMemberships';
 import { useBusinessProfileBySlug } from '../hooks/usePublicBooking';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
 import { PlanCard } from '../components/membership/PlanCard';
 import { PixDisplay } from '../components/membership/PixDisplay';
 import { MembershipPlan } from '../services/memberships';
+import { generatePixPayload } from '../lib/pix-generator';
+import { generatePixTxid } from '../lib/pix-txid';
 import { supabase } from '../lib/supabase';
 
 export const JoinClub: React.FC = () => {
@@ -20,6 +22,8 @@ export const JoinClub: React.FC = () => {
     const businessId = (businessProfile as { id?: string } | null)?.id ?? null;
     const { data: plans, isLoading: plansLoading } = useActiveMembershipPlans();
     const { data: pixConfig, isLoading: pixLoading } = useBusinessPixConfig();
+    const createMembership = useCreateMembershipRequest();
+    const createPix = useCreatePixPayment();
 
     const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
     const [step, setStep] = useState<'choose' | 'pay' | 'confirmation'>('choose');
@@ -27,6 +31,7 @@ export const JoinClub: React.FC = () => {
     const [clientName, setClientName] = useState('');
     const [clientPhone, setClientPhone] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [pixBrCode, setPixBrCode] = useState<string | null>(null);
 
     const merchantName = pixConfig?.pix_holder_name || '';
     const merchantCity = pixConfig?.pix_merchant_city || 'SAO PAULO';
@@ -78,23 +83,39 @@ export const JoinClub: React.FC = () => {
                 clientId = newClient.id;
             }
 
-            // Create pending membership
-            const { error: msErr } = await supabase
-                .from('client_memberships')
-                .insert({
-                    user_id: businessId,
-                    client_id: clientId,
-                    plan_id: selectedPlan.id,
-                    status: 'pending',
-                    payment_method: paymentMethod,
-                    starts_at: new Date().toISOString(),
+            // Create pending membership (via hook)
+            const ms = await createMembership.mutateAsync({
+                client_id: clientId,
+                plan_id: selectedPlan.id,
+                payment_method: paymentMethod,
+            });
+
+            // Sprint D+1: Se escolheu Pix e barbeiro tem chave configurada, gera pix_payment
+            if (paymentMethod === 'pix' && pixReady) {
+                const txid = generatePixTxid('AGX');
+                const brCode = generatePixPayload({
+                    pixKey: pixConfig!.pix_key_value!,
+                    pixKeyType: pixConfig!.pix_key_type!,
+                    merchantName,
+                    merchantCity,
+                    amountCents: selectedPlan.price_cents,
+                    txid,
                 });
-            if (msErr) throw msErr;
+                const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+                await createPix.mutateAsync({
+                    membership_id: ms.id,
+                    amount_cents: selectedPlan.price_cents,
+                    br_code: brCode,
+                    txid,
+                    expires_at: expiresAt,
+                });
+                setPixBrCode(brCode);
+            }
 
             setStep('confirmation');
             showToast(
                 paymentMethod === 'pix'
-                    ? 'Solicitação criada! Aguarde a confirmação do barbeiro.'
+                    ? 'Solicitação criada! Pague o Pix para ativar.'
                     : 'Solicitação criada! Pague no balcão na próxima visita.',
                 'success'
             );
@@ -272,20 +293,32 @@ export const JoinClub: React.FC = () => {
                 )}
 
                 {step === 'confirmation' && selectedPlan && (
-                    <div className={`${colors.card} ${colors.border} border rounded-2xl p-8 text-center space-y-4`}>
-                        <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                            <Check className="w-8 h-8 text-green-400" />
+                    <div className="space-y-4">
+                        <div className={`${colors.card} ${colors.border} border rounded-2xl p-8 text-center space-y-4`}>
+                            <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
+                                <Check className="w-8 h-8 text-green-400" />
+                            </div>
+                            <h2 className={`text-2xl ${font.heading} text-white uppercase`}>
+                                Solicitação enviada!
+                            </h2>
+                            <p className="text-neutral-300 text-base max-w-md mx-auto">
+                                {paymentMethod === 'pix' ? (
+                                    <>Escaneie o QR Code abaixo. Seu plano será ativado em segundos após o pagamento.</>
+                                ) : (
+                                    <>Na próxima visita, pague no balcão. Seu plano será ativado após a confirmação.</>
+                                )}
+                            </p>
                         </div>
-                        <h2 className={`text-2xl ${font.heading} text-white uppercase`}>
-                            Solicitação enviada!
-                        </h2>
-                        <p className="text-neutral-300 text-base max-w-md mx-auto">
-                            {paymentMethod === 'pix' ? (
-                                <>O barbeiro vai confirmar seu pagamento e você receberá um aviso no WhatsApp.</>
-                            ) : (
-                                <>Na próxima visita, pague no balcão. Seu plano será ativado após a confirmação.</>
-                            )}
-                        </p>
+                        {paymentMethod === 'pix' && pixBrCode && pixConfig?.pix_key_value && (
+                            <PixDisplay
+                                pixKey={pixConfig.pix_key_value}
+                                pixKeyType={pixConfig.pix_key_type!}
+                                merchantName={merchantName}
+                                merchantCity={merchantCity}
+                                amountCents={selectedPlan.price_cents}
+                                description="Pague o valor com seu app. A confirmação chega em segundos."
+                            />
+                        )}
                     </div>
                 )}
             </div>

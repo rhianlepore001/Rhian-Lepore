@@ -1,11 +1,12 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Sparkles, Target, TrendingUp, X } from 'lucide-react';
+import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Crown, Sparkles, Target, TrendingUp, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { useMembershipStats } from '../hooks/useMemberships';
 import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
 import { SetupCopilot } from '../components/dashboard/SetupCopilot';
 import { StaffEarningsCard } from '../components/StaffEarningsCard';
@@ -91,7 +92,8 @@ export const Dashboard: React.FC = () => {
     actionItems,
   } = useDashboardData();
 
-  const { accent, colors, density, status, isBeauty } = useBrutalTheme();
+  const { accent, colors, density, font, status, isBeauty } = useBrutalTheme();
+  const { data: clubStats } = useMembershipStats();
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
   const firstName = fullName?.split(' ')[0] || 'Profissional';
   const todayLabel = formatDateLong(new Date(), currencyRegion);
@@ -186,6 +188,58 @@ export const Dashboard: React.FC = () => {
               </>
             )}
           </section>
+
+          {clubStats && (clubStats.totalActive > 0 || clubStats.totalPending > 0) && (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate('/clube/assinantes')}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/clube/assinantes')}
+              className={`${colors.card} ${colors.border} border rounded-2xl p-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform`}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-amber-600/10 flex items-center justify-center shrink-0">
+                  <Crown className="w-6 h-6 text-yellow-300" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <h3 className={`font-heading text-base font-bold ${colors.text} uppercase tracking-wide`}>
+                      Clube de Assinatura
+                    </h3>
+                    <span className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-wider`}>
+                      ver detalhes →
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-3">
+                    <div>
+                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                        Ativos
+                      </p>
+                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-green-400">
+                        {clubStats.totalActive}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                        Pendentes
+                      </p>
+                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-amber-400">
+                        {clubStats.totalPending}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                        MRR
+                      </p>
+                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-yellow-300">
+                        {formatCurrency(clubStats.monthlyRecurringRevenueCents / 100, currencyRegion)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <SetupCopilot />
 

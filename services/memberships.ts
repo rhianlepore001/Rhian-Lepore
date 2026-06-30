@@ -5,6 +5,23 @@ export type MembershipPaymentMethod = 'pix' | 'cash' | 'card' | 'in_person';
 export type MembershipPaymentStatus = 'pending' | 'confirmed' | 'failed';
 export type MembershipBadgeColor = 'gold' | 'silver' | 'bronze';
 export type PixKeyType = 'cpf' | 'cnpj' | 'phone' | 'email' | 'random';
+export type PixPaymentStatus = 'pending' | 'paid' | 'expired' | 'cancelled';
+
+export interface PixPayment {
+    id: string;
+    user_id: string;
+    membership_id: string;
+    amount_cents: number;
+    br_code: string;
+    txid: string;
+    status: PixPaymentStatus;
+    paid_at: string | null;
+    expires_at: string;
+    confirmed_at: string | null;
+    confirmed_by: string | null;
+    created_at: string;
+    updated_at: string;
+}
 
 export interface MembershipPlan {
     id: string;
@@ -295,6 +312,145 @@ export interface MembershipStats {
     totalPending: number;
     totalCancelled: number;
     monthlyRecurringRevenueCents: number;
+}
+
+// =============================================================================
+// Sprint D+1: Pagamentos Pix + Simulação de webhook
+// =============================================================================
+
+export interface CreatePixPaymentInput {
+    membership_id: string;
+    amount_cents: number;
+    br_code: string;
+    txid: string;
+    expires_at: string;
+}
+
+export async function createPixPayment(
+    companyId: string,
+    input: CreatePixPaymentInput
+): Promise<PixPayment> {
+    const { data, error } = await supabase
+        .from('pix_payments')
+        .insert({
+            user_id: companyId,
+            membership_id: input.membership_id,
+            amount_cents: input.amount_cents,
+            br_code: input.br_code,
+            txid: input.txid,
+            expires_at: input.expires_at,
+            status: 'pending',
+        })
+        .select('*')
+        .single();
+    if (error) throw error;
+    return data as PixPayment;
+}
+
+export async function fetchPixPaymentByMembership(
+    companyId: string,
+    membershipId: string
+): Promise<PixPayment | null> {
+    const { data, error } = await supabase
+        .from('pix_payments')
+        .select('*')
+        .eq('user_id', companyId)
+        .eq('membership_id', membershipId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+    if (error) throw error;
+    return (data ?? null) as PixPayment | null;
+}
+
+/**
+ * Simula a confirmação do Pix pelo banco (webhook real quando integrar PSP).
+ * Ativa a membership, gera o payment de membership e marca o pix como paid.
+ * Tudo em transação lógica (sem RPC — operations em sequência; se alguma falhar, o estado fica inconsistente,
+ * mas como é simulação, o barbeiro pode re-tentar).
+ */
+export interface SimulatePixPaidInput {
+    pixPaymentId: string;
+    membershipId: string;
+    confirmedByUserId: string;
+}
+
+export async function simulatePixPaid(
+    companyId: string,
+    input: SimulatePixPaidInput
+): Promise<void> {
+    const now = new Date().toISOString();
+    const oneMonthLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    // 1. Buscar dados da membership + plano (para saber valor e cliente)
+    const { data: ms, error: msErr } = await supabase
+        .from('client_memberships')
+        .select('plan_id, plan:membership_plans(price_cents)')
+        .eq('user_id', companyId)
+        .eq('id', input.membershipId)
+        .single();
+    if (msErr) throw msErr;
+
+    const plan = ms?.plan as unknown as { price_cents: number } | null;
+    const amountCents = plan?.price_cents ?? 0;
+
+    // 2. Marcar pix_payments como paid
+    const { error: pixErr } = await supabase
+        .from('pix_payments')
+        .update({
+            status: 'paid',
+            paid_at: now,
+            confirmed_at: now,
+            confirmed_by: input.confirmedByUserId,
+        })
+        .eq('user_id', companyId)
+        .eq('id', input.pixPaymentId);
+    if (pixErr) throw pixErr;
+
+    // 3. Criar membership_payments (histórico)
+    const { error: payErr } = await supabase
+        .from('membership_payments')
+        .insert({
+            user_id: companyId,
+            membership_id: input.membershipId,
+            amount_cents: amountCents,
+            method: 'pix',
+            status: 'confirmed',
+            paid_at: now,
+            confirmed_at: now,
+            confirmed_by: input.confirmedByUserId,
+        });
+    if (payErr) throw payErr;
+
+    // 4. Ativar membership
+    const { error: updErr } = await supabase
+        .from('client_memberships')
+        .update({
+            status: 'active',
+            current_period_start: now,
+            current_period_end: oneMonthLater,
+            next_billing_at: oneMonthLater,
+            last_paid_at: now,
+        })
+        .eq('user_id', companyId)
+        .eq('id', input.membershipId);
+    if (updErr) throw updErr;
+}
+
+/**
+ * Cancela um Pix pendente (cliente desistiu / timeout).
+ */
+export async function cancelPixPayment(
+    companyId: string,
+    pixPaymentId: string
+): Promise<void> {
+    const { error } = await supabase
+        .from('pix_payments')
+        .update({ status: 'cancelled' })
+        .eq('user_id', companyId)
+        .eq('id', pixPaymentId);
+    if (error) throw error;
 }
 
 export async function fetchMembershipStats(companyId: string): Promise<MembershipStats> {

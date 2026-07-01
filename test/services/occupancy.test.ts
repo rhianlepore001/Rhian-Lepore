@@ -97,8 +97,12 @@ describe('occupancy service', () => {
   describe('getPeriodDates', () => {
     it('retorna apenas hoje', () => {
       const { start, end } = getPeriodDates('today', new Date('2025-06-15T12:00:00'));
-      expect(start.toISOString().startsWith('2025-06-15')).toBe(true);
-      expect(end.toISOString().startsWith('2025-06-15')).toBe(true);
+      // Compara em data local (getPeriodDates usa meia-noite local); toISOString
+      // forçaria UTC e quebraria o teste em fusos a leste de Greenwich.
+      const localDate = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      expect(localDate(start)).toBe('2025-06-15');
+      expect(localDate(end)).toBe('2025-06-15');
     });
 
     it('retorna semana correta (segunda a domingo)', () => {

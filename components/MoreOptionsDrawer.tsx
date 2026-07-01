@@ -1,117 +1,242 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutDashboard, Settings, LogOut, X, User, Users } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  X,
+  User,
+  Users,
+  Package,
+  Megaphone,
+  TrendingUp,
+  Clock,
+  ChevronRight,
+} from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface MoreOptionsDrawerProps {
-    onClose: () => void;
+  onClose: () => void;
+}
+
+interface MenuItem {
+  name: string;
+  icon: React.ElementType;
+  path: string;
+  ownerOnly?: boolean;
 }
 
 export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose }) => {
-    const navigate = useNavigate();
-    const { logout, fullName, businessName, avatarUrl, role } = useAuth();
-    const { setModalOpen } = useUI();
-    const { colors, accent, classes, status } = useBrutalTheme();
-    const isStaff = role === 'staff';
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { logout, fullName, businessName, avatarUrl, role } = useAuth();
+  const { setModalOpen } = useUI();
+  const { colors, accent, classes } = useBrutalTheme();
+  const isStaff = role === 'staff';
 
-    useEffect(() => {
-        setModalOpen(true);
-        return () => setModalOpen(false);
-    }, [setModalOpen]);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isRendered, setIsRendered] = useState(true);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
 
-    const menuItems = [
-        { name: 'Início', icon: LayoutDashboard, path: '/' },
-        { name: 'Fila Digital', icon: Users, path: '/fila' },
-        ...(!isStaff ? [{ name: 'Ajustes', icon: Settings, path: '/configuracoes' }] : []),
-    ];
+  useEffect(() => {
+    setModalOpen(true);
+    const raf = requestAnimationFrame(() => setIsVisible(true));
 
-    const handleNavigate = (path: string) => {
-        navigate(path);
-        onClose();
+    return () => {
+      cancelAnimationFrame(raf);
+      setModalOpen(false);
     };
+  }, [setModalOpen]);
 
-    const handleLogout = () => {
-        logout();
-        onClose();
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+    setTimeout(() => {
+      setIsRendered(false);
+      onClose();
+    }, 350);
+  }, [onClose]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
     };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleClose]);
 
-    const drawerContent = (
-        <div className={`fixed inset-0 flex flex-col justify-end ${colors.overlay} backdrop-blur-md animate-in fade-in duration-200`} style={{ zIndex: 'var(--z-modal)' }}>
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    handleClose();
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleClose();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || !panelRef.current) return;
+    const currentX = e.touches[0].clientX;
+    const delta = currentX - touchStartX.current;
+    if (delta > 0) {
+      panelRef.current.style.transform = `translateX(${delta}px)`;
+      panelRef.current.style.transition = 'none';
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || !panelRef.current) return;
+    const currentX = e.changedTouches[0].clientX;
+    const delta = currentX - touchStartX.current;
+    panelRef.current.style.transition = '';
+    panelRef.current.style.transform = '';
+
+    if (delta > 80) {
+      handleClose();
+    }
+    touchStartX.current = null;
+  };
+
+  const menuItems: MenuItem[] = [
+    { name: 'Início', icon: LayoutDashboard, path: '/' },
+    { name: 'Agenda', icon: Clock, path: '/agenda' },
+    { name: 'Clientes', icon: Users, path: '/clientes' },
+    { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
+    { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: true },
+    { name: 'Marketing', icon: Megaphone, path: '/marketing', ownerOnly: true },
+    { name: 'Insights', icon: TrendingUp, path: '/insights', ownerOnly: true },
+    { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true },
+  ];
+
+  const visibleItems = menuItems.filter((item) => !item.ownerOnly || !isStaff);
+
+  const isActive = (path: string) =>
+    location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+
+  if (!isRendered) return null;
+
+  const drawerContent = (
+    <div
+      className={`fixed inset-0 z-[60] flex justify-end transition-opacity duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+      aria-modal="true"
+      role="dialog"
+      aria-label="Menu de navegação"
+    >
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+
+      <div
+        ref={panelRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className={`relative h-full w-[85vw] max-w-[320px] shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${colors.bg} border-l ${colors.divider}`}
+        style={{
+          transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
+          willChange: 'transform',
+        }}
+      >
+        <div className={`h-1.5 w-12 rounded-full bg-[var(--color-divider)] mx-auto mt-3 md:hidden`} />
+
+        <div className={`flex items-center justify-between p-5 border-b ${colors.divider}`}>
+          <div className="flex items-center gap-3.5 min-w-0">
             <div
-                className="absolute inset-0"
-                onClick={onClose}
-            />
-
-            <div className={`relative w-full rounded-t-[32px] shadow-promax-depth overflow-hidden animate-in slide-in-from-bottom-full duration-500 max-h-[90vh] pb-8 backdrop-blur-3xl border-t-2
-                ${colors.card} border-[var(--color-accent-border)]
-            `}>
-                {/* Header with User Info */}
-                <div className={`p-6 border-b relative ${colors.divider} bg-[var(--color-surface)]`}>
-                    <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden border-2 shadow-lg bg-[var(--color-card-hover)] ${colors.border}`}>
-                            {avatarUrl ? (
-                                <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
-                            ) : (
-                                <User className={`w-7 h-7 ${colors.textMuted}`} />
-                            )}
-                        </div>
-                        <div>
-                            <h3 className={`font-heading text-lg leading-tight uppercase tracking-tight ${colors.text}`}>{businessName || 'Seu Negócio'}</h3>
-                            <p className={`text-sm font-mono uppercase tracking-wider ${colors.textSecondary}`}>{fullName}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className={`absolute top-4 right-4 p-2.5 rounded-full shadow-lg border transition-all active:scale-90
-                            ${colors.textSecondary} ${colors.border} bg-[var(--color-card-hover)] hover:bg-[var(--color-divider)] hover:${colors.text}
-                        `}
-                        aria-label="Fechar menu"
-                        title="Fechar"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Menu Grid */}
-                <div className="p-6 grid grid-cols-2 gap-3 overflow-y-auto">
-                    {menuItems.map((item) => (
-                        <button
-                            key={item.path}
-                            onClick={() => handleNavigate(item.path)}
-                            className={`flex flex-col items-start p-5 rounded-2xl border transition-all active:scale-95 group
-                                ${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)] hover:border-[var(--color-accent-border)]
-                            `}
-                        >
-                            <div className={`p-3 rounded-xl mb-4 transition-all group-hover:scale-110 bg-[var(--color-accent-dim)] ${accent.text} group-hover:bg-[var(--color-accent-border)]`}>
-                                <item.icon className="w-6 h-6" />
-                            </div>
-                            <span className={`font-heading text-sm uppercase tracking-wide transition-colors ${colors.text}`}>{item.name}</span>
-                        </button>
-                    ))}
-
-                    {/* Logout Button */}
-                    <button
-                        onClick={handleLogout}
-                        className={`flex flex-col items-start p-5 rounded-2xl border transition-all active:scale-95 col-span-2
-                            ${classes.buttonDanger}
-                        `}
-                    >
-                        <div className={`p-3 rounded-xl mb-4 bg-[var(--color-danger-bg)] ${status.danger}`}>
-                            <LogOut className="w-6 h-6" />
-                        </div>
-                        <span className={`font-heading text-sm uppercase tracking-wide ${status.danger}`}>Sair da Conta</span>
-                    </button>
-                </div>
-
-                <div className="p-6 pt-2 pb-8 flex justify-center">
-                    <div className={`w-12 h-1 rounded-full bg-[var(--color-divider)]`} />
-                </div>
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden border-2 shrink-0 ${colors.border} bg-[var(--color-surface)]`}
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Usuário" className="w-full h-full object-cover" />
+              ) : (
+                <User className={`w-6 h-6 ${colors.textMuted}`} />
+              )}
             </div>
+            <div className="min-w-0">
+              <h3 className={`font-heading text-base uppercase tracking-tight truncate ${colors.text}`}>
+                {businessName || 'Seu Negócio'}
+              </h3>
+              <p className={`text-xs font-mono uppercase tracking-wider truncate ${colors.textSecondary}`}>
+                {fullName}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className={`p-2.5 rounded-full border transition-all active:scale-90 shrink-0 ${colors.border} ${colors.textSecondary} ${colors.card} hover:${colors.text} hover:border-[var(--color-accent-border)]`}
+            aria-label="Fechar menu"
+            title="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-    );
 
-    return createPortal(drawerContent, document.body);
+        <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <ul className="space-y-1">
+            {visibleItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <li key={item.path}>
+                  <button
+                    onClick={() => handleNavigate(item.path)}
+                    className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl border transition-all duration-200 group ${
+                      active
+                        ? `${accent.bgDim} ${accent.text} ${accent.border} font-bold`
+                        : `${colors.card} ${colors.border} ${colors.text} hover:bg-[var(--color-card-hover)] hover:border-[var(--color-accent-border)]`
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg transition-all ${
+                        active ? 'bg-[var(--color-accent-border)]' : 'bg-[var(--color-surface)] group-hover:bg-[var(--color-accent-dim)]'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <span className="flex-1 text-left text-sm font-medium tracking-wide">{item.name}</span>
+                    <ChevronRight
+                      className={`w-4 h-4 transition-transform ${
+                        active ? `${accent.text}` : `${colors.textMuted} group-hover:translate-x-0.5`
+                      }`}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className={`p-4 border-t ${colors.divider}`}>
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl border transition-all active:scale-95 ${classes.buttonDanger}`}
+          >
+            <div className="p-2 rounded-lg bg-[var(--color-danger-bg)]">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <span className="text-sm font-medium tracking-wide">Sair da Conta</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(drawerContent, document.body);
 };

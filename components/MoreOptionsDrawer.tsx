@@ -11,6 +11,7 @@ import {
   Megaphone,
   TrendingUp,
   Clock,
+  DollarSign,
   ChevronRight,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -117,6 +118,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     { name: 'Início', icon: LayoutDashboard, path: '/' },
     { name: 'Agenda', icon: Clock, path: '/agenda' },
     { name: 'Clientes', icon: Users, path: '/clientes' },
+    { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
     { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
     { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: true },
     { name: 'Marketing', icon: Megaphone, path: '/marketing', ownerOnly: true },

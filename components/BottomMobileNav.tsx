@@ -104,21 +104,19 @@ export const BottomMobileNav: React.FC = () => {
                     </button>
                 )}
 
-                {/* 5. Mais — visível somente para o dono */}
-                {!isStaff && (
-                    <button
-                        type="button"
-                        onClick={() => setShowMoreMenu(true)}
-                        aria-label="Mais opções"
-                        aria-expanded={showMoreMenu}
-                        className={`${navItemBase} h-full ${showMoreMenu ? accent.text : colors.textSecondary}`}
-                    >
-                        <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-white/5' : ''}`}>
-                            <Menu className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
-                        </div>
-                        <span className="text-[11px] font-bold tracking-tight">Mais</span>
-                    </button>
-                )}
+                {/* 5. Mais — visível para dono e staff (staff vê versão limitada) */}
+                <button
+                    type="button"
+                    onClick={() => setShowMoreMenu(true)}
+                    aria-label="Mais opções"
+                    aria-expanded={showMoreMenu}
+                    className={`${navItemBase} h-full ${showMoreMenu ? accent.text : colors.textSecondary}`}
+                >
+                    <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-white/5' : ''}`}>
+                        <Menu className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
+                    </div>
+                    <span className="text-[11px] font-bold tracking-tight">Mais</span>
+                </button>
             </nav>
 
             {showQuickActions && (

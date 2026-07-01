@@ -1,9 +1,12 @@
 import { Card } from '../components/ui';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../components/ui/Toast';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useReportsData } from '../hooks/useReports';
+import { ExportButton } from '../components/ExportButton';
+import { exportToCsv, exportToPdf } from '../utils/exporters';
 import {
     TrendingUp,
     DollarSign,
@@ -18,6 +21,7 @@ import { formatCurrency } from '../utils/formatters';
 
 export const Reports: React.FC = () => {
     const { user, companyId, region } = useAuth();
+    const { showToast } = useToast();
     const effectiveUserId = companyId ?? user?.id;
     const { accent, isBeauty } = useBrutalTheme();
     const currentDate = new Date();
@@ -34,6 +38,73 @@ export const Reports: React.FC = () => {
     };
 
     const hasSufficientData = stats && (stats.appointments_total > 5 || stats.total_profit > 0 || clientInsights.top_clients.length > 0);
+
+    const monthLabel = useMemo(() => {
+        const date = new Date(selectedYear, selectedMonth, 1);
+        return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    }, [selectedMonth, selectedYear]);
+
+    const handleExportCsv = () => {
+        if (!stats || !hasSufficientData) {
+            showToast('Ainda não há dados suficientes para exportar.', 'warning');
+            return;
+        }
+        const rows = clientInsights.top_clients.map(c => ({
+            cliente: c.name,
+            visitas: c.visits,
+            total_gasto: formatCurrency(c.revenue, currencyRegion),
+            ultima_visita: c.last_visit,
+        }));
+        const summary = [
+            { metrica: 'Média por atendimento', valor: formatCurrency(stats.avg_ticket || 0, currencyRegion) },
+            { metrica: 'Crescimento semanal', valor: `${stats.weekly_growth || 0}%` },
+            { metrica: 'Recorrência', valor: `${stats.repeat_client_rate || 0}%` },
+            { metrica: 'Clientes em risco', valor: String(stats.churn_risk_count || 0) },
+            { metrica: 'Atendimentos no mês', valor: String(stats.appointments_total || 0) },
+        ];
+        exportToCsv({
+            filename: `relatorio-agendix-${monthLabel.replace(/\s/g, '-')}`,
+            data: [...summary, ...rows],
+            columns: [
+                { key: 'metrica', label: 'Métrica / Cliente', format: r => (r as { metrica?: string }).metrica ?? (r as { cliente?: string }).cliente ?? '' },
+                { key: 'valor', label: 'Valor', format: r => (r as { valor?: string }).valor ?? '' },
+                { key: 'visitas', label: 'Visitas', format: r => (r as { visitas?: number }).visitas ?? '' },
+                { key: 'total_gasto', label: 'Total Gasto', format: r => (r as { total_gasto?: string }).total_gasto ?? '' },
+                { key: 'ultima_visita', label: 'Última Visita', format: r => (r as { ultima_visita?: string }).ultima_visita ?? '' },
+            ],
+        });
+        showToast('Relatório CSV exportado. Abra no Excel ou Google Sheets.', 'success');
+    };
+
+    const handleExportPdf = () => {
+        if (!stats || !hasSufficientData) {
+            showToast('Ainda não há dados suficientes para exportar.', 'warning');
+            return;
+        }
+        const rows = clientInsights.top_clients.map(c => ({
+            cliente: c.name,
+            visitas: c.visits,
+            total_gasto: formatCurrency(c.revenue, currencyRegion),
+            ultima_visita: c.last_visit,
+        }));
+        const summary = [
+            { metrica: 'Média por atendimento', valor: formatCurrency(stats.avg_ticket || 0, currencyRegion) },
+            { metrica: 'Crescimento semanal', valor: `${stats.weekly_growth || 0}%` },
+            { metrica: 'Recorrência', valor: `${stats.repeat_client_rate || 0}%` },
+            { metrica: 'Clientes em risco', valor: String(stats.churn_risk_count || 0) },
+        ];
+        exportToPdf({
+            filename: `Relatório AgendiX · ${monthLabel}`,
+            data: [...summary, ...rows],
+            columns: [
+                { key: 'metrica', label: 'Métrica / Cliente', format: r => (r as { metrica?: string }).metrica ?? (r as { cliente?: string }).cliente ?? '' },
+                { key: 'valor', label: 'Valor', format: r => (r as { valor?: string }).valor ?? '' },
+                { key: 'visitas', label: 'Visitas', format: r => (r as { visitas?: number }).visitas ?? '' },
+                { key: 'total_gasto', label: 'Total Gasto', format: r => (r as { total_gasto?: string }).total_gasto ?? '' },
+                { key: 'ultima_visita', label: 'Última Visita', format: r => (r as { ultima_visita?: string }).ultima_visita ?? '' },
+            ],
+        });
+    };
 
     if (loading && !stats) {
         return (
@@ -59,6 +130,11 @@ export const Reports: React.FC = () => {
                     selectedYear={selectedYear}
                     onChange={handleMonthChange}
                     accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
+                />
+
+                <ExportButton
+                    onExportCsv={handleExportCsv}
+                    onExportPdf={handleExportPdf}
                 />
             </div>
 

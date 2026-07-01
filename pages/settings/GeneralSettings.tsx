@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../components/ui/Toast';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
 import { useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
@@ -15,6 +16,7 @@ import { InfoButton } from '../../components/HelpButtons';
 
 export const GeneralSettings: React.FC = () => {
     const { user, companyId, region } = useAuth();
+    const { showToast } = useToast();
     const { accent, colors, classes, isBeauty } = useBrutalTheme();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
@@ -54,6 +56,15 @@ export const GeneralSettings: React.FC = () => {
 
     const loading = !settings && !profile;
 
+    const initialValuesRef = React.useRef<{
+        businessName: string;
+        phone: string;
+        address: string;
+        instagram: string;
+        cancellationPolicy: string;
+        businessHours: typeof businessHours;
+    } | null>(null);
+
     React.useEffect(() => {
         if (profile) {
             setBusinessName(profile.business_name ?? '');
@@ -73,14 +84,34 @@ export const GeneralSettings: React.FC = () => {
     }, [settings]);
 
     React.useEffect(() => {
-        if (!loading) {
-            setHasChanges(true);
+        if (loading) return;
+        if (!initialValuesRef.current) {
+            initialValuesRef.current = {
+                businessName,
+                phone,
+                address,
+                instagram,
+                cancellationPolicy,
+                businessHours,
+            };
+            return;
         }
-    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours]);
+        const initial = initialValuesRef.current;
+        const dirty =
+            businessName !== initial.businessName ||
+            phone !== initial.phone ||
+            address !== initial.address ||
+            instagram !== initial.instagram ||
+            cancellationPolicy !== initial.cancellationPolicy ||
+            JSON.stringify(businessHours) !== JSON.stringify(initial.businessHours) ||
+            logoFile !== null ||
+            coverFile !== null;
+        setHasChanges(dirty);
+    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours, loading]);
 
     const handleLogoChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 10MB.');
+            showToast('A imagem deve ter no máximo 10MB.', 'error');
             return;
         }
         setLogoFile(file);
@@ -89,7 +120,7 @@ export const GeneralSettings: React.FC = () => {
 
     const handleCoverChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 10MB.');
+            showToast('A imagem deve ter no máximo 10MB.', 'error');
             return;
         }
         setCoverFile(file);
@@ -148,6 +179,7 @@ export const GeneralSettings: React.FC = () => {
         } catch (error) {
             console.error('Error saving settings:', error);
             setSaveStatus('error');
+            showToast('Não foi possível salvar as configurações. Tente novamente.', 'error');
         }
     };
 

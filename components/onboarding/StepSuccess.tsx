@@ -39,7 +39,7 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
             icon: <Link className="w-5 h-5" />,
             label: 'Link Público',
             description: 'Compartilhe seu link de agendamento',
-            path: '/configuracoes/agendamento-publico',
+            path: '/configuracoes/agendamento',
         },
         {
             icon: <LayoutDashboard className="w-5 h-5" />,

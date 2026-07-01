@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, Button, useToast } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrutalTheme } from '@/hooks/useBrutalTheme';
+import { useSubscriptionDiscount } from '@/hooks/useSubscriptionDiscount';
+import { MembershipBadge } from '@/components/membership/MembershipBadge';
 import { logger } from '@/utils/Logger';
-import { Banknote, CreditCard, Minus, Package, Plus, Smartphone } from 'lucide-react';
+import { Banknote, Check, CreditCard, Crown, Minus, Package, Plus, Smartphone, Sparkles } from 'lucide-react';
 import type { Appointment } from '@/types';
 import { calcCheckoutNetAmount, calcMachineFee, getMachineFeePercent } from '@/services/scheduling';
 import { useCheckout } from '@/hooks/useScheduling';
@@ -68,18 +70,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     [products]
   );
 
+  // Sprint D+1: Bypass de assinatura — se cliente é assinante ativo, recalcula total
+  const discount = useSubscriptionDiscount({
+    clientId: (appointment as { client_id?: string } | null)?.client_id ?? null,
+    services: appointment
+      ? [{ id: (appointment as { service_id?: string }).service_id || appointment.id, name: appointment.service, price: appointment.price ?? 0 }]
+      : [],
+  });
+
   useEffect(() => {
     if (appointment) {
       setPaymentMethod('');
       setReceivedBy('');
       setMachineFeePercent('');
-      setFinalPrice(appointment.price ?? 0);
+      // Sprint D+1: Se assinante, parte coberta já é 0. Adicionais (fora do plano) ainda são cobrados.
+      const subscriptionCents = discount.hasActiveSubscription ? discount.coveredCents : 0;
+      const remainingCents = Math.round((appointment.price ?? 0) * 100) - subscriptionCents;
+      const remainingReais = Math.max(0, remainingCents / 100);
+      setFinalPrice(remainingReais);
       setErrors({});
       setCart([]);
       setSelectedProductId('');
       reset();
     }
-  }, [appointment?.id, reset]);
+  }, [appointment?.id, reset, discount.hasActiveSubscription, discount.coveredCents]);
 
   useEffect(() => {
     const defaultFeePercent = getMachineFeePercent(paymentMethod, financialSettings);
@@ -148,9 +162,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleConfirm = async () => {
     const newErrors: { paymentMethod?: string; receivedBy?: string } = {};
 
-    if (!paymentMethod) {
+    // Sprint D+1: Se totalmente coberto pela assinatura, não exige forma de pagamento
+    const isFullyCovered = discount.fullyCovered;
+    if (!paymentMethod && !isFullyCovered) {
       newErrors.paymentMethod = 'Selecione a forma de pagamento';
     }
+    // Quando totalmente coberto, ainda exigimos "recebido por" pra registrar quem fez o atendimento
     if (!receivedBy) {
       newErrors.receivedBy = 'Selecione quem recebeu o pagamento';
     }
@@ -162,7 +179,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setErrors(newErrors);
       return;
     }
-    if (!appointment || !paymentMethod) return;
+    if (!appointment) return;
 
     setErrors({});
 
@@ -176,10 +193,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
 
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
+      // Sprint D+1: Se totalmente coberto, marca como 'pix' (placeholder, não é cobrado de fato)
+      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'pix' : (paymentMethod as CheckoutPaymentMethod);
 
       await mutateAsync({
         appointmentId: appointment.id,
-        paymentMethod,
+        paymentMethod: effectiveMethod,
         receivedBy: receivedByUUID,
         completedBy: receivedByUUID,
         finalPrice,
@@ -234,12 +253,58 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleConfirm} loading={loading}>
-            Confirmar Pagamento
+            {discount.fullyCovered ? 'Concluir atendimento' : 'Confirmar Pagamento'}
           </Button>
         </div>
       }
     >
       <div className="space-y-5">
+        {discount.hasActiveSubscription && discount.plan && (
+          <div
+            data-testid="membership-banner"
+            className={`relative overflow-hidden rounded-2xl p-4 border-2 ${
+              discount.fullyCovered
+                ? 'border-yellow-500/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/5'
+                : 'border-yellow-500/40 bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-transparent'
+            }`}
+          >
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-yellow-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-yellow-500/20 shrink-0">
+                <Crown className="w-5 h-5 text-yellow-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-sm ${font.heading} text-yellow-100 uppercase tracking-wide`}>
+                    Clube {discount.plan.name}
+                  </span>
+                  <MembershipBadge color={discount.plan.badge_color} label={discount.plan.badge_color} />
+                </div>
+                <p className="text-sm text-yellow-100/80 mt-1.5 leading-relaxed">
+                  {discount.message}
+                </p>
+                {discount.fullyCovered && (
+                  <div className="mt-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-yellow-300">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Você não paga nada neste atendimento
+                  </div>
+                )}
+                {discount.coveredCents > 0 && !discount.fullyCovered && (
+                  <div className="mt-3 flex items-center gap-3 text-xs">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/15 text-green-300">
+                      <Check className="w-3 h-3" />
+                      Desconto: R$ {(discount.coveredCents / 100).toFixed(2).replace('.', ',')}
+                    </span>
+                    <span className="text-neutral-400">
+                      Paga só adicionais: R$ {(discount.finalCents / 100).toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className={`${colors.surface} rounded-xl p-4 space-y-1 ${colors.border} border backdrop-blur-md`}>
           <p className={`text-xs ${font.mono} uppercase ${colors.textSecondary}`}>Serviço</p>
           <p className={`${colors.text} font-medium`}>{appointment?.service}</p>
@@ -325,43 +390,45 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           />
         </div>
 
-        <div>
-          <p className={`block text-xs ${font.mono} uppercase mb-2 ${errors.paymentMethod ? status.danger : colors.textSecondary}`}>
-            Forma de Pagamento <span className={status.danger}>*</span>
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {paymentMethods.map(({ value, label }) => (
-              <label
-                key={value}
-                className={`flex items-center gap-2 cursor-pointer rounded-xl px-3 py-2.5 border transition-all duration-200 ${
-                  paymentMethod === value
-                    ? `${accent.border} ${accent.bgDim} ${accent.text} ${accent.shadow}`
-                    : errors.paymentMethod
-                    ? `${status.dangerBorder} ${colors.textSecondary} hover:${status.dangerBorder}`
-                    : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:${colors.border} hover:${colors.surfaceHover}`
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="payment-method"
-                  value={value}
-                  aria-label={label}
-                  checked={paymentMethod === value}
-                  onChange={() => {
-                    setPaymentMethod(value);
-                    setErrors((prev) => ({ ...prev, paymentMethod: undefined }));
-                  }}
-                  className="sr-only"
-                />
-                {paymentMethodIcon(value)}
-                {label}
-              </label>
-            ))}
+        {!discount.fullyCovered && (
+          <div>
+            <p className={`block text-xs ${font.mono} uppercase mb-2 ${errors.paymentMethod ? status.danger : colors.textSecondary}`}>
+              Forma de Pagamento <span className={status.danger}>*</span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {paymentMethods.map(({ value, label }) => (
+                <label
+                  key={value}
+                  className={`flex items-center gap-2 cursor-pointer rounded-xl px-3 py-2.5 border transition-all duration-200 ${
+                    paymentMethod === value
+                      ? `${accent.border} ${accent.bgDim} ${accent.text} ${accent.shadow}`
+                      : errors.paymentMethod
+                      ? `${status.dangerBorder} ${colors.textSecondary} hover:${status.dangerBorder}`
+                      : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:${colors.border} hover:${colors.surfaceHover}`
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value={value}
+                    aria-label={label}
+                    checked={paymentMethod === value}
+                    onChange={() => {
+                      setPaymentMethod(value);
+                      setErrors((prev) => ({ ...prev, paymentMethod: undefined }));
+                    }}
+                    className="sr-only"
+                  />
+                  {paymentMethodIcon(value)}
+                  {label}
+                </label>
+              ))}
+            </div>
+            {errors.paymentMethod && (
+              <p className={`${status.danger} text-xs mt-1`}>{errors.paymentMethod}</p>
+            )}
           </div>
-          {errors.paymentMethod && (
-            <p className={`${status.danger} text-xs mt-1`}>{errors.paymentMethod}</p>
-          )}
-        </div>
+        )}
 
         {showMachineFee && (
           <div className="space-y-2">

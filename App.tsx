@@ -29,6 +29,9 @@ const TeamSettings = React.lazy(() => import('./pages/settings/TeamSettings').th
 const ServiceSettings = React.lazy(() => import('./pages/settings/ServiceSettings').then(module => ({ default: module.ServiceSettings })));
 const CommissionsSettings = React.lazy(() => import('./pages/settings/CommissionsSettings').then(module => ({ default: module.CommissionsSettings })));
 const SubscriptionSettings = React.lazy(() => import('./pages/settings/SubscriptionSettings').then(module => ({ default: module.SubscriptionSettings })));
+const MembershipSettings = React.lazy(() => import('./pages/settings/MembershipSettings').then(module => ({ default: module.MembershipSettings })));
+const MembershipPlansSettings = React.lazy(() => import('./pages/settings/MembershipPlansSettings').then(module => ({ default: module.MembershipPlansSettings })));
+const MembersList = React.lazy(() => import('./pages/MembersList').then(module => ({ default: module.MembersList })));
 const AuditLogs = React.lazy(() => import('./pages/settings/AuditLogs').then(module => ({ default: module.AuditLogs })));
 const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(module => ({ default: module.RecycleBin })));
 const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySettings').then(module => ({ default: module.SecuritySettings })));
@@ -46,6 +49,8 @@ const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(mo
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
 const PlaywrightBugReporterDemo = React.lazy(() => import('./pages/PlaywrightBugReporterDemo').then(module => ({ default: module.PlaywrightBugReporterDemo })));
 const DesignReviewDemo = React.lazy(() => import('./pages/DesignReviewDemo').then(module => ({ default: module.DesignReviewDemo })));
+const JoinClub = React.lazy(() => import('./pages/JoinClub').then(module => ({ default: module.JoinClub })));
+const ClubDemo = React.lazy(() => import('./pages/ClubDemo').then(module => ({ default: module.ClubDemo })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
 const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
@@ -151,11 +156,13 @@ const AppRoutes: React.FC = () => {
         <Route path="/update-password" element={<UpdatePassword />} />
         <Route path="/playwright-bug-reporter-demo" element={<PlaywrightBugReporterDemo />} />
         <Route path="/design-review-demo" element={<DesignReviewDemo />} />
+        <Route path="/club-demo" element={<ClubDemo />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />
         <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
         <Route path="/minha-area/:slug" element={<ClientArea />} />
+        <Route path="/clube" element={<JoinClub />} />
         <Route path="/onboarding-wizard" element={
           <RequireAuth>
             <OnboardingWizard />
@@ -198,6 +205,9 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/comissoes" element={<OwnerRouteGuard><CommissionsSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/financeiro" element={<Navigate to="/configuracoes/comissoes" replace />} />
           <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/clube" element={<OwnerRouteGuard><MembershipPlansSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/clube/pix" element={<OwnerRouteGuard><MembershipSettings /></OwnerRouteGuard>} />
+          <Route path="/clube/assinantes" element={<OwnerRouteGuard><MembersList /></OwnerRouteGuard>} />
           <Route path="/configuracoes/auditoria" element={<DevRouteGuard><AuditLogs /></DevRouteGuard>} />
           <Route path="/configuracoes/lixeira" element={<DevRouteGuard><RecycleBin /></DevRouteGuard>} />
           <Route path="/configuracoes/seguranca" element={<OwnerRouteGuard><SecuritySettings /></OwnerRouteGuard>} />

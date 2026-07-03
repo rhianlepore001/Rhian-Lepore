@@ -15,7 +15,7 @@ import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { BookingModeToggle } from '../components/booking/BookingModeToggle';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { formatCurrency, formatDuration, Region } from '../utils/formatters';
+import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { ConfirmModal, useToast } from '@/components/ui';
@@ -611,7 +611,7 @@ export const PublicBooking: React.FC = () => {
 
     const currencyRegion = (business?.region as Region) || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
     const whatsappLink = business?.phone
-        ? `https://wa.me/${business.phone.replace(/\D/g, '')}`
+        ? buildWhatsAppLink(business.phone, currencyRegion)
         : null;
 
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
@@ -1404,7 +1404,7 @@ export const PublicBooking: React.FC = () => {
                                     </div>
 
                                     <div className="flex flex-col gap-5">
-                                        <a href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)}`} target="_blank" rel="noopener noreferrer"
+                                        <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
                                             className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
                                             <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
                                                 <Send className="w-5 h-5" />
@@ -1652,7 +1652,7 @@ export const PublicBooking: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col gap-5">
-                        <a href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)}`} target="_blank" rel="noopener noreferrer"
+                        <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
                             className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
                             <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
                                 <Send className="w-5 h-5" />

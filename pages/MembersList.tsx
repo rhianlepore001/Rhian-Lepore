@@ -16,7 +16,7 @@ import {
 import { MembershipBadge } from '../components/membership/MembershipBadge';
 import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
-import { formatCurrency } from '../utils/formatters';
+import { buildWhatsAppLink, formatCurrency } from '../utils/formatters';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -36,7 +36,7 @@ const STATUS_LABELS: Record<MembershipStatus, { label: string; color: string }> 
 export const MembersList: React.FC = () => {
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
-    const { user, region } = useAuth();
+    const { user, region, businessName } = useAuth();
     const navigate = useNavigate();
 
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
@@ -80,12 +80,10 @@ export const MembersList: React.FC = () => {
     };
 
     const handleWhatsApp = (m: MembershipWithPlan) => {
-        const phone = (m.client?.phone || '').replace(/\D/g, '');
-        if (!phone) return;
-        const text = encodeURIComponent(
-            `Olá ${m.client?.name?.split(' ')[0]}! Tudo bem? Aqui é da barbearia. Sobre seu plano "${m.plan?.name}"...`
-        );
-        window.open(`https://wa.me/55${phone}?text=${text}`, '_blank');
+        const phone = m.client?.phone || '';
+        if (!phone.replace(/\D/g, '')) return;
+        const message = `Olá ${m.client?.name?.split(' ')[0]}! Tudo bem? Aqui é ${businessName ? `da ${businessName}` : 'do seu clube de assinatura'}. Sobre seu plano "${m.plan?.name}"...`;
+        window.open(buildWhatsAppLink(phone, region, message), '_blank');
     };
 
     return (

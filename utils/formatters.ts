@@ -123,6 +123,22 @@ export const formatPhone = (phone: string, region: Region = 'BR'): string => {
     }
 };
 
+/**
+ * Monta um link wa.me com o DDI correto da região.
+ * Remove DDIs duplicados salvos por erro (mesma lógica do formatPhone).
+ */
+export const buildWhatsAppLink = (phone: string, region: Region = 'BR', message?: string): string => {
+    let digits = (phone || '').replace(/\D/g, '');
+    const ddi = region === 'PT' ? '351' : '55';
+
+    while (digits.startsWith(ddi) && digits.length >= 12) {
+        digits = digits.slice(ddi.length);
+    }
+
+    const text = message ? `?text=${encodeURIComponent(message)}` : '';
+    return `https://wa.me/${ddi}${digits}${text}`;
+};
+
 // ===========================================
 // FORMATAÇÃO DE NÚMEROS
 // ===========================================

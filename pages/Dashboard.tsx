@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Crown, Sparkles, Target, TrendingUp, X } from 'lucide-react';
+import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Crown, Minus, Sparkles, Target, TrendingDown, TrendingUp, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -102,7 +102,12 @@ export const Dashboard: React.FC = () => {
   const todayLabel = formatDateLong(new Date(), currencyRegion);
   const todayRevenue = profitMetrics.todayRevenue ?? 0;
   const goalProgress = monthlyGoal > 0 ? Math.round((currentMonthRevenue / monthlyGoal) * 100) : 0;
-  const vsYesterday = Math.max(profitMetrics.weeklyGrowth || 0, 0);
+  const weeklyGrowth = Math.round(profitMetrics.weeklyGrowth || 0);
+  const growthBadge = weeklyGrowth > 0
+    ? { classes: `${status.successBg} ${status.successBorder} ${status.success}`, Icon: TrendingUp }
+    : weeklyGrowth < 0
+      ? { classes: `${status.dangerBg} ${status.dangerBorder} ${status.danger}`, Icon: TrendingDown }
+      : { classes: `${colors.surface} ${colors.border} ${colors.textSecondary}`, Icon: Minus };
   const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
   const healthScore = Math.min(100, Math.max(0, Math.round(
     (financialDoctor.repeatClientRate || 0) +
@@ -158,9 +163,9 @@ export const Dashboard: React.FC = () => {
                     {formatCurrency(todayRevenue, currencyRegion)}
                   </p>
                 </div>
-                <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${status.successBg} ${status.successBorder} ${status.success}`}>
-                  <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  {vsYesterday}% vs ontem
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${growthBadge.classes}`}>
+                  <growthBadge.Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {weeklyGrowth > 0 ? `+${weeklyGrowth}` : weeklyGrowth}% vs ontem
                 </span>
               </div>
             </Card>
@@ -383,7 +388,11 @@ export const Dashboard: React.FC = () => {
               <div>
                 <h2 className={`font-heading text-base font-bold ${colors.text}`}>Dica para hoje</h2>
                 <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                  Você está {vsYesterday}% acima da média recente. Mantenha a agenda cheia nos horários de maior procura.
+                  {weeklyGrowth > 0
+                    ? `Você está ${weeklyGrowth}% acima da média recente. Mantenha a agenda cheia nos horários de maior procura.`
+                    : weeklyGrowth < 0
+                      ? `Seu movimento caiu ${Math.abs(weeklyGrowth)}% em relação à média recente. Que tal avisar os clientes dos horários vagos de hoje?`
+                      : 'Seu movimento está estável. Preencha os horários vagos para crescer em relação à média recente.'}
                 </p>
               </div>
             </div>

@@ -11,6 +11,7 @@ import { MembershipPlan } from '../services/memberships';
 import { generatePixPayload } from '../lib/pix-generator';
 import { generatePixTxid } from '../lib/pix-txid';
 import { supabase } from '../lib/supabase';
+import { formatCurrency, Region } from '../utils/formatters';
 
 export const JoinClub: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -20,6 +21,7 @@ export const JoinClub: React.FC = () => {
 
     const { data: businessProfile, isLoading: profileLoading } = useBusinessProfileBySlug(slug);
     const businessId = (businessProfile as { id?: string } | null)?.id ?? null;
+    const region = ((businessProfile as { region?: string } | null)?.region === 'PT' ? 'PT' : 'BR') as Region;
     const { data: plans, isLoading: plansLoading } = useActiveMembershipPlans();
     const { data: pixConfig, isLoading: pixLoading } = useBusinessPixConfig();
     const createMembership = useCreateMembershipRequest();
@@ -163,6 +165,7 @@ export const JoinClub: React.FC = () => {
                                         plan={plan}
                                         onSelect={handleSelectPlan}
                                         actionLabel="Quero assinar"
+                                        region={region}
                                     />
                                 ))}
                             </div>
@@ -190,7 +193,7 @@ export const JoinClub: React.FC = () => {
                                 {selectedPlan.name}
                             </h2>
                             <p className="text-neutral-400 text-sm mb-4">
-                                Mensalidade: R$ {(selectedPlan.price_cents / 100).toFixed(2).replace('.', ',')}
+                                Mensalidade: {formatCurrency(selectedPlan.price_cents / 100, region)}
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

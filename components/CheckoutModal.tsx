@@ -293,10 +293,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <div className="mt-3 flex items-center gap-3 text-xs">
                     <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/15 text-green-300">
                       <Check className="w-3 h-3" />
-                      Desconto: R$ {(discount.coveredCents / 100).toFixed(2).replace('.', ',')}
+                      Desconto: {currencyLabel} {(discount.coveredCents / 100).toFixed(2).replace('.', ',')}
                     </span>
                     <span className="text-neutral-400">
-                      Paga só adicionais: R$ {(discount.finalCents / 100).toFixed(2).replace('.', ',')}
+                      Paga só adicionais: {currencyLabel} {(discount.finalCents / 100).toFixed(2).replace('.', ',')}
                     </span>
                   </div>
                 )}

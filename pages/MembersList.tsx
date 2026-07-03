@@ -36,7 +36,7 @@ const STATUS_LABELS: Record<MembershipStatus, { label: string; color: string }> 
 export const MembersList: React.FC = () => {
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
-    const { user } = useAuth();
+    const { user, region } = useAuth();
     const navigate = useNavigate();
 
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
@@ -60,7 +60,7 @@ export const MembersList: React.FC = () => {
 
     const handleConfirm = async (m: MembershipWithPlan) => {
         if (!user) return;
-        if (!window.confirm(`Confirmar R$ ${(m.plan?.price_cents || 0) / 100} do plano "${m.plan?.name}" para ${m.client?.name}?`)) return;
+        if (!window.confirm(`Confirmar ${formatCurrency((m.plan?.price_cents || 0) / 100, region)} do plano "${m.plan?.name}" para ${m.client?.name}?`)) return;
         try {
             await confirmMutation.mutateAsync({ membershipId: m.id, method: 'pix' });
             showToast(`${m.client?.name} agora é assinante ativo!`, 'success');
@@ -127,7 +127,7 @@ export const MembersList: React.FC = () => {
                     <Card>
                         <p className="text-xs text-neutral-500 uppercase tracking-widest">MRR</p>
                         <p className="text-3xl font-bold text-white mt-1">
-                            {formatCurrency(stats.monthlyRecurringRevenueCents / 100, 'BR')}
+                            {formatCurrency(stats.monthlyRecurringRevenueCents / 100, region)}
                         </p>
                     </Card>
                 </div>
@@ -205,7 +205,7 @@ export const MembersList: React.FC = () => {
 
                                     <div className="flex flex-row md:flex-col items-start md:items-end gap-2 md:gap-1">
                                         <p className="text-white font-bold">
-                                            {formatCurrency((m.plan?.price_cents || 0) / 100, 'BR')}
+                                            {formatCurrency((m.plan?.price_cents || 0) / 100, region)}
                                             <span className="text-neutral-500 text-xs font-normal">/mês</span>
                                         </p>
                                         <p className={`text-xs font-bold uppercase tracking-wider ${status.color}`}>{status.label}</p>

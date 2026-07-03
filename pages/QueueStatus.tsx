@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase';
 
 import { Loader2, User, Clock, CheckCircle, AlertOctagon, AlertTriangle } from 'lucide-react';
 import { useQueueStatusSnapshot } from '../hooks/useQueueStatus';
+import { cancelQueueEntryPublic, readQueuePhoneProof } from '../services/queue';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { QueueRecord } from '@/types/queue';
 
 export const QueueStatus: React.FC = () => {
@@ -15,7 +17,31 @@ export const QueueStatus: React.FC = () => {
     const position = snapshot?.position ?? null;
 
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [leaving, setLeaving] = useState(false);
+    const [leaveError, setLeaveError] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    const handleLeaveQueue = async () => {
+        if (!id) return;
+        const phone = readQueuePhoneProof(id);
+        if (!phone) {
+            setLeaveError(true);
+            setShowLeaveConfirm(false);
+            return;
+        }
+        setLeaving(true);
+        setLeaveError(false);
+        try {
+            await cancelQueueEntryPublic(id, phone);
+            await refetch();
+            setShowLeaveConfirm(false);
+        } catch {
+            setLeaveError(true);
+        } finally {
+            setLeaving(false);
+        }
+    };
 
     useEffect(() => {
         audioRef.current = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
@@ -185,11 +211,29 @@ export const QueueStatus: React.FC = () => {
                     </Button>
 
                     {['waiting', 'calling'].includes(entry.status) && (
-                        <button className="text-sm font-medium text-red-500 opacity-60 hover:opacity-100 transition-opacity p-4 min-w-[120px]">
+                        <button
+                            onClick={() => setShowLeaveConfirm(true)}
+                            className="text-sm font-medium text-red-500 opacity-60 hover:opacity-100 transition-opacity p-4 min-w-[120px]"
+                        >
                             Sair da Fila
                         </button>
                     )}
+                    {leaveError && (
+                        <p className="text-xs text-red-400">Não foi possível sair da fila. Tente novamente ou avise no balcão.</p>
+                    )}
                 </div>
+
+                <ConfirmModal
+                    open={showLeaveConfirm}
+                    title="Sair da fila"
+                    message="Você vai perder sua posição e precisará entrar de novo se mudar de ideia. Quer sair mesmo?"
+                    confirmLabel="Sair da fila"
+                    cancelLabel="Ficar"
+                    variant="danger"
+                    loading={leaving}
+                    onConfirm={handleLeaveQueue}
+                    onCancel={() => setShowLeaveConfirm(false)}
+                />
             </div>
         </div>
     );

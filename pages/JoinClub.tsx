@@ -130,8 +130,8 @@ export const JoinClub: React.FC = () => {
         <div className="min-h-screen p-4 md:p-8 bg-[var(--color-bg)]">
             <div className="max-w-4xl mx-auto space-y-6">
                 <header className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500/30 to-amber-600/10">
-                        <Crown className="w-6 h-6 text-yellow-300" />
+                    <div className={`p-3 rounded-xl ${accent.bgDim}`}>
+                        <Crown className={`w-6 h-6 ${accent.text}`} />
                     </div>
                     <div>
                         <h1 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase tracking-tight`}>

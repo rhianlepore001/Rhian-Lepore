@@ -214,8 +214,8 @@ export const Dashboard: React.FC = () => {
               className={`${colors.card} ${colors.border} border rounded-2xl p-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform`}
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-amber-600/10 flex items-center justify-center shrink-0">
-                  <Crown className="w-6 h-6 text-yellow-300" />
+                <div className={`w-12 h-12 rounded-2xl ${accent.bgDim} flex items-center justify-center shrink-0`}>
+                  <Crown className={`w-6 h-6 ${accent.text}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline justify-between gap-2 flex-wrap">
@@ -247,7 +247,7 @@ export const Dashboard: React.FC = () => {
                       <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         MRR
                       </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-yellow-300">
+                      <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums ${accent.text}`}>
                         {formatCurrency(clubStats.monthlyRecurringRevenueCents / 100, currencyRegion)}
                       </p>
                     </div>

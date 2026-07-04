@@ -134,17 +134,17 @@ export const JoinClub: React.FC = () => {
                         <Crown className="w-6 h-6 text-yellow-300" />
                     </div>
                     <div>
-                        <h1 className={`text-2xl md:text-3xl ${font.heading} text-white uppercase tracking-tight`}>
+                        <h1 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase tracking-tight`}>
                             Clube de Assinatura
                         </h1>
-                        <p className="text-neutral-400 text-sm">Vantagens exclusivas todo mês, pagando menos por cada serviço.</p>
+                        <p className={`${colors.textSecondary} text-sm`}>Vantagens exclusivas todo mês, pagando menos por cada serviço.</p>
                     </div>
                 </header>
 
                 {step === 'choose' && (
                     <>
                         {plansLoading || profileLoading ? (
-                            <div className="text-neutral-400 p-8 text-center">Carregando planos...</div>
+                            <div className={`${colors.textSecondary} p-8 text-center`}>Carregando planos...</div>
                         ) : plans && plans.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {plans.map(plan => (
@@ -159,8 +159,8 @@ export const JoinClub: React.FC = () => {
                             </div>
                         ) : (
                             <div className="text-center py-12 space-y-2">
-                                <p className="text-white text-lg">Nenhum plano disponível no momento.</p>
-                                <p className="text-neutral-500 text-sm">Volte mais tarde ou fale com o estabelecimento.</p>
+                                <p className={`${colors.text} text-lg`}>Nenhum plano disponível no momento.</p>
+                                <p className={`${colors.textMuted} text-sm`}>Volte mais tarde ou fale com o estabelecimento.</p>
                             </div>
                         )}
                     </>
@@ -171,16 +171,16 @@ export const JoinClub: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setStep('choose')}
-                            className="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1"
+                            className={`text-sm ${colors.textSecondary} hover:${colors.text} transition-colors flex items-center gap-1`}
                         >
                             ← Escolher outro plano
                         </button>
 
                         <div className={`${colors.card} ${colors.border} border rounded-2xl p-6`}>
-                            <h2 className={`text-xl ${font.heading} text-white uppercase mb-1`}>
+                            <h2 className={`text-xl ${font.heading} ${colors.text} uppercase mb-1`}>
                                 {selectedPlan.name}
                             </h2>
-                            <p className="text-neutral-400 text-sm mb-4">
+                            <p className={`${colors.textSecondary} text-sm mb-4`}>
                                 Mensalidade: {formatCurrency(selectedPlan.price_cents / 100, region)}
                             </p>
 
@@ -222,9 +222,9 @@ export const JoinClub: React.FC = () => {
                                     >
                                         <div className="flex items-center gap-2 mb-1">
                                             <MessageCircle className="w-5 h-5 text-[var(--color-accent)]" />
-                                            <span className={`${font.heading} text-white uppercase text-sm`}>Pix agora</span>
+                                            <span className={`${font.heading} ${colors.text} uppercase text-sm`}>Pix agora</span>
                                         </div>
-                                        <p className="text-xs text-neutral-400">
+                                        <p className={`text-xs ${colors.textSecondary}`}>
                                             {pixReady ? 'Paga e confirmação em segundos.' : 'Pix ainda não configurado.'}
                                         </p>
                                     </button>
@@ -240,9 +240,9 @@ export const JoinClub: React.FC = () => {
                                     >
                                         <div className="flex items-center gap-2 mb-1">
                                             <Store className="w-5 h-5 text-[var(--color-accent)]" />
-                                            <span className={`${font.heading} text-white uppercase text-sm`}>No balcão</span>
+                                            <span className={`${font.heading} ${colors.text} uppercase text-sm`}>No balcão</span>
                                         </div>
-                                        <p className="text-xs text-neutral-400">Dinheiro ou cartão na próxima visita.</p>
+                                        <p className={`text-xs ${colors.textSecondary}`}>Dinheiro ou cartão na próxima visita.</p>
                                     </button>
                                 </div>
                             </div>
@@ -289,10 +289,10 @@ export const JoinClub: React.FC = () => {
                             <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
                                 <Check className="w-8 h-8 text-green-400" />
                             </div>
-                            <h2 className={`text-2xl ${font.heading} text-white uppercase`}>
+                            <h2 className={`text-2xl ${font.heading} ${colors.text} uppercase`}>
                                 Solicitação enviada!
                             </h2>
-                            <p className="text-neutral-300 text-base max-w-md mx-auto">
+                            <p className={`${colors.textSecondary} text-base max-w-md mx-auto`}>
                                 {paymentMethod === 'pix' && pixBrCode ? (
                                     <>Escaneie o QR Code abaixo. Seu plano será ativado em segundos após o pagamento.</>
                                 ) : (

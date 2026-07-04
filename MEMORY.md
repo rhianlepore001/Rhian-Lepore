@@ -102,6 +102,14 @@
   - 263 testes unitários verdes; `typecheck`, `lint`, `build` OK.
   - **Pendente de validação visual:** Rhian vai testar em desktop; fluxo de login real com Playwright depende de credenciais de teste válidas.
 
+- **Auditoria UI/UX → execução Sprints 1-3 (04 Jul 2026, branch `feature/ux-audit-fixes`, 17 commits, não pushed):**
+  - **Clube multi-tenant (P0):** JoinClub usava hooks autenticados — deslogado não via planos; logado de outro tenant via os próprios planos/Pix. Agora 4 RPCs `SECURITY DEFINER` escopados por `business_id` (migration `20260704000001_public_club_rpcs.sql`) + hooks públicos. Tema do estabelecimento forçado via override.
+  - **Números honestos:** badge "% vs ontem" mostra queda real (era `Math.max(...,0)` sempre verde); banner de não-confirmados usava data UTC (nunca disparava após 21h BRT); atendimento coberto pelo clube grava `payment_method='membership'` (era pix R$ 0); confirmação de assinatura pergunta o método real.
+  - **Staff mobile:** ~20 `alert()`/`confirm()` da Agenda viraram ConfirmModal/Toast; footer do modal de detalhes com primário full-width; "Sair da Fila" implementado (RPC `cancel_queue_entry_public`, migration `20260703000001`); som da fila via Web Audio (sem CDN externo).
+  - **Sistemático:** sweep `text-[9/10/11px]`→`text-xs` (250× em 68 arquivos); `buildWhatsAppLink` com DDI por região (mata `wa.me/55` fixo); moeda por região em todo o clube; bottom nav `${colors.bg}/40`→`color-mix`.
+  - ⚠️ **2 migrations novas precisam ir pra produção:** `20260703000001_cancel_queue_entry_public.sql` e `20260704000001_public_club_rpcs.sql` (além das 2 do clube já pendentes).
+  - **Falta (Sprints 4-5 do plano):** re-skin geração antiga (QueueManagement, Reports, MembersList/JoinClub com PageHeader/tokens, settings frias, dourado do clube→token) e governança (lint gates, useTenantLocale, migração Tailwind CDN).
+
 ## 📋 Pendências / próximos passos
 
 - [ ] **Smoke test manual em produção:** agendar → checkout → fila → confirmar isolamento entre barbearias.

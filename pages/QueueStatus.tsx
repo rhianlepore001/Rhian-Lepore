@@ -20,7 +20,6 @@ export const QueueStatus: React.FC = () => {
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [leaveError, setLeaveError] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handleLeaveQueue = async () => {
         if (!id) return;
@@ -43,9 +42,25 @@ export const QueueStatus: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        audioRef.current = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
-    }, []);
+    const playCallSound = () => {
+        try {
+            const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            const ctx = new AudioCtx();
+            [0, 0.2].forEach(offset => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.25, ctx.currentTime + offset);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.15);
+                osc.start(ctx.currentTime + offset);
+                osc.stop(ctx.currentTime + offset + 0.15);
+            });
+        } catch {
+            // Sem áudio disponível — segue só com o alerta visual
+        }
+    };
 
     useEffect(() => {
         if (!position || entry?.status !== 'waiting') {
@@ -81,7 +96,7 @@ export const QueueStatus: React.FC = () => {
     const prevStatusRef = useRef<string | null>(null);
     useEffect(() => {
         if (entry?.status === 'calling' && prevStatusRef.current !== 'calling') {
-            void audioRef.current?.play().catch(() => undefined);
+            playCallSound();
         }
         prevStatusRef.current = entry?.status ?? null;
     }, [entry?.status]);
@@ -192,8 +207,8 @@ export const QueueStatus: React.FC = () => {
                                 </div>
                                 <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
                                     <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
-                                    <div className={`text-2xl font-black ${timeLeft !== null && timeLeft < 0 ? 'text-red-400' : 'text-white'} mt-2 flex items-center justify-center gap-1 font-mono`}>
-                                        {timeLeft !== null ? formatTime(timeLeft) : '--:--'}
+                                    <div className={`text-2xl font-black text-white mt-2 flex items-center justify-center gap-1 font-mono`}>
+                                        {timeLeft === null ? '--:--' : timeLeft <= 0 ? 'Agora' : formatTime(timeLeft)}
                                     </div>
                                 </div>
                             </div>
@@ -206,8 +221,8 @@ export const QueueStatus: React.FC = () => {
                 </div>
 
                 <div className="mt-8 space-y-3">
-                    <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
-                        Atualizar Status
+                    <Button variant="outline" onClick={() => void refetch()} className="w-full">
+                        Atualizar status
                     </Button>
 
                     {['waiting', 'calling'].includes(entry.status) && (

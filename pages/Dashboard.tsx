@@ -367,10 +367,17 @@ export const Dashboard: React.FC = () => {
                   <div className={iconClass}><Activity className="h-5 w-5" /></div>
                   <div>
                     <h2 className={`font-heading text-base font-bold ${colors.text}`}>Saúde do negócio</h2>
-                    <p className={`text-sm ${colors.textSecondary}`}>Leitura rápida do momento.</p>
+                    <p className={`text-sm ${colors.textSecondary}`}>
+                      Nota de 0 a 100: clientes que voltam, ticket médio e risco de perda.
+                    </p>
                   </div>
                 </div>
-                <span className={`font-mono text-2xl font-black tabular-nums ${accent.text}`}>{healthScore}</span>
+                <span
+                  className={`font-mono text-2xl font-black tabular-nums ${accent.text}`}
+                  title="Combina taxa de retorno de clientes, ticket médio registrado, serviço mais pedido e clientes em risco de abandono."
+                >
+                  {healthScore}
+                </span>
               </div>
               <div className="mt-5 space-y-3">
                 {healthSummary.map((item) => (

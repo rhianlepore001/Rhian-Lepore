@@ -85,7 +85,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   const content = (
     <div
-      className={`fixed inset-0 flex items-stretch justify-center ${isFull ? '' : 'p-3 md:p-4 items-center'}`}
+      className={`fixed inset-0 flex justify-center ${isFull ? 'items-stretch' : 'items-end md:items-center p-0 md:p-4'}`}
       style={{ zIndex: 'var(--z-modal)' }}
     >
       <div
@@ -113,7 +113,9 @@ export const Modal: React.FC<ModalProps> = ({
             'relative w-full',
             SIZE_MAP[size],
             classes.modalContainer,
-            isFull ? 'flex flex-col' : 'max-h-[calc(100vh-1.5rem)] md:max-h-[90vh] flex flex-col',
+            isFull
+              ? 'flex flex-col'
+              : 'max-h-[92dvh] md:max-h-[90vh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:animate-slide-up',
             'focus:outline-none',
             className,
           ].filter(Boolean).join(' ')}

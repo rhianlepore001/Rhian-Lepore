@@ -108,7 +108,9 @@
   - **Staff mobile:** ~20 `alert()`/`confirm()` da Agenda viraram ConfirmModal/Toast; footer do modal de detalhes com primário full-width; "Sair da Fila" implementado (RPC `cancel_queue_entry_public`, migration `20260703000001`); som da fila via Web Audio (sem CDN externo).
   - **Sistemático:** sweep `text-[9/10/11px]`→`text-xs` (250× em 68 arquivos); `buildWhatsAppLink` com DDI por região (mata `wa.me/55` fixo); moeda por região em todo o clube; bottom nav `${colors.bg}/40`→`color-mix`.
   - ⚠️ **2 migrations novas precisam ir pra produção:** `20260703000001_cancel_queue_entry_public.sql` e `20260704000001_public_club_rpcs.sql` (além das 2 do clube já pendentes).
-  - **Falta (Sprints 4-5 do plano):** re-skin geração antiga (QueueManagement, Reports, MembersList/JoinClub com PageHeader/tokens, settings frias, dourado do clube→token) e governança (lint gates, useTenantLocale, migração Tailwind CDN).
+  - **Sprint 4 concluído (04 Jul 2026):** QueueManagement, Reports, MembersList, JoinClub e settings frias (RecycleBin/Security/Subscription) no shell PageHeader + tokens (light mode funcional); modais custom da fila e do form de planos migrados pra ui/Modal; dourado do clube unificado com o accent do tema.
+  - **Sprint 5.1 concluído:** `scripts/check-design-debt.mjs` (ratchet) plugado no `npm run lint` — falha em violação NOVA de anti-padrão do MASTER.md §13; baseline commitado é o mapa da dívida restante (ClientCRM, ClientArea, ClubDemo, PublicBooking concentram o grosso). Reduziu dívida? `--update` pra apertar.
+  - **Pendente de decisão do Rhian (Sprint 5 restante):** useTenantLocale (5.2), migração Tailwind CDN→build (5.3, projeto próprio), modal→bottom-sheet no mobile (5.4), dieta de animação do PublicBooking (5.5). Branch pronta pra revisão visual e merge.
 
 ## 📋 Pendências / próximos passos
 

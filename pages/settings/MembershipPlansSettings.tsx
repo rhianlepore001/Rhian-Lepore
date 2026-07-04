@@ -9,7 +9,7 @@ import {
     useDeleteMembershipPlan,
 } from '../../hooks/useMemberships';
 import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships';
-import { Button } from '../../components/ui';
+import { Button, Modal } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -200,19 +200,24 @@ export const MembershipPlansSettings: React.FC = () => {
                     </div>
                 )}
 
-                {showForm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ zIndex: 'var(--z-modal)' }}>
-                        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-                        <div className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto ${colors.card} ${colors.border} border rounded-2xl p-6 space-y-4`}>
-                            <div className="flex items-center justify-between">
-                                <h2 className={`${font.heading} ${colors.text} text-lg uppercase`}>
-                                    {form.id ? 'Editar' : 'Novo'} Plano
-                                </h2>
-                                <button type="button" onClick={() => setShowForm(false)} className={`${colors.textMuted} hover:${colors.text} p-1`}>
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
+                <Modal
+                    open={showForm}
+                    onClose={() => setShowForm(false)}
+                    title={form.id ? 'Editar plano' : 'Novo plano'}
+                    size="lg"
+                    preventClose={upsertMutation.isPending}
+                    footer={
+                        <div className="flex gap-3 w-full">
+                            <Button variant="ghost" onClick={() => setShowForm(false)} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
+                                Cancelar
+                            </Button>
+                            <Button variant="primary" onClick={handleSave} loading={upsertMutation.isPending} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
+                                Salvar
+                            </Button>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
                             <div>
                                 <label className={`${classes.label} block mb-1.5`}>Nome do plano</label>
                                 <input
@@ -329,18 +334,8 @@ export const MembershipPlansSettings: React.FC = () => {
                                 />
                                 <span className={`${colors.text} text-sm`}>Plano disponível para novos clientes</span>
                             </label>
-
-                            <div className="flex gap-3 pt-2">
-                                <Button variant="ghost" onClick={() => setShowForm(false)} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
-                                    Cancelar
-                                </Button>
-                                <Button variant="primary" onClick={handleSave} loading={upsertMutation.isPending} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
-                                    Salvar
-                                </Button>
-                            </div>
-                        </div>
                     </div>
-                )}
+                </Modal>
             </div>
         </SettingsLayout>
     );

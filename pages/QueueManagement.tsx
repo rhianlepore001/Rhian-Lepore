@@ -11,11 +11,11 @@ import { formatPhone, formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { useQueueEntries, useBusinessSlug, useQueueTeamMembers, useServiceById, useAddManualQueueEntry, useUpdateQueueStatus, useFinishQueueEntry } from '../hooks/useQueue';
 import { useQueryClient } from '@tanstack/react-query';
-import { ConfirmModal, useToast } from '@/components/ui';
+import { ConfirmModal, Modal, useToast } from '@/components/ui';
 
 export const QueueManagement: React.FC = () => {
     const { user, region } = useAuth();
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent, isBeauty, classes, colors } = useBrutalTheme();
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const addManualMutation = useAddManualQueueEntry();
@@ -380,184 +380,164 @@ const confirmFinish = async () => {
             }
 
             {/* MANUAL ADD MODAL */}
-            {showAddModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl">
-                    <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative shadow-promax-depth`}>
-                        <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
-                            <X className="w-5 h-5" />
-                        </button>
-                        <h3 className="text-xl font-bold text-white mb-6 font-heading uppercase flex items-center gap-2">
-                            <User className={`w-5 h-5 ${accent.text}`} />
-                            Adicionar na Fila
-                        </h3>
-                        <form onSubmit={handleManualAdd} className="space-y-4">
-                            <div>
-                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Nome do Cliente *</label>
-                                <input
-                                    type="text"
-                                    value={addClientName}
-                                    onChange={e => setAddClientName(e.target.value)}
-                                    required
-                                    placeholder="Nome completo"
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Telefone (opcional)</label>
-                                <input
-                                    type="text"
-                                    value={addClientPhone}
-                                    onChange={e => setAddClientPhone(e.target.value)}
-                                    placeholder="(00) 00000-0000"
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-mono"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Serviço (opcional)</label>
-                                <input
-                                    type="text"
-                                    value={addServiceName}
-                                    onChange={e => setAddServiceName(e.target.value)}
-                                    placeholder="Ex: Corte de cabelo"
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
-                                />
-                            </div>
-                            <Button type="submit" variant="primary" fullWidth loading={isAdding}>
-                                {isAdding ? 'Adicionando...' : 'Adicionar na Fila'}
-                            </Button>
-                        </form>
+            <Modal
+                open={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                title="Adicionar na fila"
+                size="sm"
+            >
+                <form onSubmit={handleManualAdd} className="space-y-4">
+                    <div>
+                        <label className={`block ${classes.label} mb-1 ml-1`}>Nome do cliente *</label>
+                        <input
+                            type="text"
+                            value={addClientName}
+                            onChange={e => setAddClientName(e.target.value)}
+                            required
+                            placeholder="Nome completo"
+                            className={classes.input}
+                        />
                     </div>
-                </div>
-            )}
+                    <div>
+                        <label className={`block ${classes.label} mb-1 ml-1`}>Telefone (opcional)</label>
+                        <input
+                            type="text"
+                            value={addClientPhone}
+                            onChange={e => setAddClientPhone(e.target.value)}
+                            placeholder="(00) 00000-0000"
+                            className={`${classes.input} font-mono`}
+                        />
+                    </div>
+                    <div>
+                        <label className={`block ${classes.label} mb-1 ml-1`}>Serviço (opcional)</label>
+                        <input
+                            type="text"
+                            value={addServiceName}
+                            onChange={e => setAddServiceName(e.target.value)}
+                            placeholder="Ex: Corte de cabelo"
+                            className={classes.input}
+                        />
+                    </div>
+                    <Button type="submit" variant="primary" fullWidth loading={isAdding}>
+                        {isAdding ? 'Adicionando...' : 'Adicionar na fila'}
+                    </Button>
+                </form>
+            </Modal>
 
             {/* FINISH MODAL */}
-            {
-                showFinishModal && finishingEntry && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in">
-                        <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-promax-depth`}>
-                            <button onClick={() => setShowFinishModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
+            <Modal
+                open={showFinishModal && !!finishingEntry}
+                onClose={() => setShowFinishModal(false)}
+                title="Finalizar atendimento"
+                size="sm"
+                preventClose={isFinishing}
+                footer={
+                    <Button
+                        onClick={confirmFinish}
+                        loading={isFinishing}
+                        variant="primary"
+                        fullWidth
+                    >
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Confirmar e receber
+                    </Button>
+                }
+            >
+                {finishingEntry && (
+                    <div className="space-y-4">
+                        <div className={`p-4 ${colors.surface} rounded-2xl border ${colors.border}`}>
+                            <p className={classes.label}>Cliente</p>
+                            <p className={`${colors.text} font-bold text-lg`}>{finishingEntry.client_name}</p>
+                            <p className={`${colors.textSecondary} text-sm font-mono`}>{formatPhone(finishingEntry.client_phone, region === 'PT' ? 'PT' : 'BR')}</p>
+                        </div>
 
-                            <h3 className="text-xl font-bold text-white mb-6 font-heading uppercase flex items-center gap-2">
-                                <Check className="w-5 h-5 text-green-500" />
-                                Finalizar Atendimento
-                            </h3>
+                        <div>
+                            <label className={`block ${classes.label} mb-1 ml-1`}>Serviço realizado</label>
+                            <input
+                                type="text"
+                                value={finishService}
+                                onChange={e => setFinishService(e.target.value)}
+                                className={classes.input}
+                            />
+                        </div>
 
-                            <div className="space-y-4">
-                                <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10">
-                                    <p className="text-xs uppercase text-neutral-500 font-bold mb-1">Cliente</p>
-                                    <p className="text-white font-bold text-lg">{finishingEntry.client_name}</p>
-                                    <p className="text-neutral-400 text-sm font-mono">{formatPhone(finishingEntry.client_phone, region === 'PT' ? 'PT' : 'BR')}</p>
-                                </div>
+                        <div>
+                            <label className={`block ${classes.label} mb-1 ml-1`}>Valor final ({region === 'PT' ? '€' : 'R$'})</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={finishPrice}
+                                onChange={e => setFinishPrice(e.target.value)}
+                                className={`${classes.input} text-xl font-mono`}
+                            />
+                        </div>
 
-                                <div>
-                                    <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Serviço Realizado</label>
-                                    <input
-                                        type="text"
-                                        value={finishService}
-                                        onChange={e => setFinishService(e.target.value)}
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-medium"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Valor Final ({region === 'PT' ? '€' : 'R$'})</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={finishPrice}
-                                        onChange={e => setFinishPrice(e.target.value)}
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white text-xl font-mono focus:outline-none focus:border-green-500/50 transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Profissional</label>
-                                    <select
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
-                                        value={finishPro}
-                                        onChange={e => setFinishPro(e.target.value)}
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {teamMembers.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <Button
-                                    onClick={confirmFinish}
-                                    loading={isFinishing}
-                                    className="w-full mt-4 bg-green-500 hover:bg-green-400 text-black border-none"
-                                >
-                                    <DollarSign className="w-4 h-4 mr-2" />
-                                    Confirmar e Receber
-                                </Button>
-                            </div>
+                        <div>
+                            <label className={`block ${classes.label} mb-1 ml-1`}>Profissional</label>
+                            <select
+                                className={classes.input}
+                                value={finishPro}
+                                onChange={e => setFinishPro(e.target.value)}
+                            >
+                                <option value="">Selecione...</option>
+                                {teamMembers.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
-                )
-            }
+                )}
+            </Modal>
 
-            {/* QR MODAL (Keep as is, just styled) */}
-            {
-                showQrModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in">
-                        <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-promax-depth`}>
-                            <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
-
-                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 font-heading uppercase">
-                                <QrCode className={`w-5 h-5 ${accent.text}`} />
-                                QR Code da Fila
-                            </h3>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs uppercase font-bold text-neutral-500 mb-2 block">Vincular a Profissional (Opcional)</label>
-                                    <select
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-neutral-500"
-                                        value={selectedQrPro || ''}
-                                        onChange={(e) => setSelectedQrPro(e.target.value || null)}
-                                    >
-                                        <option value="">Geral da Barbearia</option>
-                                        {teamMembers.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="bg-white p-4 rounded-2xl flex justify-center">
-                                    {businessSlug ? (
-                                        <img
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(getQrUrl())}`}
-                                            className="w-48 h-48"
-                                            alt="QR Code"
-                                        />
-                                    ) : (
-                                        <div className="w-48 h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
-                                            Carregando...
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="text-center p-2.5 bg-white/[0.03] rounded-2xl border border-white/10">
-                                    <p className="text-xs text-neutral-500 break-all font-mono opacity-60">
-                                        {getQrUrl()}
-                                    </p>
-                                </div>
-
-                                <Button onClick={downloadQr} className="w-full">
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Baixar Imagem
-                                </Button>
-                            </div>
-                        </div>
+            {/* QR MODAL */}
+            <Modal
+                open={showQrModal}
+                onClose={() => setShowQrModal(false)}
+                title="QR Code da fila"
+                size="sm"
+                footer={
+                    <Button onClick={downloadQr} fullWidth>
+                        <Download className="w-4 h-4 mr-2" />
+                        Baixar imagem
+                    </Button>
+                }
+            >
+                <div className="space-y-4">
+                    <div>
+                        <label className={`block ${classes.label} mb-2`}>Vincular a profissional (opcional)</label>
+                        <select
+                            className={classes.input}
+                            value={selectedQrPro || ''}
+                            onChange={(e) => setSelectedQrPro(e.target.value || null)}
+                        >
+                            <option value="">Fila geral</option>
+                            {teamMembers.map(m => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                        </select>
                     </div>
-                )
-            }
+
+                    <div className="bg-white p-4 rounded-2xl flex justify-center">
+                        {businessSlug ? (
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(getQrUrl())}`}
+                                className="w-48 h-48"
+                                alt="QR Code"
+                            />
+                        ) : (
+                            <div className="w-48 h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
+                                Carregando...
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`text-center p-2.5 ${colors.surface} rounded-2xl border ${colors.border}`}>
+                        <p className={`text-xs ${colors.textMuted} break-all font-mono`}>
+                            {getQrUrl()}
+                        </p>
+                    </div>
+                </div>
+            </Modal>
 
             <ConfirmModal
                 open={!!noShowTarget}

@@ -1760,13 +1760,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         </div>
 
                         {/* Footer Actions */}
-                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-wrap gap-3 rounded-b-2xl`}>
+                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-col gap-3 rounded-b-2xl`}>
                             {(detailsApt.status === 'Confirmed' || detailsApt.status === 'Pending') ? (
                                 <>
                                     {/* Confirmar e cobrar — disponível para dono E colaborador (abre o checkout) */}
                                     <Button
                                         variant="primary"
-                                        className="flex-1 flex justify-center items-center gap-2"
+                                        className="w-full flex justify-center items-center gap-2"
                                         onClick={() => {
                                             setCheckoutAppointment(detailsApt as unknown as import('../types').Appointment);
                                             setShowingDetailsAppointment(null);
@@ -1774,34 +1774,36 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     >
                                         <DollarSign className="w-4 h-4" /> Confirmar e cobrar
                                     </Button>
-                                    {/* Faltou — dono E colaborador */}
-                                    <Button
-                                        variant="secondary"
-                                        className="flex-1 flex justify-center items-center gap-2"
-                                        onClick={() => handleNoShowAppointment(detailsApt.id)}
-                                    >
-                                        <Ban className="w-4 h-4" /> Faltou
-                                    </Button>
-                                    {/* Editar — apenas o dono */}
-                                    {!isStaff && detailsApt.status === 'Confirmed' && (
+                                    <div className="flex gap-3">
+                                        {/* Faltou — dono E colaborador */}
                                         <Button
                                             variant="secondary"
                                             className="flex-1 flex justify-center items-center gap-2"
-                                            onClick={() => {
-                                                setEditingAppointment(detailsApt);
-                                                setShowingDetailsAppointment(null);
-                                            }}
+                                            onClick={() => handleNoShowAppointment(detailsApt.id)}
                                         >
-                                            <Edit2 className="w-4 h-4" /> Editar
+                                            <Ban className="w-4 h-4" /> Faltou
                                         </Button>
-                                    )}
-                                    <Button
-                                        variant="ghost"
-                                        className="flex-1 flex justify-center items-center gap-2"
-                                        onClick={() => setShowingDetailsAppointment(null)}
-                                    >
-                                        Fechar
-                                    </Button>
+                                        {/* Editar — apenas o dono */}
+                                        {!isStaff && detailsApt.status === 'Confirmed' && (
+                                            <Button
+                                                variant="secondary"
+                                                className="flex-1 flex justify-center items-center gap-2"
+                                                onClick={() => {
+                                                    setEditingAppointment(detailsApt);
+                                                    setShowingDetailsAppointment(null);
+                                                }}
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Editar
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            className="flex-1 flex justify-center items-center gap-2"
+                                            onClick={() => setShowingDetailsAppointment(null)}
+                                        >
+                                            Fechar
+                                        </Button>
+                                    </div>
                                 </>
                             ) : (
                                 <Button

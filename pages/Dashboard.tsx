@@ -69,7 +69,8 @@ export const Dashboard: React.FC = () => {
     const now = new Date();
     if (now.getHours() < 20) return;
     const fetchUnfinished = async () => {
-      const todayStr = now.toISOString().split('T')[0];
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
       const { count } = await supabase
         .from('appointments')
         .select('id', { count: 'exact', head: true })

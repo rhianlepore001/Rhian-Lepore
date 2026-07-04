@@ -4,6 +4,8 @@ import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { useToast } from '../components/ui/Toast';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -16,7 +18,7 @@ import { EmptyState } from '../components/EmptyState';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
 import { deleteAppointmentWithFinance } from '../services/scheduling';
 
-import { formatCurrency, formatPhone } from '../utils/formatters';
+import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
@@ -144,6 +146,15 @@ export const Agenda: React.FC = () => {
 
 
     const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
+    const { showToast } = useToast();
+    const [confirmDialog, setConfirmDialog] = useState<{
+        title: string;
+        message: string;
+        confirmLabel: string;
+        cancelLabel?: string;
+        variant?: 'danger' | 'default';
+        onConfirm: () => void;
+    } | null>(null);
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
@@ -552,24 +563,30 @@ export const Agenda: React.FC = () => {
         }
     };
 
-    const handleDeleteHistoryAppointment = async (appointmentId: string) => {
+    const handleDeleteHistoryAppointment = (appointmentId: string) => {
         if (isStaff) {
-            alert('Apenas o dono pode excluir agendamentos do histórico.');
+            showToast('Apenas o dono pode excluir agendamentos do histórico.', 'warning');
             return;
         }
-        if (!confirm('Tem certeza que deseja excluir este agendamento do histórico? Esta ação é irreversível e removerá também o registro financeiro associado.')) return;
-
-        try {
-            // Exclusão atômica (agendamento + registro financeiro) via RPC transacional, com escopo de tenant no banco.
-            await deleteAppointmentWithFinance({ appointmentId });
-
-            alert('Agendamento e registro financeiro excluídos com sucesso!');
-            fetchHistoryAppointments(); // Refresh history
-            fetchData(); // Also refresh main agenda data in case it affects counts/stats
-        } catch (error) {
-            logger.error('Error deleting history appointment', error);
-            alert('Erro ao excluir agendamento do histórico.');
-        }
+        setConfirmDialog({
+            title: 'Excluir do histórico',
+            message: 'Esta ação é irreversível e remove também o registro financeiro associado. Excluir mesmo assim?',
+            confirmLabel: 'Excluir',
+            variant: 'danger',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    // Exclusão atômica (agendamento + registro financeiro) via RPC transacional, com escopo de tenant no banco.
+                    await deleteAppointmentWithFinance({ appointmentId });
+                    showToast('Agendamento e registro financeiro excluídos.', 'success');
+                    fetchHistoryAppointments();
+                    fetchData();
+                } catch (error) {
+                    logger.error('Error deleting history appointment', error);
+                    showToast('Erro ao excluir agendamento do histórico.', 'error');
+                }
+            },
+        });
     };
 
     const handleAcceptBooking = async (booking: any) => {
@@ -712,44 +729,48 @@ export const Agenda: React.FC = () => {
 
             await confirmPublicBooking(booking.id, user.id);
 
-            // Fetch the client to ensure we have the correct phone number if it was just created
             const phone = booking.customer_phone;
-            const waPhone = phone.replace(/\D/g, '');
-            const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+            const dateObj = new Date(booking.appointment_time);
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+            const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const establishment = businessName;
+            const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
 
-            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
-                const dateObj = new Date(booking.appointment_time);
-                const formattedDate = dateObj.toLocaleDateString('pt-BR');
-                const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                const establishment = businessName;
-
-                const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
-                const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
-
-                const message = isBeauty
-                    ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
-                    `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
-                    `📅 *${formattedDate}* às *${formattedTime}*\n` +
-                    `💼 *Serviço*: ${serviceNames}\n` +
-                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `📍  Local: estamos te esperando!\n\n` +
-                    `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
-                    : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️ \n` +
-                    `Marque na sua agenda:\n` +
-                    `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
-                    `✂️  *Serviço*: ${serviceNames}\n` +
-                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `📍  Onde: *${establishment || 'Barbearia'}*.\n\n` +
-                    `Prepare-se para o trato! Nos vemos em breve. 👋`;
-
-                const waMessage = encodeURIComponent(message);
-                window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
-            }
+            const message = isBeauty
+                ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
+                `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
+                `📅 *${formattedDate}* às *${formattedTime}*\n` +
+                `💼 *Serviço*: ${serviceNames}\n` +
+                `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                `📍  Local: estamos te esperando!\n\n` +
+                `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
+                : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️ \n` +
+                `Marque na sua agenda:\n` +
+                `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
+                `✂️  *Serviço*: ${serviceNames}\n` +
+                `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                `📍  Onde: *${establishment || 'Barbearia'}*.\n\n` +
+                `Prepare-se para o trato! Nos vemos em breve. 👋`;
 
             fetchData();
+
+            if (phone) {
+                setConfirmDialog({
+                    title: 'Agendamento aceito',
+                    message: 'Deseja enviar a confirmação para o cliente via WhatsApp?',
+                    confirmLabel: 'Enviar no WhatsApp',
+                    cancelLabel: 'Agora não',
+                    onConfirm: () => {
+                        setConfirmDialog(null);
+                        window.open(buildWhatsAppLink(phone, currencyRegion, message), '_blank');
+                    },
+                });
+            } else {
+                showToast('Agendamento aceito com sucesso!', 'success');
+            }
         } catch (error) {
             logger.error('Error accepting booking', error);
-            alert('Erro ao aceitar agendamento.');
+            showToast('Erro ao aceitar agendamento.', 'error');
         } finally {
             setIsProcessing(false);
         }
@@ -758,16 +779,17 @@ export const Agenda: React.FC = () => {
     const handleRejectBooking = async (bookingId: string) => {
         try {
             await rejectPublicBooking(bookingId, user.id);
-            alert('Solicitação recusada.');
+            showToast('Solicitação recusada.', 'success');
             fetchData();
         } catch (error) {
             logger.error('Error rejecting booking', error);
+            showToast('Erro ao recusar a solicitação.', 'error');
         }
     };
 
     const handleCompleteAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
         if (isStaff) {
-            alert('Apenas o dono pode concluir agendamentos.');
+            showToast('Apenas o dono pode concluir agendamentos.', 'warning');
             return;
         }
         try {
@@ -782,47 +804,63 @@ export const Agenda: React.FC = () => {
             }
         } catch (error: any) {
             logger.error('Error completing appointment', error);
-            alert(`Erro ao concluir agendamento: ${error.message || error}`);
+            showToast('Erro ao concluir agendamento. Tente novamente.', 'error');
         }
     };
-    const handleCancelAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
+    const handleCancelAppointment = (appointmentId: string, isOverdue: boolean = false) => {
         if (isStaff) {
-            alert('Apenas o dono pode cancelar agendamentos.');
+            showToast('Apenas o dono pode cancelar agendamentos.', 'warning');
             return;
         }
-        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
-        try {
-            await supabase
-                .from('appointments')
-                .update({ status: 'Cancelled' })
-                .eq('id', appointmentId);
-            alert('Agendamento cancelado e movido para o histórico!');
-            if (isOverdue) {
-                fetchOverdueAppointments();
-            } else {
-                fetchData();
-            }
-        } catch (error) {
-            logger.error('Error cancelling appointment', error);
-            alert('Erro ao cancelar agendamento.');
-        }
+        setConfirmDialog({
+            title: 'Cancelar agendamento',
+            message: 'O agendamento será movido para o histórico. Cancelar mesmo assim?',
+            confirmLabel: 'Cancelar agendamento',
+            cancelLabel: 'Voltar',
+            variant: 'danger',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    await supabase
+                        .from('appointments')
+                        .update({ status: 'Cancelled' })
+                        .eq('id', appointmentId);
+                    showToast('Agendamento cancelado e movido para o histórico.', 'success');
+                    if (isOverdue) {
+                        fetchOverdueAppointments();
+                    } else {
+                        fetchData();
+                    }
+                } catch (error) {
+                    logger.error('Error cancelling appointment', error);
+                    showToast('Erro ao cancelar agendamento.', 'error');
+                }
+            },
+        });
     };
 
-    const handleNoShowAppointment = async (appointmentId: string) => {
-        if (!confirm('Marcar como "Não compareceu"? O agendamento permanece no histórico.')) return;
-        try {
-            const { error } = await supabase
-                .from('appointments')
-                .update({ status: 'NoShow' })
-                .eq('id', appointmentId)
-                .eq('user_id', effectiveUserId);
-            if (error) throw error;
-            setShowingDetailsAppointment(null);
-            fetchData();
-        } catch (error) {
-            logger.error('Error marking appointment as no-show', error);
-            alert('Erro ao marcar como não compareceu.');
-        }
+    const handleNoShowAppointment = (appointmentId: string) => {
+        setConfirmDialog({
+            title: 'Cliente faltou',
+            message: 'Marcar como "Não compareceu"? O agendamento permanece no histórico.',
+            confirmLabel: 'Marcar falta',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    const { error } = await supabase
+                        .from('appointments')
+                        .update({ status: 'NoShow' })
+                        .eq('id', appointmentId)
+                        .eq('user_id', effectiveUserId);
+                    if (error) throw error;
+                    setShowingDetailsAppointment(null);
+                    fetchData();
+                } catch (error) {
+                    logger.error('Error marking appointment as no-show', error);
+                    showToast('Erro ao marcar como não compareceu.', 'error');
+                }
+            },
+        });
     };
 
     const handleAssignToProfessional = async (appointmentId: string, professionalId: string) => {
@@ -835,7 +873,7 @@ export const Agenda: React.FC = () => {
             fetchData();
         } catch (error) {
             logger.error('Error assigning professional', error);
-            alert('Erro ao atribuir profissional.');
+            showToast('Erro ao atribuir profissional.', 'error');
         }
     };
 
@@ -854,14 +892,14 @@ export const Agenda: React.FC = () => {
 
     const handleCreateAppointment = async () => {
         if (!user || !selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedTime || !selectedAppointmentDate) {
-            alert('Preencha todos os campos!');
+            showToast('Preencha todos os campos!', 'warning');
             return;
         }
 
         try {
             const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
             if (selectedServicesDetails.length === 0) {
-                alert('Serviço inválido.');
+                showToast('Serviço inválido.', 'warning');
                 return;
             }
 
@@ -870,7 +908,7 @@ export const Agenda: React.FC = () => {
             // Use manually edited price
             const finalPrice = parseFloat(finalPriceInput);
             if (isNaN(finalPrice)) {
-                alert('Preço inválido!');
+                showToast('Preço inválido!', 'warning');
                 return;
             }
 
@@ -899,31 +937,31 @@ export const Agenda: React.FC = () => {
             // Prompt for WhatsApp confirmation
             const client = clients.find(c => c.id === selectedClient);
             if (client?.phone) {
-                const waPhone = client.phone.replace(/\D/g, '');
-                const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+                const clientPhone = client.phone;
+                const formattedDate = dateTime.toLocaleDateString('pt-BR');
+                const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
 
-                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
-                    const dateObj = dateTime;
-                    const formattedDate = dateObj.toLocaleDateString('pt-BR');
-                    const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    const establishment = businessName;
-
-                    const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
-                    const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
-
-                    const message = `Agendamento confirmado! ✨
+                const message = `Agendamento confirmado! ✨
 Data: ${formattedDate}
 Horário: ${formattedTime}
 Serviço: ${serviceNames}
 Valor: ${currencySymbol} ${formattedPrice}
 
-Obrigada pela confiança! Te espero no ${establishment}.`;
+Obrigada pela confiança! Te espero no ${businessName}.`;
 
-                    const waMessage = encodeURIComponent(message);
-                    window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
-                }
+                setConfirmDialog({
+                    title: 'Agendamento criado',
+                    message: 'Deseja enviar a confirmação para o cliente via WhatsApp?',
+                    confirmLabel: 'Enviar no WhatsApp',
+                    cancelLabel: 'Agora não',
+                    onConfirm: () => {
+                        setConfirmDialog(null);
+                        window.open(buildWhatsAppLink(clientPhone, currencyRegion, message), '_blank');
+                    },
+                });
             } else {
-                alert('Agendamento criado com sucesso!');
+                showToast('Agendamento criado com sucesso!', 'success');
             }
 
             setShowNewAppointmentModal(false);
@@ -942,7 +980,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
         } catch (error) {
             logger.error('Error creating appointment', error);
-            alert('Erro ao criar agendamento.');
+            showToast('Erro ao criar agendamento.', 'error');
         }
     };
 
@@ -1779,6 +1817,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     </FocusTrap>
                 </div>, document.body
             )}
+
+            {/* Confirmações (substitui os dialogs nativos) */}
+            <ConfirmModal
+                open={!!confirmDialog}
+                title={confirmDialog?.title || 'Confirmar'}
+                message={confirmDialog?.message || ''}
+                confirmLabel={confirmDialog?.confirmLabel || 'Confirmar'}
+                cancelLabel={confirmDialog?.cancelLabel || 'Cancelar'}
+                variant={confirmDialog?.variant || 'default'}
+                onConfirm={() => confirmDialog?.onConfirm()}
+                onCancel={() => setConfirmDialog(null)}
+            />
 
             {/* All Future Appointments Modal */}
             <AllAppointmentsModal

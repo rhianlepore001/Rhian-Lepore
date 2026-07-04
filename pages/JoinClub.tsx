@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Check, MessageCircle, Store, ArrowRight, Crown, Zap } from 'lucide-react';
 import { usePublicMembershipPlans, usePublicPixConfig, useCreatePublicMembershipRequest, useCreatePublicPixPayment } from '../hooks/useMemberships';
 import { useBusinessProfileBySlug } from '../hooks/usePublicBooking';
-import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
 import { PlanCard } from '../components/membership/PlanCard';
 import { PixDisplay } from '../components/membership/PixDisplay';
@@ -15,12 +15,13 @@ import { formatCurrency, Region } from '../utils/formatters';
 export const JoinClub: React.FC = () => {
     const [searchParams] = useSearchParams();
     const slug = searchParams.get('slug') || '';
-    const { colors, classes, accent, font } = useBrutalTheme();
     const { showToast } = useToast();
 
     const { data: businessProfile, isLoading: profileLoading } = useBusinessProfileBySlug(slug);
     const businessId = (businessProfile as { id?: string } | null)?.id ?? null;
     const region = ((businessProfile as { region?: string } | null)?.region === 'PT' ? 'PT' : 'BR') as Region;
+    const themeOverride: ThemeVariant = (businessProfile as { user_type?: string } | null)?.user_type === 'beauty' ? 'beauty' : 'barber';
+    const { colors, classes, accent, font } = useBrutalTheme({ override: themeOverride });
     const { data: plans, isLoading: plansLoading } = usePublicMembershipPlans(businessId);
     const { data: pixConfig, isLoading: pixLoading } = usePublicPixConfig(businessId);
     const createMembership = useCreatePublicMembershipRequest(businessId);
@@ -54,6 +55,10 @@ export const JoinClub: React.FC = () => {
         }
         if (clientPhone.replace(/\D/g, '').length < 10) {
             showToast('WhatsApp inválido.', 'error');
+            return;
+        }
+        if (paymentMethod === 'pix' && !pixReady) {
+            showToast('O Pix ainda não está disponível aqui. Escolha pagar no balcão.', 'error');
             return;
         }
         setSubmitting(true);
@@ -288,7 +293,7 @@ export const JoinClub: React.FC = () => {
                                 Solicitação enviada!
                             </h2>
                             <p className="text-neutral-300 text-base max-w-md mx-auto">
-                                {paymentMethod === 'pix' ? (
+                                {paymentMethod === 'pix' && pixBrCode ? (
                                     <>Escaneie o QR Code abaixo. Seu plano será ativado em segundos após o pagamento.</>
                                 ) : (
                                     <>Na próxima visita, pague no balcão. Seu plano será ativado após a confirmação.</>

@@ -94,6 +94,82 @@ export async function fetchActiveMembershipPlans(companyId: string): Promise<Mem
     return (data ?? []) as MembershipPlan[];
 }
 
+// ============================================================================
+// Fluxo público (/clube, sem login) — RPCs SECURITY DEFINER escopados por
+// business_id. Migration: 20260704000001_public_club_rpcs.sql
+// ============================================================================
+
+export async function fetchPublicMembershipPlans(businessId: string): Promise<MembershipPlan[]> {
+    const { data, error } = await supabase.rpc('get_public_membership_plans', {
+        p_business_id: businessId,
+    });
+    if (error) throw error;
+    return (data ?? []) as MembershipPlan[];
+}
+
+export async function fetchPublicPixConfig(businessId: string): Promise<{
+    pix_key_type: PixKeyType | null;
+    pix_key_value: string | null;
+    pix_holder_name: string | null;
+    pix_merchant_city: string | null;
+}> {
+    const { data, error } = await supabase.rpc('get_public_pix_config', {
+        p_business_id: businessId,
+    });
+    if (error) throw error;
+    const row = data?.[0];
+    return {
+        pix_key_type: (row?.pix_key_type as PixKeyType | null) ?? null,
+        pix_key_value: row?.pix_key_value ?? null,
+        pix_holder_name: row?.pix_holder_name ?? null,
+        pix_merchant_city: row?.pix_merchant_city ?? null,
+    };
+}
+
+export interface CreatePublicMembershipInput {
+    clientName: string;
+    clientPhone: string;
+    planId: string;
+    paymentMethod: 'pix' | 'in_person';
+}
+
+export async function createPublicMembershipRequest(
+    businessId: string,
+    input: CreatePublicMembershipInput
+): Promise<string> {
+    const { data, error } = await supabase.rpc('create_public_membership_request', {
+        p_business_id: businessId,
+        p_client_name: input.clientName,
+        p_client_phone: input.clientPhone,
+        p_plan_id: input.planId,
+        p_payment_method: input.paymentMethod,
+    });
+    if (error) throw error;
+    return data as string;
+}
+
+export interface CreatePublicPixPaymentInput {
+    membershipId: string;
+    brCode: string;
+    txid: string;
+    expiresAt: string;
+}
+
+export async function createPublicPixPayment(
+    businessId: string,
+    input: CreatePublicPixPaymentInput
+): Promise<string> {
+    const { data, error } = await supabase.rpc('create_public_pix_payment', {
+        p_business_id: businessId,
+        p_membership_id: input.membershipId,
+        p_br_code: input.brCode,
+        p_txid: input.txid,
+        p_expires_at: input.expiresAt,
+    });
+    if (error) throw error;
+    return data as string;
+}
+
 export interface UpsertMembershipPlanInput {
     id?: string;
     name: string;

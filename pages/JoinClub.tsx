@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Check, MessageCircle, Store, ArrowRight, Crown, Zap } from 'lucide-react';
-import { useActiveMembershipPlans, useBusinessPixConfig, useCreateMembershipRequest, useCreatePixPayment } from '../hooks/useMemberships';
+import { usePublicMembershipPlans, usePublicPixConfig, useCreatePublicMembershipRequest, useCreatePublicPixPayment } from '../hooks/useMemberships';
 import { useBusinessProfileBySlug } from '../hooks/usePublicBooking';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
@@ -10,7 +10,6 @@ import { PixDisplay } from '../components/membership/PixDisplay';
 import { MembershipPlan } from '../services/memberships';
 import { generatePixPayload } from '../lib/pix-generator';
 import { generatePixTxid } from '../lib/pix-txid';
-import { supabase } from '../lib/supabase';
 import { formatCurrency, Region } from '../utils/formatters';
 
 export const JoinClub: React.FC = () => {
@@ -22,10 +21,10 @@ export const JoinClub: React.FC = () => {
     const { data: businessProfile, isLoading: profileLoading } = useBusinessProfileBySlug(slug);
     const businessId = (businessProfile as { id?: string } | null)?.id ?? null;
     const region = ((businessProfile as { region?: string } | null)?.region === 'PT' ? 'PT' : 'BR') as Region;
-    const { data: plans, isLoading: plansLoading } = useActiveMembershipPlans();
-    const { data: pixConfig, isLoading: pixLoading } = useBusinessPixConfig();
-    const createMembership = useCreateMembershipRequest();
-    const createPix = useCreatePixPayment();
+    const { data: plans, isLoading: plansLoading } = usePublicMembershipPlans(businessId);
+    const { data: pixConfig, isLoading: pixLoading } = usePublicPixConfig(businessId);
+    const createMembership = useCreatePublicMembershipRequest(businessId);
+    const createPix = useCreatePublicPixPayment(businessId);
 
     const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
     const [step, setStep] = useState<'choose' | 'pay' | 'confirmation'>('choose');
@@ -59,37 +58,13 @@ export const JoinClub: React.FC = () => {
         }
         setSubmitting(true);
         try {
-            const phone = clientPhone.replace(/\D/g, '');
-
-            // Resolve client_id (existing or new)
-            let clientId: string | null = null;
-            const { data: existing } = await supabase
-                .from('clients')
-                .select('id')
-                .eq('user_id', businessId)
-                .eq('phone', phone)
-                .maybeSingle();
-            if (existing) {
-                clientId = existing.id;
-            } else {
-                const { data: newClient, error: createErr } = await supabase
-                    .from('clients')
-                    .insert({
-                        user_id: businessId,
-                        name: clientName.trim(),
-                        phone,
-                    })
-                    .select('id')
-                    .single();
-                if (createErr) throw createErr;
-                clientId = newClient.id;
-            }
-
-            // Create pending membership (via hook)
-            const ms = await createMembership.mutateAsync({
-                client_id: clientId,
-                plan_id: selectedPlan.id,
-                payment_method: paymentMethod,
+            // RPC público resolve/cria o cliente e a membership pending no servidor,
+            // sempre escopado pelo businessId do slug (nunca pela sessão).
+            const membershipId = await createMembership.mutateAsync({
+                clientName: clientName.trim(),
+                clientPhone,
+                planId: selectedPlan.id,
+                paymentMethod,
             });
 
             // Sprint D+1: Se escolheu Pix e barbeiro tem chave configurada, gera pix_payment
@@ -105,11 +80,10 @@ export const JoinClub: React.FC = () => {
                 });
                 const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
                 await createPix.mutateAsync({
-                    membership_id: ms.id,
-                    amount_cents: selectedPlan.price_cents,
-                    br_code: brCode,
+                    membershipId,
+                    brCode,
                     txid,
-                    expires_at: expiresAt,
+                    expiresAt,
                 });
                 setPixBrCode(brCode);
             }
@@ -122,7 +96,16 @@ export const JoinClub: React.FC = () => {
                 'success'
             );
         } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            const message = (err as Error).message || '';
+            if (message.includes('membership_already_exists')) {
+                showToast('Este WhatsApp já tem uma assinatura ativa ou pendente aqui. Fale com o estabelecimento.', 'error');
+            } else if (message.includes('plan_not_found')) {
+                showToast('Este plano não está mais disponível. Escolha outro.', 'error');
+            } else if (message.includes('invalid_phone')) {
+                showToast('WhatsApp inválido. Confira o número.', 'error');
+            } else {
+                showToast('Não foi possível enviar sua solicitação. Tente novamente.', 'error');
+            }
         } finally {
             setSubmitting(false);
         }

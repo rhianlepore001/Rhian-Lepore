@@ -19,6 +19,7 @@ import {
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 export const Reports: React.FC = () => {
     const { user, companyId, region } = useAuth();
@@ -31,7 +32,7 @@ export const Reports: React.FC = () => {
 
     const { stats, clientInsights, loading } = useReportsData(effectiveUserId);
 
-    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+    const { region: currencyRegion } = useTenantLocale();
 
     const handleMonthChange = (month: number, year: number) => {
         setSelectedMonth(month);

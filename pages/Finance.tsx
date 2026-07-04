@@ -19,6 +19,7 @@ import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
 import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history' | 'insights';
 
@@ -143,8 +144,7 @@ const [searchParams, setSearchParams] = useSearchParams();
     expenseFill: '#EF4444',
   }), [isDark]);
   const { showToast } = useToast();
-  const currencySymbol = region === 'PT' ? '€' : 'R$';
-  const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+  const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
   const queryUserId = isStaff && companyId ? companyId : (user?.id || '');
   const { data: monthlyHistoryData, refetch: refetchMonthlyHistory } = useMonthlyHistory(user?.id || '', 12);

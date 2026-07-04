@@ -19,6 +19,7 @@ import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { OccupancyRateCard } from '../components/dashboard/OccupancyRateCard';
 import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
 import { CancellationRateCard } from '../components/dashboard/CancellationRateCard';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
 const GoalHistoryModal = lazy(() => import('../components/dashboard/modals/GoalHistoryModal').then(m => ({ default: m.GoalHistoryModal })));
@@ -98,7 +99,7 @@ export const Dashboard: React.FC = () => {
 
   const { accent, colors, density, font, status, isBeauty } = useBrutalTheme();
   const { data: clubStats } = useMembershipStats();
-  const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+  const { region: currencyRegion } = useTenantLocale();
   const firstName = fullName?.split(' ')[0] || 'Profissional';
   const todayLabel = formatDateLong(new Date(), currencyRegion);
   const todayRevenue = profitMetrics.todayRevenue ?? 0;

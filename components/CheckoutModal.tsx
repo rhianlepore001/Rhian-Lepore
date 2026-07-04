@@ -12,6 +12,7 @@ import { useCheckout } from '@/hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
 import { useProducts, useSellProduct } from '@/hooks/useCatalog';
 import type { Product } from '@/types/catalog';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface TeamMember {
   id: string;
@@ -238,7 +239,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         { value: 'credit', label: 'Crédito' },
       ];
 
-  const currencyLabel = region === 'PT' ? '€' : 'R$';
+  const { currencySymbol: currencyLabel } = useTenantLocale();
 
   return (
     <Modal

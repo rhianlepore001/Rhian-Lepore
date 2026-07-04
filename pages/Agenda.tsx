@@ -24,6 +24,7 @@ import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime } from '../utils/date';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../utils/appointmentStatus';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 // Ícone por estado visual — indicador secundário (forma + cor) para daltônicos/baixa visão.
 const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?: string }>> = {
@@ -155,8 +156,7 @@ export const Agenda: React.FC = () => {
         variant?: 'danger' | 'default';
         onConfirm: () => void;
     } | null>(null);
-    const currencySymbol = region === 'PT' ? '€' : 'R$';
-    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+    const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 

@@ -11,6 +11,7 @@ export const appointmentStatusSchema = z.enum([
 export const checkoutPaymentMethodSchema = z.enum([
   ...paymentMethodSchema.options,
   'mbway',
+  'membership',
 ]);
 
 export const machineFeeSettingsSchema = z.object({

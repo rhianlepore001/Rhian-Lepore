@@ -193,8 +193,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
 
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
-      // Sprint D+1: Se totalmente coberto, marca como 'pix' (placeholder, não é cobrado de fato)
-      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'pix' : (paymentMethod as CheckoutPaymentMethod);
+      // Coberto pela assinatura: registra como 'membership' pra nao poluir o Pix no financeiro
+      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'membership' : (paymentMethod as CheckoutPaymentMethod);
 
       await mutateAsync({
         appointmentId: appointment.id,

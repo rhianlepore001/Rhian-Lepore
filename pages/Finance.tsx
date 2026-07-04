@@ -38,6 +38,15 @@ interface Transaction {
   status: 'paid' | 'pending';
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  pix: 'Pix',
+  cash: 'Dinheiro',
+  debit: 'Débito',
+  credit: 'Crédito',
+  mbway: 'MBWay',
+  membership: 'Clube',
+};
+
 interface MonthlyHistoryItem {
   month: string;
   year: number;
@@ -493,7 +502,7 @@ useEffect(() => {
       align: 'center',
       render: (t) => (
         <span className={`text-xs ${colors.textSecondary} ${colors.surface} px-2 py-1 rounded border ${colors.border}`}>
-          {t.payment_method || '—'}
+          {PAYMENT_METHOD_LABELS[t.payment_method || ''] || t.payment_method || '—'}
         </span>
       ),
     },

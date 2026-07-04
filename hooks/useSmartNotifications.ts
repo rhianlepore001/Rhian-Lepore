@@ -104,8 +104,8 @@ export function useSmartNotifications() {
                 priority: 'low',
                 title: `R$ ${recoverable.toLocaleString()} em oportunidades hoje`,
                 message: 'Clientes que não voltaram recentemente podem ser recuperados com uma mensagem personalizada.',
-                actionLabel: 'Ver Marketing',
-                actionUrl: '/marketing',
+                actionLabel: 'Ver clientes',
+                actionUrl: '/clientes',
                 dismissed: dismissedIds.includes(tipId),
                 createdAt: new Date(),
             });

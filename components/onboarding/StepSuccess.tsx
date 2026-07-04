@@ -31,9 +31,9 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
         },
         {
             icon: <Zap className="w-5 h-5" />,
-            label: 'Ver Oportunidades',
+            label: 'Ver Insights',
             description: 'Clientes e horários em risco',
-            path: '/marketing',
+            path: '/insights',
         },
         {
             icon: <Link className="w-5 h-5" />,

@@ -57,8 +57,8 @@ export const OccupancyRateCard: React.FC = () => {
             <Clock className="w-5 h-5" />
           </div>
           <div>
-            <h2 className={`font-heading text-base font-bold ${colors.text}`}>Taxa de Ocupação</h2>
-            <p className={`text-sm ${colors.textSecondary}`}>Horários preenchidos</p>
+            <h2 className={`font-heading text-base font-bold ${colors.text}`}>Agenda cheia</h2>
+            <p className={`text-sm ${colors.textSecondary}`}>Quanto da sua agenda está preenchida</p>
           </div>
         </div>
 
@@ -140,7 +140,7 @@ export const OccupancyRateCard: React.FC = () => {
             <div className={`mt-4 p-3 rounded-xl border ${status.warningBg} ${status.warningBorder} ${status.warning}`}>
               <p className="text-xs font-medium leading-relaxed">
                 Você ainda tem {formatDuration(current.availableMinutes - current.occupiedMinutes)} livres.
-                Considere uma campanha para preencher esses horários.
+                Vale abrir mais horários ou avisar clientes com agenda em aberto.
               </p>
             </div>
           )}

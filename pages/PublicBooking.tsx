@@ -1015,7 +1015,7 @@ export const PublicBooking: React.FC = () => {
                                     <input type="checkbox" id="marketing-optin-quick" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
                                         className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
                                     <label htmlFor="marketing-optin-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                        Aceito receber lembretes de agendamento e promoções por WhatsApp. Posso cancelar a qualquer momento.
+                                        Aceito receber lembretes do meu agendamento por WhatsApp. Posso cancelar a qualquer momento.
                                     </label>
                                 </div>
 
@@ -1526,7 +1526,7 @@ export const PublicBooking: React.FC = () => {
                                 <input type="checkbox" id="marketing-optin" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
                                     className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
                                 <label htmlFor="marketing-optin" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Aceito receber lembretes de agendamento e promoções por WhatsApp. Posso cancelar a qualquer momento.
+                                    Aceito receber lembretes do meu agendamento por WhatsApp. Posso cancelar a qualquer momento.
                                 </label>
                             </div>
 

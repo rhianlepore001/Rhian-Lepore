@@ -8,7 +8,6 @@ import {
   User,
   Users,
   Package,
-  Megaphone,
   TrendingUp,
   Clock,
   DollarSign,
@@ -121,7 +120,6 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
     { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
     { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: true },
-    { name: 'Marketing', icon: Megaphone, path: '/marketing', ownerOnly: true },
     { name: 'Insights', icon: TrendingUp, path: '/insights', ownerOnly: true },
     { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true },
   ];

@@ -67,6 +67,7 @@ export const dashboardAppointmentSchema = z.object({
   status: z.string(),
   price: z.number(),
   appointment_time: z.string(),
+  professional_id: z.string().nullable(),
 });
 
 export const goalHistoryItemSchema = z.object({

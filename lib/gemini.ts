@@ -1,5 +1,4 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { Client, Appointment } from '../types';
 import { supabase } from './supabase';
 
 // Initialize Gemini API
@@ -87,16 +86,6 @@ export async function saveSemanticCache(query: string, response: string, metadat
     } catch (error) {
         console.error('Error saving to AI knowledge base:', error);
     }
-}
-
-interface GeminiMarketingCampaign {
-    name: string;
-    type: 'birthday' | 'reactivation' | 'promotion' | 'premium' | 'seasonal';
-    target_audience: string;
-    objective: string;
-    timing: string;
-    expected_impact: string;
-    message: string;
 }
 
 /**
@@ -279,93 +268,6 @@ Return ONLY valid JSON array with 7 objects in this exact format:
     } catch (error: any) {
         console.error('Error generating calendar:', error);
         throw new Error(error.message || 'Falha ao gerar calendário. Tente novamente.');
-    }
-}
-
-/**
- * Analyze business data and suggest marketing campaigns
- */
-export async function analyzeCampaignOpportunities(
-    clients: Client[],
-    appointments: Appointment[],
-    businessType: 'barber' | 'beauty',
-    businessName: string
-): Promise<GeminiMarketingCampaign[]> {
-    try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
-
-        // Analyze data
-        const now = new Date();
-        const thisMonth = now.getMonth();
-        const birthdaysThisMonth = clients.filter(c => {
-            if (!c.created_at) return false;
-            const clientMonth = new Date(c.created_at).getMonth();
-            return clientMonth === thisMonth;
-        }).length;
-
-        // Find inactive clients (no appointments in last 60 days)
-        const sixtyDaysAgo = new Date();
-        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-        const recentAppointments = appointments.filter(a =>
-            new Date(a.appointment_time) > sixtyDaysAgo
-        );
-        const activeClientIds = new Set(recentAppointments.map(a => a.client_id));
-        const inactiveClients = clients.filter(c => !activeClientIds.has(c.id)).length;
-
-        // Analyze appointment patterns
-        const appointmentsByDay = appointments.reduce((acc: any, apt) => {
-            const day = new Date(apt.appointment_time).getDay();
-            acc[day] = (acc[day] || 0) + 1;
-            return acc;
-        }, {});
-
-        const businessTypePT = businessType === 'barber' ? 'barbearia' : 'salão de beleza';
-
-        const prompt = `Analyze this ${businessTypePT} business data and suggest 3-5 targeted marketing campaigns.
-
-Business: ${businessName}
-Data:
-- Total clients: ${clients.length}
-- Birthdays this month: ${birthdaysThisMonth}
-- Inactive clients (60+ days): ${inactiveClients}
-- Busiest days: ${Object.entries(appointmentsByDay).sort((a: any, b: any) => b[1] - a[1]).slice(0, 2).map(([day]) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][day]).join(', ')}
-
-Suggest campaigns for:
-1. Birthday promotions
-2. Reactivating inactive clients
-3. Filling slow days with promotions
-4. Premium pricing on peak days
-5. Seasonal opportunities
-
-For each campaign, provide:
-- name: campaign name
-- type: "birthday", "reactivation", "promotion", "premium", or "seasonal"
-- target_audience: who to target
-- objective: main goal
-- timing: when to run it
-- expected_impact: estimated results
-- message: suggested campaign message in Portuguese
-
-Return ONLY valid JSON array with 3-5 campaign objects in this exact format:
-[
-  {
-    "name": "campaign name",
-    "type": "birthday",
-    "target_audience": "description",
-    "objective": "goal",
-    "timing": "when to run",
-    "expected_impact": "expected results",
-    "message": "campaign message in Portuguese"
-  }
-]`;
-
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        const jsonText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        return JSON.parse(jsonText);
-    } catch (error) {
-        console.error('Error analyzing campaigns:', error);
-        throw new Error('Falha ao analisar oportunidades. Tente novamente.');
     }
 }
 

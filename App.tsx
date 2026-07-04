@@ -17,7 +17,6 @@ import { DevBugButton } from './components/DevBugButton';
 const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const ClientCRM = React.lazy(() => import('./pages/ClientCRM').then(module => ({ default: module.ClientCRM })));
 const Finance = React.lazy(() => import('./pages/Finance').then(module => ({ default: module.Finance })));
-const Marketing = React.lazy(() => import('./pages/Marketing').then(module => ({ default: module.Marketing })));
 const Register = React.lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Agenda = React.lazy(() => import('./pages/Agenda').then(module => ({ default: module.Agenda })));
@@ -192,7 +191,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/clientes/:id" element={<ClientCRM />} />
           <Route path="/produtos" element={<Products />} />
           <Route path="/financeiro" element={<Finance />} />
-          <Route path="/marketing" element={<OwnerRouteGuard><Marketing /></OwnerRouteGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
 

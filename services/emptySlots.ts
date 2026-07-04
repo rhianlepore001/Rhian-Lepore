@@ -139,8 +139,8 @@ export function analyzeEmptySlots(
 
       const severity: EmptySlot['severity'] = emptyRate >= 0.75 ? 'critical' : 'warning';
       const suggestion = severity === 'critical'
-        ? `${WEEKDAY_LABELS[dayKey]} tem ${Math.round(emptyRate * 100)}% ocioso. Criar campanha?`
-        : `${WEEKDAY_LABELS[dayKey]} com ${Math.round(emptyRate * 100)}% livre. Considere promoção.`;
+        ? `${WEEKDAY_LABELS[dayKey]} tem ${Math.round(emptyRate * 100)}% ocioso.`
+        : `${WEEKDAY_LABELS[dayKey]} com ${Math.round(emptyRate * 100)}% livre.`;
 
       result.criticalSlots.push({
         date: dateStr,

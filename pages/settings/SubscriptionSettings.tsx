@@ -60,7 +60,7 @@ export const SubscriptionSettings: React.FC = () => {
                 'Múltiplos Profissionais',
                 'Gestão de Comissões',
                 'Relatórios Avançados',
-                'Marketing com IA',
+                'Clube de Assinatura',
                 'Prioridade no Suporte'
             ],
             recommended: isBeauty,

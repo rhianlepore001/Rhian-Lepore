@@ -43,6 +43,7 @@ export const profileFieldsSchema = z.object({
   cover_photo_url: z.string().nullable().optional(),
   business_slug: z.string().nullable().optional(),
   monthly_goal: z.number().nullable().optional(),
+  daily_goal: z.number().nullable().optional(),
   public_booking_enabled: z.boolean().default(true),
   booking_lead_time_hours: z.number().int().min(0).default(2),
   max_bookings_per_day: z.number().int().positive().nullable().optional(),

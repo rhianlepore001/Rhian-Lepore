@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
     analyzePhoto,
     generateSocialContent,
-    generateContentCalendar,
-    analyzeCampaignOpportunities
+    generateContentCalendar
 } from '@/lib/gemini';
 
 // Precisamos acessar o mock factory para alterar o comportamento por teste
@@ -126,36 +125,4 @@ describe('Gemini AI Lib', () => {
         });
     });
 
-    describe('analyzeCampaignOpportunities', () => {
-        it('should analyze campaign opportunities', async () => {
-            const mockCampaigns = [{ name: 'Promo', type: 'birthday' }];
-
-            const mockClients = [
-                {
-                    id: '1',
-                    name: 'Cliente Teste',
-                    email: 'cliente@test.com',
-                    phone: '11999999999',
-                    loyaltyTier: 'Bronze' as const,
-                    lastVisit: '2023-01-01',
-                    totalVisits: 5,
-                    hairHistory: [],
-                    notes: '',
-                    nextPrediction: '',
-                    created_at: '2023-01-01'
-                }
-            ];
-            const mockAppointments = [{ id: '1', clientName: 'Cliente Teste', service: 'Corte', time: '2023-05-20T10:00:00Z', appointment_time: '2023-05-20T10:00:00Z', status: 'Confirmed' as const, price: 50 }];
-
-            mockGenerateContent.mockResolvedValueOnce({
-                response: {
-                    text: () => JSON.stringify(mockCampaigns)
-                }
-            });
-
-
-            const result = await analyzeCampaignOpportunities(mockClients, mockAppointments, 'barber', 'Shop');
-            expect(result).toEqual(mockCampaigns);
-        });
-    });
 });

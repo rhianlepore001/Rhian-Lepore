@@ -14,12 +14,13 @@ import {
 export interface DashboardProfileData {
   businessSlug: string | null;
   monthlyGoal: number;
+  dailyGoal: number | null;
 }
 
 export async function fetchDashboardProfile(userId: string): Promise<DashboardProfileData> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('business_slug, monthly_goal')
+    .select('business_slug, monthly_goal, daily_goal')
     .eq('id', userId)
     .single();
 
@@ -28,7 +29,17 @@ export async function fetchDashboardProfile(userId: string): Promise<DashboardPr
   return {
     businessSlug: data?.business_slug || null,
     monthlyGoal: data?.monthly_goal ?? 15000,
+    dailyGoal: data?.daily_goal ?? null,
   };
+}
+
+export async function updateDailyGoal(userId: string, dailyGoal: number | null): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ daily_goal: dailyGoal })
+    .eq('id', userId);
+
+  if (error) throw error;
 }
 
 export async function fetchGoalSettings(
@@ -147,6 +158,7 @@ export async function fetchUpcomingAppointments(effectiveUserId: string, limit =
     status: apt.status,
     price: Number(apt.price) || 0,
     appointment_time: apt.appointment_time,
+    professional_id: apt.professional_id ?? null,
   }));
 }
 
@@ -234,6 +246,7 @@ export async function fetchTodayAppointmentsForProfessional(
     status: apt.status,
     price: Number(apt.price) || 0,
     appointment_time: apt.appointment_time,
+    professional_id: apt.professional_id ?? null,
   }));
 }
 
@@ -272,6 +285,7 @@ export async function fetchFutureAppointmentsForProfessional(
         status: apt.status,
         price: Number(apt.price) || 0,
         appointment_time: apt.appointment_time,
+        professional_id: apt.professional_id ?? null,
     }));
 }
 

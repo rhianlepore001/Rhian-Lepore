@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, AlertCircle, TrendingUp, Megaphone } from 'lucide-react';
+import { Calendar, AlertCircle, TrendingUp } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useCriticalEmptySlots } from '../../hooks/useCriticalEmptySlots';
@@ -116,10 +116,10 @@ export const CriticalEmptySlotsCard: React.FC = () => {
                     </div>
                     <button
                       className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${colors.border} ${colors.card} ${colors.text} hover:${accent.bgDim} transition-all`}
-                      title="Criar campanha para preencher"
+                      title="Ver horário livre na agenda"
                     >
-                      <Megaphone className="w-3 h-3" />
-                      Camp.
+                      <Calendar className="w-3 h-3" />
+                      Agenda
                     </button>
                   </div>
                 </li>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Crown, Sparkles, Target, TrendingUp, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, Bell, Calendar, Clock, Crown, Target, TrendingUp, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { useAlerts } from '../contexts/AlertsContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useMembershipStats } from '../hooks/useMemberships';
+import { useAgendaTeamMembers } from '../hooks/useScheduling';
 import { MeuDiaWidget } from '../components/dashboard/MeuDiaWidget';
 import { SetupCopilot } from '../components/dashboard/SetupCopilot';
 import { StaffEarningsCard } from '../components/StaffEarningsCard';
@@ -16,15 +17,10 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
-import { OccupancyRateCard } from '../components/dashboard/OccupancyRateCard';
-import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
-import { CancellationRateCard } from '../components/dashboard/CancellationRateCard';
-
-const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
-const GoalHistoryModal = lazy(() => import('../components/dashboard/modals/GoalHistoryModal').then(m => ({ default: m.GoalHistoryModal })));
 
 export const Dashboard: React.FC = () => {
-  const { region, role, user, fullName } = useAuth();
+  const { region, role, user, fullName, companyId } = useAuth();
+  const effectiveUserId = companyId ?? user?.id ?? '';
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const isStaff = role === 'staff';
@@ -34,8 +30,6 @@ export const Dashboard: React.FC = () => {
   const [commissionBannerDismissed, setCommissionBannerDismissed] = useState(false);
   const [unfinishedCount, setUnfinishedCount] = useState(0);
   const [unfinishedBannerDismissed, setUnfinishedBannerDismissed] = useState(false);
-  const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [showGoalHistory, setShowGoalHistory] = useState(false);
 
   useEffect(() => {
     const msg = sessionStorage.getItem('ownerRouteToast');
@@ -85,38 +79,24 @@ export const Dashboard: React.FC = () => {
 
   const {
     appointments,
-    currentMonthRevenue,
     loading,
-    monthlyGoal,
-    goalHistory,
-    updateGoal,
+    dailyGoal,
     profitMetrics,
-    financialDoctor,
-    actionItems,
   } = useDashboardData();
 
-  const { accent, colors, density, font, status, isBeauty } = useBrutalTheme();
+  const { accent, colors, density, font, status } = useBrutalTheme();
   const { data: clubStats } = useMembershipStats();
+  const { data: teamMembers } = useAgendaTeamMembers(effectiveUserId);
   const currencyRegion = region === 'PT' ? 'PT' : 'BR';
   const firstName = fullName?.split(' ')[0] || 'Profissional';
   const todayLabel = formatDateLong(new Date(), currencyRegion);
   const todayRevenue = profitMetrics.todayRevenue ?? 0;
-  const goalProgress = monthlyGoal > 0 ? Math.round((currentMonthRevenue / monthlyGoal) * 100) : 0;
   const vsYesterday = Math.max(profitMetrics.weeklyGrowth || 0, 0);
   const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
-  const healthScore = Math.min(100, Math.max(0, Math.round(
-    (financialDoctor.repeatClientRate || 0) +
-    (financialDoctor.avgTicket > 0 ? 25 : 0) +
-    (financialDoctor.topService ? 25 : 0) -
-    Math.min(financialDoctor.churnRiskCount || 0, 25)
-  )));
-  const healthSummary = financialDoctor.avgTicket || financialDoctor.topService || financialDoctor.repeatClientRate
-    ? [
-        financialDoctor.avgTicket > 0 ? `Ticket médio ${formatCurrency(financialDoctor.avgTicket, currencyRegion)}` : null,
-        financialDoctor.topService ? `Mais pedido: ${financialDoctor.topService}` : null,
-        financialDoctor.repeatClientRate > 0 ? `${Math.round(financialDoctor.repeatClientRate)}% dos clientes voltam` : null,
-      ].filter(Boolean)
-    : ['Seus indicadores aparecem após o primeiro mês.', 'Continue registrando atendimentos para liberar os insights.'];
+  const dayProgress = dailyGoal && dailyGoal > 0 ? Math.round((todayRevenue / dailyGoal) * 100) : 0;
+
+  const professionalName = (id: string | null) =>
+    id ? teamMembers?.find((m) => m.id === id)?.name ?? null : null;
 
   return (
     <div className={`space-y-6 md:space-y-8 ${density.pagePadding} md:px-0`}>
@@ -147,113 +127,8 @@ export const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          {loading ? (
-            <SkeletonCard className={density.kpiMinHeight} />
-          ) : (
-            <Card variant="elevated" className={density.kpiMinHeight}>
-              <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>Faturamento hoje</p>
-                  <p className={`mt-2 font-mono text-3xl font-black tracking-tight tabular-nums md:text-4xl ${colors.text}`}>
-                    {formatCurrency(todayRevenue, currencyRegion)}
-                  </p>
-                </div>
-                <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${status.successBg} ${status.successBorder} ${status.success}`}>
-                  <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  {vsYesterday}% vs ontem
-                </span>
-              </div>
-            </Card>
-          )}
-
-          <OccupancyRateCard />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            <CriticalEmptySlotsCard />
-            <CancellationRateCard />
-          </div>
-
-          <section className="grid grid-cols-2 gap-3">
-            {loading ? (
-              <>
-                <SkeletonCard className="min-h-[88px]" />
-                <SkeletonCard className="min-h-[88px]" />
-              </>
-            ) : (
-              <>
-                <Card variant="outlined" className="p-4">
-                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>Agenda de hoje</p>
-                  <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{appointments.length}</p>
-                  <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
-                    {appointments.length === 1 ? '1 agendamento' : `${appointments.length} agendamentos`}
-                  </p>
-                </Card>
-                <Card variant="outlined" className="p-4">
-                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>Oportunidades</p>
-                  <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{actionItems.length}</p>
-                  <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
-                    {actionItems.length === 1 ? '1 ação em aberto' : `${actionItems.length} ações em aberto`}
-                  </p>
-                </Card>
-              </>
-            )}
-          </section>
-
-          {clubStats && (clubStats.totalActive > 0 || clubStats.totalPending > 0) && (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate('/clube/assinantes')}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/clube/assinantes')}
-              className={`${colors.card} ${colors.border} border rounded-2xl p-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform`}
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-amber-600/10 flex items-center justify-center shrink-0">
-                  <Crown className="w-6 h-6 text-yellow-300" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                    <h3 className={`font-heading text-base font-bold ${colors.text} uppercase tracking-wide`}>
-                      Clube de Assinatura
-                    </h3>
-                    <span className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-wider`}>
-                      ver detalhes →
-                    </span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-3 gap-3">
-                    <div>
-                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
-                        Ativos
-                      </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-green-400">
-                        {clubStats.totalActive}
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
-                        Pendentes
-                      </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-amber-400">
-                        {clubStats.totalPending}
-                      </p>
-                    </div>
-                    <div>
-                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
-                        MRR
-                      </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-yellow-300">
-                        {formatCurrency(clubStats.monthlyRecurringRevenueCents / 100, currencyRegion)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <SetupCopilot />
-
-          {!commissionBannerDismissed && commissionBanner && (
+          {/* Avisos importantes */}
+          {(commissionBanner && !commissionBannerDismissed) && (
             <Card variant="outlined">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm">
@@ -324,89 +199,189 @@ export const Dashboard: React.FC = () => {
             </Card>
           )}
 
-          <section className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.62fr)]">
-            <Card variant="outlined">
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className={iconClass}><Target className="h-5 w-5" /></div>
-                  <div>
-                    <h2 className={`font-heading text-base font-bold ${colors.text}`}>Meta mensal</h2>
-                    <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                      Você já fez {formatCurrency(currentMonthRevenue, currencyRegion)} de {formatCurrency(monthlyGoal, currencyRegion)}.
-                    </p>
+          {/* KPIs do dia: faturamento + meta do dia */}
+          <section className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+            {loading ? (
+              <>
+                <SkeletonCard className={density.kpiMinHeight} />
+                <SkeletonCard className={density.kpiMinHeight} />
+              </>
+            ) : (
+              <>
+                <Card variant="elevated" className={density.kpiMinHeight}>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <p className={`text-sm font-semibold ${colors.textSecondary}`}>Faturamento hoje</p>
+                      <p className={`mt-2 font-mono text-3xl font-black tracking-tight tabular-nums md:text-4xl ${colors.text}`}>
+                        {formatCurrency(todayRevenue, currencyRegion)}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${status.successBg} ${status.successBorder} ${status.success}`}>
+                      <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+                      {vsYesterday}% vs ontem
+                    </span>
                   </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setIsEditingGoal(true)}>
-                  Ajustar meta
-                </Button>
-              </div>
-              <div className={`mt-6 h-3 rounded-full ${colors.surface} overflow-hidden`}>
-                <div className={`h-full ${accent.bg} transition-all duration-1000`} style={{ width: `${Math.min(goalProgress, 100)}%` }} />
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <span className={`font-mono text-xs ${colors.textSecondary}`}>{goalProgress}% atingido</span>
-                <button
-                  type="button"
-                  onClick={() => setShowGoalHistory(true)}
-                  className={`min-h-[44px] text-sm font-semibold ${accent.text} transition-opacity hover:opacity-70`}
-                >
-                  Ver histórico
-                </button>
-              </div>
-            </Card>
+                </Card>
 
-            <Card variant="outlined">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={iconClass}><Activity className="h-5 w-5" /></div>
-                  <div>
-                    <h2 className={`font-heading text-base font-bold ${colors.text}`}>Saúde do negócio</h2>
-                    <p className={`text-sm ${colors.textSecondary}`}>Leitura rápida do momento.</p>
+                <Card variant="outlined" className={density.kpiMinHeight}>
+                  <div className="flex items-start gap-3">
+                    <div className={iconClass}><Target className="h-5 w-5" /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${colors.textSecondary}`}>Meta do dia</p>
+                      {dailyGoal && dailyGoal > 0 ? (
+                        <>
+                          <p className={`mt-1 font-mono text-2xl font-black tabular-nums ${colors.text}`}>
+                            {formatCurrency(todayRevenue, currencyRegion)}
+                            <span className={`ml-1 text-sm font-semibold ${colors.textMuted}`}>de {formatCurrency(dailyGoal, currencyRegion)}</span>
+                          </p>
+                          <div className={`mt-3 h-2.5 rounded-full ${colors.surface} overflow-hidden`}>
+                            <div className={`h-full ${accent.bg} transition-all duration-1000`} style={{ width: `${Math.min(dayProgress, 100)}%` }} />
+                          </div>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className={`font-mono text-xs ${colors.textSecondary}`}>{dayProgress}% da meta</span>
+                            <button
+                              type="button"
+                              onClick={() => navigate('/configuracoes/geral')}
+                              className={`min-h-[44px] text-xs font-semibold ${accent.text} transition-opacity hover:opacity-70`}
+                            >
+                              Ajustar
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className={`mt-1 text-sm ${colors.textSecondary}`}>
+                            Defina uma meta diária pra acompanhar seu ritmo ao longo do dia.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => navigate('/configuracoes/geral')}
+                            className={`mt-3 min-h-[44px] text-sm font-semibold ${accent.text} transition-opacity hover:opacity-70`}
+                          >
+                            Definir meta do dia
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <span className={`font-mono text-2xl font-black tabular-nums ${accent.text}`}>{healthScore}</span>
-              </div>
-              <div className="mt-5 space-y-3">
-                {healthSummary.map((item) => (
-                  <div key={String(item)} className={`flex items-start gap-3 rounded-2xl p-3 ${colors.surface}`}>
-                    <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text}`} aria-hidden="true" />
-                    <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>{item}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                </Card>
+              </>
+            )}
           </section>
 
+          {/* Próximos agendamentos — coração da tela */}
           <Card variant="outlined">
-            <div className="flex items-start gap-4">
-              <div className={iconClass}><Sparkles className="h-5 w-5" /></div>
-              <div>
-                <h2 className={`font-heading text-base font-bold ${colors.text}`}>Dica para hoje</h2>
-                <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                  Você está {vsYesterday}% acima da média recente. Mantenha a agenda cheia nos horários de maior procura.
-                </p>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className={iconClass}><Clock className="h-5 w-5" /></div>
+                <div>
+                  <h2 className={`font-heading text-base font-bold ${colors.text}`}>Próximos agendamentos</h2>
+                  <p className={`text-sm ${colors.textSecondary}`}>Quem chega a seguir</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => navigate('/agenda')}>
+                Ver agenda
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="space-y-2">
+                <SkeletonCard className="min-h-[64px]" />
+                <SkeletonCard className="min-h-[64px]" />
+              </div>
+            ) : appointments.length === 0 ? (
+              <div className={`rounded-2xl p-6 text-center ${colors.surface}`}>
+                <p className={`text-sm font-semibold ${colors.text}`}>Nenhum atendimento à frente</p>
+                <p className={`mt-1 text-sm ${colors.textSecondary}`}>Assim que houver agendamentos, eles aparecem aqui.</p>
+                <Button variant="primary" size="sm" className="mt-4" icon={<Calendar className="h-4 w-4" />} onClick={() => navigate('/agenda')}>
+                  Novo agendamento
+                </Button>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {appointments.map((apt) => {
+                  const professional = professionalName(apt.professional_id);
+                  const description = [apt.service, professional].filter(Boolean).join(' · ');
+                  return (
+                    <li
+                      key={apt.id}
+                      className={`flex items-center gap-3 rounded-2xl p-3 ${colors.surface}`}
+                    >
+                      <div className={`flex h-12 w-14 shrink-0 flex-col items-center justify-center rounded-xl ${accent.bgDim} ${accent.text}`}>
+                        <span className={`font-mono text-sm font-bold tabular-nums`}>{apt.time}</span>
+                        <span className={`text-[10px] ${font.mono} uppercase tracking-wider opacity-70`}>{apt.date}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-bold truncate ${colors.text}`}>{apt.clientName}</p>
+                        <p className={`text-xs truncate ${colors.textMuted}`}>{description || 'Atendimento'}</p>
+                      </div>
+                      {apt.price > 0 && (
+                        <span className={`font-mono text-sm font-semibold tabular-nums shrink-0 ${colors.textSecondary}`}>
+                          {formatCurrency(apt.price, currencyRegion)}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+
+          {clubStats && (clubStats.totalActive > 0 || clubStats.totalPending > 0) && (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate('/clube/assinantes')}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/clube/assinantes')}
+              className={`${colors.card} ${colors.border} border rounded-2xl p-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform`}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-amber-600/10 flex items-center justify-center shrink-0">
+                  <Crown className="w-6 h-6 text-yellow-300" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <h3 className={`font-heading text-base font-bold ${colors.text} uppercase tracking-wide`}>
+                      Clube de Assinatura
+                    </h3>
+                    <span className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-wider`}>
+                      ver detalhes →
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-3">
+                    <div>
+                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                        Ativos
+                      </p>
+                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-green-400">
+                        {clubStats.totalActive}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                        Pendentes
+                      </p>
+                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-amber-400">
+                        {clubStats.totalPending}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                        MRR
+                      </p>
+                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-yellow-300">
+                        {formatCurrency(clubStats.monthlyRecurringRevenueCents / 100, currencyRegion)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </Card>
+          )}
+
+          <SetupCopilot />
         </>
       )}
-
-      <Suspense fallback={null}>
-        <GoalSettingsModal
-          isOpen={isEditingGoal}
-          onClose={() => setIsEditingGoal(false)}
-          currentGoal={monthlyGoal}
-          onSave={updateGoal}
-          isBeauty={isBeauty}
-        />
-        <GoalHistoryModal
-          isOpen={showGoalHistory}
-          onClose={() => setShowGoalHistory(false)}
-          history={goalHistory}
-          isBeauty={isBeauty}
-          currencyRegion={currencyRegion}
-        />
-      </Suspense>
     </div>
   );
 };

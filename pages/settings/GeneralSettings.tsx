@@ -47,6 +47,7 @@ export const GeneralSettings: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [instagram, setInstagram] = useState('');
+    const [dailyGoal, setDailyGoal] = useState('');
 
     const policyTemplates: Record<string, string> = {
         flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
@@ -61,6 +62,7 @@ export const GeneralSettings: React.FC = () => {
         phone: string;
         address: string;
         instagram: string;
+        dailyGoal: string;
         cancellationPolicy: string;
         businessHours: typeof businessHours;
     } | null>(null);
@@ -73,6 +75,7 @@ export const GeneralSettings: React.FC = () => {
             setInstagram(profile.instagram_handle ?? '');
             setLogoPreview(profile.logo_url ?? null);
             setCoverPreview(profile.cover_photo_url ?? null);
+            setDailyGoal(profile.daily_goal != null ? String(profile.daily_goal) : '');
         }
     }, [profile]);
 
@@ -91,6 +94,7 @@ export const GeneralSettings: React.FC = () => {
                 phone,
                 address,
                 instagram,
+                dailyGoal,
                 cancellationPolicy,
                 businessHours,
             };
@@ -102,12 +106,13 @@ export const GeneralSettings: React.FC = () => {
             phone !== initial.phone ||
             address !== initial.address ||
             instagram !== initial.instagram ||
+            dailyGoal !== initial.dailyGoal ||
             cancellationPolicy !== initial.cancellationPolicy ||
             JSON.stringify(businessHours) !== JSON.stringify(initial.businessHours) ||
             logoFile !== null ||
             coverFile !== null;
         setHasChanges(dirty);
-    }, [businessName, phone, address, instagram, logoFile, coverFile, cancellationPolicy, businessHours, loading]);
+    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, businessHours, loading]);
 
     const handleLogoChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
@@ -154,6 +159,7 @@ export const GeneralSettings: React.FC = () => {
                 instagram_handle: instagram,
                 logo_url: logoUrl,
                 cover_photo_url: coverUrl,
+                daily_goal: dailyGoal.trim() === '' ? null : Number(dailyGoal),
             } as any);
 
             await updateSettingsMutation.mutateAsync({
@@ -280,6 +286,39 @@ export const GeneralSettings: React.FC = () => {
                                 Este endereço será usado para gerar o link do Google Maps para seus clientes.
                             </p>
                         </div>
+                    </div>
+                </SettingsSection>
+
+                <SettingsSection
+                    title={
+                        <div className="flex items-center gap-2">
+                            <span>Meta do dia</span>
+                            <InfoButton text="Valor de faturamento que você quer alcançar por dia. Aparece no seu painel para acompanhar o ritmo ao longo do dia." />
+                        </div>
+                    }
+                >
+                    <div className="max-w-xs">
+                        <label className={classes.label}>
+                            Meta de faturamento diária
+                        </label>
+                        <div className="relative">
+                            <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${colors.textMuted}`}>
+                                {region === 'PT' ? '€' : 'R$'}
+                            </span>
+                            <input
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                step="10"
+                                value={dailyGoal}
+                                onChange={e => setDailyGoal(e.target.value)}
+                                placeholder="500"
+                                className={`${classes.input} pl-10`}
+                            />
+                        </div>
+                        <p className={`${colors.textMuted} text-xs mt-1`}>
+                            Deixe em branco para não exibir a meta do dia no painel.
+                        </p>
                     </div>
                 </SettingsSection>
 

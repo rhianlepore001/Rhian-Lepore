@@ -22,6 +22,7 @@ export function useDashboardData() {
 
     const businessSlug = profile?.businessSlug || null;
     const profileMonthlyGoal = profile?.monthlyGoal ?? 15000;
+    const dailyGoal = profile?.dailyGoal ?? null;
 
     // 2. Goal setting query for current month
     const now = new Date();
@@ -96,6 +97,23 @@ export function useDashboardData() {
         }
     };
 
+    // Mutation to update daily goal
+    const updateDailyGoalMutation = useMutation({
+        mutationFn: (newDailyGoal: number | null) => dashboardService.updateDailyGoal(userId!, newDailyGoal),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', userId] });
+        }
+    });
+
+    const updateDailyGoal = async (newDailyGoal: number | null) => {
+        try {
+            await updateDailyGoalMutation.mutateAsync(newDailyGoal);
+            return { error: null };
+        } catch (error: any) {
+            return { error };
+        }
+    };
+
     // 9. Fetch all appointments callback (used in modal)
     const fetchAllAppointments = useCallback(async () => {
         if (!effectiveUserId) return [];
@@ -144,10 +162,12 @@ export function useDashboardData() {
         weeklyGrowth,
         loading: statsLoading && appointments.length === 0,
         monthlyGoal,
+        dailyGoal,
         goalHistory,
         businessSlug,
         accountCreatedAt,
         updateGoal,
+        updateDailyGoal,
         profitMetrics,
         dataMaturity,
         financialDoctor,

@@ -6,21 +6,20 @@ import { Button, Modal, Table, Badge, ConfirmModal, useToast } from '@/component
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, BarChart2 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
-import { FinanceInsights } from '../components/FinanceInsights';
 import { formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
 import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
 
-type FinanceTabType = 'overview' | 'commissions' | 'history' | 'insights';
+type FinanceTabType = 'overview' | 'commissions' | 'history';
 
 interface Transaction {
   id: string;
@@ -191,9 +190,6 @@ useEffect(() => {
       fetchFinanceData();
     } else if (activeTab === 'history') {
       refetchMonthlyHistory();
-    } else if (activeTab === 'insights') {
-      if (!monthlyHistoryData || monthlyHistoryData.length === 0) refetchMonthlyHistory();
-      if (transactions.length === 0) fetchFinanceData();
     }
   }, [activeTab, selectedMonth, selectedYear, user, isStaff]);
 
@@ -570,7 +566,6 @@ useEffect(() => {
         tabs={[
           { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
           ...(!isStaff ? [
-            { id: 'insights', label: 'Insights', icon: <BarChart2 className="w-3.5 h-3.5" /> },
             { id: 'commissions', label: 'Comissões', icon: <Users className="w-3.5 h-3.5" /> },
             { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
           ] : []),
@@ -795,15 +790,6 @@ useEffect(() => {
           />
         )
       }
-
-      {activeTab === 'insights' && !isStaff && (
-        <FinanceInsights
-          summary={summary}
-          monthlyHistory={monthlyHistory}
-          transactions={transactions}
-          currencyRegion={currencyRegion}
-        />
-      )}
 
       {/* New Transaction Modal */}
       {

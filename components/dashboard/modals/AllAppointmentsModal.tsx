@@ -86,7 +86,7 @@ export const AllAppointmentsModal: React.FC<AllAppointmentsModalProps> = ({
                                     onClose();
                                     navigate(`/agenda?date=${apt.rawDate}`);
                                 }}
-                                className={`p-4 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:${accent.bgDim}`}
+                                className={`p-4 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-[var(--color-accent-dim)]`}
                             >
                                 <div className="flex items-start sm:items-center gap-4">
                                     <div className={`font-mono text-xl font-bold ${accent.text} ${colors.card} px-3 py-2 border ${colors.border} flex flex-col items-center min-w-[80px]`}>

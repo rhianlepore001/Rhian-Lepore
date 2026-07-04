@@ -141,7 +141,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className={`rounded-lg p-2 ${colors.textMuted} transition-all hover:${colors.surface} hover:${colors.text}`}
+                                className={`rounded-lg p-2 ${colors.textMuted} transition-all hover:bg-theme-surface hover:text-theme-text`}
                             >
                                 <X className="h-5 w-5" />
                             </button>

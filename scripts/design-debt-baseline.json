@@ -2,8 +2,7 @@
   "pages/Agenda.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
     "modal custom fixed inset-0 (use ui/Modal)": 2,
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 9
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "pages/ClientArea.tsx": {
     "text-white hardcoded (use colors.text)": 15,
@@ -13,11 +12,7 @@
     "text-white hardcoded (use colors.text)": 25,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 8,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 2
-  },
-  "pages/Clients.tsx": {
-    "hover interpolado (quebra no build estatico)": 2
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "pages/ClubDemo.tsx": {
     "text-white hardcoded (use colors.text)": 11,
@@ -32,20 +27,17 @@
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
   "pages/JoinClub.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "text-white hardcoded (use colors.text)": 1
   },
   "pages/Login.tsx": {
     "text-white hardcoded (use colors.text)": 14,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4,
-    "hover interpolado (quebra no build estatico)": 2
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
   },
   "pages/Marketing.tsx": {
     "text-white hardcoded (use colors.text)": 7
   },
   "pages/MembersList.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
-    "hover interpolado (quebra no build estatico)": 2
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
   },
   "pages/Placeholder.tsx": {
     "text-white hardcoded (use colors.text)": 1
@@ -56,8 +48,7 @@
   },
   "pages/PublicBooking.tsx": {
     "text-white hardcoded (use colors.text)": 1,
-    "modal custom fixed inset-0 (use ui/Modal)": 4,
-    "hover interpolado (quebra no build estatico)": 15
+    "modal custom fixed inset-0 (use ui/Modal)": 4
   },
   "pages/QueueJoin.tsx": {
     "text-white hardcoded (use colors.text)": 7,
@@ -74,8 +65,7 @@
   },
   "pages/Register.tsx": {
     "text-white hardcoded (use colors.text)": 4,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 9,
-    "hover interpolado (quebra no build estatico)": 4
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 9
   },
   "pages/Reports.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
@@ -91,25 +81,19 @@
   "pages/settings/FinancialSettings.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
   },
-  "pages/settings/GeneralSettings.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
-  },
   "pages/settings/MembershipPlansSettings.tsx": {
     "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
-    "hover interpolado (quebra no build estatico)": 1
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
   },
   "pages/settings/PublicBookingSettings.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
   },
   "pages/settings/ServiceSettings.tsx": {
     "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
   },
   "pages/settings/TeamSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
   },
   "pages/settings/UiPreview.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
@@ -125,8 +109,7 @@
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/AppointmentEditModal.tsx": {
-    "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/AppointmentWizard.tsx": {
     "text-white hardcoded (use colors.text)": 4,
@@ -135,8 +118,7 @@
   },
   "components/BrandIdentitySection.tsx": {
     "text-white hardcoded (use colors.text)": 1,
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/BugAnnotateModal.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1
@@ -151,21 +133,9 @@
     "text-white hardcoded (use colors.text)": 3,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3
   },
-  "components/BusinessHoursEditor.tsx": {
-    "hover interpolado (quebra no build estatico)": 3
-  },
-  "components/CalendarPicker.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
-  },
   "components/ChatBubble.tsx": {
     "text-white hardcoded (use colors.text)": 4,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
-  },
-  "components/CheckoutModal.tsx": {
-    "hover interpolado (quebra no build estatico)": 5
-  },
-  "components/ClientAuthModal.tsx": {
-    "hover interpolado (quebra no build estatico)": 2
   },
   "components/ClientBookingCard.tsx": {
     "text-white hardcoded (use colors.text)": 8
@@ -174,42 +144,24 @@
     "text-white hardcoded (use colors.text)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
-  "components/CommissionDetailReport.tsx": {
-    "hover interpolado (quebra no build estatico)": 2
-  },
-  "components/CommissionPaymentHistory.tsx": {
-    "hover interpolado (quebra no build estatico)": 9
-  },
-  "components/CommissionsManagement.tsx": {
-    "hover interpolado (quebra no build estatico)": 6
-  },
   "components/DevBugButton.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "components/ExportButton.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
-  },
-  "components/FinanceInsights.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
   },
   "components/GoalHistory.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 12
   },
   "components/Header.tsx": {
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 3
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/HelpButtons.tsx": {
     "text-white hardcoded (use colors.text)": 7,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/Modal.tsx": {
-    "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/MonthYearSelector.tsx": {
     "text-white hardcoded (use colors.text)": 3,
@@ -221,8 +173,7 @@
   },
   "components/MoreOptionsDrawer.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/OnboardingLayout.tsx": {
     "text-white hardcoded (use colors.text)": 1,
@@ -240,8 +191,7 @@
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/ProfessionalCommissionDetails.tsx": {
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 2,
-    "hover interpolado (quebra no build estatico)": 11
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 2
   },
   "components/ProfessionalSelector.tsx": {
     "text-white hardcoded (use colors.text)": 5,
@@ -250,8 +200,7 @@
   "components/ProfileModal.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
-    "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "hover interpolado (quebra no build estatico)": 3
+    "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/PublicBusinessHeader.tsx": {
     "text-white hardcoded (use colors.text)": 4,
@@ -278,18 +227,15 @@
     "text-white hardcoded (use colors.text)": 2,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 4
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/SettingsLayout.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
-    "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "hover interpolado (quebra no build estatico)": 2
+    "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/Sidebar.tsx": {
-    "modal custom fixed inset-0 (use ui/Modal)": 1,
-    "hover interpolado (quebra no build estatico)": 2
+    "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/TabNav.tsx": {
     "text-white hardcoded (use colors.text)": 1,
@@ -300,12 +246,10 @@
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
   "components/TeamMemberForm.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "text-white hardcoded (use colors.text)": 1
   },
   "components/TimeGrid.tsx": {
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1,
-    "hover interpolado (quebra no build estatico)": 1
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/TrialBanner.tsx": {
     "text-white hardcoded (use colors.text)": 2
@@ -340,26 +284,10 @@
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
   "components/booking/BookingModeToggle.tsx": {
-    "shadow generico (use tokens shadow-*, MASTER.md §8)": 2,
-    "hover interpolado (quebra no build estatico)": 2
-  },
-  "components/dashboard/CancellationRateCard.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
-  },
-  "components/dashboard/CriticalEmptySlotsCard.tsx": {
-    "hover interpolado (quebra no build estatico)": 2
-  },
-  "components/dashboard/DashboardHero.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
+    "shadow generico (use tokens shadow-*, MASTER.md §8)": 2
   },
   "components/dashboard/FinancialDoctorPanel.tsx": {
     "text-white hardcoded (use colors.text)": 6
-  },
-  "components/dashboard/OccupancyRateCard.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
-  },
-  "components/dashboard/SetupCopilot.tsx": {
-    "hover interpolado (quebra no build estatico)": 3
   },
   "components/dashboard/SmartRebooking.tsx": {
     "text-white hardcoded (use colors.text)": 2
@@ -368,9 +296,6 @@
     "text-white hardcoded (use colors.text)": 6,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "components/dashboard/modals/AllAppointmentsModal.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
   },
   "components/marketing/CampaignModal.tsx": {
     "text-white hardcoded (use colors.text)": 3
@@ -429,11 +354,5 @@
   },
   "components/ui/Modal.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1
-  },
-  "components/ui/Tabs.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
-  },
-  "components/ui/Toast.tsx": {
-    "hover interpolado (quebra no build estatico)": 1
   }
 }

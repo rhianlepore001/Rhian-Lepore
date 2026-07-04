@@ -346,7 +346,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                             activeTab === tab
                                 ? `${accent.bg} text-[var(--color-bg)]`
-                                : `${colors.textMuted} hover:${colors.text}`
+                                : `${colors.textMuted} hover:text-theme-text`
                         }`}
                     >
                         {tab === 'pending' ? 'Pendente' : 'Pago'}
@@ -468,21 +468,21 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                     <div className="flex gap-2 flex-1">
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
-                                                            className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
+                                                            className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
                                                         >
                                                             <Scissors className="w-3.5 h-3.5" />
                                                             <span>Serviços</span>
                                                         </button>
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
-                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
                                                             title="Relatório detalhado"
                                                         >
                                                             <FileText className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
                                                         </button>
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowHistoryModal(true); }}
-                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
                                                             title="Histórico de pagamentos"
                                                         >
                                                             <Clock className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
@@ -671,7 +671,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         setPaymentPeriodLabel(p.label);
                                         calculateAmountForDates(selectedProfessional.professional_id, p.start, p.end);
                                     }}
-                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all hover:${colors.surfaceHover} active:scale-95`}
+                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
                                     Período atual
                                 </button>
@@ -692,7 +692,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         setPaymentPeriodLabel(`${fmtLabel(prevStart)} → ${fmtLabel(prevEnd)}`);
                                         calculateAmountForDates(selectedProfessional.professional_id, start, end);
                                     }}
-                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all hover:${colors.surfaceHover} active:scale-95`}
+                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
                                     Período anterior
                                 </button>

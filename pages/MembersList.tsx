@@ -141,7 +141,7 @@ export const MembersList: React.FC = () => {
                                 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all',
                                 tab === t.value
                                     ? `${accent.bg} text-[var(--color-bg)]`
-                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} border hover:${colors.textSecondary}`,
+                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} border hover:text-theme-textSecondary`,
                             ].join(' ')}
                         >
                             {t.label}
@@ -213,7 +213,7 @@ export const MembersList: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => handleWhatsApp(m)}
-                                                className={`p-2.5 rounded-xl ${colors.inputBg} ${colors.border} ${colors.textMuted} hover:${colors.text} border transition-colors`}
+                                                className={`p-2.5 rounded-xl ${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-text border transition-colors`}
                                                 aria-label="Enviar WhatsApp"
                                                 title="WhatsApp"
                                             >

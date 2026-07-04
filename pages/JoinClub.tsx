@@ -171,7 +171,7 @@ export const JoinClub: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setStep('choose')}
-                            className={`text-sm ${colors.textSecondary} hover:${colors.text} transition-colors flex items-center gap-1`}
+                            className={`text-sm ${colors.textSecondary} hover:text-theme-text transition-colors flex items-center gap-1`}
                         >
                             ← Escolher outro plano
                         </button>

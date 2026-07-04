@@ -290,7 +290,7 @@ export const Clients: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className={`text-lg font-heading ${colors.text} mb-1 group-hover:${accent.text} transition-colors`}>
+                      <h3 className={`text-lg font-heading ${colors.text} mb-1 group-hover:text-theme-accent transition-colors`}>
                         {client.name}
                       </h3>
                       <p className={`text-sm ${colors.textSecondary} font-mono flex items-center gap-2`}>
@@ -311,7 +311,7 @@ export const Clients: React.FC = () => {
                         )}
                       </p>
                     </div>
-                    <ChevronRight className={`w-5 h-5 ${colors.textMuted} group-hover:${accent.text} group-hover:translate-x-1 transition-all`} />
+                    <ChevronRight className={`w-5 h-5 ${colors.textMuted} group-hover:text-theme-accent group-hover:translate-x-1 transition-all`} />
                   </div>
                 </Card>
               </Link>

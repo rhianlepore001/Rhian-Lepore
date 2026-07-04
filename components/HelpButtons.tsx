@@ -150,7 +150,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className={`ml-2 p-1 rounded-full ${accent.bgDim} ${accent.text} hover:${accent.bg} transition-colors`}
+                className={`ml-2 p-1 rounded-full ${accent.bgDim} ${accent.text} hover:bg-theme-accent transition-colors`}
                 title="Assistente IA"
                 aria-label="Abrir assistente IA"
             >

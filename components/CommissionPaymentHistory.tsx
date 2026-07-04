@@ -121,7 +121,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                         </div>
                         <button
                             onClick={onClose}
-                            className={`${colors.textMuted} hover:${colors.text} transition-all p-2 hover:${colors.surface} rounded-xl border border-transparent hover:${colors.border} active:scale-95`}
+                            className={`${colors.textMuted} hover:text-theme-text transition-all p-2 hover:bg-theme-surface rounded-xl border border-transparent hover:border-theme-border active:scale-95`}
                         >
                             <X className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
@@ -162,7 +162,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             setStartDate(firstDay.toISOString().split('T')[0]);
                                             setEndDate(lastDay.toISOString().split('T')[0]);
                                         }}
-                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} hover:${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} ${colors.border} border transition-all`}
+                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text ${colors.border} border transition-all`}
                                     >
                                         Este Mês
                                     </button>
@@ -174,7 +174,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             setStartDate(firstDay.toISOString().split('T')[0]);
                                             setEndDate(lastDay.toISOString().split('T')[0]);
                                         }}
-                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} hover:${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} ${colors.border} border transition-all`}
+                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text ${colors.border} border transition-all`}
                                     >
                                         Mês Passado
                                     </button>
@@ -201,7 +201,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                             {payments.map((payment, index) => (
                                 <div
                                     key={index}
-                                    className={`group ${colors.card} ${colors.border} border rounded-2xl p-4 md:p-6 hover:${colors.border} transition-all duration-300`}
+                                    className={`group ${colors.card} ${colors.border} border rounded-2xl p-4 md:p-6 hover:border-theme-border transition-all duration-300`}
                                 >
                                     <div className="flex flex-col gap-4">
                                         <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             </div>
                                         </div>
 
-                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 md:p-4 rounded-xl ${colors.surface} ${colors.border} border opacity-80 group-hover:${colors.border} transition-colors`}>
+                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 md:p-4 rounded-xl ${colors.surface} ${colors.border} border opacity-80 group-hover:border-theme-border transition-colors`}>
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-8 h-8 rounded-lg ${colors.card} ${colors.border} border flex items-center justify-center`}>
                                                     <Calendar className={`w-4 h-4 ${colors.textMuted}`} />

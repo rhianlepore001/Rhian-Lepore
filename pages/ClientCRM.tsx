@@ -418,7 +418,7 @@ const { id } = useParams<{ id: string }>();
 
                 return (
                   <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
-                    <div className={`relative border-2 border-neutral-700 hover:${accent.border} transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
+                    <div className={`relative border-2 border-neutral-700 hover:border-[var(--color-accent-border)] transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
                       <Calendar className={`w-12 h-12 ${accent.text} mb-2 opacity-50`} />
                       <p className="text-white font-bold font-heading text-lg text-center leading-tight mb-1">{apt.service}</p>
                       <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
@@ -461,7 +461,7 @@ const { id } = useParams<{ id: string }>();
               {/* Keep existing hair records for backward compatibility */}
               {client.hairHistory.map((record: any) => (
                 <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className={`relative border-2 border-neutral-700 hover:${accent.border} transition-colors`}>
+                  <div className={`relative border-2 border-neutral-700 hover:border-[var(--color-accent-border)] transition-colors`}>
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
                       <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>

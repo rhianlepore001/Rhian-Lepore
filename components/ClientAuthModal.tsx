@@ -37,7 +37,7 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                     <h3 className={`${colors.text} ${font.heading} text-lg`}>Seus Dados</h3>
                     <button
                         onClick={() => logout(businessId)}
-                        className={`${colors.textMuted} hover:${status.danger} text-xs flex items-center gap-1`}
+                        className={`${colors.textMuted} hover:text-[var(--color-danger)] text-xs flex items-center gap-1`}
                     >
                         <LogOut className="w-3 h-3" /> Sair
                     </button>
@@ -168,7 +168,7 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setStep('phone')}
-                                className={`text-xs ${colors.textSecondary} hover:${colors.text} underline`}
+                                className={`text-xs ${colors.textSecondary} hover:text-theme-text underline`}
                             >
                                 Alterar
                             </button>

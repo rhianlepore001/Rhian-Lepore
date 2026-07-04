@@ -1226,7 +1226,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 <button
                     onClick={() => changeDate(-7)}
                     aria-label="Semana anterior"
-                    className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
+                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                 </button>
@@ -1250,7 +1250,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     const newDateStr = d.toISOString().split('T')[0];
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text} ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
                                 <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
                                 <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
@@ -1262,7 +1262,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 <button
                     onClick={() => changeDate(7)}
                     aria-label="Próxima semana"
-                    className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
+                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                 </button>
@@ -1656,7 +1656,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 </div>
                                 <button
                                     onClick={() => setShowingDetailsAppointment(null)}
-                                    className={`p-1 rounded-full transition-colors ${colors.textMuted} hover:${colors.text} hover:${colors.surface}`}
+                                    className={`p-1 rounded-full transition-colors ${colors.textMuted} hover:text-theme-text hover:bg-theme-surface`}
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -1848,7 +1848,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             <h3 className={`${colors.text} font-heading text-2xl uppercase`}>Histórico de Agendamentos</h3>
                             <button
                                 onClick={() => setShowHistoryModal(false)}
-                                className={`${colors.textMuted} hover:${colors.text} transition-colors`}
+                                className={`${colors.textMuted} hover:text-theme-text transition-colors`}
                             >
                                 <X className="w-6 h-6" />
                             </button>
@@ -1860,7 +1860,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 onClick={() => {
                                     changeHistoryMonth(-1);
                                 }}
-                                className={`p-2 rounded-lg transition-colors hover:${colors.surface}`}
+                                className={`p-2 rounded-lg transition-colors hover:bg-theme-surface`}
                             >
                                 <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                             </button>
@@ -1873,7 +1873,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 onClick={() => {
                                     changeHistoryMonth(1);
                                 }}
-                                className={`p-2 rounded-lg transition-colors hover:${colors.surface}`}
+                                className={`p-2 rounded-lg transition-colors hover:bg-theme-surface`}
                             >
                                 <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                             </button>
@@ -1912,7 +1912,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                     )}
                                                     <button
                                                         onClick={() => setShowingDetailsAppointment(apt)}
-                                                        className={`${colors.textMuted} hover:${colors.text} transition-colors mt-1 flex items-center gap-1 text-xs`}
+                                                        className={`${colors.textMuted} hover:text-theme-text transition-colors mt-1 flex items-center gap-1 text-xs`}
                                                         title="Ver detalhes"
                                                     >
                                                         <Info className="w-3 h-3" />

@@ -344,7 +344,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           type="button"
                           aria-label="Diminuir quantidade"
                           onClick={() => updateCartQuantity(line.productId, -1)}
-                          className={`p-1 rounded-lg hover:${colors.surfaceHover} ${colors.textSecondary}`}
+                          className={`p-1 rounded-lg ${colors.surfaceHover} ${colors.textSecondary}`}
                         >
                           <Minus size={14} />
                         </button>
@@ -353,7 +353,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           type="button"
                           aria-label="Aumentar quantidade"
                           onClick={() => updateCartQuantity(line.productId, 1)}
-                          className={`p-1 rounded-lg hover:${colors.surfaceHover} ${colors.textSecondary}`}
+                          className={`p-1 rounded-lg ${colors.surfaceHover} ${colors.textSecondary}`}
                         >
                           <Plus size={14} />
                         </button>
@@ -401,8 +401,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     paymentMethod === value
                       ? `${accent.border} ${accent.bgDim} ${accent.text} ${accent.shadow}`
                       : errors.paymentMethod
-                      ? `${status.dangerBorder} ${colors.textSecondary} hover:${status.dangerBorder}`
-                      : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:${colors.border} hover:${colors.surfaceHover}`
+                      ? `${status.dangerBorder} ${colors.textSecondary} hover:border-[var(--color-danger-border)]`
+                      : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:border-theme-border ${colors.surfaceHover}`
                   }`}
                 >
                   <input

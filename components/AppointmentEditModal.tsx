@@ -91,7 +91,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     const labelStyles = `${classes.label} uppercase tracking-wider mb-1 block`;
 
-    const closeButtonStyles = `${colors.textMuted} hover:${colors.text} hover:bg-[var(--color-card-hover)] rounded-full p-1.5 transition-all`;
+    const closeButtonStyles = `${colors.textMuted} hover:text-theme-text hover:bg-[var(--color-card-hover)] rounded-full p-1.5 transition-all`;
 
     // Initial state setup
     const initialDate = formatDateForInput(appointment.appointment_time);

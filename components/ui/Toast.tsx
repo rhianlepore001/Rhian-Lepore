@@ -94,7 +94,7 @@ const ToastView: React.FC<{ toast: ToastItem; onDismiss: (id: number) => void }>
       <button
         type="button"
         onClick={() => onDismiss(toast.id)}
-        className={`shrink-0 -mr-1 -mt-1 p-2 rounded-lg ${colors.textMuted} hover:${colors.text} transition-opacity min-h-[36px] min-w-[36px] inline-flex items-center justify-center`}
+        className={`shrink-0 -mr-1 -mt-1 p-2 rounded-lg ${colors.textMuted} hover:text-theme-text transition-opacity min-h-[36px] min-w-[36px] inline-flex items-center justify-center`}
         aria-label="Fechar"
       >
         <X className="w-4 h-4" aria-hidden="true" />

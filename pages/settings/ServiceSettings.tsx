@@ -175,7 +175,7 @@ export const ServiceSettings: React.FC = () => {
                                                     </div>
 
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <div className={`p-2 ${colors.textMuted} hover:${colors.text}`}>
+                                                        <div className={`p-2 ${colors.textMuted} hover:text-theme-text`}>
                                                             <Edit2 className="w-4 h-4" />
                                                         </div>
                                                     </div>

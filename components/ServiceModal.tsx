@@ -188,7 +188,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                     </h3>
                     <button
                         onClick={onClose}
-                        className={`${colors.textSecondary} hover:${colors.text} hover:bg-white/10 rounded-full p-1.5 transition-all`}
+                        className={`${colors.textSecondary} hover:text-theme-text hover:bg-white/10 rounded-full p-1.5 transition-all`}
                         aria-label="Fechar modal de serviço"
                         title="Fechar"
                     >
@@ -209,7 +209,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     type="button"
                                     onClick={() => handleApplySuggestion(s)}
                                     className={`whitespace-nowrap px-3 py-1.5 text-xs text-white transition-all flex items-center gap-2 rounded-xl ${isBeauty
-                                        ? `${colors.card} ${accent.border} hover:${accent.bg}`
+                                        ? `${colors.card} ${accent.border} hover:bg-theme-accent`
                                         : `${colors.card} ${colors.border} hover:bg-white/10`
                                         }`}
                                 >
@@ -225,7 +225,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <div
-                                className={`relative w-full h-48 rounded-lg ${colors.card} border-2 border-dashed ${imagePreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:${accent.border} overflow-hidden group transition-colors`}
+                                className={`relative w-full h-48 rounded-lg ${colors.card} border-2 border-dashed ${imagePreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {imagePreview ? (
@@ -256,7 +256,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                 <div className="flex items-center justify-between mb-1">
                                     <label className={`${classes.label} block`} htmlFor="service-category">Categoria</label>
                                     {!isCreatingCategory && (
-                                        <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:${accent.bgDim} text-xs font-bold flex items-center gap-1 transition-colors`}>
+                                        <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:bg-[var(--color-accent-dim)] text-xs font-bold flex items-center gap-1 transition-colors`}>
                                             <Plus className="w-3 h-3" /> Nova Categoria
                                         </button>
                                     )}

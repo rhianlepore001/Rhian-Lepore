@@ -139,7 +139,7 @@ export const Header: React.FC = () => {
               aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
               title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               className={`p-2 rounded border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
-                ${colors.card} hover:${colors.surface}`}
+                ${colors.card} hover:bg-theme-surface`}
               style={{ transition: 'background 0.2s' }}
             >
               <span
@@ -160,7 +160,7 @@ export const Header: React.FC = () => {
               <button
                 id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2 hover:${colors.surface} rounded border border-transparent hover:border-[var(--color-divider)] transition-colors`}
+                className={`relative p-2 hover:bg-theme-surface rounded border border-transparent hover:border-[var(--color-divider)] transition-colors`}
                 aria-label="Abrir notificações"
                 title="Notificações"
               >
@@ -202,7 +202,7 @@ export const Header: React.FC = () => {
                               alert.type === 'warning' ? 'text-yellow-500' : 'text-green-500'
                               }`} />
                             <div className="flex-1">
-                              <p className={`text-sm ${colors.text} ${alert.actionPath ? `group-hover:${accent.text}` : ''} transition-colors`}>
+                              <p className={`text-sm ${colors.text} ${alert.actionPath ? `group-hover:text-theme-accent` : ''} transition-colors`}>
                                 {alert.text}
                               </p>
                               <p className={`text-xs ${colors.textSecondary} mt-1 uppercase tracking-wide`}>

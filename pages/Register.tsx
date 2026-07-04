@@ -167,7 +167,7 @@ export const Register: React.FC = () => {
                     placeholder="••••••••"
                     forceTheme={userType}
                     iconRight={
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     }
@@ -183,7 +183,7 @@ export const Register: React.FC = () => {
                     placeholder="••••••••"
                     forceTheme={userType}
                     iconRight={
-                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     }
@@ -335,7 +335,7 @@ export const Register: React.FC = () => {
                       placeholder="••••••••"
                       forceTheme={userType}
                       iconRight={
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                       }
@@ -354,7 +354,7 @@ export const Register: React.FC = () => {
                   placeholder="••••••••"
                   forceTheme={userType}
                   iconRight={
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                           {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                   }

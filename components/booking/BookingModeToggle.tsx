@@ -19,7 +19,7 @@ export const BookingModeToggle: React.FC<BookingModeToggleProps> = ({ mode, onCh
         onClick={() => onChange('quick')}
         className={`${baseBtn} ${mode === 'quick'
             ? `${accent.bg} text-[var(--color-bg)] shadow-lg scale-105`
-            : `${colors.textSecondary} hover:${colors.text} hover:bg-[var(--color-card-hover)]`
+            : `${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)]`
           }`}
         aria-pressed={mode === 'quick'}
       >
@@ -30,7 +30,7 @@ export const BookingModeToggle: React.FC<BookingModeToggleProps> = ({ mode, onCh
         onClick={() => onChange('chat')}
         className={`${baseBtn} ${mode === 'chat'
             ? `${accent.bg} text-[var(--color-bg)] shadow-lg scale-105`
-            : `${colors.textSecondary} hover:${colors.text} hover:bg-[var(--color-card-hover)]`
+            : `${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)]`
           }`}
         aria-pressed={mode === 'chat'}
       >

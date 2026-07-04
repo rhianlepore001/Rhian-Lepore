@@ -252,7 +252,7 @@ export const SetupCopilot: React.FC = () => {
                     <div className={`relative rounded-2xl border p-4 overflow-hidden ${colors.card} ${colors.border}`}>
                         <button
                             onClick={handleDismissResume}
-                            className={`absolute top-3 right-3 p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                            className={`absolute top-3 right-3 p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
                             aria-label="Dispensar"
                         >
                             <X className="w-3.5 h-3.5" />
@@ -281,7 +281,7 @@ export const SetupCopilot: React.FC = () => {
                             </button>
                             <button
                                 onClick={handleDismissResume}
-                                className={`text-xs ${colors.textSecondary} hover:${colors.text} transition-colors font-mono`}
+                                className={`text-xs ${colors.textSecondary} hover:text-theme-text transition-colors font-mono`}
                             >
                                 Não, obrigado
                             </button>
@@ -333,7 +333,7 @@ export const SetupCopilot: React.FC = () => {
                                             localStorage.setItem(getActivationSeenKey(), 'true');
                                         }
                                     }}
-                                    className={`p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                                    className={`p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
                                     title="Fechar"
                                 >
                                     <X className="w-4 h-4" />

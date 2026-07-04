@@ -150,7 +150,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     <button
                         type="button"
                         onClick={handleFillWithOwner}
-                        className={`w-full py-2 px-4 mb-4 border border-dashed rounded-lg transition-all text-xs ${font.mono} uppercase ${accent.borderDim} ${accent.text} hover:${accent.bgDim}`}
+                        className={`w-full py-2 px-4 mb-4 border border-dashed rounded-lg transition-all text-xs ${font.mono} uppercase ${accent.borderDim} ${accent.text} hover:bg-[var(--color-accent-dim)]`}
                     >
                         Sou eu quem atende (Usar meu perfil)
                     </button>

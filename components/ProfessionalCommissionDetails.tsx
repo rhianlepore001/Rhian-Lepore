@@ -223,7 +223,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                             </div>
                             <button
                                 onClick={onClose}
-                                className={`${colors.textMuted} hover:${colors.text} transition-all p-2 hover:${colors.surface} rounded-xl border border-transparent hover:${colors.border} active:scale-95`}
+                                className={`${colors.textMuted} hover:text-theme-text transition-all p-2 hover:bg-theme-surface rounded-xl border border-transparent hover:border-theme-border active:scale-95`}
                             >
                                 <X className="w-5 h-5 md:w-6 md:h-6" />
                             </button>
@@ -276,7 +276,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                     setStartDate(firstDay.toISOString().split('T')[0]);
                                                     setEndDate(lastDay.toISOString().split('T')[0]);
                                                 }}
-                                                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold uppercase hover:${colors.card} transition-all ${colors.textSecondary} hover:${colors.text}`}
+                                                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold uppercase hover:bg-theme-card transition-all ${colors.textSecondary} hover:text-theme-text`}
                                             >
                                                 Este Mês
                                             </button>
@@ -288,7 +288,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                     setStartDate(firstDay.toISOString().split('T')[0]);
                                                     setEndDate(lastDay.toISOString().split('T')[0]);
                                                 }}
-                                                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold uppercase hover:${colors.card} transition-all ${colors.textSecondary} hover:${colors.text} border-l ${colors.divider}`}
+                                                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold uppercase hover:bg-theme-card transition-all ${colors.textSecondary} hover:text-theme-text border-l ${colors.divider}`}
                                             >
                                                 Mês Passado
                                             </button>
@@ -298,7 +298,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                 <button
                                                     key={s}
                                                     onClick={() => setStatusFilter(s)}
-                                                    className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold uppercase transition-all ${statusFilter === s ? `${colors.card} ${colors.text} shadow-lg` : `${colors.textMuted} hover:${colors.textSecondary}`}`}
+                                                    className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold uppercase transition-all ${statusFilter === s ? `${colors.card} ${colors.text} shadow-lg` : `${colors.textMuted} hover:text-theme-textSecondary`}`}
                                                 >
                                                     {s === 'all' ? 'Tudo' : s === 'pending' ? 'Pendente' : 'Pago'}
                                                 </button>
@@ -327,7 +327,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                 {filteredServices.map((service) => (
                                     <div
                                         key={service.id}
-                                        className={`group ${colors.card} ${colors.border} border rounded-2xl p-4 md:p-5 hover:${colors.border} transition-all duration-300`}
+                                        className={`group ${colors.card} ${colors.border} border rounded-2xl p-4 md:p-5 hover:border-theme-border transition-all duration-300`}
                                     >
                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div className="flex items-start gap-3 md:gap-4">
@@ -362,7 +362,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                     <p className={`${colors.text} text-xs md:text-sm ${font.mono} font-bold`}>{currencySymbol} {service.price.toFixed(2)}</p>
                                                 </div>
                                                 <div className={`h-6 md:h-8 w-px ${colors.divider}`}></div>
-                                                <div className={`text-right ${colors.card} opacity-80 md:px-4 px-3 py-2 rounded-xl ${colors.border} border group-hover:${colors.border} transition-colors relative md:min-w-[120px] min-w-[100px]`}>
+                                                <div className={`text-right ${colors.card} opacity-80 md:px-4 px-3 py-2 rounded-xl ${colors.border} border group-hover:border-theme-border transition-colors relative md:min-w-[120px] min-w-[100px]`}>
                                                     <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Comissão ({service.commission_rate}%)</p>
                                                     <p className={`${font.mono} font-bold text-sm md:text-lg ${accent.text} leading-none`}>
                                                         {currencySymbol} {service.commission_amount.toFixed(2)}
@@ -373,7 +373,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                             setEditValue(service.commission_amount.toFixed(2));
                                                             setEditRate(service.commission_rate.toString());
                                                         }}
-                                                        className={`absolute -top-1.5 -right-1.5 w-6 h-6 ${colors.surface} hover:${colors.surfaceHover} ${colors.text} rounded-lg flex items-center justify-center shadow-lg ${colors.border} border transition-transform hover:scale-110 active:scale-95`}
+                                                        className={`absolute -top-1.5 -right-1.5 w-6 h-6 ${colors.surface} ${colors.surfaceHover} ${colors.text} rounded-lg flex items-center justify-center shadow-lg ${colors.border} border transition-transform hover:scale-110 active:scale-95`}
                                                     >
                                                         <Pencil className="w-3 h-3" />
                                                     </button>

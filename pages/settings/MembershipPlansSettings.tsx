@@ -278,7 +278,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                                 'py-3 px-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 border',
                                                 form.badgeColor === b.value
                                                     ? `${accent.bg} text-[var(--color-bg)] border-transparent ${accent.shadow}`
-                                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:${colors.textSecondary}`,
+                                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-textSecondary`,
                                             ].join(' ')}
                                         >
                                             {b.icon}

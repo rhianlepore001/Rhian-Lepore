@@ -808,7 +808,7 @@ export const PublicBooking: React.FC = () => {
                                             <div className="p-6">
                                                 <div className="flex justify-between items-end">
                                                     <div className="flex-1 space-y-3">
-                                                        <h4 className={`text-xl font-black tracking-tight ${colors.text} group-hover:${accent.text} transition-colors duration-200`}>
+                                                        <h4 className={`text-xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
                                                             {service.name}
                                                         </h4>
                                                         {service.description && (
@@ -881,7 +881,7 @@ export const PublicBooking: React.FC = () => {
 
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 <button onClick={() => setSelectedProfessional('any')}
-                                    className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                    className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                     <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                         <Users className="w-8 h-8" />
                                     </div>
@@ -891,7 +891,7 @@ export const PublicBooking: React.FC = () => {
                                 {filteredProfessionals.map((pro, pIdx) => (
                                     <button key={pro.id}
                                         onClick={() => setSelectedProfessional(pro.id)}
-                                        className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.glow}` : `${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}`}>
+                                        className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.glow}` : `${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}`}>
                                         <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                             {pro.photo_url ? (
                                                 <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
@@ -1006,7 +1006,7 @@ export const PublicBooking: React.FC = () => {
                                     <input type="checkbox" id="privacy-quick" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
                                         className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
                                     <label htmlFor="privacy-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                        Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:${colors.text}`}>diretrizes de cancelamento</button>.
+                                        Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
                                     </label>
                                 </div>
 
@@ -1120,15 +1120,15 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-4">
                                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                                         <button onClick={() => { setEditMode('time'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de mudar apenas o horário.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Certo. Escolha sua nova data e horário abaixo:", isAssistant: true, type: 'datetime' }]); setStep('datetime'); }}
-                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <Clock className="w-6 h-6" /> Mudar Horário
                                                         </button>
                                                         <button onClick={() => { setEditMode('service'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de alterar meus serviços.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Quais serviços você gostaria que fossem realizados?", isAssistant: true, type: 'services' }]); setStep('services'); }}
-                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <Scissors className="w-6 h-6" /> Editar Serviços
                                                         </button>
                                                         <button onClick={() => { setEditMode('both'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de mudar serviços e horário.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Ok. Primeiro, vamos revisar seus serviços.", isAssistant: true, type: 'services' }]); setStep('services'); }}
-                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <Calendar className="w-6 h-6" /> Mudar Ambos
                                                         </button>
                                                     </div>
@@ -1229,7 +1229,7 @@ export const PublicBooking: React.FC = () => {
                                                                     <div className="p-6">
                                                                         <div className="flex justify-between items-end">
                                                                             <div className="flex-1 space-y-3">
-                                                                                <h4 className={`text-2xl font-black tracking-tight ${colors.text} group-hover:${accent.text} transition-colors duration-200`}>
+                                                                                <h4 className={`text-2xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
                                                                                     {service.name}
                                                                                 </h4>
                                                                                 {service.description && (
@@ -1278,7 +1278,7 @@ export const PublicBooking: React.FC = () => {
 
                                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                                         <button onClick={() => { setSelectedProfessional('any'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Perfeita escolha. Qual dia e horário ficam melhores para você?", isAssistant: true, type: 'datetime' }]); }}
-                                                            className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                                                 <Users className="w-8 h-8" />
                                                             </div>
@@ -1288,7 +1288,7 @@ export const PublicBooking: React.FC = () => {
                                                         {filteredProfessionals.map((pro, pIdx) => (
                                                             <button key={pro.id}
                                                                 onClick={() => { setSelectedProfessional(pro.id); setMessages(prev => [...prev, { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para a sua visita?`, isAssistant: true, type: 'datetime' }]); }}
-                                                                className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                                className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                                 <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                                                     {pro.photo_url ? (
                                                                         <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
@@ -1414,7 +1414,7 @@ export const PublicBooking: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={handleOpenClientArea}
-                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:border-[var(--color-accent-border)] ${shadow.card}`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`p-2.5 rounded-xl ${colors.surface}`}>
@@ -1463,7 +1463,7 @@ export const PublicBooking: React.FC = () => {
                     <div className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
-                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:${colors.text} transition-colors rounded-full p-2 hover:bg-white/5`}>
+                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:text-theme-text transition-colors rounded-full p-2 hover:bg-white/5`}>
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -1516,7 +1516,7 @@ export const PublicBooking: React.FC = () => {
                                 <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
                                     className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:${colors.text}`}>diretrizes de cancelamento</button>.
+                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
                                 </label>
                             </div>
 
@@ -1662,7 +1662,7 @@ export const PublicBooking: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleOpenClientArea}
-                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:border-[var(--color-accent-border)] ${shadow.card}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2.5 rounded-xl ${colors.surface}`}>
@@ -1720,7 +1720,7 @@ export const PublicBooking: React.FC = () => {
             {showPolicyModal && (
                 <div className="fixed inset-0 flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
                     <div className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
-                        <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:${colors.text} transition-colors z-30`}><X className="w-8 h-8" /></button>
+                        <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-8 h-8" /></button>
                         <div className="relative z-10 space-y-6">
                             <h3 className={`text-2xl ${colors.text} flex items-center gap-3`}>
                                 <AlertTriangle className={`w-6 h-6 ${accent.text}`} />

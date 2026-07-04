@@ -79,7 +79,7 @@ export const Tabs: React.FC<TabsProps> = ({
               tab.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
               isActive
                 ? `${accent.text} border-b-2 border-current -mb-px`
-                : `${colors.textSecondary} hover:${colors.text}`,
+                : `${colors.textSecondary} hover:text-theme-text`,
             ].filter(Boolean).join(' ')}
           >
             {tab.icon && <span className="[&>svg]:w-4 [&>svg]:h-4 shrink-0" aria-hidden="true">{tab.icon}</span>}

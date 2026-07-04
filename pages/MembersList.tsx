@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Check, X, MessageCircle, Search, Crown, Calendar, ChevronRight, Zap } from 'lucide-react';
-import { Card } from '../components/ui';
+import { Card, Modal, Button, ConfirmModal } from '../components/ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,6 +41,9 @@ export const MembersList: React.FC = () => {
 
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
     const [search, setSearch] = useState('');
+    const [confirming, setConfirming] = useState<MembershipWithPlan | null>(null);
+    const [confirmMethod, setConfirmMethod] = useState<'pix' | 'cash' | 'card'>('pix');
+    const [cancelling, setCancelling] = useState<MembershipWithPlan | null>(null);
     const statusFilter = tab === 'all' ? undefined : tab;
     const { data: memberships, isLoading } = useClientMemberships(statusFilter);
     const confirmMutation = useConfirmMembershipPayment();
@@ -58,24 +61,30 @@ export const MembersList: React.FC = () => {
         );
     }, [memberships, search]);
 
-    const handleConfirm = async (m: MembershipWithPlan) => {
-        if (!user) return;
-        if (!window.confirm(`Confirmar ${formatCurrency((m.plan?.price_cents || 0) / 100, region)} do plano "${m.plan?.name}" para ${m.client?.name}?`)) return;
+    const openConfirm = (m: MembershipWithPlan) => {
+        setConfirmMethod(m.payment_method === 'pix' ? 'pix' : 'cash');
+        setConfirming(m);
+    };
+
+    const handleConfirm = async () => {
+        if (!user || !confirming) return;
         try {
-            await confirmMutation.mutateAsync({ membershipId: m.id, method: 'pix' });
-            showToast(`${m.client?.name} agora é assinante ativo!`, 'success');
-        } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            await confirmMutation.mutateAsync({ membershipId: confirming.id, method: confirmMethod });
+            showToast(`${confirming.client?.name} agora é assinante ativo!`, 'success');
+            setConfirming(null);
+        } catch {
+            showToast('Não foi possível confirmar o pagamento. Tente novamente.', 'error');
         }
     };
 
-    const handleCancel = async (m: MembershipWithPlan) => {
-        if (!window.confirm(`Cancelar a assinatura de ${m.client?.name}?`)) return;
+    const handleCancel = async () => {
+        if (!cancelling) return;
         try {
-            await cancelMutation.mutateAsync(m.id);
+            await cancelMutation.mutateAsync(cancelling.id);
             showToast('Assinatura cancelada.', 'success');
-        } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            setCancelling(null);
+        } catch {
+            showToast('Não foi possível cancelar a assinatura. Tente novamente.', 'error');
         }
     };
 
@@ -224,7 +233,7 @@ export const MembersList: React.FC = () => {
                                         {m.status === 'pending' && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleConfirm(m)}
+                                                onClick={() => openConfirm(m)}
                                                 disabled={confirmMutation.isPending}
                                                 className="px-3 py-2 rounded-xl bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
                                             >
@@ -235,7 +244,7 @@ export const MembersList: React.FC = () => {
                                         {(m.status === 'active' || m.status === 'overdue') && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleCancel(m)}
+                                                onClick={() => setCancelling(m)}
                                                 disabled={cancelMutation.isPending}
                                                 className="px-3 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
                                             >
@@ -253,6 +262,69 @@ export const MembersList: React.FC = () => {
                     })}
                 </div>
             )}
+
+            <Modal
+                open={!!confirming}
+                onClose={() => setConfirming(null)}
+                title="Confirmar pagamento"
+                size="sm"
+                footer={
+                    <div className="flex justify-end gap-2 w-full">
+                        <Button variant="ghost" onClick={() => setConfirming(null)} disabled={confirmMutation.isPending}>
+                            Cancelar
+                        </Button>
+                        <Button variant="primary" onClick={handleConfirm} loading={confirmMutation.isPending}>
+                            Confirmar pagamento
+                        </Button>
+                    </div>
+                }
+            >
+                {confirming && (
+                    <div className="space-y-4">
+                        <p className={`text-sm ${colors.textSecondary}`}>
+                            {formatCurrency((confirming.plan?.price_cents || 0) / 100, region)} do plano{' '}
+                            <span className={colors.text}>&quot;{confirming.plan?.name}&quot;</span> para{' '}
+                            <span className={colors.text}>{confirming.client?.name}</span>.
+                        </p>
+                        <div>
+                            <p className={`${classes.label} mb-2`}>Como o pagamento foi recebido?</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {([
+                                    { value: 'pix', label: 'Pix' },
+                                    { value: 'cash', label: 'Dinheiro' },
+                                    { value: 'card', label: 'Cartão' },
+                                ] as const).map(({ value, label }) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => setConfirmMethod(value)}
+                                        className={[
+                                            'py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all',
+                                            confirmMethod === value
+                                                ? `${accent.bgDim} ${accent.border} ${accent.text}`
+                                                : `${colors.inputBg} ${colors.border} ${colors.textMuted}`,
+                                        ].join(' ')}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            <ConfirmModal
+                open={!!cancelling}
+                title="Cancelar assinatura"
+                message={`Cancelar a assinatura de ${cancelling?.client?.name || 'este cliente'}? Ele perde os benefícios do plano imediatamente.`}
+                confirmLabel="Cancelar assinatura"
+                cancelLabel="Voltar"
+                variant="danger"
+                loading={cancelMutation.isPending}
+                onConfirm={handleCancel}
+                onCancel={() => setCancelling(null)}
+            />
         </div>
     );
 };

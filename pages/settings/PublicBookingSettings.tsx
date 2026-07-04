@@ -125,7 +125,7 @@ export const PublicBookingSettings: React.FC = () => {
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Sugere serviços extras para o cliente gastar mais por visita, automaticamente.
                             </p>
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl ${accent.bgDim} ${accent.borderDim} ${accent.text} text-[10px] font-bold uppercase tracking-wider`}>
+                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl ${accent.bgDim} ${accent.borderDim} ${accent.text} text-xs font-bold uppercase tracking-wider`}>
                                 +R$ 1.200/mês méd.
                             </div>
                             <div className="flex justify-end pt-2">
@@ -146,7 +146,7 @@ export const PublicBookingSettings: React.FC = () => {
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Permite que os clientes escolham com quem desejam realizar o procedimento.
                             </p>
-                            <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                            <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-wider">
                                 +114% Retenção
                             </div>
                             <div className="flex justify-end pt-2">

@@ -67,7 +67,7 @@ export const OccupancyRateCard: React.FC = () => {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
+              className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
                 period === p
                   ? `${accent.bgDim} ${accent.text}`
                   : `${colors.textMuted} hover:${colors.text}`

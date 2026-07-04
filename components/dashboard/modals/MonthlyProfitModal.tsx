@@ -123,13 +123,13 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                     {/* Resumo acumulado */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className={`p-4 rounded-xl ${colors.card} ${colors.border}`}>
-                            <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Lucro Acumulado (12m)</p>
+                            <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Lucro Acumulado (12m)</p>
                             <p className={`text-2xl font-bold font-heading ${accent.text}`}>
                                 {formatCurrency(totalAccumulated, currencyRegion)}
                             </p>
                         </div>
                         <div className={`p-4 rounded-xl ${colors.card} ${colors.border}`}>
-                            <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Melhor Mês</p>
+                            <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Melhor Mês</p>
                             <p className={`text-lg font-bold font-heading ${colors.text}`}>
                                 {bestMonth?.month ? `${bestMonth.month.substring(0, 3)} ${bestMonth.year}` : '—'}
                             </p>
@@ -152,7 +152,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                                             {item.month} <span className={`${colors.textSecondary} font-mono`}>{item.year}</span>
                                         </p>
                                         {idx === 0 && (
-                                            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-[var(--color-bg)]`}>
+                                            <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-[var(--color-bg)]`}>
                                                 Atual
                                             </span>
                                         )}
@@ -174,7 +174,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                                     )}
 
                                     <div className="text-right">
-                                        <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase`}>Lucro</p>
+                                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase`}>Lucro</p>
                                         <p className={`text-base font-bold font-heading ${item.profit >= 0 ? accent.text : classes.badgeDanger.split(' ').find(c => c.startsWith('text-'))}`}>
                                             {formatCurrency(item.profit, currencyRegion)}
                                         </p>
@@ -192,7 +192,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                     </div>
 
                     {/* Legenda */}
-                    <div className={`flex items-center gap-2 text-[10px] font-mono ${colors.textMuted} border-t ${colors.divider} pt-3`}>
+                    <div className={`flex items-center gap-2 text-xs font-mono ${colors.textMuted} border-t ${colors.divider} pt-3`}>
                         <DollarSign className="w-3 h-3" />
                         <span>Lucro = Receita − Despesas pagas no período.</span>
                     </div>

@@ -310,7 +310,7 @@ const { id } = useParams<{ id: string }>();
                     }
                   }}
                 />
-                <span className="text-white text-[10px] font-bold uppercase border border-white px-2 py-1">Alterar</span>
+                <span className="text-white text-xs font-bold uppercase border border-white px-2 py-1">Alterar</span>
               </label>
             </div>
             <div className="flex flex-col justify-center md:items-center md:w-full">
@@ -377,21 +377,21 @@ const { id } = useParams<{ id: string }>();
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-[10px] md:text-xs text-text-secondary uppercase">Última Visita</p>
+                <p className="text-xs md:text-xs text-text-secondary uppercase">Última Visita</p>
                 <p className="text-base md:text-lg font-bold text-white">{client.lastVisit}</p>
               </div>
               <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-[10px] md:text-xs text-text-secondary uppercase">Total Visitas</p>
+                <p className="text-xs md:text-xs text-text-secondary uppercase">Total Visitas</p>
                 <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
               </div>
               <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-[10px] md:text-xs text-text-secondary uppercase" title="Total gasto neste estabelecimento">Total Gasto</p>
+                <p className="text-xs md:text-xs text-text-secondary uppercase" title="Total gasto neste estabelecimento">Total Gasto</p>
                 <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
               </div>
               <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border ${isBeauty ? 'border-beauty-neon/40' : 'border-accent-gold/40'}`}>
-                <p className={`text-[10px] md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
+                <p className={`text-xs md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
                   <Sparkles className="w-3 h-3" /> Próxima Visita
                 </p>
                 <p className="text-base md:text-lg font-bold text-white">{client.nextPrediction}</p>
@@ -424,11 +424,11 @@ const { id } = useParams<{ id: string }>();
                       <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
 
                       <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
-                        <p className="text-[10px] md:text-xs text-text-secondary font-mono flex justify-between items-center">
+                        <p className="text-xs md:text-xs text-text-secondary font-mono flex justify-between items-center">
                           <span>{apt.professional_name || 'Profissional'}</span>
                           <span className="flex items-center gap-2">
                             {hasDiscount && (
-                              <span className="text-red-400 line-through text-[10px]">{currencySymbol} {apt.basePrice.toFixed(2)}</span>
+                              <span className="text-red-400 line-through text-xs">{currencySymbol} {apt.basePrice.toFixed(2)}</span>
                             )}
                             <span className="text-white font-bold">{currencySymbol} {apt.price.toFixed(2)}</span>
                           </span>
@@ -438,10 +438,10 @@ const { id } = useParams<{ id: string }>();
                       {/* Badges */}
                       <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {index === 0 && (
-                          <span className={`${accent.bg} text-[var(--color-bg)] text-[10px] font-bold px-2 py-1 uppercase`}>Último</span>
+                          <span className={`${accent.bg} text-[var(--color-bg)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
                         )}
                         {hasDiscount && (
-                          <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-1 flex items-center gap-1">
+                          <span className="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 flex items-center gap-1">
                             <Tag className="w-3 h-3" /> {discountPercentage}% OFF
                           </span>
                         )}
@@ -465,10 +465,10 @@ const { id } = useParams<{ id: string }>();
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
                       <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
-                      <p className="text-[10px] md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
+                      <p className="text-xs md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
                     </div>
                     <div className="absolute top-2 right-2">
-                      <span className="bg-neutral-800 text-white text-[10px] font-bold px-2 py-1 uppercase border border-neutral-600">Foto</span>
+                      <span className="bg-neutral-800 text-white text-xs font-bold px-2 py-1 uppercase border border-neutral-600">Foto</span>
                     </div>
                   </div>
                 </div>
@@ -522,7 +522,7 @@ const { id } = useParams<{ id: string }>();
                 </p>
 
                 <div className="bg-white/5 p-3 rounded border border-white/5">
-                  <p className="text-[10px] uppercase font-mono text-text-secondary mb-1">Sugestão da IA:</p>
+                  <p className="text-xs uppercase font-mono text-text-secondary mb-1">Sugestão da IA:</p>
                   <p className="text-xs italic text-white/80">&quot;Enviar mensagem de saudades e oferecer um horário prioritário para esta semana.&quot;</p>
                 </div>
 

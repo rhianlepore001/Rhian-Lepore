@@ -124,7 +124,7 @@ export const ComandoDoDia: React.FC<ComandoDoDiaProps> = ({
                                 <div className="flex-1 min-w-0">
                                     <p className={`text-xs ${colors.text} font-medium truncate`}>{item.label}</p>
                                     {item.detail && (
-                                        <p className={`text-[10px] ${colors.textMuted} font-mono truncate`}>{item.detail}</p>
+                                        <p className={`text-xs ${colors.textMuted} font-mono truncate`}>{item.detail}</p>
                                     )}
                                 </div>
                                 {item.action && (

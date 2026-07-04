@@ -187,11 +187,11 @@ export const QueueStatus: React.FC = () => {
                         {entry.status === 'waiting' && position ? (
                             <div className="grid grid-cols-2 gap-3 w-full mb-6">
                                 <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                    <span className="block text-neutral-500 text-[10px] uppercase font-bold tracking-widest mb-1">Sua Posição</span>
+                                    <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Sua Posição</span>
                                     <div className="text-4xl font-black text-white">{position}º</div>
                                 </div>
                                 <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                    <span className="block text-neutral-500 text-[10px] uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
+                                    <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
                                     <div className={`text-2xl font-black ${timeLeft !== null && timeLeft < 0 ? 'text-red-400' : 'text-white'} mt-2 flex items-center justify-center gap-1 font-mono`}>
                                         {timeLeft !== null ? formatTime(timeLeft) : '--:--'}
                                     </div>

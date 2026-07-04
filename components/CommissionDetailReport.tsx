@@ -126,7 +126,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                     <div className={`mb-4 flex items-center justify-between border-b ${colors.divider} pb-4`}>
                         <div>
                             <h3 className={`text-lg font-bold tracking-tight ${colors.text}`}>Relatório de comissões</h3>
-                            <p className={`text-[11px] ${font.mono} ${colors.textMuted}`}>{periodLabel}</p>
+                            <p className={`text-xs ${font.mono} ${colors.textMuted}`}>{periodLabel}</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
@@ -179,13 +179,13 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className={`border-b ${colors.divider}`}>
-                                                <th className={`text-left py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Data</th>
-                                                <th className={`text-left py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Serviço / Cliente</th>
-                                                <th className={`text-right py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Valor</th>
-                                                <th className={`text-right py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider hidden md:table-cell`}>Pagamento</th>
-                                                <th className={`text-right py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider hidden md:table-cell`}>Taxa</th>
-                                                <th className={`text-right py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Base</th>
-                                                <th className={`text-right py-2 text-[10px] ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Comissão</th>
+                                                <th className={`text-left py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Data</th>
+                                                <th className={`text-left py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Serviço / Cliente</th>
+                                                <th className={`text-right py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Valor</th>
+                                                <th className={`text-right py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider hidden md:table-cell`}>Pagamento</th>
+                                                <th className={`text-right py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider hidden md:table-cell`}>Taxa</th>
+                                                <th className={`text-right py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Base</th>
+                                                <th className={`text-right py-2 text-xs ${font.mono} ${colors.textMuted} uppercase tracking-wider`}>Comissão</th>
                                             </tr>
                                         </thead>
                                         <tbody className={`divide-y ${colors.divider}`}>
@@ -194,7 +194,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                                     <td className={`py-3 ${colors.textSecondary} ${font.mono} text-xs whitespace-nowrap`}>{fmtDate(r.created_at)}</td>
                                                     <td className="py-3 pr-4">
                                                         <p className={`${colors.text} text-xs font-medium`}>{r.service_name}</p>
-                                                        {r.client_name && <p className={`${colors.textMuted} text-[10px]`}>{r.client_name}</p>}
+                                                        {r.client_name && <p className={`${colors.textMuted} text-xs`}>{r.client_name}</p>}
                                                     </td>
                                                     <td className={`py-3 text-right ${colors.text} ${font.mono} text-xs whitespace-nowrap`}>{fmt(r.amount)}</td>
                                                     <td className={`py-3 text-right ${colors.textMuted} text-xs hidden md:table-cell whitespace-nowrap`}>
@@ -242,7 +242,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                     </div>
                                 </div>
 
-                                <div className={`border-t ${colors.divider} pt-4 text-[10px] ${colors.textMuted} opacity-60 ${font.mono} flex flex-wrap gap-4`}>
+                                <div className={`border-t ${colors.divider} pt-4 text-xs ${colors.textMuted} opacity-60 ${font.mono} flex flex-wrap gap-4`}>
                                     <span>{professionalName}</span>
                                     <span>CPF: {cpf || 'Não cadastrado'}</span>
                                     <span>Período: {periodLabel}</span>

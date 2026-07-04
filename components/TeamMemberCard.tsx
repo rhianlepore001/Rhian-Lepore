@@ -110,7 +110,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                                     {member.commission_rate || 0}%
                                 </span>
                             </div>
-                            <span className="text-[9px] uppercase tracking-widest text-neutral-500">
+                            <span className="text-xs uppercase tracking-widest text-neutral-500">
                                 comissão
                             </span>
                         </div>

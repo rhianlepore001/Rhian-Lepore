@@ -36,7 +36,7 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                     <div className="flex-1 text-center md:text-left">
                         <h3 className={`text-xl md:text-2xl ${font.heading} ${colors.text} mb-1 flex items-center justify-center md:justify-start gap-2`}>
                             Oportunidades Ativas
-                            <span className={`text-[10px] ${font.mono} px-2 py-0.5 ${colors.surface} rounded uppercase tracking-widest opacity-70`}>Inteligência AgendiX</span>
+                            <span className={`text-xs ${font.mono} px-2 py-0.5 ${colors.surface} rounded uppercase tracking-widest opacity-70`}>Inteligência AgendiX</span>
                         </h3>
                         <p className={`${colors.textSecondary} text-sm md:text-base max-w-xl`}>
                             Detectamos <span className={`${accent.text} font-bold`}>{diagnostic.at_risk_clients.length} clientes habituais</span> que não retornam há mais de 30 dias.
@@ -57,11 +57,11 @@ export const AIOSDiagnosticCard: React.FC<AIOSDiagnosticCardProps> = ({ isBeauty
                 </div>
 
                 <div className={`${colors.surface} p-3 flex justify-around border-t ${colors.divider}`}>
-                    <div className={`flex items-center gap-2 text-[10px] ${font.mono} uppercase tracking-tighter ${colors.textSecondary}`}>
+                    <div className={`flex items-center gap-2 text-xs ${font.mono} uppercase tracking-tighter ${colors.textSecondary}`}>
                         <Users className="w-3 h-3" />
                         <span>{diagnostic.at_risk_clients.length} clientes para chamar de volta</span>
                     </div>
-                    <div className={`flex items-center gap-2 text-[10px] ${font.mono} uppercase tracking-tighter ${colors.textSecondary}`}>
+                    <div className={`flex items-center gap-2 text-xs ${font.mono} uppercase tracking-tighter ${colors.textSecondary}`}>
                         <TrendingUp className="w-3 h-3" />
                         <span>Gasto por visita: {formatCurrency(diagnostic.recoverable_revenue / diagnostic.at_risk_clients.length, region)}</span>
                     </div>

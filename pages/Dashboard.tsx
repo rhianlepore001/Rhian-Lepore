@@ -227,7 +227,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-3">
                     <div>
-                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                      <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         Ativos
                       </p>
                       <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-green-400">
@@ -235,7 +235,7 @@ export const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                      <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         Pendentes
                       </p>
                       <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-amber-400">
@@ -243,7 +243,7 @@ export const Dashboard: React.FC = () => {
                       </p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
+                      <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         MRR
                       </p>
                       <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-yellow-300">

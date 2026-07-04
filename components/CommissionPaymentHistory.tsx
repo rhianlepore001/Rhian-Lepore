@@ -103,7 +103,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
     const totalServices = payments.reduce((sum, p) => sum + p.services_count, 0);
 
-    const dateInputClass = `w-full p-2 md:p-2.5 ${colors.inputBg} ${colors.inputBorder} border md:rounded-xl rounded-lg ${colors.text} text-[11px] md:text-xs focus:border-[var(--color-input-focus)] outline-none transition-colors`;
+    const dateInputClass = `w-full p-2 md:p-2.5 ${colors.inputBg} ${colors.inputBorder} border md:rounded-xl rounded-lg ${colors.text} text-xs md:text-xs focus:border-[var(--color-input-focus)] outline-none transition-colors`;
 
     return (
         <Modal open size="full" onClose={onClose} showCloseButton={false}>
@@ -116,7 +116,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                             </div>
                             <div>
                                 <h2 className={`text-lg md:text-2xl ${font.heading} ${colors.text} uppercase tracking-tight leading-none md:leading-normal`}>Histórico de Pagamentos</h2>
-                                <p className={`${colors.textMuted} text-[10px] md:text-sm mt-0.5`}>Repasses para <span className={`${colors.text} font-bold`}>{professionalName}</span></p>
+                                <p className={`${colors.textMuted} text-xs md:text-sm mt-0.5`}>Repasses para <span className={`${colors.text} font-bold`}>{professionalName}</span></p>
                             </div>
                         </div>
                         <button
@@ -130,7 +130,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                     <div className={`${colors.surface} p-3 md:p-4 rounded-2xl ${colors.border} border opacity-80`}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className={`${colors.textMuted} text-[9px] md:text-[10px] uppercase ${font.mono} block px-1`}>Período de Consulta</label>
+                                <label className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} block px-1`}>Período de Consulta</label>
                                 <div className="flex gap-2">
                                     <div className="flex-1">
                                         <input
@@ -152,7 +152,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                             </div>
 
                             <div className="flex flex-col space-y-2">
-                                <label className={`${colors.textMuted} text-[9px] md:text-[10px] uppercase ${font.mono} block px-1`}>Seleção Rápida</label>
+                                <label className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} block px-1`}>Seleção Rápida</label>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => {
@@ -162,7 +162,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             setStartDate(firstDay.toISOString().split('T')[0]);
                                             setEndDate(lastDay.toISOString().split('T')[0]);
                                         }}
-                                        className={`flex-1 py-2 px-2 rounded-xl text-[9px] font-bold uppercase ${colors.inputBg} hover:${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} ${colors.border} border transition-all`}
+                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} hover:${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} ${colors.border} border transition-all`}
                                     >
                                         Este Mês
                                     </button>
@@ -174,7 +174,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             setStartDate(firstDay.toISOString().split('T')[0]);
                                             setEndDate(lastDay.toISOString().split('T')[0]);
                                         }}
-                                        className={`flex-1 py-2 px-2 rounded-xl text-[9px] font-bold uppercase ${colors.inputBg} hover:${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} ${colors.border} border transition-all`}
+                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} hover:${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} ${colors.border} border transition-all`}
                                     >
                                         Mês Passado
                                     </button>
@@ -188,13 +188,13 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24 space-y-4">
                             <Loader2 className={`w-10 h-10 animate-spin ${accent.text}`} />
-                            <p className={`${colors.textMuted} ${font.mono} text-[10px] uppercase tracking-widest`}>Buscando pagamentos...</p>
+                            <p className={`${colors.textMuted} ${font.mono} text-xs uppercase tracking-widest`}>Buscando pagamentos...</p>
                         </div>
                     ) : payments.length === 0 ? (
                         <div className={`text-center py-20 ${colors.surface} rounded-[32px] border-2 border-dashed ${colors.border}`}>
                             <Clock className={`w-12 h-12 ${colors.textMuted} mx-auto mb-4 opacity-50`} />
                             <p className={`${colors.textSecondary} font-medium`}>Nenhum pagamento registrado.</p>
-                            <p className={`${colors.textMuted} text-[11px] mt-1 uppercase ${font.mono}`}>Os repasses aparecerão aqui após serem liquidados</p>
+                            <p className={`${colors.textMuted} text-xs mt-1 uppercase ${font.mono}`}>Os repasses aparecerão aqui após serem liquidados</p>
                         </div>
                     ) : (
                         <div className="flex flex-col gap-4">
@@ -210,14 +210,14 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                                     <Check className={`w-4 h-4 ${status.success}`} />
                                                 </div>
                                                 <div>
-                                                    <span className={`text-[10px] font-bold ${status.success} uppercase tracking-tight`}>Pagamento Efetuado</span>
-                                                    <p className={`text-[9px] md:text-xs ${font.mono} ${colors.textMuted} uppercase`}>
+                                                    <span className={`text-xs font-bold ${status.success} uppercase tracking-tight`}>Pagamento Efetuado</span>
+                                                    <p className={`text-xs md:text-xs ${font.mono} ${colors.textMuted} uppercase`}>
                                                         Em: {new Date(payment.payment_date).toLocaleDateString('pt-BR')}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-[9px] ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Total Pago</p>
+                                                <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Total Pago</p>
                                                 <p className={`${font.mono} font-bold text-lg md:text-2xl ${accent.text} leading-none`}>
                                                     {currencySymbol} {payment.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                 </p>
@@ -230,8 +230,8 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                                     <Calendar className={`w-4 h-4 ${colors.textMuted}`} />
                                                 </div>
                                                 <div>
-                                                    <p className={`text-[9px] ${colors.textMuted} uppercase ${font.mono} font-bold leading-none mb-1`}>Período</p>
-                                                    <p className={`${colors.textSecondary} text-[11px] md:text-xs`}>
+                                                    <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold leading-none mb-1`}>Período</p>
+                                                    <p className={`${colors.textSecondary} text-xs md:text-xs`}>
                                                         {new Date(payment.period_start).toLocaleDateString('pt-BR')} — {new Date(payment.period_end).toLocaleDateString('pt-BR')}
                                                     </p>
                                                 </div>
@@ -241,8 +241,8 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                                     <TrendingUp className={`w-4 h-4 ${colors.textMuted}`} />
                                                 </div>
                                                 <div>
-                                                    <p className={`text-[9px] ${colors.textMuted} uppercase ${font.mono} font-bold leading-none mb-1`}>Serviços</p>
-                                                    <p className={`${colors.textSecondary} text-[11px] md:text-xs`}>
+                                                    <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold leading-none mb-1`}>Serviços</p>
+                                                    <p className={`${colors.textSecondary} text-xs md:text-xs`}>
                                                         {payment.services_count} atendimentos liquidados
                                                     </p>
                                                 </div>
@@ -259,14 +259,14 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
                         <div className="flex justify-between md:justify-start items-center gap-6 md:gap-10 w-full md:w-auto">
                             <div>
-                                <p className={`${colors.textMuted} text-[9px] md:text-[10px] uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Total Geral Pago</p>
+                                <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Total Geral Pago</p>
                                 <p className={`${font.mono} font-bold text-xl md:text-3xl ${accent.text} leading-none`}>
                                     {currencySymbol} {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </p>
                             </div>
                             <div className={`h-10 w-px ${colors.divider}`}></div>
                             <div>
-                                <p className={`${colors.textMuted} text-[9px] md:text-[10px] uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Serviços</p>
+                                <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Serviços</p>
                                 <p className={`${colors.text} ${font.mono} font-bold text-xl md:text-3xl leading-none`}>
                                     {totalServices}
                                 </p>

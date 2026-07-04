@@ -66,7 +66,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                 {/* Assistant Avatar - Premium Identity */}
                 {isAssistant && (
                     <div className={`w-8 h-8 md:w-10 md:h-10 shrink-0 flex items-center justify-center border transition-all duration-500 shadow-lg mb-2 ${isBeauty ? 'bg-stone-800 text-white rounded-full border-stone-200' : 'bg-accent-gold text-black rounded-none border-black font-black'}`}>
-                        <span className="text-[10px] md:text-xs tracking-tighter">AI</span>
+                        <span className="text-xs md:text-xs tracking-tighter">AI</span>
                     </div>
                 )}
 

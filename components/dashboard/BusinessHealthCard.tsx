@@ -109,7 +109,7 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
                 <p className={`text-sm ${colors.textSecondary}`}>
                     Seus indicadores aparecem após o primeiro mês.
                 </p>
-                <p className={`text-[11px] ${colors.textMuted} mt-1 leading-relaxed`}>
+                <p className={`text-xs ${colors.textMuted} mt-1 leading-relaxed`}>
                     Continue registrando — os dados já estão sendo coletados.
                 </p>
             </Card>
@@ -184,7 +184,7 @@ export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
                                         {item.label}
                                     </p>
                                     {item.detail && (
-                                        <p className={`text-[10px] ${colors.textMuted} mt-0.5 leading-relaxed`}>
+                                        <p className={`text-xs ${colors.textMuted} mt-0.5 leading-relaxed`}>
                                             {item.detail}
                                         </p>
                                     )}

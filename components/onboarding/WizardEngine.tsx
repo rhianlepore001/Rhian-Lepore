@@ -120,7 +120,7 @@ export function WizardEngine() {
                 </div>
                 <h2 className="text-sm font-bold tracking-tight">{currentStepConfig.title}</h2>
               </div>
-              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                 Passo {currentStep} de {TOTAL_STEPS}
               </div>
             </div>
@@ -153,10 +153,10 @@ export function WizardEngine() {
         {/* Footer */}
         <div className="fixed bottom-0 left-0 right-0 z-[60] border-t ${colors.divider} ${colors.bg}/90 backdrop-blur-2xl">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               © {new Date().getFullYear()} AgendiX
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Configuração Inicial
             </span>
           </div>

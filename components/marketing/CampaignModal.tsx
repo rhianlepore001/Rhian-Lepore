@@ -160,7 +160,7 @@ export const CampaignModal: React.FC<CampaignModalProps> = ({ isOpen, onClose, c
                 </div>
 
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <p className="text-[10px] font-mono text-blue-400 leading-relaxed uppercase">
+                    <p className="text-xs font-mono text-blue-400 leading-relaxed uppercase">
                         DICA: Personalize o texto acima com o seu jeito de falar. Quanto mais você usar, melhores ficam as sugestões.
                     </p>
                 </div>

@@ -307,7 +307,7 @@ export const SetupCopilot: React.FC = () => {
                                     <h3 className={`text-sm font-bold font-heading ${colors.text}`}>
                                         {isActivated ? 'Sistema Ativado!' : 'Configure seu espaço'}
                                     </h3>
-                                    <p className={`text-[11px] ${colors.textSecondary} font-mono`}>
+                                    <p className={`text-xs ${colors.textSecondary} font-mono`}>
                                         {isActivated
                                             ? '100% — tudo pronto!'
                                             : completedCount === 0
@@ -382,23 +382,23 @@ export const SetupCopilot: React.FC = () => {
                                                         {step.label}
                                                     </p>
                                                     {step.id === 'team' && !step.completed && (
-                                                        <span className={`text-[9px] font-mono font-bold ${colors.textSecondary} uppercase tracking-wide`}>
+                                                        <span className={`text-xs font-mono font-bold ${colors.textSecondary} uppercase tracking-wide`}>
                                                             Opcional
                                                         </span>
                                                     )}
                                                     {step.completed && (
-                                                        <span className={`text-[9px] font-mono font-bold ${successTextClass} uppercase tracking-wide`}>
+                                                        <span className={`text-xs font-mono font-bold ${successTextClass} uppercase tracking-wide`}>
                                                             Feito
                                                         </span>
                                                     )}
                                                     {!step.completed && step.id === nextStep?.id && (
-                                                        <span className={`text-[9px] font-mono font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${accent.bgDim} ${accent.text}`}>
+                                                        <span className={`text-xs font-mono font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${accent.bgDim} ${accent.text}`}>
                                                             Próximo
                                                         </span>
                                                     )}
                                                 </div>
                                                 {!step.completed && (
-                                                    <p className={`text-[11px] ${colors.textSecondary} mt-0.5`}>{step.description}</p>
+                                                    <p className={`text-xs ${colors.textSecondary} mt-0.5`}>{step.description}</p>
                                                 )}
                                             </div>
                                             {!step.completed && (

@@ -47,7 +47,7 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({
             {badge && (
                 <Badge
                     variant={TYPE_BADGE_VARIANT[type]}
-                    className="absolute top-0 right-0 rounded-none rounded-bl-lg text-[9px] font-mono font-bold uppercase"
+                    className="absolute top-0 right-0 rounded-none rounded-bl-lg text-xs font-mono font-bold uppercase"
                 >
                     {badge}
                 </Badge>
@@ -63,7 +63,7 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({
                     <p className={`${colors.textSecondary} text-xs mb-3 leading-relaxed`}>{description}</p>
 
                     {impact && (
-                        <div className={`flex items-center gap-1.5 text-[10px] ${font.mono} ${status.success} mb-4`}>
+                        <div className={`flex items-center gap-1.5 text-xs ${font.mono} ${status.success} mb-4`}>
                             <TrendingUp className="w-3 h-3" />
                             <span>Impacto: {impact}</span>
                         </div>
@@ -72,7 +72,7 @@ export const OpportunityCard: React.FC<OpportunityCardProps> = ({
                     <Button
                         variant={btnVariant}
                         size="sm"
-                        className="w-full text-[10px] h-8"
+                        className="w-full text-xs h-8"
                         onClick={onAction}
                         icon={<ArrowRight className="w-3 h-3" />}
                     >

@@ -81,7 +81,7 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                     }`}
             >
                 <Info className={`w-3.5 h-3.5 transition-transform duration-300 ${showTooltip ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="text-[10px] font-mono uppercase tracking-widest font-bold opacity-70 group-hover:opacity-100">Ajuda</span>
+                <span className="text-xs font-mono uppercase tracking-widest font-bold opacity-70 group-hover:opacity-100">Ajuda</span>
             </div>
 
             {showTooltip && createPortal(
@@ -103,8 +103,8 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                             <Bot className="w-3.5 h-3.5 text-blue-400" />
                         </div>
                         <div className="space-y-1.5">
-                            <p className="font-bold text-[10px] uppercase tracking-wider text-blue-400 font-mono">Dica do Assistente</p>
-                            <p className="text-[11px] leading-relaxed text-neutral-200 font-medium">{text}</p>
+                            <p className="font-bold text-xs uppercase tracking-wider text-blue-400 font-mono">Dica do Assistente</p>
+                            <p className="text-xs leading-relaxed text-neutral-200 font-medium">{text}</p>
                         </div>
                     </div>
                     {/* Seta do Tooltip */}

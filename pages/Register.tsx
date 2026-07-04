@@ -266,7 +266,7 @@ export const Register: React.FC = () => {
                     <AgendiXLogo size={20} isBeauty={false} showText={false} />
                     <div className="text-left">
                       <p className="font-heading text-sm uppercase tracking-tight leading-none">Barbearia</p>
-                      <p className="font-mono text-[10px] text-current opacity-50 mt-0.5">Barber shop</p>
+                      <p className="font-mono text-xs text-current opacity-50 mt-0.5">Barber shop</p>
                     </div>
                   </button>
                   <button
@@ -279,7 +279,7 @@ export const Register: React.FC = () => {
                     <AgendiXLogo size={20} isBeauty={true} showText={false} />
                     <div className="text-left">
                       <p className="font-heading text-sm uppercase tracking-tight leading-none">Studio</p>
-                      <p className="font-mono text-[10px] text-current opacity-50 mt-0.5">Beauty salon</p>
+                      <p className="font-mono text-xs text-current opacity-50 mt-0.5">Beauty salon</p>
                     </div>
                   </button>
                 </div>

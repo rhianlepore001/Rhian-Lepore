@@ -1214,7 +1214,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 }}
                                 className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text} ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
-                                <span className="text-[10px] sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
+                                <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
                                 <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
@@ -1243,7 +1243,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
                                     <Users className="w-5 h-5" />
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
+                                <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
                             </button>
                         )}
                         {teamMembers.map(member => {
@@ -1270,7 +1270,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         )}
                                         <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
                                     </div>
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
                                         {isSelf ? 'Você' : member.name.split(' ')[0]}
                                     </span>
                                 </button>
@@ -1314,14 +1314,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     {/* Badge de tipo */}
                                     {(booking as any).is_edit && (
                                         <div className="mb-3">
-                                            <span className={`text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
+                                            <span className={`text-xs font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
                                                 ALTERAÇÃO DE AGENDAMENTO
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
-                                            <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-bg)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
+                                            <span className={`text-xs font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-bg)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
                                                 {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
@@ -1462,7 +1462,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 {/* Preço + rótulo de status */}
                                                 <div className="flex flex-col items-end justify-center flex-shrink-0">
                                                     <span className={`text-sm font-mono font-bold ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
-                                                    <span className={`text-[10px] font-medium mt-0.5 ${vc.text}`}>{VISUAL_STATUS_LABEL[visual]}</span>
+                                                    <span className={`text-xs font-medium mt-0.5 ${vc.text}`}>{VISUAL_STATUS_LABEL[visual]}</span>
                                                 </div>
                                             </button>
                                         );
@@ -1528,7 +1528,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                                     className={`cursor-pointer rounded-md border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : vc.card} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden hover:shadow-lite-glass shadow-sm`}
                                                                 >
                                                                     <div className="flex items-center justify-between gap-1">
-                                                                        <h4 className={`text-[11px] font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
+                                                                        <h4 className={`text-xs font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
                                                                         <div className="flex items-center gap-1 flex-shrink-0">
                                                                             {apt.edited_at && <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />}
                                                                             {apt.notes && <MessageCircle className="w-2.5 h-2.5 text-emerald-500/80" aria-label="Com observação" />}
@@ -1536,8 +1536,8 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center justify-between gap-1">
-                                                                        <span className={`text-[10px] truncate ${colors.textMuted}`}>{apt.service}</span>
-                                                                        <span className={`text-[10px] font-mono font-medium flex-shrink-0 ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
+                                                                        <span className={`text-xs truncate ${colors.textMuted}`}>{apt.service}</span>
+                                                                        <span className={`text-xs font-mono font-medium flex-shrink-0 ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -1653,14 +1653,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Scissors className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Serviço</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Serviço</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>{detailsApt.service}</p>
                                 </div>
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <User className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Profissional</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Profissional</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>
                                         {teamMembers.find(m => m.id === detailsApt.professional_id)?.name || 'N/A'}
@@ -1673,7 +1673,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Clock className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Data e Hora</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Data e Hora</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>
                                         {new Date(detailsApt.appointment_time).toLocaleDateString('pt-BR')}
@@ -1685,7 +1685,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <DollarSign className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Valor</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Valor</span>
                                     </div>
                                     <div className="flex flex-col">
                                         {(() => {
@@ -1712,7 +1712,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Info className={`w-4 h-4 ${accent.text}`} />
-                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
+                                        <span className={`text-xs font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
                                     </div>
                                     <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
                                         &quot;{detailsApt.notes}&quot;
@@ -1877,12 +1877,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         {formatCurrency(apt.price, currencyRegion)}
                                                     </p>
                                                     {hasDiscount && (
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1`}>
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1`}>
                                                             {discountPercentage}% OFF
                                                         </span>
                                                     )}
                                                     {isCustomPriceHigher && (
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
                                                             Preço Customizado
                                                         </span>
                                                     )}

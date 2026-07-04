@@ -92,7 +92,7 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
                     Simular recebido
                 </button>
             </div>
-            <p className={`text-[10px] ${colors.textMuted} leading-relaxed`}>
+            <p className={`text-xs ${colors.textMuted} leading-relaxed`}>
                 <ExternalLink className="w-3 h-3 inline mr-1" />
                 Em produção: webhook do PSP ativa automaticamente. Botão é só pra testes.
             </p>

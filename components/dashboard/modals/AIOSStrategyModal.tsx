@@ -57,7 +57,7 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <Zap className={`w-4 h-4 ${accentText} animate-pulse`} />
-                                <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${accentText}`}>AgendiX Success Playbook</span>
+                                <span className={`text-xs font-mono uppercase tracking-[0.3em] ${accentText}`}>AgendiX Success Playbook</span>
                             </div>
                             <h2 className="text-2xl md:text-3xl font-heading text-white">Guia para Faturar Mais</h2>
                         </div>
@@ -100,7 +100,7 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
                             <Rocket className={`w-8 h-8 ${accentText} opacity-40`} />
                             <div>
                                 <p className="text-xs text-white uppercase font-bold tracking-widest mb-1">Dica Pro:</p>
-                                <p className="text-[11px] text-text-secondary max-w-xs font-mono">
+                                <p className="text-xs text-text-secondary max-w-xs font-mono">
                                     Ative o 2FA para garantir que seus dados estratégicos estejam blindados.
                                 </p>
                             </div>

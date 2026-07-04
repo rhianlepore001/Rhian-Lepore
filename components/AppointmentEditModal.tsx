@@ -272,7 +272,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                 <div className="p-6 space-y-4">
                     {/* Seção: Cliente */}
-                    <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted}`}>Cliente</p>
+                    <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted}`}>Cliente</p>
                     <div>
                         <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select
@@ -308,7 +308,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Seção: Serviços */}
                     <div className={`pt-4 border-t ${colors.divider}`}>
-                        <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Serviços</p>
+                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Serviços</p>
                     </div>
                     {/* Service */}
                     <SearchableSelect
@@ -363,7 +363,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Seção: Horário */}
                     <div className={`pt-4 border-t ${colors.divider}`}>
-                        <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Horário</p>
+                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Horário</p>
                     </div>
                     {/* Date & Time */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -397,7 +397,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Seção: Preço */}
                     <div className={`pt-4 border-t ${colors.divider}`}>
-                        <p className={`text-[10px] font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Preço</p>
+                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Preço</p>
                     </div>
                     {/* Price and Discount */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

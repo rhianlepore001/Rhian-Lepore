@@ -479,7 +479,7 @@ export const ClientArea: React.FC = () => {
                             {tab.icon}
                             {tab.label}
                             {tab.id === 'upcoming' && upcomingBookings.length > 0 && (
-                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black ${isBeauty ? 'bg-stone-800 text-white' : 'bg-white text-black'}`}>
+                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-stone-800 text-white' : 'bg-white text-black'}`}>
                                     {upcomingBookings.length}
                                 </span>
                             )}
@@ -696,7 +696,7 @@ const ProfileRow: React.FC<ProfileRowProps> = ({ icon, label, value, isBeauty })
     <div className="flex items-center gap-3">
         <div className={isBeauty ? 'text-stone-400' : 'text-zinc-500'}>{icon}</div>
         <div>
-            <p className={`text-[10px] uppercase tracking-wider font-medium ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`}>{label}</p>
+            <p className={`text-xs uppercase tracking-wider font-medium ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`}>{label}</p>
             <p className={`text-sm font-semibold ${isBeauty ? 'text-stone-700' : 'text-zinc-200'}`}>{value}</p>
         </div>
     </div>

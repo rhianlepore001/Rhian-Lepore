@@ -115,7 +115,7 @@ export const CriticalEmptySlotsCard: React.FC = () => {
                       </p>
                     </div>
                     <button
-                      className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${colors.border} ${colors.card} ${colors.text} hover:${accent.bgDim} transition-all`}
+                      className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${colors.border} ${colors.card} ${colors.text} hover:${accent.bgDim} transition-all`}
                       title="Criar campanha para preencher"
                     >
                       <Megaphone className="w-3 h-3" />

@@ -11,7 +11,7 @@ interface BookingModeToggleProps {
 export const BookingModeToggle: React.FC<BookingModeToggleProps> = ({ mode, onChange, forceTheme }) => {
   const { colors, accent } = useBrutalTheme({ override: forceTheme });
 
-  const baseBtn = `flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300`;
+  const baseBtn = `flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-300`;
 
   return (
     <div className={`flex items-center justify-center gap-1 p-1.5 ${colors.card} ${colors.border} border rounded-2xl w-fit mx-auto`}>

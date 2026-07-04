@@ -60,7 +60,7 @@ export const CancellationRateCard: React.FC = () => {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
+              className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
                 period === p
                   ? `${accent.bgDim} ${accent.text}`
                   : `${colors.textMuted} hover:${colors.text}`
@@ -119,14 +119,14 @@ export const CancellationRateCard: React.FC = () => {
             <div className={`p-3 rounded-xl border ${colors.card} ${colors.border}`}>
               <div className="flex items-center gap-1.5">
                 <UserX className={`w-3.5 h-3.5 ${colors.textMuted}`} />
-                <p className={`text-[10px] font-bold uppercase tracking-wider ${colors.textMuted}`}>
+                <p className={`text-xs font-bold uppercase tracking-wider ${colors.textMuted}`}>
                   Cancelados
                 </p>
               </div>
               <p className={`mt-1.5 font-mono text-2xl font-black tabular-nums ${colors.text}`}>
                 {current.breakdown.cancelled}
               </p>
-              <p className={`text-[10px] font-mono ${colors.textSecondary}`}>
+              <p className={`text-xs font-mono ${colors.textSecondary}`}>
                 {current.cancellationRate.toFixed(1)}% do total
               </p>
             </div>
@@ -134,14 +134,14 @@ export const CancellationRateCard: React.FC = () => {
             <div className={`p-3 rounded-xl border ${colors.card} ${colors.border}`}>
               <div className="flex items-center gap-1.5">
                 <AlertTriangle className={`w-3.5 h-3.5 ${colors.textMuted}`} />
-                <p className={`text-[10px] font-bold uppercase tracking-wider ${colors.textMuted}`}>
+                <p className={`text-xs font-bold uppercase tracking-wider ${colors.textMuted}`}>
                   Faltas
                 </p>
               </div>
               <p className={`mt-1.5 font-mono text-2xl font-black tabular-nums ${colors.text}`}>
                 {current.breakdown.noShow}
               </p>
-              <p className={`text-[10px] font-mono ${colors.textSecondary}`}>
+              <p className={`text-xs font-mono ${colors.textSecondary}`}>
                 {current.noShowRate.toFixed(1)}% do total
               </p>
             </div>

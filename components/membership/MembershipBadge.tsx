@@ -22,7 +22,7 @@ export const MembershipBadge: React.FC<MembershipBadgeProps> = ({
     className = '',
 }) => {
     const style = COLORS[color] ?? COLORS.gold;
-    const padding = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs';
+    const padding = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs';
     return (
         <span
             className={[

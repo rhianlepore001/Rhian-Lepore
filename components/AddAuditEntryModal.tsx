@@ -276,7 +276,7 @@ export const AddAuditEntryModal: React.FC<AddAuditEntryModalProps> = ({ onClose,
                       ].join(' ')}
                     >
                       <span className="text-sm font-bold">{lv.label}</span>
-                      <span className="text-[9px] leading-tight px-0.5">{lv.hint}</span>
+                      <span className="text-xs leading-tight px-0.5">{lv.hint}</span>
                     </button>
                   );
                 })}

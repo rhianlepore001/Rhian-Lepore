@@ -50,7 +50,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
                             {greeting},{' '}
                             <span className={accent.text}>{firstName}</span>
                         </h1>
-                        <p className={`text-[10px] md:text-xs ${colors.textMuted} font-sans uppercase tracking-widest leading-tight`}>
+                        <p className={`text-xs md:text-xs ${colors.textMuted} font-sans uppercase tracking-widest leading-tight`}>
                             {isStaff ? 'Agenda aberta' : 'Operação ativa'}
                         </p>
                     </div>

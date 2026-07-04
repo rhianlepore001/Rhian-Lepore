@@ -321,7 +321,7 @@ export const GeneralSettings: React.FC = () => {
                         placeholder="Descreva sua política de cancelamento..."
                         className={classes.input}
                     />
-                    <p className={`${colors.textMuted} text-[10px] mt-2 italic px-1`}>
+                    <p className={`${colors.textMuted} text-xs mt-2 italic px-1`}>
                         Você pode editar o texto acima para personalizar sua política.
                     </p>
                 </SettingsSection>

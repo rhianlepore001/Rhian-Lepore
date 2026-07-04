@@ -87,7 +87,7 @@ export const SecuritySettings: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            <h4 className="text-white/40 font-mono text-[10px] uppercase tracking-[0.2em] mb-4">Métodos Verificados</h4>
+                                            <h4 className="text-white/40 font-mono text-xs uppercase tracking-[0.2em] mb-4">Métodos Verificados</h4>
                                             {factors.map(factor => (
                                                 <div key={factor.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:bg-white/10 transition-all">
                                                     <div className="flex items-center gap-4">
@@ -96,7 +96,7 @@ export const SecuritySettings: React.FC = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-white text-sm font-bold">{factor.friendly_name || 'Autenticador'}</p>
-                                                            <p className="text-neutral-500 text-[10px] uppercase">Algoritmo TOTP</p>
+                                                            <p className="text-neutral-500 text-xs uppercase">Algoritmo TOTP</p>
                                                         </div>
                                                     </div>
                                                     <button

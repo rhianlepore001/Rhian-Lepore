@@ -65,7 +65,7 @@ export const PaywallModal: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center gap-4 text-[10px] text-neutral-600 uppercase font-mono tracking-widest">
+                        <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center gap-4 text-xs text-neutral-600 uppercase font-mono tracking-widest">
                             <Sparkles className="w-3 h-3" /> BE {isBeauty ? 'BEAUTY' : 'BARBER'} OS <Sparkles className="w-3 h-3" />
                         </div>
                     </div>

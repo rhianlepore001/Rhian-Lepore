@@ -176,7 +176,7 @@ export const ClubDemo: React.FC = () => {
                             <span
                                 key={s.id}
                                 className={[
-                                    'text-[10px] md:text-xs whitespace-nowrap px-2.5 py-1 rounded-full font-bold uppercase tracking-wider',
+                                    'text-xs md:text-xs whitespace-nowrap px-2.5 py-1 rounded-full font-bold uppercase tracking-wider',
                                     active
                                         ? `${accent.bg} text-[var(--color-bg)]`
                                         : passed
@@ -321,7 +321,7 @@ export const ClubDemo: React.FC = () => {
                             description="Escaneie o QR ou copie o código. A confirmação chega em segundos."
                         />
                         {pixTxid && (
-                            <p className={`text-[10px] ${colors.textMuted} text-center font-mono`}>
+                            <p className={`text-xs ${colors.textMuted} text-center font-mono`}>
                                 TXID: {pixTxid}
                             </p>
                         )}
@@ -395,7 +395,7 @@ export const ClubDemo: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {covered ? (
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-300 bg-yellow-500/15 px-2 py-0.5 rounded-md">
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-yellow-300 bg-yellow-500/15 px-2 py-0.5 rounded-md">
                                                         Grátis
                                                     </span>
                                                 ) : (
@@ -502,7 +502,7 @@ export const ClubDemo: React.FC = () => {
                     </div>
                 )}
 
-                <footer className="text-center text-[10px] text-neutral-600 pt-8 pb-2">
+                <footer className="text-center text-xs text-neutral-600 pt-8 pb-2">
                     Demo Club Sprint D+1 — sem dados reais, sem cobrança.
                 </footer>
             </div>

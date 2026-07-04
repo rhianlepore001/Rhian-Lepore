@@ -185,7 +185,7 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
                                         }`}
                                 >
                                     <span className="text-xl mb-1">{opt.icon}</span>
-                                    <span className="text-[10px] font-bold uppercase">{opt.label}</span>
+                                    <span className="text-xs font-bold uppercase">{opt.label}</span>
                                 </button>
                             ))}
                         </div>

@@ -71,7 +71,7 @@ export const AIAssistantChat: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="text-[var(--color-text)] font-bold text-sm">Assistente IA</h3>
-                                <p className="text-[var(--color-text-muted)] text-[10px] font-mono">
+                                <p className="text-[var(--color-text-muted)] text-xs font-mono">
                                     {businessName || 'Seu negócio'}
                                 </p>
                             </div>

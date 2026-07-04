@@ -340,22 +340,22 @@ export const AuditLogs: React.FC = () => {
                     </span>
                     <span className="flex-1 min-w-0">
                       <span className="flex items-center gap-2 flex-wrap">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${sMeta.badge}`}>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-bold border ${sMeta.badge}`}>
                           <StatusIcon className="w-3 h-3" /> {sMeta.label}
                         </span>
-                        <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${levelClasses(entry.level)}`}>
+                        <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold border ${levelClasses(entry.level)}`}>
                           {entry.level ? `N${entry.level}` : '—'}
                         </span>
-                        <span className={`text-[10px] uppercase tracking-wide ${colors.textMuted}`}>
+                        <span className={`text-xs uppercase tracking-wide ${colors.textMuted}`}>
                           {SOURCE_META[entry.source].label}
                         </span>
                         {entry.occurrences && entry.occurrences > 1 && (
-                          <span className={`text-[10px] ${colors.textMuted}`}>×{entry.occurrences}</span>
+                          <span className={`text-xs ${colors.textMuted}`}>×{entry.occurrences}</span>
                         )}
                         {entry.screenshot_url && <ImageIcon className={`w-3 h-3 ${colors.textMuted}`} />}
                       </span>
                       <span className={`block text-sm font-medium truncate mt-0.5 ${colors.text}`}>{entry.title}</span>
-                      <span className={`block text-[11px] truncate ${colors.textMuted}`}>
+                      <span className={`block text-xs truncate ${colors.textMuted}`}>
                         {entry.category ?? 'other'} · {entry.context?.route || '—'} · {formatDate(entry.last_seen_at ?? entry.created_at)}
                       </span>
                     </span>
@@ -380,7 +380,7 @@ export const AuditLogs: React.FC = () => {
                       )}
 
                       {entry.context?.consoleErrors && entry.context.consoleErrors.length > 0 && (
-                        <pre className={`text-[10px] font-mono whitespace-pre-wrap break-words p-2 ${radius.input} ${colors.surface} ${colors.textMuted} max-h-40 overflow-auto`}>
+                        <pre className={`text-xs font-mono whitespace-pre-wrap break-words p-2 ${radius.input} ${colors.surface} ${colors.textMuted} max-h-40 overflow-auto`}>
                           {entry.context.consoleErrors.join('\n')}
                         </pre>
                       )}
@@ -425,7 +425,7 @@ export const AuditLogs: React.FC = () => {
 
                         {pendingDeleteId === entry.id ? (
                           <span className="flex items-center gap-2 ml-auto">
-                            <span className={`text-[11px] ${colors.textMuted}`}>Apagar?</span>
+                            <span className={`text-xs ${colors.textMuted}`}>Apagar?</span>
                             <button onClick={() => handleDelete(entry)} disabled={busy} className={`${actionBtn} bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger-border)]`}>
                               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Sim
                             </button>
@@ -460,7 +460,7 @@ export const AuditLogs: React.FC = () => {
 
 const Ctx: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="min-w-0">
-    <dt className="text-[9px] uppercase tracking-wide opacity-70">{label}</dt>
-    <dd className="text-[11px] font-mono break-words">{value}</dd>
+    <dt className="text-xs uppercase tracking-wide opacity-70">{label}</dt>
+    <dd className="text-xs font-mono break-words">{value}</dd>
   </div>
 );

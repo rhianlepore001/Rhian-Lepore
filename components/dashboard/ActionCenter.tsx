@@ -75,7 +75,7 @@ export const ActionCenter = React.memo(({
                             <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className={`text-[10px] font-mono uppercase px-2.5 py-1 rounded-full font-bold tracking-[0.15em] ${
+                                        <span className={`text-xs font-mono uppercase px-2.5 py-1 rounded-full font-bold tracking-[0.15em] ${
                                             action.type === 'recovery' ? status.dangerBg + ' ' + status.danger :
                                             action.type === 'gap' ? status.warningBg + ' ' + status.warning :
                                             action.type === 'upsell' ? status.successBg + ' ' + status.success :

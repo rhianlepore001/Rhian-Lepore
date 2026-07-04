@@ -123,7 +123,7 @@ export const StaffOnboarding: React.FC = () => {
       </div>
 
       {/* Footer fora do card */}
-      <p className="absolute bottom-5 left-0 right-0 text-center text-[10px] text-muted-foreground/40 uppercase tracking-widest">
+      <p className="absolute bottom-5 left-0 right-0 text-center text-xs text-muted-foreground/40 uppercase tracking-widest">
         © {new Date().getFullYear()} AgendiX
       </p>
 

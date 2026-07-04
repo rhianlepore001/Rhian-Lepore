@@ -363,7 +363,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
                                 <div className={`p-4 md:p-6`}>
                                     <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accent.bg}`}></div>
-                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pendente</p>
+                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pendente</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold ${totalDueOverall > 0 ? 'text-yellow-400' : colors.textMuted}`}>
                                         {currencySymbol} {(totalDueOverall || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </h4>
@@ -372,7 +372,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
                                 <div className="p-4 md:p-6">
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-green-500"></div>
-                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pago (Mês)</p>
+                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pago (Mês)</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-green-400`}>
                                         {currencySymbol} {(totalPaidMonth || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </h4>
@@ -381,11 +381,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <Card variant="outlined" className="col-span-2 lg:col-span-1 p-4 md:p-6 relative overflow-hidden" noPadding>
                                 <div className="p-4 md:p-6">
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-blue-500"></div>
-                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Destaque</p>
+                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Destaque</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-blue-400 truncate`}>
                                         {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
                                     </h4>
-                                    <p className={`text-[9px] ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-widest`}>Melhor Desempenho</p>
+                                    <p className={`text-xs ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-widest`}>Melhor Desempenho</p>
                                 </div>
                             </Card>
                         </div>
@@ -442,7 +442,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className={`text-[9px] ${colors.textMuted} ${font.mono} uppercase mb-0.5`}>Saldo Atual</p>
+                                                        <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase mb-0.5`}>Saldo Atual</p>
                                                         <p className={`text-lg md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-yellow-400' : colors.textMuted}`}>
                                                             {currencySymbol} {(professional.total_due || 0).toFixed(2)}
                                                         </p>
@@ -544,7 +544,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                             Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
                                         </p>
-                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full ${status.successBg} ${status.success} text-[9px] font-bold uppercase ${status.successBorder} border`}>
+                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full ${status.successBg} ${status.success} text-xs font-bold uppercase ${status.successBorder} border`}>
                                             Pago
                                         </span>
                                     </div>
@@ -716,7 +716,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                     <div className={`mt-8 flex gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4`}>
                         <InfoIcon className="h-5 w-5 shrink-0 text-blue-500" />
-                        <p className="text-[11px] leading-snug text-blue-400">
+                        <p className="text-xs leading-snug text-blue-400">
                             <strong>Aviso:</strong> Este pagamento será registrado como despesa e as comissões do período serão marcadas como pagas.
                         </p>
                     </div>

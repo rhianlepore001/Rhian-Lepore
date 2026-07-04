@@ -62,7 +62,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                             <Calendar className="w-8 h-8" />
                         </div>
                         <span className="font-bold text-sm text-white text-center">Novo Atendimento</span>
-                        <span className="text-[10px] font-mono text-neutral-500 uppercase mt-1">Agenda</span>
+                        <span className="text-xs font-mono text-neutral-500 uppercase mt-1">Agenda</span>
                     </button>
 
                     {!isStaff && (
@@ -78,7 +78,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                                 <DollarSign className="w-8 h-8" />
                             </div>
                             <span className="font-bold text-sm text-white text-center">Nova Transação</span>
-                            <span className="text-[10px] font-mono text-neutral-500 uppercase mt-1">Financeiro</span>
+                            <span className="text-xs font-mono text-neutral-500 uppercase mt-1">Financeiro</span>
                         </button>
                     )}
                 </div>

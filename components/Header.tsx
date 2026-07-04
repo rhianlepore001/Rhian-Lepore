@@ -167,7 +167,7 @@ export const Header: React.FC = () => {
                 <Bell className={`w-5 h-5 md:w-6 md:h-6 ${colors.text}`} />
                 {alertCount > 0 && (
                   <span
-                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 ${colors.bg} animate-pulse flex items-center justify-center text-[9px] font-mono font-bold text-[var(--color-bg)] leading-none`}
+                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 ${colors.bg} animate-pulse flex items-center justify-center text-xs font-mono font-bold text-[var(--color-bg)] leading-none`}
                   >
                     {alertCount > 9 ? '9+' : alertCount}
                   </span>

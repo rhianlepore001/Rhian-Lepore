@@ -161,7 +161,7 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
                     </div>
                     <div className="text-left">
                         <h3 className="text-sm font-bold font-heading text-white">Como está seu mês</h3>
-                        <p className="text-[11px] text-text-secondary font-mono">
+                        <p className="text-xs text-text-secondary font-mono">
                             {hasData ? `${insights.length} dicas para você • Atualizado agora` : 'Use o sistema para desbloquear dicas'}
                         </p>
                     </div>
@@ -189,26 +189,26 @@ export const FinancialDoctorPanel: React.FC<FinancialDoctorPanelProps> = ({
                         />
                         <div className="flex-1 grid grid-cols-2 gap-3">
                             <div>
-                                <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-0.5">Média por atendimento</p>
+                                <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-0.5">Média por atendimento</p>
                                 <p className="text-base font-bold font-heading text-white">
                                     {hasData ? `R$ ${financialDoctor.avgTicket.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}` : '—'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-0.5">Fidelidade</p>
+                                <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-0.5">Fidelidade</p>
                                 <p className="text-base font-bold font-heading text-white">
                                     {hasData ? `${financialDoctor.repeatClientRate}%` : '—'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-0.5">Crescimento</p>
+                                <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-0.5">Crescimento</p>
                                 <div className={`flex items-center gap-1 text-sm font-bold font-heading ${weeklyGrowth >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                     {weeklyGrowth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                     <span>{hasData ? `${weeklyGrowth >= 0 ? '+' : ''}${weeklyGrowth}%` : '—'}</span>
                                 </div>
                             </div>
                             <div>
-                                <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-0.5">Serviço Top</p>
+                                <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-0.5">Serviço Top</p>
                                 <p className="text-sm font-bold font-heading text-white truncate">
                                     {(hasData && financialDoctor.topService) ? financialDoctor.topService : '—'}
                                 </p>

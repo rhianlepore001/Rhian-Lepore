@@ -97,7 +97,7 @@ export const ChurnRadar: React.FC<ChurnRadarProps> = ({ clients, loading, onReac
 
                             <div className="flex items-center justify-between mt-auto">
                                 <div className="flex flex-col">
-                                    <span className={`text-[10px] uppercase ${font.mono} ${colors.textSecondary}`}>Gasto por visita</span>
+                                    <span className={`text-xs uppercase ${font.mono} ${colors.textSecondary}`}>Gasto por visita</span>
                                     <span className={`text-sm font-bold ${accent.text}`}>R$ {client.avg_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                 </div>
 

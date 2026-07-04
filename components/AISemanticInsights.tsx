@@ -49,7 +49,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
             <div className="flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-neutral-800 rounded-lg">
                 <Brain className="w-8 h-8 text-neutral-700 mb-2" />
                 <p className="text-xs text-neutral-500 font-mono uppercase">Sem memórias profundas ainda para {clientName.split(' ')[0]}</p>
-                <p className="text-[10px] text-neutral-600 mt-1">Anote preferências nas notas para ativar a IA.</p>
+                <p className="text-xs text-neutral-600 mt-1">Anote preferências nas notas para ativar a IA.</p>
             </div>
         );
     }
@@ -79,10 +79,10 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                                     &quot;{insight.observation}&quot;
                                 </p>
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-[9px] text-neutral-500 font-mono uppercase">
+                                    <span className="text-xs text-neutral-500 font-mono uppercase">
                                         {insight.context_type === 'style' ? 'Estilo' : 'Preferência'}
                                     </span>
-                                    <span className="text-[9px] text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-xs text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                         Match: {Math.round((insight.similarity || 0) * 100)}%
                                     </span>
                                 </div>
@@ -95,7 +95,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
             </div>
 
             <div className={`mt-2 p-2 rounded ${accent.bgDim} border border-dashed ${accent.border}`}>
-                <p className="text-[10px] text-neutral-400 text-center">
+                <p className="text-xs text-neutral-400 text-center">
                     A IA está relacionando notas passadas para este atendimento.
                 </p>
             </div>

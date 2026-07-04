@@ -236,7 +236,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
               <dl className={[radius.card, colors.card, colors.border, 'border', 'p-4 grid grid-cols-2 gap-y-2 gap-x-3'].join(' ')}>
                 {contextRows.map((row) => (
                   <div key={row.label} className="min-w-0 col-span-2 sm:col-span-1">
-                    <dt className={`text-[10px] uppercase tracking-wide ${colors.textMuted}`}>{row.label}</dt>
+                    <dt className={`text-xs uppercase tracking-wide ${colors.textMuted}`}>{row.label}</dt>
                     <dd className={`text-xs font-mono break-words ${colors.textSecondary}`}>{row.value}</dd>
                   </div>
                 ))}

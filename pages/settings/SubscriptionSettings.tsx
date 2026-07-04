@@ -122,7 +122,7 @@ export const SubscriptionSettings: React.FC = () => {
                             <div>
                                 <h3 className="text-white font-bold text-lg uppercase tracking-tight">Status da Conta</h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isSubscriptionActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${isSubscriptionActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                                         }`}>
                                         {subscriptionStatus === 'trial' ? 'Período de Teste' :
                                             subscriptionStatus === 'active' ? 'Assinatura Ativa' : 'Expirado'}
@@ -150,7 +150,7 @@ export const SubscriptionSettings: React.FC = () => {
                             className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-' + accentColor : ''}`}
                         >
                             {plan.recommended && (
-                                <div className={`absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-[10px] font-black uppercase tracking-tighter ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'}`}>
+                                <div className={`absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'}`}>
                                     Recomendado
                                 </div>
                             )}

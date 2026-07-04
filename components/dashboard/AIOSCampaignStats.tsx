@@ -44,7 +44,7 @@ export const AIOSCampaignStats = React.memo(({
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
                             <Send className={`w-3 h-3 ${colors.textSecondary}`} />
-                            <span className={`text-[10px] uppercase ${font.mono} ${colors.textSecondary}`}>Enviadas</span>
+                            <span className={`text-xs uppercase ${font.mono} ${colors.textSecondary}`}>Enviadas</span>
                         </div>
                         <p className={`text-2xl font-bold ${colors.text} leading-none`}>{campaignsSent}</p>
                     </div>
@@ -52,7 +52,7 @@ export const AIOSCampaignStats = React.memo(({
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
                             <TrendingUp className={`w-3 h-3 ${status.success}`} />
-                            <span className={`text-[10px] uppercase ${font.mono} ${colors.textSecondary}`}>Faturou de volta</span>
+                            <span className={`text-xs uppercase ${font.mono} ${colors.textSecondary}`}>Faturou de volta</span>
                         </div>
                         <p className={`text-2xl font-bold ${accent.text} leading-none`}>
                             {currencySymbol} {recoveredRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

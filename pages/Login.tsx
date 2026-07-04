@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
                 </div>
 
                 <div className="text-center mb-10 md:mb-14 max-w-xl">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 mb-4">
+                    <p className="font-mono text-xs uppercase tracking-[0.12em] text-white/50 mb-4">
                         O sistema que trabalha enquanto você atende.
                     </p>
                     <h1 className="font-heading text-4xl md:text-6xl text-white uppercase leading-[0.95] tracking-tight">

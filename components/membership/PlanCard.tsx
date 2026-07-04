@@ -61,7 +61,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         {style.icon}
                     </div>
                     {!compact && plan.active && (
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-green-400 flex items-center gap-1">
+                        <span className="text-xs font-bold uppercase tracking-widest text-green-400 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Disponível
                         </span>
                     )}

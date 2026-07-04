@@ -268,7 +268,7 @@ export const QueueJoin: React.FC = () => {
                                 <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center border border-white/10">
                                     <Users className="w-5 h-5 text-neutral-400" />
                                 </div>
-                                <span className="text-[10px] font-bold text-center">Qualquer</span>
+                                <span className="text-xs font-bold text-center">Qualquer</span>
                             </button>
                             {professionals.map(pro => (
                                 <button
@@ -283,7 +283,7 @@ export const QueueJoin: React.FC = () => {
                                             <span className="text-xs font-bold">{pro.name.substring(0, 2)}</span>
                                         </div>
                                     )}
-                                    <span className="text-[10px] font-bold text-center truncate w-full">{pro.name.split(' ')[0]}</span>
+                                    <span className="text-xs font-bold text-center truncate w-full">{pro.name.split(' ')[0]}</span>
                                 </button>
                             ))}
                         </div>

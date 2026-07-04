@@ -54,6 +54,7 @@ export const QueueJoin: React.FC = () => {
     const [professionals, setProfessionals] = useState<Professional[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [joinError, setJoinError] = useState(false);
 
     // Filter Stats
     const [searchQuery, setSearchQuery] = useState('');
@@ -99,6 +100,7 @@ export const QueueJoin: React.FC = () => {
     const handleJoin = async () => {
         if (!name || !phone || !selectedService || !business) return;
         setSubmitting(true);
+        setJoinError(false);
         try {
             const data = await joinQueue({
                 businessId: business.id,
@@ -111,7 +113,7 @@ export const QueueJoin: React.FC = () => {
 
         } catch (err) {
             console.error('Error joining queue:', err);
-            alert('Erro ao entrar na fila. Tente novamente.');
+            setJoinError(true);
         } finally {
             setSubmitting(false);
         }
@@ -179,7 +181,7 @@ export const QueueJoin: React.FC = () => {
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className={`w-full ${inputBg} border ${borderColor} rounded-2xl p-4 pl-12 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400/60 transition-all font-medium`}
+                                className={`w-full ${inputBg} border ${borderColor} rounded-xl p-4 pl-12 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400/60 transition-all font-medium`}
                                 placeholder="Como quer ser chamado?"
                             />
                             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
@@ -231,7 +233,7 @@ export const QueueJoin: React.FC = () => {
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                     placeholder="Buscar serviço..."
-                                    className={`w-full ${inputBg} border ${borderColor} rounded-2xl p-3.5 pl-10 text-base text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 transition-all`}
+                                    className={`w-full ${inputBg} border ${borderColor} rounded-xl p-3.5 pl-10 text-base text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 transition-all`}
                                 />
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
                             </div>
@@ -298,6 +300,11 @@ export const QueueJoin: React.FC = () => {
                         >
                             Entrar na Fila
                         </Button>
+                        {joinError && (
+                            <p className="text-center text-xs text-red-400 mt-3 p-3 rounded-xl bg-red-500/8 border border-red-500/30">
+                                Não foi possível entrar na fila. Tente novamente ou avise no balcão.
+                            </p>
+                        )}
                         <p className="text-center text-xs text-neutral-500 mt-3">
                             Você receberá atualizações em tempo real nesta página.
                         </p>

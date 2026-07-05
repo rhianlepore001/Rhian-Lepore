@@ -40,6 +40,7 @@ Gerar `agendix-e2e-test/04-bugs-e-achados/consolidado.md` com:
    - Sprint 1: P0 + quick wins de P1 (resolve o crítico rápido)
    - Sprint 2: P1 restantes + quick wins de P2
    - Sprint 3+: P2 + P3 + dívidas estruturais
+   - **Achados de regra de domínio (agente 06) SEMPRE entram na Sprint 1, independente de quick win ou não** — buraco de lógica de domínio trava produto, não pode esperar.
 5. **Cruzar com auditoria anterior** (20260610): o que foi resolvido, o que persiste, o que é novo.
 
 ---
@@ -63,7 +64,7 @@ Salve em `agendix-e2e-test/04-bugs-e-achados/consolidado.md`.
 
 **Data**: YYYY-MM-DD
 **Frente**: [dono-onboarding | colaborador-dashboard | cliente-final | e2e-jornada]
-**Agentes**: 01 (UI visual), 02 (copy), 03 (fluxo), 04 (design system)
+**Agentes**: 01 (UI visual), 02 (copy), 03 (fluxo), 04 (design system), 06 (domínio)
 **Auditoria anterior referência**: 20260610_120000
 
 ## Sumário executivo
@@ -73,10 +74,11 @@ Salve em `agendix-e2e-test/04-bugs-e-achados/consolidado.md`.
 - O que é dívida estrutural (3 bullets)
 
 ## Estatísticas
-- Total de achados por lente (01/02/03/04): X / Y / Z / W
+- Total de achados por lente (01/02/03/04/06): X / Y / Z / W / V
 - Total de achados únicos (após cruzamento): N
 - Por severidade: P0=X, P1=Y, P2=Z, P3=W
 - Comparação com 20260610: resolvidos X, persistentes Y, novos Z
+- Regras de domínio descobertas/contraditas: M (listadas em regras-dominio.md)
 
 ## Achados cruzados (compostos)
 | # | Título | Telas afetadas | Lentes que viram | Severidade (pior das lentes) | Esforço estimado | Sugestão de sprint |
@@ -93,7 +95,10 @@ Salve em `agendix-e2e-test/04-bugs-e-achados/consolidado.md`.
 [idem]
 
 ### Lente 04 (design system)
-[idem]
+[lista numerada, com severidade e referência ao relatório parcial]
+
+### Lente 06 (domínio — regras de negócio)
+[lista numerada, com severidade e referência ao `regras-dominio.md`]
 
 ## Top 5 quick wins
 | # | O que | Onde | Esforço | Impacto | Risco | Lente(s) |

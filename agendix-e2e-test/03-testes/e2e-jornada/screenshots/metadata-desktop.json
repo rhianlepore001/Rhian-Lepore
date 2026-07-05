@@ -1,0 +1,68 @@
+[
+  {
+    "route": "dashboard",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/dashboard-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "agenda",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/agenda-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "fila-digital",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/fila-digital-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "clientes-crm",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/clientes-crm-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "produtos",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/produtos-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "financeiro",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/financeiro-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "insights",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/insights-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "ajustes-geral",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/ajustes-geral-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "ajustes-equipe",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/ajustes-equipe-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "ajustes-servicos",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/ajustes-servicos-desktop.png",
+    "hasFatal": false
+  },
+  {
+    "route": "public-booking",
+    "viewport": "desktop",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/public-booking-desktop.png",
+    "hasFatal": false
+  }
+]

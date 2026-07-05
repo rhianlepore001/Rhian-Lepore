@@ -1,0 +1,68 @@
+[
+  {
+    "route": "dashboard",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/dashboard-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "agenda",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/agenda-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "fila-digital",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/fila-digital-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "clientes-crm",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/clientes-crm-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "produtos",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/produtos-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "financeiro",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/financeiro-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "insights",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/insights-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "ajustes-geral",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/ajustes-geral-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "ajustes-equipe",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/ajustes-equipe-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "ajustes-servicos",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/ajustes-servicos-mobile.png",
+    "hasFatal": false
+  },
+  {
+    "route": "public-booking",
+    "viewport": "mobile",
+    "filePath": "/root/projetos/Rhian-Lepore/agendix-e2e-test/03-testes/e2e-jornada/screenshots/public-booking-mobile.png",
+    "hasFatal": false
+  }
+]

@@ -66,7 +66,7 @@
 ### ❌ Features que o AppBarber **NÃO tem** explicitamente (oportunidade pro AgendiX)
 
 - **Marketplace de clientes** (diferencial Trinks/Booksy)
-- **Assinatura recorrente de cliente** (clube mensal) — só o Barbeiro.app tem
+- **Assinatura recorrente de cliente** (clube mensal) — **Agendix tem na v1**, Barbeiro.app tem em produção, demais não
 - **Insights / IA** (pós-MVP do Agendix segundo PRODUCT.md)
 - **Multi-idioma** (PT-BR + PT-PT)
 
@@ -134,7 +134,7 @@
 2. **Sem marketplace** — não atrai cliente novo. (Mas é uma faca de dois gumes: marketplace tira cliente do dono.)
 3. **App do cliente é "mais um app"** — reclamação no ReclameAqui sobre experiência. Agendix tem a chance de fazer melhor.
 4. **Preço alto pra 1 profissional** (R$ 79,90) — Barbeiro.app tá em R$ 49,90 e tem free tier.
-5. **Sem assinatura recorrente pro cliente final** (clube mensal) — Barbeiro.app tem, Agendix pode ter.
+5. ~~**Sem assinatura recorrente pro cliente final** (clube mensal) — Barbeiro.app tem, Agendix pode ter.~~ **CORRIGIDO 2026-07-05**: Agendix **tem clube de assinatura na v1** — é diferencial vs AppBarber.
 
 ---
 

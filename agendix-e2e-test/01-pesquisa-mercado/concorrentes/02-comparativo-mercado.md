@@ -15,7 +15,7 @@
 | **Marketplace de clientes** | ❌ | ❌ | ✅ (forte BR) | ✅ (internacional) | limitado | ❌ | ❌ |
 | **Plano gratuito funcional** | ❌ | ❌ (só trial) | ❌ | ❌ | ❌ | ✅ (único) | ✅ (sem limite de tempo) |
 | **Gestão de comissões** | ✅ (precisa auditar) | ✅ | ✅ robusto | básico | básico | ✅ flexível | básico |
-| **Clube de assinatura pro cliente** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Clube de assinatura pro cliente** | ✅ (v1) | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
 | **Programa de fidelidade** | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | básico |
 | **Lista de espera (fila)** | ✅ | ✅ | ✅ | ✅ | básico | ✅ | ✅ |
 | **Pagamento on-line** | parcial (PIX) | ✅ | ✅ | ✅ | básico | ✅ | ✅ |
@@ -52,17 +52,17 @@
 - Premium acessível, personalidade "elegante, confiável, eficiente"
 - Multi-tenant + RLS → **fundação sólida**
 - Sem marketplace (decisão) → **não compete com Trinks/Booksy por aquisição**
-- Sem plano gratuito (com plano gratuito 10 dias) → **decisão de monetização agressiva**
-- Sem clube de assinatura pro cliente (em produção) → **gap vs Barbeiro.app** (a desenvolver)
+- **Plano gratuito 10 dias** → onboarding rápido, conversão agressiva nos primeiros 10 dias
+- **Clube de assinatura pro cliente em produção (v1)** → recorrência além do agendamento, **diferencial vs AppBarber/Trinks/Booksy** (só Barbeiro.app tem no comparativo)
 
 **Onde Agendix **ganha** no papel (vs concorrentes)**:
 - Tema duplo (barber + beauty) com consistência cross-tema
 - Copy 100% pt-BR sem "potencialize" genérico
 - Mobile-first real (não só responsive)
+- **Clube de assinatura pro cliente em produção** (só Barbeiro.app tem, e mesmo assim de forma limitada)
 
 **Onde Agendix **perde** no papel (vs concorrentes)**:
 - Sem marketplace (perde aquisição; Trinks/Booksy ganham)
-- Sem clube de assinatura em produção (perde recorrência; Barbeiro.app tem)
 - Plano gratuito só 10 dias (Barbeiro.app e Reservio têm free permanente — perdem funil de entrada longo)
 - Sem WhatsApp nativo (perde canal nº 1 do BR)
 - Sem NPS (perde feedback loop)
@@ -88,4 +88,5 @@ Quando o agente 01/02/03/04/06 rodarem, eles devem **cruzar achados com o que os
 - [ ] Auditar **LGPD** do Agendix — exclusão de conta em 1 clique (diferencial vs AppBarber que tem 3 reclamações de 3 anos)
 - [ ] Auditar **WhatsApp** — Agendix tem? (vi que tem `useSmartRebooking` e `useSmartNotifications`, mas não sei se é via WhatsApp)
 - [ ] Auditar **NPS** — o que Agendix usa? Tabela `nps_responses` não existe, mas pode estar embutida em outro lugar
-- [ ] Auditar **clube de assinatura** — feature existe em código?
+- [ ] Auditar **clube de assinatura pro cliente** (em produção na v1) — fluxo de adesão, cobrança recorrente, cancelamento, retentativa em caso de falha
+- [ ] Auditar **plano gratuito 10 dias** — onboarding até conversão, e-mail/WhatsApp antes do fim, upsell para pago

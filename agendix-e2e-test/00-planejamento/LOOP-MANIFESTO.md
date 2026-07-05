@@ -46,13 +46,20 @@ Este documento define os loops do projeto, os gates de saída (quando pode avan�
 
 ---
 
-## Loop 2 — Auditoria visual com agentes especialistas (4 em paralelo)
+## Loop 2 — Auditoria visual com agentes especialistas (5 em paralelo)
 
-**Objetivo**: rodar 4 agentes (UI/UX visual, copy/microcopy, fluxo/funcional, design system) em paralelo, cada um com briefing inicial específico e a mesma base de contexto (design system lock, achados anteriores, personas).
+**Objetivo**: rodar 5 agentes em paralelo, cada um com briefing inicial específico e a mesma base de contexto (design system lock, achados anteriores, personas, **regras de domínio**).
 
 **Quem roda**: Claude Code / Codex CLI / OpenCode (você escolhe por sessão, e roda **um por vez** ou todos em paralelo — sua decisão).
 
-**Briefings iniciais**: `01-pesquisa-mercado/prompts/0X-*.md` (4 arquivos).
+**Briefings iniciais**: `01-pesquisa-mercado/prompts/0X-*.md` (5 arquivos):
+- `01-agente-ui-visual.md` — UI/UX visual, hierarquia, consistência
+- `02-agente-copy.md` — copy, microcopy, tom de voz
+- `03-agente-fluxo.md` — fluxo funcional, jornada, estados
+- `04-agente-design-system.md` — tokens, cores, espaçamentos
+- `06-agente-dominio.md` — regras de domínio / lógica de negócio (buracos, contradições)
+
+O agente 06 é diferente dos outros 4: ele não audita tela por tela, ele **atravessa o produto inteiro caçando regras implícitas** e mantém atualizado o doc `02-personas/regras-dominio.md`. Pode (e deve) rodar em paralelo com os outros.
 
 **Como cada loop individual funciona**:
 ```
@@ -83,7 +90,7 @@ loop fecha quando você tá satisfeito
 
 ## Loop 3 — Consolidação cruzada (orquestrador)
 
-**Objetivo**: gerar o relatório mestre que cruza as 4 lentes, identifica "achados compostos" (ex: card com cor errada + texto com tom errado = 1 P1 em vez de 2 P3), e sugere o que vai pra qual sprint.
+**Objetivo**: gerar o relatório mestre que cruza os **5** relatórios parciais, identifica "achados compostos" (ex: card com cor errada + texto com tom errado = 1 P1 em vez de 2 P3), e sugere o que vai pra qual sprint.
 
 **Quem roda**: agente orquestrador (briefing em `01-pesquisa-mercado/prompts/05-orquestrador.md`).
 
@@ -92,6 +99,7 @@ loop fecha quando você tá satisfeito
 - [ ] Top 5 quick wins (≤ 1 dia cada)
 - [ ] Top 3 dívidas estruturais (2+ sprints pra resolver)
 - [ ] Recomendações por persona (dono, colaborador, cliente)
+- [ ] **Regras de domínio descobertas pelo agente 06** integradas como P0/P1 backlog (e o `regras-dominio.md` atualizado)
 - [ ] Validação que precisa ser manual vs automatizável (Playwright)
 
 **Gate de saída**: o consolidado serve de input direto pra quebrar em sprints.

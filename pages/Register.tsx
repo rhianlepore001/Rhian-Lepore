@@ -167,7 +167,7 @@ export const Register: React.FC = () => {
                     placeholder="••••••••"
                     forceTheme={userType}
                     iconRight={
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     }
@@ -183,7 +183,7 @@ export const Register: React.FC = () => {
                     placeholder="••••••••"
                     forceTheme={userType}
                     iconRight={
-                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     }
@@ -266,7 +266,7 @@ export const Register: React.FC = () => {
                     <AgendiXLogo size={20} isBeauty={false} showText={false} />
                     <div className="text-left">
                       <p className="font-heading text-sm uppercase tracking-tight leading-none">Barbearia</p>
-                      <p className="font-mono text-[10px] text-current opacity-50 mt-0.5">Barber shop</p>
+                      <p className="font-mono text-xs text-current opacity-50 mt-0.5">Barber shop</p>
                     </div>
                   </button>
                   <button
@@ -279,7 +279,7 @@ export const Register: React.FC = () => {
                     <AgendiXLogo size={20} isBeauty={true} showText={false} />
                     <div className="text-left">
                       <p className="font-heading text-sm uppercase tracking-tight leading-none">Studio</p>
-                      <p className="font-mono text-[10px] text-current opacity-50 mt-0.5">Beauty salon</p>
+                      <p className="font-mono text-xs text-current opacity-50 mt-0.5">Beauty salon</p>
                     </div>
                   </button>
                 </div>
@@ -335,7 +335,7 @@ export const Register: React.FC = () => {
                       placeholder="••••••••"
                       forceTheme={userType}
                       iconRight={
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                       }
@@ -354,7 +354,7 @@ export const Register: React.FC = () => {
                   placeholder="••••••••"
                   forceTheme={userType}
                   iconRight={
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}>
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
                           {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                   }

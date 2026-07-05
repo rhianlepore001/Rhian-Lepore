@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase';
 
 import { Loader2, User, Clock, CheckCircle, AlertOctagon, AlertTriangle } from 'lucide-react';
 import { useQueueStatusSnapshot } from '../hooks/useQueueStatus';
+import { cancelQueueEntryPublic, readQueuePhoneProof } from '../services/queue';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { QueueRecord } from '@/types/queue';
 
 export const QueueStatus: React.FC = () => {
@@ -15,11 +17,50 @@ export const QueueStatus: React.FC = () => {
     const position = snapshot?.position ?? null;
 
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [leaving, setLeaving] = useState(false);
+    const [leaveError, setLeaveError] = useState(false);
 
-    useEffect(() => {
-        audioRef.current = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
-    }, []);
+    const handleLeaveQueue = async () => {
+        if (!id) return;
+        const phone = readQueuePhoneProof(id);
+        if (!phone) {
+            setLeaveError(true);
+            setShowLeaveConfirm(false);
+            return;
+        }
+        setLeaving(true);
+        setLeaveError(false);
+        try {
+            await cancelQueueEntryPublic(id, phone);
+            await refetch();
+            setShowLeaveConfirm(false);
+        } catch {
+            setLeaveError(true);
+        } finally {
+            setLeaving(false);
+        }
+    };
+
+    const playCallSound = () => {
+        try {
+            const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            const ctx = new AudioCtx();
+            [0, 0.2].forEach(offset => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.25, ctx.currentTime + offset);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.15);
+                osc.start(ctx.currentTime + offset);
+                osc.stop(ctx.currentTime + offset + 0.15);
+            });
+        } catch {
+            // Sem áudio disponível — segue só com o alerta visual
+        }
+    };
 
     useEffect(() => {
         if (!position || entry?.status !== 'waiting') {
@@ -55,7 +96,7 @@ export const QueueStatus: React.FC = () => {
     const prevStatusRef = useRef<string | null>(null);
     useEffect(() => {
         if (entry?.status === 'calling' && prevStatusRef.current !== 'calling') {
-            void audioRef.current?.play().catch(() => undefined);
+            playCallSound();
         }
         prevStatusRef.current = entry?.status ?? null;
     }, [entry?.status]);
@@ -161,13 +202,13 @@ export const QueueStatus: React.FC = () => {
                         {entry.status === 'waiting' && position ? (
                             <div className="grid grid-cols-2 gap-3 w-full mb-6">
                                 <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                    <span className="block text-neutral-500 text-[10px] uppercase font-bold tracking-widest mb-1">Sua Posição</span>
+                                    <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Sua Posição</span>
                                     <div className="text-4xl font-black text-white">{position}º</div>
                                 </div>
                                 <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                    <span className="block text-neutral-500 text-[10px] uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
-                                    <div className={`text-2xl font-black ${timeLeft !== null && timeLeft < 0 ? 'text-red-400' : 'text-white'} mt-2 flex items-center justify-center gap-1 font-mono`}>
-                                        {timeLeft !== null ? formatTime(timeLeft) : '--:--'}
+                                    <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
+                                    <div className={`text-2xl font-black text-white mt-2 flex items-center justify-center gap-1 font-mono`}>
+                                        {timeLeft === null ? '--:--' : timeLeft <= 0 ? 'Agora' : formatTime(timeLeft)}
                                     </div>
                                 </div>
                             </div>
@@ -180,16 +221,34 @@ export const QueueStatus: React.FC = () => {
                 </div>
 
                 <div className="mt-8 space-y-3">
-                    <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
-                        Atualizar Status
+                    <Button variant="outline" onClick={() => void refetch()} className="w-full">
+                        Atualizar status
                     </Button>
 
                     {['waiting', 'calling'].includes(entry.status) && (
-                        <button className="text-sm font-medium text-red-500 opacity-60 hover:opacity-100 transition-opacity p-4 min-w-[120px]">
+                        <button
+                            onClick={() => setShowLeaveConfirm(true)}
+                            className="text-sm font-medium text-red-500 opacity-60 hover:opacity-100 transition-opacity p-4 min-w-[120px]"
+                        >
                             Sair da Fila
                         </button>
                     )}
+                    {leaveError && (
+                        <p className="text-xs text-red-400">Não foi possível sair da fila. Tente novamente ou avise no balcão.</p>
+                    )}
                 </div>
+
+                <ConfirmModal
+                    open={showLeaveConfirm}
+                    title="Sair da fila"
+                    message="Você vai perder sua posição e precisará entrar de novo se mudar de ideia. Quer sair mesmo?"
+                    confirmLabel="Sair da fila"
+                    cancelLabel="Ficar"
+                    variant="danger"
+                    loading={leaving}
+                    onConfirm={handleLeaveQueue}
+                    onCancel={() => setShowLeaveConfirm(false)}
+                />
             </div>
         </div>
     );

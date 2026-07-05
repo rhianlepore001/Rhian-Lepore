@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Check, X, MessageCircle, Search, Crown, Calendar, ChevronRight, Zap } from 'lucide-react';
-import { Card } from '../components/ui';
+import { Card, Modal, Button, ConfirmModal, PageHeader } from '../components/ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,7 +16,7 @@ import {
 import { MembershipBadge } from '../components/membership/MembershipBadge';
 import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
-import { formatCurrency } from '../utils/formatters';
+import { buildWhatsAppLink, formatCurrency } from '../utils/formatters';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -36,11 +36,14 @@ const STATUS_LABELS: Record<MembershipStatus, { label: string; color: string }> 
 export const MembersList: React.FC = () => {
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
-    const { user } = useAuth();
+    const { user, region, businessName } = useAuth();
     const navigate = useNavigate();
 
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
     const [search, setSearch] = useState('');
+    const [confirming, setConfirming] = useState<MembershipWithPlan | null>(null);
+    const [confirmMethod, setConfirmMethod] = useState<'pix' | 'cash' | 'card'>('pix');
+    const [cancelling, setCancelling] = useState<MembershipWithPlan | null>(null);
     const statusFilter = tab === 'all' ? undefined : tab;
     const { data: memberships, isLoading } = useClientMemberships(statusFilter);
     const confirmMutation = useConfirmMembershipPayment();
@@ -58,76 +61,70 @@ export const MembersList: React.FC = () => {
         );
     }, [memberships, search]);
 
-    const handleConfirm = async (m: MembershipWithPlan) => {
-        if (!user) return;
-        if (!window.confirm(`Confirmar R$ ${(m.plan?.price_cents || 0) / 100} do plano "${m.plan?.name}" para ${m.client?.name}?`)) return;
+    const openConfirm = (m: MembershipWithPlan) => {
+        setConfirmMethod(m.payment_method === 'pix' ? 'pix' : 'cash');
+        setConfirming(m);
+    };
+
+    const handleConfirm = async () => {
+        if (!user || !confirming) return;
         try {
-            await confirmMutation.mutateAsync({ membershipId: m.id, method: 'pix' });
-            showToast(`${m.client?.name} agora é assinante ativo!`, 'success');
-        } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            await confirmMutation.mutateAsync({ membershipId: confirming.id, method: confirmMethod });
+            showToast(`${confirming.client?.name} agora é assinante ativo!`, 'success');
+            setConfirming(null);
+        } catch {
+            showToast('Não foi possível confirmar o pagamento. Tente novamente.', 'error');
         }
     };
 
-    const handleCancel = async (m: MembershipWithPlan) => {
-        if (!window.confirm(`Cancelar a assinatura de ${m.client?.name}?`)) return;
+    const handleCancel = async () => {
+        if (!cancelling) return;
         try {
-            await cancelMutation.mutateAsync(m.id);
+            await cancelMutation.mutateAsync(cancelling.id);
             showToast('Assinatura cancelada.', 'success');
-        } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            setCancelling(null);
+        } catch {
+            showToast('Não foi possível cancelar a assinatura. Tente novamente.', 'error');
         }
     };
 
     const handleWhatsApp = (m: MembershipWithPlan) => {
-        const phone = (m.client?.phone || '').replace(/\D/g, '');
-        if (!phone) return;
-        const text = encodeURIComponent(
-            `Olá ${m.client?.name?.split(' ')[0]}! Tudo bem? Aqui é da barbearia. Sobre seu plano "${m.plan?.name}"...`
-        );
-        window.open(`https://wa.me/55${phone}?text=${text}`, '_blank');
+        const phone = m.client?.phone || '';
+        if (!phone.replace(/\D/g, '')) return;
+        const message = `Olá ${m.client?.name?.split(' ')[0]}! Tudo bem? Aqui é ${businessName ? `da ${businessName}` : 'do seu clube de assinatura'}. Sobre seu plano "${m.plan?.name}"...`;
+        window.open(buildWhatsAppLink(phone, region, message), '_blank');
     };
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-6 pb-24">
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className={`text-3xl md:text-4xl ${font.heading} text-white uppercase tracking-tighter flex items-center gap-3`}>
-                        <Crown className="w-8 h-8 text-yellow-400" />
-                        Assinantes
-                    </h1>
-                    <p className="text-neutral-400 text-sm mt-1">
-                        Gerencie os membros do clube de assinatura.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => navigate('/configuracoes/clube')}
-                    className={`px-4 py-2 rounded-xl ${colors.card} ${colors.border} ${colors.text} border text-sm font-bold uppercase tracking-wider hover:bg-white/5`}
-                >
-                    <Users className="w-4 h-4 inline mr-2" />
-                    Gerenciar Planos
-                </button>
-            </header>
+            <PageHeader
+                title="Assinantes"
+                subtitle="Gerencie os membros do clube de assinatura."
+                action={
+                    <Button variant="secondary" icon={<Users className="w-4 h-4" />} onClick={() => navigate('/configuracoes/clube')}>
+                        Gerenciar planos
+                    </Button>
+                }
+            />
 
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Card>
-                        <p className="text-xs text-neutral-500 uppercase tracking-widest">Ativos</p>
+                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Ativos</p>
                         <p className="text-3xl font-bold text-green-400 mt-1">{stats.totalActive}</p>
                     </Card>
                     <Card>
-                        <p className="text-xs text-neutral-500 uppercase tracking-widest">Pendentes</p>
+                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Pendentes</p>
                         <p className="text-3xl font-bold text-amber-400 mt-1">{stats.totalPending}</p>
                     </Card>
                     <Card>
-                        <p className="text-xs text-neutral-500 uppercase tracking-widest">Atrasados</p>
+                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Atrasados</p>
                         <p className="text-3xl font-bold text-red-400 mt-1">{stats.totalOverdue}</p>
                     </Card>
                     <Card>
-                        <p className="text-xs text-neutral-500 uppercase tracking-widest">MRR</p>
-                        <p className="text-3xl font-bold text-white mt-1">
-                            {formatCurrency(stats.monthlyRecurringRevenueCents / 100, 'BR')}
+                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>MRR</p>
+                        <p className={`text-3xl font-bold ${colors.text} mt-1`}>
+                            {formatCurrency(stats.monthlyRecurringRevenueCents / 100, region)}
                         </p>
                     </Card>
                 </div>
@@ -144,7 +141,7 @@ export const MembersList: React.FC = () => {
                                 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all',
                                 tab === t.value
                                     ? `${accent.bg} text-[var(--color-bg)]`
-                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} border hover:${colors.textSecondary}`,
+                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} border hover:text-theme-textSecondary`,
                             ].join(' ')}
                         >
                             {t.label}
@@ -164,13 +161,13 @@ export const MembersList: React.FC = () => {
             </div>
 
             {isLoading ? (
-                <div className="text-neutral-400 p-8 text-center">Carregando...</div>
+                <div className={`${colors.textSecondary} p-8 text-center`}>Carregando...</div>
             ) : filtered.length === 0 ? (
                 <Card>
                     <div className="text-center py-12 space-y-3">
-                        <Users className="w-12 h-12 mx-auto text-neutral-600" />
-                        <p className="text-white text-lg">Nenhum assinante {tab !== 'all' ? `com status "${TABS.find(t => t.value === tab)?.label}"` : ''}.</p>
-                        <p className="text-neutral-500 text-sm">
+                        <Users className={`w-12 h-12 mx-auto ${colors.textMuted}`} />
+                        <p className={`${colors.text} text-lg`}>Nenhum assinante {tab !== 'all' ? `com status "${TABS.find(t => t.value === tab)?.label}"` : ''}.</p>
+                        <p className={`${colors.textMuted} text-sm`}>
                             {tab === 'all' ? 'Crie planos em Configurações e compartilhe o link do clube.' : 'Mude o filtro para ver outros.'}
                         </p>
                     </div>
@@ -180,7 +177,7 @@ export const MembersList: React.FC = () => {
                     {filtered.map(m => {
                         const status = STATUS_LABELS[m.status];
                         return (
-                            <Card key={m.id} className="hover:bg-white/5 transition-colors">
+                            <Card key={m.id} className="hover:bg-[var(--color-card-hover)] transition-colors">
                                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 ${accent.bgDim} ${accent.text}`}>
@@ -188,10 +185,10 @@ export const MembersList: React.FC = () => {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="text-white font-bold truncate">{m.client?.name || 'Sem nome'}</p>
+                                                <p className={`${colors.text} font-bold truncate`}>{m.client?.name || 'Sem nome'}</p>
                                                 <MembershipBadge color={m.plan?.badge_color || 'gold'} label={m.plan?.badge_color || 'clube'} />
                                             </div>
-                                            <p className="text-sm text-neutral-400 truncate">
+                                            <p className={`text-sm ${colors.textSecondary} truncate`}>
                                                 {m.client?.phone || 'sem telefone'} · {m.plan?.name || 'Plano removido'}
                                             </p>
                                             {m.next_billing_at && m.status === 'active' && (
@@ -204,9 +201,9 @@ export const MembersList: React.FC = () => {
                                     </div>
 
                                     <div className="flex flex-row md:flex-col items-start md:items-end gap-2 md:gap-1">
-                                        <p className="text-white font-bold">
-                                            {formatCurrency((m.plan?.price_cents || 0) / 100, 'BR')}
-                                            <span className="text-neutral-500 text-xs font-normal">/mês</span>
+                                        <p className={`${colors.text} font-bold`}>
+                                            {formatCurrency((m.plan?.price_cents || 0) / 100, region)}
+                                            <span className={`${colors.textMuted} text-xs font-normal`}>/mês</span>
                                         </p>
                                         <p className={`text-xs font-bold uppercase tracking-wider ${status.color}`}>{status.label}</p>
                                     </div>
@@ -216,7 +213,7 @@ export const MembersList: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => handleWhatsApp(m)}
-                                                className={`p-2.5 rounded-xl ${colors.inputBg} ${colors.border} ${colors.textMuted} hover:${colors.text} border transition-colors`}
+                                                className={`p-2.5 rounded-xl ${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-text border transition-colors`}
                                                 aria-label="Enviar WhatsApp"
                                                 title="WhatsApp"
                                             >
@@ -226,7 +223,7 @@ export const MembersList: React.FC = () => {
                                         {m.status === 'pending' && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleConfirm(m)}
+                                                onClick={() => openConfirm(m)}
                                                 disabled={confirmMutation.isPending}
                                                 className="px-3 py-2 rounded-xl bg-green-500/20 text-green-400 hover:bg-green-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
                                             >
@@ -237,7 +234,7 @@ export const MembersList: React.FC = () => {
                                         {(m.status === 'active' || m.status === 'overdue') && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleCancel(m)}
+                                                onClick={() => setCancelling(m)}
                                                 disabled={cancelMutation.isPending}
                                                 className="px-3 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
                                             >
@@ -255,6 +252,69 @@ export const MembersList: React.FC = () => {
                     })}
                 </div>
             )}
+
+            <Modal
+                open={!!confirming}
+                onClose={() => setConfirming(null)}
+                title="Confirmar pagamento"
+                size="sm"
+                footer={
+                    <div className="flex justify-end gap-2 w-full">
+                        <Button variant="ghost" onClick={() => setConfirming(null)} disabled={confirmMutation.isPending}>
+                            Cancelar
+                        </Button>
+                        <Button variant="primary" onClick={handleConfirm} loading={confirmMutation.isPending}>
+                            Confirmar pagamento
+                        </Button>
+                    </div>
+                }
+            >
+                {confirming && (
+                    <div className="space-y-4">
+                        <p className={`text-sm ${colors.textSecondary}`}>
+                            {formatCurrency((confirming.plan?.price_cents || 0) / 100, region)} do plano{' '}
+                            <span className={colors.text}>&quot;{confirming.plan?.name}&quot;</span> para{' '}
+                            <span className={colors.text}>{confirming.client?.name}</span>.
+                        </p>
+                        <div>
+                            <p className={`${classes.label} mb-2`}>Como o pagamento foi recebido?</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {([
+                                    { value: 'pix', label: 'Pix' },
+                                    { value: 'cash', label: 'Dinheiro' },
+                                    { value: 'card', label: 'Cartão' },
+                                ] as const).map(({ value, label }) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => setConfirmMethod(value)}
+                                        className={[
+                                            'py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all',
+                                            confirmMethod === value
+                                                ? `${accent.bgDim} ${accent.border} ${accent.text}`
+                                                : `${colors.inputBg} ${colors.border} ${colors.textMuted}`,
+                                        ].join(' ')}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            <ConfirmModal
+                open={!!cancelling}
+                title="Cancelar assinatura"
+                message={`Cancelar a assinatura de ${cancelling?.client?.name || 'este cliente'}? Ele perde os benefícios do plano imediatamente.`}
+                confirmLabel="Cancelar assinatura"
+                cancelLabel="Voltar"
+                variant="danger"
+                loading={cancelMutation.isPending}
+                onConfirm={handleCancel}
+                onCancel={() => setCancelling(null)}
+            />
         </div>
     );
 };

@@ -18,6 +18,7 @@ import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
 import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
@@ -36,6 +37,15 @@ interface Transaction {
   commission_paid: boolean;
   status: 'paid' | 'pending';
 }
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  pix: 'Pix',
+  cash: 'Dinheiro',
+  debit: 'Débito',
+  credit: 'Crédito',
+  mbway: 'MBWay',
+  membership: 'Clube',
+};
 
 interface MonthlyHistoryItem {
   month: string;
@@ -133,8 +143,7 @@ const [searchParams, setSearchParams] = useSearchParams();
     expenseFill: '#EF4444',
   }), [isDark]);
   const { showToast } = useToast();
-  const currencySymbol = region === 'PT' ? '€' : 'R$';
-  const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+  const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
   const queryUserId = isStaff && companyId ? companyId : (user?.id || '');
   const { data: monthlyHistoryData, refetch: refetchMonthlyHistory } = useMonthlyHistory(user?.id || '', 12);
@@ -489,7 +498,7 @@ useEffect(() => {
       align: 'center',
       render: (t) => (
         <span className={`text-xs ${colors.textSecondary} ${colors.surface} px-2 py-1 rounded border ${colors.border}`}>
-          {t.payment_method || '—'}
+          {PAYMENT_METHOD_LABELS[t.payment_method || ''] || t.payment_method || '—'}
         </span>
       ),
     },

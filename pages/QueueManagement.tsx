@@ -11,11 +11,12 @@ import { formatPhone, formatCurrency } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { useQueueEntries, useBusinessSlug, useQueueTeamMembers, useServiceById, useAddManualQueueEntry, useUpdateQueueStatus, useFinishQueueEntry } from '../hooks/useQueue';
 import { useQueryClient } from '@tanstack/react-query';
-import { ConfirmModal, useToast } from '@/components/ui';
+import { ConfirmModal, Modal, useToast } from '@/components/ui';
+import { SkeletonCard } from '@/components/ui/Skeleton';
 
 export const QueueManagement: React.FC = () => {
     const { user, region } = useAuth();
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent, isBeauty, classes, colors } = useBrutalTheme();
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const addManualMutation = useAddManualQueueEntry();
@@ -44,11 +45,25 @@ export const QueueManagement: React.FC = () => {
     const { data: finishServiceData } = useServiceById(finishServiceId, user?.id ?? '');
     const [noShowTarget, setNoShowTarget] = useState<string | null>(null);
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
-useEffect(() => {
-        audioRef.current = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
-    }, []);
+    const playCallSound = () => {
+        try {
+            const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            const ctx = new AudioCtx();
+            [0, 0.2].forEach(offset => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.25, ctx.currentTime + offset);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.15);
+                osc.start(ctx.currentTime + offset);
+                osc.stop(ctx.currentTime + offset + 0.15);
+            });
+        } catch {
+            // Sem áudio disponível — segue só com o feedback visual
+        }
+    };
 
     const entries = useMemo(() => rawEntries as QueueEntry[], [rawEntries]);
 
@@ -105,8 +120,8 @@ const updateStatus = async (id: string, newStatus: QueueEntry['status']) => {
                 status: newStatus,
             });
 
-            if (newStatus === 'calling' && audioRef.current) {
-                audioRef.current.play().catch(e => logger.warn('Audio play failed', { error: e }));
+            if (newStatus === 'calling') {
+                playCallSound();
             }
 
         } catch (err) {
@@ -199,7 +214,22 @@ const confirmFinish = async () => {
         }
     };
 
-    if (loadingEntries) return <div className="p-8 text-white"><Clock className="animate-spin w-8 h-8" /></div>;
+    if (loadingEntries) {
+        return (
+            <div className="space-y-6 pb-20">
+                <SkeletonCard className="min-h-[96px]" />
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                    <SkeletonCard className="min-h-[88px]" />
+                    <SkeletonCard className="min-h-[88px]" />
+                    <SkeletonCard className="min-h-[88px]" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <SkeletonCard className="min-h-[160px]" />
+                    <SkeletonCard className="min-h-[160px]" />
+                </div>
+            </div>
+        );
+    }
 
     const waitingList = entries.filter(e => e.status === 'waiting');
     const callingList = entries.filter(e => e.status === 'calling');
@@ -210,13 +240,13 @@ const confirmFinish = async () => {
     return (
         <div className="space-y-6 pb-20">
             {/* Header */}
-            <div className={`flex flex-col md:flex-row justify-between items-center ${isBeauty ? 'bg-beauty-card/40 border-beauty-neon/20' : 'bg-white/[0.04] border-white/10'} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-promax-glass`}>
+            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-promax-glass`}>
                 <div className="mb-4 md:mb-0">
-                    <h1 className={`text-2xl md:text-3xl font-heading font-bold text-white mb-1 flex items-center gap-2`}>
+                    <h1 className={`text-2xl md:text-3xl font-heading font-bold ${colors.text} mb-1 flex items-center gap-2`}>
                         <Clock className={`w-8 h-8 ${accent.text}`} />
                         Fila Digital
                     </h1>
-                    <p className="text-neutral-400 text-sm font-mono">Gerencie atendimentos em tempo real</p>
+                    <p className={`${colors.textSecondary} text-sm font-mono`}>Gerencie atendimentos em tempo real</p>
                 </div>
                 <div className="flex gap-2">
                     <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />} className="hidden md:flex">
@@ -237,15 +267,15 @@ const confirmFinish = async () => {
             {/* Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 <Card className="p-4 border border-yellow-400/40">
-                    <div className="text-xs uppercase text-neutral-500 font-bold mb-1 tracking-widest">Na Fila</div>
+                    <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Na Fila</div>
                     <div className="text-4xl font-heading text-yellow-400">{metrics.waiting}</div>
                 </Card>
                 <Card className="p-4 border border-blue-400/40">
-                    <div className="text-xs uppercase text-neutral-500 font-bold mb-1 tracking-widest">Atendendo</div>
+                    <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Atendendo</div>
                     <div className="text-4xl font-heading text-blue-400">{metrics.serving}</div>
                 </Card>
                 <Card className="p-4 border border-green-500/40">
-                    <div className="text-xs uppercase text-neutral-500 font-bold mb-1 tracking-widest">Finalizados</div>
+                    <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Finalizados</div>
                     <div className="text-4xl font-heading text-green-500">{metrics.completed}</div>
                 </Card>
             </div>
@@ -259,20 +289,20 @@ const confirmFinish = async () => {
                     </h2>
 
                     {actionableList.length === 0 ? (
-                        <div className={`p-10 border border-dashed ${isBeauty ? 'border-beauty-neon/20' : 'border-white/10'} bg-white/[0.02] rounded-2xl text-center text-neutral-500`}>
+                        <div className={`p-10 border border-dashed ${colors.border} ${colors.surface} rounded-2xl text-center ${colors.textMuted}`}>
                             <p className="font-mono text-sm">A fila está vazia.</p>
                         </div>
                     ) : (
                         actionableList.map(entry => (
-                            <div key={entry.id} className={`bg-white/[0.03] backdrop-blur-lg border border-white/10 p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
+                            <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
                                 <div>
-                                    <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                                    <h3 className={`font-bold ${colors.text} text-lg flex items-center gap-2`}>
                                         <span className="font-heading">{entry.client_name}</span>
                                         {entry.status === 'calling' && (
                                             <span className="text-xs bg-green-500 text-black px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
                                         )}
                                     </h3>
-                                    <div className="text-sm text-neutral-400 flex flex-col gap-1 mt-1 font-mono">
+                                    <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>
                                         <span className="flex items-center gap-2"><Phone className="w-3 h-3" /> {formatPhone(entry.client_phone)}</span>
                                         <span className="text-xs opacity-50">{new Date(entry.joined_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
@@ -318,15 +348,15 @@ const confirmFinish = async () => {
                     </h2>
 
                     {servingList.length === 0 ? (
-                        <div className={`p-10 border border-dashed ${isBeauty ? 'border-beauty-neon/20' : 'border-white/10'} bg-white/[0.02] rounded-2xl text-center text-neutral-500`}>
+                        <div className={`p-10 border border-dashed ${colors.border} ${colors.surface} rounded-2xl text-center ${colors.textMuted}`}>
                             <p className="font-mono text-sm">Nenhum atendimento em andamento.</p>
                         </div>
                     ) : (
                         servingList.map(entry => (
-                            <div key={entry.id} className={`bg-white/[0.03] backdrop-blur-lg border border-white/10 p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
+                            <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
                                 <div>
-                                    <h3 className="font-bold text-white text-lg font-heading">{entry.client_name}</h3>
-                                    <div className="text-sm text-neutral-400 flex flex-col gap-1 mt-1 font-mono">
+                                    <h3 className={`font-bold ${colors.text} text-lg font-heading`}>{entry.client_name}</h3>
+                                    <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>
                                         <span className="text-xs opacity-60">Iniciou às {new Date(entry.joined_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span> {/* In real app use updated_at or dedicated 'started_at' */}
                                     </div>
                                 </div>
@@ -353,24 +383,24 @@ const confirmFinish = async () => {
             {
                 completedList.length > 0 && (
                     <div className="mt-12 space-y-4">
-                        <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight text-neutral-500">
+                        <h2 className={`text-xl font-bold flex items-center gap-2 uppercase tracking-tight ${colors.textMuted}`}>
                             <Check className="w-5 h-5" />
                             Histórico de Atendimentos
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {completedList.map(entry => (
-                                <div key={entry.id} className="bg-white/[0.03] border border-white/10 p-4 rounded-2xl flex justify-between items-center opacity-80 hover:opacity-100 transition-opacity">
+                                <div key={entry.id} className={`${colors.card} border ${colors.border} p-4 rounded-2xl flex justify-between items-center opacity-80 hover:opacity-100 transition-opacity`}>
                                     <div>
-                                        <h3 className="font-bold text-neutral-300 text-base font-heading">{entry.client_name}</h3>
-                                        <div className="text-xs text-neutral-500 flex items-center gap-2 mt-1">
+                                        <h3 className={`font-bold ${colors.textSecondary} text-base font-heading`}>{entry.client_name}</h3>
+                                        <div className={`text-xs ${colors.textMuted} flex items-center gap-2 mt-1`}>
                                             <Check className="w-3 h-3 text-green-500" />
                                             Finalizado
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="text-xs text-neutral-500 block">Entrou às</span>
-                                        <span className="text-sm font-mono text-neutral-400">{new Date(entry.joined_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span className={`text-xs ${colors.textMuted} block`}>Entrou às</span>
+                                        <span className={`text-sm font-mono ${colors.textSecondary}`}>{new Date(entry.joined_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                 </div>
                             ))}
@@ -380,184 +410,164 @@ const confirmFinish = async () => {
             }
 
             {/* MANUAL ADD MODAL */}
-            {showAddModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl">
-                    <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative shadow-promax-depth`}>
-                        <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
-                            <X className="w-5 h-5" />
-                        </button>
-                        <h3 className="text-xl font-bold text-white mb-6 font-heading uppercase flex items-center gap-2">
-                            <User className={`w-5 h-5 ${accent.text}`} />
-                            Adicionar na Fila
-                        </h3>
-                        <form onSubmit={handleManualAdd} className="space-y-4">
-                            <div>
-                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Nome do Cliente *</label>
-                                <input
-                                    type="text"
-                                    value={addClientName}
-                                    onChange={e => setAddClientName(e.target.value)}
-                                    required
-                                    placeholder="Nome completo"
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Telefone (opcional)</label>
-                                <input
-                                    type="text"
-                                    value={addClientPhone}
-                                    onChange={e => setAddClientPhone(e.target.value)}
-                                    placeholder="(00) 00000-0000"
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-mono"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Serviço (opcional)</label>
-                                <input
-                                    type="text"
-                                    value={addServiceName}
-                                    onChange={e => setAddServiceName(e.target.value)}
-                                    placeholder="Ex: Corte de cabelo"
-                                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
-                                />
-                            </div>
-                            <Button type="submit" variant="primary" fullWidth loading={isAdding}>
-                                {isAdding ? 'Adicionando...' : 'Adicionar na Fila'}
-                            </Button>
-                        </form>
+            <Modal
+                open={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                title="Adicionar na fila"
+                size="sm"
+            >
+                <form onSubmit={handleManualAdd} className="space-y-4">
+                    <div>
+                        <label className={`block ${classes.label} mb-1 ml-1`}>Nome do cliente *</label>
+                        <input
+                            type="text"
+                            value={addClientName}
+                            onChange={e => setAddClientName(e.target.value)}
+                            required
+                            placeholder="Nome completo"
+                            className={classes.input}
+                        />
                     </div>
-                </div>
-            )}
+                    <div>
+                        <label className={`block ${classes.label} mb-1 ml-1`}>Telefone (opcional)</label>
+                        <input
+                            type="text"
+                            value={addClientPhone}
+                            onChange={e => setAddClientPhone(e.target.value)}
+                            placeholder="(00) 00000-0000"
+                            className={`${classes.input} font-mono`}
+                        />
+                    </div>
+                    <div>
+                        <label className={`block ${classes.label} mb-1 ml-1`}>Serviço (opcional)</label>
+                        <input
+                            type="text"
+                            value={addServiceName}
+                            onChange={e => setAddServiceName(e.target.value)}
+                            placeholder="Ex: Corte de cabelo"
+                            className={classes.input}
+                        />
+                    </div>
+                    <Button type="submit" variant="primary" fullWidth loading={isAdding}>
+                        {isAdding ? 'Adicionando...' : 'Adicionar na fila'}
+                    </Button>
+                </form>
+            </Modal>
 
             {/* FINISH MODAL */}
-            {
-                showFinishModal && finishingEntry && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in">
-                        <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-promax-depth`}>
-                            <button onClick={() => setShowFinishModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
+            <Modal
+                open={showFinishModal && !!finishingEntry}
+                onClose={() => setShowFinishModal(false)}
+                title="Finalizar atendimento"
+                size="sm"
+                preventClose={isFinishing}
+                footer={
+                    <Button
+                        onClick={confirmFinish}
+                        loading={isFinishing}
+                        variant="primary"
+                        fullWidth
+                    >
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Confirmar e receber
+                    </Button>
+                }
+            >
+                {finishingEntry && (
+                    <div className="space-y-4">
+                        <div className={`p-4 ${colors.surface} rounded-2xl border ${colors.border}`}>
+                            <p className={classes.label}>Cliente</p>
+                            <p className={`${colors.text} font-bold text-lg`}>{finishingEntry.client_name}</p>
+                            <p className={`${colors.textSecondary} text-sm font-mono`}>{formatPhone(finishingEntry.client_phone, region === 'PT' ? 'PT' : 'BR')}</p>
+                        </div>
 
-                            <h3 className="text-xl font-bold text-white mb-6 font-heading uppercase flex items-center gap-2">
-                                <Check className="w-5 h-5 text-green-500" />
-                                Finalizar Atendimento
-                            </h3>
+                        <div>
+                            <label className={`block ${classes.label} mb-1 ml-1`}>Serviço realizado</label>
+                            <input
+                                type="text"
+                                value={finishService}
+                                onChange={e => setFinishService(e.target.value)}
+                                className={classes.input}
+                            />
+                        </div>
 
-                            <div className="space-y-4">
-                                <div className="p-4 bg-white/[0.03] rounded-2xl border border-white/10">
-                                    <p className="text-xs uppercase text-neutral-500 font-bold mb-1">Cliente</p>
-                                    <p className="text-white font-bold text-lg">{finishingEntry.client_name}</p>
-                                    <p className="text-neutral-400 text-sm font-mono">{formatPhone(finishingEntry.client_phone, region === 'PT' ? 'PT' : 'BR')}</p>
-                                </div>
+                        <div>
+                            <label className={`block ${classes.label} mb-1 ml-1`}>Valor final ({region === 'PT' ? '€' : 'R$'})</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={finishPrice}
+                                onChange={e => setFinishPrice(e.target.value)}
+                                className={`${classes.input} text-xl font-mono`}
+                            />
+                        </div>
 
-                                <div>
-                                    <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Serviço Realizado</label>
-                                    <input
-                                        type="text"
-                                        value={finishService}
-                                        onChange={e => setFinishService(e.target.value)}
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all font-medium"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Valor Final ({region === 'PT' ? '€' : 'R$'})</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={finishPrice}
-                                        onChange={e => setFinishPrice(e.target.value)}
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white text-xl font-mono focus:outline-none focus:border-green-500/50 transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs uppercase text-neutral-500 font-bold mb-1 ml-1">Profissional</label>
-                                    <select
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-white/20 transition-all"
-                                        value={finishPro}
-                                        onChange={e => setFinishPro(e.target.value)}
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {teamMembers.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <Button
-                                    onClick={confirmFinish}
-                                    loading={isFinishing}
-                                    className="w-full mt-4 bg-green-500 hover:bg-green-400 text-black border-none"
-                                >
-                                    <DollarSign className="w-4 h-4 mr-2" />
-                                    Confirmar e Receber
-                                </Button>
-                            </div>
+                        <div>
+                            <label className={`block ${classes.label} mb-1 ml-1`}>Profissional</label>
+                            <select
+                                className={classes.input}
+                                value={finishPro}
+                                onChange={e => setFinishPro(e.target.value)}
+                            >
+                                <option value="">Selecione...</option>
+                                {teamMembers.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
-                )
-            }
+                )}
+            </Modal>
 
-            {/* QR MODAL (Keep as is, just styled) */}
-            {
-                showQrModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xl animate-in fade-in">
-                        <div className={`bg-white/[0.05] border ${isBeauty ? 'border-beauty-neon/30' : 'border-white/10'} backdrop-blur-2xl rounded-2xl p-5 sm:p-6 max-w-sm w-full relative animate-in zoom-in-95 shadow-promax-depth`}>
-                            <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 text-neutral-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
-
-                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 font-heading uppercase">
-                                <QrCode className={`w-5 h-5 ${accent.text}`} />
-                                QR Code da Fila
-                            </h3>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs uppercase font-bold text-neutral-500 mb-2 block">Vincular a Profissional (Opcional)</label>
-                                    <select
-                                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-3 text-white focus:outline-none focus:border-neutral-500"
-                                        value={selectedQrPro || ''}
-                                        onChange={(e) => setSelectedQrPro(e.target.value || null)}
-                                    >
-                                        <option value="">Geral da Barbearia</option>
-                                        {teamMembers.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="bg-white p-4 rounded-2xl flex justify-center">
-                                    {businessSlug ? (
-                                        <img
-                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(getQrUrl())}`}
-                                            className="w-48 h-48"
-                                            alt="QR Code"
-                                        />
-                                    ) : (
-                                        <div className="w-48 h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
-                                            Carregando...
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="text-center p-2.5 bg-white/[0.03] rounded-2xl border border-white/10">
-                                    <p className="text-xs text-neutral-500 break-all font-mono opacity-60">
-                                        {getQrUrl()}
-                                    </p>
-                                </div>
-
-                                <Button onClick={downloadQr} className="w-full">
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Baixar Imagem
-                                </Button>
-                            </div>
-                        </div>
+            {/* QR MODAL */}
+            <Modal
+                open={showQrModal}
+                onClose={() => setShowQrModal(false)}
+                title="QR Code da fila"
+                size="sm"
+                footer={
+                    <Button onClick={downloadQr} fullWidth>
+                        <Download className="w-4 h-4 mr-2" />
+                        Baixar imagem
+                    </Button>
+                }
+            >
+                <div className="space-y-4">
+                    <div>
+                        <label className={`block ${classes.label} mb-2`}>Vincular a profissional (opcional)</label>
+                        <select
+                            className={classes.input}
+                            value={selectedQrPro || ''}
+                            onChange={(e) => setSelectedQrPro(e.target.value || null)}
+                        >
+                            <option value="">Fila geral</option>
+                            {teamMembers.map(m => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                        </select>
                     </div>
-                )
-            }
+
+                    <div className="bg-white p-4 rounded-2xl flex justify-center">
+                        {businessSlug ? (
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(getQrUrl())}`}
+                                className="w-48 h-48"
+                                alt="QR Code"
+                            />
+                        ) : (
+                            <div className="w-48 h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
+                                Carregando...
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`text-center p-2.5 ${colors.surface} rounded-2xl border ${colors.border}`}>
+                        <p className={`text-xs ${colors.textMuted} break-all font-mono`}>
+                            {getQrUrl()}
+                        </p>
+                    </div>
+                </div>
+            </Modal>
 
             <ConfirmModal
                 open={!!noShowTarget}

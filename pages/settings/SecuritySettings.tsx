@@ -12,7 +12,7 @@ export const SecuritySettings: React.FC = () => {
     const { isEnabled, loading, unenroll, factors, refreshUser } = use2FA();
     const [showSetup, setShowSetup] = useState(false);
 
-    const { accent } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
 
     const handleSetupComplete = () => {
         setShowSetup(false);
@@ -34,7 +34,7 @@ export const SecuritySettings: React.FC = () => {
 
     if (loading) return (
         <SettingsLayout>
-            <div className="p-8 text-center text-neutral-400">Carregando configurações de segurança...</div>
+            <div className={`p-8 text-center ${colors.textSecondary}`}>Carregando configurações de segurança...</div>
         </SettingsLayout>
     );
 
@@ -54,7 +54,7 @@ export const SecuritySettings: React.FC = () => {
                 >
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex-1">
-                            <p className="text-neutral-400 text-sm mb-6 leading-relaxed">
+                            <p className={`${colors.textSecondary} text-sm mb-6 leading-relaxed`}>
                                 Adicione uma camada extra de segurança. Ao fazer login, você precisará fornecer um código
                                 gerado pelo seu celular além da senha tradicional.
                             </p>
@@ -87,21 +87,21 @@ export const SecuritySettings: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            <h4 className="text-white/40 font-mono text-[10px] uppercase tracking-[0.2em] mb-4">Métodos Verificados</h4>
+                                            <h4 className={`${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] mb-4`}>Métodos Verificados</h4>
                                             {factors.map(factor => (
                                                 <div key={factor.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:bg-white/10 transition-all">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5">
-                                                            <Smartphone className="w-5 h-5 text-neutral-400" />
+                                                            <Smartphone className={`w-5 h-5 ${colors.textSecondary}`} />
                                                         </div>
                                                         <div>
-                                                            <p className="text-white text-sm font-bold">{factor.friendly_name || 'Autenticador'}</p>
-                                                            <p className="text-neutral-500 text-[10px] uppercase">Algoritmo TOTP</p>
+                                                            <p className={`${colors.text} text-sm font-bold`}>{factor.friendly_name || 'Autenticador'}</p>
+                                                            <p className={`${colors.textMuted} text-xs uppercase`}>Algoritmo TOTP</p>
                                                         </div>
                                                     </div>
                                                     <button
                                                         onClick={() => handleUnenroll(factor.id)}
-                                                        className="p-2 hover:bg-red-500/20 rounded-xl text-neutral-500 hover:text-red-400 transition-all active:animate-haptic-click"
+                                                        className={`p-2 hover:bg-red-500/20 rounded-xl ${colors.textMuted} hover:text-red-400 transition-all active:animate-haptic-click`}
                                                         title="Remover"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -131,10 +131,10 @@ export const SecuritySettings: React.FC = () => {
                 {/* Password Section */}
                 <Card className="opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
                     <div className="flex items-center gap-3 mb-4">
-                        <Lock className="w-5 h-5 text-neutral-400" />
-                        <h3 className="text-lg font-bold text-white">Alterar Senha</h3>
+                        <Lock className={`w-5 h-5 ${colors.textSecondary}`} />
+                        <h3 className={`text-lg font-bold ${colors.text}`}>Alterar Senha</h3>
                     </div>
-                    <p className="text-neutral-400 text-sm mb-6 max-w-md">
+                    <p className={`${colors.textSecondary} text-sm mb-6 max-w-md`}>
                         Mantenha sua senha forte e atualizada para evitar acessos não autorizados.
                     </p>
                     <Button variant="secondary" disabled className="text-xs">

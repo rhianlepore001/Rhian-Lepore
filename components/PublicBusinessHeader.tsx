@@ -96,7 +96,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
 
                 {/* Badge de segmento + toggle dark/light */}
                 <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
-                    <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-xl rounded-full border text-[10px] font-bold uppercase tracking-[0.18em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                    <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-xl rounded-full border text-xs font-bold uppercase tracking-[0.18em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                         <SegmentIcon className="w-3 h-3" />
                         {segmentLabel}
                     </div>
@@ -126,7 +126,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         <a href={`/#/minha-area/${businessSlug}`}
                             className={`group flex items-center gap-3 px-4 py-2 backdrop-blur-xl rounded-full border transition-all shadow-lg ${colors.card} ${colors.border} cursor-pointer hover:brightness-110`}>
                             <div className="flex flex-col items-end">
-                                <span className={`text-[9px] uppercase font-black tracking-widest ${colors.textMuted}`}>Sessão Ativa</span>
+                                <span className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Sessão Ativa</span>
                                 <span className={`text-xs font-bold truncate max-w-[100px] ${colors.text}`}>{clientSession.name.split(' ')[0]}</span>
                             </div>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border ${colors.surface} ${colors.border} ${colors.text}`}>
@@ -179,7 +179,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                 <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                                 <span className="text-sm font-black tracking-tight">{googleRating.toFixed(1)}</span>
                                 <div className="w-px h-3 bg-current opacity-20" />
-                                <span className="text-[10px] uppercase font-bold tracking-[0.1em] opacity-60">
+                                <span className="text-xs uppercase font-bold tracking-[0.1em] opacity-60">
                                     {totalReviews} avaliações
                                 </span>
                             </div>
@@ -199,21 +199,21 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                 <a href={instagramLink} target="_blank" rel="noopener noreferrer"
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-gradient-to-tr hover:from-purple-500 hover:to-pink-500 hover:text-white hover:border-transparent`}>
                                     <Instagram className="w-4 h-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">Instagram</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">Instagram</span>
                                 </a>
                             )}
                             {whatsappLink && (
                                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-green-500 hover:text-white hover:border-transparent`}>
                                     <Phone className="w-4 h-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">WhatsApp</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">WhatsApp</span>
                                 </a>
                             )}
                             {mapsLink && (
                                 <a href={mapsLink} target="_blank" rel="noopener noreferrer"
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-blue-500 hover:text-white hover:border-transparent`}>
                                     <MapPin className="w-4 h-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:block">Como chegar</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">Como chegar</span>
                                 </a>
                             )}
                         </div>
@@ -255,7 +255,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                     </div>
 
                     {/* Label da galeria */}
-                    <div className={`absolute top-4 right-12 text-[9px] font-bold uppercase tracking-[0.2em] ${colors.textMuted}`}>
+                    <div className={`absolute top-4 right-12 text-xs font-bold uppercase tracking-[0.2em] ${colors.textMuted}`}>
                         Portfólio
                     </div>
                 </div>

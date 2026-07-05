@@ -94,7 +94,7 @@ export const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
                     </div>
                     <div>
                         <p className={`text-sm ${colors.text} font-heading`}>Foco em Crescimento</p>
-                        <p className={`text-[10px] ${colors.textMuted} font-mono uppercase`}>Mantenha o histórico real de cada mês</p>
+                        <p className={`text-xs ${colors.textMuted} font-mono uppercase`}>Mantenha o histórico real de cada mês</p>
                     </div>
                 </div>
             </div>

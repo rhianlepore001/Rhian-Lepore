@@ -20,7 +20,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const { colors, accent, font, shadow, isBeauty } = useBrutalTheme({ override: forceTheme });
 
-    const hoverBg = `hover:${accent.bgDim}`;
+    const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
     const selectedClass = `${accent.bg} text-[var(--color-bg)]`;
     const todayClass = `border-2 ${accent.border}`;
 

@@ -34,7 +34,7 @@ export const Sidebar: React.FC = () => {
           ${isActive ? '' : colors.border}
         `}
       >
-        <Icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? accent.text : `${accent.text} group-hover:${colors.text}`}`} />
+        <Icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? accent.text : `${accent.text} group-hover:text-theme-text`}`} />
         {label}
       </Link>
     );
@@ -73,7 +73,7 @@ export const Sidebar: React.FC = () => {
               <span className={`text-xl font-heading font-black uppercase tracking-tighter leading-none ${colors.text}`}>AgendiX</span>
             </div>
           </div>
-          <button onClick={closeSidebar} className={`${colors.textSecondary} hover:${colors.text} transition-colors`} aria-label="Fechar menu" title="Fechar menu">
+          <button onClick={closeSidebar} className={`${colors.textSecondary} hover:text-theme-text transition-colors`} aria-label="Fechar menu" title="Fechar menu">
             <X className="w-6 h-6" />
           </button>
         </div>

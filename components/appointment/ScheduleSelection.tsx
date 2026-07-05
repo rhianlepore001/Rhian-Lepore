@@ -129,7 +129,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                 )}
                                 <div>
                                     <p className={`font-bold leading-tight ${selectedProId === member.id ? (isBeauty ? 'text-beauty-dark' : 'text-black') : 'text-white'}`}>{member.name}</p>
-                                    <p className="text-[10px] opacity-70">Disponível</p>
+                                    <p className="text-xs opacity-70">Disponível</p>
                                 </div>
                             </button>
                         ))}

@@ -108,7 +108,7 @@ export const Modal: React.FC<ModalProps> = ({
                         {showCloseButton && (
                             <button
                                 onClick={onClose}
-                                className={`${colors.textMuted} hover:${colors.text} rounded-full p-2 transition-all duration-200 hover:rotate-90 hover:bg-white/[0.06]`}
+                                className={`${colors.textMuted} hover:text-theme-text rounded-full p-2 transition-all duration-200 hover:rotate-90 hover:bg-white/[0.06]`}
                                 aria-label="Fechar"
                             >
                                 <X className="w-4 h-4" />

@@ -54,7 +54,7 @@ export const BrandIdentitySection: React.FC<BrandIdentitySectionProps> = ({
                     relative overflow-hidden cursor-pointer transition-all duration-200
                     ${aspect === 'square' ? 'w-28 h-28 md:w-36 md:h-36 rounded-2xl' : 'w-full h-32 md:h-48 rounded-xl'}
                     ${colors.inputBg} ${colors.border} border-2 border-dashed
-                    hover:${accent.border}
+                    hover:border-[var(--color-accent-border)]
                     flex items-center justify-center
                 `}
             >

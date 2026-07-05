@@ -49,11 +49,11 @@ export const DashboardKpiCard: React.FC<DashboardKpiCardProps> = ({
         <div className="p-4 md:p-6 flex flex-col justify-between h-full relative z-10">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <span className={`text-[10px] font-mono uppercase tracking-[0.15em] font-bold ${colors.textMuted}`}>
+              <span className={`text-xs font-mono uppercase tracking-[0.15em] font-bold ${colors.textMuted}`}>
                 {title}
               </span>
               {subtitle && (
-                <p className={`text-[9px] ${colors.textMuted} mt-0.5 opacity-60`}>{subtitle}</p>
+                <p className={`text-xs ${colors.textMuted} mt-0.5 opacity-60`}>{subtitle}</p>
               )}
             </div>
             {icon && (
@@ -78,11 +78,11 @@ export const DashboardKpiCard: React.FC<DashboardKpiCardProps> = ({
                   ) : (
                     <Minus className={`w-3 h-3 ${variationColor}`} aria-hidden="true" />
                   )}
-                  <span className={`text-[10px] font-mono font-bold ${variationColor}`}>
+                  <span className={`text-xs font-mono font-bold ${variationColor}`}>
                     {variationText}
                   </span>
                 </div>
-                <span className={`text-[9px] ${colors.textMuted}`}>vs sem. anterior</span>
+                <span className={`text-xs ${colors.textMuted}`}>vs sem. anterior</span>
               </div>
             )}
 

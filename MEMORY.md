@@ -102,6 +102,17 @@
   - 263 testes unitários verdes; `typecheck`, `lint`, `build` OK.
   - **Pendente de validação visual:** Rhian vai testar em desktop; fluxo de login real com Playwright depende de credenciais de teste válidas.
 
+- **Auditoria UI/UX → execução Sprints 1-3 (04 Jul 2026, branch `feature/ux-audit-fixes`, 17 commits, não pushed):**
+  - **Clube multi-tenant (P0):** JoinClub usava hooks autenticados — deslogado não via planos; logado de outro tenant via os próprios planos/Pix. Agora 4 RPCs `SECURITY DEFINER` escopados por `business_id` (migration `20260704000001_public_club_rpcs.sql`) + hooks públicos. Tema do estabelecimento forçado via override.
+  - **Números honestos:** badge "% vs ontem" mostra queda real (era `Math.max(...,0)` sempre verde); banner de não-confirmados usava data UTC (nunca disparava após 21h BRT); atendimento coberto pelo clube grava `payment_method='membership'` (era pix R$ 0); confirmação de assinatura pergunta o método real.
+  - **Staff mobile:** ~20 `alert()`/`confirm()` da Agenda viraram ConfirmModal/Toast; footer do modal de detalhes com primário full-width; "Sair da Fila" implementado (RPC `cancel_queue_entry_public`, migration `20260703000001`); som da fila via Web Audio (sem CDN externo).
+  - **Sistemático:** sweep `text-[9/10/11px]`→`text-xs` (250× em 68 arquivos); `buildWhatsAppLink` com DDI por região (mata `wa.me/55` fixo); moeda por região em todo o clube; bottom nav `${colors.bg}/40`→`color-mix`.
+  - ⚠️ **2 migrations novas precisam ir pra produção:** `20260703000001_cancel_queue_entry_public.sql` e `20260704000001_public_club_rpcs.sql` (além das 2 do clube já pendentes).
+  - **Sprint 4 concluído (04 Jul 2026):** QueueManagement, Reports, MembersList, JoinClub e settings frias (RecycleBin/Security/Subscription) no shell PageHeader + tokens (light mode funcional); modais custom da fila e do form de planos migrados pra ui/Modal; dourado do clube unificado com o accent do tema.
+  - **Sprint 5.1 concluído:** `scripts/check-design-debt.mjs` (ratchet) plugado no `npm run lint` — falha em violação NOVA de anti-padrão do MASTER.md §13; baseline commitado é o mapa da dívida restante (ClientCRM, ClientArea, ClubDemo, PublicBooking concentram o grosso). Reduziu dívida? `--update` pra apertar.
+  - **Sprint 5 completo (04 Jul 2026, branch `feature/ux-audit-sprint5`, contém toda a branch anterior):** `useTenantLocale`/`usePublicTenantLocale` (ponto único região→moeda/DDI, adotado em 5 telas); `ui/Modal` vira bottom sheet abaixo de `md`; dieta de animação no PublicBooking (sem stagger/grayscale/rotate, feedback 200-300ms); **116 `hover:${}` interpolados eliminados em 43 arquivos** (inclusive `hover:hover:` quebrado); **MIGRAÇÃO TAILWIND CDN→BUILD FEITA** (`@tailwindcss/vite`, `styles/tailwind.css` com @theme/@theme inline, CDN e config inline removidos do index.html).
+  - ⚠️ **A migração do Tailwind exige validação visual nos 4 temas (barber/beauty × dark/light) ANTES do merge** — build compilar não garante paridade visual com o CDN v3. Pontos de atenção: borders sem cor explícita (compat aplicado), escala de shadows genéricos do v4, `text-text-*` (agora utilities explícitas pra não colidir com vars do tokens.css).
+
 ## 📋 Pendências / próximos passos
 
 - [ ] **Smoke test manual em produção:** agendar → checkout → fila → confirmar isolamento entre barbearias.

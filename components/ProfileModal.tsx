@@ -113,7 +113,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 >
                 <button
                     onClick={onClose}
-                    className={`absolute top-4 right-4 ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                    className={`absolute top-4 right-4 ${colors.textSecondary} hover:text-theme-text transition-colors`}
                 >
                     <span className="sr-only">Fechar</span>
                     X
@@ -122,7 +122,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
                 <div className="flex justify-center mb-6">
                     <div
-                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:${accent.border} overflow-hidden group transition-colors`}
+                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
                         onClick={() => fileInputRef.current?.click()}
                     >
                         {photoPreview ? (
@@ -201,7 +201,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                             navigate('/configuracoes/geral');
                             onClose();
                         }}
-                        className={`w-full flex items-center justify-center gap-2 text-center py-2 text-xs font-mono uppercase transition-colors ${accent.text}/70 hover:${accent.text}`}
+                        className={`w-full flex items-center justify-center gap-2 text-center py-2 text-xs font-mono uppercase transition-colors ${accent.text}/70 hover:text-theme-accent`}
                     >
                         <Settings className="w-3 h-3" />
                         Configurações Avançadas

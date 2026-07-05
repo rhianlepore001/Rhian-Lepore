@@ -236,6 +236,16 @@ export async function fetchQueueEntry(entryId: string, phone: string): Promise<Q
   return queueEntrySchema.parse(entry);
 }
 
+export async function cancelQueueEntryPublic(entryId: string, phone: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('cancel_queue_entry_public', {
+    p_entry_id: entryId,
+    p_phone: phone,
+  });
+
+  if (error) throw error;
+  return data === true;
+}
+
 export async function fetchQueueBusinessProfile(businessId: string): Promise<QueueBusinessProfile | null> {
   const { data, error } = await supabase.rpc('get_public_business_profile_minimal', {
     p_business_id: businessId,

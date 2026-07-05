@@ -346,7 +346,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                             activeTab === tab
                                 ? `${accent.bg} text-[var(--color-bg)]`
-                                : `${colors.textMuted} hover:${colors.text}`
+                                : `${colors.textMuted} hover:text-theme-text`
                         }`}
                     >
                         {tab === 'pending' ? 'Pendente' : 'Pago'}
@@ -363,7 +363,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
                                 <div className={`p-4 md:p-6`}>
                                     <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accent.bg}`}></div>
-                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pendente</p>
+                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pendente</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold ${totalDueOverall > 0 ? 'text-yellow-400' : colors.textMuted}`}>
                                         {currencySymbol} {(totalDueOverall || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </h4>
@@ -372,7 +372,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
                                 <div className="p-4 md:p-6">
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-green-500"></div>
-                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pago (Mês)</p>
+                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pago (Mês)</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-green-400`}>
                                         {currencySymbol} {(totalPaidMonth || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </h4>
@@ -381,11 +381,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <Card variant="outlined" className="col-span-2 lg:col-span-1 p-4 md:p-6 relative overflow-hidden" noPadding>
                                 <div className="p-4 md:p-6">
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-blue-500"></div>
-                                    <p className={`${colors.textMuted} text-[9px] md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Destaque</p>
+                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Destaque</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-blue-400 truncate`}>
                                         {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
                                     </h4>
-                                    <p className={`text-[9px] ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-widest`}>Melhor Desempenho</p>
+                                    <p className={`text-xs ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-widest`}>Melhor Desempenho</p>
                                 </div>
                             </Card>
                         </div>
@@ -442,7 +442,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className={`text-[9px] ${colors.textMuted} ${font.mono} uppercase mb-0.5`}>Saldo Atual</p>
+                                                        <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase mb-0.5`}>Saldo Atual</p>
                                                         <p className={`text-lg md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-yellow-400' : colors.textMuted}`}>
                                                             {currencySymbol} {(professional.total_due || 0).toFixed(2)}
                                                         </p>
@@ -468,21 +468,21 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                     <div className="flex gap-2 flex-1">
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
-                                                            className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
+                                                            className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
                                                         >
                                                             <Scissors className="w-3.5 h-3.5" />
                                                             <span>Serviços</span>
                                                         </button>
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
-                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
                                                             title="Relatório detalhado"
                                                         >
                                                             <FileText className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
                                                         </button>
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowHistoryModal(true); }}
-                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} hover:${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
                                                             title="Histórico de pagamentos"
                                                         >
                                                             <Clock className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
@@ -544,7 +544,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                             Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
                                         </p>
-                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full ${status.successBg} ${status.success} text-[9px] font-bold uppercase ${status.successBorder} border`}>
+                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full ${status.successBg} ${status.success} text-xs font-bold uppercase ${status.successBorder} border`}>
                                             Pago
                                         </span>
                                     </div>
@@ -671,7 +671,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         setPaymentPeriodLabel(p.label);
                                         calculateAmountForDates(selectedProfessional.professional_id, p.start, p.end);
                                     }}
-                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all hover:${colors.surfaceHover} active:scale-95`}
+                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
                                     Período atual
                                 </button>
@@ -692,7 +692,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         setPaymentPeriodLabel(`${fmtLabel(prevStart)} → ${fmtLabel(prevEnd)}`);
                                         calculateAmountForDates(selectedProfessional.professional_id, start, end);
                                     }}
-                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all hover:${colors.surfaceHover} active:scale-95`}
+                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
                                     Período anterior
                                 </button>
@@ -716,7 +716,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                     <div className={`mt-8 flex gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4`}>
                         <InfoIcon className="h-5 w-5 shrink-0 text-blue-500" />
-                        <p className="text-[11px] leading-snug text-blue-400">
+                        <p className="text-xs leading-snug text-blue-400">
                             <strong>Aviso:</strong> Este pagamento será registrado como despesa e as comissões do período serão marcadas como pagas.
                         </p>
                     </div>

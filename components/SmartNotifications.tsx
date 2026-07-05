@@ -49,7 +49,7 @@ export const SmartNotificationsBanner: React.FC = () => {
                     )}
                     <button
                         onClick={dismissAll}
-                        className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors p-1 text-[10px] font-mono uppercase"
+                        className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors p-1 text-xs font-mono uppercase"
                     >
                         Limpar
                     </button>
@@ -85,7 +85,7 @@ export const SmartNotificationsBanner: React.FC = () => {
                                     <button
                                         onClick={() => sendWhatsApp(notif)}
                                         disabled={sendingId === notif.id}
-                                        className={`${accent.bg} text-[var(--color-bg)] text-[10px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 flex items-center gap-1`}
+                                        className={`${accent.bg} text-[var(--color-bg)] text-xs font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all disabled:opacity-30 flex items-center gap-1`}
                                     >
                                         {sendingId === notif.id ? (
                                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -99,7 +99,7 @@ export const SmartNotificationsBanner: React.FC = () => {
                                 ) : notif.actionUrl ? (
                                     <button
                                         onClick={() => navigate(notif.actionUrl!)}
-                                        className={`text-[10px] font-mono ${accent.text} hover:opacity-70 transition-opacity px-2 py-1`}
+                                        className={`text-xs font-mono ${accent.text} hover:opacity-70 transition-opacity px-2 py-1`}
                                     >
                                         {notif.actionLabel} →
                                     </button>
@@ -123,7 +123,7 @@ export const SmartNotificationsBanner: React.FC = () => {
             {hasMore && !expanded && (
                 <button
                     onClick={() => setExpanded(true)}
-                    className="w-full py-2 text-center text-[10px] font-mono text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors bg-[var(--color-card-hover)]"
+                    className="w-full py-2 text-center text-xs font-mono text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors bg-[var(--color-card-hover)]"
                 >
                     + {notifications.length - 2} oportunidades →
                 </button>
@@ -149,7 +149,7 @@ export const NotificationBell: React.FC<{ onClick?: () => void }> = ({ onClick }
             aria-label={`${notifications.length} notificações`}
         >
             <Bell className="w-5 h-5 text-[var(--color-text-muted)]" />
-            <span className={`absolute -top-0.5 -right-0.5 ${accent.bg} text-[var(--color-bg)] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center`}>
+            <span className={`absolute -top-0.5 -right-0.5 ${accent.bg} text-[var(--color-bg)] text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center`}>
                 {notifications.length > 9 ? '9+' : notifications.length}
             </span>
         </button>

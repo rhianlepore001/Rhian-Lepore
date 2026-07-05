@@ -54,17 +54,17 @@ export const GoalHistoryModal: React.FC<GoalHistoryModalProps> = ({
                 {/* Resumo de desempenho */}
                 <div className="grid grid-cols-3 gap-3">
                     <div className={`p-4 rounded-xl ${colors.card} ${colors.border} text-center`}>
-                        <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Taxa de Sucesso</p>
+                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Taxa de Sucesso</p>
                         <p className={`text-2xl font-bold font-heading ${accent.text}`}>{successRate}%</p>
                         <p className={`text-xs ${colors.textSecondary} font-mono`}>{successCount}/{history.length} meses</p>
                     </div>
                     <div className={`p-4 rounded-xl ${colors.card} ${colors.border} text-center`}>
-                        <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Média Mensal</p>
+                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Média Mensal</p>
                         <p className={`text-2xl font-bold font-heading ${avgPerformance >= 100 ? accent.text : colors.textMuted}`}>{avgPerformance}%</p>
                         <p className={`text-xs ${colors.textSecondary} font-mono`}>da meta</p>
                     </div>
                     <div className={`p-4 rounded-xl ${colors.card} ${colors.border} text-center`}>
-                        <p className={`text-[10px] font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Metas Batidas</p>
+                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wider mb-1`}>Metas Batidas</p>
                         <p className={`text-2xl font-bold font-heading ${classes.badgeSuccess.split(' ').find(c => c.startsWith('text-'))}`}>{successCount}</p>
                         <p className={`text-xs ${colors.textSecondary} font-mono`}>em {history.length} meses</p>
                     </div>
@@ -108,16 +108,16 @@ export const GoalHistoryModal: React.FC<GoalHistoryModalProps> = ({
                                                 {item.month} <span className={`${colors.textSecondary} font-mono`}>{item.year}</span>
                                             </p>
                                             {idx === 0 && (
-                                                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-[var(--color-bg)]`}>
+                                                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded uppercase ${accent.bg} text-[var(--color-bg)]`}>
                                                     Atual
                                                 </span>
                                             )}
                                             {item.success ? (
-                                                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${classes.badgeSuccess}`}>
+                                                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded uppercase ${classes.badgeSuccess}`}>
                                                     Batida
                                                 </span>
                                             ) : (
-                                                <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${classes.badgeDanger}`}>
+                                                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded uppercase ${classes.badgeDanger}`}>
                                                     Não batida
                                                 </span>
                                             )}
@@ -139,7 +139,7 @@ export const GoalHistoryModal: React.FC<GoalHistoryModalProps> = ({
                                             <p className={`text-xl font-bold font-heading ${item.success ? accent.text : classes.badgeDanger.split(' ').find(c => c.startsWith('text-'))}`}>
                                                 {item.percentage}%
                                             </p>
-                                            <p className={`text-[10px] ${colors.textSecondary} font-mono`}>da meta</p>
+                                            <p className={`text-xs ${colors.textSecondary} font-mono`}>da meta</p>
                                         </div>
                                     </div>
                                 </div>
@@ -149,7 +149,7 @@ export const GoalHistoryModal: React.FC<GoalHistoryModalProps> = ({
                 </div>
 
                 {/* Legenda */}
-                <div className={`flex items-center gap-4 text-[10px] font-mono ${colors.textMuted} border-t ${colors.divider} pt-3`}>
+                <div className={`flex items-center gap-4 text-xs font-mono ${colors.textMuted} border-t ${colors.divider} pt-3`}>
                     <div className="flex items-center gap-1.5">
                         <CheckCircle2 className={`w-3 h-3 ${classes.badgeSuccess.split(' ').find(c => c.startsWith('text-'))}`} />
                         <span>Meta atingida (≥100%)</span>

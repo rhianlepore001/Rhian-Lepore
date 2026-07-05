@@ -172,7 +172,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
                                     </div>
                                 )}
                                 <div className="flex items-center justify-between mb-2">
-                                    <p className="text-[10px] font-mono text-neutral-400 uppercase tracking-wide">
+                                    <p className="text-xs font-mono text-neutral-400 uppercase tracking-wide">
                                         {item.month.substring(0, 3)}
                                     </p>
                                     <span className="text-lg leading-none">

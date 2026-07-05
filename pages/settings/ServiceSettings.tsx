@@ -117,7 +117,7 @@ export const ServiceSettings: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                 <GripVertical className={`w-4 h-4 ${colors.textMuted} cursor-move`} />
                                                 <span>{category.name}</span>
-                                                <span className={`text-[10px] ${colors.inputBg} border ${colors.border} px-2 py-0.5 rounded-full ${colors.textMuted}`}>
+                                                <span className={`text-xs ${colors.inputBg} border ${colors.border} px-2 py-0.5 rounded-full ${colors.textMuted}`}>
                                                     {categoryServices.length}
                                                 </span>
                                             </div>
@@ -166,7 +166,7 @@ export const ServiceSettings: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h4 className={`${colors.text} font-bold tracking-tight truncate`}>{service.name}</h4>
                                                             {!service.active && (
-                                                                <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Inativo</span>
+                                                                <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Inativo</span>
                                                             )}
                                                         </div>
                                                         <p className={`text-sm font-mono ${colors.textMuted}`}>
@@ -175,7 +175,7 @@ export const ServiceSettings: React.FC = () => {
                                                     </div>
 
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <div className={`p-2 ${colors.textMuted} hover:${colors.text}`}>
+                                                        <div className={`p-2 ${colors.textMuted} hover:text-theme-text`}>
                                                             <Edit2 className="w-4 h-4" />
                                                         </div>
                                                     </div>

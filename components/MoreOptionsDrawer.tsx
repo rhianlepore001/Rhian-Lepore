@@ -181,7 +181,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
           </div>
           <button
             onClick={handleClose}
-            className={`p-2.5 rounded-full border transition-all active:scale-90 shrink-0 ${colors.border} ${colors.textSecondary} ${colors.card} hover:${colors.text} hover:border-[var(--color-accent-border)]`}
+            className={`p-2.5 rounded-full border transition-all active:scale-90 shrink-0 ${colors.border} ${colors.textSecondary} ${colors.card} hover:text-theme-text hover:border-[var(--color-accent-border)]`}
             aria-label="Fechar menu"
             title="Fechar"
           >

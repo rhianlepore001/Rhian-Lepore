@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
                 </div>
 
                 <div className="text-center mb-10 md:mb-14 max-w-xl">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/50 mb-4">
+                    <p className="font-mono text-xs uppercase tracking-[0.12em] text-white/50 mb-4">
                         O sistema que trabalha enquanto você atende.
                     </p>
                     <h1 className="font-heading text-4xl md:text-6xl text-white uppercase leading-[0.95] tracking-tight">
@@ -316,7 +316,7 @@ export const Login: React.FC = () => {
                                         type="button"
                                         onClick={() => setShowPassword(prev => !prev)}
                                         aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                                        className={`pointer-events-auto ${colors.textMuted} hover:${colors.text} transition-colors`}
+                                        className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}
                                     >
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
@@ -339,7 +339,7 @@ export const Login: React.FC = () => {
                             <div className={`mt-6 pt-5 border-t ${colors.divider} flex flex-col gap-2.5 text-center`}>
                                 <Link
                                     to="/forgot-password"
-                                    className={`text-xs ${colors.textSecondary} hover:${colors.text} transition-colors min-h-[44px] inline-flex items-center justify-center font-mono uppercase tracking-wider`}
+                                    className={`text-xs ${colors.textSecondary} hover:text-theme-text transition-colors min-h-[44px] inline-flex items-center justify-center font-mono uppercase tracking-wider`}
                                 >
                                     Esqueci minha senha
                                 </Link>

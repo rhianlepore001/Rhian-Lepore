@@ -61,15 +61,15 @@ export const DataMaturityBadge: React.FC<DataMaturityBadgeProps> = ({ maturity, 
             </div>
 
             <div className="hidden md:flex flex-col gap-1 flex-shrink-0">
-                <div className={`flex items-center gap-1 text-[10px] ${font.mono} ${maturity.appointmentsTotal > 0 ? status.success : `${colors.textSecondary} opacity-30`}`}>
+                <div className={`flex items-center gap-1 text-xs ${font.mono} ${maturity.appointmentsTotal > 0 ? status.success : `${colors.textSecondary} opacity-30`}`}>
                     <CheckCircle className="w-3 h-3" />
                     <span>Receita</span>
                 </div>
-                <div className={`flex items-center gap-1 text-[10px] ${font.mono} ${maturity.appointmentsTotal >= 5 ? status.success : `${colors.textSecondary} opacity-30`}`}>
+                <div className={`flex items-center gap-1 text-xs ${font.mono} ${maturity.appointmentsTotal >= 5 ? status.success : `${colors.textSecondary} opacity-30`}`}>
                     <CheckCircle className="w-3 h-3" />
                     <span>Faltas</span>
                 </div>
-                <div className={`flex items-center gap-1 text-[10px] ${font.mono} ${maturity.hasPublicBookings ? status.success : `${colors.textSecondary} opacity-30`}`}>
+                <div className={`flex items-center gap-1 text-xs ${font.mono} ${maturity.hasPublicBookings ? status.success : `${colors.textSecondary} opacity-30`}`}>
                     <CheckCircle className="w-3 h-3" />
                     <span>Vagas</span>
                 </div>

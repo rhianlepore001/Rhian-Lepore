@@ -12,6 +12,7 @@ import { useCheckout } from '@/hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
 import { useProducts, useSellProduct } from '@/hooks/useCatalog';
 import type { Product } from '@/types/catalog';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface TeamMember {
   id: string;
@@ -193,8 +194,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
 
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
-      // Sprint D+1: Se totalmente coberto, marca como 'pix' (placeholder, não é cobrado de fato)
-      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'pix' : (paymentMethod as CheckoutPaymentMethod);
+      // Coberto pela assinatura: registra como 'membership' pra nao poluir o Pix no financeiro
+      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'membership' : (paymentMethod as CheckoutPaymentMethod);
 
       await mutateAsync({
         appointmentId: appointment.id,
@@ -238,7 +239,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         { value: 'credit', label: 'Crédito' },
       ];
 
-  const currencyLabel = region === 'PT' ? '€' : 'R$';
+  const { currencySymbol: currencyLabel } = useTenantLocale();
 
   return (
     <Modal
@@ -262,41 +263,38 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         {discount.hasActiveSubscription && discount.plan && (
           <div
             data-testid="membership-banner"
-            className={`relative overflow-hidden rounded-2xl p-4 border-2 ${
-              discount.fullyCovered
-                ? 'border-yellow-500/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/5'
-                : 'border-yellow-500/40 bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-transparent'
+            className={`relative overflow-hidden rounded-2xl p-4 border-2 ${accent.bgDim} ${
+              discount.fullyCovered ? accent.border : accent.borderDim
             }`}
           >
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-yellow-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-yellow-500/20 shrink-0">
-                <Crown className="w-5 h-5 text-yellow-300" />
+              <div className={`p-2 rounded-xl ${accent.bgDim} shrink-0`}>
+                <Crown className={`w-5 h-5 ${accent.text}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-sm ${font.heading} text-yellow-100 uppercase tracking-wide`}>
+                  <span className={`text-sm ${font.heading} ${colors.text} uppercase tracking-wide`}>
                     Clube {discount.plan.name}
                   </span>
                   <MembershipBadge color={discount.plan.badge_color} label={discount.plan.badge_color} />
                 </div>
-                <p className="text-sm text-yellow-100/80 mt-1.5 leading-relaxed">
+                <p className={`text-sm ${colors.textSecondary} mt-1.5 leading-relaxed`}>
                   {discount.message}
                 </p>
                 {discount.fullyCovered && (
-                  <div className="mt-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-yellow-300">
+                  <div className={`mt-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${accent.text}`}>
                     <Sparkles className="w-3.5 h-3.5" />
                     Você não paga nada neste atendimento
                   </div>
                 )}
                 {discount.coveredCents > 0 && !discount.fullyCovered && (
                   <div className="mt-3 flex items-center gap-3 text-xs">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/15 text-green-300">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md ${status.successBg} ${status.success}`}>
                       <Check className="w-3 h-3" />
-                      Desconto: R$ {(discount.coveredCents / 100).toFixed(2).replace('.', ',')}
+                      Desconto: {currencyLabel} {(discount.coveredCents / 100).toFixed(2).replace('.', ',')}
                     </span>
-                    <span className="text-neutral-400">
-                      Paga só adicionais: R$ {(discount.finalCents / 100).toFixed(2).replace('.', ',')}
+                    <span className={colors.textSecondary}>
+                      Paga só adicionais: {currencyLabel} {(discount.finalCents / 100).toFixed(2).replace('.', ',')}
                     </span>
                   </div>
                 )}
@@ -346,7 +344,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           type="button"
                           aria-label="Diminuir quantidade"
                           onClick={() => updateCartQuantity(line.productId, -1)}
-                          className={`p-1 rounded-lg hover:${colors.surfaceHover} ${colors.textSecondary}`}
+                          className={`p-1 rounded-lg ${colors.surfaceHover} ${colors.textSecondary}`}
                         >
                           <Minus size={14} />
                         </button>
@@ -355,7 +353,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           type="button"
                           aria-label="Aumentar quantidade"
                           onClick={() => updateCartQuantity(line.productId, 1)}
-                          className={`p-1 rounded-lg hover:${colors.surfaceHover} ${colors.textSecondary}`}
+                          className={`p-1 rounded-lg ${colors.surfaceHover} ${colors.textSecondary}`}
                         >
                           <Plus size={14} />
                         </button>
@@ -403,8 +401,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     paymentMethod === value
                       ? `${accent.border} ${accent.bgDim} ${accent.text} ${accent.shadow}`
                       : errors.paymentMethod
-                      ? `${status.dangerBorder} ${colors.textSecondary} hover:${status.dangerBorder}`
-                      : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:${colors.border} hover:${colors.surfaceHover}`
+                      ? `${status.dangerBorder} ${colors.textSecondary} hover:border-[var(--color-danger-border)]`
+                      : `${colors.border} ${colors.surface} ${colors.textSecondary} hover:border-theme-border ${colors.surfaceHover}`
                   }`}
                 >
                   <input

@@ -15,7 +15,7 @@ import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { BookingModeToggle } from '../components/booking/BookingModeToggle';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { formatCurrency, formatDuration, Region } from '../utils/formatters';
+import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { ConfirmModal, useToast } from '@/components/ui';
@@ -611,7 +611,7 @@ export const PublicBooking: React.FC = () => {
 
     const currencyRegion = (business?.region as Region) || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
     const whatsappLink = business?.phone
-        ? `https://wa.me/${business.phone.replace(/\D/g, '')}`
+        ? buildWhatsAppLink(business.phone, currencyRegion)
         : null;
 
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
@@ -718,7 +718,7 @@ export const PublicBooking: React.FC = () => {
                             {quickSteps.map((qs, idx) => (
                                 <React.Fragment key={qs.key}>
                                     <div className="flex flex-col items-center gap-1">
-                                        <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-500 ${idx < currentQuickStepIndex
+                                        <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-200 ${idx < currentQuickStepIndex
                                                 ? `${accent.bg} ${accentTextOnAccent}`
                                                 : idx === currentQuickStepIndex
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
@@ -726,10 +726,10 @@ export const PublicBooking: React.FC = () => {
                                             }`}>
                                             {idx < currentQuickStepIndex ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                                         </div>
-                                        <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
+                                        <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-200 ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
                                     </div>
                                     {idx < quickSteps.length - 1 && (
-                                        <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentQuickStepIndex ? `${accent.bg} opacity-50` : colors.divider}`} />
+                                        <div className={`flex-1 h-px mx-2 transition-all duration-300 ${idx < currentQuickStepIndex ? `${accent.bg} opacity-50` : colors.divider}`} />
                                     )}
                                 </React.Fragment>
                             ))}
@@ -749,7 +749,7 @@ export const PublicBooking: React.FC = () => {
                                 <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                     <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
                                         <button onClick={() => setActiveCategory('all')}
-                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
+                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                     : `${colors.textMuted} hover:bg-white/5`
                                                 }`}>
@@ -757,7 +757,7 @@ export const PublicBooking: React.FC = () => {
                                         </button>
                                         {categories.map(cat => (
                                             <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
+                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                         : `${colors.textMuted} ${colors.border} hover:bg-white/5`
                                                     }`}>
@@ -781,9 +781,8 @@ export const PublicBooking: React.FC = () => {
                                     return (
                                         <div key={service.id}
                                             onClick={() => toggleService(service.id)}
-                                            style={{ animationDelay: `${sIdx * 80}ms` }}
                                             className={`
-                                                relative overflow-hidden cursor-pointer transition-all duration-700 animate-reveal-fragment group
+                                                relative overflow-hidden cursor-pointer transition-all duration-300 animate-reveal-fragment group
                                                 rounded-2xl
                                                 ${isSelected
                                                     ? `md:scale-[1.02] ${shadow.glow} ring-2 ${accent.ring}`
@@ -792,7 +791,7 @@ export const PublicBooking: React.FC = () => {
                                             `}>
                                             <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
                                                 {service.image_url ? (
-                                                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                                                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                 ) : (
                                                     <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
                                                         <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
@@ -802,14 +801,14 @@ export const PublicBooking: React.FC = () => {
                                                 <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                                                     {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
                                                 </div>
-                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent} scale-110 rotate-12` : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-black/20 border-white/20 text-transparent'}`}>
                                                     <Check className="w-6 h-6" />
                                                 </div>
                                             </div>
                                             <div className="p-6">
                                                 <div className="flex justify-between items-end">
                                                     <div className="flex-1 space-y-3">
-                                                        <h4 className={`text-xl font-black tracking-tight ${colors.text} group-hover:${accent.text} transition-colors duration-500`}>
+                                                        <h4 className={`text-xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
                                                             {service.name}
                                                         </h4>
                                                         {service.description && (
@@ -882,7 +881,7 @@ export const PublicBooking: React.FC = () => {
 
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 <button onClick={() => setSelectedProfessional('any')}
-                                    className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                    className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                     <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                         <Users className="w-8 h-8" />
                                     </div>
@@ -890,9 +889,9 @@ export const PublicBooking: React.FC = () => {
                                 </button>
 
                                 {filteredProfessionals.map((pro, pIdx) => (
-                                    <button key={pro.id} style={{ animationDelay: `${pIdx * 100}ms` }}
+                                    <button key={pro.id}
                                         onClick={() => setSelectedProfessional(pro.id)}
-                                        className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.glow}` : `${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}`}>
+                                        className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.glow}` : `${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}`}>
                                         <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                             {pro.photo_url ? (
                                                 <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
@@ -1007,7 +1006,7 @@ export const PublicBooking: React.FC = () => {
                                     <input type="checkbox" id="privacy-quick" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
                                         className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
                                     <label htmlFor="privacy-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                        Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:${colors.text}`}>diretrizes de cancelamento</button>.
+                                        Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
                                     </label>
                                 </div>
 
@@ -1040,7 +1039,7 @@ export const PublicBooking: React.FC = () => {
 
             {/* Quick Flow Bottom Navigation */}
             {bookingMode === 'quick' && quickStep !== 'success' && (
-                <div className="fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-out" style={{ zIndex: 'var(--z-modal)' }}>
+                <div className="fixed bottom-0 left-0 right-0 w-full transition-all duration-200 ease-out" style={{ zIndex: 'var(--z-modal)' }}>
                     <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
                         <div className="flex items-center gap-3 max-w-3xl mx-auto pb-4">
                             {quickStep !== 'services' && (
@@ -1071,7 +1070,7 @@ export const PublicBooking: React.FC = () => {
                                 {stepLabels.map((label, idx) => (
                                     <React.Fragment key={label}>
                                         <div className="flex flex-col items-center gap-1">
-                                            <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-500 ${idx < currentStepNum
+                                            <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-200 ${idx < currentStepNum
                                                     ? `${accent.bg} ${accentTextOnAccent}`
                                                     : idx === currentStepNum
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
@@ -1079,10 +1078,10 @@ export const PublicBooking: React.FC = () => {
                                                 }`}>
                                                 {idx < currentStepNum ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                                             </div>
-                                            <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-500 ${idx === currentStepNum ? accent.text : colors.textMuted}`}>{label}</span>
+                                            <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-200 ${idx === currentStepNum ? accent.text : colors.textMuted}`}>{label}</span>
                                         </div>
                                         {idx < stepLabels.length - 1 && (
-                                            <div className={`flex-1 h-px mx-2 transition-all duration-700 ${idx < currentStepNum ? `${accent.bg} opacity-50` : colors.divider}`} />
+                                            <div className={`flex-1 h-px mx-2 transition-all duration-300 ${idx < currentStepNum ? `${accent.bg} opacity-50` : colors.divider}`} />
                                         )}
                                     </React.Fragment>
                                 ))}
@@ -1121,15 +1120,15 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-4">
                                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                                         <button onClick={() => { setEditMode('time'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de mudar apenas o horário.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Certo. Escolha sua nova data e horário abaixo:", isAssistant: true, type: 'datetime' }]); setStep('datetime'); }}
-                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <Clock className="w-6 h-6" /> Mudar Horário
                                                         </button>
                                                         <button onClick={() => { setEditMode('service'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de alterar meus serviços.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Quais serviços você gostaria que fossem realizados?", isAssistant: true, type: 'services' }]); setStep('services'); }}
-                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <Scissors className="w-6 h-6" /> Editar Serviços
                                                         </button>
                                                         <button onClick={() => { setEditMode('both'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Gostaria de mudar serviços e horário.", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Ok. Primeiro, vamos revisar seus serviços.", isAssistant: true, type: 'services' }]); setStep('services'); }}
-                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-4 font-bold text-sm tracking-widest uppercase transition-all flex flex-col items-center gap-3 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <Calendar className="w-6 h-6" /> Mudar Ambos
                                                         </button>
                                                     </div>
@@ -1158,7 +1157,7 @@ export const PublicBooking: React.FC = () => {
                                                         <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                                             <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
                                                                 <button onClick={() => setActiveCategory('all')}
-                                                                    className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === 'all'
+                                                                    className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
                                                                             ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
                                                                             : `${colors.textMuted} hover:bg-white/5`
                                                                         }`}>
@@ -1166,7 +1165,7 @@ export const PublicBooking: React.FC = () => {
                                                                 </button>
                                                                 {categories.map(cat => (
                                                                     <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                                        className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-500 ${activeCategory === cat.id
+                                                                        className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
                                                                                 ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
                                                                                 : `${colors.textMuted} ${colors.border} hover:bg-white/5`
                                                                             }`}>
@@ -1207,14 +1206,13 @@ export const PublicBooking: React.FC = () => {
                                                             return (
                                                                 <div key={service.id}
                                                                     onClick={() => toggleService(service.id)}
-                                                                    style={{ animationDelay: `${sIdx * 80}ms` }}
-                                                                    className={`relative overflow-hidden cursor-pointer transition-all duration-700 animate-reveal-fragment group rounded-2xl ${isSelected
+                                                                    className={`relative overflow-hidden cursor-pointer transition-all duration-300 animate-reveal-fragment group rounded-2xl ${isSelected
                                                                             ? `md:scale-[1.03] ${shadow.glow} ring-2 ${accent.ring}`
                                                                             : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
                                                                         }`}>
                                                                     <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
                                                                         {service.image_url ? (
-                                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center grayscale-[30%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+                                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                                         ) : (
                                                                             <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
                                                                                 <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
@@ -1224,14 +1222,14 @@ export const PublicBooking: React.FC = () => {
                                                                         <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                                                                             {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
                                                                         </div>
-                                                                        <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-500 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent} scale-110 rotate-12` : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                                        <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-black/20 border-white/20 text-transparent'}`}>
                                                                             <Check className="w-6 h-6" />
                                                                         </div>
                                                                     </div>
                                                                     <div className="p-6">
                                                                         <div className="flex justify-between items-end">
                                                                             <div className="flex-1 space-y-3">
-                                                                                <h4 className={`text-2xl font-black tracking-tight ${colors.text} group-hover:${accent.text} transition-colors duration-500`}>
+                                                                                <h4 className={`text-2xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
                                                                                     {service.name}
                                                                                 </h4>
                                                                                 {service.description && (
@@ -1280,7 +1278,7 @@ export const PublicBooking: React.FC = () => {
 
                                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                                         <button onClick={() => { setSelectedProfessional('any'); setMessages(prev => [...prev, { id: Date.now().toString(), text: "Qualquer profissional disponível", isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Perfeita escolha. Qual dia e horário ficam melhores para você?", isAssistant: true, type: 'datetime' }]); }}
-                                                            className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                            className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                             <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                                                 <Users className="w-8 h-8" />
                                                             </div>
@@ -1288,9 +1286,9 @@ export const PublicBooking: React.FC = () => {
                                                         </button>
 
                                                         {filteredProfessionals.map((pro, pIdx) => (
-                                                            <button key={pro.id} style={{ animationDelay: `${pIdx * 100}ms` }}
+                                                            <button key={pro.id}
                                                                 onClick={() => { setSelectedProfessional(pro.id); setMessages(prev => [...prev, { id: Date.now().toString(), text: `Quero ser atendido(a) por ${pro.name}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: `Ótimo! Vou verificar a agenda de ${pro.name.split(' ')[0]}. Qual dia e horário você prefere para a sua visita?`, isAssistant: true, type: 'datetime' }]); }}
-                                                                className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:${accent.border}`}>
+                                                                className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                                 <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                                                     {pro.photo_url ? (
                                                                         <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
@@ -1400,12 +1398,12 @@ export const PublicBooking: React.FC = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className={`absolute inset-0 bg-gradient-to-br ${accent.bgDim} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000`} />
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${accent.bgDim} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                                     </div>
 
                                     <div className="flex flex-col gap-5">
-                                        <a href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)}`} target="_blank" rel="noopener noreferrer"
-                                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                                        <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
+                                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
                                             <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
                                                 <Send className="w-5 h-5" />
                                             </div>
@@ -1416,7 +1414,7 @@ export const PublicBooking: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={handleOpenClientArea}
-                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:border-[var(--color-accent-border)] ${shadow.card}`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`p-2.5 rounded-xl ${colors.surface}`}>
@@ -1465,7 +1463,7 @@ export const PublicBooking: React.FC = () => {
                     <div className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
-                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:${colors.text} transition-colors rounded-full p-2 hover:bg-white/5`}>
+                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:text-theme-text transition-colors rounded-full p-2 hover:bg-white/5`}>
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -1518,7 +1516,7 @@ export const PublicBooking: React.FC = () => {
                                 <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
                                     className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:${colors.text}`}>diretrizes de cancelamento</button>.
+                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
                                 </label>
                             </div>
 
@@ -1552,7 +1550,7 @@ export const PublicBooking: React.FC = () => {
             {/* Chat Flow: Botão Flutuante "Avançar" */}
             {bookingMode === 'chat' && step === 'services' && (
                 <div
-                  className={`fixed bottom-0 left-0 right-0 w-full transition-all duration-500 ease-out ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
+                  className={`fixed bottom-0 left-0 right-0 w-full transition-all duration-200 ease-out ${selectedServices.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}
                   style={{ zIndex: 'var(--z-modal)' }}
                 >
                     <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
@@ -1648,12 +1646,12 @@ export const PublicBooking: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className={`absolute inset-0 bg-gradient-to-br ${accent.bgDim} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000`} />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${accent.bgDim} via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                     </div>
 
                     <div className="flex flex-col gap-5">
-                        <a href={`https://wa.me/${(business.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)}`} target="_blank" rel="noopener noreferrer"
-                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-500 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                        <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
+                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
                             <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
                                 <Send className="w-5 h-5" />
                             </div>
@@ -1664,7 +1662,7 @@ export const PublicBooking: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleOpenClientArea}
-                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:${accent.border} ${shadow.card}`}>
+                            className={`group relative overflow-hidden flex flex-col gap-2 py-6 px-8 text-left transition-all duration-300 rounded-2xl border-2 w-full ${colors.card} ${colors.border} hover:border-[var(--color-accent-border)] ${shadow.card}`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2.5 rounded-xl ${colors.surface}`}>
@@ -1710,7 +1708,7 @@ export const PublicBooking: React.FC = () => {
                         <div className="grid grid-cols-2 gap-2">
                             {gallery.slice(0, 4).map((item) => (
                                 <div key={item.id} className={`aspect-square overflow-hidden rounded-lg border ${colors.border}`}>
-                                    <img src={item.image_url} alt="Portfolio" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                                    <img src={item.image_url} alt="Portfolio" className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.03]" />
                                 </div>
                             ))}
                         </div>
@@ -1722,7 +1720,7 @@ export const PublicBooking: React.FC = () => {
             {showPolicyModal && (
                 <div className="fixed inset-0 flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
                     <div className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
-                        <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:${colors.text} transition-colors z-30`}><X className="w-8 h-8" /></button>
+                        <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-8 h-8" /></button>
                         <div className="relative z-10 space-y-6">
                             <h3 className={`text-2xl ${colors.text} flex items-center gap-3`}>
                                 <AlertTriangle className={`w-6 h-6 ${accent.text}`} />

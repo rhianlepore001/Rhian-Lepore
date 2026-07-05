@@ -2,7 +2,7 @@ import React from 'react';
 import { Check, Crown, Sparkles } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { MembershipPlan } from '../../services/memberships';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, Region } from '../../utils/formatters';
 
 interface PlanCardProps {
     plan: MembershipPlan;
@@ -10,6 +10,7 @@ interface PlanCardProps {
     actionLabel?: string;
     compact?: boolean;
     className?: string;
+    region?: Region;
 }
 
 const BADGE_STYLES: Record<string, { gradient: string; icon: React.ReactNode; ring: string }> = {
@@ -36,6 +37,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     actionLabel = 'Quero este plano',
     compact = false,
     className = '',
+    region = 'BR',
 }) => {
     const { accent, colors, font } = useBrutalTheme();
     const style = BADGE_STYLES[plan.badge_color] ?? BADGE_STYLES.gold;
@@ -59,7 +61,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         {style.icon}
                     </div>
                     {!compact && plan.active && (
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-green-400 flex items-center gap-1">
+                        <span className="text-xs font-bold uppercase tracking-widest text-green-400 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Disponível
                         </span>
                     )}
@@ -74,7 +76,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
                 <div className="flex items-baseline gap-1">
                     <span className={`text-4xl ${font.heading} text-white`}>
-                        {formatCurrency(plan.price_cents / 100, 'BR')}
+                        {formatCurrency(plan.price_cents / 100, region)}
                     </span>
                     <span className={`${colors.textMuted} text-sm`}>/mês</span>
                 </div>

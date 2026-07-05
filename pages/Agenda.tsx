@@ -4,6 +4,8 @@ import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { useToast } from '../components/ui/Toast';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -16,12 +18,13 @@ import { EmptyState } from '../components/EmptyState';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
 import { deleteAppointmentWithFinance } from '../services/scheduling';
 
-import { formatCurrency, formatPhone } from '../utils/formatters';
+import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime } from '../utils/date';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../utils/appointmentStatus';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 // Ícone por estado visual — indicador secundário (forma + cor) para daltônicos/baixa visão.
 const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?: string }>> = {
@@ -144,8 +147,16 @@ export const Agenda: React.FC = () => {
 
 
     const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
-    const currencySymbol = region === 'PT' ? '€' : 'R$';
-    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+    const { showToast } = useToast();
+    const [confirmDialog, setConfirmDialog] = useState<{
+        title: string;
+        message: string;
+        confirmLabel: string;
+        cancelLabel?: string;
+        variant?: 'danger' | 'default';
+        onConfirm: () => void;
+    } | null>(null);
+    const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
@@ -552,24 +563,30 @@ export const Agenda: React.FC = () => {
         }
     };
 
-    const handleDeleteHistoryAppointment = async (appointmentId: string) => {
+    const handleDeleteHistoryAppointment = (appointmentId: string) => {
         if (isStaff) {
-            alert('Apenas o dono pode excluir agendamentos do histórico.');
+            showToast('Apenas o dono pode excluir agendamentos do histórico.', 'warning');
             return;
         }
-        if (!confirm('Tem certeza que deseja excluir este agendamento do histórico? Esta ação é irreversível e removerá também o registro financeiro associado.')) return;
-
-        try {
-            // Exclusão atômica (agendamento + registro financeiro) via RPC transacional, com escopo de tenant no banco.
-            await deleteAppointmentWithFinance({ appointmentId });
-
-            alert('Agendamento e registro financeiro excluídos com sucesso!');
-            fetchHistoryAppointments(); // Refresh history
-            fetchData(); // Also refresh main agenda data in case it affects counts/stats
-        } catch (error) {
-            logger.error('Error deleting history appointment', error);
-            alert('Erro ao excluir agendamento do histórico.');
-        }
+        setConfirmDialog({
+            title: 'Excluir do histórico',
+            message: 'Esta ação é irreversível e remove também o registro financeiro associado. Excluir mesmo assim?',
+            confirmLabel: 'Excluir',
+            variant: 'danger',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    // Exclusão atômica (agendamento + registro financeiro) via RPC transacional, com escopo de tenant no banco.
+                    await deleteAppointmentWithFinance({ appointmentId });
+                    showToast('Agendamento e registro financeiro excluídos.', 'success');
+                    fetchHistoryAppointments();
+                    fetchData();
+                } catch (error) {
+                    logger.error('Error deleting history appointment', error);
+                    showToast('Erro ao excluir agendamento do histórico.', 'error');
+                }
+            },
+        });
     };
 
     const handleAcceptBooking = async (booking: any) => {
@@ -712,44 +729,48 @@ export const Agenda: React.FC = () => {
 
             await confirmPublicBooking(booking.id, user.id);
 
-            // Fetch the client to ensure we have the correct phone number if it was just created
             const phone = booking.customer_phone;
-            const waPhone = phone.replace(/\D/g, '');
-            const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+            const dateObj = new Date(booking.appointment_time);
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+            const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const establishment = businessName;
+            const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
 
-            if (window.confirm('Agendamento aceito com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
-                const dateObj = new Date(booking.appointment_time);
-                const formattedDate = dateObj.toLocaleDateString('pt-BR');
-                const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                const establishment = businessName;
-
-                const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
-                const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
-
-                const message = isBeauty
-                    ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
-                    `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
-                    `📅 *${formattedDate}* às *${formattedTime}*\n` +
-                    `💼 *Serviço*: ${serviceNames}\n` +
-                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `📍  Local: estamos te esperando!\n\n` +
-                    `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
-                    : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️ \n` +
-                    `Marque na sua agenda:\n` +
-                    `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
-                    `✂️  *Serviço*: ${serviceNames}\n` +
-                    `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                    `📍  Onde: *${establishment || 'Barbearia'}*.\n\n` +
-                    `Prepare-se para o trato! Nos vemos em breve. 👋`;
-
-                const waMessage = encodeURIComponent(message);
-                window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
-            }
+            const message = isBeauty
+                ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
+                `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
+                `📅 *${formattedDate}* às *${formattedTime}*\n` +
+                `💼 *Serviço*: ${serviceNames}\n` +
+                `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                `📍  Local: estamos te esperando!\n\n` +
+                `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
+                : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️ \n` +
+                `Marque na sua agenda:\n` +
+                `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
+                `✂️  *Serviço*: ${serviceNames}\n` +
+                `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
+                `📍  Onde: *${establishment || 'Barbearia'}*.\n\n` +
+                `Prepare-se para o trato! Nos vemos em breve. 👋`;
 
             fetchData();
+
+            if (phone) {
+                setConfirmDialog({
+                    title: 'Agendamento aceito',
+                    message: 'Deseja enviar a confirmação para o cliente via WhatsApp?',
+                    confirmLabel: 'Enviar no WhatsApp',
+                    cancelLabel: 'Agora não',
+                    onConfirm: () => {
+                        setConfirmDialog(null);
+                        window.open(buildWhatsAppLink(phone, currencyRegion, message), '_blank');
+                    },
+                });
+            } else {
+                showToast('Agendamento aceito com sucesso!', 'success');
+            }
         } catch (error) {
             logger.error('Error accepting booking', error);
-            alert('Erro ao aceitar agendamento.');
+            showToast('Erro ao aceitar agendamento.', 'error');
         } finally {
             setIsProcessing(false);
         }
@@ -758,16 +779,17 @@ export const Agenda: React.FC = () => {
     const handleRejectBooking = async (bookingId: string) => {
         try {
             await rejectPublicBooking(bookingId, user.id);
-            alert('Solicitação recusada.');
+            showToast('Solicitação recusada.', 'success');
             fetchData();
         } catch (error) {
             logger.error('Error rejecting booking', error);
+            showToast('Erro ao recusar a solicitação.', 'error');
         }
     };
 
     const handleCompleteAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
         if (isStaff) {
-            alert('Apenas o dono pode concluir agendamentos.');
+            showToast('Apenas o dono pode concluir agendamentos.', 'warning');
             return;
         }
         try {
@@ -782,47 +804,63 @@ export const Agenda: React.FC = () => {
             }
         } catch (error: any) {
             logger.error('Error completing appointment', error);
-            alert(`Erro ao concluir agendamento: ${error.message || error}`);
+            showToast('Erro ao concluir agendamento. Tente novamente.', 'error');
         }
     };
-    const handleCancelAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
+    const handleCancelAppointment = (appointmentId: string, isOverdue: boolean = false) => {
         if (isStaff) {
-            alert('Apenas o dono pode cancelar agendamentos.');
+            showToast('Apenas o dono pode cancelar agendamentos.', 'warning');
             return;
         }
-        if (!confirm('Cancelar este agendamento? Ele será movido para o histórico.')) return;
-        try {
-            await supabase
-                .from('appointments')
-                .update({ status: 'Cancelled' })
-                .eq('id', appointmentId);
-            alert('Agendamento cancelado e movido para o histórico!');
-            if (isOverdue) {
-                fetchOverdueAppointments();
-            } else {
-                fetchData();
-            }
-        } catch (error) {
-            logger.error('Error cancelling appointment', error);
-            alert('Erro ao cancelar agendamento.');
-        }
+        setConfirmDialog({
+            title: 'Cancelar agendamento',
+            message: 'O agendamento será movido para o histórico. Cancelar mesmo assim?',
+            confirmLabel: 'Cancelar agendamento',
+            cancelLabel: 'Voltar',
+            variant: 'danger',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    await supabase
+                        .from('appointments')
+                        .update({ status: 'Cancelled' })
+                        .eq('id', appointmentId);
+                    showToast('Agendamento cancelado e movido para o histórico.', 'success');
+                    if (isOverdue) {
+                        fetchOverdueAppointments();
+                    } else {
+                        fetchData();
+                    }
+                } catch (error) {
+                    logger.error('Error cancelling appointment', error);
+                    showToast('Erro ao cancelar agendamento.', 'error');
+                }
+            },
+        });
     };
 
-    const handleNoShowAppointment = async (appointmentId: string) => {
-        if (!confirm('Marcar como "Não compareceu"? O agendamento permanece no histórico.')) return;
-        try {
-            const { error } = await supabase
-                .from('appointments')
-                .update({ status: 'NoShow' })
-                .eq('id', appointmentId)
-                .eq('user_id', effectiveUserId);
-            if (error) throw error;
-            setShowingDetailsAppointment(null);
-            fetchData();
-        } catch (error) {
-            logger.error('Error marking appointment as no-show', error);
-            alert('Erro ao marcar como não compareceu.');
-        }
+    const handleNoShowAppointment = (appointmentId: string) => {
+        setConfirmDialog({
+            title: 'Cliente faltou',
+            message: 'Marcar como "Não compareceu"? O agendamento permanece no histórico.',
+            confirmLabel: 'Marcar falta',
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                try {
+                    const { error } = await supabase
+                        .from('appointments')
+                        .update({ status: 'NoShow' })
+                        .eq('id', appointmentId)
+                        .eq('user_id', effectiveUserId);
+                    if (error) throw error;
+                    setShowingDetailsAppointment(null);
+                    fetchData();
+                } catch (error) {
+                    logger.error('Error marking appointment as no-show', error);
+                    showToast('Erro ao marcar como não compareceu.', 'error');
+                }
+            },
+        });
     };
 
     const handleAssignToProfessional = async (appointmentId: string, professionalId: string) => {
@@ -835,7 +873,7 @@ export const Agenda: React.FC = () => {
             fetchData();
         } catch (error) {
             logger.error('Error assigning professional', error);
-            alert('Erro ao atribuir profissional.');
+            showToast('Erro ao atribuir profissional.', 'error');
         }
     };
 
@@ -854,14 +892,14 @@ export const Agenda: React.FC = () => {
 
     const handleCreateAppointment = async () => {
         if (!user || !selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedTime || !selectedAppointmentDate) {
-            alert('Preencha todos os campos!');
+            showToast('Preencha todos os campos!', 'warning');
             return;
         }
 
         try {
             const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
             if (selectedServicesDetails.length === 0) {
-                alert('Serviço inválido.');
+                showToast('Serviço inválido.', 'warning');
                 return;
             }
 
@@ -870,7 +908,7 @@ export const Agenda: React.FC = () => {
             // Use manually edited price
             const finalPrice = parseFloat(finalPriceInput);
             if (isNaN(finalPrice)) {
-                alert('Preço inválido!');
+                showToast('Preço inválido!', 'warning');
                 return;
             }
 
@@ -899,31 +937,31 @@ export const Agenda: React.FC = () => {
             // Prompt for WhatsApp confirmation
             const client = clients.find(c => c.id === selectedClient);
             if (client?.phone) {
-                const waPhone = client.phone.replace(/\D/g, '');
-                const waMessage = encodeURIComponent('Seu agendamento foi confirmado');
+                const clientPhone = client.phone;
+                const formattedDate = dateTime.toLocaleDateString('pt-BR');
+                const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
 
-                if (window.confirm('Agendamento criado com sucesso! Deseja enviar uma mensagem de confirmação para o cliente via WhatsApp?')) {
-                    const dateObj = dateTime;
-                    const formattedDate = dateObj.toLocaleDateString('pt-BR');
-                    const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    const establishment = businessName;
-
-                    const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
-                    const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
-
-                    const message = `Agendamento confirmado! ✨
+                const message = `Agendamento confirmado! ✨
 Data: ${formattedDate}
 Horário: ${formattedTime}
 Serviço: ${serviceNames}
 Valor: ${currencySymbol} ${formattedPrice}
 
-Obrigada pela confiança! Te espero no ${establishment}.`;
+Obrigada pela confiança! Te espero no ${businessName}.`;
 
-                    const waMessage = encodeURIComponent(message);
-                    window.open(`https://wa.me/${waPhone}?text=${waMessage}`, '_blank');
-                }
+                setConfirmDialog({
+                    title: 'Agendamento criado',
+                    message: 'Deseja enviar a confirmação para o cliente via WhatsApp?',
+                    confirmLabel: 'Enviar no WhatsApp',
+                    cancelLabel: 'Agora não',
+                    onConfirm: () => {
+                        setConfirmDialog(null);
+                        window.open(buildWhatsAppLink(clientPhone, currencyRegion, message), '_blank');
+                    },
+                });
             } else {
-                alert('Agendamento criado com sucesso!');
+                showToast('Agendamento criado com sucesso!', 'success');
             }
 
             setShowNewAppointmentModal(false);
@@ -942,7 +980,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
 
         } catch (error) {
             logger.error('Error creating appointment', error);
-            alert('Erro ao criar agendamento.');
+            showToast('Erro ao criar agendamento.', 'error');
         }
     };
 
@@ -1188,7 +1226,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 <button
                     onClick={() => changeDate(-7)}
                     aria-label="Semana anterior"
-                    className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
+                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                 </button>
@@ -1212,9 +1250,9 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     const newDateStr = d.toISOString().split('T')[0];
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:${colors.text} ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
-                                <span className="text-[10px] sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
+                                <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
                                 <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
@@ -1224,7 +1262,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                 <button
                     onClick={() => changeDate(7)}
                     aria-label="Próxima semana"
-                    className={`p-3 rounded-2xl transition-colors hover:${colors.surface} ${colors.card} ${colors.border} border shadow-lite-glass`}
+                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                 </button>
@@ -1243,7 +1281,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
                                     <Users className="w-5 h-5" />
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
+                                <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
                             </button>
                         )}
                         {teamMembers.map(member => {
@@ -1270,7 +1308,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                         )}
                                         <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
                                     </div>
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
                                         {isSelf ? 'Você' : member.name.split(' ')[0]}
                                     </span>
                                 </button>
@@ -1314,14 +1352,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     {/* Badge de tipo */}
                                     {(booking as any).is_edit && (
                                         <div className="mb-3">
-                                            <span className={`text-[10px] font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
+                                            <span className={`text-xs font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
                                                 ALTERAÇÃO DE AGENDAMENTO
                                             </span>
                                         </div>
                                     )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
-                                            <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-bg)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
+                                            <span className={`text-xs font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-bg)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
                                                 {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
@@ -1462,7 +1500,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                 {/* Preço + rótulo de status */}
                                                 <div className="flex flex-col items-end justify-center flex-shrink-0">
                                                     <span className={`text-sm font-mono font-bold ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
-                                                    <span className={`text-[10px] font-medium mt-0.5 ${vc.text}`}>{VISUAL_STATUS_LABEL[visual]}</span>
+                                                    <span className={`text-xs font-medium mt-0.5 ${vc.text}`}>{VISUAL_STATUS_LABEL[visual]}</span>
                                                 </div>
                                             </button>
                                         );
@@ -1528,7 +1566,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                                     className={`cursor-pointer rounded-md border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : vc.card} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden hover:shadow-lite-glass shadow-sm`}
                                                                 >
                                                                     <div className="flex items-center justify-between gap-1">
-                                                                        <h4 className={`text-[11px] font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
+                                                                        <h4 className={`text-xs font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
                                                                         <div className="flex items-center gap-1 flex-shrink-0">
                                                                             {apt.edited_at && <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />}
                                                                             {apt.notes && <MessageCircle className="w-2.5 h-2.5 text-emerald-500/80" aria-label="Com observação" />}
@@ -1536,8 +1574,8 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center justify-between gap-1">
-                                                                        <span className={`text-[10px] truncate ${colors.textMuted}`}>{apt.service}</span>
-                                                                        <span className={`text-[10px] font-mono font-medium flex-shrink-0 ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
+                                                                        <span className={`text-xs truncate ${colors.textMuted}`}>{apt.service}</span>
+                                                                        <span className={`text-xs font-mono font-medium flex-shrink-0 ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -1618,7 +1656,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 </div>
                                 <button
                                     onClick={() => setShowingDetailsAppointment(null)}
-                                    className={`p-1 rounded-full transition-colors ${colors.textMuted} hover:${colors.text} hover:${colors.surface}`}
+                                    className={`p-1 rounded-full transition-colors ${colors.textMuted} hover:text-theme-text hover:bg-theme-surface`}
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -1653,14 +1691,14 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Scissors className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Serviço</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Serviço</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>{detailsApt.service}</p>
                                 </div>
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <User className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Profissional</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Profissional</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>
                                         {teamMembers.find(m => m.id === detailsApt.professional_id)?.name || 'N/A'}
@@ -1673,7 +1711,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <Clock className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Data e Hora</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Data e Hora</span>
                                     </div>
                                     <p className={`${colors.text} font-medium text-sm`}>
                                         {new Date(detailsApt.appointment_time).toLocaleDateString('pt-BR')}
@@ -1685,7 +1723,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
                                         <DollarSign className="w-4 h-4" />
-                                        <span className={`text-[10px] font-mono uppercase tracking-widest font-bold`}>Valor</span>
+                                        <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Valor</span>
                                     </div>
                                     <div className="flex flex-col">
                                         {(() => {
@@ -1712,7 +1750,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Info className={`w-4 h-4 ${accent.text}`} />
-                                        <span className={`text-[10px] font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
+                                        <span className={`text-xs font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
                                     </div>
                                     <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
                                         &quot;{detailsApt.notes}&quot;
@@ -1722,13 +1760,13 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                         </div>
 
                         {/* Footer Actions */}
-                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-wrap gap-3 rounded-b-2xl`}>
+                        <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-col gap-3 rounded-b-2xl`}>
                             {(detailsApt.status === 'Confirmed' || detailsApt.status === 'Pending') ? (
                                 <>
                                     {/* Confirmar e cobrar — disponível para dono E colaborador (abre o checkout) */}
                                     <Button
                                         variant="primary"
-                                        className="flex-1 flex justify-center items-center gap-2"
+                                        className="w-full flex justify-center items-center gap-2"
                                         onClick={() => {
                                             setCheckoutAppointment(detailsApt as unknown as import('../types').Appointment);
                                             setShowingDetailsAppointment(null);
@@ -1736,34 +1774,36 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                     >
                                         <DollarSign className="w-4 h-4" /> Confirmar e cobrar
                                     </Button>
-                                    {/* Faltou — dono E colaborador */}
-                                    <Button
-                                        variant="secondary"
-                                        className="flex-1 flex justify-center items-center gap-2"
-                                        onClick={() => handleNoShowAppointment(detailsApt.id)}
-                                    >
-                                        <Ban className="w-4 h-4" /> Faltou
-                                    </Button>
-                                    {/* Editar — apenas o dono */}
-                                    {!isStaff && detailsApt.status === 'Confirmed' && (
+                                    <div className="flex gap-3">
+                                        {/* Faltou — dono E colaborador */}
                                         <Button
                                             variant="secondary"
                                             className="flex-1 flex justify-center items-center gap-2"
-                                            onClick={() => {
-                                                setEditingAppointment(detailsApt);
-                                                setShowingDetailsAppointment(null);
-                                            }}
+                                            onClick={() => handleNoShowAppointment(detailsApt.id)}
                                         >
-                                            <Edit2 className="w-4 h-4" /> Editar
+                                            <Ban className="w-4 h-4" /> Faltou
                                         </Button>
-                                    )}
-                                    <Button
-                                        variant="ghost"
-                                        className="flex-1 flex justify-center items-center gap-2"
-                                        onClick={() => setShowingDetailsAppointment(null)}
-                                    >
-                                        Fechar
-                                    </Button>
+                                        {/* Editar — apenas o dono */}
+                                        {!isStaff && detailsApt.status === 'Confirmed' && (
+                                            <Button
+                                                variant="secondary"
+                                                className="flex-1 flex justify-center items-center gap-2"
+                                                onClick={() => {
+                                                    setEditingAppointment(detailsApt);
+                                                    setShowingDetailsAppointment(null);
+                                                }}
+                                            >
+                                                <Edit2 className="w-4 h-4" /> Editar
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            className="flex-1 flex justify-center items-center gap-2"
+                                            onClick={() => setShowingDetailsAppointment(null)}
+                                        >
+                                            Fechar
+                                        </Button>
+                                    </div>
                                 </>
                             ) : (
                                 <Button
@@ -1779,6 +1819,18 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                     </FocusTrap>
                 </div>, document.body
             )}
+
+            {/* Confirmações (substitui os dialogs nativos) */}
+            <ConfirmModal
+                open={!!confirmDialog}
+                title={confirmDialog?.title || 'Confirmar'}
+                message={confirmDialog?.message || ''}
+                confirmLabel={confirmDialog?.confirmLabel || 'Confirmar'}
+                cancelLabel={confirmDialog?.cancelLabel || 'Cancelar'}
+                variant={confirmDialog?.variant || 'default'}
+                onConfirm={() => confirmDialog?.onConfirm()}
+                onCancel={() => setConfirmDialog(null)}
+            />
 
             {/* All Future Appointments Modal */}
             <AllAppointmentsModal
@@ -1796,7 +1848,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                             <h3 className={`${colors.text} font-heading text-2xl uppercase`}>Histórico de Agendamentos</h3>
                             <button
                                 onClick={() => setShowHistoryModal(false)}
-                                className={`${colors.textMuted} hover:${colors.text} transition-colors`}
+                                className={`${colors.textMuted} hover:text-theme-text transition-colors`}
                             >
                                 <X className="w-6 h-6" />
                             </button>
@@ -1808,7 +1860,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 onClick={() => {
                                     changeHistoryMonth(-1);
                                 }}
-                                className={`p-2 rounded-lg transition-colors hover:${colors.surface}`}
+                                className={`p-2 rounded-lg transition-colors hover:bg-theme-surface`}
                             >
                                 <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                             </button>
@@ -1821,7 +1873,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                 onClick={() => {
                                     changeHistoryMonth(1);
                                 }}
-                                className={`p-2 rounded-lg transition-colors hover:${colors.surface}`}
+                                className={`p-2 rounded-lg transition-colors hover:bg-theme-surface`}
                             >
                                 <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                             </button>
@@ -1860,7 +1912,7 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                     )}
                                                     <button
                                                         onClick={() => setShowingDetailsAppointment(apt)}
-                                                        className={`${colors.textMuted} hover:${colors.text} transition-colors mt-1 flex items-center gap-1 text-xs`}
+                                                        className={`${colors.textMuted} hover:text-theme-text transition-colors mt-1 flex items-center gap-1 text-xs`}
                                                         title="Ver detalhes"
                                                     >
                                                         <Info className="w-3 h-3" />
@@ -1877,12 +1929,12 @@ Obrigada pela confiança! Te espero no ${establishment}.`;
                                                         {formatCurrency(apt.price, currencyRegion)}
                                                     </p>
                                                     {hasDiscount && (
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1`}>
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1`}>
                                                             {discountPercentage}% OFF
                                                         </span>
                                                     )}
                                                     {isCustomPriceHigher && (
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
                                                             Preço Customizado
                                                         </span>
                                                     )}

@@ -115,7 +115,7 @@ export const CriticalEmptySlotsCard: React.FC = () => {
                       </p>
                     </div>
                     <button
-                      className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${colors.border} ${colors.card} ${colors.text} hover:${accent.bgDim} transition-all`}
+                      className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border ${colors.border} ${colors.card} ${colors.text} hover:bg-[var(--color-accent-dim)] transition-all`}
                       title="Ver horário livre na agenda"
                     >
                       <Calendar className="w-3 h-3" />
@@ -126,7 +126,7 @@ export const CriticalEmptySlotsCard: React.FC = () => {
               ))}
               {critical.length > 3 && (
                 <li>
-                  <button className={`w-full text-center text-xs font-bold py-2 ${colors.textSecondary} hover:${accent.text} transition-colors`}>
+                  <button className={`w-full text-center text-xs font-bold py-2 ${colors.textSecondary} hover:text-theme-accent transition-colors`}>
                     + {critical.length - 3} horários vagos
                   </button>
                 </li>

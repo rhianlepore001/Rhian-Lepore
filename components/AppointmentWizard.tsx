@@ -292,7 +292,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                                         {isDone && <Check size={12} className="text-black" />}
                                                         {isCurrent && <div className={`w-2 h-2 rounded-full ${accent.bg}`} />}
                                                     </div>
-                                                    <span className={`hidden md:block text-[9px] font-mono uppercase tracking-wider mt-1 ${
+                                                    <span className={`hidden md:block text-xs font-mono uppercase tracking-wider mt-1 ${
                                                         isCurrent ? accent.text
                                                         : isDone ? 'text-neutral-400' : 'text-neutral-600'
                                                     }`}>{label}</span>

@@ -363,7 +363,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                         [member.id]: { ...prev[member.id], commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 }
                                                                     }));
                                                                 }}
-                                                                className={`${colors.inputBg} ${colors.text} text-[10px] p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
+                                                                className={`${colors.inputBg} ${colors.text} text-xs p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >
                                                                 <option value="monthly">Mensal</option>
                                                                 <option value="weekly">Semanal</option>
@@ -377,7 +377,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                         [member.id]: { ...prev[member.id], commission_payment_day: val }
                                                                     }));
                                                                 }}
-                                                                className={`${colors.inputBg} ${colors.text} text-[10px] p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
+                                                                className={`${colors.inputBg} ${colors.text} text-xs p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >
                                                                 {member.commission_payment_frequency === 'weekly' ? (
                                                                     <>
@@ -422,7 +422,7 @@ export const CommissionsSettings: React.FC = () => {
                                                 </div>
                                             ) : (
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <div className={`text-[9px] uppercase font-mono ${colors.textMuted} whitespace-nowrap ${colors.inputBg} px-2 py-1 rounded`}>
+                                                    <div className={`text-xs uppercase font-mono ${colors.textMuted} whitespace-nowrap ${colors.inputBg} px-2 py-1 rounded`}>
                                                         {member.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal'} •
                                                         {member.commission_payment_frequency === 'weekly'
                                                             ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][member.commission_payment_day || 0]

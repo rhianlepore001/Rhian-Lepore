@@ -3,6 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import {
     fetchMembershipPlans,
     fetchActiveMembershipPlans,
+    fetchPublicMembershipPlans,
+    fetchPublicPixConfig,
+    createPublicMembershipRequest,
+    createPublicPixPayment,
+    CreatePublicMembershipInput,
+    CreatePublicPixPaymentInput,
     upsertMembershipPlan,
     deleteMembershipPlan,
     fetchClientMemberships,
@@ -174,6 +180,43 @@ export function useMembershipStats() {
         queryKey: KEYS.stats(companyId!),
         queryFn: () => fetchMembershipStats(companyId!),
         enabled: !!companyId,
+    });
+}
+
+// =============================================================================
+// Fluxo público (/clube, sem login) — escopado pelo businessId do slug,
+// nunca pelo companyId da sessão.
+// =============================================================================
+
+export function usePublicMembershipPlans(businessId: string | null) {
+    return useQuery({
+        queryKey: ['public-membership-plans', businessId],
+        queryFn: () => fetchPublicMembershipPlans(businessId!),
+        enabled: !!businessId,
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+export function usePublicPixConfig(businessId: string | null) {
+    return useQuery({
+        queryKey: ['public-pix-config', businessId],
+        queryFn: () => fetchPublicPixConfig(businessId!),
+        enabled: !!businessId,
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+export function useCreatePublicMembershipRequest(businessId: string | null) {
+    return useMutation({
+        mutationFn: (input: CreatePublicMembershipInput) =>
+            createPublicMembershipRequest(businessId!, input),
+    });
+}
+
+export function useCreatePublicPixPayment(businessId: string | null) {
+    return useMutation({
+        mutationFn: (input: CreatePublicPixPaymentInput) =>
+            createPublicPixPayment(businessId!, input),
     });
 }
 

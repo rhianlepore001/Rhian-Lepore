@@ -252,7 +252,7 @@ export const SetupCopilot: React.FC = () => {
                     <div className={`relative rounded-2xl border p-4 overflow-hidden ${colors.card} ${colors.border}`}>
                         <button
                             onClick={handleDismissResume}
-                            className={`absolute top-3 right-3 p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                            className={`absolute top-3 right-3 p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
                             aria-label="Dispensar"
                         >
                             <X className="w-3.5 h-3.5" />
@@ -281,7 +281,7 @@ export const SetupCopilot: React.FC = () => {
                             </button>
                             <button
                                 onClick={handleDismissResume}
-                                className={`text-xs ${colors.textSecondary} hover:${colors.text} transition-colors font-mono`}
+                                className={`text-xs ${colors.textSecondary} hover:text-theme-text transition-colors font-mono`}
                             >
                                 Não, obrigado
                             </button>
@@ -307,7 +307,7 @@ export const SetupCopilot: React.FC = () => {
                                     <h3 className={`text-sm font-bold font-heading ${colors.text}`}>
                                         {isActivated ? 'Sistema Ativado!' : 'Configure seu espaço'}
                                     </h3>
-                                    <p className={`text-[11px] ${colors.textSecondary} font-mono`}>
+                                    <p className={`text-xs ${colors.textSecondary} font-mono`}>
                                         {isActivated
                                             ? '100% — tudo pronto!'
                                             : completedCount === 0
@@ -333,7 +333,7 @@ export const SetupCopilot: React.FC = () => {
                                             localStorage.setItem(getActivationSeenKey(), 'true');
                                         }
                                     }}
-                                    className={`p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:${colors.text} transition-colors`}
+                                    className={`p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
                                     title="Fechar"
                                 >
                                     <X className="w-4 h-4" />
@@ -382,23 +382,23 @@ export const SetupCopilot: React.FC = () => {
                                                         {step.label}
                                                     </p>
                                                     {step.id === 'team' && !step.completed && (
-                                                        <span className={`text-[9px] font-mono font-bold ${colors.textSecondary} uppercase tracking-wide`}>
+                                                        <span className={`text-xs font-mono font-bold ${colors.textSecondary} uppercase tracking-wide`}>
                                                             Opcional
                                                         </span>
                                                     )}
                                                     {step.completed && (
-                                                        <span className={`text-[9px] font-mono font-bold ${successTextClass} uppercase tracking-wide`}>
+                                                        <span className={`text-xs font-mono font-bold ${successTextClass} uppercase tracking-wide`}>
                                                             Feito
                                                         </span>
                                                     )}
                                                     {!step.completed && step.id === nextStep?.id && (
-                                                        <span className={`text-[9px] font-mono font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${accent.bgDim} ${accent.text}`}>
+                                                        <span className={`text-xs font-mono font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${accent.bgDim} ${accent.text}`}>
                                                             Próximo
                                                         </span>
                                                     )}
                                                 </div>
                                                 {!step.completed && (
-                                                    <p className={`text-[11px] ${colors.textSecondary} mt-0.5`}>{step.description}</p>
+                                                    <p className={`text-xs ${colors.textSecondary} mt-0.5`}>{step.description}</p>
                                                 )}
                                             </div>
                                             {!step.completed && (

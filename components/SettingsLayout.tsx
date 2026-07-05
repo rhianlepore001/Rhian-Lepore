@@ -66,7 +66,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                                 active:animate-haptic-click
                                 ${isActive
                                     ? `${accent.bgDim} ${accent.text} ${accent.shadowStrong} font-bold`
-                                    : `${colors.textSecondary} hover:${colors.text} hover:bg-white/5 border border-transparent`
+                                    : `${colors.textSecondary} hover:text-theme-text hover:bg-white/5 border border-transparent`
                                 }
                             `}
                         >
@@ -79,7 +79,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 <div className={`pt-6 border-t ${colors.divider} mt-auto flex-shrink-0`}>
                     <NavLink
                         to="/dashboard"
-                        className={`flex items-center gap-2 ${colors.textSecondary} hover:${colors.text} transition-colors px-2 active:animate-haptic-click`}
+                        className={`flex items-center gap-2 ${colors.textSecondary} hover:text-theme-text transition-colors px-2 active:animate-haptic-click`}
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="text-sm font-medium">Voltar ao Dashboard</span>

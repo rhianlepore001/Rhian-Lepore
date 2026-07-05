@@ -302,7 +302,7 @@ export const FinanceInsights: React.FC<FinanceInsightsProps> = ({
             onClick={() => setShowExpenses((v) => !v)}
             className={[
               'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors min-h-[44px]',
-              showExpenses ? `${status.dangerBg} ${status.dangerBorder} ${status.danger}` : `${colors.border} ${colors.textMuted} hover:${colors.text}`,
+              showExpenses ? `${status.dangerBg} ${status.dangerBorder} ${status.danger}` : `${colors.border} ${colors.textMuted} hover:text-theme-text`,
             ].join(' ')}
           >
             {showExpenses

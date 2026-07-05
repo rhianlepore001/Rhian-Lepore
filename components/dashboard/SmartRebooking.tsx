@@ -74,7 +74,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
                             <h3 className="text-sm font-bold font-heading text-white">Clientes para chamar de volta</h3>
                             <InfoButton text="Baseado na frequência de visitas de cada cliente, calculamos quando é hora de entrar em contato para agendar o próximo atendimento." />
                         </div>
-                        <p className="text-[11px] text-text-secondary font-mono">
+                        <p className="text-xs text-text-secondary font-mono">
                             {nowCount > 0 ? `${nowCount} urgente${nowCount > 1 ? 's' : ''}` : `${suggestions.length} sugestões`} • Cadência preditiva
                         </p>
                     </div>
@@ -114,7 +114,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
                                             {config.label}
                                         </span>
                                     </div>
-                                    <p className="text-[11px] text-text-secondary">
+                                    <p className="text-xs text-text-secondary">
                                         Vem {getCadenceLabel(suggestion.avgCadenceDays)} • Última visita há {suggestion.daysSinceLastVisit} dias • ~{formatCurrency(suggestion.avgTicket, currencyRegion as any)}/visita
                                     </p>
                                 </div>
@@ -138,7 +138,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
                     })}
 
                     {suggestions.length > limit && (
-                        <p className="text-center text-[10px] text-text-secondary font-mono pt-1">
+                        <p className="text-center text-xs text-text-secondary font-mono pt-1">
                             +{suggestions.length - limit} clientes para acompanhar
                         </p>
                     )}

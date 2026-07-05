@@ -20,7 +20,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
     forceTheme
 }) => {
     const { colors, accent, font, classes, density } = useBrutalTheme({ override: forceTheme });
-    const hoverBg = `hover:${accent.bgDim}`;
+    const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
     const slotPadding = density.tableRowPy;
     const selectedText = classes.buttonPrimary.split(' ').find((c) => c.startsWith('text-')) ?? colors.text;
 

@@ -121,20 +121,20 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
             <div className="space-y-4">
                 <div ref={summaryRef} className={`${colors.card} p-4`}>
                     <div className={`${colors.surface} rounded-xl p-4 space-y-3 ${colors.border} border`}>
-                        <p className={`${colors.textMuted} text-[10px] ${font.mono} uppercase tracking-widest`}>Resumo de Comissões</p>
+                        <p className={`${colors.textMuted} text-xs ${font.mono} uppercase tracking-widest`}>Resumo de Comissões</p>
                         <div className="space-y-1">
                             <p className={`${colors.text} font-bold text-lg leading-tight`}>{professionalName}</p>
                             {cpf && <p className={`${colors.textSecondary} text-xs ${font.mono}`}>CPF: {cpf}</p>}
                         </div>
                         <div className={`border-t ${colors.divider} pt-3`}>
-                            <p className={`${colors.textMuted} text-[10px] ${font.mono}`}>Período</p>
+                            <p className={`${colors.textMuted} text-xs ${font.mono}`}>Período</p>
                             <p className={`${colors.text} text-sm ${font.mono}`}>{periodLabel}</p>
                         </div>
                         <div className={`border-t ${colors.divider} pt-3`}>
-                            <p className={`${colors.textMuted} text-[10px] ${font.mono} uppercase`}>Valor a receber</p>
+                            <p className={`${colors.textMuted} text-xs ${font.mono} uppercase`}>Valor a receber</p>
                             <p className={`text-2xl ${font.mono} font-bold ${accent.text}`}>{currencySymbol} {fmtAmount}</p>
                         </div>
-                        <p className={`${colors.textMuted} opacity-60 text-[9px] ${font.mono}`}>Gerado pelo AgendiX</p>
+                        <p className={`${colors.textMuted} opacity-60 text-xs ${font.mono}`}>Gerado pelo AgendiX</p>
                     </div>
                 </div>
 

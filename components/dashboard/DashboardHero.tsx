@@ -50,7 +50,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
                             {greeting},{' '}
                             <span className={accent.text}>{firstName}</span>
                         </h1>
-                        <p className={`text-[10px] md:text-xs ${colors.textMuted} font-sans uppercase tracking-widest leading-tight`}>
+                        <p className={`text-xs md:text-xs ${colors.textMuted} font-sans uppercase tracking-widest leading-tight`}>
                             {isStaff ? 'Agenda aberta' : 'Operação ativa'}
                         </p>
                     </div>
@@ -71,7 +71,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
 
                         <button
                             onClick={() => setIsStrategyOpen(true)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-medium ${colors.card} border ${colors.border} ${colors.textSecondary} hover:${colors.text} ${colors.surfaceHover} transition-all`}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-sans font-medium ${colors.card} border ${colors.border} ${colors.textSecondary} hover:text-theme-text ${colors.surfaceHover} transition-all`}
                         >
                             <Sparkles size={13} className={accent.text} />
                             <span className="hidden sm:inline">Estratégia</span>

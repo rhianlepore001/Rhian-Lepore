@@ -58,7 +58,7 @@ export const ProfitMetrics = React.memo(({
                     <div className="p-4 md:p-6 flex flex-col justify-between h-full relative z-10">
                         <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-mono uppercase tracking-[0.15em] font-bold ${colors.textMuted}`}>
+                                <span className={`text-xs font-mono uppercase tracking-[0.15em] font-bold ${colors.textMuted}`}>
                                     Receita do Dia
                                 </span>
                                 <InfoButton text="Valor recebido hoje (atendimentos com status Concluído)." />
@@ -73,7 +73,7 @@ export const ProfitMetrics = React.memo(({
                                 <div className={`text-2xl md:text-3xl font-bold font-mono tabular-nums tracking-tight ${accent.text} mb-1`}>
                                     {formatCurrency(todayRevenue, currencyRegion)}
                                 </div>
-                                <div className={`text-[10px] font-mono uppercase tracking-[0.15em] ${colors.textMuted}`}>
+                                <div className={`text-xs font-mono uppercase tracking-[0.15em] ${colors.textMuted}`}>
                                     HOJE
                                 </div>
                                 {metrics.weeklyGrowth !== 0 && (
@@ -83,7 +83,7 @@ export const ProfitMetrics = React.memo(({
                                         ) : (
                                             <TrendingDown className={`w-3 h-3 ${status.danger}`} aria-hidden="true" />
                                         )}
-                                        <span className={`text-[10px] font-mono font-bold ${metrics.weeklyGrowth >= 0 ? status.success : status.danger}`}>
+                                        <span className={`text-xs font-mono font-bold ${metrics.weeklyGrowth >= 0 ? status.success : status.danger}`}>
                                             {metrics.weeklyGrowth >= 0 ? '+' : ''}{metrics.weeklyGrowth}%
                                         </span>
                                     </div>

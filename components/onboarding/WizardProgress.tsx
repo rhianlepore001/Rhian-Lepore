@@ -24,10 +24,10 @@ export const WizardProgress: React.FC<WizardProgressProps> = ({ currentStep, tot
     >
       {/* Texto de progresso */}
       <div className="flex justify-between items-center mb-3">
-        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
           Passo {currentStep} de {totalSteps}
         </span>
-        <span className={`text-[11px] font-bold tabular-nums ${accent.text}`}>
+        <span className={`text-xs font-bold tabular-nums ${accent.text}`}>
           {Math.round(percentage)}%
         </span>
       </div>
@@ -73,7 +73,7 @@ export const WizardProgress: React.FC<WizardProgressProps> = ({ currentStep, tot
               </div>
               <span
                 className={`
-                  text-[10px] font-medium uppercase tracking-wider transition-colors duration-300
+                  text-xs font-medium uppercase tracking-wider transition-colors duration-300
                   ${isCompleted || isCurrent ? accent.text : 'text-muted-foreground/60'}
                 `}
               >

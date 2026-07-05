@@ -41,7 +41,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
                 onClick={() => setOpen(o => !o)}
                 aria-expanded={open}
                 aria-haspopup="menu"
-                className={`inline-flex items-center gap-2 px-4 py-2.5 ${radius.button} ${colors.card} ${colors.border} ${colors.text} hover:${colors.textSecondary} transition-all active:scale-95`}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 ${radius.button} ${colors.card} ${colors.border} ${colors.text} hover:text-theme-textSecondary transition-all active:scale-95`}
             >
                 <Download className="w-4 h-4" strokeWidth={2.5} />
                 <span className={`text-sm font-bold uppercase tracking-wide ${font.heading}`}>{label}</span>

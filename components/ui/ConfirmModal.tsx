@@ -48,6 +48,6 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </div>
     }
   >
-    <p className="text-sm leading-relaxed text-neutral-300 whitespace-pre-line">{message}</p>
+    <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-line">{message}</p>
   </Modal>
 );

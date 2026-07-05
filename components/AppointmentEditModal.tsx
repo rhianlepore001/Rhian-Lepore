@@ -87,7 +87,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     const headerStyles = `${classes.modalHeader} bg-[var(--color-card-hover)]`;
 
-    const inputStyles = `w-full px-4 py-3 ${radius.input} text-sm ${colors.text} ${colors.inputBg} border ${colors.inputBorder} focus:outline-none focus:border-theme-accent transition-all font-sans placeholder:${colors.textMuted}`;
+    const inputStyles = `w-full px-4 py-3 ${radius.input} text-sm ${colors.text} ${colors.inputBg} border ${colors.inputBorder} focus:outline-none focus:border-theme-accent transition-all font-sans placeholder:text-[var(--color-text-muted)]`;
 
     const labelStyles = `${classes.label} uppercase tracking-wider mb-1 block`;
 

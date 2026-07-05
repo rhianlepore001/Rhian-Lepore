@@ -232,12 +232,12 @@ export const Reports: React.FC = () => {
                                                     <stop offset="95%" stopColor={accent.hex} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                                            <XAxis dataKey="month" stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="#555" fontSize={11} tickLine={false} axisLine={false} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={isBeauty ? '#E2DDD2' : '#222'} vertical={false} />
+                                            <XAxis dataKey="month" stroke={isBeauty ? '#8A8377' : '#555'} fontSize={11} tickLine={false} axisLine={false} />
+                                            <YAxis stroke={isBeauty ? '#8A8377' : '#555'} fontSize={11} tickLine={false} axisLine={false} />
                                             <Tooltip
-                                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #222', borderRadius: '12px' }}
-                                                itemStyle={{ color: '#fff' }}
+                                                contentStyle={{ backgroundColor: isBeauty ? '#FFFFFF' : '#0a0a0a', border: `1px solid ${isBeauty ? '#E2DDD2' : '#222'}`, borderRadius: '12px' }}
+                                                itemStyle={{ color: isBeauty ? '#2E2A24' : '#fff' }}
                                             />
                                             <Area
                                                 type="monotone"
@@ -279,7 +279,7 @@ export const Reports: React.FC = () => {
                                         </tr>
                                     ) : (
                                         clientInsights.top_clients.map((client, idx) => (
-                                            <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                                            <tr key={idx} className="hover:bg-[var(--color-card-hover)] transition-colors group">
                                                 <td className="px-4 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${accent.bgDim} ${accent.text}`}>

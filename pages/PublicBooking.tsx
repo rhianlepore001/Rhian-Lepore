@@ -151,6 +151,10 @@ export const PublicBooking: React.FC = () => {
     const { colors, accent, classes, shadow, radius, font, isDark } = useBrutalTheme({ override: themeOverride });
 
     const accentTextOnAccent = isBeauty ? 'text-white' : 'text-black';
+    // Classes literais estáticas (variante interpolada não gera CSS no build estático do Tailwind)
+    const selectionClasses = isBeauty
+        ? 'selection:bg-theme-accent selection:text-[#fff]'
+        : 'selection:bg-theme-accent selection:text-[#000]';
 
     // Sincroniza dados do cliente logado com os campos do formulário
     useEffect(() => {
@@ -679,7 +683,7 @@ export const PublicBooking: React.FC = () => {
     }
 
     return (
-        <div id="booking-root" className={`min-h-screen ${colors.bg} ${colors.text} selection:${accent.bg} selection:${accentTextOnAccent} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
+        <div id="booking-root" className={`min-h-screen ${colors.bg} ${colors.text} ${selectionClasses} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
             {/* Background Texture Overlay */}
             <div className="fixed inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-noise z-[1]" />
 

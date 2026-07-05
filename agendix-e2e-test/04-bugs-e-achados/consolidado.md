@@ -2,7 +2,7 @@
 
 **Data**: 2026-07-05
 **Frente**: e2e-jornada
-**Agentes**: 02 (copy), 03 (fluxo), 04 (design system), 06 (domínio). GAP: 01 (UI visual) não rodou.
+**Agentes**: 01 (UI visual), 02 (copy), 03 (fluxo), 04 (design system), 06 (domínio) — **os 5 rodaram**.
 **Auditoria anterior referência**: 20260610_120000
 
 ## Sumário executivo
@@ -34,6 +34,7 @@
 **Achados por lente (bruto)**
 | Lente | P0 | P1 | P2 | P3 | Total |
 |---|---|---|---|---|---|
+| 01 (UI visual) | 1 | 5 | 8 | 4 | 18 |
 | 02 (copy) | 1 | 3 | ~13 | 4 | ~21 |
 | 03 (fluxo) | 4 | 7 | 10 | 6 | 27 |
 | 04 (design system) | 1 | 5 | ~6 | 4 | ~16 |
@@ -64,8 +65,21 @@
 | C3 | **`resetExpiredCallingEntries`: `calling → waiting` (não `no_show`)** — estado `no_show` inalcançável; decisão de produto pendente (regra D2/D4) | 03 (P2-01) + 06 (R-03/R-04) | 🟡 P2 | Baixo (após decisão) | 2 |
 | C4 | **Componentes deprecados + tokens duplicados** — `BrutalCard`/`BrutalButton`/`Modal` (51 imports) e tokens `index.html` vs `tokens.css` | 04 (P1-DS03/DS04) + 20260610 (UI-001/002/003) | 🟠 P1 | Alto | 3 |
 | C5 | **`deleteFinanceTransaction` não-atômico + design confuso do fallback** | 03 (P0-03 + P2-02) | 🔴 P0 | Médio | 1 |
+| C6 | **Página pública de agendamento 99.9% preta** — `bg-${accentColor}` não gera CSS (design) E confirmado por análise de cores (visual): tela de aquisição de cliente sem marca/texto | 01 (P0-UI01) + 04 (P0-DS01) | 🔴 P0 | Baixo | 1 |
+| C7 | **Copy pt-PT na landing/produto BR** — "Bom te ver de novo" (copy) E detectado visualmente na landing (visual) | 01 (P1-UI05) + 02 (P1-C) | 🟠 P1 | Baixo | 2 |
+| C8 | **`LoadingFull` hardcoded `bg-neutral-900` + sem skeleton route-level** — persistente desde 20260610 (UI-011) | 01 (P2-UI06/07) + 04 (P1-DS) | 🟠 P1 | Médio | 3 |
 
 ## Achados únicos por lente
+
+### Lente 01 (UI visual) — Playwright, 22 screenshots + análise de cores
+- 🔴 **P0-UI01** — página pública `/#/book/:slug` é **99.9% preta** (análise PIL: sem accent, 0% texto). Confirma C6/P0-DS01 na tela de aquisição.
+- 🟠 **P1-UI01** — light text 0.1-1.1% em desktop → fonte pequena/baixo contraste (pior: `ajustes-servicos` 0.1%, `produtos` 0.4%).
+- 🟠 **P1-UI02** — hierarquia H1→H2 rasa (24px→16px, só 8px de diferença). Cruza com UI-004 (20260610).
+- 🟠 **P1-UI03** — banner "PERÍODO DE TESTE GRÁTIS" persistente em todas as 10 telas logadas → pressão desnecessária, deveria ser dismissible.
+- 🟠 **P1-UI04** — botão "ASSINAR AGORA" `bg-black` sobre fundo `rgb(18,16,14)` → botão de conversão quase invisível.
+- 🟠 **P1-UI05** — copy pt-PT ("Bom te ver de novo") na landing BR (composto C7).
+- 🟡 **P2-UI01..08** — score de saúde sem cor de status; cards de agenda transparentes; botão de profissional sem estado ativo; empty states rasos (`ajustes-servicos` 87.3% vazio, `produtos` 85.1%); `LoadingFull` hardcoded; sem skeleton route (C8); "14 dias" vs config "10 dias".
+- 🟢 **P3-UI01..04** — badge "2" não limpa; iniciais sem separador dono/staff; logo 1024² em tamanho pequeno; touch targets mobile não medidos.
 
 ### Lente 02 (copy)
 - 🟠 **P1-C01** — `ClientCRM.tsx` usa `alert()` nativo para **sucesso** (5 locais) → trocar por `showToast(...,'success')`.
@@ -157,8 +171,8 @@
 - `alert()` nativo vs `showToast` em produção.
 
 ## Gaps de cobertura
-- **Agente 01 (UI visual) NÃO rodou** — precisa de browser para screenshots. Fica em aberto: hierarquia de dashboard (UI-004), skeleton route-level (UI-011), consistência visual das 40% de telas legadas. **Cobertura visual = 0 nesta rodada.**
-- Todos os relatórios são **estáticos** (leitura de código) — nenhuma navegação em produção. Todos os P0/P1 de RLS precisam de confirmação SQL no banco vivo antes de merge.
+- **Agente 01 rodou** (Playwright, 22 screenshots desktop+mobile), mas com limitações: **sem inspeção visual humana** (vision provider indisponível — análise foi por cores/PIL + DOM, pegou o P0 mas pode ter perdido nuances de espaçamento/alinhamento/overlay). **Não capturou**: tela de login, onboarding wizard, staff view, estados de erro/empty/loading reais. Recomenda-se revisão humana dos PNGs em `screenshots/`.
+- Os relatórios 02/03/04/06 são **estáticos** (leitura de código). Todos os P0/P1 de RLS precisam de confirmação SQL no banco vivo antes de merge.
 - Reconciliação P0-01/P0-02 depende de confirmar policies dropadas no banco vivo (Agente 06 leu a migration, mas ninguém validou o estado real).
 - R-09 (FK `companies`) pode ser falso-positivo ou bloqueador total de registro — depende do estado real do banco.
 - Callers de `createAcceptedAppointmentFromBooking` (P1-05) não foram mapeados exaustivamente.
@@ -172,6 +186,7 @@
 - 🔴 P0-C01 / C1 (alert→showToast, esconder erro bruto)
 - 🟠 R-05 (is_owner nas comissões), R-06 (constraint onboarding), R-09 (validar FK companies) — **regras de domínio, todas aqui**
 - Quick wins 1-4 (eq user_id, guard, toast rejeição)
+- 🟠 P1-UI04 (botão "ASSINAR AGORA" preto → accent), P1-UI03 (banner trial só no dashboard), P2-UI08 ("14 dias" vs "10 dias") — quick wins visuais
 - Validação SQL de reconciliação (P0-01/P0-02) + P1-01
 
 ### Sprint 2 (P1 restantes + quick wins P2)

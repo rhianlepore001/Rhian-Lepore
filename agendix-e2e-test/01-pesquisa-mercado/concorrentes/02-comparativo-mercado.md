@@ -26,7 +26,7 @@
 | **Módulo fiscal (NF-e)** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Multi-unidade (rede)** | ❌ | parcial | ✅ | ✅ | ❌ | parcial | ✅ |
 | **Multi-idioma (PT-PT)** | parcial | ❌ | ❌ | parcial (EN) | ❌ | ❌ | ✅ |
-| **IA / insights** | parcial (AIOS pós-MVP) | ❌ | básico | básico | ❌ | ❌ | básico |
+| **IA / insights** | ❌ | ❌ | básico | básico | ❌ | ❌ | básico |
 
 ---
 
@@ -50,7 +50,6 @@
 **Onde o AgendiX está hoje** (visão do `PRODUCT.md` + `DECISIONS.md`):
 - Temas: barber (dark industrial) + beauty (light elegante) → **diferencial forte** (maioria tem 1 tema só)
 - Premium acessível, personalidade "elegante, confiável, eficiente"
-- AIOS (IA) pós-MVP → **oportunidade futura** (Rhian 2026-07-05)
 - Multi-tenant + RLS → **fundação sólida**
 - Sem marketplace (decisão) → **não compete com Trinks/Booksy por aquisição**
 - Sem plano gratuito (com plano gratuito 10 dias) → **decisão de monetização agressiva**
@@ -60,7 +59,6 @@
 - Tema duplo (barber + beauty) com consistência cross-tema
 - Copy 100% pt-BR sem "potencialize" genérico
 - Mobile-first real (não só responsive)
-- AIOS quando lançar (concorrentes não têm)
 
 **Onde Agendix **perde** no papel (vs concorrentes)**:
 - Sem marketplace (perde aquisição; Trinks/Booksy ganham)

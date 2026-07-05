@@ -87,12 +87,6 @@
 | H7 | Touch targets mínimo 48×48dp. | PRODUCT.md (Accessibility) | confirmada |
 | H8 | Estados de erro PRÓXIMOS ao campo, não no topo da página. | PRODUCT.md (Accessibility) | confirmada |
 
-## Bloco I — AIOS (pós-MVP)
-
-| # | Regra | Fonte | Status |
-|---|---|---|---|
-| I1 | AIOS é sistema de agentes IA. Features pós-MVP — **não priorizar** no momento. | GLOSSARY.md, CLAUDE.md | confirmada |
-
 ---
 
 ## Como esse arquivo evolui

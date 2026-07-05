@@ -10,9 +10,10 @@
 //   node scripts/check-design-debt.mjs --update   # regrava o baseline
 
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const BASELINE_PATH = join(ROOT, 'scripts', 'design-debt-baseline.json');
 const SCAN_DIRS = ['pages', 'components'];
 
@@ -46,7 +47,7 @@ function scan() {
   for (const dir of SCAN_DIRS) {
     for (const file of walk(join(ROOT, dir))) {
       const src = readFileSync(file, 'utf-8');
-      const rel = relative(ROOT, file);
+      const rel = relative(ROOT, file).split(sep).join('/');
       for (const [label, re] of Object.entries(PATTERNS)) {
         const n = (src.match(re) || []).length;
         if (n > 0) {

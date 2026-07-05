@@ -6,14 +6,15 @@ Antes de rodar a auditoria com os agentes especialistas, você precisa de um ten
 
 | Item | Quantidade | Configuração |
 |---|---|---|
-| Profissionais | 3 (já tem você como dono) | Comissão 40%, especialidades variadas |
+| Profissionais | 3 (já tem você como dono) | Comissão 40%, especialidades em `bio` |
 | Serviços | 6 | Corte, Barba, Combo, Sobrancelha, Pigmentação, VIP |
 | Clientes | 50 | Nomes brasileiros, telefones válidos (DDDs variados) |
 | Agendamentos | 150 | 50% passados (Completed/Cancelled), 30% hoje, 20% futuros |
-| Fila | 1 ciclo + 2 esperando | Status: finished/waiting |
-| NPS | 1 avaliação | Score 9, comentário positivo |
+| Fila | 1 ciclo + 2 esperando | Status: completed/waiting |
 
 **Faturamento esperado**: ~R$ 8.000–15.000/mês (varia por sorteio).
+
+> NPS não é criado: a tabela `nps_responses` não existe nas migrations do projeto. Quando for adicionada, dá pra estender o script.
 
 ## Como rodar
 
@@ -52,8 +53,19 @@ Abra https://app.agendix.com.br/#/reports (ou sua URL de produção) e confirme:
 - [ ] 3 funcionários aparecem comissionados
 - [ ] Tem agendamentos passados (Completed, alguns Cancelled)
 - [ ] Tem agendamentos futuros (Confirmed, alguns Pending)
-- [ ] Fila digital tem 1 finished e 2 waiting
-- [ ] NPS tem 1 avaliação
+- [ ] Fila digital tem 1 completed e 2 waiting
+
+## Schema real (referência pra quem for auditar)
+
+Pra evitar o que aconteceu na primeira rodada (script inventando coluna que não existe), anote:
+
+- `team_members` tem coluna `bio` (não `specialty`) pra texto livre do profissional
+- `queue_entries` tem `business_id` (FK → `profiles.id`), **não** `user_id`
+- `queue_entries.service_id` é UUID (FK → `services.id`), **não** texto
+- `queue_entries.status` aceita: `waiting | calling | serving | completed | cancelled | no_show` (não `finished`)
+- Tabela `nps_responses` **não existe** no schema atual
+
+Tudo isso foi confirmado nas migrations em `supabase/migrations/20260218_team_setup.sql` e `supabase/migrations/20260218_queue_system.sql`.
 
 ## Idempotência
 

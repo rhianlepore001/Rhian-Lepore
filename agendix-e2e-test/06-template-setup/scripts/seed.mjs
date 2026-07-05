@@ -147,7 +147,7 @@ async function ensureProfessionals(userId) {
         user_id: userId,
         name: p.name,
         role: 'barber',
-        specialty: p.specialty,
+        bio: p.specialty, // coluna real é bio, não specialty
         active: true,
         commission_rate: 40,
     }));
@@ -301,15 +301,28 @@ async function ensureAppointments(userId, services, professionals) {
 }
 
 async function ensureQueueAndNps(userId) {
-    console.log('\n[5/5] Verificando fila e NPS...');
+    console.log('\n[5/5] Verificando fila...');
     // Fila: 1 ciclo completo (entrou, foi atendido, saiu)
+    // SCHEMA REAL (supabase/migrations/20260218_queue_system.sql):
+    //   business_id (FK profiles.id, NÃO user_id)
+    //   service_id (UUID do serviço, NÃO texto)
+    //   status valores: waiting | calling | serving | completed | cancelled | no_show
     const { data: existingQueue } = await supabase
         .from('queue_entries')
         .select('id')
-        .eq('user_id', userId)
+        .eq('business_id', userId) // campo correto é business_id
         .limit(1);
 
     if (!existingQueue || existingQueue.length === 0) {
+        // Buscar serviço "Corte Masculino" pra usar o service_id real
+        const { data: corte } = await supabase
+            .from('services')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('name', 'Corte Masculino')
+            .limit(1)
+            .single();
+
         const { data: clients } = await supabase
             .from('clients')
             .select('id, name, phone')
@@ -318,55 +331,27 @@ async function ensureQueueAndNps(userId) {
 
         if (clients && clients.length > 0) {
             const queueEntries = clients.map((c, i) => ({
-                user_id: userId,
+                business_id: userId, // FK para profiles.id
                 client_name: c.name,
                 client_phone: c.phone,
-                service: 'Corte Masculino',
-                status: i === 0 ? 'finished' : 'waiting',
+                service_id: corte?.id ?? null, // UUID, não texto
+                status: i === 0 ? 'completed' : 'waiting', // valor válido: completed, não finished
                 joined_at: new Date(Date.now() - (i + 1) * 600000).toISOString(),
-                finished_at: i === 0 ? new Date(Date.now() - 60000).toISOString() : null,
+                // sem finished_at: coluna não existe
             }));
             const { error } = await supabase.from('queue_entries').insert(queueEntries);
             if (error) {
-                console.log(`  ⚠ Fila: ${error.message} (tabela pode não existir ou ter schema diferente)`);
+                console.log(`  ⚠ Fila: ${error.message}`);
             } else {
-                console.log('  ✓ Fila: 1 ciclo completo criado (1 finished + 2 waiting)');
+                console.log('  ✓ Fila: 1 ciclo completo criado (1 completed + 2 waiting)');
             }
         }
     } else {
         console.log('  ✓ Fila já populada');
     }
 
-    // NPS: 1 avaliação
-    const { data: existingNps } = await supabase
-        .from('nps_responses')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
-
-    if (!existingNps || existingNps.length === 0) {
-        const { data: clients } = await supabase
-            .from('clients')
-            .select('id')
-            .eq('user_id', userId)
-            .limit(1);
-        if (clients && clients.length > 0) {
-            const { error } = await supabase.from('nps_responses').insert({
-                user_id: userId,
-                client_id: clients[0].id,
-                score: 9,
-                comment: 'Atendimento excelente, barbeiro muito atencioso',
-                created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
-            });
-            if (error) {
-                console.log(`  ⚠ NPS: ${error.message} (tabela pode não existir)`);
-            } else {
-                console.log('  ✓ NPS: 1 avaliação criada (score 9)');
-            }
-        }
-    } else {
-        console.log('  ✓ NPS já populado');
-    }
+    // NPS: a tabela nps_responses não existe nas migrations. Pulando.
+    // Se for adicionada no futuro, preencher aqui.
 }
 
 async function main() {
@@ -395,7 +380,15 @@ async function main() {
     console.log('✓ Setup concluído!');
     console.log('Próximos passos:');
     console.log('  1. Abra /reports no app e confirme que os números fazem sentido');
+    console.log('     (esperado: R$ 8.000-15.000/mês, 3 funcionários comissionados)');
     console.log('  2. Rode o primeiro agente especialista (01-agente-ui-visual.md)');
+    console.log('');
+    console.log('Notas sobre o schema real usado:');
+    console.log('  - team_members: coluna "bio" (não "specialty")');
+    console.log('  - queue_entries: business_id (FK profiles.id, não user_id)');
+    console.log('  - queue_entries: service_id (UUID, não texto)');
+    console.log('  - queue_entries.status valores: waiting|completed (não finished)');
+    console.log('  - tabela nps_responses: não existe no schema atual');
 }
 
 main().catch((e) => {

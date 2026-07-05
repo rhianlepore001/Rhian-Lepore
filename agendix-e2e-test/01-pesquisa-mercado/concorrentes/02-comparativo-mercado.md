@@ -50,11 +50,11 @@
 **Onde o AgendiX está hoje** (visão do `PRODUCT.md` + `DECISIONS.md`):
 - Temas: barber (dark industrial) + beauty (light elegante) → **diferencial forte** (maioria tem 1 tema só)
 - Premium acessível, personalidade "elegante, confiável, eficiente"
-- AIOS (IA) pós-MVP → **oportunidade futura**
+- AIOS (IA) pós-MVP → **oportunidade futura** (Rhian 2026-07-05)
 - Multi-tenant + RLS → **fundação sólida**
 - Sem marketplace (decisão) → **não compete com Trinks/Booksy por aquisição**
-- Sem plano gratuito → **decisão de monetização agressiva**
-- Sem clube de assinatura pro cliente → **gap vs Barbeiro.app**
+- Sem plano gratuito (com plano gratuito 10 dias) → **decisão de monetização agressiva**
+- Sem clube de assinatura pro cliente (em produção) → **gap vs Barbeiro.app** (a desenvolver)
 
 **Onde Agendix **ganha** no papel (vs concorrentes)**:
 - Tema duplo (barber + beauty) com consistência cross-tema
@@ -64,8 +64,8 @@
 
 **Onde Agendix **perde** no papel (vs concorrentes)**:
 - Sem marketplace (perde aquisição; Trinks/Booksy ganham)
-- Sem clube de assinatura (perde recorrência; Barbeiro.app ganha)
-- Sem plano gratuito (perde funil de entrada; Barbeiro.app/Reservio ganham)
+- Sem clube de assinatura em produção (perde recorrência; Barbeiro.app tem)
+- Plano gratuito só 10 dias (Barbeiro.app e Reservio têm free permanente — perdem funil de entrada longo)
 - Sem WhatsApp nativo (perde canal nº 1 do BR)
 - Sem NPS (perde feedback loop)
 

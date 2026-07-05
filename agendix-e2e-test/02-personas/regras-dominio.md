@@ -89,6 +89,42 @@
 
 ---
 
+## Regras descobertas na auditoria (Agente 06 — Loop 2)
+
+Aguardando revisão da Rhian (marcar cada uma como **confirmada** ou **rejeitada**).
+
+### Bloco B — Agendamento
+| # | Regra | Evidência | Tag |
+|---|---|---|---|
+| B5 | `createAgendaAppointment` cria com status `Confirmed` diretamente (sem passar por `Pending`). | `services/scheduling.ts:355` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+| B6 | Cancelamento (`cancelAppointment`) não gera registro financeiro nem cobra taxa. | `services/scheduling.ts:326-333` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+| B7 | `appointments.status` usa PascalCase; `public_bookings.status` usa lowercase. | `services/scheduling.ts:228,265` | `[CONFLITO]` `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+
+### Bloco C — Financeiro e comissão
+| # | Regra | Evidência | Tag |
+|---|---|---|---|
+| C5 | `get_commissions_due` NÃO retorna `is_owner`. O filtro client-side `!item.is_owner` é ineficaz (`!undefined === true`) — dono com `commission_rate > 0` aparece nas comissões devidas. | `CommissionsManagement.tsx:151,171` + `20260218_commissions_enhancement.sql` | `[CONFLITO]` `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+
+### Bloco D — Fila digital
+| # | Regra | Evidência | Tag |
+|---|---|---|---|
+| D7 | Estado `no_show` existe no schema mas é **inalcançável** — nenhum fluxo transiciona para ele. | `services/queue.ts:137-149` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+| D8 | `fetchQueueEntries` omite `cancelled` e `no_show` da visualização diária do barbeiro. | `services/queue.ts:171` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+
+### Bloco E — Onboarding
+| # | Regra | Evidência | Tag |
+|---|---|---|---|
+| E5 | `onboarding_progress.current_step` tem constraint `CHECK BETWEEN 1 AND 5`, mas o wizard tem 6 passos — `goToStep(6)` viola a constraint e trava o wizard no passo 5. | `20260320_onboarding_wizard.sql:35` + `useOnboardingState.ts:31` | `[CONFLITO]` `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+| E6 | FK `onboarding_progress.company_id REFERENCES companies(id)` — tabela `companies` não existe no schema. Validar se a migration falhou. | `20260320_onboarding_wizard.sql:30` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` (validar no banco) |
+| E7 | Dois wizards coexistem: `/onboarding-wizard` (ativo, 6 passos) e `/onboarding` (legado, WizardEngine). | `App.tsx:165-176` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+
+### Bloco A — Identidade
+| # | Regra | Evidência | Tag |
+|---|---|---|---|
+| A9 | Slug do staff gerado com `Math.random()` sem constraint UNIQUE em `team_members.slug` — risco de colisão. | `contexts/AuthContext.tsx:336` | `[DESCOBERTA PELO AGENTE — 2026-07-05]` |
+
+---
+
 ## Como esse arquivo evolui
 
 1. **Antes da auditoria (agora)**: ele já tem o que a gente extraiu do repo. Revisado por você.

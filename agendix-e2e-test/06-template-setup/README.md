@@ -28,11 +28,21 @@ Deve mostrar `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. Se não tiver, copi
 
 ### 2. Rode o seed
 
+**Opção A — Terminal interativo (humano no desktop):**
 ```bash
 node agendix-e2e-test/06-template-setup/scripts/seed.mjs
 ```
+O script pede a senha da `bob.teste@gmail.com` via prompt. Digita, Enter, segue.
 
-O script vai pedir a senha da `bob.teste@gmail.com` (não commita, digita na hora).
+**Opção B — Agente / ambiente não-interativo (sem TTY):**
+```bash
+$env:SEED_PASSWORD = "SuaSenha"  # PowerShell
+# ou
+export SEED_PASSWORD="SuaSenha"  # bash
+
+node agendix-e2e-test/06-template-setup/scripts/seed.mjs
+```
+A senha fica só no env do processo — não vai pro histórico do shell nem pro git. Pra limpar depois: `Remove-Item Env:SEED_PASSWORD` (PowerShell) ou `unset SEED_PASSWORD` (bash).
 
 ### 3. Valide
 

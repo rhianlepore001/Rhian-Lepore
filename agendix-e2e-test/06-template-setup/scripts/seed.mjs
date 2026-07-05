@@ -110,7 +110,13 @@ function randomDate(daysAgo, daysForward = 0) {
 const supabase = createClient(url, key, { auth: { persistSession: false } });
 
 async function login() {
-    const password = await ask(`Senha da conta ${TEST_EMAIL}: `);
+    // Ordem de prioridade: env var (CI/agent) > prompt interativo (terminal humano)
+    let password = process.env.SEED_PASSWORD;
+    if (!password) {
+        password = await ask(`Senha da conta ${TEST_EMAIL}: `);
+    } else {
+        console.log(`[auth] usando SEED_PASSWORD do env (não vai pro histórico do shell)`);
+    }
     const { data, error } = await supabase.auth.signInWithPassword({ email: TEST_EMAIL, password });
     if (error) {
         console.error('Login falhou:', error.message);

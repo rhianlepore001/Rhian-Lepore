@@ -90,8 +90,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         }
     };
 
-    const accentBorder = `focus:border-${accentColor}`;
-    const accentBg = `bg-${accentColor}/10`;
+    const accentBorder = `focus:border-theme-accent`;
+    const accentBg = `bg-theme-accent/10`;
 
     return (
         <div className="relative" ref={containerRef}>
@@ -140,7 +140,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                                     <p className="text-white text-sm font-medium">{option.name}</p>
                                     {option.subtext && <p className="text-xs text-neutral-400">{option.subtext}</p>}
                                 </div>
-                                {isSelected(option.id) && <Check className={`w-4 h-4 text-${accentColor}`} />}
+                                {isSelected(option.id) && <Check className={`w-4 h-4 text-theme-accent`} />}
                             </div>
                         ))
                     ) : (

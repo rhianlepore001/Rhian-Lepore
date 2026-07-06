@@ -40,7 +40,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                         className={`
               flex flex-col items-center gap-2 p-4 rounded-lg transition-all
               ${selectedProfessional === null
-                                ? `border-2 border-${accentColor} bg-${accentColor}/10`
+                                ? `border-2 border-theme-accent bg-theme-accent/10`
                                 : 'border-2 border-neutral-700 hover:border-neutral-600'
                             }
               min-w-[120px]
@@ -49,11 +49,11 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                         <div className={`
               w-20 h-20 rounded-full flex items-center justify-center
               ${selectedProfessional === null
-                                ? `bg-${accentColor}/20`
+                                ? `bg-theme-accent/20`
                                 : 'bg-neutral-800'
                             }
             `}>
-                            <User className={`w-10 h-10 ${selectedProfessional === null ? `text-${accentColor}` : 'text-neutral-500'}`} />
+                            <User className={`w-10 h-10 ${selectedProfessional === null ? `text-theme-accent` : 'text-neutral-500'}`} />
                         </div>
                         <div className="text-center">
                             <div className="text-white text-sm font-bold">Qualquer</div>
@@ -72,7 +72,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                 className={`
                   flex flex-col items-center gap-2 p-4 rounded-lg transition-all
                   ${isSelected
-                                        ? `border-2 border-${accentColor} bg-${accentColor}/10`
+                                        ? `border-2 border-theme-accent bg-theme-accent/10`
                                         : 'border-2 border-neutral-700 hover:border-neutral-600'
                                     }
                   min-w-[120px]
@@ -81,7 +81,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                 {/* Avatar */}
                                 <div className={`
                   w-20 h-20 rounded-full overflow-hidden
-                  ${isSelected ? `ring-2 ring-${accentColor}` : ''}
+                  ${isSelected ? `ring-2 ring-theme-accent` : ''}
                 `}>
                                     {professional.photo_url ? (
                                         <img
@@ -104,7 +104,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
 
                                     {/* Rating */}
                                     <div className="flex items-center justify-center gap-1 mt-1">
-                                        <Star className={`w-3 h-3 text-${accentColor} fill-current`} />
+                                        <Star className={`w-3 h-3 text-theme-accent fill-current`} />
                                         <span className="text-white text-xs font-bold">
                                             {professional.individual_rating.toFixed(1)}
                                         </span>
@@ -151,7 +151,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                         {selected.specialties.join(', ')}
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
-                                        <Star className={`w-3 h-3 text-${accentColor} fill-current`} />
+                                        <Star className={`w-3 h-3 text-theme-accent fill-current`} />
                                         <span className="text-neutral-400 text-xs">
                                             {selected.individual_rating.toFixed(1)} ({selected.total_reviews} avaliações)
                                         </span>

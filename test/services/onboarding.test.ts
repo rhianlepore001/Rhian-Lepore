@@ -59,7 +59,7 @@ describe('onboarding service', () => {
     expect(result).toEqual({ step: 5, completed: true });
   });
 
-  it('fetchOnboardingProgress clamps step para [1,5]', async () => {
+  it('fetchOnboardingProgress clamps step para [1,6]', async () => {
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
@@ -72,7 +72,7 @@ describe('onboarding service', () => {
     });
 
     const result = await fetchOnboardingProgress('company-001');
-    expect(result).toEqual({ step: 5, completed: false });
+    expect(result).toEqual({ step: 6, completed: false });
   });
 
   it('fetchOnboardingProgress retorna step=1 quando sem dados', async () => {

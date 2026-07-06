@@ -15,11 +15,13 @@ import {
   SkeletonCard,
   PageHeader,
 } from '../components/ui';
+import { useToast } from '../components/ui/Toast';
 import { formatPhone } from '../utils/formatters';
 import { calcLoyaltyTier, createClient, syncPublicClientsToCrm } from '../services/crm';
 
 export const Clients: React.FC = () => {
   const { user, region, companyId } = useAuth();
+  const { showToast } = useToast();
   const { colors, accent, radius } = useBrutalTheme();
   const effectiveUserId = companyId ?? user?.id;
   const [searchParams] = useSearchParams();
@@ -100,7 +102,7 @@ export const Clients: React.FC = () => {
     e.preventDefault();
 
     if (!phone && !email) {
-      alert('Informe pelo menos um contato (telefone ou e-mail).');
+      showToast('Informe pelo menos um contato (telefone ou e-mail).', 'info');
       return;
     }
 
@@ -124,7 +126,7 @@ export const Clients: React.FC = () => {
 
           if (uploadError) {
             logger.error('Photo upload error', uploadError);
-            alert('Aviso: Não foi possível fazer upload da foto. O cliente será criado sem foto.');
+            showToast('Não foi possível enviar a foto. O cliente será criado sem foto.', 'info');
           } else {
             const {
               data: { publicUrl },
@@ -133,7 +135,7 @@ export const Clients: React.FC = () => {
           }
         } catch (photoError) {
           logger.error('Photo upload exception', photoError);
-          alert('Aviso: Erro ao fazer upload da foto. O cliente será criado sem foto.');
+          showToast('Não foi possível enviar a foto. O cliente será criado sem foto.', 'info');
         }
       }
 
@@ -156,7 +158,7 @@ export const Clients: React.FC = () => {
     } catch (error: unknown) {
       logger.error('Error creating client', error);
       const message = error instanceof Error ? error.message : 'Erro desconhecido';
-      alert(`Erro ao criar cliente: ${message}`);
+      showToast('Não foi possível criar o cliente. Tente novamente.', 'error');
     } finally {
       setUploading(false);
     }

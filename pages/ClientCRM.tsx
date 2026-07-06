@@ -14,12 +14,14 @@ import { formatPhone, formatCurrency } from '../utils/formatters';
 import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
 import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
 import { useSemanticMemory } from '../hooks/useSemanticMemory';
+import { useToast } from '../components/ui/Toast';
 import { AISemanticInsights } from '../components/AISemanticInsights';
 
 export const ClientCRM: React.FC = () => {
 const { id } = useParams<{ id: string }>();
   const { user, userType, region, businessName } = useAuth();
   const { accent, isBeauty } = useBrutalTheme();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -117,10 +119,10 @@ const { id } = useParams<{ id: string }>();
 
       // Update local client state with new notes
       setClient({ ...client, notes: notes });
-      alert('Notas salvas com sucesso!');
+      showToast('Notas salvas com sucesso!', 'success');
     } catch (error: any) {
       console.error('Error saving notes:', error);
-      alert('Erro ao salvar notas: ' + (error.message || 'Erro desconhecido'));
+      showToast('Não foi possível salvar as notas. Tente novamente.', 'error');
     } finally {
       setSavingNotes(false);
     }
@@ -143,10 +145,10 @@ const { id } = useParams<{ id: string }>();
       await saveMemory(client.id, notes, 'preference');
 
       setClient({ ...client, notes: notes });
-      alert('Nota e Memória de IA salvas!');
+      showToast('Nota e Memória de IA salvas!', 'success');
     } catch (error: any) {
       console.error('Error saving semantic note:', error);
-      alert('Erro: ' + error.message);
+      showToast('Não foi possível salvar. Tente novamente.', 'error');
     } finally {
       setSavingNotes(false);
     }
@@ -154,7 +156,7 @@ const { id } = useParams<{ id: string }>();
 
   const handleWhatsAppClick = async () => {
     if (!client?.phone) {
-      alert('Cliente sem telefone cadastrado.');
+      showToast('Cliente sem telefone cadastrado.', 'info');
       return;
     }
 
@@ -199,11 +201,11 @@ const { id } = useParams<{ id: string }>();
       if (error) throw error;
 
       setClient({ ...client, name: editName, phone: editPhone, email: editEmail });
-      alert('Cliente atualizado com sucesso!');
+      showToast('Cliente atualizado com sucesso!', 'success');
       setShowEditModal(false);
     } catch (error: any) {
       console.error('Error updating client:', error);
-      alert('Erro ao atualizar cliente: ' + error.message);
+      showToast('Não foi possível atualizar o cliente. Tente novamente.', 'error');
     } finally {
       setUpdating(false);
     }
@@ -225,11 +227,11 @@ const { id } = useParams<{ id: string }>();
 
       if (error) throw error;
 
-      alert('Cliente desativado com sucesso!');
+      showToast('Cliente desativado com sucesso!', 'success');
       navigate('/clientes');
     } catch (error: any) {
       console.error('Error deactivating client:', error);
-      alert('Erro ao desativar cliente: ' + error.message);
+      showToast('Não foi possível desativar o cliente. Tente novamente.', 'error');
       setDeleting(false);
     }
   };
@@ -302,11 +304,11 @@ const { id } = useParams<{ id: string }>();
 
                       // Update Local State
                       setClient({ ...client, photo_url: publicUrl });
-                      alert('Foto atualizada com sucesso!');
+                      showToast('Foto atualizada com sucesso!', 'success');
 
                     } catch (error: any) {
                       console.error('Error uploading photo:', error);
-                      alert('Erro ao atualizar foto: ' + (error.message || 'Erro desconhecido'));
+                      showToast('Não foi possível atualizar a foto. Tente novamente.', 'error');
                     }
                   }}
                 />

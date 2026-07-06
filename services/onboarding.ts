@@ -37,7 +37,7 @@ export async function fetchOnboardingProgress(companyId: string): Promise<Onboar
   }
 
   const step = progress?.current_step
-    ? Math.min(Math.max(progress.current_step, 1), 5)
+    ? Math.min(Math.max(progress.current_step, 1), 6)
     : 1;
 
   return { step, completed: false };

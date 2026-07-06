@@ -42,7 +42,7 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
     return (
         <div className={`${cardBg} p-6 mt-4 animate-fadeIn`}>
             <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className={`w-5 h-5 text-${accentColor}`} />
+                <TrendingUp className={`w-5 h-5 text-theme-accent`} />
                 <h3 className="text-white font-heading text-lg uppercase">
                     💎 Complete sua Experiência
                 </h3>
@@ -64,7 +64,7 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                             className={`
                 w-full p-4 rounded-lg border-2 transition-all text-left
                 ${isSelected
-                                    ? `border-${accentColor} bg-${accentColor}/10`
+                                    ? `border-theme-accent bg-theme-accent/10`
                                     : 'border-neutral-700 hover:border-neutral-600'
                                 }
               `}
@@ -75,7 +75,7 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                                     <div className={`
                     w-6 h-6 rounded border-2 flex items-center justify-center mt-0.5
                     ${isSelected
-                                            ? `border-${accentColor} bg-${accentColor}`
+                                            ? `border-theme-accent bg-theme-accent`
                                             : 'border-neutral-600'
                                         }
                   `}>
@@ -87,14 +87,14 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-white font-bold">{upsell.name}</span>
                                             {savings > 0 && (
-                                                <span className={`text-xs px-2 py-0.5 rounded-full bg-${accentColor}/20 text-${accentColor} font-bold`}>
+                                                <span className={`text-xs px-2 py-0.5 rounded-full bg-theme-accent/20 text-theme-accent font-bold`}>
                                                     Economize R$ {savings.toFixed(2)}
                                                 </span>
                                             )}
                                         </div>
 
                                         <div className="flex items-center gap-3 text-sm">
-                                            <span className={`text-${accentColor} font-bold`}>
+                                            <span className={`text-theme-accent font-bold`}>
                                                 +R$ {upsell.price.toFixed(2)}
                                             </span>
                                             <span className="text-neutral-400">
@@ -124,7 +124,7 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                         <span className="text-neutral-400 text-sm">
                             {selectedUpsells.length} adicional{selectedUpsells.length > 1 ? 'is' : ''} selecionado{selectedUpsells.length > 1 ? 's' : ''}
                         </span>
-                        <span className={`text-${accentColor} font-bold`}>
+                        <span className={`text-theme-accent font-bold`}>
                             +R$ {availableUpsells
                                 .filter(u => selectedUpsells.includes(u.id))
                                 .reduce((sum, u) => sum + u.price, 0)

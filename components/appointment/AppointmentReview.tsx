@@ -157,7 +157,7 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
 
                     <div className="flex justify-between items-center py-2 border-t border-white/5">
                         <span className="text-neutral-400">Total a Receber</span>
-                        <span className={`text-2xl font-bold font-mono ${accentColor}`}>
+                        <span className={`text-2xl font-bold font-mono text-theme-accent`}>
                             {formatCurrency(finalPrice, currencyRegion)}
                         </span>
                     </div>

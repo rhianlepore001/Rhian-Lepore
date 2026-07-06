@@ -96,10 +96,12 @@ export const createAgendaAppointmentInputSchema = z.object({
 export const assignProfessionalInputSchema = z.object({
   appointmentId: uuidSchema.or(z.string().min(1)),
   professionalId: uuidSchema.or(z.string().min(1)),
+  companyId: z.string().min(1),
 });
 
 export const cancelAppointmentInputSchema = z.object({
   appointmentId: uuidSchema.or(z.string().min(1)),
+  companyId: z.string().min(1),
 });
 
 export const deleteAppointmentInputSchema = z.object({

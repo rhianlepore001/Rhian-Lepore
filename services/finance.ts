@@ -96,51 +96,11 @@ export async function fetchMonthlyHistory(companyId: string, monthsCount: number
 }
 
 export async function deleteFinanceTransaction(transactionId: string, companyId: string): Promise<void> {
-  const { data: record, error: findError } = await supabase
-    .from('finance_records')
-    .select('appointment_id')
-    .eq('id', transactionId)
-    .eq('user_id', companyId)
-    .maybeSingle();
-
-  if (findError) throw findError;
-
-  if (record) {
-    if (record.appointment_id) {
-      const { error: aptError } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', record.appointment_id)
-        .eq('user_id', companyId);
-      if (aptError) throw aptError;
-    }
-    const { error } = await supabase
-      .from('finance_records')
-      .delete()
-      .eq('id', transactionId)
-      .eq('user_id', companyId);
-    if (error) throw error;
-  } else {
-    const { data: appt, error: apptFindError } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('id', transactionId)
-      .eq('user_id', companyId)
-      .maybeSingle();
-
-    if (apptFindError) throw apptFindError;
-
-    if (appt) {
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', transactionId)
-        .eq('user_id', companyId);
-      if (error) throw error;
-    } else {
-      throw new Error('Transação não encontrada. Pode já ter sido excluída.');
-    }
-  }
+  void companyId; // tenant validado server-side pela RPC (get_auth_company_id/auth.uid)
+  const { error } = await supabase.rpc('delete_finance_transaction', {
+    p_record_id: transactionId,
+  });
+  if (error) throw error;
 }
 
 export async function markExpenseAsPaid(recordId: string, companyId: string): Promise<void> {

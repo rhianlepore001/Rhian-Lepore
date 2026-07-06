@@ -126,7 +126,7 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
                 <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className={`flex items-center gap-2 px-4 py-2 bg-${accentColor} text-black font-bold rounded-lg hover:scale-105 transition-all text-xs active:scale-95 disabled:opacity-50`}
+                    className={`flex items-center gap-2 px-4 py-2 bg-theme-accent text-black font-bold rounded-lg hover:scale-105 transition-all text-xs active:scale-95 disabled:opacity-50`}
                 >
                     {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Adicionar Foto

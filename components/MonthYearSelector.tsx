@@ -64,13 +64,13 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
             </button>
 
             <div className="flex items-center gap-3">
-                <Calendar className={`w-5 h-5 ${isCurrentMonth ? `text-${accentColor}` : 'text-neutral-500'}`} />
+                <Calendar className={`w-5 h-5 ${isCurrentMonth ? `text-theme-accent` : 'text-neutral-500'}`} />
                 <div className="text-center">
                     <p className="text-xl font-heading text-white uppercase tracking-wide">
                         {months[selectedMonth]} {selectedYear}
                     </p>
                     {isCurrentMonth && (
-                        <p className={`text-xs font-mono text-${accentColor} uppercase tracking-wider mt-1`}>
+                        <p className={`text-xs font-mono text-theme-accent uppercase tracking-wider mt-1`}>
                             Mês Atual
                         </p>
                     )}
@@ -81,7 +81,7 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
                 {!isCurrentMonth && (
                     <button
                         onClick={goToCurrentMonth}
-                        className={`px-3 py-1 text-xs font-mono uppercase bg-${accentColor}/10 text-${accentColor} border border-${accentColor}/30 hover:bg-${accentColor}/20 transition-colors rounded`}
+                        className={`px-3 py-1 text-xs font-mono uppercase bg-theme-accent/10 text-theme-accent border border-theme-accent/30 hover:bg-theme-accent/20 transition-colors rounded`}
                     >
                         Hoje
                     </button>

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Sparkles, AlertTriangle, ArrowRight, X } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -10,6 +10,7 @@ export const TrialBanner: React.FC = () => {
     const { role } = useAuth();
     const { isBeauty } = useBrutalTheme();
     const navigate = useNavigate();
+    const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('trial-banner-dismissed') === '1');
 
     // Staff não vê banner de trial (herda plano do dono)
     if (role === 'staff') return null;
@@ -35,6 +36,14 @@ export const TrialBanner: React.FC = () => {
     // Se estiver no trial
     const isCritical = trialDaysRemaining <= 2;
 
+    // Dispensável por sessão quando não é crítico (crítico/expirado sempre visível)
+    if (dismissed && !isCritical) return null;
+
+    const handleDismiss = () => {
+        sessionStorage.setItem('trial-banner-dismissed', '1');
+        setDismissed(true);
+    };
+
     return (
         <div className={`w-full h-10 px-4 flex items-center justify-center gap-4 text-black text-xs md:text-sm font-bold z-[60] relative transition-all
             ${isCritical
@@ -55,6 +64,15 @@ export const TrialBanner: React.FC = () => {
             >
                 ASSINAR AGORA <ArrowRight className="w-3 h-3" />
             </button>
+            {!isCritical && (
+                <button
+                    onClick={handleDismiss}
+                    aria-label="Dispensar aviso de período de teste"
+                    className="p-1 rounded-full hover:bg-black/10 transition-colors"
+                >
+                    <X className="w-4 h-4" />
+                </button>
+            )}
         </div>
     );
 };

@@ -175,7 +175,7 @@ export const Login: React.FC = () => {
                             to="/register"
                             className="w-full flex items-center justify-center py-3.5 rounded-xl border border-white/15 hover:border-white/25 text-white text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-white/[0.04] hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                         >
-                            Criar conta — 14 dias grátis
+                            Criar conta — 10 dias grátis
                         </Link>
                     </div>
                 </div>

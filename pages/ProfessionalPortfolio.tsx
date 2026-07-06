@@ -95,7 +95,7 @@ export const ProfessionalPortfolio: React.FC = () => {
                     <div className="max-w-4xl w-full px-4 pt-20">
                         <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
                             {/* Profile Photo (Avatar style for mobile, or large for desktop) */}
-                            <div className={`relative w-40 h-40 md:w-56 md:h-56 rounded-full border-4 border-${accentColor} shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden shrink-0`}>
+                            <div className={`relative w-40 h-40 md:w-56 md:h-56 rounded-full border-4 border-theme-accent shadow-[0_0_30px_rgba(0,0,0,0.5)] overflow-hidden shrink-0`}>
                                 {professional.photo_url ? (
                                     <img src={professional.photo_url} alt={professional.name} className="w-full h-full object-cover" />
                                 ) : (
@@ -107,7 +107,7 @@ export const ProfessionalPortfolio: React.FC = () => {
 
                             <div className="text-center md:text-left flex-1 space-y-4">
                                 <div>
-                                    <h2 className={`text-lg uppercase tracking-widest font-bold text-${accentColor} mb-2`}>
+                                    <h2 className={`text-lg uppercase tracking-widest font-bold text-theme-accent mb-2`}>
                                         {professional.role}
                                     </h2>
                                     <h1 className="text-4xl md:text-6xl font-heading uppercase leading-tight">
@@ -121,7 +121,7 @@ export const ProfessionalPortfolio: React.FC = () => {
                                         <span>{business.business_name}</span>
                                     </div>
                                     <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                        <Star className={`w-4 h-4 fill-${accentColor} text-${accentColor}`} />
+                                        <Star className={`w-4 h-4 fill-theme-accent text-theme-accent`} />
                                         <span>5.0 (Avaliações)</span>
                                     </div>
                                 </div>
@@ -139,14 +139,14 @@ export const ProfessionalPortfolio: React.FC = () => {
 
             {/* CTA Section */}
             <div className="max-w-4xl mx-auto px-4 -mt-10 relative z-20 pb-20">
-                <Card className={`border-t-4 border-${accentColor} p-8 flex flex-col md:flex-row items-center justify-between gap-6`}>
+                <Card className={`border-t-4 border-theme-accent p-8 flex flex-col md:flex-row items-center justify-between gap-6`}>
                     <div>
                         <h3 className="text-2xl font-bold uppercase mb-2">Pronto para transformar seu visual?</h3>
                         <p className="text-neutral-400">Agende agora com {professional.name.split(' ')[0]} e garanta seu horário.</p>
                     </div>
                     <Button
                         onClick={() => navigate(`/book/${business.business_slug}?pro=${professional.id}`)}
-                        className={`w-full md:w-auto px-8 py-4 text-lg bg-${accentColor} hover:bg-${accentColor}Hover text-black font-bold whitespace-nowrap`}
+                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-black font-bold whitespace-nowrap`}
                     >
                         <span className="flex items-center gap-2">
                             <Calendar className="w-5 h-5" /> Agendar Horário

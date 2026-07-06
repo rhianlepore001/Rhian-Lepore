@@ -147,7 +147,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                             <button onClick={() => changeDate(1)} className="p-1 hover:bg-white/10 rounded"><ChevronRight className="w-5 h-5 text-white" /></button>
                         </div>
                         <div className="text-center">
-                            <p className={`text-4xl font-heading ${accentColor}`}>{selectedDate.getDate()}</p>
+                            <p className={`text-4xl font-heading text-theme-accent`}>{selectedDate.getDate()}</p>
                             <p className="text-white uppercase text-sm mb-2">{selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
                             <button
                                 onClick={() => setSelectedDate(new Date())}

@@ -300,7 +300,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               phone: data.phone,
               tutorial_completed: false,
               subscription_status: 'trial',
-              trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days trial
+              trial_ends_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 dias de teste (posicionamento v1)
               role: data.companyId ? 'staff' : 'owner',
               company_id: data.companyId || authData.user.id,
               aios_enabled: true

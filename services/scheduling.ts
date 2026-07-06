@@ -328,7 +328,8 @@ export async function cancelAppointment(input: CancelAppointmentInput): Promise<
   const { error } = await supabase
     .from('appointments')
     .update({ status: 'Cancelled' })
-    .eq('id', parsed.appointmentId);
+    .eq('id', parsed.appointmentId)
+    .eq('user_id', parsed.companyId);
   if (error) throw error;
 }
 
@@ -337,7 +338,8 @@ export async function assignAppointmentProfessional(input: AssignProfessionalInp
   const { error } = await supabase
     .from('appointments')
     .update({ professional_id: parsed.professionalId })
-    .eq('id', parsed.appointmentId);
+    .eq('id', parsed.appointmentId)
+    .eq('user_id', parsed.companyId);
   if (error) throw error;
 }
 

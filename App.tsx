@@ -199,7 +199,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/geral" element={<OwnerRouteGuard><GeneralSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/agendamento" element={<OwnerRouteGuard><PublicBookingSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/equipe" element={<OwnerRouteGuard><TeamSettings /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/servicos" element={<ServiceSettings />} />
+          <Route path="/configuracoes/servicos" element={<OwnerRouteGuard><ServiceSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/comissoes" element={<OwnerRouteGuard><CommissionsSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/financeiro" element={<Navigate to="/configuracoes/comissoes" replace />} />
           <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />

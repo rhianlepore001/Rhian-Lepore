@@ -162,28 +162,11 @@ describe('finance service', () => {
     });
   });
 
-  it('deleteFinanceTransaction exclui finance_record com appointment vinculado', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: { appointment_id: 'apt-001' },
-              error: null,
-            }),
-          }),
-        }),
-      }),
-      delete: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ error: null }),
-        }),
-      }),
-    });
-    (supabase.from as any).mockImplementation(mockFrom);
-
+  it('deleteFinanceTransaction chama RPC atomica delete_finance_transaction', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: null });
     await deleteFinanceTransaction('fin-001', 'company-001');
-    expect(supabase.from).toHaveBeenCalledWith('finance_records');
-    expect(supabase.from).toHaveBeenCalledWith('appointments');
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_finance_transaction', {
+      p_record_id: 'fin-001',
+    });
   });
 });

@@ -779,7 +779,7 @@ export const Agenda: React.FC = () => {
     const handleRejectBooking = async (bookingId: string) => {
         try {
             await rejectPublicBooking(bookingId, user.id);
-            showToast('Solicitação recusada.', 'success');
+            showToast('Solicitação recusada.', 'info');
             fetchData();
         } catch (error) {
             logger.error('Error rejecting booking', error);

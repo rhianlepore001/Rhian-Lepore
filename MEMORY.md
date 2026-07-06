@@ -9,6 +9,15 @@
 
 ---
 
+## 🔧 Sprints da Auditoria 360° — CONCLUÍDAS (6 Jul 2026)
+
+Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`) implementada em 3 sprints, tudo na `main` local (`15e5b7a`, `827decb`, `6cbae57`):
+- **Sprint 1 (P0s):** RPC atômica `delete_finance_transaction`, guard em `/configuracoes/servicos`, interpolações Tailwind → `theme-accent` (página pública `/book` renderiza marca), `alert()` → `showToast`, `is_owner` nas comissões, constraint onboarding 1→6, trial padronizado 10 dias.
+- **Sprint 2 (P1s):** staff órfão → `canceled`, `markTutorialCompleted` retorna erro, páginas `/termos` e `/privacidade` (LGPD), UNIQUE parcial na fila (race condition), tenant no `complete_appointment(uuid)`, copy padronizada (agendamento/Dar baixa/Receita-mês).
+- **Sprint 3:** LoadingFull com tokens, wizard legado `/onboarding` → redirect pro ativo, Dashboard usa `companyId`, `text-[8px]` → `text-xs`.
+- **⚠️ Pendências:** aplicar as 2 migrations novas (`20260706000001/2`) no Supabase de produção; validar no banco vivo a FK `onboarding_progress→companies` (R-09) e as policies de `queue_entries`; decisão de produto no_show vs waiting (C3); backlog estrutural (tokens únicos, z-index scale, migração isBeauty→tokens, consolidação BrutalCard).
+- Gates verdes em todos os commits: typecheck, lint, test 337/337, build.
+
 ## 📊 Status atual (atualizado 26 Jun 2026)
 
 - **Primeiro deploy de produção CONCLUÍDO.** Branch `main` em produção.

@@ -25,7 +25,7 @@ const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/Goal
 const GoalHistoryModal = lazy(() => import('../components/dashboard/modals/GoalHistoryModal').then(m => ({ default: m.GoalHistoryModal })));
 
 export const Dashboard: React.FC = () => {
-  const { region, role, user, fullName } = useAuth();
+  const { region, role, user, fullName, companyId } = useAuth();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const isStaff = role === 'staff';
@@ -53,7 +53,7 @@ export const Dashboard: React.FC = () => {
       const { data } = await supabase
         .from('business_settings')
         .select('commission_settlement_day_of_month')
-        .eq('user_id', user.id)
+        .eq('user_id', companyId ?? user.id)
         .maybeSingle();
       if (!data?.commission_settlement_day_of_month) return;
       const today = new Date();
@@ -75,7 +75,7 @@ export const Dashboard: React.FC = () => {
       const { count } = await supabase
         .from('appointments')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', companyId ?? user.id)
         .gte('appointment_time', todayStr + 'T00:00:00')
         .lte('appointment_time', todayStr + 'T23:59:59')
         .neq('status', 'Completed')

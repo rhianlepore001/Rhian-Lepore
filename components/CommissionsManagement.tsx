@@ -451,15 +451,15 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                                                 <div className="grid grid-cols-3 gap-2 md:gap-4">
                                                     <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
-                                                        <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Este Mês</p>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Este Mês</p>
                                                         <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{currencySymbol} {professional.total_earnings_month.toFixed(2)}</p>
                                                     </div>
                                                     <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
-                                                        <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Liquidado</p>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Liquidado</p>
                                                         <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>{currencySymbol} {professional.total_paid.toFixed(2)}</p>
                                                     </div>
                                                     <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
-                                                        <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Serviços</p>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Serviços</p>
                                                         <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{professional.total_pending_records || 0}</p>
                                                     </div>
                                                 </div>

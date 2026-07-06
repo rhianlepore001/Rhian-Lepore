@@ -37,7 +37,6 @@ const RecycleBin = React.lazy(() => import('./pages/settings/RecycleBin').then(m
 const SecuritySettings = React.lazy(() => import('./pages/settings/SecuritySettings').then(module => ({ default: module.SecuritySettings })));
 const UiPreview = React.lazy(() => import('./pages/settings/UiPreview').then(module => ({ default: module.UiPreview })));
 const OnboardingWizard = React.lazy(() => import('./pages/OnboardingWizard').then(module => ({ default: module.OnboardingWizard })));
-const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 const StaffOnboarding = React.lazy(() => import('./pages/StaffOnboarding').then(module => ({ default: module.StaffOnboarding })));
 const Reports = React.lazy(() => import('./pages/Reports').then(module => ({ default: module.Reports })));
 const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortfolio').then(module => ({ default: module.ProfessionalPortfolio })));
@@ -56,8 +55,8 @@ const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(modu
 const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
 
 const LoadingFull = () => (
-  <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+  <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-accent)]"></div>
   </div>
 );
 
@@ -170,13 +169,7 @@ const AppRoutes: React.FC = () => {
             <OnboardingWizard />
           </RequireAuth>
         } />
-        <Route path="/onboarding" element={
-          <RequireAuth>
-            <Suspense fallback={<LoadingFull />}>
-              <Onboarding />
-            </Suspense>
-          </RequireAuth>
-        } />
+        <Route path="/onboarding" element={<Navigate to="/onboarding-wizard" replace />} />
         <Route path="/staff-onboarding" element={
           <RequireAuth>
             <Suspense fallback={<LoadingFull />}>

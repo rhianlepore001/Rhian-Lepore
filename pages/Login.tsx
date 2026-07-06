@@ -60,7 +60,7 @@ export const Login: React.FC = () => {
                 const progress = await getOnboardingProgress(companyId);
 
                 if (!progress?.is_completed) {
-                    navigate('/onboarding');
+                    navigate('/onboarding-wizard');
                 } else {
                     navigate('/');
                 }

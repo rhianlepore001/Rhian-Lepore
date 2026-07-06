@@ -61,7 +61,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                     <Sparkles className="w-4 h-4" />
                     <h3 className="font-heading text-sm uppercase tracking-wider">Memória da IA</h3>
                 </div>
-                <span className="text-[8px] bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded border border-neutral-700 font-mono">EMBEDDINGS-004</span>
+                <span className="text-xs bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded border border-neutral-700 font-mono">EMBEDDINGS-004</span>
             </div>
 
             <div className="grid gap-3">

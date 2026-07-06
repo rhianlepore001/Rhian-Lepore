@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useToast } from '../components/ui/Toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +13,7 @@ export const StaffOnboarding: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const { accent, colors, classes } = useBrutalTheme();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!companyId) return;
@@ -28,7 +30,12 @@ export const StaffOnboarding: React.FC = () => {
 
   const handleStart = async () => {
     setLoading(true);
-    await markTutorialCompleted();
+    const { error } = await markTutorialCompleted();
+    if (error) {
+      setLoading(false);
+      showToast('Não foi possível concluir. Verifique sua conexão e tente novamente.', 'error');
+      return;
+    }
     navigate('/');
   };
 

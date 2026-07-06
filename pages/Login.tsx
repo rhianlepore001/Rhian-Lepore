@@ -269,7 +269,7 @@ export const Login: React.FC = () => {
                             <p className={`text-xs uppercase tracking-widest
                                 ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
                             `}>
-                                Bom te ver de novo
+                                Que bom te ver de novo
                             </p>
                         </div>
 

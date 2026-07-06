@@ -246,7 +246,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
-                        MRR
+                        Receita/mês (MRR)
                       </p>
                       <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums ${accent.text}`}>
                         {formatCurrency(clubStats.monthlyRecurringRevenueCents / 100, currencyRegion)}

@@ -941,7 +941,7 @@ export const PublicBooking: React.FC = () => {
                             {/* Summary Card */}
                             <div className={`p-6 ${colors.card} ${colors.border} border rounded-2xl ${shadow.card}`}>
                                 <div className="flex justify-between items-center border-b pb-4 mb-4 ${colors.divider}">
-                                    <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                    <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo do Agendamento</span>
                                     <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                         <Star className="w-4 h-4" />
                                     </div>
@@ -1325,7 +1325,7 @@ export const PublicBooking: React.FC = () => {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Quase pronto. Verifique o resumo da edição abaixo.", isAssistant: true, type: 'edit_confirm' }]);
                                                                     setStep('edit_confirm');
                                                                 } else {
-                                                                    setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme a sua reserva." : "Estamos quase concluindo! Agora, para confirmar sua reserva, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
+                                                                    setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
                                                             }} availableSlots={availableSlots} forceTheme={themeOverride} />
@@ -1363,7 +1363,7 @@ export const PublicBooking: React.FC = () => {
                                     </div>
 
                                     <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
-                                        {isBeauty ? 'Sua beleza agendada' : 'RESERVA CONFIRMADA'}
+                                        {isBeauty ? 'Sua beleza agendada' : 'AGENDAMENTO CONFIRMADO'}
                                     </h2>
 
                                     <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
@@ -1376,7 +1376,7 @@ export const PublicBooking: React.FC = () => {
                                     <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
                                         <div className="relative z-10 flex flex-col gap-6">
                                             <div className={`flex justify-between items-center border-b pb-4 ${colors.divider}`}>
-                                                <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                                <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo do Agendamento</span>
                                                 <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                                     <Star className="w-4 h-4" />
                                                 </div>
@@ -1611,7 +1611,7 @@ export const PublicBooking: React.FC = () => {
                     </div>
 
                     <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
-                        {isBeauty ? 'Sua beleza agendada' : 'RESERVA CONFIRMADA'}
+                        {isBeauty ? 'Sua beleza agendada' : 'AGENDAMENTO CONFIRMADO'}
                     </h2>
 
                     <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
@@ -1624,7 +1624,7 @@ export const PublicBooking: React.FC = () => {
                     <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
                         <div className="relative z-10 flex flex-col gap-6">
                             <div className={`flex justify-between items-center border-b pb-4 ${colors.divider}`}>
-                                <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo da Reserva</span>
+                                <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo do Agendamento</span>
                                 <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
                                     <Star className="w-4 h-4" />
                                 </div>

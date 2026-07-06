@@ -368,9 +368,9 @@ export const Register: React.FC = () => {
 
                 <p className="text-center font-mono text-xs text-neutral-600 uppercase tracking-widest">
                   Ao se cadastrar, você concorda com os{' '}
-                  <a href="#" className="underline hover:text-neutral-300 transition-colors">Termos</a>
+                  <Link to="/termos" className="underline hover:text-neutral-300 transition-colors">Termos</Link>
                   {' '}e{' '}
-                  <a href="#" className="underline hover:text-neutral-300 transition-colors">Privacidade</a>
+                  <Link to="/privacidade" className="underline hover:text-neutral-300 transition-colors">Privacidade</Link>
                 </p>
 
                 <p className="text-center border-t border-white/5 pt-5 font-mono text-xs text-neutral-600 uppercase tracking-wider">

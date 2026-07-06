@@ -102,7 +102,7 @@ export const QueueStatus: React.FC = () => {
     }, [entry?.status]);
 
     if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>;
-    if (!entry) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Entrada não encontrada</div>;
+    if (!entry) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Não encontramos você na fila. O link pode ter expirado — entre na fila de novo pelo balcão ou QR code.</div>;
 
     const formatTime = (seconds: number) => {
         const isNegative = seconds < 0;

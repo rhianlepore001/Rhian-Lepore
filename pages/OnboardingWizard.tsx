@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useOnboardingState, OnboardingStep } from '../hooks/useOnboardingState';
@@ -19,6 +19,10 @@ export const OnboardingWizard: React.FC = () => {
 
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
+    useEffect(() => {
+        if (completed) navigate('/', { replace: true });
+    }, [completed, navigate]);
+
     if (loading) {
         return (
             <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
@@ -32,7 +36,6 @@ export const OnboardingWizard: React.FC = () => {
     }
 
     if (completed) {
-        navigate('/');
         return null;
     }
 

@@ -27,7 +27,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
-  markTutorialCompleted: () => Promise<void>;
+  markTutorialCompleted: () => Promise<{ error: Error | null }>;
   register: (data: {
     email: string;
     password: string;
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [businessName, setBusinessName] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [tutorialCompleted, setTutorialCompleted] = useState(true);
+  const [tutorialCompleted, setTutorialCompleted] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber'>('trial');
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [role, setRole] = useState<'owner' | 'staff'>('owner');
@@ -104,9 +104,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUserType(ownerProfile.user_type as UserType || 'barber');
             setBusinessName(ownerProfile.business_name || '');
           } else {
-            // Fallback: usar tipo do próprio staff e manter como subscriber
+            // Dono não encontrado (conta desativada/excluída): bloquear acesso do staff órfão
             setUserType(profile.user_type as UserType || 'barber');
-            setSubscriptionStatus('subscriber');
+            setSubscriptionStatus('canceled');
             setTrialEndsAt(null);
           }
 
@@ -232,14 +232,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTeamMemberId(null);
   };
 
-  const markTutorialCompleted = async () => {
-    if (!session?.user) return;
+  const markTutorialCompleted = async (): Promise<{ error: Error | null }> => {
+    if (!session?.user) return { error: new Error('Sessão não encontrada.') };
     try {
       if (role === 'staff') {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update({ tutorial_completed: true })
           .eq('id', session.user.id);
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from('onboarding_progress')
@@ -258,8 +259,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setTutorialCompleted(true);
+      return { error: null };
     } catch (error) {
       console.error('Error marking tutorial as complete:', error);
+      return { error: error instanceof Error ? error : new Error('Erro ao concluir o tutorial.') };
     }
   };
 

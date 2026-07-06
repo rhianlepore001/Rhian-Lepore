@@ -19,6 +19,7 @@ const ClientCRM = React.lazy(() => import('./pages/ClientCRM').then(module => ({
 const Finance = React.lazy(() => import('./pages/Finance').then(module => ({ default: module.Finance })));
 const Register = React.lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
+const Legal = React.lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
 const Agenda = React.lazy(() => import('./pages/Agenda').then(module => ({ default: module.Agenda })));
 const Clients = React.lazy(() => import('./pages/Clients').then(module => ({ default: module.Clients })));
 const PublicBooking = React.lazy(() => import('./pages/PublicBooking').then(module => ({ default: module.PublicBooking })));
@@ -151,6 +152,8 @@ const AppRoutes: React.FC = () => {
         {/* Public / Standalone Routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/termos" element={<Legal />} />
+        <Route path="/privacidade" element={<Legal />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
         <Route path="/playwright-bug-reporter-demo" element={<PlaywrightBugReporterDemo />} />

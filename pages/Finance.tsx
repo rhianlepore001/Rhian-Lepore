@@ -519,7 +519,7 @@ useEffect(() => {
                 setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' });
               }}
             >
-              Liquidar
+              Dar baixa
             </Button>
           )}
           <Button
@@ -756,7 +756,7 @@ useEffect(() => {
                           icon={<Check className="h-3.5 w-3.5" />}
                           onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
                         >
-                          Liquidar
+                          Dar baixa
                         </Button>
                       )}
                       <Button
@@ -1088,9 +1088,9 @@ useEffect(() => {
 
       <ConfirmModal
         open={!!pendingMarkPaid}
-        title="Liquidar despesa"
+        title="Dar baixa na despesa"
         message={`Deseja marcar "${pendingMarkPaid?.name}" como paga?`}
-        confirmLabel="Liquidar"
+        confirmLabel="Dar baixa"
         onCancel={() => setPendingMarkPaid(null)}
         onConfirm={async () => {
           if (!pendingMarkPaid) return;

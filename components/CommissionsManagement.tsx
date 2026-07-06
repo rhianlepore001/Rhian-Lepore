@@ -619,7 +619,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 disabled={!!payingProfessionalId}
                                 loading={payingProfessionalId === selectedProfessional.professional_id}
                             >
-                                {payingProfessionalId === selectedProfessional.professional_id ? 'Confirmando...' : 'Liquidar agora'}
+                                {payingProfessionalId === selectedProfessional.professional_id ? 'Confirmando...' : 'Pagar agora'}
                             </Button>
                         </div>
                     }

@@ -122,7 +122,7 @@ export const MembersList: React.FC = () => {
                         <p className="text-3xl font-bold text-red-400 mt-1">{stats.totalOverdue}</p>
                     </Card>
                     <Card>
-                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>MRR</p>
+                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Receita/mês (MRR)</p>
                         <p className={`text-3xl font-bold ${colors.text} mt-1`}>
                             {formatCurrency(stats.monthlyRecurringRevenueCents / 100, region)}
                         </p>

@@ -1980,7 +1980,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         navigate(location.pathname, { replace: true });
                     }}
                     onSuccess={(date) => {
-                        const newDateStr = date.toISOString().split('T')[0];
+                        const newDateStr = formatLocalDateString(date);
                         setShowNewAppointmentModal(false);
                         navigate(`/agenda?date=${newDateStr}`, { replace: true });
                     }}

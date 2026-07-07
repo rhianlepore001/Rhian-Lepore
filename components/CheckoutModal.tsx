@@ -31,6 +31,58 @@ interface CartLine {
   quantity: number;
 }
 
+/**
+ * Traduz um erro da RPC complete_appointment (ou venda de produto) em mensagem
+ * PT-BR acionável para o operador. Antes o fluxo só exibia "Erro ao concluir
+ * atendimento. Tente novamente." — impossível saber se era auth, agendamento
+ * cancelado, RPC sem migration aplicada (signature mismatch) ou bug de dados.
+ *
+ * RAISE EXCEPTION do Postgres chega com `code` `'P0001'` e `message` em PT-BR
+ * (veja migration 20260530_complete_appointment_atomic_price.sql).
+ * Signature mismatch chega como 42883 ("function does not exist").
+ */
+function resolveCheckoutErrorMessage(err: unknown): string {
+  if (!(err instanceof Error) && typeof err !== 'object' && err != null) {
+    return 'Erro ao concluir atendimento. Tente novamente.';
+  }
+  const e: { message?: string; code?: string } = err instanceof Error
+    ? { message: err.message, code: (err as { code?: string }).code }
+    : { message: String(err) };
+
+  const code = e.code ?? '';
+  const message = e.message ?? '';
+
+  // Venda de produto com estoque insuficiente (computada antes da RPC).
+  if (message.includes('insufficient_stock')) {
+    return 'Estoque insuficiente para um dos produtos.';
+  }
+  // RAISE EXCEPTION da RPC completa_appointment — mensagens em PT-BR já boas
+  // pra o operador saber o que fez de errado (sem expor stack/SQL).
+  if (code === 'P0001') {
+    if (message.includes('nao pode ser concluido') || message.includes('cancelado')) {
+      return 'Este agendamento está cancelado e não pode ser concluído.';
+    }
+    if (message.includes('nao encontrado') || message.includes('sem permissao')) {
+      return 'Agendamento não encontrado. Atualize a agenda e tente novamente.';
+    }
+    if (message.includes('negativo')) {
+      return 'O valor final não pode ser negativo.';
+    }
+    if (message.includes('maquininha')) {
+      return 'A taxa de maquininha não pode exceder o valor do serviço.';
+    }
+    return message || 'Erro ao concluir atendimento. Tente novamente.';
+  }
+  // Function not found — migration 20260530 ainda não aplicada em produção.
+  if (code === '42883' || /function .* does not exist/i.test(message)) {
+    return 'Atualização do sistema pendente. Tente novamente em alguns minutos.';
+  }
+  if (message.includes('JWT') || message.includes('JWSError') || message.includes('auth')) {
+    return 'Sessão expirada. Recarregue a página e faça login novamente.';
+  }
+  return 'Erro ao concluir atendimento. Tente novamente.';
+}
+
 export interface CheckoutModalProps {
   appointment: Appointment | null;
   teamMembers: TeamMember[];
@@ -209,13 +261,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
       onConfirm();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      logger.error('Erro ao concluir atendimento via checkout', { error: errorMessage });
-      if (errorMessage.includes('insufficient_stock')) {
-        showToast('Estoque insuficiente para um dos produtos.', 'error');
-      } else {
-        showToast('Erro ao concluir atendimento. Tente novamente.', 'error');
-      }
+      const userMessage = resolveCheckoutErrorMessage(err);
+      logger.error('Erro ao concluir atendimento via checkout', {
+        error: err instanceof Error ? err.message : String(err),
+        code: (err as { code?: string } | null)?.code ?? null,
+      });
+      showToast(userMessage, 'error');
     }
   };
 

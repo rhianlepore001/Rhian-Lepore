@@ -136,14 +136,6 @@ export const OccupancyRateCard: React.FC = () => {
             </div>
           </div>
 
-          {rate < 70 && (
-            <div className={`mt-4 p-3 rounded-xl border ${status.warningBg} ${status.warningBorder} ${status.warning}`}>
-              <p className="text-xs font-medium leading-relaxed">
-                Você ainda tem {formatDuration(current.availableMinutes - current.occupiedMinutes)} livres.
-                Vale abrir mais horários ou avisar clientes com agenda em aberto.
-              </p>
-            </div>
-          )}
         </>
       )}
     </Card>

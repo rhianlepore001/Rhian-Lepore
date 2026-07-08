@@ -19,7 +19,7 @@ import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPubli
 import { deleteAppointmentWithFinance } from '../services/scheduling';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
-import { formatDateForInput } from '../utils/date';
+import { formatDateForInput, formatLocalDateString } from '../utils/date';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime } from '../utils/date';
@@ -986,10 +986,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
+        newDate.setHours(0, 0, 0, 0);
         newDate.setDate(newDate.getDate() + days);
 
-        // Atualiza a URL para refletir a nova data
-        const newDateStr = newDate.toISOString().split('T')[0];
+        // Atualiza a URL para refletir a nova data (formato local, sem UTC roll em fuso BR)
+        const newDateStr = formatLocalDateString(newDate);
         navigate(`/agenda?date=${newDateStr}`);
     };
 
@@ -1247,7 +1248,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             <button
                                 key={i}
                                 onClick={() => {
-                                    const newDateStr = d.toISOString().split('T')[0];
+                                    const newDateStr = formatLocalDateString(d);
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
                                 className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
@@ -1286,7 +1287,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         )}
                         {teamMembers.map(member => {
                             const isSelected = selectedProfessionalIds.includes(member.id);
-                            const isSelf = isStaff && member.id === teamMemberId;
+                            // teamMemberId agora é resolvido também para o dono
+                            // (AuthContext) — o badge "Você" vale para qualquer
+                            // um que atenda, dono ou colaborador.
+                            const isSelf = member.id === teamMemberId;
                             return (
                                 <button
                                     key={member.id}
@@ -1976,7 +1980,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         navigate(location.pathname, { replace: true });
                     }}
                     onSuccess={(date) => {
-                        const newDateStr = date.toISOString().split('T')[0];
+                        const newDateStr = formatLocalDateString(date);
                         setShowNewAppointmentModal(false);
                         navigate(`/agenda?date=${newDateStr}`, { replace: true });
                     }}

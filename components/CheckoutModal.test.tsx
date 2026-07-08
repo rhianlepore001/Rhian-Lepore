@@ -169,7 +169,7 @@ describe('CheckoutModal', () => {
     expect(defaultProps.onConfirm).toHaveBeenCalled();
   });
 
-  it('quando RPC falha, exibe erro e nao faz update mais insert no client-side', async () => {
+  it('quando RPC falha com erro genérico, exibe mensagem de erro amigável', async () => {
     (supabase.rpc as any).mockResolvedValue({
       data: null,
       error: new Error('RPC indisponivel'),
@@ -188,5 +188,48 @@ describe('CheckoutModal', () => {
     // (não relacionado ao fluxo de checkout do appointment em si)
     expect(supabase.from).not.toHaveBeenCalledWith('appointments');
     expect(defaultProps.onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('quando RPC recusa agendamento cancelado, exibe mensagem específica', async () => {
+    // P0001 = RAISE EXCEPTION do Postgres (veja migration 20260530)
+    const rpcError = Object.assign(new Error('Agendamento cancelado nao pode ser concluido.'), {
+      code: 'P0001',
+    });
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: rpcError });
+
+    renderCheckoutModal();
+
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith(
+        'Este agendamento está cancelado e não pode ser concluído.',
+        'error',
+      );
+    });
+    expect(defaultProps.onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('quando RPC não existe (migration 20260530 pendente), avisa atualização pendente', async () => {
+    // 42883 = undefined_function no Postgres (function does not exist)
+    const rpcError = Object.assign(new Error('function public.complete_appointment(...) does not exist'), {
+      code: '42883',
+    });
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: rpcError });
+
+    renderCheckoutModal();
+
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+
+    await waitFor(() => {
+      expect(showToastMock).toHaveBeenCalledWith(
+        'Atualização do sistema pendente. Tente novamente em alguns minutos.',
+        'error',
+      );
+    });
   });
 });

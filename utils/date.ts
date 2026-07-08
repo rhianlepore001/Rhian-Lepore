@@ -65,7 +65,23 @@ export const parseDate = (dateString: Date | string | null | undefined): Date | 
 };
 
 /**
+ * Formata uma Date para YYYY-MM-DD usando componentes locais (getFullYear/
+ * getMonth/getDate). Diferente de `toISOString().split('T')[0]`, não converte
+ * pra UTC — evita rolar 1 dia quando a hora local está entre 21:00 e meia-noite
+ * em fusos negativos (BR UTC-3). Bug P0 #2 da auditoria ADM: cliques nos botões
+ * da faixa semanal abriam o dia adjacente.
+ */
+export const formatLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+/**
  * Formata com segurança uma data para uso em input type="date" (YYYY-MM-DD)
+ * respeitando o fuso horário local (sem `toISOString().split('T')[0]`, que
+ * rola o dia em fusos != UTC quando a hora local está perto de meia-noite).
  * Retorna string vazia se data inválida, evitando crash.
  */
 export const formatDateForInput = (date: Date | string | null | undefined): string => {
@@ -73,12 +89,13 @@ export const formatDateForInput = (date: Date | string | null | undefined): stri
     try {
         const d = new Date(date);
         if (isNaN(d.getTime())) return '';
-        return d.toISOString().split('T')[0];
+        return formatLocalDateString(d);
     } catch (e) {
         console.error('formatDateForInput error', e);
         return '';
     }
 };
+
 /**
  * Cria um objeto Date no fuso horário local combinando uma string de data (YYYY-MM-DD)
  * e uma string de hora (HH:mm). Evita o bug de parsing UTC do construtor Date(string).
@@ -93,9 +110,5 @@ export const combineDateAndTime = (dateStr: string, timeStr: string): Date => {
  * Retorna a data atual no formato YYYY-MM-DD respeitando o fuso local.
  */
 export const getTodayDateString = (): string => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return formatLocalDateString(new Date());
 };

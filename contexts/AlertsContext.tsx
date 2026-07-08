@@ -94,7 +94,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
 
                 // Check if there are commissions due
-                const { data: commissionsDue } = await supabase.rpc('get_commissions_due', { p_user_id: tenantId });
+                const { data: commissionsDue } = await supabase.rpc('get_commissions_due');
                 const totalDue = (commissionsDue || []).reduce((sum: number, r: any) => sum + (r.total_due || 0), 0);
 
                 if (totalDue > 0) {

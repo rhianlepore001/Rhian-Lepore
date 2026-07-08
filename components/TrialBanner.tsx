@@ -20,7 +20,7 @@ export const TrialBanner: React.FC = () => {
     if (isExpired) {
         return (
             <div className={`w-full h-10 px-4 flex items-center justify-center gap-4 text-white text-xs md:text-sm font-bold z-[60] relative
-                ${isBeauty ? 'bg-red-600' : 'bg-red-600'}`}>
+                bg-red-600`}>
                 <AlertTriangle className="w-4 h-4" />
                 <span>SEU PERÍODO DE TESTE EXPIROU. ASSINE AGORA PARA CONTINUAR USANDO.</span>
                 <button

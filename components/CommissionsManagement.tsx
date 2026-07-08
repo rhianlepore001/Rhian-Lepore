@@ -144,7 +144,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         if (!user) return;
         setLoading(true);
         try {
-            const { data, error } = await supabase.rpc('get_commissions_due', { p_user_id: user.id });
+            const { data, error } = await supabase.rpc('get_commissions_due');
             if (error) throw error;
 
             // Fetch CPF for each professional

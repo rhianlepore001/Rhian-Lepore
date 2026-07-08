@@ -121,48 +121,52 @@ test.describe('Ciclo de receita', () => {
                 isMobile: true,
                 hasTouch: true,
             });
-            const joao = await joaoCtx.newPage();
+            // finally garante que o contexto não vaza se uma assertion falhar no meio
+            try {
+                const joao = await joaoCtx.newPage();
 
-            await joao.goto(`${BASE}/#/book/${slug}`, { waitUntil: 'load' });
-            const servico = joao.getByText('Corte Masculino').first();
-            await servico.waitFor({ timeout: 20_000 });
-            await servico.click();
-            await joao.getByRole('button', { name: /Continuar/i }).click({ timeout: 5_000 });
+                await joao.goto(`${BASE}/#/book/${slug}`, { waitUntil: 'load' });
+                const servico = joao.getByText('Corte Masculino').first();
+                await servico.waitFor({ timeout: 20_000 });
+                await servico.click();
+                await joao.getByRole('button', { name: /Continuar/i }).click({ timeout: 5_000 });
 
-            // Profissional: o card usa o primeiro nome em caixa alta; "qualquer um" também serve
-            const prof = joao.getByText(/^CLAUDE$/i).first().or(joao.getByText(/QUALQUER PROFISSIONAL/i).first()).first();
-            await prof.waitFor({ timeout: 15_000 });
-            await prof.click();
-            const cont = joao.getByRole('button', { name: /Continuar/i });
-            if (await cont.isVisible().catch(() => false)) await cont.click({ timeout: 5_000 });
+                // Profissional: o card usa o primeiro nome em caixa alta; "qualquer um" também serve
+                const prof = joao.getByText(/^CLAUDE$/i).first().or(joao.getByText(/QUALQUER PROFISSIONAL/i).first()).first();
+                await prof.waitFor({ timeout: 15_000 });
+                await prof.click();
+                const cont = joao.getByRole('button', { name: /Continuar/i });
+                if (await cont.isVisible().catch(() => false)) await cont.click({ timeout: 5_000 });
 
-            // Data: amanhã; se não houver slot (domingo/lotado), avança um dia
-            await joao.getByText(/^JANEIRO|FEVEREIRO|MARÇO|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO/i).first()
-                .waitFor({ timeout: 15_000 }).catch(() => { /* cabeçalho do calendário é informativo */ });
-            await joao.getByText(dayNumber, { exact: true }).first().click({ timeout: 10_000 });
-            await joao.waitForTimeout(3000); // busca de slots
-            let slot = joao.getByText(/^\d{2}:\d{2}$/).first();
-            if (!(await slot.isVisible().catch(() => false))) {
-                const nextDay = String(Number(dayNumber) + 1);
-                await joao.getByText(nextDay, { exact: true }).first().click({ timeout: 10_000 });
-                await joao.waitForTimeout(3000);
-                slot = joao.getByText(/^\d{2}:\d{2}$/).first();
+                // Data: amanhã; se não houver slot (domingo/lotado), avança um dia
+                await joao.getByText(/^JANEIRO|FEVEREIRO|MARÇO|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO/i).first()
+                    .waitFor({ timeout: 15_000 }).catch(() => { /* cabeçalho do calendário é informativo */ });
+                await joao.getByText(dayNumber, { exact: true }).first().click({ timeout: 10_000 });
+                await joao.waitForTimeout(3000); // busca de slots
+                let slot = joao.getByText(/^\d{2}:\d{2}$/).first();
+                if (!(await slot.isVisible().catch(() => false))) {
+                    const nextDay = String(Number(dayNumber) + 1);
+                    await joao.getByText(nextDay, { exact: true }).first().click({ timeout: 10_000 });
+                    await joao.waitForTimeout(3000);
+                    slot = joao.getByText(/^\d{2}:\d{2}$/).first();
+                }
+                await slot.waitFor({ timeout: 10_000 });
+                bookedTime = (await slot.innerText()).trim();
+                await slot.click();
+                await joao.getByRole('button', { name: /Continuar/i }).click({ timeout: 5_000 });
+
+                // Contato + consentimentos
+                await joao.locator('input[type="text"], input:not([type])').first().fill(CLIENT_NAME, { timeout: 10_000 });
+                await joao.locator('input[type="tel"]').first().fill(CLIENT_PHONE);
+                const checks = joao.locator('input[type="checkbox"]');
+                const n = await checks.count();
+                for (let i = 0; i < n; i++) await checks.nth(i).check({ timeout: 3_000 }).catch(() => { /* opcional */ });
+
+                await joao.getByRole('button', { name: /Confirmar & Agendar/i }).click({ timeout: 5_000 });
+                await expect(joao.getByText('AGENDAMENTO CONFIRMADO')).toBeVisible({ timeout: 20_000 });
+            } finally {
+                await joaoCtx.close();
             }
-            await slot.waitFor({ timeout: 10_000 });
-            bookedTime = (await slot.innerText()).trim();
-            await slot.click();
-            await joao.getByRole('button', { name: /Continuar/i }).click({ timeout: 5_000 });
-
-            // Contato + consentimentos
-            await joao.locator('input[type="text"], input:not([type])').first().fill(CLIENT_NAME, { timeout: 10_000 });
-            await joao.locator('input[type="tel"]').first().fill(CLIENT_PHONE);
-            const checks = joao.locator('input[type="checkbox"]');
-            const n = await checks.count();
-            for (let i = 0; i < n; i++) await checks.nth(i).check({ timeout: 3_000 }).catch(() => { /* opcional */ });
-
-            await joao.getByRole('button', { name: /Confirmar & Agendar/i }).click({ timeout: 5_000 });
-            await expect(joao.getByText('AGENDAMENTO CONFIRMADO')).toBeVisible({ timeout: 20_000 });
-            await joaoCtx.close();
         });
 
         await test.step('3. Dono aceita a solicitação e ela aparece na grade no horário local', async () => {
@@ -172,23 +176,27 @@ test.describe('Ciclo de receita', () => {
             await owner.getByText('Olá,').first().waitFor({ timeout: 20_000 });
             await navTo(owner, 'Agenda');
 
-            // Painel "Solicitações Pendentes" — aceita todas (runs anteriores podem ter
-            // deixado solicitações penduradas; a deste run está entre elas)
-            const aceitar = owner.getByRole('button', { name: /^Aceitar$/i }).first();
+            // Painel "Solicitações Pendentes" — aceita SÓ a deste run (a conta de teste é
+            // compartilhada; aceitar tudo aprovaria solicitações que não são deste teste)
+            const cardPendente = owner
+                .locator('div')
+                .filter({ hasText: CLIENT_NAME })
+                .filter({ has: owner.getByRole('button', { name: /^Aceitar$/i }) })
+                .last(); // .last() = o container mais interno que tem nome + botão
+            const aceitar = cardPendente.getByRole('button', { name: /^Aceitar$/i }).first();
             await aceitar.waitFor({ timeout: 20_000 });
-            for (let i = 0; i < 10 && await aceitar.isVisible().catch(() => false); i++) {
-                await aceitar.click({ timeout: 5_000 });
-                // Modal pós-aceite oferece confirmar por WhatsApp
-                const agoraNao = owner.getByRole('button', { name: /Agora não/i });
-                await agoraNao.waitFor({ timeout: 10_000 });
-                await agoraNao.click();
-                await owner.waitForTimeout(1500);
-            }
+            await aceitar.click({ timeout: 5_000 });
+            // Modal pós-aceite oferece confirmar por WhatsApp
+            const agoraNao = owner.getByRole('button', { name: /Agora não/i });
+            await agoraNao.waitFor({ timeout: 10_000 });
+            await agoraNao.click();
 
             // Grade do dia escolhido, no fuso do negócio
             await owner.getByText(dayNumber, { exact: true }).locator('visible=true').first().click({ timeout: 10_000 });
             const cardGrade = owner.locator('div.cursor-pointer').filter({ hasText: CLIENT_NAME }).locator('visible=true').first();
             await expect(cardGrade, 'agendamento aceito deve aparecer na grade do profissional').toBeVisible({ timeout: 20_000 });
+            // O banco grava UTC; a grade deve exibir exatamente o horário que João escolheu (BRT)
+            await expect(cardGrade, 'horário na grade deve ser o mesmo que João escolheu (fuso UTC→local)').toContainText(bookedTime);
         });
 
         await test.step('4. Dono abre o detalhe e conclui com "Confirmar e cobrar" (PIX)', async () => {

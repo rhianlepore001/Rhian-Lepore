@@ -195,8 +195,6 @@ test.describe('Ciclo de receita', () => {
             await owner.getByText(dayNumber, { exact: true }).locator('visible=true').first().click({ timeout: 10_000 });
             const cardGrade = owner.locator('div.cursor-pointer').filter({ hasText: CLIENT_NAME }).locator('visible=true').first();
             await expect(cardGrade, 'agendamento aceito deve aparecer na grade do profissional').toBeVisible({ timeout: 20_000 });
-            // O banco grava UTC; a grade deve exibir exatamente o horário que João escolheu (BRT)
-            await expect(cardGrade, 'horário na grade deve ser o mesmo que João escolheu (fuso UTC→local)').toContainText(bookedTime);
         });
 
         await test.step('4. Dono abre o detalhe e conclui com "Confirmar e cobrar" (PIX)', async () => {
@@ -208,6 +206,9 @@ test.describe('Ciclo de receita', () => {
             const detalhe = owner.locator('[role="dialog"]');
             await expect(detalhe, 'modal de detalhes deve permanecer aberto após o clique').toBeVisible({ timeout: 10_000 });
             await expect(detalhe.getByText(CLIENT_NAME)).toBeVisible();
+            // O banco grava UTC; "Data e Hora" do modal deve exibir o horário que João
+            // escolheu (BRT). O card da grade não mostra o horário — a verificação vive aqui.
+            await expect(detalhe, 'horário no detalhe deve ser o que João escolheu (fuso UTC→local)').toContainText(bookedTime);
 
             await owner.getByRole('button', { name: /Confirmar e cobrar/i }).click({ timeout: 5_000 });
             await owner.getByText('Concluir Atendimento').waitFor({ timeout: 10_000 });

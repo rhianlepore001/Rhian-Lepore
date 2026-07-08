@@ -37,6 +37,14 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **E2E ciclo de receita (8 Jul 2026, branch `test/e2e-ciclo-receita`):** spec Playwright `e2e/ciclo-de-receita.spec.ts` cobre link público → booking anônimo → aceite do dono → checkout → Financeiro (credenciais via `E2E_OWNER_EMAIL`/`E2E_OWNER_PASS`). Achados:
+  - **🔴 BLOQUEIO DE PRODUÇÃO:** migration `supabase/migrations/20260413_checkout_fields.sql` nunca foi aplicada no banco remoto, mas a versão nova de `complete_appointment` (que usa `received_by`) foi → **todo checkout falha com 42703** ("column received_by does not exist"). Nenhuma cobrança/faturamento funciona até aplicar o SQL (idempotente) no SQL Editor.
+  - **🔴 Domínio de produção suspenso (8 Jul 2026):** agendixstudio.com/www exibem página "domain suspended" da Hostinger (verificação de e-mail ICANN pendente). O deploy Vercel continua no ar em https://rhian-lepore.vercel.app. Resolver: verificar e-mail do registro na Hostinger.
+  - Fix P0 commitado (`ca7d286`): modal de detalhes da Agenda fechava no mesmo clique (FocusTrap `onDeactivate` × StrictMode); padrão correto é o de `components/ui/Modal.tsx`.
+  - P1 aberto: deep-link com boot frio (ex. `goto /#/agenda` logado) cai no wizard de onboarding (corrida no gate). Workaround nos testes: boot via `/#/` e navegar pelo menu.
+  - RPCs ausentes no banco (fluxo funciona por fallback): `get_public_client_by_phone`, `get_first_available_professional`, `upsert_public_client`, `get_aios_diagnostic`; `get_public_booking_by_id` responde 400.
+  - UX (persona cliente): slug não é criado no onboarding (dono fica sem link até achar Ajustes→Agendamento); tela final diz "AGENDAMENTO CONFIRMADO" mas ainda depende de aprovação do dono; chips de categoria duplicados no booking público.
+  - `e2e/.auth/` agora está no `.gitignore` (storageState contém tokens; repo é público).
 - **Fases 0–8:** migração da camada de dados para TanStack Query (services/hooks/types) — team, settings, dashboard, fila, agendamento, finanças.
 - **Auditoria UX writing + visual:** cores (roxo/dourado/modais), correção de textos, mojibake, links mortos.
 - **Go-live hardening (20 Jun 2026):** validação completa, correções de release, blindagem multi-tenant, aplicação de migrations pendentes em produção e verificação no banco vivo.

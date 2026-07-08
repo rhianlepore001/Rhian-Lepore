@@ -133,3 +133,6 @@ testsprite_tests\tmp\config.json
 
 # Supabase CLI local metadata (nao versionar)
 supabase/.temp/
+
+# Playwright storageState (contem access_tokens - nunca versionar)
+e2e/.auth/

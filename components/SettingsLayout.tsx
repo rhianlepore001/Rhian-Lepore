@@ -49,7 +49,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                     </h2>
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="md:hidden p-2 text-neutral-400 hover:text-white rounded-full hover:bg-white/10 active:animate-haptic-click"
+                        className="md:hidden p-2 text-theme-textSecondary hover:text-theme-text rounded-full hover:bg-[var(--color-card-hover)] active:animate-haptic-click"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -66,7 +66,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                                 active:animate-haptic-click
                                 ${isActive
                                     ? `${accent.bgDim} ${accent.text} ${accent.shadowStrong} font-bold`
-                                    : `${colors.textSecondary} hover:text-theme-text hover:bg-white/5 border border-transparent`
+                                    : `${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] border border-transparent`
                                 }
                             `}
                         >
@@ -105,7 +105,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsSidebarOpen(true)}
-                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click bg-white/5 ${colors.text}`}
+                                className={`p-2 -ml-2 rounded-xl transition-all active:animate-haptic-click bg-[var(--color-card-hover)] ${colors.text}`}
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
@@ -130,7 +130,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                                             flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
                                             ${isActive
                                                 ? `${accent.bgDim} ${accent.text} ${accent.border} shadow-promax-glass`
-                                                : `bg-white/5 ${colors.border} ${colors.textSecondary} opacity-80`
+                                                : `bg-[var(--color-card-hover)] ${colors.border} ${colors.textSecondary} opacity-80`
                                             }
                                         `}
                                     >
@@ -143,7 +143,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                             </div>
                         </div>
                         {/* Gradient fade right */}
-                        <div className={`pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-neutral-900 to-transparent md:hidden`} />
+                        <div className={`pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[var(--color-bg)] to-transparent md:hidden`} />
                     </div>
                 </div>
 

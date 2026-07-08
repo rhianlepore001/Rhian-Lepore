@@ -1,6 +1,8 @@
 import { Card, PageHeader } from '../components/ui';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import React, { useState, useMemo } from 'react';
+import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
+import { CancellationRateCard } from '../components/dashboard/CancellationRateCard';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/Toast';
@@ -218,6 +220,15 @@ export const Reports: React.FC = () => {
                             </Card>
                         </div>
                     </div>
+
+                    <div>
+                        <h2 className={`text-xl font-heading ${colors.text} uppercase mb-4 tracking-wider`}>Ocupação e cancelamentos</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <CriticalEmptySlotsCard />
+                            <CancellationRateCard />
+                        </div>
+                    </div>
+
 
                     <div>
                         <h2 className={`text-xl font-heading ${colors.text} uppercase mb-4 tracking-wider`}>Performance e crescimento</h2>

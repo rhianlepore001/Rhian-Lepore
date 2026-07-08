@@ -17,8 +17,6 @@ import { Button } from '../components/ui/Button';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { OccupancyRateCard } from '../components/dashboard/OccupancyRateCard';
-import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
-import { CancellationRateCard } from '../components/dashboard/CancellationRateCard';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -174,11 +172,6 @@ export const Dashboard: React.FC = () => {
           )}
 
           <OccupancyRateCard />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-            <CriticalEmptySlotsCard />
-            <CancellationRateCard />
-          </div>
 
           <section className="grid grid-cols-2 gap-3">
             {loading ? (

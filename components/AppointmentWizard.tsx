@@ -38,7 +38,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 }) => {
     const { user, region, businessName, companyId } = useAuth();
     const { setModalOpen } = useUI();
-    const { isBeauty, accent } = useBrutalTheme();
+    const { isBeauty, accent, colors } = useBrutalTheme();
     const createAppointment = useCreateAppointment();
     const { showToast } = useToast();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -267,7 +267,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 {/* HEADER */}
                 <div className={`relative p-6 flex items-center justify-between border-b ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-white/5 bg-brutal-main/50'}`}>
                     <div>
-                        <h2 className="text-2xl font-heading text-white uppercase tracking-wider">
+                        <h2 className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
                             Novo Atendimento
                         </h2>
                         {(() => {
@@ -307,7 +307,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             );
                         })()}
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
+                    <button onClick={onClose} className={`p-2 hover:bg-white/10 rounded-full transition-colors ${colors.text}`}>
                         <X className="w-6 h-6" />
                     </button>
                     <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} aria-hidden="true" />
@@ -337,7 +337,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                     {step === 2 && (
                         <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-heading text-white uppercase tracking-tight">Menu de Serviços</h3>
+                                <h3 className={`text-2xl font-heading ${colors.text} uppercase tracking-tight`}>Menu de Serviços</h3>
                                 <p className="text-neutral-500 text-xs font-mono">
                                     {services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length} Opções
                                 </p>
@@ -439,7 +439,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                     {step > 1 ? (
                         <button
                             onClick={() => setStep(prev => (prev - 1) as any)}
-                            className="text-white hover:opacity-70 px-4 py-2 flex items-center gap-2 transition-opacity"
+                            className={`${colors.text} hover:opacity-70 px-4 py-2 flex items-center gap-2 transition-opacity`}
                         >
                             <ChevronLeft className="w-4 h-4" /> Voltar
                         </button>

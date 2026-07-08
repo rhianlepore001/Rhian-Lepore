@@ -1633,13 +1633,16 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${colors.overlay} md:left-64`}
                     onClick={() => setShowingDetailsAppointment(null)}
                 >
-                    {/* clickOutsideDeactivates desligado: ele fechava o modal no MESMO clique que o abria
-                        (corrida) — o "clico no agendamento e nada abre". O fundo escuro fecha via onClick acima. */}
-                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: true, clickOutsideDeactivates: false, onDeactivate: () => setShowingDetailsAppointment(null) }}>
+                    {/* onDeactivate não pode fechar o modal: sob StrictMode o cleanup do effect do
+                        FocusTrap desativa o trap logo após montar, fechando o modal no mesmo clique
+                        que o abriu. Esc fecha via onKeyDown abaixo; fundo escuro fecha via onClick acima. */}
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: false, fallbackFocus: '[aria-labelledby="appointment-details-title"]' }}>
                     <div
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="appointment-details-title"
+                        tabIndex={-1}
+                        onKeyDown={(e) => { if (e.key === 'Escape') setShowingDetailsAppointment(null); }}
                         onClick={(e) => e.stopPropagation()}
                         className={`w-full max-w-md max-h-[90vh] overflow-y-auto p-0 relative transition-all animate-in fade-in zoom-in duration-300 ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
                         {/* Header */}

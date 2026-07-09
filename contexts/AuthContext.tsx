@@ -169,7 +169,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (session?.user?.id) {
-        setIsDev(session.user.email === 'rleporesilva@gmail.com');
+        const devEmail = import.meta.env.VITE_DEV_EMAIL;
+        setIsDev(!!devEmail && session.user.email === devEmail);
         // Re-fetch profile data on sign in/change
         fetchProfileData(session.user.id).then(() => {
           setLoading(false);

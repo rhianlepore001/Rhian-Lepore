@@ -155,8 +155,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/privacidade" element={<Legal />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
-        <Route path="/playwright-bug-reporter-demo" element={<PlaywrightBugReporterDemo />} />
-        <Route path="/design-review-demo" element={<DesignReviewDemo />} />
+        <Route path="/playwright-bug-reporter-demo" element={<DevRouteGuard><PlaywrightBugReporterDemo /></DevRouteGuard>} />
+        <Route path="/design-review-demo" element={<DevRouteGuard><DesignReviewDemo /></DevRouteGuard>} />
         <Route path="/club-demo" element={<ClubDemo />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />

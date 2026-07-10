@@ -111,6 +111,9 @@ export interface BrutalThemeTokens {
     warning: string;
     warningBg: string;
     warningBorder: string;
+    info: string;
+    infoBg: string;
+    infoBorder: string;
   };
 
   classes: {
@@ -131,6 +134,7 @@ export interface BrutalThemeTokens {
     badgeDanger: string;
     badgeSuccess: string;
     badgeWarning: string;
+    badgeInfo: string;
     badgeNeutral: string;
     tableRow: string;
     tableHeader: string;
@@ -263,6 +267,9 @@ const status: BrutalThemeTokens['status'] = {
   warning: 'text-[var(--color-warning)]',
   warningBg: 'bg-[var(--color-warning-bg)]',
   warningBorder: 'border-[var(--color-warning-border)]',
+  info: 'text-[var(--color-info)]',
+  infoBg: 'bg-[var(--color-info-bg)]',
+  infoBorder: 'border-[var(--color-info-border)]',
 };
 
 const focus: BrutalThemeTokens['focus'] = {
@@ -308,6 +315,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       badgeDanger: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]`,
       badgeSuccess: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]`,
       badgeWarning: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]`,
+      badgeInfo: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-info-bg)] text-[var(--color-info)] border border-[var(--color-info-border)]`,
       badgeNeutral: `px-2 py-0.5 ${radius.badge} text-xs font-bold bg-[var(--color-card-hover)] text-theme-textSecondary border border-[var(--color-divider)]`,
 
       tableRow: `${radius.input} border-theme-border hover:bg-[var(--color-card-hover)] ${density.tableRowPy} transition-colors`,

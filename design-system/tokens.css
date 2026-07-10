@@ -1,11 +1,16 @@
 /**
- * AgendiX Design System Tokens
- * Auto-generated from design-system/tokens/*.json
- * DO NOT EDIT MANUALLY — Update the JSON files and regenerate.
+ * AgendiX Design System Tokens — v1.1
+ * FONTE ÚNICA de tokens (design-audit.md §3). Os JSON em design-system/tokens/
+ * são documentação histórica; este arquivo é editado diretamente.
+ *
+ * Regras:
+ * - Nenhum tema/modo é definido em outro lugar (index.html não duplica mais).
+ * - text-muted calibrado para WCAG AA (≥4.5:1 sobre --color-card) nas 4 combinações.
+ * - Elevação: 4 níveis (--elevation-0..3). Dropdown=1, card destaque=2, modal=3.
  */
 
 /* ============================================
-   PRIMITIVE TOKENS (HSL for opacity control)
+   PRIMITIVE TOKENS
    ============================================ */
 :root {
   /* Z-index scale (DS Lock §1.7) */
@@ -15,22 +20,23 @@
   --z-modal: 80;
   --z-toast: 90;
 
-  /* Gold Palette */
-  --color-gold-50: #FBF5E6;
-  --color-gold-100: #F5E8C8;
-  --color-gold-200: #EDD49A;
-  --color-gold-300: #D4AF50;
-  --color-gold-400: #C29B40;
-  --color-gold-500: #A07A2A;
-  --color-gold-600: #8A6D2A;
-  --color-gold-700: #6B5420;
-  --color-gold-800: #4D3D18;
-  --color-gold-900: #332810;
+  /* Gold Palette (50–950) */
+  --color-gold-50: #FBF6E9;
+  --color-gold-100: #F5EACB;
+  --color-gold-200: #EBD79E;
+  --color-gold-300: #DFC066;
+  --color-gold-400: #D2AC4E;
+  --color-gold-500: #C9A24A;
+  --color-gold-600: #A8842F;
+  --color-gold-700: #8B6914;
+  --color-gold-800: #6B5210;
+  --color-gold-900: #4A390C;
+  --color-gold-950: #2E2408;
 
-  /* Violet Palette */
+  /* Violet Palette (50–950) */
   --color-violet-50: #F5F3FF;
   --color-violet-100: #EDE9FE;
-  --color-violet-200: #E9D5FF;
+  --color-violet-200: #DDD6FE;
   --color-violet-300: #C4B5FD;
   --color-violet-400: #A78BFA;
   --color-violet-500: #8B5CF6;
@@ -38,8 +44,35 @@
   --color-violet-700: #6D28D9;
   --color-violet-800: #5B21B6;
   --color-violet-900: #4C1D95;
+  --color-violet-950: #2E1065;
 
-  /* Neutral Palette */
+  /* Sand — neutro quente (barber), claro→escuro */
+  --color-sand-50: #FAF8F4;
+  --color-sand-100: #F2EFE8;
+  --color-sand-200: #E5E0D5;
+  --color-sand-300: #CFC8B8;
+  --color-sand-400: #A89A82;
+  --color-sand-500: #8A7F6C;
+  --color-sand-600: #6B6252;
+  --color-sand-700: #4A443A;
+  --color-sand-800: #2A2620;
+  --color-sand-900: #1A1816;
+  --color-sand-950: #12100E;
+
+  /* Orchid — neutro frio-arroxeado (beauty), claro→escuro */
+  --color-orchid-50: #F8F6FC;
+  --color-orchid-100: #EFEBF8;
+  --color-orchid-200: #DDD4EF;
+  --color-orchid-300: #C3B8DD;
+  --color-orchid-400: #9C90BC;
+  --color-orchid-500: #7B6E95;
+  --color-orchid-600: #5D5178;
+  --color-orchid-700: #443A5E;
+  --color-orchid-800: #2A2740;
+  --color-orchid-900: #221F35;
+  --color-orchid-950: #17132A;
+
+  /* Neutral Palette (legado — mantido por compat; preferir sand/orchid) */
   --color-neutral-0: #121212;
   --color-neutral-50: #1E1E1E;
   --color-neutral-100: #252525;
@@ -56,6 +89,12 @@
   --font-heading: 'Chivo', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Movimento */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ============================================
@@ -78,12 +117,13 @@ html[data-theme="barber"][data-mode="dark"] {
   --color-modal-border: rgba(201, 162, 74, 0.15);
   --color-text: #F0EBE0;
   --color-text-secondary: #A89A82;
-  --color-text-muted: #6B6252;
+  --color-text-muted: #8F8574; /* AA fix (era #6B6252 — 3.0:1) */
   --color-border: rgba(255, 245, 230, 0.08);
   --color-border-strong: rgba(255, 245, 230, 0.14);
   --color-input-bg: rgba(20, 16, 10, 0.5);
   --color-input-border: rgba(255, 255, 255, 0.06);
   --color-input-focus: rgba(201, 162, 74, 0.6);
+  --color-focus-ring: rgba(201, 162, 74, 0.25);
   --color-danger: #EF4444;
   --color-danger-bg: rgba(239, 68, 68, 0.08);
   --color-danger-border: rgba(239, 68, 68, 0.3);
@@ -93,6 +133,9 @@ html[data-theme="barber"][data-mode="dark"] {
   --color-warning: #F59E0B;
   --color-warning-bg: rgba(245, 158, 11, 0.08);
   --color-warning-border: rgba(245, 158, 11, 0.2);
+  --color-info: #60A5FA;
+  --color-info-bg: rgba(59, 130, 246, 0.10);
+  --color-info-border: rgba(59, 130, 246, 0.25);
 
   --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 245, 230, 0.12);
   --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -102,8 +145,21 @@ html[data-theme="barber"][data-mode="dark"] {
   --shadow-btn-primary: 0 4px 20px rgba(194, 155, 64, 0.25);
   --shadow-modal: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 245, 230, 0.12);
 
+  /* Elevação com régua (v1.1) */
+  --elevation-0: none;
+  --elevation-1: 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --elevation-2: var(--shadow-card);
+  --elevation-3: 0 24px 64px -16px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 245, 230, 0.12);
+
+  /* Estilo brutal (consumido por .shadow-brutal* no index.html) */
+  --shadow-brutal: 8px 8px 0 0 #000000;
+  --shadow-brutal-sm: 2px 2px 0 0 #000000;
+  --shadow-brutal-md: 4px 4px 0 0 #000000;
+
   --gradient-card: linear-gradient(135deg, #12100E 0%, #1A1816 50%, #12100E 100%);
   --gradient-bg: radial-gradient(circle at 10% 90%, rgba(194, 155, 64, 0.08) 0%, transparent 50%), radial-gradient(circle at 90% 10%, rgba(194, 155, 64, 0.05) 0%, transparent 40%), var(--color-bg);
+  --bg-gradient: var(--gradient-bg);
+  --particle-color: rgba(194, 155, 64, 0.20);
 }
 
 /* ============================================
@@ -125,31 +181,47 @@ html[data-theme="barber"][data-mode="light"] {
   --color-modal-border: rgba(0, 0, 0, 0.08);
   --color-text: #1A1610;
   --color-text-secondary: #55524C;
-  --color-text-muted: #7A7A75;
+  --color-text-muted: #6E6B64; /* AA fix (era #7A7A75 — 4.2:1) */
   --color-border: rgba(0, 0, 0, 0.10);
   --color-border-strong: rgba(0, 0, 0, 0.16);
   --color-input-bg: rgba(0, 0, 0, 0.04);
   --color-input-border: rgba(0, 0, 0, 0.14);
   --color-input-focus: rgba(139, 105, 20, 0.45);
+  --color-focus-ring: rgba(139, 105, 20, 0.45);
   --color-danger: #DC2626;
   --color-danger-bg: rgba(220, 38, 38, 0.08);
   --color-danger-border: rgba(220, 38, 38, 0.2);
   --color-success: #059669;
   --color-success-bg: rgba(5, 150, 105, 0.08);
   --color-success-border: rgba(5, 150, 105, 0.15);
-  --color-warning: #D97706;
+  --color-warning: #B45309;
   --color-warning-bg: rgba(217, 119, 6, 0.08);
   --color-warning-border: rgba(217, 119, 6, 0.15);
+  --color-info: #2563EB;
+  --color-info-bg: rgba(37, 99, 235, 0.07);
+  --color-info-border: rgba(37, 99, 235, 0.22);
 
   --shadow-card: 0 8px 24px -8px rgba(100, 80, 30, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
   --shadow-card-mobile: 0 4px 12px rgba(100, 80, 30, 0.12);
+  --shadow-card-hover: 0 8px 24px rgba(139, 105, 20, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
   --shadow-card-accent: 0 6px 24px rgba(139, 105, 20, 0.20), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-card-glow: 0 12px 32px rgba(139, 105, 20, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-btn-primary: 0 4px 16px rgba(139, 105, 20, 0.25);
   --shadow-modal: 0 24px 64px -16px rgba(100, 80, 30, 0.18), 0 8px 20px rgba(0, 0, 0, 0.08);
 
+  --elevation-0: none;
+  --elevation-1: 0 3px 10px -3px rgba(80, 64, 24, 0.14);
+  --elevation-2: var(--shadow-card);
+  --elevation-3: var(--shadow-modal);
+
+  --shadow-brutal: 6px 6px 0 0 rgba(139, 105, 20, 0.30);
+  --shadow-brutal-sm: 2px 2px 0 0 rgba(139, 105, 20, 0.22);
+  --shadow-brutal-md: 4px 4px 0 0 rgba(139, 105, 20, 0.26);
+
   --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5F3EE 100%);
   --gradient-bg: radial-gradient(circle at 15% 85%, rgba(139, 105, 20, 0.08) 0%, transparent 50%), radial-gradient(circle at 85% 15%, rgba(139, 105, 20, 0.05) 0%, transparent 40%), var(--color-bg);
+  --bg-gradient: var(--gradient-bg);
+  --particle-color: rgba(139, 105, 20, 0.08);
 }
 
 /* ============================================
@@ -171,12 +243,13 @@ html[data-theme="beauty"][data-mode="dark"] {
   --color-modal-border: rgba(167, 139, 250, 0.15);
   --color-text: #EEE8FF;
   --color-text-secondary: #B5A9D0;
-  --color-text-muted: #8A7DA8;
+  --color-text-muted: #9C90BC; /* AA fix (era #8A7DA8 — 3.9:1) */
   --color-border: rgba(200, 180, 255, 0.10);
   --color-border-strong: rgba(200, 180, 255, 0.16);
   --color-input-bg: rgba(167, 139, 250, 0.06);
   --color-input-border: rgba(255, 255, 255, 0.1);
   --color-input-focus: rgba(183, 148, 246, 0.5);
+  --color-focus-ring: rgba(183, 148, 246, 0.25);
   --color-danger: #EF4444;
   --color-danger-bg: rgba(239, 68, 68, 0.1);
   --color-danger-border: rgba(239, 68, 68, 0.2);
@@ -186,6 +259,9 @@ html[data-theme="beauty"][data-mode="dark"] {
   --color-warning: #F59E0B;
   --color-warning-bg: rgba(245, 158, 11, 0.1);
   --color-warning-border: rgba(245, 158, 11, 0.2);
+  --color-info: #60A5FA;
+  --color-info-bg: rgba(59, 130, 246, 0.10);
+  --color-info-border: rgba(59, 130, 246, 0.25);
 
   --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(200, 180, 255, 0.14);
   --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -195,8 +271,19 @@ html[data-theme="beauty"][data-mode="dark"] {
   --shadow-btn-primary: 0 4px 20px rgba(183, 148, 246, 0.3);
   --shadow-modal: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(200, 180, 255, 0.14);
 
+  --elevation-0: none;
+  --elevation-1: 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --elevation-2: var(--shadow-card);
+  --elevation-3: 0 24px 64px -16px rgba(0, 0, 0, 0.72), inset 0 0 0 1px rgba(200, 180, 255, 0.14);
+
+  --shadow-brutal: 8px 8px 0 0 #000000;
+  --shadow-brutal-sm: 2px 2px 0 0 #000000;
+  --shadow-brutal-md: 4px 4px 0 0 #000000;
+
   --gradient-card: linear-gradient(135deg, #17132A 0%, #221F35 50%, #17132A 100%);
   --gradient-bg: radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.10) 0%, transparent 50%), radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.06) 0%, transparent 40%), var(--color-bg);
+  --bg-gradient: var(--gradient-bg);
+  --particle-color: rgba(167, 139, 250, 0.25);
 }
 
 /* ============================================
@@ -218,29 +305,45 @@ html[data-theme="beauty"][data-mode="light"] {
   --color-modal-border: rgba(124, 58, 237, 0.12);
   --color-text: #1A1225;
   --color-text-secondary: #4A3D65;
-  --color-text-muted: #7B6E95;
+  --color-text-muted: #6B5E86; /* AA fix (era #7B6E95 — 4.3:1) */
   --color-border: rgba(124, 58, 237, 0.16);
   --color-border-strong: rgba(124, 58, 237, 0.24);
   --color-input-bg: rgba(124, 58, 237, 0.05);
   --color-input-border: rgba(124, 58, 237, 0.18);
   --color-input-focus: rgba(124, 58, 237, 0.40);
+  --color-focus-ring: rgba(124, 58, 237, 0.40);
   --color-danger: #DC2626;
   --color-danger-bg: rgba(220, 38, 38, 0.08);
   --color-danger-border: rgba(220, 38, 38, 0.15);
   --color-success: #059669;
   --color-success-bg: rgba(5, 150, 105, 0.08);
   --color-success-border: rgba(5, 150, 105, 0.12);
-  --color-warning: #D97706;
+  --color-warning: #B45309;
   --color-warning-bg: rgba(217, 119, 6, 0.08);
   --color-warning-border: rgba(217, 119, 6, 0.12);
+  --color-info: #2563EB;
+  --color-info-bg: rgba(37, 99, 235, 0.07);
+  --color-info-border: rgba(37, 99, 235, 0.22);
 
   --shadow-card: 0 8px 24px -8px rgba(91, 33, 182, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
   --shadow-card-mobile: 0 4px 12px rgba(91, 33, 182, 0.10);
+  --shadow-card-hover: 0 8px 24px rgba(91, 33, 182, 0.14), 0 4px 8px rgba(0, 0, 0, 0.05);
   --shadow-card-accent: 0 6px 24px rgba(91, 33, 182, 0.22), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-card-glow: 0 12px 32px rgba(91, 33, 182, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-btn-primary: 0 4px 16px rgba(91, 33, 182, 0.28);
   --shadow-modal: 0 24px 64px -16px rgba(91, 33, 182, 0.15), 0 8px 20px rgba(0, 0, 0, 0.06);
 
+  --elevation-0: none;
+  --elevation-1: 0 3px 10px -3px rgba(76, 29, 149, 0.13);
+  --elevation-2: var(--shadow-card);
+  --elevation-3: var(--shadow-modal);
+
+  --shadow-brutal: 6px 6px 0 0 rgba(91, 33, 182, 0.25);
+  --shadow-brutal-sm: 2px 2px 0 0 rgba(91, 33, 182, 0.18);
+  --shadow-brutal-md: 4px 4px 0 0 rgba(91, 33, 182, 0.22);
+
   --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F3F0FA 100%);
   --gradient-bg: radial-gradient(circle at 15% 85%, rgba(91, 33, 182, 0.08) 0%, transparent 50%), radial-gradient(circle at 85% 10%, rgba(139, 92, 246, 0.05) 0%, transparent 40%), var(--color-bg);
+  --bg-gradient: var(--gradient-bg);
+  --particle-color: rgba(91, 33, 182, 0.06);
 }

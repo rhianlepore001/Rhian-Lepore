@@ -1,6 +1,7 @@
-import { Modal } from '../../Modal';
-import { BrutalButton } from '../../BrutalButton';
-import { BrainCircuit, Target, Sparkles, TrendingUp, Users, Send, X, Trophy, Rocket, Zap, MessageSquare } from 'lucide-react';
+import { Modal } from '../../ui/Modal';
+import { Button } from '../../ui/Button';
+import { useBrutalTheme } from '../../../hooks/useBrutalTheme';
+import { Target, Zap, Trophy, Rocket, MessageSquare } from 'lucide-react';
 
 interface AIOSStrategyModalProps {
     isOpen: boolean;
@@ -9,27 +10,23 @@ interface AIOSStrategyModalProps {
 }
 
 export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, onClose, isBeauty }) => {
-    if (!isOpen) return null;
-
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
-    const accentBg = isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold';
-    const borderClass = isBeauty ? 'border-beauty-neon/20' : 'border-accent-gold/20';
+    const { accent, colors } = useBrutalTheme({ override: isBeauty ? 'beauty' : 'barber' });
 
     const playbooks = [
         {
-            icon: <Trophy className={`w-5 h-5 ${accentText}`} />,
+            icon: <Trophy className={`w-5 h-5 ${accent.text}`} />,
             title: "O Painel de Oportunidades",
             description: "Identifique quem não aparece há 30 dias. Recuperar 2 clientes por semana paga o sistema e sobra lucro neto.",
             tag: "LUCRO RÁPIDO"
         },
         {
-            icon: <MessageSquare className={`w-5 h-5 ${accentText}`} />,
+            icon: <MessageSquare className={`w-5 h-5 ${accent.text}`} />,
             title: "Script que Converte",
             description: "Use o link de WhatsApp no CRM. Dica: 'Notei que faz tempo que não damos aquele trato. Tenho uma vaga pra quinta!'",
             tag: "RESULTADO"
         },
         {
-            icon: <Target className={`w-5 h-5 ${accentText}`} />,
+            icon: <Target className={`w-5 h-5 ${accent.text}`} />,
             title: "Psicologia da Meta",
             description: "Defina metas 10% maiores que o mês passado. O sistema brilha mais forte conforme você se aproxima.",
             tag: "CRESCIMENTO"
@@ -37,80 +34,55 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
     ];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
-                onClick={onClose}
-            />
+        <Modal open={isOpen} onClose={onClose} size="xl">
+            <div className="mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                    <Zap className={`w-4 h-4 ${accent.text}`} />
+                    <span className={`text-xs font-mono uppercase tracking-[0.3em] ${accent.text}`}>AgendiX Success Playbook</span>
+                </div>
+                <h2 className={`text-2xl md:text-3xl font-heading ${colors.text}`}>Guia para Faturar Mais</h2>
+            </div>
 
-            {/* Modal */}
-            <div className={`
-                relative w-full max-w-2xl bg-neutral-900 border-2 ${borderClass} 
-                rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300
-            `}>
-                {/* Header Gradient */}
-                <div className={`absolute top-0 left-0 right-0 h-1 ${accentBg} opacity-50`} />
-
-                <div className="p-6 md:p-10">
-                    <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <Zap className={`w-4 h-4 ${accentText} animate-pulse`} />
-                                <span className={`text-xs font-mono uppercase tracking-[0.3em] ${accentText}`}>AgendiX Success Playbook</span>
+            <div className="grid gap-4">
+                {playbooks.map((p, idx) => (
+                    <div
+                        key={idx}
+                        className={`group p-4 md:p-5 ${colors.surface} border ${colors.border} rounded-2xl ${colors.surfaceHover} transition-all duration-300`}
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className={`mt-1 p-3 rounded-xl ${accent.bgDim} border ${colors.border} group-hover:scale-110 transition-transform`}>
+                                {p.icon}
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-heading text-white">Guia para Faturar Mais</h2>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-full bg-white/5 text-white/40 hover:text-white transition-colors"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    <div className="grid gap-4 md:gap-6">
-                        {playbooks.map((p, idx) => (
-                            <div
-                                key={idx}
-                                className="group p-4 md:p-6 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300"
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className="mt-1 p-3 rounded-xl bg-black/40 border border-white/5 group-hover:scale-110 transition-transform">
-                                        {p.icon}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <h3 className="font-heading text-lg text-white">{p.title}</h3>
-                                            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-white/40 border border-white/5">
-                                                {p.tag}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-text-secondary leading-relaxed font-inter">
-                                            {p.description}
-                                        </p>
-                                    </div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1 gap-2">
+                                    <h3 className={`font-heading text-lg ${colors.text}`}>{p.title}</h3>
+                                    <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${colors.card} ${colors.textMuted} border ${colors.border} whitespace-nowrap`}>
+                                        {p.tag}
+                                    </span>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-                        <div className="flex items-center gap-4 text-left">
-                            <Rocket className={`w-8 h-8 ${accentText} opacity-40`} />
-                            <div>
-                                <p className="text-xs text-white uppercase font-bold tracking-widest mb-1">Dica Pro:</p>
-                                <p className="text-xs text-text-secondary max-w-xs font-mono">
-                                    Ative o 2FA para garantir que seus dados estratégicos estejam blindados.
+                                <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                                    {p.description}
                                 </p>
                             </div>
                         </div>
-                        <BrutalButton onClick={onClose} className="w-full md:w-auto">
-                            ENTENDI, VAMOS FATURAR!
-                        </BrutalButton>
+                    </div>
+                ))}
+            </div>
+
+            <div className={`mt-8 flex flex-col md:flex-row items-center justify-between gap-6 p-5 rounded-2xl ${colors.surface} border ${colors.border}`}>
+                <div className="flex items-center gap-4 text-left">
+                    <Rocket className={`w-8 h-8 ${accent.text} opacity-40`} />
+                    <div>
+                        <p className={`text-xs uppercase font-bold tracking-widest mb-1 ${colors.text}`}>Dica Pro:</p>
+                        <p className={`text-xs max-w-xs font-mono ${colors.textSecondary}`}>
+                            Ative o 2FA para garantir que seus dados estratégicos estejam blindados.
+                        </p>
                     </div>
                 </div>
+                <Button onClick={onClose} className="w-full md:w-auto">
+                    ENTENDI, VAMOS FATURAR!
+                </Button>
             </div>
-        </div>
+        </Modal>
     );
 };

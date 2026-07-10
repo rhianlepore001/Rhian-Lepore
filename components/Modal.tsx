@@ -1,10 +1,12 @@
-import React, { useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import FocusTrap from 'focus-trap-react';
-import { X } from 'lucide-react';
-import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { BrutalButton } from './BrutalButton';
-import { useUI } from '../contexts/UIContext';
+/**
+ * @deprecated Casca de compatibilidade sobre `components/ui/Modal` (DS v1.1).
+ * Novos usos devem importar `Modal`/`ConfirmModal` de `@/components/ui`.
+ * Mantém a API antiga (`isOpen`, `confirmText`, variant `warning`) delegando
+ * tudo para os componentes canônicos — um único casco de modal no app.
+ */
+import React from 'react';
+import { Modal as UiModal } from './ui/Modal';
+import { ConfirmModal as UiConfirmModal } from './ui/ConfirmModal';
 
 interface ModalProps {
     isOpen: boolean;
@@ -18,131 +20,10 @@ interface ModalProps {
     forceTheme?: 'beauty' | 'barber';
 }
 
-export const Modal: React.FC<ModalProps> = ({
-    isOpen,
-    onClose,
-    title,
-    children,
-    size = 'md',
-    showCloseButton = true,
-    footer,
-    preventClose = false,
-    forceTheme
-}) => {
-    const { classes, accent, colors } = useBrutalTheme({ override: forceTheme });
-    const { setModalOpen } = useUI();
-
-    // Fecha ao pressionar ESC
-    const handleEscape = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape' && !preventClose) {
-            onClose();
-        }
-    }, [onClose, preventClose]);
-
-    useEffect(() => {
-        if (isOpen) {
-            setModalOpen(true);
-            document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden';
-        } else {
-            setModalOpen(false);
-        }
-
-        return () => {
-            setModalOpen(false);
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = '';
-        };
-    }, [isOpen, handleEscape, setModalOpen]);
-
-    if (!isOpen) return null;
-
-    // Tamanhos do modal
-    const sizeClasses = {
-        sm: 'max-w-sm',
-        md: 'max-w-md',
-        lg: 'max-w-lg',
-        xl: 'max-w-2xl',
-        full: 'max-w-4xl'
-    };
-
-    const modalContent = (
-        <div className="fixed inset-0 flex items-center justify-center p-3 md:p-4" style={{ zIndex: 'var(--z-modal)' }}>
-            {/* Backdrop */}
-            <div
-                className={`
-          absolute inset-0 
-          ${classes.modalOverlay}
-          transition-opacity duration-300
-        `}
-                onClick={() => !preventClose && onClose()}
-            />
-
-            {/* Modal */}
-            <FocusTrap active={isOpen}>
-                <div
-                    className={`
-          relative w-full ${sizeClasses[size]}
-          ${classes.modalContainer}
-          max-h-[calc(100vh-1.5rem)] md:max-h-[90vh] flex flex-col
-        `.replace(/\s+/g, ' ').trim()}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby={title ? 'modal-title' : undefined}
-                >
-                {/* Craft Layers: Noise + Gradiente (consistente com BrutalCard) */}
-                <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none rounded-2xl" />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-2xl" />
-
-                {/* Header */}
-                {(title || showCloseButton) && (
-                    <div className={`${classes.modalHeader} relative z-10`}>
-                        {title && (
-                            <h3 id="modal-title" className={`
-                font-heading text-lg md:text-xl tracking-tight font-bold
-                ${colors.text}
-              `}>
-                                {title}
-                            </h3>
-                        )}
-                        {showCloseButton && (
-                            <button
-                                onClick={onClose}
-                                className={`${colors.textMuted} hover:text-theme-text rounded-full p-2 transition-all duration-200 hover:rotate-90 hover:bg-white/[0.06]`}
-                                aria-label="Fechar"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Content */}
-                <div className={`
-          flex-1 overflow-y-auto p-5 md:p-6 relative z-10
-        `}>
-                    {children}
-                </div>
-
-                {/* Footer */}
-                {footer && (
-                    <div className={`
-            px-6 py-4 border-t ${colors.divider} relative z-10
-          `}>
-                        {footer}
-                    </div>
-                )}
-                </div>
-            </FocusTrap>
-        </div>
-    );
-
-    return createPortal(modalContent, document.body);
-};
-
-// ===========================================
-// COMPONENTES AUXILIARES PARA O MODAL
-// ===========================================
+export const Modal: React.FC<ModalProps> = ({ isOpen, size = 'md', ...rest }) => (
+    // Legado `full` era max-w-4xl (não fullscreen); `xl` é o equivalente mais próximo.
+    <UiModal open={isOpen} size={size === 'full' ? 'xl' : size} {...rest} />
+);
 
 interface ModalFooterProps {
     children: React.ReactNode;
@@ -189,34 +70,16 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     cancelText = 'Cancelar',
     variant = 'primary',
     loading = false
-}) => {
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={title}
-            size="sm"
-            footer={
-                <ModalFooter align="right">
-                    <BrutalButton variant="ghost" onClick={onClose} disabled={loading}>
-                        {cancelText}
-                    </BrutalButton>
-                    <BrutalButton
-                        variant={variant === 'danger' ? 'danger' : 'primary'}
-                        onClick={onConfirm}
-                        loading={loading}
-                    >
-                        {confirmText}
-                    </BrutalButton>
-                </ModalFooter>
-            }
-        >
-            <ConfirmModalContent message={message} />
-        </Modal>
-    );
-};
-
-const ConfirmModalContent: React.FC<{ message: string }> = ({ message }) => {
-    const { colors } = useBrutalTheme();
-    return <p className={colors.textSecondary}>{message}</p>;
-};
+}) => (
+    <UiConfirmModal
+        open={isOpen}
+        onCancel={onClose}
+        onConfirm={onConfirm}
+        title={title}
+        message={message}
+        confirmLabel={confirmText}
+        cancelLabel={cancelText}
+        variant={variant === 'danger' ? 'danger' : 'default'}
+        loading={loading}
+    />
+);

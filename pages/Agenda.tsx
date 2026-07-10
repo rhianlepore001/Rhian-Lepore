@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { Modal as UiModal } from '../components/ui/Modal';
 import { useToast } from '../components/ui/Toast';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -1630,7 +1631,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* Appointment Details Modal */}
             {detailsApt && createPortal(
                 <div
-                    className={`fixed inset-0 z-[999] flex items-center justify-center p-4 ${colors.overlay} md:left-64`}
+                    style={{ zIndex: 'var(--z-modal)' }}
+                    className={`fixed inset-0 flex items-center justify-center p-4 ${colors.overlay} md:left-64`}
                     onClick={() => setShowingDetailsAppointment(null)}
                 >
                     {/* onDeactivate não pode fechar o modal: sob StrictMode o cleanup do effect do
@@ -1848,19 +1850,22 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             />
 
             {/* History Modal */}
-            {showHistoryModal && (
-                <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto ${colors.overlay}`}>
-                    <div className={`w-full max-w-4xl p-6 my-8 transition-all ${colors.card} ${colors.border} ${radius.modal} ${shadow.modal}`}>
-                        <div className={`flex items-center justify-between mb-6`}>
-                            <h3 className={`${colors.text} font-heading text-2xl uppercase`}>Histórico de Agendamentos</h3>
-                            <button
-                                onClick={() => setShowHistoryModal(false)}
-                                className={`${colors.textMuted} hover:text-theme-text transition-colors`}
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
+            <UiModal
+                open={showHistoryModal}
+                onClose={() => setShowHistoryModal(false)}
+                title="Histórico de Agendamentos"
+                size="xl"
+                className="md:max-w-4xl"
+                footer={
+                    <Button
+                        variant="secondary"
+                        className="w-full"
+                        onClick={() => setShowHistoryModal(false)}
+                    >
+                        Fechar
+                    </Button>
+                }
+            >
                         {/* Month Navigator */}
                         <div className={`flex items-center justify-between mb-6 ${colors.surface} p-4 rounded-xl ${colors.border}`}>
                             <button
@@ -1962,18 +1967,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             )}
                         </div>
 
-                        <div className={`mt-6 pt-4 ${colors.divider} border-t`}>
-                            <Button
-                                variant="secondary"
-                                className="w-full"
-                                onClick={() => setShowHistoryModal(false)}
-                            >
-                                Fechar
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            </UiModal>
 
             {/* New Appointment Wizard */}
             {showNewAppointmentModal && (

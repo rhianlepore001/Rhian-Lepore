@@ -1,4 +1,4 @@
-import { Card, Button } from '../components/ui';
+import { Card, Button, Modal } from '../components/ui';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -20,7 +20,7 @@ import { AISemanticInsights } from '../components/AISemanticInsights';
 export const ClientCRM: React.FC = () => {
 const { id } = useParams<{ id: string }>();
   const { user, userType, region, businessName } = useAuth();
-  const { accent, isBeauty } = useBrutalTheme();
+  const { accent, isBeauty, classes } = useBrutalTheme();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
@@ -550,96 +550,51 @@ const { id } = useParams<{ id: string }>();
         </Card>
       </div>
       {/* Edit Modal */}
-      {showEditModal && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
-          <div className={`w-full max-w-md p-6 relative transition-all
-              ${isBeauty
-              ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
-          `}>
-            <button
-              onClick={() => setShowEditModal(false)}
-              className={`absolute top-4 right-4 transition-colors
-                  ${isBeauty
-                  ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5'
-                  : 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1'}
-              `}
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className={`mb-6 ${isBeauty ? 'border-b border-beauty-neon/20 pb-4' : 'border-b-2 border-dashed border-neutral-800 pb-4'}`}>
-              <h3 className={`text-xl font-heading uppercase ${isBeauty ? 'text-white tracking-normal' : 'text-white tracking-wider'}`}>Editar Cliente</h3>
-            </div>
-
-            <form onSubmit={handleUpdateClient} className="space-y-4">
-              <div>
-                <label className={`block text-xs mb-1 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Nome Completo</label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className={`w-full p-3 outline-none transition-all
-                      ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:border-beauty-neon focus:bg-beauty-dark placeholder-beauty-neon/30'
-                      : 'bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:border-accent-gold placeholder-neutral-600'}
-                  `}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className={`block text-xs mb-2 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Telefone</label>
-                <PhoneInput
-                  value={editPhone}
-                  onChange={setEditPhone}
-                  defaultRegion={region as 'BR' | 'PT'}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className={`block text-xs mb-1 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Email</label>
-                <input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className={`w-full p-3 outline-none transition-all
-                      ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:border-beauty-neon focus:bg-beauty-dark placeholder-beauty-neon/30'
-                      : 'bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:border-accent-gold placeholder-neutral-600'}
-                  `}
-                />
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className={`flex-1 py-3 font-bold uppercase tracking-wider transition-colors
-                      ${isBeauty
-                      ? 'bg-transparent text-white border border-white/10 hover:bg-white/5 rounded-xl'
-                      : 'bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700 rounded-lg'}
-                  `}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className={`flex-1 py-3 font-bold uppercase tracking-wider transition-all disabled:opacity-50
-                      ${isBeauty
-                      ? 'bg-beauty-neon text-black hover:bg-beauty-neonHover rounded-xl shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-brutal-sm'}
-                  `}
-                >
-                  {updating ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </form>
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar Cliente" size="md">
+        <form onSubmit={handleUpdateClient} className="space-y-4">
+          <div>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-name">Nome Completo</label>
+            <input
+              id="crm-edit-name"
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className={classes.input}
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className={`block mb-2 ${classes.label}`} htmlFor="crm-edit-phone">Telefone</label>
+            <PhoneInput
+              value={editPhone}
+              onChange={setEditPhone}
+              defaultRegion={region as 'BR' | 'PT'}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-email">Email</label>
+            <input
+              id="crm-edit-email"
+              type="email"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+              className={classes.input}
+            />
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <Button type="button" variant="secondary" fullWidth onClick={() => setShowEditModal(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" fullWidth loading={updating}>
+              {updating ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

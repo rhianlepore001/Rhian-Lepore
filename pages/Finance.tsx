@@ -833,7 +833,7 @@ useEffect(() => {
                   <button
                     onClick={() => setNewTransactionType('income')}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'income'
-                      ? 'bg-green-500/20 border-green-500 text-green-500'
+                      ? 'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success)]'
                       : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
                       }`}
                   >
@@ -842,7 +842,7 @@ useEffect(() => {
                   <button
                     onClick={() => setNewTransactionType('expense')}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'expense'
-                      ? 'bg-red-500/20 border-red-500 text-red-500'
+                      ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]'
                       : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
                       }`}
                   >

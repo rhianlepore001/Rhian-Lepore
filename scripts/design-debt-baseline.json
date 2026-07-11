@@ -9,8 +9,8 @@
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 4
   },
   "pages/ClientCRM.tsx": {
-    "text-white hardcoded (use colors.text)": 16,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4,
+    "text-white hardcoded (use colors.text)": 11,
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "pages/ClubDemo.tsx": {
@@ -167,16 +167,9 @@
     "text-white hardcoded (use colors.text)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
-  "components/dashboard/SmartRebooking.tsx": {
-    "text-white hardcoded (use colors.text)": 2
-  },
   "components/DevBugButton.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "components/GoalHistory.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 12
   },
   "components/Header.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
@@ -191,9 +184,6 @@
   },
   "components/membership/PixDisplay.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/membership/PlanCard.tsx": {
-    "text-white hardcoded (use colors.text)": 3
   },
   "components/MonthlyHistory.tsx": {
     "text-white hardcoded (use colors.text)": 4,
@@ -303,10 +293,6 @@
   "components/TabNav.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/TeamMemberCard.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
   "components/TeamMemberForm.tsx": {
     "text-white hardcoded (use colors.text)": 1

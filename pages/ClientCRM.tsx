@@ -20,7 +20,7 @@ import { AISemanticInsights } from '../components/AISemanticInsights';
 export const ClientCRM: React.FC = () => {
 const { id } = useParams<{ id: string }>();
   const { user, userType, region, businessName } = useAuth();
-  const { accent, isBeauty, classes } = useBrutalTheme();
+  const { accent, isBeauty, classes, colors, radius, status } = useBrutalTheme();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
@@ -378,25 +378,25 @@ const { id } = useParams<{ id: string }>();
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-              <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-xs md:text-xs text-text-secondary uppercase">Última Visita</p>
-                <p className="text-base md:text-lg font-bold text-white">{client.lastVisit}</p>
+              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase`}>Última Visita</p>
+                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.lastVisit}</p>
               </div>
-              <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-xs md:text-xs text-text-secondary uppercase">Total Visitas</p>
-                <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
+              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase`}>Total Visitas</p>
+                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.totalVisits}</p>
               </div>
-              <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-xs md:text-xs text-text-secondary uppercase" title="Total gasto neste estabelecimento">Total Gasto</p>
-                <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
+              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase`} title="Total gasto neste estabelecimento">Total Gasto</p>
+                <p className={`text-base md:text-lg font-bold ${accent.text}`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
               </div>
-              <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border ${isBeauty ? 'border-beauty-neon/40' : 'border-accent-gold/40'}`}>
-                <p className={`text-xs md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
+              <div className={`col-span-2 md:col-span-1 ${colors.surface} p-3 border ${accent.borderDim} ${radius.input}`}>
+                <p className={`text-xs ${accent.text} uppercase flex items-center gap-1`}>
                   <Sparkles className="w-3 h-3" /> Próxima Visita
                 </p>
-                <p className="text-base md:text-lg font-bold text-white">{client.nextPrediction}</p>
+                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.nextPrediction}</p>
               </div>
             </div>
           </div>
@@ -420,19 +420,19 @@ const { id } = useParams<{ id: string }>();
 
                 return (
                   <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
-                    <div className={`relative border-2 border-neutral-700 hover:border-[var(--color-accent-border)] transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
+                    <div className={`relative border ${colors.border} hover:border-[var(--color-accent-border)] transition-colors ${colors.surface} ${radius.card} overflow-hidden h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
                       <Calendar className={`w-12 h-12 ${accent.text} mb-2 opacity-50`} />
-                      <p className="text-white font-bold font-heading text-lg text-center leading-tight mb-1">{apt.service}</p>
-                      <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
+                      <p className={`${colors.text} font-bold font-heading text-lg text-center leading-tight mb-1`}>{apt.service}</p>
+                      <p className={`${colors.textSecondary} font-mono text-xs`}>{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
-                        <p className="text-xs md:text-xs text-text-secondary font-mono flex justify-between items-center">
+                      <div className={`absolute bottom-0 left-0 right-0 ${colors.card} p-3 border-t ${colors.divider}`}>
+                        <p className={`text-xs ${colors.textSecondary} font-mono flex justify-between items-center`}>
                           <span>{apt.professional_name || 'Profissional'}</span>
                           <span className="flex items-center gap-2">
                             {hasDiscount && (
-                              <span className="text-red-400 line-through text-xs">{currencySymbol} {apt.basePrice.toFixed(2)}</span>
+                              <span className={`${status.danger} line-through text-xs`}>{currencySymbol} {apt.basePrice.toFixed(2)}</span>
                             )}
-                            <span className="text-white font-bold">{currencySymbol} {apt.price.toFixed(2)}</span>
+                            <span className={`${colors.text} font-bold`}>{currencySymbol} {apt.price.toFixed(2)}</span>
                           </span>
                         </p>
                       </div>

@@ -20,7 +20,7 @@ interface SetupStep {
 export const SetupCopilot: React.FC = () => {
     const navigate = useNavigate();
     const { user, companyId } = useAuth();
-    const { accent, colors, classes } = useBrutalTheme();
+    const { accent, colors, classes, radius } = useBrutalTheme();
     const getDismissedKey = () => `setup_copilot_dismissed_${user?.id ?? 'anon'}`;
     const [dismissed, setDismissed] = useState(() => {
         if (typeof window === 'undefined' || !user?.id) return false;
@@ -249,7 +249,7 @@ export const SetupCopilot: React.FC = () => {
             {/* Banner "continuar de onde parou" */}
             {resumeStep && !dismissed && (
                 <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className={`relative rounded-2xl border p-4 overflow-hidden ${colors.card} ${colors.border}`}>
+                    <div className={`relative ${radius.card} border p-4 overflow-hidden ${colors.card} ${colors.border}`}>
                         <button
                             onClick={handleDismissResume}
                             className={`absolute top-3 right-3 p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}

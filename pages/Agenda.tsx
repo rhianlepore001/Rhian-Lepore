@@ -1152,9 +1152,9 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* --- Agendamentos Atrasados (Overdue) --- */}
             {isOverdueFilter && (
                 <div className="px-4 md:px-6">
-                    <Card variant="outlined" className="border-l-4 border-red-500 bg-red-500/5">
+                    <Card variant="outlined" className="border-l-4 border-[var(--color-danger)] bg-[var(--color-danger-bg)]">
                         <div className="flex items-start gap-4">
-                            <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
+                            <AlertTriangle className="w-6 h-6 text-[var(--color-danger)] flex-shrink-0 mt-1" />
                             <div className="flex-1">
                                 <h3 className={`${colors.text} font-heading text-lg uppercase mb-2`}>
                                     Agendamentos Atrasados ({overdueAppointments.length})
@@ -1186,7 +1186,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                     <div className="flex gap-2 flex-shrink-0">
                                                         <button
                                                             onClick={() => setShowingDetailsAppointment(apt)}
-                                                            className="px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                            className="px-3 py-2 bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg)] border border-[var(--color-info-border)] text-[var(--color-info)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                             title="Informações"
                                                         >
                                                             <Info className="w-4 h-4" /> Info
@@ -1195,14 +1195,14 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             <>
                                                                 <button
                                                                     onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                                    className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    className="px-3 py-2 bg-[var(--color-success-bg)] hover:bg-[var(--color-success-bg)] border border-[var(--color-success-border)] text-[var(--color-success)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                                     title="Concluir e Faturar"
                                                                 >
                                                                     <Check className="w-4 h-4" /> Faturar
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleCancelAppointment(apt.id, true)}
-                                                                    className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    className="px-3 py-2 bg-[var(--color-danger-bg)] hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] text-[var(--color-danger)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                                     title="Cancelar"
                                                                 >
                                                                     <X className="w-4 h-4" /> Cancelar
@@ -1311,7 +1311,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 {getInitials(member.name)}
                                             </div>
                                         )}
-                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-black rounded-full" />
+                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[var(--color-success)] border-2 border-black rounded-full" />
                                     </div>
                                     <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
                                         {isSelf ? 'Você' : member.name.split(' ')[0]}
@@ -1357,7 +1357,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     {/* Badge de tipo */}
                                     {(booking as any).is_edit && (
                                         <div className="mb-3">
-                                            <span className={`text-xs font-mono font-bold text-blue-400 bg-blue-400/10 border border-blue-400/30 px-2 py-1 rounded`}>
+                                            <span className={`text-xs font-mono font-bold text-[var(--color-info)] bg-[var(--color-info-bg)] border border-[var(--color-info-border)] px-2 py-1 rounded`}>
                                                 ALTERAÇÃO DE AGENDAMENTO
                                             </span>
                                         </div>
@@ -1379,7 +1379,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                             {!isStaff && (
                                                 <button
                                                     onClick={() => handleRejectBooking(booking.id)}
-                                                    className="px-3 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
+                                                    className="px-3 py-1.5 bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
                                                     title="Recusar"
                                                 >
                                                     <X className="w-3.5 h-3.5" /> Recusar
@@ -1391,7 +1391,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     <div className="space-y-1">
                                         <p className={`${colors.text} font-bold text-xl leading-tight`}>{booking.customer_name}</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse"></span>
                                             <p className={`${colors.textSecondary} text-sm font-mono tracking-wider`}>
                                                 {formatPhone(booking.customer_phone, currencyRegion)}
                                             </p>
@@ -1480,7 +1480,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 className={`w-full text-left flex items-stretch gap-3 rounded-2xl border ${colors.card} ${colors.border} p-3 transition-transform active:scale-[0.99]`}
                                             >
                                                 {/* Barra lateral de status */}
-                                                <span className={`w-1.5 rounded-full flex-shrink-0 ${isUnassigned ? 'bg-red-500' : vc.dot}`} />
+                                                <span className={`w-1.5 rounded-full flex-shrink-0 ${isUnassigned ? 'bg-[var(--color-danger)]' : vc.dot}`} />
                                                 {/* Horário + ícone de status */}
                                                 <div className="flex flex-col items-center justify-center min-w-[48px]">
                                                     <span className={`text-sm font-bold ${colors.text}`}>{timeStr}</span>
@@ -1491,13 +1491,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                     <div className="flex items-center gap-2">
                                                         <h4 className={`text-sm font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
                                                         {apt.edited_at && <Edit2 className={`w-3 h-3 flex-shrink-0 ${colors.textMuted}`} aria-label="Editado" />}
-                                                        {apt.notes && <MessageCircle className="w-3 h-3 flex-shrink-0 text-emerald-500/80" aria-label="Com observação" />}
+                                                        {apt.notes && <MessageCircle className="w-3 h-3 flex-shrink-0 text-[var(--color-success)]/80" aria-label="Com observação" />}
                                                     </div>
                                                     <div className={`flex items-center gap-1.5 mt-0.5 ${colors.textMuted}`}>
                                                         <Scissors className="w-3 h-3 flex-shrink-0" />
                                                         <span className="text-xs truncate">{apt.service}</span>
                                                     </div>
-                                                    <div className={`flex items-center gap-1.5 mt-0.5 ${isUnassigned ? 'text-red-400' : colors.textMuted}`}>
+                                                    <div className={`flex items-center gap-1.5 mt-0.5 ${isUnassigned ? 'text-[var(--color-danger)]' : colors.textMuted}`}>
                                                         <User className="w-3 h-3 flex-shrink-0" />
                                                         <span className="text-xs truncate">{isUnassigned ? 'Não atribuído' : (professional?.name || '—')}</span>
                                                     </div>
@@ -1568,13 +1568,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                                 <div
                                                                     key={apt.id}
                                                                     onClick={() => setShowingDetailsAppointment(apt)}
-                                                                    className={`cursor-pointer rounded-md border ${isUnassigned ? 'border-red-500/50 bg-red-500/5' : vc.card} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden hover:shadow-lite-glass shadow-sm`}
+                                                                    className={`cursor-pointer rounded-md border ${isUnassigned ? 'border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]' : vc.card} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden hover:shadow-lite-glass shadow-sm`}
                                                                 >
                                                                     <div className="flex items-center justify-between gap-1">
                                                                         <h4 className={`text-xs font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
                                                                         <div className="flex items-center gap-1 flex-shrink-0">
                                                                             {apt.edited_at && <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />}
-                                                                            {apt.notes && <MessageCircle className="w-2.5 h-2.5 text-emerald-500/80" aria-label="Com observação" />}
+                                                                            {apt.notes && <MessageCircle className="w-2.5 h-2.5 text-[var(--color-success)]/80" aria-label="Com observação" />}
                                                                             <StatusIcon className={`w-3 h-3 ${vc.text}`} aria-label={VISUAL_STATUS_LABEL[visual]} />
                                                                         </div>
                                                                     </div>
@@ -1619,7 +1619,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     );
                 })}
                 <div className="flex items-center gap-1.5 ml-4">
-                    <MessageCircle className="w-3.5 h-3.5 text-emerald-500/80" />
+                    <MessageCircle className="w-3.5 h-3.5 text-[var(--color-success)]/80" />
                     <span>Com observação</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1740,7 +1740,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                             return (
                                                 <>
                                                     {hasDiscount && basePrice && (
-                                                        <span className={`text-xs text-red-500 line-through font-mono`}>
+                                                        <span className={`text-xs text-[var(--color-danger)] line-through font-mono`}>
                                                             {formatCurrency(basePrice, currencyRegion)}
                                                         </span>
                                                     )}
@@ -1903,7 +1903,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     return (
                                         <div
                                             key={apt.id}
-                                            className={`${colors.surface} rounded-xl p-5 border-2 ${apt.status === 'Completed' ? 'border-emerald-500/40' : 'border-red-500/40'}`}
+                                            className={`${colors.surface} rounded-xl p-5 border-2 ${apt.status === 'Completed' ? 'border-[var(--color-success-border)]' : 'border-[var(--color-danger-border)]'}`}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
@@ -1933,7 +1933,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 </div>
                                                 <div className="text-right flex flex-col items-end gap-2">
                                                     {hasDiscount && apt.basePrice && (
-                                                        <span className={`text-xs font-mono text-red-500 line-through`}>
+                                                        <span className={`text-xs font-mono text-[var(--color-danger)] line-through`}>
                                                             {formatCurrency(apt.basePrice, currencyRegion)}
                                                         </span>
                                                     )}
@@ -1941,19 +1941,19 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                         {formatCurrency(apt.price, currencyRegion)}
                                                     </p>
                                                     {hasDiscount && (
-                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 flex items-center gap-1`}>
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-[var(--color-danger-bg)] text-[var(--color-danger)] flex items-center gap-1`}>
                                                             {discountPercentage}% OFF
                                                         </span>
                                                     )}
                                                     {isCustomPriceHigher && (
-                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1`}>
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded bg-[var(--color-info-bg)] text-[var(--color-info)] flex items-center gap-1`}>
                                                             Preço Customizado
                                                         </span>
                                                     )}
                                                     {!isStaff && (
                                                         <button
                                                             onClick={() => handleDeleteHistoryAppointment(apt.id)}
-                                                            className={`p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors`}
+                                                            className={`p-2 text-[var(--color-danger)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-colors`}
                                                             title="Excluir agendamento"
                                                         >
                                                             <Trash2 className="w-4 h-4" />

@@ -126,7 +126,7 @@ export const Register: React.FC = () => {
         <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] ${isBeauty ? 'bg-beauty-neon/[0.04]' : 'bg-accent-gold/[0.04]'} rounded-full blur-[120px] pointer-events-none`} />
 
         <div className="w-full max-w-md relative z-10">
-          <div className="relative bg-[#1C1C1C] rounded-2xl border border-white/5 shadow-[0_32px_80px_rgba(0,0,0,0.7)] overflow-hidden">
+          <div className="relative bg-[#1C1C1C] rounded-2xl border border-white/5 shadow-[var(--elevation-3)] overflow-hidden">
 
             <div className={`h-[2px] w-full ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
 
@@ -223,8 +223,8 @@ export const Register: React.FC = () => {
 
       <div className="w-full max-w-2xl relative z-10">
         <div className={`relative overflow-hidden ${isBeauty
-            ? 'rounded-3xl border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.6)]'
-            : 'rounded-2xl border border-white/5 shadow-[0_32px_80px_rgba(0,0,0,0.7)]'
+            ? 'rounded-3xl border border-white/10 shadow-[var(--elevation-3)]'
+            : 'rounded-2xl border border-white/5 shadow-[var(--elevation-3)]'
           }`}>
           <div className={`h-[2px] w-full ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
 

@@ -46,7 +46,7 @@ export const ForgotPassword: React.FC = () => {
                     Voltar para o Login
                 </Link>
 
-                <div className="bg-neutral-900 border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-8 relative">
+                <div className="bg-neutral-900 border-4 border-black shadow-[var(--shadow-brutal)] p-8 relative">
                     <Screw className="top-[-10px] left-[-10px] text-neutral-800" />
                     <Screw className="top-[-10px] right-[-10px] text-neutral-800" />
                     <Screw className="bottom-[-10px] left-[-10px] text-neutral-800" />

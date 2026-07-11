@@ -181,9 +181,9 @@ const confirmFinish = async () => {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'waiting': return 'border border-yellow-400/40 bg-yellow-400/5';
-            case 'calling': return 'border border-green-500/40 bg-green-500/5 animate-pulse';
-            case 'serving': return 'border border-blue-400/40 bg-blue-500/5';
+            case 'waiting': return 'border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]';
+            case 'calling': return 'border border-[var(--color-success-border)] bg-[var(--color-success-bg)] animate-pulse';
+            case 'serving': return 'border border-[var(--color-info-border)] bg-[var(--color-info-bg)]';
             default: return 'border border-neutral-700';
         }
     };
@@ -266,17 +266,17 @@ const confirmFinish = async () => {
 
             {/* Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                <Card className="p-4 border border-yellow-400/40">
+                <Card className="p-4 border border-[var(--color-warning-border)]">
                     <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Na Fila</div>
-                    <div className="text-4xl font-heading text-yellow-400">{metrics.waiting}</div>
+                    <div className="text-4xl font-heading text-[var(--color-warning)]">{metrics.waiting}</div>
                 </Card>
-                <Card className="p-4 border border-blue-400/40">
+                <Card className="p-4 border border-[var(--color-info-border)]">
                     <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Atendendo</div>
-                    <div className="text-4xl font-heading text-blue-400">{metrics.serving}</div>
+                    <div className="text-4xl font-heading text-[var(--color-info)]">{metrics.serving}</div>
                 </Card>
-                <Card className="p-4 border border-green-500/40">
+                <Card className="p-4 border border-[var(--color-success-border)]">
                     <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Finalizados</div>
-                    <div className="text-4xl font-heading text-green-500">{metrics.completed}</div>
+                    <div className="text-4xl font-heading text-[var(--color-success)]">{metrics.completed}</div>
                 </Card>
             </div>
 
@@ -299,7 +299,7 @@ const confirmFinish = async () => {
                                     <h3 className={`font-bold ${colors.text} text-lg flex items-center gap-2`}>
                                         <span className="font-heading">{entry.client_name}</span>
                                         {entry.status === 'calling' && (
-                                            <span className="text-xs bg-green-500 text-black px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
+                                            <span className="text-xs bg-[var(--color-success)] text-black px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
                                         )}
                                     </h3>
                                     <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>
@@ -312,7 +312,7 @@ const confirmFinish = async () => {
                                     {entry.status === 'waiting' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'calling')}
-                                            className="p-3 bg-green-500/10 text-green-500 rounded-full hover:bg-green-500/20 border border-green-500/20 transition-all hover:scale-105"
+                                            className="p-3 bg-[var(--color-success-bg)] text-[var(--color-success)] rounded-full hover:bg-[var(--color-success-bg)] border border-[var(--color-success-border)] transition-all hover:scale-105"
                                             title="Chamar Cliente"
                                         >
                                             <Megaphone className="w-5 h-5" />
@@ -321,7 +321,7 @@ const confirmFinish = async () => {
                                     {entry.status === 'calling' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'serving')}
-                                            className="p-3 bg-blue-500/10 text-blue-500 rounded-full hover:bg-blue-500/20 border border-blue-500/20 transition-all hover:scale-105"
+                                            className="p-3 bg-[var(--color-info-bg)] text-[var(--color-info)] rounded-full hover:bg-[var(--color-info-bg)] border border-[var(--color-info-border)] transition-all hover:scale-105"
                                             title="Iniciar Atendimento"
                                         >
                                             <Play className="w-5 h-5 fill-current" />
@@ -329,7 +329,7 @@ const confirmFinish = async () => {
                                     )}
                                     <button
                                         onClick={() => setNoShowTarget(entry.id)}
-                                        className="p-3 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 border border-red-500/20 transition-all opacity-60 hover:opacity-100"
+                                        className="p-3 bg-[var(--color-danger-bg)] text-[var(--color-danger)] rounded-full hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] transition-all opacity-60 hover:opacity-100"
                                         title="Não Compareceu"
                                     >
                                         <X className="w-5 h-5" />
@@ -342,7 +342,7 @@ const confirmFinish = async () => {
 
                 {/* Right Column: In Service */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight text-blue-400">
+                    <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight text-[var(--color-info)]">
                         <User className="w-5 h-5" />
                         Em Atendimento
                     </h2>
@@ -394,7 +394,7 @@ const confirmFinish = async () => {
                                     <div>
                                         <h3 className={`font-bold ${colors.textSecondary} text-base font-heading`}>{entry.client_name}</h3>
                                         <div className={`text-xs ${colors.textMuted} flex items-center gap-2 mt-1`}>
-                                            <Check className="w-3 h-3 text-green-500" />
+                                            <Check className="w-3 h-3 text-[var(--color-success)]" />
                                             Finalizado
                                         </div>
                                     </div>

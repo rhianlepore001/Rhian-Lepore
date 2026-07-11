@@ -1,37 +1,36 @@
 import React, { useState } from 'react';
-import { RefreshCw, MessageCircle, Clock, ChevronRight, AlertCircle, Calendar, User } from 'lucide-react';
+import { RefreshCw, MessageCircle, ChevronRight, User } from 'lucide-react';
 import { useSmartRebooking, RebookingSuggestion } from '../../hooks/useSmartRebooking';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBrutalTheme, type BrutalThemeTokens } from '../../hooks/useBrutalTheme';
 import { formatCurrency } from '../../utils/formatters';
 import { InfoButton } from '../HelpButtons';
 
 interface SmartRebookingProps {
-    isBeauty: boolean;
+    /** @deprecated tema vem do useBrutalTheme; mantido por compat de API */
+    isBeauty?: boolean;
     limit?: number;
 }
 
-function getUrgencyConfig(urgency: RebookingSuggestion['urgency']) {
+function getUrgencyConfig(urgency: RebookingSuggestion['urgency'], status: BrutalThemeTokens['status']) {
     switch (urgency) {
         case 'now':
             return {
                 label: 'Chamar agora',
-                color: 'text-red-400',
-                bg: 'bg-red-500/10 border-red-500/20',
-                badgeBg: 'bg-red-900/40 text-red-300'
+                bg: `${status.dangerBg} ${status.dangerBorder}`,
+                badge: `${status.dangerBg} ${status.danger} ${status.dangerBorder} border`
             };
         case 'soon':
             return {
                 label: 'Esta semana',
-                color: 'text-yellow-400',
-                bg: 'bg-yellow-500/10 border-yellow-500/20',
-                badgeBg: 'bg-yellow-900/40 text-yellow-300'
+                bg: `${status.warningBg} ${status.warningBorder}`,
+                badge: `${status.warningBg} ${status.warning} ${status.warningBorder} border`
             };
         case 'upcoming':
             return {
                 label: 'Em breve',
-                color: 'text-blue-400',
-                bg: 'bg-blue-500/10 border-blue-500/20',
-                badgeBg: 'bg-blue-900/40 text-blue-300'
+                bg: `${status.infoBg} ${status.infoBorder}`,
+                badge: `${status.infoBg} ${status.info} ${status.infoBorder} border`
             };
     }
 }
@@ -44,12 +43,12 @@ function getCadenceLabel(days: number): string {
     return `a cada ${Math.round(days / 7)} semanas`;
 }
 
-export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit = 5 }) => {
+export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => {
     const { suggestions, loading } = useSmartRebooking();
     const { region } = useAuth();
+    const { colors, accent, radius, status } = useBrutalTheme();
     const [expanded, setExpanded] = useState(true);
 
-    const accentText = isBeauty ? 'text-beauty-neon' : 'text-accent-gold';
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
 
     if (loading) return null;
@@ -59,32 +58,32 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
     const nowCount = suggestions.filter(s => s.urgency === 'now').length;
 
     return (
-        <div className="rounded-2xl border border-white/8 bg-neutral-900/60 backdrop-blur-md overflow-hidden">
+        <div className={`${radius.card} border ${colors.border} ${colors.card} overflow-hidden`}>
             {/* Header */}
             <button
                 onClick={() => setExpanded(v => !v)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
+                className={`w-full flex items-center justify-between px-5 py-4 ${colors.surfaceHover} transition-colors`}
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                        <RefreshCw className={`w-4 h-4 ${accentText}`} />
+                    <div className={`w-8 h-8 rounded-lg ${accent.bgDim} flex items-center justify-center flex-shrink-0`}>
+                        <RefreshCw className={`w-4 h-4 ${accent.text}`} />
                     </div>
                     <div className="text-left">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-bold font-heading text-white">Clientes para chamar de volta</h3>
+                            <h3 className={`text-sm font-bold font-heading ${colors.text}`}>Clientes para chamar de volta</h3>
                             <InfoButton text="Baseado na frequência de visitas de cada cliente, calculamos quando é hora de entrar em contato para agendar o próximo atendimento." />
                         </div>
-                        <p className="text-xs text-text-secondary font-mono">
+                        <p className={`text-xs ${colors.textSecondary} font-mono`}>
                             {nowCount > 0 ? `${nowCount} urgente${nowCount > 1 ? 's' : ''}` : `${suggestions.length} sugestões`} • Cadência preditiva
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     {nowCount > 0 && (
-                        <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                        <span className={`w-2 h-2 rounded-full bg-[var(--color-danger)] animate-pulse`} />
                     )}
                     <ChevronRight
-                        className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
+                        className={`w-4 h-4 ${colors.textSecondary} transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
                     />
                 </div>
             </button>
@@ -93,28 +92,28 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
             {expanded && (
                 <div className="px-5 pb-5 space-y-2">
                     {visible.map((suggestion) => {
-                        const config = getUrgencyConfig(suggestion.urgency);
+                        const config = getUrgencyConfig(suggestion.urgency, status);
                         const waPhone = suggestion.clientPhone.replace(/\D/g, '');
 
                         return (
                             <div
                                 key={suggestion.clientId}
-                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${config.bg}`}
+                                className={`flex items-center gap-3 p-3 ${radius.input} border transition-all ${config.bg}`}
                             >
                                 {/* Avatar */}
-                                <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
-                                    <User className="w-4 h-4 text-text-secondary" />
+                                <div className={`w-9 h-9 rounded-full ${colors.surface} flex items-center justify-center flex-shrink-0`}>
+                                    <User className={`w-4 h-4 ${colors.textSecondary}`} />
                                 </div>
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
-                                        <p className="text-sm font-semibold text-white truncate">{suggestion.clientName}</p>
-                                        <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded-full ${config.badgeBg}`}>
+                                        <p className={`text-sm font-semibold ${colors.text} truncate`}>{suggestion.clientName}</p>
+                                        <span className={`text-xs font-mono px-1.5 py-0.5 ${radius.badge} whitespace-nowrap ${config.badge}`}>
                                             {config.label}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-text-secondary">
+                                    <p className={`text-xs ${colors.textSecondary}`}>
                                         Vem {getCadenceLabel(suggestion.avgCadenceDays)} • Última visita há {suggestion.daysSinceLastVisit} dias • ~{formatCurrency(suggestion.avgTicket, currencyRegion as any)}/visita
                                     </p>
                                 </div>
@@ -127,7 +126,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
                                         )}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-shrink-0 p-2 rounded-lg bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors"
+                                        className={`flex-shrink-0 p-2 ${radius.button} ${status.successBg} ${status.success} border ${status.successBorder} hover:brightness-110 transition-all`}
                                         title="Enviar WhatsApp"
                                     >
                                         <MessageCircle className="w-4 h-4" />
@@ -138,7 +137,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
                     })}
 
                     {suggestions.length > limit && (
-                        <p className="text-center text-xs text-text-secondary font-mono pt-1">
+                        <p className={`text-center text-xs ${colors.textSecondary} font-mono pt-1`}>
                             +{suggestions.length - limit} clientes para acompanhar
                         </p>
                     )}

@@ -95,7 +95,7 @@ export const Dashboard: React.FC = () => {
     actionItems,
   } = useDashboardData();
 
-  const { accent, colors, density, font, status, isBeauty } = useBrutalTheme();
+  const { accent, colors, density, font, status, radius, isBeauty } = useBrutalTheme();
   const { data: clubStats } = useMembershipStats();
   const { region: currencyRegion } = useTenantLocale();
   const firstName = fullName?.split(' ')[0] || 'Profissional';
@@ -205,7 +205,7 @@ export const Dashboard: React.FC = () => {
               tabIndex={0}
               onClick={() => navigate('/clube/assinantes')}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/clube/assinantes')}
-              className={`${colors.card} ${colors.border} border rounded-2xl p-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform`}
+              className={`${colors.card} ${colors.border} border ${radius.card} p-4 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-transform`}
             >
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-2xl ${accent.bgDim} flex items-center justify-center shrink-0`}>
@@ -225,7 +225,7 @@ export const Dashboard: React.FC = () => {
                       <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         Ativos
                       </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-green-400">
+                      <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums ${status.success}`}>
                         {clubStats.totalActive}
                       </p>
                     </div>
@@ -233,7 +233,7 @@ export const Dashboard: React.FC = () => {
                       <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         Pendentes
                       </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-amber-400">
+                      <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums ${status.warning}`}>
                         {clubStats.totalPending}
                       </p>
                     </div>

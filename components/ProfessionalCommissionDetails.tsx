@@ -344,9 +344,9 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                             {new Date(service.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                         {service.paid ? (
-                                                            <span className={`text-[8px] md:text-xs font-bold px-1.5 py-0.5 rounded-md ${status.successBg} ${status.success} ${status.successBorder} border`}>PAGO</span>
+                                                            <span className={`text-xs md:text-xs font-bold px-1.5 py-0.5 rounded-md ${status.successBg} ${status.success} ${status.successBorder} border`}>PAGO</span>
                                                         ) : (
-                                                            <span className={`text-[8px] md:text-xs font-bold px-1.5 py-0.5 rounded-md ${status.warningBg} ${status.warning} ${status.warningBorder} border`}>PENDENTE</span>
+                                                            <span className={`text-xs md:text-xs font-bold px-1.5 py-0.5 rounded-md ${status.warningBg} ${status.warning} ${status.warningBorder} border`}>PENDENTE</span>
                                                         )}
                                                     </div>
                                                     <h4 className={`${colors.text} font-bold text-base md:text-lg mb-0.5 uppercase tracking-tight leading-tight`}>{service.client_name}</h4>
@@ -363,7 +363,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                 </div>
                                                 <div className={`h-6 md:h-8 w-px ${colors.divider}`}></div>
                                                 <div className={`text-right ${colors.card} opacity-80 md:px-4 px-3 py-2 rounded-xl ${colors.border} border group-hover:border-theme-border transition-colors relative md:min-w-[120px] min-w-[100px]`}>
-                                                    <p className={`text-[8px] md:text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Comissão ({service.commission_rate}%)</p>
+                                                    <p className={`text-xs md:text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Comissão ({service.commission_rate}%)</p>
                                                     <p className={`${font.mono} font-bold text-sm md:text-lg ${accent.text} leading-none`}>
                                                         {currencySymbol} {service.commission_amount.toFixed(2)}
                                                     </p>

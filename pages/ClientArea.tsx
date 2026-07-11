@@ -96,6 +96,16 @@ export const ClientArea: React.FC = () => {
     const isBeauty = business?.user_type === 'beauty';
     const region = (business?.region as 'BR' | 'PT') ?? 'BR';
 
+    // Tokens do DS: beauty = claro (silk), barber = escuro. O script anti-FOUC do
+    // index.html remove data-mode nas rotas públicas; aqui restauramos assim que
+    // o negócio carrega para os var(--color-*) resolverem certo.
+    useEffect(() => {
+        if (!business) return;
+        const html = document.documentElement;
+        html.setAttribute('data-theme', isBeauty ? 'beauty' : 'barber');
+        html.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
+    }, [business, isBeauty]);
+
     const fetchBookings = useCallback(async () => {
         if (!sessionClient || !business) return;
         setBookingsLoading(true);
@@ -253,29 +263,29 @@ export const ClientArea: React.FC = () => {
 
     if (businessLoading || clientLoading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
-                <Loader2 className={`w-8 h-8 animate-spin ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+            <div className={`min-h-screen flex items-center justify-center ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
+                <Loader2 className={`w-8 h-8 animate-spin ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
             </div>
         );
     }
 
     if (businessError || !business) {
         return (
-            <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-4 p-8">
-                <CalendarX className="w-12 h-12 text-zinc-600" />
-                <p className="text-zinc-400 text-center">Estabelecimento não encontrado.</p>
-                <Link to="/" className="text-xs text-zinc-600 underline">Voltar ao início</Link>
+            <div className="min-h-screen bg-theme-bg flex flex-col items-center justify-center gap-4 p-8">
+                <CalendarX className="w-12 h-12 text-[var(--color-text-muted)]" />
+                <p className="text-theme-textSecondary text-center">Estabelecimento não encontrado.</p>
+                <Link to="/" className="text-xs text-[var(--color-text-muted)] underline">Voltar ao início</Link>
             </div>
         );
     }
 
     if (!sessionClient) {
         return (
-            <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
-                <header className={`px-6 py-5 border-b ${isBeauty ? 'border-stone-200 bg-white/60 backdrop-blur-sm' : 'border-zinc-900 bg-black/40 backdrop-blur-sm'}`}>
+            <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
+                <header className={`px-6 py-5 border-b ${isBeauty ? 'border-theme-border bg-theme-card backdrop-blur-sm' : 'border-theme-border bg-theme-card backdrop-blur-sm'}`}>
                     <Link
                         to={`/book/${slug}`}
-                        className={`inline-flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-stone-400 hover:text-stone-600' : 'text-zinc-600 hover:text-zinc-400'}`}
+                        className={`inline-flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-theme-textSecondary hover:text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)] hover:text-theme-textSecondary'}`}
                     >
                         <ChevronLeft className="w-4 h-4" />
                         Voltar ao agendamento
@@ -288,34 +298,34 @@ export const ClientArea: React.FC = () => {
                             {business.logo_url
                                 ? <img src={business.logo_url} alt={business.business_name} className="w-16 h-16 rounded-2xl mx-auto mb-4 object-cover" />
                                 : (
-                                    <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center ${isBeauty ? 'bg-stone-200' : 'bg-zinc-800'}`}>
-                                        <Sparkles className={`w-7 h-7 ${isBeauty ? 'text-stone-500' : 'text-zinc-500'}`} />
+                                    <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center ${isBeauty ? 'bg-theme-surface' : 'bg-theme-surface'}`}>
+                                        <Sparkles className={`w-7 h-7 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`} />
                                     </div>
                                 )
                             }
-                            <h1 className={`text-2xl font-bold ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                            <h1 className={`text-2xl font-bold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                                 {business.business_name}
                             </h1>
-                            <p className={`text-sm mt-1 ${isBeauty ? 'text-stone-500' : 'text-zinc-500'}`}>
+                            <p className={`text-sm mt-1 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`}>
                                 Minha Área
                             </p>
                         </div>
 
-                        <div className={`rounded-2xl p-6 ${isBeauty ? 'bg-white shadow-lg border border-stone-100' : 'bg-zinc-900 border border-zinc-800'}`}>
+                        <div className={`rounded-2xl p-6 ${isBeauty ? 'bg-theme-card shadow-lg border border-theme-border' : 'bg-theme-surface border border-theme-border'}`}>
                             {gateStep === 'phone' ? (
                                 <form onSubmit={handlePhoneCheck} className="space-y-5">
                                     <div className="text-center mb-2">
-                                        <Phone className={`w-8 h-8 mx-auto mb-2 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
-                                        <h2 className={`font-bold text-lg ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                        <Phone className={`w-8 h-8 mx-auto mb-2 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
+                                        <h2 className={`font-bold text-lg ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                                             Acesse sua área
                                         </h2>
-                                        <p className={`text-xs mt-1 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`}>
+                                        <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
                                             Use o mesmo número do seu agendamento
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-stone-500' : 'text-zinc-400'}`}>
+                                        <label className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
                                             Seu WhatsApp / Telefone
                                         </label>
                                         <PhoneInput
@@ -325,7 +335,7 @@ export const ClientArea: React.FC = () => {
                                         />
                                     </div>
 
-                                    {gateError && <p className="text-red-400 text-xs text-center">{gateError}</p>}
+                                    {gateError && <p className="text-[var(--color-danger)] text-xs text-center">{gateError}</p>}
 
                                     <button
                                         type="submit"
@@ -334,8 +344,8 @@ export const ClientArea: React.FC = () => {
                                             w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all
                                             disabled:opacity-40
                                             ${isBeauty
-                                                ? 'bg-stone-800 text-white hover:bg-stone-700'
-                                                : 'bg-white text-black hover:bg-zinc-200'
+                                                ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]'
+                                                : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'
                                             }
                                         `}
                                     >
@@ -348,40 +358,40 @@ export const ClientArea: React.FC = () => {
                             ) : (
                                 <form onSubmit={handleRegister} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                                     <div className="text-center mb-2">
-                                        <User className={`w-8 h-8 mx-auto mb-2 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
-                                        <h2 className={`font-bold text-lg ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                        <User className={`w-8 h-8 mx-auto mb-2 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
+                                        <h2 className={`font-bold text-lg ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                                             Criar cadastro
                                         </h2>
-                                        <p className={`text-xs mt-1 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`}>
+                                        <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
                                             Primeira vez? Informe seu nome.
                                         </p>
                                     </div>
 
-                                    <div className={`flex items-center justify-between text-xs px-3 py-2 rounded-lg ${isBeauty ? 'bg-stone-50 text-stone-500' : 'bg-zinc-800 text-zinc-400'}`}>
+                                    <div className={`flex items-center justify-between text-xs px-3 py-2 rounded-lg ${isBeauty ? 'bg-theme-surface text-[var(--color-text-muted)]' : 'bg-theme-surface text-theme-textSecondary'}`}>
                                         <span>{phone}</span>
                                         <button type="button" onClick={() => setGateStep('phone')} className="underline">Alterar</button>
                                     </div>
 
                                     <div className="relative">
-                                        <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+                                        <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
                                         <input
                                             type="text"
                                             placeholder="Nome completo"
                                             value={gateName}
                                             onChange={e => setGateName(e.target.value)}
                                             required
-                                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-colors ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800 focus:border-stone-400' : 'bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500'}`}
+                                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-colors ${isBeauty ? 'bg-theme-surface border border-theme-border text-theme-text focus:border-theme-border' : 'bg-theme-surface border border-theme-border text-theme-text focus:border-theme-border'}`}
                                         />
                                     </div>
 
-                                    {gateError && <p className="text-red-400 text-xs text-center">{gateError}</p>}
+                                    {gateError && <p className="text-[var(--color-danger)] text-xs text-center">{gateError}</p>}
 
                                     <button
                                         type="submit"
                                         disabled={gateSubmitting}
                                         className={`
                                             w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40
-                                            ${isBeauty ? 'bg-stone-800 text-white hover:bg-stone-700' : 'bg-white text-black hover:bg-zinc-200'}
+                                            ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'}
                                         `}
                                     >
                                         {gateSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar minha área'}
@@ -390,9 +400,9 @@ export const ClientArea: React.FC = () => {
                             )}
                         </div>
 
-                        <p className={`text-center text-xs ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`}>
+                        <p className={`text-center text-xs ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
                             Quer agendar?{' '}
-                            <Link to={`/book/${slug}`} className={`font-semibold underline ${isBeauty ? 'text-stone-600' : 'text-zinc-400'}`}>
+                            <Link to={`/book/${slug}`} className={`font-semibold underline ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
                                 Ir para o agendamento
                             </Link>
                         </p>
@@ -403,24 +413,24 @@ export const ClientArea: React.FC = () => {
     }
 
     return (
-        <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-[#E2E1DA]' : 'bg-[#050505]'}`}>
-            <header className={`sticky top-0 z-30 px-4 md:px-8 py-4 border-b ${isBeauty ? 'border-stone-200 bg-[#E2E1DA]/90 backdrop-blur-sm' : 'border-zinc-900 bg-[#050505]/90 backdrop-blur-sm'}`}>
+        <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
+            <header className={`sticky top-0 z-30 px-4 md:px-8 py-4 border-b ${isBeauty ? 'border-theme-border bg-theme-bg backdrop-blur-sm' : 'border-theme-border bg-theme-bg backdrop-blur-sm'}`}>
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
                     <Link
                         to={`/book/${slug}`}
-                        className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${isBeauty ? 'text-stone-400 hover:text-stone-600' : 'text-zinc-600 hover:text-zinc-400'}`}
+                        className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${isBeauty ? 'text-theme-textSecondary hover:text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)] hover:text-theme-textSecondary'}`}
                     >
                         <ChevronLeft className="w-4 h-4" />
                         {business.business_name}
                     </Link>
                     <div className="flex items-center gap-3">
-                        <span className={`text-sm font-semibold ${isBeauty ? 'text-stone-700' : 'text-zinc-300'}`}>
+                        <span className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                             {sessionClient.name.split(' ')[0]}
                         </span>
                         <button
                             onClick={() => logout(business.id)}
                             title="Sair"
-                            className={`p-1.5 rounded-lg transition-colors ${isBeauty ? 'text-stone-400 hover:text-red-400 hover:bg-red-50' : 'text-zinc-600 hover:text-red-400 hover:bg-red-500/10'}`}
+                            className={`p-1.5 rounded-lg transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]`}
                         >
                             <LogOut className="w-4 h-4" />
                         </button>
@@ -429,17 +439,17 @@ export const ClientArea: React.FC = () => {
             </header>
 
             <main className="flex-1 max-w-2xl mx-auto w-full px-4 md:px-8 py-6 space-y-6">
-                <div className={`relative overflow-hidden rounded-2xl p-6 ${isBeauty ? 'bg-stone-800 text-white' : 'bg-zinc-900 border border-zinc-800'}`}>
-                    <div className={`absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10 ${isBeauty ? 'bg-white' : 'bg-white'}`} />
+                <div className={`relative overflow-hidden rounded-2xl p-6 ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-surface border border-theme-border'}`}>
+                    <div className={`absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10 ${isBeauty ? 'bg-theme-card' : 'bg-theme-card'}`} />
                     <div className="relative z-10 flex items-center justify-between gap-4">
                         <div>
-                            <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isBeauty ? 'text-stone-300' : 'text-zinc-500'}`}>
+                            <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isBeauty ? 'text-theme-text' : 'text-[var(--color-text-muted)]'}`}>
                                 {business.business_name}
                             </p>
-                            <h1 className="text-2xl font-bold text-white">
+                            <h1 className="text-2xl font-bold text-theme-text">
                                 Olá, {sessionClient.name.split(' ')[0]}!
                             </h1>
-                            <p className={`text-xs mt-1 ${isBeauty ? 'text-stone-300' : 'text-zinc-400'}`}>
+                            <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-text' : 'text-theme-textSecondary'}`}>
                                 {upcomingBookings.length > 0
                                     ? `Você tem ${upcomingBookings.length} agendamento${upcomingBookings.length > 1 ? 's' : ''} próximo${upcomingBookings.length > 1 ? 's' : ''}`
                                     : 'Nenhum agendamento futuro'}
@@ -447,7 +457,7 @@ export const ClientArea: React.FC = () => {
                         </div>
                         <Link
                             to={`/book/${slug}`}
-                            className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${isBeauty ? 'bg-white text-stone-800 shadow-md' : 'bg-white text-black'}`}
+                            className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${isBeauty ? 'bg-theme-card text-theme-text shadow-md' : 'bg-theme-card text-black'}`}
                         >
                             <Calendar className="w-3.5 h-3.5" />
                             Novo Agendamento
@@ -455,7 +465,7 @@ export const ClientArea: React.FC = () => {
                     </div>
                 </div>
 
-                <div className={`flex gap-1 p-1 rounded-xl ${isBeauty ? 'bg-stone-200/60' : 'bg-zinc-900 border border-zinc-800'}`}>
+                <div className={`flex gap-1 p-1 rounded-xl ${isBeauty ? 'bg-theme-surface/60' : 'bg-theme-surface border border-theme-border'}`}>
                     {([
                         { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
                         { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
@@ -468,18 +478,18 @@ export const ClientArea: React.FC = () => {
                                 flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all
                                 ${activeTab === tab.id
                                     ? isBeauty
-                                        ? 'bg-white text-stone-800 shadow-sm'
-                                        : 'bg-zinc-700 text-white'
+                                        ? 'bg-theme-card text-theme-text shadow-sm'
+                                        : 'bg-theme-surface text-theme-text'
                                     : isBeauty
-                                        ? 'text-stone-500 hover:text-stone-700'
-                                        : 'text-zinc-500 hover:text-zinc-300'
+                                        ? 'text-[var(--color-text-muted)] hover:text-theme-text'
+                                        : 'text-[var(--color-text-muted)] hover:text-theme-text'
                                 }
                             `}
                         >
                             {tab.icon}
                             {tab.label}
                             {tab.id === 'upcoming' && upcomingBookings.length > 0 && (
-                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-stone-800 text-white' : 'bg-white text-black'}`}>
+                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-card text-black'}`}>
                                     {upcomingBookings.length}
                                 </span>
                             )}
@@ -489,18 +499,18 @@ export const ClientArea: React.FC = () => {
 
                 {bookingsLoading ? (
                     <div className="py-16 flex justify-center">
-                        <Loader2 className={`w-6 h-6 animate-spin ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`} />
+                        <Loader2 className={`w-6 h-6 animate-spin ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
                     </div>
                 ) : (
                     <>
                         {activeTab === 'upcoming' && (
                             <div className="space-y-4 animate-in fade-in duration-200">
                                 {upcomingBookings.some(b => b.status === 'pending') && (
-                                    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${isBeauty ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-300'}`}>
+                                    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]`}>
                                         <Clock className="w-4 h-4 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-xs font-bold">Aguardando confirmação do estabelecimento</p>
-                                            <p className={`text-xs mt-0.5 ${isBeauty ? 'text-amber-600' : 'text-yellow-400/70'}`}>
+                                            <p className={`text-xs mt-0.5 ${isBeauty ? 'text-[var(--color-warning)]' : 'text-[var(--color-warning)]/70'}`}>
                                                 Seu agendamento está em análise. Use o botão de WhatsApp para agilizar a confirmação.
                                             </p>
                                         </div>
@@ -559,7 +569,7 @@ export const ClientArea: React.FC = () => {
                                         {historySlice.length < historyBookings.length && (
                                             <button
                                                 onClick={() => setHistoryPage(p => p + 1)}
-                                                className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${isBeauty ? 'bg-stone-200 text-stone-600 hover:bg-stone-300' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'}`}
+                                                className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${isBeauty ? 'bg-theme-surface text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)]' : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)] border border-theme-border'}`}
                                             >
                                                 Carregar mais ({historyBookings.length - historySlice.length} restantes)
                                             </button>
@@ -571,15 +581,15 @@ export const ClientArea: React.FC = () => {
 
                         {activeTab === 'profile' && (
                             <div className="animate-in fade-in duration-200">
-                                <div className={`rounded-2xl p-6 space-y-5 ${isBeauty ? 'bg-white border border-stone-100 shadow-sm' : 'bg-zinc-900 border border-zinc-800'}`}>
+                                <div className={`rounded-2xl p-6 space-y-5 ${isBeauty ? 'bg-theme-card border border-theme-border shadow-sm' : 'bg-theme-surface border border-theme-border'}`}>
                                     <div className="flex items-center justify-between">
-                                        <h2 className={`font-bold text-base ${isBeauty ? 'text-stone-800' : 'text-white'}`}>
+                                        <h2 className={`font-bold text-base ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                                             Meus Dados
                                         </h2>
                                         {!editingProfile && (
                                             <button
                                                 onClick={startEdit}
-                                                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${isBeauty ? 'text-stone-500 hover:text-stone-700 hover:bg-stone-100' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'}`}
+                                                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${isBeauty ? 'text-[var(--color-text-muted)] hover:text-theme-text hover:bg-[var(--color-card-hover)]' : 'text-[var(--color-text-muted)] hover:text-theme-text hover:bg-[var(--color-card-hover)]'}`}
                                             >
                                                 <Edit2 className="w-3.5 h-3.5" />
                                                 Editar
@@ -590,36 +600,36 @@ export const ClientArea: React.FC = () => {
                                     {editingProfile ? (
                                         <div className="space-y-3">
                                             <div className="relative">
-                                                <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+                                                <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
                                                 <input
                                                     type="text"
                                                     value={editName}
                                                     onChange={e => setEditName(e.target.value)}
                                                     placeholder="Nome"
-                                                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800' : 'bg-zinc-800 border border-zinc-700 text-white'}`}
+                                                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-theme-surface border border-theme-border text-theme-text' : 'bg-theme-surface border border-theme-border text-theme-text'}`}
                                                 />
                                             </div>
                                             <div className="relative">
-                                                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-stone-400' : 'text-zinc-500'}`} />
+                                                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
                                                 <input
                                                     type="email"
                                                     value={editEmail}
                                                     onChange={e => setEditEmail(e.target.value)}
                                                     placeholder="E-mail (opcional)"
-                                                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-stone-50 border border-stone-200 text-stone-800' : 'bg-zinc-800 border border-zinc-700 text-white'}`}
+                                                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-theme-surface border border-theme-border text-theme-text' : 'bg-theme-surface border border-theme-border text-theme-text'}`}
                                                 />
                                             </div>
                                             <div className="flex gap-2 pt-1">
                                                 <button
                                                     onClick={() => setEditingProfile(false)}
-                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 ${isBeauty ? 'bg-stone-100 text-stone-600 hover:bg-stone-200' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 ${isBeauty ? 'bg-theme-surface text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)]' : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                                                 >
                                                     <X className="w-3.5 h-3.5" /> Cancelar
                                                 </button>
                                                 <button
                                                     onClick={handleSaveProfile}
                                                     disabled={profileSaving}
-                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50 ${isBeauty ? 'bg-stone-800 text-white hover:bg-stone-700' : 'bg-white text-black hover:bg-zinc-200'}`}
+                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50 ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'}`}
                                                 >
                                                     {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Check className="w-3.5 h-3.5" /> Salvar</>}
                                                 </button>
@@ -633,10 +643,10 @@ export const ClientArea: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <div className={`pt-4 border-t ${isBeauty ? 'border-stone-100' : 'border-zinc-800'}`}>
+                                    <div className={`pt-4 border-t ${isBeauty ? 'border-theme-border' : 'border-theme-border'}`}>
                                         <button
                                             onClick={() => logout(business.id)}
-                                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-red-400 hover:text-red-500' : 'text-red-400 hover:text-red-300'}`}
+                                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-[var(--color-danger)] hover:text-[var(--color-danger)]' : 'text-[var(--color-danger)] hover:text-[var(--color-danger)]'}`}
                                         >
                                             <LogOut className="w-3.5 h-3.5" />
                                             Sair da minha área
@@ -669,16 +679,16 @@ interface EmptyStateProps {
     isBeauty: boolean;
 }
 const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, cta, isBeauty }) => (
-    <div className={`py-16 flex flex-col items-center gap-4 rounded-2xl ${isBeauty ? 'bg-white/60 border border-stone-100' : 'bg-zinc-900/60 border border-zinc-800'}`}>
-        <div className={isBeauty ? 'text-stone-300' : 'text-zinc-700'}>{icon}</div>
+    <div className={`py-16 flex flex-col items-center gap-4 rounded-2xl ${isBeauty ? 'bg-theme-card/60 border border-theme-border' : 'bg-theme-surface/60 border border-theme-border'}`}>
+        <div className={isBeauty ? 'text-theme-text' : 'text-theme-text'}>{icon}</div>
         <div className="text-center">
-            <p className={`font-semibold text-sm ${isBeauty ? 'text-stone-600' : 'text-zinc-400'}`}>{title}</p>
-            <p className={`text-xs mt-1 ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`}>{description}</p>
+            <p className={`font-semibold text-sm ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>{title}</p>
+            <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>{description}</p>
         </div>
         {cta && (
             <Link
                 to={cta.to}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${isBeauty ? 'bg-stone-800 text-white hover:bg-stone-700' : 'bg-white text-black hover:bg-zinc-200'}`}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'}`}
             >
                 {cta.label}
             </Link>
@@ -694,10 +704,10 @@ interface ProfileRowProps {
 }
 const ProfileRow: React.FC<ProfileRowProps> = ({ icon, label, value, isBeauty }) => (
     <div className="flex items-center gap-3">
-        <div className={isBeauty ? 'text-stone-400' : 'text-zinc-500'}>{icon}</div>
+        <div className={isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}>{icon}</div>
         <div>
-            <p className={`text-xs uppercase tracking-wider font-medium ${isBeauty ? 'text-stone-400' : 'text-zinc-600'}`}>{label}</p>
-            <p className={`text-sm font-semibold ${isBeauty ? 'text-stone-700' : 'text-zinc-200'}`}>{value}</p>
+            <p className={`text-xs uppercase tracking-wider font-medium ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>{label}</p>
+            <p className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>{value}</p>
         </div>
     </div>
 );

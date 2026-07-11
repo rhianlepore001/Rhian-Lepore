@@ -117,7 +117,7 @@ export const PublicBookingSettings: React.FC = () => {
                         title={
                             <div className="flex items-center gap-2">
                                 <span className="text-sm">Upsells Inteligentes</span>
-                                <HelpCircle className="w-4 h-4 text-neutral-500" />
+                                <HelpCircle className="w-4 h-4 text-[var(--color-text-muted)]" />
                             </div>
                         }
                     >
@@ -138,7 +138,7 @@ export const PublicBookingSettings: React.FC = () => {
                         title={
                             <div className="flex items-center gap-2">
                                 <span className="text-sm">Profissionais</span>
-                                <HelpCircle className="w-4 h-4 text-neutral-500" />
+                                <HelpCircle className="w-4 h-4 text-[var(--color-text-muted)]" />
                             </div>
                         }
                     >

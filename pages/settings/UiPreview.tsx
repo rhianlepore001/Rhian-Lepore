@@ -397,7 +397,7 @@ export const UiPreview: React.FC = () => {
                   {selectedUser && (
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Linha Selecionada (onClick):</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-theme-textSecondary">Linha Selecionada (onClick):</p>
                         <p className="text-sm font-bold">{selectedUser.name} ({selectedUser.email})</p>
                       </div>
                       <Button size="sm" variant="ghost" onClick={() => setSelectedUser(null)}>
@@ -488,7 +488,7 @@ export const UiPreview: React.FC = () => {
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
               <CheckCircle className="text-emerald-400 w-8 h-8 shrink-0" />
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Acessibilidade Garantida</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-theme-textSecondary">Acessibilidade Garantida</p>
                 <p className="text-xs text-text-secondary">Pressione ESC para sair ou clique no fundo de overlay.</p>
               </div>
             </div>

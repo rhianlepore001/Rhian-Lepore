@@ -828,13 +828,13 @@ useEffect(() => {
             <div className="space-y-4">
               {/* Type Selector */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Tipo</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Tipo</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNewTransactionType('income')}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'income'
                       ? 'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success)]'
-                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                      : 'bg-theme-surface border-theme-border text-theme-textSecondary hover:border-theme-border'
                       }`}
                   >
                     + Receita
@@ -843,7 +843,7 @@ useEffect(() => {
                     onClick={() => setNewTransactionType('expense')}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'expense'
                       ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]'
-                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                      : 'bg-theme-surface border-theme-border text-theme-textSecondary hover:border-theme-border'
                       }`}
                   >
                     - Despesa
@@ -853,7 +853,7 @@ useEffect(() => {
 
               {/* Description */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Descrição *</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Descrição *</label>
                 <input
                   type="text"
                   value={newTransactionDescription}
@@ -861,7 +861,7 @@ useEffect(() => {
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                      : `bg-black border border-theme-border focus:border-accent-gold`}
                 `}
                   placeholder="Ex: Venda de produto, Pagamento de aluguel..."
                   required
@@ -871,14 +871,14 @@ useEffect(() => {
               {/* Status and Due Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Status</label>
+                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Status</label>
                   <select
                     value={newTransactionStatus}
                     onChange={(e) => setNewTransactionStatus(e.target.value as 'paid' | 'pending')}
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                        : `bg-black border border-theme-border focus:border-accent-gold`}
                   `}
                   >
                     <option value="paid">Pago / Recebido</option>
@@ -887,7 +887,7 @@ useEffect(() => {
                 </div>
                 {newTransactionStatus === 'pending' && (
                   <div>
-                    <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Vencimento</label>
+                    <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Vencimento</label>
                     <input
                       type="date"
                       value={newTransactionDueDate}
@@ -895,7 +895,7 @@ useEffect(() => {
                       className={`w-full p-3 rounded-lg text-white transition-all outline-none
                         ${isBeauty
                           ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                          : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                          : `bg-black border border-theme-border focus:border-accent-gold`}
                       `}
                     />
                   </div>
@@ -904,7 +904,7 @@ useEffect(() => {
 
               {/* Amount */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Valor ({currencySymbol}) *</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Valor ({currencySymbol}) *</label>
                 <input
                   type="number"
                   value={newTransactionAmount}
@@ -914,7 +914,7 @@ useEffect(() => {
                   className={`w-full p-3 rounded-lg text-white font-mono text-lg transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                      : `bg-black border border-theme-border focus:border-accent-gold`}
                 `}
                   placeholder="0.00"
                   required
@@ -924,7 +924,7 @@ useEffect(() => {
               {/* Date and Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Data</label>
+                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Data</label>
                   <input
                     type="date"
                     value={newTransactionDate}
@@ -932,12 +932,12 @@ useEffect(() => {
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                        : `bg-black border border-theme-border focus:border-accent-gold`}
                   `}
                   />
                 </div>
                 <div>
-                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Horário (opcional)</label>
+                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Horário (opcional)</label>
                   <input
                     type="time"
                     value={newTransactionTime}
@@ -945,7 +945,7 @@ useEffect(() => {
                     className={`w-full p-3 rounded-lg text-white transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                        : `bg-black border border-theme-border focus:border-accent-gold`}
                   `}
                   />
                 </div>
@@ -953,14 +953,14 @@ useEffect(() => {
 
               {/* Service */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Serviço (opcional)</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Serviço (opcional)</label>
                 <select
                   value={newTransactionService}
                   onChange={(e) => setNewTransactionService(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                      : `bg-black border border-theme-border focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um serviço</option>
@@ -972,14 +972,14 @@ useEffect(() => {
 
               {/* Client */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Cliente (opcional)</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Cliente (opcional)</label>
                 <select
                   value={newTransactionClient}
                   onChange={(e) => setNewTransactionClient(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                      : `bg-black border border-theme-border focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um cliente</option>
@@ -991,14 +991,14 @@ useEffect(() => {
 
               {/* Professional */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Profissional (opcional)</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`}>Profissional (opcional)</label>
                 <select
                   value={newTransactionProfessional}
                   onChange={(e) => setNewTransactionProfessional(e.target.value)}
                   className={`w-full p-3 rounded-lg text-white transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
+                      : `bg-black border border-theme-border focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um profissional</option>
@@ -1033,7 +1033,7 @@ useEffect(() => {
           >
             <div className="space-y-4">
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Tipo de Transação</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-theme-textSecondary'}`}>Tipo de Transação</label>
                 <div className="flex gap-2">
                   {(['all', 'revenue', 'expense'] as const).map((type) => (
                     <button
@@ -1042,7 +1042,7 @@ useEffect(() => {
                       className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterType === type
                           ? `${accent.bg} text-[var(--color-bg)]`
-                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                          : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
                       {type === 'all' ? 'Tudo' : type === 'revenue' ? 'Entradas' : 'Saídas'}
                     </button>
@@ -1051,7 +1051,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Forma de Pagamento</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-theme-textSecondary'}`}>Forma de Pagamento</label>
                 <div className="flex flex-wrap gap-2">
                   {['all', 'Dinheiro', ...(region === 'PT' ? ['MBWay'] : ['Pix']), 'Cartão'].map((method) => (
                     <button
@@ -1060,7 +1060,7 @@ useEffect(() => {
                       className={`px-3 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterPaymentMethod === method
                           ? `${accent.bg} text-[var(--color-bg)]`
-                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                          : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
                       {method === 'all' ? 'Todas' : method}
                     </button>

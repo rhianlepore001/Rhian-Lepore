@@ -184,7 +184,7 @@ const confirmFinish = async () => {
             case 'waiting': return 'border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]';
             case 'calling': return 'border border-[var(--color-success-border)] bg-[var(--color-success-bg)] animate-pulse';
             case 'serving': return 'border border-[var(--color-info-border)] bg-[var(--color-info-bg)]';
-            default: return 'border border-neutral-700';
+            default: return 'border border-theme-border';
         }
     };
 
@@ -364,7 +364,7 @@ const confirmFinish = async () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => openFinishModal(entry)}
-                                        className="px-5 py-3 bg-neutral-100 text-black font-bold rounded-xl hover:bg-white hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.3)] min-h-[48px]"
+                                        className="px-5 py-3 bg-theme-surface text-black font-bold rounded-xl hover:bg-white hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.3)] min-h-[48px]"
                                         title="Finalizar"
                                     >
                                         <Check className="w-5 h-5" />
@@ -555,7 +555,7 @@ const confirmFinish = async () => {
                                 alt="QR Code"
                             />
                         ) : (
-                            <div className="w-48 h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
+                            <div className="w-48 h-48 bg-theme-surface flex items-center justify-center text-theme-textSecondary text-xs">
                                 Carregando...
                             </div>
                         )}

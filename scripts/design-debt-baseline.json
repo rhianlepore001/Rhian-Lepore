@@ -1,16 +1,13 @@
 {
   "pages/Agenda.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "pages/ClientArea.tsx": {
-    "text-white hardcoded (use colors.text)": 15,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 4
   },
   "pages/ClientCRM.tsx": {
     "text-white hardcoded (use colors.text)": 11,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "pages/ClubDemo.tsx": {
@@ -18,8 +15,7 @@
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 12
   },
   "pages/Finance.tsx": {
-    "text-white hardcoded (use colors.text)": 9,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 16
+    "text-white hardcoded (use colors.text)": 9
   },
   "pages/ForgotPassword.tsx": {
     "text-white hardcoded (use colors.text)": 5,
@@ -51,9 +47,6 @@
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 15,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
-  "pages/QueueManagement.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
   "pages/QueueStatus.tsx": {
     "text-white hardcoded (use colors.text)": 5,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 7,
@@ -63,28 +56,11 @@
     "text-white hardcoded (use colors.text)": 4,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 9
   },
-  "pages/Reports.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
-  "pages/settings/FinancialSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
   "pages/settings/MembershipPlansSettings.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
-  },
-  "pages/settings/PublicBookingSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
+    "text-white hardcoded (use colors.text)": 2
   },
   "pages/settings/ServiceSettings.tsx": {
-    "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "pages/settings/TeamSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "pages/settings/UiPreview.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
+    "text-white hardcoded (use colors.text)": 3
   },
   "pages/StaffInsights.tsx": {
     "text-white hardcoded (use colors.text)": 7,
@@ -157,14 +133,9 @@
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3
   },
   "components/ChatBubble.tsx": {
-    "text-white hardcoded (use colors.text)": 4,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
-  "components/ClientBookingCard.tsx": {
-    "text-white hardcoded (use colors.text)": 8
-  },
   "components/ClientWhatsAppFAB.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
   "components/DevBugButton.tsx": {

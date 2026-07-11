@@ -153,7 +153,7 @@ export const MembershipPlansSettings: React.FC = () => {
                 </header>
 
                 {!isBeauty && (
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                    <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                         <a href="#/configuracoes/clube/pix" className={`${accent.text} underline`}>← Configurar Pix</a>
                     </div>
                 )}
@@ -188,7 +188,7 @@ export const MembershipPlansSettings: React.FC = () => {
                     </div>
                 ) : (
                     <div className={`${colors.card} ${colors.border} border rounded-2xl p-12 text-center space-y-3`}>
-                        <Users className="w-12 h-12 mx-auto text-neutral-600" />
+                        <Users className="w-12 h-12 mx-auto text-[var(--color-text-muted)]" />
                         <p className={`${colors.text} text-lg font-bold uppercase`}>Nenhum plano ainda</p>
                         <p className={`${colors.textSecondary} text-sm`}>
                             Crie seu primeiro plano para começar a receber assinaturas.

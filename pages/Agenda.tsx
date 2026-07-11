@@ -1399,7 +1399,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     </div>
 
                                     <div className={`mt-4 pt-4 ${colors.divider} border-t space-y-3`}>
-                                        <div className="flex items-center gap-3 text-xs text-neutral-300">
+                                        <div className="flex items-center gap-3 text-xs text-theme-text">
                                             <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
                                                 <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
@@ -1407,7 +1407,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 {booking.service_ids?.length || 0} serviço(s) • <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-neutral-300">
+                                        <div className="flex items-center gap-3 text-xs text-theme-text">
                                             <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
                                                 <User className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>

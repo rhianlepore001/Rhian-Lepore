@@ -249,7 +249,7 @@ const { id } = useParams<{ id: string }>();
       {/* Back Button */}
       <button
         onClick={() => navigate('/clientes')}
-        className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-4"
+        className="flex items-center gap-2 text-theme-textSecondary hover:text-white transition-colors mb-4"
       >
         <ArrowLeft className="w-5 h-5" />
         <span className="font-mono text-sm uppercase">Voltar para Clientes</span>
@@ -330,11 +330,11 @@ const { id } = useParams<{ id: string }>();
 
           {/* Info */}
           <div className="flex-1 w-full mt-2 md:mt-0">
-            <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-neutral-800 pb-4 mb-4 gap-4 md:gap-0">
+            <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-theme-border pb-4 mb-4 gap-4 md:gap-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl md:text-3xl font-heading text-white uppercase leading-none">{client.name}</h1>
-                  <button onClick={() => setShowEditModal(true)} className="text-neutral-500 hover:text-white transition-colors">
+                  <button onClick={() => setShowEditModal(true)} className="text-[var(--color-text-muted)] hover:text-white transition-colors">
                     <Edit2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -406,7 +406,7 @@ const { id } = useParams<{ id: string }>();
       {/* Visual History - Now using Real Appointments */}
       <Card title={isBeauty ? "Histórico de Visitas" : "Histórico de Cortes"}>
         {client.hairHistory.length === 0 && (!client.appointmentsHistory || client.appointmentsHistory.length === 0) ? (
-          <div className="text-center py-12 text-neutral-500">
+          <div className="text-center py-12 text-[var(--color-text-muted)]">
             <p className="text-sm">{isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}</p>
           </div>
         ) : (
@@ -452,7 +452,7 @@ const { id } = useParams<{ id: string }>();
                     {/* Repeat Service Button for each card */}
                     <button
                       onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-neutral-800 ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
+                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>
@@ -463,14 +463,14 @@ const { id } = useParams<{ id: string }>();
               {/* Keep existing hair records for backward compatibility */}
               {client.hairHistory.map((record: any) => (
                 <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className={`relative border-2 border-neutral-700 hover:border-[var(--color-accent-border)] transition-colors`}>
+                  <div className={`relative border-2 border-theme-border hover:border-[var(--color-accent-border)] transition-colors`}>
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-theme-border">
                       <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
                       <p className="text-xs md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
                     </div>
                     <div className="absolute top-2 right-2">
-                      <span className="bg-neutral-800 text-white text-xs font-bold px-2 py-1 uppercase border border-neutral-600">Foto</span>
+                      <span className="bg-theme-surface text-white text-xs font-bold px-2 py-1 uppercase border border-theme-border">Foto</span>
                     </div>
                   </div>
                 </div>
@@ -485,7 +485,7 @@ const { id } = useParams<{ id: string }>();
         <div className="md:col-span-2 h-full">
           <Card title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
             <textarea
-              className={`w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:border-[var(--color-accent-border)] resize-none`}
+              className={`w-full h-40 bg-theme-surface border-2 border-theme-border p-4 text-text-primary font-mono text-sm focus:outline-none focus:border-[var(--color-accent-border)] resize-none`}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Digite observações sobre o cliente..."

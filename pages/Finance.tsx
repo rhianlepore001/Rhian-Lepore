@@ -6,7 +6,7 @@ import { Button, Modal, Table, Badge, ConfirmModal, useToast } from '@/component
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -637,26 +637,29 @@ useEffect(() => {
 
           {!isStaff && (
             <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Card variant="outlined">
-                <p className={`text-sm font-semibold ${colors.textSecondary}`}>
-                  {region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix'}
-                </p>
-                <p className={`mt-2 font-mono text-xl font-bold tabular-nums ${status.success}`}>
-                  {formatCurrency(region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0), currencyRegion)}
-                </p>
-              </Card>
-              <Card variant="outlined">
-                <p className={`text-sm font-semibold ${colors.textSecondary}`}>Receita via dinheiro</p>
-                <p className={`mt-2 font-mono text-xl font-bold tabular-nums ${status.success}`}>
-                  {formatCurrency(summary.revenueByMethod.dinheiro || 0, currencyRegion)}
-                </p>
-              </Card>
-              <Card variant="outlined">
-                <p className={`text-sm font-semibold ${colors.textSecondary}`}>Receita via cartão</p>
-                <p className={`mt-2 font-mono text-xl font-bold tabular-nums ${status.success}`}>
-                  {formatCurrency(summary.revenueByMethod.cartao || 0, currencyRegion)}
-                </p>
-              </Card>
+              {[
+                {
+                  icon: <Smartphone className="h-4 w-4" />,
+                  label: region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix',
+                  value: region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0),
+                },
+                { icon: <Banknote className="h-4 w-4" />, label: 'Receita via dinheiro', value: summary.revenueByMethod.dinheiro || 0 },
+                { icon: <CreditCard className="h-4 w-4" />, label: 'Receita via cartão', value: summary.revenueByMethod.cartao || 0 },
+              ].map((m) => (
+                <Card key={m.label} variant="outlined">
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${accent.bgDim} ${accent.text} shrink-0`}>
+                      {m.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-sm font-semibold ${colors.textSecondary} truncate`}>{m.label}</p>
+                      <p className={`mt-0.5 font-mono text-xl font-bold tabular-nums ${colors.text}`}>
+                        {formatCurrency(m.value, currencyRegion)}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </section>
           )}
 

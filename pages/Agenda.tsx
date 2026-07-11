@@ -1252,10 +1252,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     const newDateStr = formatLocalDateString(d);
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} ${accent.text} border-transparent shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} text-[var(--color-bg)] border-transparent shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
                                 <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
-                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-black' : colors.text}`}>{dayNum}</span>
+                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-[var(--color-bg)]' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
                     })}
@@ -1280,7 +1280,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 onClick={() => setSelectedProfessionalIds([])}
                                 className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                             >
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
                                     <Users className="w-5 h-5" />
                                 </div>
                                 <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
@@ -1304,10 +1304,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                             <img
                                                 src={member.photo_url}
                                                 alt={member.name}
-                                                className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[0_0_15px_rgba(200,160,50,0.3)]` : colors.border}`}
+                                                className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[var(--shadow-card-accent)]` : colors.border}`}
                                             />
                                         ) : (
-                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[0_0_15px_rgba(200,160,50,0.3)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
                                                 {getInitials(member.name)}
                                             </div>
                                         )}

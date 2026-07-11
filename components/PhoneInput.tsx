@@ -137,7 +137,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 </button>
                 {isOpen && (
                     <div className={`absolute top-full left-0 mt-1 w-40 shadow-xl z-50 overflow-hidden ${isBeauty
-                        ? 'bg-beauty-dark border border-beauty-neon/30 rounded-xl shadow-[0_0_20px_rgba(167,139,250,0.2)]'
+                        ? 'bg-beauty-dark border border-beauty-neon/30 rounded-xl shadow-[var(--shadow-card-accent)]'
                         : 'bg-neutral-900 border-2 border-neutral-800 shadow-heavy'
                         }`}>
                         {(Object.keys(REGIONS) as Array<'BR' | 'PT'>).map((r) => (
@@ -171,7 +171,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                         value={displayValue}
                         onChange={handleChange}
                         className={`w-full pl-14 pr-4 py-3 text-white focus:outline-none font-mono h-[54px] transition-all ${isBeauty
-                            ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-r-2xl focus:border-beauty-neon focus:bg-beauty-card placeholder-beauty-neon/30 focus:shadow-[0_0_15px_rgba(167,139,250,0.15)]'
+                            ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-r-2xl focus:border-beauty-neon focus:bg-beauty-card placeholder-beauty-neon/30 focus:shadow-[var(--shadow-card-accent)]'
                             : 'bg-neutral-900 border-2 border-neutral-800 border-l-0 focus:border-accent-gold placeholder-neutral-600'
                             }`}
                         placeholder={region === 'BR' ? '(99) 99999-9999' : '999 999 999'}

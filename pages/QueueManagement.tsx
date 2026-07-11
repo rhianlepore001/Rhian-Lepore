@@ -240,7 +240,7 @@ const confirmFinish = async () => {
     return (
         <div className="space-y-6 pb-20">
             {/* Header */}
-            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-promax-glass`}>
+            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-[var(--shadow-card)]`}>
                 <div className="mb-4 md:mb-0">
                     <h1 className={`text-2xl md:text-3xl font-heading font-bold ${colors.text} mb-1 flex items-center gap-2`}>
                         <Clock className={`w-8 h-8 ${accent.text}`} />

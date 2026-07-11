@@ -247,7 +247,7 @@ export const QueueJoin: React.FC = () => {
                                     <button
                                         key={service.id}
                                         onClick={() => setSelectedService(service.id)}
-                                        className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? `bg-white/[0.08] ${borderColor} border-opacity-100 shadow-[0_0_15px_rgba(168,85,247,0.12)]` : `${inputBg} border-white/5 hover:border-white/15`}`}
+                                        className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? `bg-white/[0.08] ${borderColor} border-opacity-100 shadow-[var(--shadow-card-accent)]` : `${inputBg} border-white/5 hover:border-white/15`}`}
                                     >
                                         <span className="font-medium text-white text-base">{service.name}</span>
                                         <div className="text-right">
@@ -296,7 +296,7 @@ export const QueueJoin: React.FC = () => {
                             loading={submitting}
                             disabled={!name || !phone || !selectedService}
                             onClick={handleJoin}
-                            className={`w-full ${business.user_type === 'beauty' ? 'shadow-[0_0_20px_rgba(168,85,247,0.3)]' : ''}`}
+                            className={`w-full ${business.user_type === 'beauty' ? 'shadow-[var(--shadow-card-accent)]' : ''}`}
                         >
                             Entrar na Fila
                         </Button>

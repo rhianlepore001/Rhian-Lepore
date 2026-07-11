@@ -93,9 +93,20 @@ export const Sidebar: React.FC = () => {
           </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-6 overflow-y-auto space-y-1 px-3">
-          {visibleItems.map((item) => renderLink(item.path, item.icon, item.name))}
+        {/* Navigation — agrupada por seção (Operação / Crescimento / Sistema) */}
+        <nav className="flex-1 py-4 overflow-y-auto space-y-1 px-3">
+          {['Operação', 'Crescimento', 'Sistema'].map((group) => {
+            const groupItems = visibleItems.filter((item) => (item.group ?? 'Operação') === group);
+            if (groupItems.length === 0) return null;
+            return (
+              <React.Fragment key={group}>
+                <p className={`px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-[0.08em] ${colors.textMuted} first:pt-1`}>
+                  {group}
+                </p>
+                {groupItems.map((item) => renderLink(item.path, item.icon, item.name))}
+              </React.Fragment>
+            );
+          })}
 
           {/* Links extras somente para staff */}
           {isStaff && renderLink('/meus-insights', TrendingUp, 'Meus Insights')}
@@ -109,9 +120,9 @@ export const Sidebar: React.FC = () => {
               logout();
               closeSidebar();
             }}
-            className={`w-full group flex items-center px-4 py-3 text-sm font-sans font-medium ${colors.textMuted} hover:text-red-400 hover:bg-red-500/5 rounded-xl border border-transparent hover:border-red-500/20 transition-all duration-200`}
+            className={`w-full group flex items-center px-4 py-3 text-sm font-sans font-medium ${colors.textMuted} hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-xl border border-transparent hover:border-[var(--color-danger-border)] transition-all duration-200`}
           >
-            <LogOut className={`w-5 h-5 mr-3 transition-colors ${colors.textMuted} group-hover:text-red-400`} />
+            <LogOut className={`w-5 h-5 mr-3 transition-colors ${colors.textMuted} group-hover:text-[var(--color-danger)]`} />
             Sair
           </button>
         </nav>

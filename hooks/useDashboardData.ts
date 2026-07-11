@@ -62,6 +62,14 @@ export function useDashboardData() {
         staleTime: 30 * 1000, // 30s
     });
 
+    // 5b. Sparkline de receita (últimos 7 dias)
+    const { data: revenueSparkline = [] } = useQuery({
+        queryKey: ['dashboard', 'revenueSparkline', effectiveUserId],
+        queryFn: () => dashboardService.fetchRevenueSparkline(effectiveUserId!),
+        enabled: !!effectiveUserId,
+        staleTime: 2 * 60 * 1000,
+    });
+
     // 6. Upcoming appointments query
     const { data: appointments = [] } = useQuery({
         queryKey: ['dashboard', 'upcomingAppointments', effectiveUserId],
@@ -171,6 +179,7 @@ export function useDashboardData() {
         profitMetrics,
         dataMaturity,
         financialDoctor,
-        actionItems
+        actionItems,
+        revenueSparkline
     };
 }

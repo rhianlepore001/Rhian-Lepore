@@ -261,12 +261,28 @@ useEffect(() => {
           pendingExpenses: data.pendingExpenses || 0
         });
 
-        setChartData(data.chart_data || []);
-
         const formattedTransactions = (data.transactions || []).map(mapFinanceTransaction);
         const staffFiltered = isStaff
           ? filterStaffTransactions(formattedTransactions, teamMemberId)
           : formattedTransactions;
+
+        // Gráfico entradas/saídas por dia do mês selecionado, agregado das
+        // transações do período. (O chart_data da RPC vem em outro contrato —
+        // {month, revenue} mensal — e não alimenta as séries receita/despesas.)
+        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        const dailyBuckets = Array.from({ length: daysInMonth }, (_, i) => ({
+          name: String(i + 1).padStart(2, '0'),
+          receita: 0,
+          despesas: 0,
+        }));
+        for (const t of staffFiltered) {
+          const d: Date = t.rawDate;
+          if (d.getMonth() !== selectedMonth || d.getFullYear() !== selectedYear) continue;
+          const idx = d.getDate() - 1;
+          if (t.type === 'revenue') dailyBuckets[idx].receita += t.amount || 0;
+          else dailyBuckets[idx].despesas += t.expense || t.amount || 0;
+        }
+        setChartData(dailyBuckets);
 
         const filtered = staffFiltered.filter((t: any) => {
           const matchesType = filterType === 'all' || (filterType === 'revenue' ? t.type === 'revenue' : t.type === 'expense');

@@ -19,6 +19,8 @@ interface CardProps {
   id?: string;
   style?: React.CSSProperties;
   forceTheme?: ThemeVariant;
+  /** Torna o card clicável: aplica role="button", navegação por teclado, hover/active e focus ring temático. */
+  onClick?: () => void;
 }
 
 const DEPRECATED_VARIANTS = new Set(['default', 'accent', 'glow']);
@@ -40,6 +42,7 @@ export const Card: React.FC<CardProps> = ({
   id,
   style,
   forceTheme,
+  onClick,
 }) => {
   const { classes, colors, density, radius, shadow } = useBrutalTheme({ override: forceTheme });
 
@@ -73,11 +76,28 @@ export const Card: React.FC<CardProps> = ({
   const containerClass =
     variant === 'default' ? classes.card : containerByVariant[normalized];
 
+  const interactiveClass = onClick
+    ? 'cursor-pointer hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1'
+    : '';
+
+  const handleKeyDown = onClick
+    ? (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }
+    : undefined;
+
   return (
     <div
       id={id}
-      className={[containerClass, className].filter(Boolean).join(' ')}
+      className={[containerClass, interactiveClass, className].filter(Boolean).join(' ')}
       style={style}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
     >
       {(title || action) && (
         <div

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Crown, Minus, Sparkles, Target, TrendingDown, TrendingUp, X } from 'lucide-react';
+import { Activity, AlertTriangle, Bell, Calendar, CheckCircle2, Clock, Crown, Sparkles, Target, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,7 +17,6 @@ import { Button } from '../components/ui/Button';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { OccupancyRateCard } from '../components/dashboard/OccupancyRateCard';
-import { MiniSparkline } from '../components/dashboard/MiniSparkline';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -95,10 +94,9 @@ export const Dashboard: React.FC = () => {
     profitMetrics,
     financialDoctor,
     actionItems,
-    revenueSparkline,
   } = useDashboardData();
 
-  const { accent, colors, density, font, status, radius, isBeauty } = useBrutalTheme();
+  const { accent, colors, density, font, status, isBeauty } = useBrutalTheme();
   const { data: clubStats } = useMembershipStats();
   const { region: currencyRegion } = useTenantLocale();
   const firstName = fullName?.split(' ')[0] || 'Profissional';
@@ -106,11 +104,9 @@ export const Dashboard: React.FC = () => {
   const todayRevenue = profitMetrics.todayRevenue ?? 0;
   const goalProgress = monthlyGoal > 0 ? Math.round((currentMonthRevenue / monthlyGoal) * 100) : 0;
   const weeklyGrowth = Math.round(profitMetrics.weeklyGrowth || 0);
-  const growthBadge = weeklyGrowth > 0
-    ? { classes: `${status.successBg} ${status.successBorder} ${status.success}`, Icon: TrendingUp }
-    : weeklyGrowth < 0
-      ? { classes: `${status.dangerBg} ${status.dangerBorder} ${status.danger}`, Icon: TrendingDown }
-      : { classes: `${colors.surface} ${colors.border} ${colors.textSecondary}`, Icon: Minus };
+  const dailyGoalProgress = dailyGoal != null && dailyGoal > 0
+    ? Math.min(100, Math.round((todayRevenue / dailyGoal) * 100))
+    : null;
   const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
   const healthScore = Math.min(100, Math.max(0, Math.round(
     (financialDoctor.repeatClientRate || 0) +
@@ -159,32 +155,31 @@ export const Dashboard: React.FC = () => {
             <SkeletonCard className={density.kpiMinHeight} />
           ) : (
             <Card variant="elevated" className={density.kpiMinHeight}>
-              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>Faturamento hoje</p>
-                  <p className={`mt-2 font-mono text-3xl font-black tracking-tight tabular-nums md:text-4xl ${colors.text}`}>
-                    {formatCurrency(todayRevenue, currencyRegion)}
-                  </p>
-                  {dailyGoal != null && dailyGoal > 0 && (
-                    <p className={`mt-1 text-xs ${colors.textMuted}`}>
+              <p className={`text-sm font-semibold ${colors.textSecondary}`}>Faturamento hoje</p>
+              <p className={`mt-2 font-mono text-3xl font-black tracking-tight tabular-nums md:text-4xl ${colors.text}`}>
+                {formatCurrency(todayRevenue, currencyRegion)}
+              </p>
+              {dailyGoalProgress != null ? (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className={colors.textMuted}>
                       Meta do dia: {formatCurrency(dailyGoal, currencyRegion)}
-                      {todayRevenue >= dailyGoal ? ' · atingida ✓' : ''}
-                    </p>
-                  )}
-                </div>
-                <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${growthBadge.classes}`}>
-                  <growthBadge.Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                  {weeklyGrowth > 0 ? `+${weeklyGrowth}` : weeklyGrowth}% vs ontem
-                </span>
-              </div>
-              {revenueSparkline.some(v => v > 0) && (
-                <div className="mt-4 -mb-1" aria-hidden="true">
-                  <MiniSparkline data={revenueSparkline} color={accent.hex} height={44} />
-                  <div className={`mt-1 flex justify-between text-xs font-mono ${colors.textMuted}`}>
-                    <span>últimos 7 dias</span>
-                    <span>hoje</span>
+                    </span>
+                    <span className={`font-semibold tabular-nums ${todayRevenue >= dailyGoal ? status.success : colors.textMuted}`}>
+                      {dailyGoalProgress}%{todayRevenue >= dailyGoal ? ' · atingida ✓' : ''}
+                    </span>
+                  </div>
+                  <div className={`mt-1.5 h-1.5 w-full overflow-hidden rounded-full ${colors.surface}`} role="progressbar" aria-valuenow={dailyGoalProgress} aria-valuemin={0} aria-valuemax={100}>
+                    <div
+                      className={`h-full rounded-full transition-[width] duration-300 ease-out ${todayRevenue >= dailyGoal ? 'bg-[var(--color-success)]' : accent.bg}`}
+                      style={{ width: `${dailyGoalProgress}%` }}
+                    />
                   </div>
                 </div>
+              ) : (
+                <p className={`mt-1 text-xs ${colors.textMuted}`}>
+                  Defina uma meta diária para acompanhar seu progresso.
+                </p>
               )}
             </Card>
           )}
@@ -199,48 +194,32 @@ export const Dashboard: React.FC = () => {
               </>
             ) : (
               <>
-                <Card
-                  variant="outlined"
-                  className="p-4 cursor-pointer transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
-                >
-                  <div role="button" tabIndex={0} onClick={() => navigate('/agenda')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/agenda')}>
-                    <div className="flex items-center justify-between">
-                      <p className={`text-sm font-semibold ${colors.textSecondary}`}>Agenda de hoje</p>
-                      <span className={`text-xs font-semibold ${accent.text}`}>abrir →</span>
-                    </div>
-                    <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{appointments.length}</p>
-                    <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
-                      {appointments.length === 1 ? '1 agendamento' : `${appointments.length} agendamentos`}
-                    </p>
+                <Card variant="outlined" className="p-4" onClick={() => navigate('/agenda')}>
+                  <div className="flex items-center justify-between">
+                    <p className={`text-sm font-semibold ${colors.textSecondary}`}>Agenda de hoje</p>
+                    <span className={`text-xs font-semibold ${accent.text}`}>abrir →</span>
                   </div>
+                  <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{appointments.length}</p>
+                  <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
+                    {appointments.length === 1 ? '1 agendamento' : `${appointments.length} agendamentos`}
+                  </p>
                 </Card>
-                <Card
-                  variant="outlined"
-                  className="p-4 cursor-pointer transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
-                >
-                  <div role="button" tabIndex={0} onClick={() => navigate('/insights')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/insights')}>
-                    <div className="flex items-center justify-between">
-                      <p className={`text-sm font-semibold ${colors.textSecondary}`}>Oportunidades</p>
-                      <span className={`text-xs font-semibold ${accent.text}`}>abrir →</span>
-                    </div>
-                    <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{actionItems.length}</p>
-                    <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
-                      {actionItems.length === 1 ? '1 ação em aberto' : `${actionItems.length} ações em aberto`}
-                    </p>
+                <Card variant="outlined" className="p-4" onClick={() => navigate('/insights')}>
+                  <div className="flex items-center justify-between">
+                    <p className={`text-sm font-semibold ${colors.textSecondary}`}>Oportunidades</p>
+                    <span className={`text-xs font-semibold ${accent.text}`}>abrir →</span>
                   </div>
+                  <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{actionItems.length}</p>
+                  <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
+                    {actionItems.length === 1 ? '1 ação em aberto' : `${actionItems.length} ações em aberto`}
+                  </p>
                 </Card>
               </>
             )}
           </section>
 
           {clubStats && (clubStats.totalActive > 0 || clubStats.totalPending > 0) && (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate('/clube/assinantes')}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/clube/assinantes')}
-              className={`${colors.card} ${colors.border} border ${radius.card} p-4 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-transform`}
-            >
+            <Card variant="outlined" className="p-4" onClick={() => navigate('/clube/assinantes')}>
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-2xl ${accent.bgDim} flex items-center justify-center shrink-0`}>
                   <Crown className={`w-6 h-6 ${accent.text}`} />
@@ -282,7 +261,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
           <SetupCopilot />

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, User, Loader2 } from 'lucide-react';
+import { Plus, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { BrutalButton } from '../BrutalButton';
+import { Button } from '../ui/Button';
 import { SearchableSelect } from '../SearchableSelect';
 import { formatPhone, Region } from '../../utils/formatters';
 import { PhoneInput } from '../PhoneInput';
@@ -91,14 +91,16 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                         <div className="h-px bg-white/10 flex-1"></div>
                     </div>
 
-                    <BrutalButton
+                    <Button
                         onClick={() => setIsCreatingClient(true)}
                         variant="secondary"
-                        className="w-full py-4 border-dashed"
+                        size="lg"
+                        fullWidth
+                        className="border-dashed"
                         icon={<Plus />}
                     >
                         Cadastrar Novo Cliente
-                    </BrutalButton>
+                    </Button>
                 </div>
             ) : (
                 <div className={`p-6 rounded-xl border ${cardBg} space-y-4`}>
@@ -126,15 +128,16 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                         />
                     </div>
                     <div className="flex gap-3 pt-2">
-                        <BrutalButton variant="secondary" onClick={() => setIsCreatingClient(false)} className="flex-1">Cancelar</BrutalButton>
-                        <BrutalButton
+                        <Button variant="secondary" onClick={() => setIsCreatingClient(false)} className="flex-1">Cancelar</Button>
+                        <Button
                             variant="primary"
                             onClick={handleCreateClient}
                             className="flex-1"
-                            disabled={loading || !newClientName || !newClientPhone}
+                            disabled={!newClientName || !newClientPhone}
+                            loading={loading}
                         >
-                            {loading ? <Loader2 className="animate-spin" /> : 'Cadastrar e Continuar'}
-                        </BrutalButton>
+                            Cadastrar e Continuar
+                        </Button>
                     </div>
                 </div>
             )}

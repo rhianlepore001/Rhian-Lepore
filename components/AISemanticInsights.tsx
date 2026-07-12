@@ -12,7 +12,7 @@ interface AISemanticInsightsProps {
 
 export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId, clientName }) => {
     const { searchMemories } = useSemanticMemory();
-    const { accent } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
     const [insights, setInsights] = useState<SemanticMemory[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -46,10 +46,10 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
 
     if (insights.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-neutral-800 rounded-lg">
-                <Brain className="w-8 h-8 text-neutral-700 mb-2" />
-                <p className="text-xs text-neutral-500 font-mono uppercase">Sem memórias profundas ainda para {clientName.split(' ')[0]}</p>
-                <p className="text-xs text-neutral-600 mt-1">Anote preferências nas notas para ativar a IA.</p>
+            <div className={`flex flex-col items-center justify-center p-4 text-center border-2 border-dashed rounded-lg ${colors.divider}`}>
+                <Brain className={`w-8 h-8 mb-2 ${colors.textMuted}`} />
+                <p className={`text-xs font-mono uppercase ${colors.textSecondary}`}>Sem memórias profundas ainda para {clientName.split(' ')[0]}</p>
+                <p className={`text-xs mt-1 ${colors.textMuted}`}>Anote preferências nas notas para ativar a IA.</p>
             </div>
         );
     }

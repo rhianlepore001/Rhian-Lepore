@@ -295,15 +295,15 @@ export const SetupCopilot: React.FC = () => {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className={`relative rounded-2xl border overflow-hidden ${colors.card} ${colors.border}`}>
                         {/* Header — clickable para expandir/colapsar */}
-                        <button
-                            onClick={() => setIsExpanded(v => !v)}
-                            className="w-full flex items-center justify-between px-5 pt-5 pb-3 text-left"
-                        >
-                            <div className="flex items-center gap-3">
+                        <div className="w-full flex items-center justify-between px-5 pt-5 pb-3">
+                            <button
+                                onClick={() => setIsExpanded(v => !v)}
+                                className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                            >
                                 <div className={`p-2 rounded-xl ${accent.bgDim}`}>
                                     <Rocket className={`w-5 h-5 ${accent.text}`} />
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <h3 className={`text-sm font-bold font-heading ${colors.text}`}>
                                         {isActivated ? 'Sistema Ativado!' : 'Configure seu espaço'}
                                     </h3>
@@ -316,30 +316,29 @@ export const SetupCopilot: React.FC = () => {
                                         }
                                     </p>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {!isActivated && (
-                                    <span className={`font-mono text-xs font-bold ${accent.text}`}>
-                                        {percentage}%
-                                    </span>
-                                )}
-                                <ChevronDown className={`w-4 h-4 ${colors.textSecondary} transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDismissed(true);
-                                        localStorage.setItem(getDismissedKey(), 'true');
-                                        if (isActivated) {
-                                            localStorage.setItem(getActivationSeenKey(), 'true');
-                                        }
-                                    }}
-                                    className={`p-1.5 rounded-full ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
-                                    title="Fechar"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </button>
+                                <div className="flex items-center gap-2 ml-auto pl-2 flex-shrink-0">
+                                    {!isActivated && (
+                                        <span className={`font-mono text-xs font-bold ${accent.text}`}>
+                                            {percentage}%
+                                        </span>
+                                    )}
+                                    <ChevronDown className={`w-4 h-4 ${colors.textSecondary} transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                </div>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setDismissed(true);
+                                    localStorage.setItem(getDismissedKey(), 'true');
+                                    if (isActivated) {
+                                        localStorage.setItem(getActivationSeenKey(), 'true');
+                                    }
+                                }}
+                                className={`ml-2 p-1.5 rounded-full flex-shrink-0 ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
+                                title="Fechar"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
 
                         {/* Barra de progresso */}
                         <div className="px-5 pb-3">
@@ -415,7 +414,7 @@ export const SetupCopilot: React.FC = () => {
                             <div className={`px-5 pb-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-500`}>
                                 <p className={`text-sm ${colors.textSecondary} leading-relaxed`}>
                                     Sua barbearia já está online e pronta para receber agendamentos.
-                                    Continue gerenciando sua agenda e clientes através do menu lateral.
+                                    Continue gerenciando sua agenda e clientes pelo menu abaixo.
                                 </p>
                             </div>
                         )}

@@ -1152,7 +1152,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* --- Agendamentos Atrasados (Overdue) --- */}
             {isOverdueFilter && (
                 <div className="px-4 md:px-6">
-                    <Card variant="outlined" className="border-l-4 border-[var(--color-danger)] bg-[var(--color-danger-bg)]">
+                    <Card variant="outlined" className="border-[var(--color-danger)]/35 bg-[var(--color-danger-bg)]">
                         <div className="flex items-start gap-4">
                             <AlertTriangle className="w-6 h-6 text-[var(--color-danger)] flex-shrink-0 mt-1" />
                             <div className="flex-1">
@@ -1326,7 +1326,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
                 <div className="px-4 md:px-6 space-y-4">
-                    <Card variant="outlined" className={`border-l-4 ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'} ${accent.bgDim}`}>
+                    <Card variant="outlined" className={`${isBeauty ? 'border-beauty-neon/35' : 'border-accent-gold/35'} ${accent.bgDim}`}>
                         <div className="flex items-center gap-3">
                             <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
                             <div>
@@ -1607,26 +1607,29 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 </>
             )}
 
-            {/* Legend (Bottom) */}
-            <div className={`px-4 md:px-6 mt-4 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-8`}>
-                {(['normal', 'overdue', 'completed', 'noshow', 'cancelled'] as VisualStatus[]).map(v => {
-                    const LegendIcon = VISUAL_STATUS_ICON[v];
-                    return (
-                        <div key={v} className="flex items-center gap-1.5">
-                            <LegendIcon className={`w-3.5 h-3.5 ${VISUAL_STATUS_CLASSES[v].text}`} />
-                            <span>{VISUAL_STATUS_LABEL[v]}</span>
-                        </div>
-                    );
-                })}
-                <div className="flex items-center gap-1.5 ml-4">
-                    <MessageCircle className="w-3.5 h-3.5 text-[var(--color-success)]/80" />
-                    <span>Com observação</span>
+            {/* Legend (Bottom) — só faz sentido quando há algo pra explicar no dia */}
+            {((showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
+                + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0)) > 0 && (
+                <div className={`px-4 md:px-6 mt-4 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-8`}>
+                    {(['normal', 'overdue', 'completed', 'noshow', 'cancelled'] as VisualStatus[]).map(v => {
+                        const LegendIcon = VISUAL_STATUS_ICON[v];
+                        return (
+                            <div key={v} className="flex items-center gap-1.5">
+                                <LegendIcon className={`w-3.5 h-3.5 ${VISUAL_STATUS_CLASSES[v].text}`} />
+                                <span>{VISUAL_STATUS_LABEL[v]}</span>
+                            </div>
+                        );
+                    })}
+                    <div className="flex items-center gap-1.5 ml-4">
+                        <MessageCircle className="w-3.5 h-3.5 text-[var(--color-success)]/80" />
+                        <span>Com observação</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Edit2 className={`w-3 h-3 ${colors.textMuted}`} />
+                        <span>Editado</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                    <Edit2 className={`w-3 h-3 ${colors.textMuted}`} />
-                    <span>Editado</span>
-                </div>
-            </div>
+            )}
 
             {/* Appointment Details Modal */}
             {detailsApt && createPortal(

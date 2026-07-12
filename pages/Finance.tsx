@@ -560,19 +560,21 @@ useEffect(() => {
       <PageHeader
         title="Financeiro"
         subtitle={periodLabel}
-        meta={<AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />}
-        action={
-          <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+        meta={
+          <>
+            <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
             <Button variant="outline" size="sm" icon={<Filter className="h-4 w-4" />} onClick={() => setShowFilterModal(true)}>
               Filtrar
-            </Button>
-            <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
-              Registrar receita
             </Button>
             <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
               Exportar
             </Button>
-          </div>
+          </>
+        }
+        action={
+          <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
+            Registrar receita
+          </Button>
         }
       />
 

@@ -51,18 +51,18 @@ export const OccupancyRateCard: React.FC = () => {
 
   return (
     <Card variant="outlined" className="overflow-hidden">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="flex items-center gap-3 min-w-0">
           <div className={`p-2.5 rounded-xl ${accent.bgDim} ${accent.text}`}>
             <Clock className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 className={`font-heading text-base font-bold ${colors.text}`}>Agenda cheia</h2>
             <p className={`text-sm ${colors.textSecondary}`}>Quanto da sua agenda está preenchida</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-divider)]">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-divider)] self-start">
           {(Object.keys(periodLabel) as OccupancyPeriod[]).map((p) => (
             <button
               key={p}

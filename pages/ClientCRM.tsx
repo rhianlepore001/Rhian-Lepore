@@ -1,4 +1,4 @@
-import { Card, Button, Modal } from '../components/ui';
+import { Card, Button, Modal, ConfirmModal } from '../components/ui';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -37,6 +37,7 @@ const { id } = useParams<{ id: string }>();
   const [editEmail, setEditEmail] = useState('');
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // AIOS Context
   const { aiosEnabled } = useAuth();
@@ -212,9 +213,13 @@ const { id } = useParams<{ id: string }>();
     }
   };
 
-  const handleDeleteClient = async () => {
+  const handleDeleteClient = () => {
     if (!client?.id) return;
-    if (!confirm('Tem certeza que deseja desativar este cliente? O cliente não aparecerá mais na lista, mas o histórico financeiro será mantido.')) return;
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteClient = async () => {
+    if (!client?.id) return;
 
     setDeleting(true);
     try {
@@ -234,6 +239,8 @@ const { id } = useParams<{ id: string }>();
       console.error('Error deactivating client:', error);
       showToast('Não foi possível desativar o cliente. Tente novamente.', 'error');
       setDeleting(false);
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -250,7 +257,7 @@ const { id } = useParams<{ id: string }>();
       {/* Back Button */}
       <button
         onClick={() => navigate('/clientes')}
-        className="flex items-center gap-2 text-theme-textSecondary hover:text-white transition-colors mb-4"
+        className="flex items-center gap-2 text-theme-textSecondary hover:text-white transition-colors mb-2"
       >
         <ArrowLeft className="w-5 h-5" />
         <span className="font-mono text-sm uppercase">Voltar para Clientes</span>
@@ -261,7 +268,7 @@ const { id } = useParams<{ id: string }>();
         <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
           {/* Avatar & Tier */}
           <div className="flex flex-row md:flex-col items-center gap-4 w-full md:w-auto">
-            <div className={`w-20 h-20 md:w-32 md:h-32 flex-shrink-0 rounded-none border-4 ${accent.border} shadow-heavy relative overflow-hidden group`}>
+            <div className={`w-20 h-20 md:w-32 md:h-32 flex-shrink-0 ${radius.avatar} ${accent.shadowStrong} relative overflow-hidden group`}>
               {client.photo_url ? (
                 <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
               ) : (
@@ -335,7 +342,11 @@ const { id } = useParams<{ id: string }>();
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl md:text-3xl font-heading text-white uppercase leading-none">{client.name}</h1>
-                  <button onClick={() => setShowEditModal(true)} className="text-[var(--color-text-muted)] hover:text-white transition-colors">
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="text-[var(--color-text-muted)] hover:text-white transition-colors"
+                    aria-label="Editar nome do cliente"
+                  >
                     <Edit2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -354,6 +365,7 @@ const { id } = useParams<{ id: string }>();
                   className="border-red-900 text-red-500 hover:bg-red-900/20 hover:text-red-400"
                   onClick={handleDeleteClient}
                   disabled={deleting}
+                  aria-label="Desativar cliente"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -363,6 +375,7 @@ const { id } = useParams<{ id: string }>();
                   className={`border-green-900/50 ${isBeauty ? 'text-green-400 hover:text-green-300 hover:bg-green-400/10' : 'text-green-600 hover:text-green-500 hover:bg-green-500/10'}`}
                   onClick={handleWhatsAppClick}
                   title="Abrir WhatsApp"
+                  aria-label="Abrir WhatsApp"
                 >
                   <MessageCircle className="w-4 h-4" />
                 </Button>
@@ -509,7 +522,8 @@ const { id } = useParams<{ id: string }>();
 
         {/* AI Insight Mini Card */}
         <Card
-          className={`bg-gradient-to-br from-brutal-card to-neutral-900 overflow-hidden relative ${isBeauty ? 'border-beauty-neon/50 shadow-neon-soft' : 'border-accent-gold/50 shadow-heavy'}`}
+          variant="elevated"
+          className="bg-gradient-to-br from-brutal-card to-neutral-900 overflow-hidden relative"
         >
           {isAtRisk ? (
             <div className="relative z-10">
@@ -523,7 +537,7 @@ const { id } = useParams<{ id: string }>();
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm text-text-secondary leading-relaxed border-l-2 border-white/10 pl-3">
+                <p className="text-sm text-text-secondary leading-relaxed bg-white/[0.03] rounded-lg p-3">
                   Detectamos que o valor médio por atendimento de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${accent.text} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
                 </p>
 
@@ -599,6 +613,17 @@ const { id } = useParams<{ id: string }>();
           </div>
         </form>
       </Modal>
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Desativar cliente"
+        message="Tem certeza que deseja desativar este cliente? O cliente não aparecerá mais na lista, mas o histórico financeiro será mantido."
+        confirmLabel="Desativar"
+        variant="danger"
+        loading={deleting}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={() => void confirmDeleteClient()}
+      />
     </div>
   );
 };

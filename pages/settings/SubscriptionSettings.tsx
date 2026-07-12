@@ -12,7 +12,7 @@ import { supabase } from '../../lib/supabase';
 export const SubscriptionSettings: React.FC = () => {
     const { businessName, region } = useAuth();
     const { subscriptionStatus, trialDaysRemaining, isSubscriptionActive, isTrial } = useSubscription();
-    const { isBeauty, colors } = useBrutalTheme();
+    const { isBeauty, colors, accent, radius, status } = useBrutalTheme();
     // Auto-detect currency based on region
     const currency = region === 'PT' ? 'EUR' : 'BRL';
     const [loading, setLoading] = useState<string | null>(null);
@@ -113,16 +113,16 @@ export const SubscriptionSettings: React.FC = () => {
                 </div>
 
                 {/* Status Atual */}
-                <div className={`p-6 mb-8 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border-2 border-neutral-800 rounded-lg'}`}>
+                <div className={`p-6 mb-8 transition-all ${colors.card} border ${colors.border} ${radius.card}`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
-                            <div className={`p-4 rounded-full ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon' : 'bg-accent-gold/10 text-accent-gold'}`}>
+                            <div className={`p-4 rounded-full ${accent.bgDim} ${accent.text}`}>
                                 <Zap className="w-8 h-8" />
                             </div>
                             <div>
                                 <h3 className={`${colors.text} font-bold text-lg uppercase tracking-tight`}>Status da Conta</h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${isSubscriptionActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                    <span className={`px-2 py-0.5 ${radius.badge} text-xs font-bold uppercase border ${isSubscriptionActive ? `${status.successBg} ${status.success} ${status.successBorder}` : `${status.dangerBg} ${status.danger} ${status.dangerBorder}`
                                         }`}>
                                         {subscriptionStatus === 'trial' ? 'Período de Teste' :
                                             subscriptionStatus === 'active' ? 'Assinatura Ativa' : 'Expirado'}

@@ -17,6 +17,7 @@ import { Button } from '../components/ui/Button';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { OccupancyRateCard } from '../components/dashboard/OccupancyRateCard';
+import { MiniSparkline } from '../components/dashboard/MiniSparkline';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
 const GoalSettingsModal = lazy(() => import('../components/dashboard/modals/GoalSettingsModal').then(m => ({ default: m.GoalSettingsModal })));
@@ -88,14 +89,16 @@ export const Dashboard: React.FC = () => {
     currentMonthRevenue,
     loading,
     monthlyGoal,
+    dailyGoal,
     goalHistory,
     updateGoal,
     profitMetrics,
     financialDoctor,
     actionItems,
+    revenueSparkline,
   } = useDashboardData();
 
-  const { accent, colors, density, font, status, isBeauty } = useBrutalTheme();
+  const { accent, colors, density, font, status, radius, isBeauty } = useBrutalTheme();
   const { data: clubStats } = useMembershipStats();
   const { region: currencyRegion } = useTenantLocale();
   const firstName = fullName?.split(' ')[0] || 'Profissional';
@@ -156,18 +159,33 @@ export const Dashboard: React.FC = () => {
             <SkeletonCard className={density.kpiMinHeight} />
           ) : (
             <Card variant="elevated" className={density.kpiMinHeight}>
-              <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className={`text-sm font-semibold ${colors.textSecondary}`}>Faturamento hoje</p>
                   <p className={`mt-2 font-mono text-3xl font-black tracking-tight tabular-nums md:text-4xl ${colors.text}`}>
                     {formatCurrency(todayRevenue, currencyRegion)}
                   </p>
+                  {dailyGoal != null && dailyGoal > 0 && (
+                    <p className={`mt-1 text-xs ${colors.textMuted}`}>
+                      Meta do dia: {formatCurrency(dailyGoal, currencyRegion)}
+                      {todayRevenue >= dailyGoal ? ' · atingida ✓' : ''}
+                    </p>
+                  )}
                 </div>
                 <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${growthBadge.classes}`}>
                   <growthBadge.Icon className="h-3.5 w-3.5" aria-hidden="true" />
                   {weeklyGrowth > 0 ? `+${weeklyGrowth}` : weeklyGrowth}% vs ontem
                 </span>
               </div>
+              {revenueSparkline.some(v => v > 0) && (
+                <div className="mt-4 -mb-1" aria-hidden="true">
+                  <MiniSparkline data={revenueSparkline} color={accent.hex} height={44} />
+                  <div className={`mt-1 flex justify-between text-xs font-mono ${colors.textMuted}`}>
+                    <span>últimos 7 dias</span>
+                    <span>hoje</span>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
@@ -181,19 +199,35 @@ export const Dashboard: React.FC = () => {
               </>
             ) : (
               <>
-                <Card variant="outlined" className="p-4">
-                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>Agenda de hoje</p>
-                  <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{appointments.length}</p>
-                  <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
-                    {appointments.length === 1 ? '1 agendamento' : `${appointments.length} agendamentos`}
-                  </p>
+                <Card
+                  variant="outlined"
+                  className="p-4 cursor-pointer transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
+                >
+                  <div role="button" tabIndex={0} onClick={() => navigate('/agenda')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/agenda')}>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-sm font-semibold ${colors.textSecondary}`}>Agenda de hoje</p>
+                      <span className={`text-xs font-semibold ${accent.text}`}>abrir →</span>
+                    </div>
+                    <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{appointments.length}</p>
+                    <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
+                      {appointments.length === 1 ? '1 agendamento' : `${appointments.length} agendamentos`}
+                    </p>
+                  </div>
                 </Card>
-                <Card variant="outlined" className="p-4">
-                  <p className={`text-sm font-semibold ${colors.textSecondary}`}>Oportunidades</p>
-                  <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{actionItems.length}</p>
-                  <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
-                    {actionItems.length === 1 ? '1 ação em aberto' : `${actionItems.length} ações em aberto`}
-                  </p>
+                <Card
+                  variant="outlined"
+                  className="p-4 cursor-pointer transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
+                >
+                  <div role="button" tabIndex={0} onClick={() => navigate('/insights')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/insights')}>
+                    <div className="flex items-center justify-between">
+                      <p className={`text-sm font-semibold ${colors.textSecondary}`}>Oportunidades</p>
+                      <span className={`text-xs font-semibold ${accent.text}`}>abrir →</span>
+                    </div>
+                    <p className={`mt-1 font-mono text-xl font-bold tabular-nums ${colors.text}`}>{actionItems.length}</p>
+                    <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
+                      {actionItems.length === 1 ? '1 ação em aberto' : `${actionItems.length} ações em aberto`}
+                    </p>
+                  </div>
                 </Card>
               </>
             )}
@@ -205,7 +239,7 @@ export const Dashboard: React.FC = () => {
               tabIndex={0}
               onClick={() => navigate('/clube/assinantes')}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/clube/assinantes')}
-              className={`${colors.card} ${colors.border} border rounded-2xl p-4 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform`}
+              className={`${colors.card} ${colors.border} border ${radius.card} p-4 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-transform`}
             >
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-2xl ${accent.bgDim} flex items-center justify-center shrink-0`}>
@@ -225,7 +259,7 @@ export const Dashboard: React.FC = () => {
                       <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         Ativos
                       </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-green-400">
+                      <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums ${status.success}`}>
                         {clubStats.totalActive}
                       </p>
                     </div>
@@ -233,7 +267,7 @@ export const Dashboard: React.FC = () => {
                       <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-widest`}>
                         Pendentes
                       </p>
-                      <p className="mt-0.5 font-mono text-2xl font-black tabular-nums text-amber-400">
+                      <p className={`mt-0.5 font-mono text-2xl font-black tabular-nums ${status.warning}`}>
                         {clubStats.totalPending}
                       </p>
                     </div>

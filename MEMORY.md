@@ -9,6 +9,18 @@
 
 ---
 
+## 🎨 Design System v1.1 — F0–F4 CONCLUÍDAS (12 Jul 2026, branch `design/ds-v1.1-polish`)
+
+Auditoria de design (`design-audit.md` + `dashboard-proposal.html` + `components-showcase.html`) implementada em 4 commits (F0–F3):
+- **F0:** `design-system/tokens.css` é FONTE ÚNICA (bloco duplicado do `index.html` removido); `text-muted` recalibrado p/ WCAG AA nas 4 combinações; token `info` novo; `--elevation-0..3`; escalas sand/orchid/gold/violet 50–950.
+- **F1:** `components/Modal` legado virou adapter deprecado sobre `ui/Modal` (casco único); a11y (FocusTrap/aria/ESC) nos 7 modais quebrados (Paywall, AIOSStrategy, Agenda history, ClientCRM edit, PublicBooking ×2, Profile); z-index sempre `var(--z-modal)`; `ui/Modal` sincroniza `setModalOpen` via `useOptionalUI`.
+- **F2:** 8 famílias de card fora do DS migradas p/ tokens (GoalHistory, TeamMemberCard, SmartRebooking, PlanCard, SubscriptionSettings, ClientCRM KPIs, SetupCopilot, Dashboard Clube); cores de status cruas → tokens em Agenda/Finance/Dashboard/QueueManagement; sombras de auth → `--elevation-3`.
+- **F3:** settings/* + Finance/Reports tokenizados; **ClientArea agora seta `data-theme`/`data-mode` (beauty=light, barber=dark) e consome tokens** — área pública do cliente saiu do stone/zinc hardcoded.
+- **F4 (fator uau):** Dashboard hero c/ sparkline 7d + meta do dia + mini-KPIs clicáveis; Sidebar agrupada (Operação/Crescimento/Sistema); Finance icon-chips + **fix gráfico entradas/saídas** (RPC devolvia contrato incompatível — agora agrega transações por dia client-side); card ocupação c/ mapa hora a hora do expediente; Reports/Insights tokenizado (status tokens + Recharts em CSS vars); empty states unificados via `ui/EmptyState` c/ variante `bordered` (fila, CRM); `ui/SettingsRow` criado (label+ajuda+controle) e aplicado em PublicBookingSettings; shell de Ajustes sem `shadow-promax-glass`.
+- Gates verdes em todo commit: typecheck, lint (+ ratchet `check-design-debt` apertado), 352 testes, build.
+- **Pendências (F5, pós-launch):** remover bridge `!important` do index.html, paleta legada do `styles/tailwind.css`, `useChartColors()` p/ Recharts, migrar ~300 `neutral-*` restantes em components/, aplicar `SettingsRow` nas demais páginas de settings. Falta validação visual manual nas 4 combinações (switcher + Chrome Android) antes do merge.
+- **🔴 Bug aberto:** usuário reporta sidebar de desktop aparecendo no mobile (Dashboard/páginas gerais, regressão recente); inspeção não achou causa no código (aside idêntico à main, CSS compilado ok) — suspeita de PWA/service worker cacheado; aguardando print + modo de acesso do usuário.
+
 ## 🔧 Sprints da Auditoria 360° — CONCLUÍDAS (6 Jul 2026)
 
 Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`) implementada em 3 sprints, tudo na `main` local (`15e5b7a`, `827decb`, `6cbae57`):

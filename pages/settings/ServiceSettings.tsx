@@ -198,7 +198,7 @@ export const ServiceSettings: React.FC = () => {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setIsCategoryModalOpen(false)}
-                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}`}
+                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-theme-textSecondary hover:text-white hover:bg-[var(--color-card-hover)]'}`}
                             >
                                 Cancelar
                             </button>
@@ -223,7 +223,7 @@ export const ServiceSettings: React.FC = () => {
                             w-full p-3 outline-none transition-all duration-300
                             ${isBeauty
                                 ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                                : 'bg-neutral-800 border-2 border-neutral-700 focus:border-accent-gold'
+                                : 'bg-theme-surface border-2 border-theme-border focus:border-accent-gold'
                             }
                             ${colors.text}
                         `}

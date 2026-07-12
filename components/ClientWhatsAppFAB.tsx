@@ -45,8 +45,8 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                     px-4 py-2.5 rounded-2xl text-xs font-semibold max-w-[200px] text-center leading-snug
                     animate-in fade-in slide-in-from-bottom-2 duration-200
                     ${isBeauty
-                        ? 'bg-white text-stone-700 shadow-lg border border-stone-100'
-                        : 'bg-zinc-800 text-zinc-200 border border-zinc-700'
+                        ? 'bg-theme-card text-theme-text shadow-lg border border-theme-border'
+                        : 'bg-theme-surface text-theme-text border border-theme-border'
                     }
                 `}>
                     Falar com {businessName}
@@ -62,8 +62,8 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                             w-9 h-9 rounded-full flex items-center justify-center transition-all
                             animate-in fade-in duration-150
                             ${isBeauty
-                                ? 'bg-stone-200 text-stone-600 hover:bg-stone-300'
-                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 border border-zinc-700'
+                                ? 'bg-theme-surface text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)]'
+                                : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)] border border-theme-border'
                             }
                         `}
                         aria-label="Fechar"
@@ -77,7 +77,7 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2.5 bg-[#25D366] text-white px-5 py-3.5 rounded-full shadow-2xl font-bold text-sm hover:bg-[#1ebe5a] transition-all hover:scale-105 animate-in zoom-in duration-200"
+                        className="flex items-center gap-2.5 bg-[#25D366] text-theme-text px-5 py-3.5 rounded-full shadow-2xl font-bold text-sm hover:bg-[#1ebe5a] transition-all hover:scale-105 animate-in zoom-in duration-200"
                         aria-label="Abrir WhatsApp"
                     >
                         <MessageCircle className="w-5 h-5 fill-white" />
@@ -86,7 +86,7 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                 ) : (
                     <button
                         onClick={() => setExpanded(true)}
-                        className="w-14 h-14 rounded-full bg-[#25D366] text-white shadow-2xl flex items-center justify-center hover:bg-[#1ebe5a] hover:scale-110 transition-all"
+                        className="w-14 h-14 rounded-full bg-[#25D366] text-theme-text shadow-2xl flex items-center justify-center hover:bg-[#1ebe5a] hover:scale-110 transition-all"
                         aria-label={`Falar com ${businessName} no WhatsApp`}
                     >
                         <MessageCircle className="w-7 h-7 fill-white" />

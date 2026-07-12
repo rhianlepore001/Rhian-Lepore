@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import FocusTrap from 'focus-trap-react';
+import React, { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { Modal } from './ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Upload, User as UserIcon } from 'lucide-react';
@@ -103,32 +102,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
         }
     };
 
-    return createPortal(
-        <div className={`fixed inset-0 ${colors.overlay} z-[100] md:left-64 flex items-center justify-center p-4 backdrop-blur-sm`}>
-            <FocusTrap active={true}>
-                <div className={`w-full max-w-md p-6 relative transition-all ${classes.modalContainer}`}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="profile-modal-title"
-                >
-                <button
-                    onClick={onClose}
-                    className={`absolute top-4 right-4 ${colors.textSecondary} hover:text-theme-text transition-colors`}
-                >
-                    <span className="sr-only">Fechar</span>
-                    X
-                </button>
-                <h3 id="profile-modal-title" className={`text-xl font-heading ${colors.text} mb-6 ${font.heading === 'font-heading' ? 'tracking-wide' : 'tracking-normal'}`}>Meu Perfil</h3>
-
+    return (
+        <Modal open onClose={onClose} title="Meu Perfil" size="md">
                 <div className="flex justify-center mb-6">
                     <div
-                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
+                        className={`relative w-24 h-24 rounded-full ${colors.surface} border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-[var(--color-border-strong)]'} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
                         onClick={() => fileInputRef.current?.click()}
                     >
                         {photoPreview ? (
                             <img src={photoPreview} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
-                            <UserIcon className="w-8 h-8 text-neutral-500" />
+                            <UserIcon className={`w-8 h-8 ${colors.textMuted}`} />
                         )}
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <Upload className="w-6 h-6 text-white" />
@@ -208,9 +192,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </button>
                 </div>
                 )}
-                </div>
-            </FocusTrap>
-        </div>,
-        document.body
+        </Modal>
     );
 };

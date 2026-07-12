@@ -49,3 +49,6 @@ export const useUI = () => {
   }
   return context;
 };
+
+/** Variante tolerante: retorna undefined fora do UIProvider (ex.: testes isolados). */
+export const useOptionalUI = () => useContext(UIContext);

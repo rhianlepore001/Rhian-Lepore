@@ -39,13 +39,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({
     className = '',
     region = 'BR',
 }) => {
-    const { accent, colors, font } = useBrutalTheme();
+    const { accent, colors, font, radius, status } = useBrutalTheme();
     const style = BADGE_STYLES[plan.badge_color] ?? BADGE_STYLES.gold;
 
     return (
         <div
             className={[
-                'relative overflow-hidden rounded-2xl border transition-all hover:scale-[1.02] active:scale-[0.98]',
+                'relative overflow-hidden border transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]',
+                radius.card,
                 colors.card,
                 colors.border,
                 style.ring,
@@ -57,25 +58,25 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
             <div className="relative p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${style.gradient} text-white`}>
+                    <div className={`p-2.5 ${radius.input} bg-gradient-to-br ${style.gradient} ${colors.text}`}>
                         {style.icon}
                     </div>
                     {!compact && plan.active && (
-                        <span className="text-xs font-bold uppercase tracking-widest text-green-400 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Disponível
+                        <span className={`text-xs font-bold uppercase tracking-widest ${status.success} flex items-center gap-1`}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" /> Disponível
                         </span>
                     )}
                 </div>
 
                 <div>
-                    <h3 className={`text-xl ${font.heading} text-white uppercase tracking-tight`}>{plan.name}</h3>
+                    <h3 className={`text-xl ${font.heading} ${colors.text} uppercase tracking-tight`}>{plan.name}</h3>
                     {plan.description && (
                         <p className={`${colors.textSecondary} text-sm mt-1.5 leading-relaxed`}>{plan.description}</p>
                     )}
                 </div>
 
                 <div className="flex items-baseline gap-1">
-                    <span className={`text-4xl ${font.heading} text-white`}>
+                    <span className={`text-4xl ${font.heading} ${colors.text}`}>
                         {formatCurrency(plan.price_cents / 100, region)}
                     </span>
                     <span className={`${colors.textMuted} text-sm`}>/mês</span>
@@ -96,10 +97,11 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                         type="button"
                         onClick={() => onSelect(plan)}
                         className={[
-                            'w-full mt-2 py-3 px-4 rounded-xl font-bold uppercase tracking-wide text-sm',
+                            'w-full mt-2 py-3 px-4 font-bold uppercase tracking-wide text-sm',
+                            radius.button,
                             'transition-all active:scale-95',
                             colors.text,
-                            'bg-white/5 hover:bg-white/10',
+                            'bg-[var(--color-card-hover)] hover:bg-[var(--color-divider)]',
                             colors.border,
                             'border',
                         ].join(' ')}

@@ -19,6 +19,7 @@ import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../ut
 import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { ConfirmModal, useToast } from '@/components/ui';
+import FocusTrap from 'focus-trap-react';
 
 interface Message {
     id: string;
@@ -1464,7 +1465,15 @@ export const PublicBooking: React.FC = () => {
             {/* Chat Flow: Modal/Bottom Sheet de Contato e Resumo */}
             {bookingMode === 'chat' && step === 'contact' && (
                 <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
-                    <div className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: false, fallbackFocus: '[data-booking-contact-dialog]' }}>
+                    <div
+                        data-booking-contact-dialog
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Confirmação do agendamento"
+                        tabIndex={-1}
+                        onKeyDown={(e) => { if (e.key === 'Escape') setStep('datetime'); }}
+                        className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
                             <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:text-theme-text transition-colors rounded-full p-2 hover:bg-white/5`}>
@@ -1548,6 +1557,7 @@ export const PublicBooking: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                    </FocusTrap>
                 </div>
             )}
 
@@ -1722,9 +1732,22 @@ export const PublicBooking: React.FC = () => {
 
             {/* Policy Modal */}
             {showPolicyModal && (
-                <div className="fixed inset-0 flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
-                    <div className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
-                        <button onClick={() => setShowPolicyModal(false)} className={`absolute top-6 right-6 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-8 h-8" /></button>
+                <div
+                    className="fixed inset-0 flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300"
+                    style={{ zIndex: 'var(--z-modal)' }}
+                    onClick={() => setShowPolicyModal(false)}
+                >
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: false, fallbackFocus: '[data-policy-dialog]' }}>
+                    <div
+                        data-policy-dialog
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Políticas administrativas"
+                        tabIndex={-1}
+                        onKeyDown={(e) => { if (e.key === 'Escape') setShowPolicyModal(false); }}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
+                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute top-6 right-6 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-8 h-8" /></button>
                         <div className="relative z-10 space-y-6">
                             <h3 className={`text-2xl ${colors.text} flex items-center gap-3`}>
                                 <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
@@ -1742,6 +1765,7 @@ export const PublicBooking: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                    </FocusTrap>
                 </div>
             )}
 

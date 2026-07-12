@@ -27,7 +27,7 @@ export const Reports: React.FC = () => {
     const { user, companyId, region } = useAuth();
     const { showToast } = useToast();
     const effectiveUserId = companyId ?? user?.id;
-    const { accent, isBeauty, colors } = useBrutalTheme();
+    const { accent, isBeauty, colors, status } = useBrutalTheme();
     const currentDate = new Date();
     const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
     const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -163,10 +163,10 @@ export const Reports: React.FC = () => {
                             <Brain className={`w-4 h-4 ${accent.text}`} /> O que você verá aqui em breve:
                         </p>
                         <ul className={`text-sm ${colors.textSecondary} space-y-3`}>
-                            <li className="flex gap-2"><DollarSign className="w-4 h-4 text-neutral-500" /> Faturamento médio real por atendimento</li>
-                            <li className="flex gap-2"><AlertCircle className="w-4 h-4 text-neutral-500" /> Alertas de clientes prestes a sumir</li>
-                            <li className="flex gap-2"><Zap className="w-4 h-4 text-neutral-500" /> Receita salva pelas campanhas automáticas</li>
-                            <li className="flex gap-2"><Target className="w-4 h-4 text-neutral-500" /> Quais serviços atraem os clientes mais fiéis</li>
+                            <li className="flex gap-2"><DollarSign className="w-4 h-4 text-[var(--color-text-muted)]" /> Faturamento médio real por atendimento</li>
+                            <li className="flex gap-2"><AlertCircle className="w-4 h-4 text-[var(--color-text-muted)]" /> Alertas de clientes prestes a sumir</li>
+                            <li className="flex gap-2"><Zap className="w-4 h-4 text-[var(--color-text-muted)]" /> Receita salva pelas campanhas automáticas</li>
+                            <li className="flex gap-2"><Target className="w-4 h-4 text-[var(--color-text-muted)]" /> Quais serviços atraem os clientes mais fiéis</li>
                         </ul>
                     </div>
                 </div>
@@ -188,18 +188,20 @@ export const Reports: React.FC = () => {
 
                             <Card>
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="p-2 rounded-xl bg-green-500/10 text-green-400">
+                                    <div className={`p-2 rounded-xl ${status.successBg} ${status.success}`}>
                                         <TrendingUp className="w-5 h-5" />
                                     </div>
                                     <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Crescimento</span>
                                 </div>
-                                <h3 className={`text-3xl font-heading ${colors.text}`}>{stats?.weekly_growth || 0}%</h3>
+                                <h3 className={`text-3xl font-heading ${(stats?.weekly_growth || 0) > 0 ? status.success : (stats?.weekly_growth || 0) < 0 ? status.danger : colors.text}`}>
+                                    {(stats?.weekly_growth || 0) > 0 ? '+' : ''}{stats?.weekly_growth || 0}%
+                                </h3>
                                 <p className={`text-xs ${colors.textMuted} mt-2`}>Vs. semana anterior</p>
                             </Card>
 
                             <Card>
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+                                    <div className={`p-2 rounded-xl ${status.infoBg} ${status.info}`}>
                                         <Target className="w-5 h-5" />
                                     </div>
                                     <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Recorrência</span>
@@ -210,7 +212,7 @@ export const Reports: React.FC = () => {
 
                             <Card>
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
+                                    <div className={`p-2 rounded-xl ${status.dangerBg} ${status.danger}`}>
                                         <AlertCircle className="w-5 h-5" />
                                     </div>
                                     <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Clientes em Risco</span>
@@ -243,12 +245,12 @@ export const Reports: React.FC = () => {
                                                     <stop offset="95%" stopColor={accent.hex} stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke={isBeauty ? '#E2DDD2' : '#222'} vertical={false} />
-                                            <XAxis dataKey="month" stroke={isBeauty ? '#8A8377' : '#555'} fontSize={11} tickLine={false} axisLine={false} />
-                                            <YAxis stroke={isBeauty ? '#8A8377' : '#555'} fontSize={11} tickLine={false} axisLine={false} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
+                                            <XAxis dataKey="month" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                                             <Tooltip
-                                                contentStyle={{ backgroundColor: isBeauty ? '#FFFFFF' : '#0a0a0a', border: `1px solid ${isBeauty ? '#E2DDD2' : '#222'}`, borderRadius: '12px' }}
-                                                itemStyle={{ color: isBeauty ? '#2E2A24' : '#fff' }}
+                                                contentStyle={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-divider)', borderRadius: '12px' }}
+                                                itemStyle={{ color: 'var(--color-text)' }}
                                             />
                                             <Area
                                                 type="monotone"

@@ -109,6 +109,31 @@ export async function fetchTodayRevenue(effectiveUserId: string): Promise<number
   return data?.reduce((sum, a) => sum + (Number(a.price) || 0), 0) ?? 0;
 }
 
+/** Receita dos últimos 7 dias (inclui hoje), somada por dia — alimenta o sparkline do hero. */
+export async function fetchRevenueSparkline(effectiveUserId: string): Promise<number[]> {
+  const start = new Date();
+  start.setDate(start.getDate() - 6);
+  start.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('price, appointment_time')
+    .eq('user_id', effectiveUserId)
+    .eq('status', 'Completed')
+    .gte('appointment_time', start.toISOString());
+
+  if (error) throw error;
+
+  const days: number[] = Array(7).fill(0);
+  for (const row of data ?? []) {
+    const d = new Date(row.appointment_time as string);
+    d.setHours(0, 0, 0, 0);
+    const idx = Math.round((d.getTime() - start.getTime()) / 86400000);
+    if (idx >= 0 && idx < 7) days[idx] += Number(row.price) || 0;
+  }
+  return days;
+}
+
 export async function updateGoal(userId: string, newGoalValue: number): Promise<void> {
   const now = new Date();
   const month = now.getMonth();

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import FocusTrap from 'focus-trap-react';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
+import { useOptionalUI } from '../../contexts/UIContext';
 
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -49,6 +50,7 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const { classes, colors } = useBrutalTheme({ override: forceTheme });
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const setModalOpen = useOptionalUI()?.setModalOpen;
 
   const allowEsc = !preventClose && closeOnEsc;
   const allowOverlay = !preventClose && closeOnOverlay;
@@ -67,17 +69,19 @@ export const Modal: React.FC<ModalProps> = ({
       previousFocusRef.current = document.activeElement as HTMLElement;
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
+      setModalOpen?.(true);
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
+      setModalOpen?.(false);
       if (!open && previousFocusRef.current) {
         previousFocusRef.current.focus();
         previousFocusRef.current = null;
       }
     };
-  }, [open, handleEscape]);
+  }, [open, handleEscape, setModalOpen]);
 
   if (!open) return null;
 

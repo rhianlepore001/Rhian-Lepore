@@ -50,7 +50,7 @@ export const StaffOnboarding: React.FC = () => {
       />
 
       {/* Card central */}
-      <div className={`relative z-10 w-full max-w-md ${colors.card} border ${colors.border} rounded-3xl shadow-[0_32px_80px_rgba(0,0,0,0.5)] p-8 md:p-10`}>
+      <div className={`relative z-10 w-full max-w-md ${colors.card} border ${colors.border} rounded-3xl shadow-[var(--elevation-3)] p-8 md:p-10`}>
 
         {/* Branding */}
         <div className="flex items-center justify-center gap-2.5 mb-8">

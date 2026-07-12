@@ -9,15 +9,21 @@ interface EmptyStateProps {
   action?: React.ReactNode;
   className?: string;
   forceTheme?: ThemeVariant;
+  /** Envelopa com borda tracejada — para vazios que ocupam o lugar de uma lista/grid. */
+  bordered?: boolean;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon: Icon, title, description, action, className = '', forceTheme,
+  icon: Icon, title, description, action, className = '', forceTheme, bordered = false,
 }) => {
-  const { colors, accent } = useBrutalTheme({ override: forceTheme });
+  const { colors, accent, radius } = useBrutalTheme({ override: forceTheme });
 
   return (
-    <div className={`flex flex-col items-center justify-center text-center py-12 px-6 ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center text-center py-12 px-6 ${
+        bordered ? `${radius.card} border-2 border-dashed border-[var(--color-divider)]` : ''
+      } ${className}`}
+    >
       <div className={`p-3.5 rounded-2xl ${accent.bgDim} mb-4`}>
         <Icon className={`w-6 h-6 ${accent.text} opacity-70`} aria-hidden="true" />
       </div>

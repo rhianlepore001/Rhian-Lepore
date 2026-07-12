@@ -174,7 +174,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const savingCategory = createCategoryMutation.isPending;
 
     return createPortal(
-        <div className={`fixed inset-0 ${classes.modalOverlay} flex items-center justify-center z-[10000] p-4 backdrop-blur-sm`}>
+        <div className={`fixed inset-0 ${classes.modalOverlay} flex items-center justify-center p-4 backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
             <div className="absolute inset-0" onClick={onClose} />
             <FocusTrap active={true}>
                 <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${classes.modalContainer} transform transition-all duration-300 z-10 modal-enter`}

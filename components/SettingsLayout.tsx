@@ -38,7 +38,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 transform transition-transform duration-300 ease-in-out md:translate-x-0
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                 p-6 flex flex-col
-                ${colors.bg}/95 border-r ${colors.divider} shadow-promax-glass
+                ${colors.bg}/95 border-r ${colors.divider} shadow-[var(--shadow-card)]
                 md:backdrop-blur-3xl
             `}
                 style={{ top: 'calc(var(--header-top, 0px) + 5rem)' }}
@@ -65,7 +65,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all group shrink-0
                                 active:animate-haptic-click
                                 ${isActive
-                                    ? `${accent.bgDim} ${accent.text} ${accent.shadowStrong} font-bold`
+                                    ? `${accent.bgDim} ${accent.text} border border-[var(--color-accent-border)] font-bold`
                                     : `${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] border border-transparent`
                                 }
                             `}
@@ -129,7 +129,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                                         className={({ isActive }) => `
                                             flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
                                             ${isActive
-                                                ? `${accent.bgDim} ${accent.text} ${accent.border} shadow-promax-glass`
+                                                ? `${accent.bgDim} ${accent.text} ${accent.border} shadow-[var(--shadow-card-accent)]`
                                                 : `bg-[var(--color-card-hover)] ${colors.border} ${colors.textSecondary} opacity-80`
                                             }
                                         `}

@@ -146,7 +146,7 @@ export const TeamSettings: React.FC = () => {
                 ) : cardMembers.length === 0 ? (
                     <Card className="p-12 text-center border-dashed">
                         <div className={`w-20 h-20 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-6 border ${colors.border}`}>
-                            <UserCheck className="w-10 h-10 text-neutral-500" />
+                            <UserCheck className="w-10 h-10 text-[var(--color-text-muted)]" />
                         </div>
                         <h3 className={`text-2xl font-heading ${colors.text} uppercase mb-3`}>
                             Comece sua equipe

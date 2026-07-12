@@ -11,6 +11,7 @@ vi.mock('../../contexts/AuthContext', () => ({
 
 vi.mock('../../contexts/UIContext', () => ({
     useUI: () => ({ setModalOpen: () => {} }),
+    useOptionalUI: () => ({ setModalOpen: () => {} }),
 }));
 
 vi.mock('focus-trap-react', () => ({
@@ -63,8 +64,8 @@ describe('Modal Component', () => {
         );
 
         const dialog = screen.getByRole('dialog');
-        expect(dialog).toHaveAttribute('aria-labelledby', 'modal-title');
-        expect(screen.getByText('Titulo Acessivel')).toHaveAttribute('id', 'modal-title');
+        expect(dialog).toHaveAttribute('aria-labelledby', 'ui-modal-title');
+        expect(screen.getByText('Titulo Acessivel')).toHaveAttribute('id', 'ui-modal-title');
     });
 
     it('chama onClose ao clicar no botao fechar', async () => {

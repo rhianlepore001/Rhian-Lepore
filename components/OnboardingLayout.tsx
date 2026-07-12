@@ -101,7 +101,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 
                     <div className={`
                         ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl shadow-[0_0_30px_rgba(167,139,250,0.12)]'
+                            ? 'bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl shadow-[var(--shadow-card-accent)]'
                             : 'bg-neutral-900 border border-white/8 rounded-xl shadow-2xl'}
                         p-6 md:p-8
                     `}>

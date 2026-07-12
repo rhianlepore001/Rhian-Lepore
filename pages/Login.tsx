@@ -205,8 +205,8 @@ export const Login: React.FC = () => {
             {/* Card split */}
             <div className={`w-full max-w-3xl relative z-10 flex overflow-hidden
                 ${isBeauty
-                    ? 'rounded-3xl border border-white/10 shadow-[0_32px_80px_rgba(0,0,0,0.6)]'
-                    : 'rounded-2xl border border-white/5 shadow-[0_32px_80px_rgba(0,0,0,0.7)]'}
+                    ? 'rounded-3xl border border-white/10 shadow-[var(--elevation-3)]'
+                    : 'rounded-2xl border border-white/5 shadow-[var(--elevation-3)]'}
             `}>
 
                 {/* Painel esquerdo — decorativo (só desktop) */}

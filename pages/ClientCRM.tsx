@@ -1,4 +1,4 @@
-import { Card, Button } from '../components/ui';
+import { Card, Button, Modal } from '../components/ui';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -16,11 +16,12 @@ import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
 import { useSemanticMemory } from '../hooks/useSemanticMemory';
 import { useToast } from '../components/ui/Toast';
 import { AISemanticInsights } from '../components/AISemanticInsights';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export const ClientCRM: React.FC = () => {
 const { id } = useParams<{ id: string }>();
   const { user, userType, region, businessName } = useAuth();
-  const { accent, isBeauty } = useBrutalTheme();
+  const { accent, isBeauty, classes, colors, radius, status } = useBrutalTheme();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [client, setClient] = useState<any>(null);
@@ -249,7 +250,7 @@ const { id } = useParams<{ id: string }>();
       {/* Back Button */}
       <button
         onClick={() => navigate('/clientes')}
-        className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-4"
+        className="flex items-center gap-2 text-theme-textSecondary hover:text-white transition-colors mb-4"
       >
         <ArrowLeft className="w-5 h-5" />
         <span className="font-mono text-sm uppercase">Voltar para Clientes</span>
@@ -330,11 +331,11 @@ const { id } = useParams<{ id: string }>();
 
           {/* Info */}
           <div className="flex-1 w-full mt-2 md:mt-0">
-            <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-neutral-800 pb-4 mb-4 gap-4 md:gap-0">
+            <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-theme-border pb-4 mb-4 gap-4 md:gap-0">
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl md:text-3xl font-heading text-white uppercase leading-none">{client.name}</h1>
-                  <button onClick={() => setShowEditModal(true)} className="text-neutral-500 hover:text-white transition-colors">
+                  <button onClick={() => setShowEditModal(true)} className="text-[var(--color-text-muted)] hover:text-white transition-colors">
                     <Edit2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -378,25 +379,25 @@ const { id } = useParams<{ id: string }>();
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-              <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-xs md:text-xs text-text-secondary uppercase">Última Visita</p>
-                <p className="text-base md:text-lg font-bold text-white">{client.lastVisit}</p>
+              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase`}>Última Visita</p>
+                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.lastVisit}</p>
               </div>
-              <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-xs md:text-xs text-text-secondary uppercase">Total Visitas</p>
-                <p className="text-base md:text-lg font-bold text-white">{client.totalVisits}</p>
+              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase`}>Total Visitas</p>
+                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.totalVisits}</p>
               </div>
-              <div className="bg-neutral-900 p-3 border border-neutral-800">
-                <p className="text-xs md:text-xs text-text-secondary uppercase" title="Total gasto neste estabelecimento">Total Gasto</p>
-                <p className={`text-base md:text-lg font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`}>
+              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase`} title="Total gasto neste estabelecimento">Total Gasto</p>
+                <p className={`text-base md:text-lg font-bold ${accent.text}`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
               </div>
-              <div className={`col-span-2 md:col-span-1 bg-neutral-900 p-3 border ${isBeauty ? 'border-beauty-neon/40' : 'border-accent-gold/40'}`}>
-                <p className={`text-xs md:text-xs ${isBeauty ? 'text-beauty-neon' : 'text-yellow-500'} uppercase flex items-center gap-1`}>
+              <div className={`col-span-2 md:col-span-1 ${colors.surface} p-3 border ${accent.borderDim} ${radius.input}`}>
+                <p className={`text-xs ${accent.text} uppercase flex items-center gap-1`}>
                   <Sparkles className="w-3 h-3" /> Próxima Visita
                 </p>
-                <p className="text-base md:text-lg font-bold text-white">{client.nextPrediction}</p>
+                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.nextPrediction}</p>
               </div>
             </div>
           </div>
@@ -406,9 +407,12 @@ const { id } = useParams<{ id: string }>();
       {/* Visual History - Now using Real Appointments */}
       <Card title={isBeauty ? "Histórico de Visitas" : "Histórico de Cortes"}>
         {client.hairHistory.length === 0 && (!client.appointmentsHistory || client.appointmentsHistory.length === 0) ? (
-          <div className="text-center py-12 text-neutral-500">
-            <p className="text-sm">{isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}</p>
-          </div>
+          <EmptyState
+            bordered
+            icon={Scissors}
+            title={isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}
+            description="Os atendimentos concluídos deste cliente aparecem aqui."
+          />
         ) : (
           <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             <div className="flex gap-4 md:gap-6 min-w-max">
@@ -420,19 +424,19 @@ const { id } = useParams<{ id: string }>();
 
                 return (
                   <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
-                    <div className={`relative border-2 border-neutral-700 hover:border-[var(--color-accent-border)] transition-colors bg-neutral-900 h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
+                    <div className={`relative border ${colors.border} hover:border-[var(--color-accent-border)] transition-colors ${colors.surface} ${radius.card} overflow-hidden h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
                       <Calendar className={`w-12 h-12 ${accent.text} mb-2 opacity-50`} />
-                      <p className="text-white font-bold font-heading text-lg text-center leading-tight mb-1">{apt.service}</p>
-                      <p className="text-neutral-400 font-mono text-xs">{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
+                      <p className={`${colors.text} font-bold font-heading text-lg text-center leading-tight mb-1`}>{apt.service}</p>
+                      <p className={`${colors.textSecondary} font-mono text-xs`}>{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
 
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
-                        <p className="text-xs md:text-xs text-text-secondary font-mono flex justify-between items-center">
+                      <div className={`absolute bottom-0 left-0 right-0 ${colors.card} p-3 border-t ${colors.divider}`}>
+                        <p className={`text-xs ${colors.textSecondary} font-mono flex justify-between items-center`}>
                           <span>{apt.professional_name || 'Profissional'}</span>
                           <span className="flex items-center gap-2">
                             {hasDiscount && (
-                              <span className="text-red-400 line-through text-xs">{currencySymbol} {apt.basePrice.toFixed(2)}</span>
+                              <span className={`${status.danger} line-through text-xs`}>{currencySymbol} {apt.basePrice.toFixed(2)}</span>
                             )}
-                            <span className="text-white font-bold">{currencySymbol} {apt.price.toFixed(2)}</span>
+                            <span className={`${colors.text} font-bold`}>{currencySymbol} {apt.price.toFixed(2)}</span>
                           </span>
                         </p>
                       </div>
@@ -452,7 +456,7 @@ const { id } = useParams<{ id: string }>();
                     {/* Repeat Service Button for each card */}
                     <button
                       onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-neutral-800 ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
+                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>
@@ -463,14 +467,14 @@ const { id } = useParams<{ id: string }>();
               {/* Keep existing hair records for backward compatibility */}
               {client.hairHistory.map((record: any) => (
                 <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className={`relative border-2 border-neutral-700 hover:border-[var(--color-accent-border)] transition-colors`}>
+                  <div className={`relative border-2 border-theme-border hover:border-[var(--color-accent-border)] transition-colors`}>
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-neutral-600">
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-theme-border">
                       <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
                       <p className="text-xs md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
                     </div>
                     <div className="absolute top-2 right-2">
-                      <span className="bg-neutral-800 text-white text-xs font-bold px-2 py-1 uppercase border border-neutral-600">Foto</span>
+                      <span className="bg-theme-surface text-white text-xs font-bold px-2 py-1 uppercase border border-theme-border">Foto</span>
                     </div>
                   </div>
                 </div>
@@ -485,7 +489,7 @@ const { id } = useParams<{ id: string }>();
         <div className="md:col-span-2 h-full">
           <Card title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
             <textarea
-              className={`w-full h-40 bg-neutral-900 border-2 border-neutral-800 p-4 text-text-primary font-mono text-sm focus:outline-none focus:border-[var(--color-accent-border)] resize-none`}
+              className={`w-full h-40 bg-theme-surface border-2 border-theme-border p-4 text-text-primary font-mono text-sm focus:outline-none focus:border-[var(--color-accent-border)] resize-none`}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Digite observações sobre o cliente..."
@@ -550,96 +554,51 @@ const { id } = useParams<{ id: string }>();
         </Card>
       </div>
       {/* Edit Modal */}
-      {showEditModal && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isBeauty ? 'bg-beauty-dark/80 backdrop-blur-sm' : 'bg-black/80'}`}>
-          <div className={`w-full max-w-md p-6 relative transition-all
-              ${isBeauty
-              ? 'bg-gradient-to-br from-beauty-card to-beauty-dark border border-beauty-neon/30 rounded-2xl shadow-[0_0_20px_rgba(167,139,250,0.15)]'
-              : 'bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-brutal'}
-          `}>
-            <button
-              onClick={() => setShowEditModal(false)}
-              className={`absolute top-4 right-4 transition-colors
-                  ${isBeauty
-                  ? 'text-beauty-neon/60 hover:text-beauty-neon hover:bg-beauty-neon/10 rounded-full p-1.5'
-                  : 'text-neutral-500 hover:text-white hover:bg-neutral-800 p-1'}
-              `}
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className={`mb-6 ${isBeauty ? 'border-b border-beauty-neon/20 pb-4' : 'border-b-2 border-dashed border-neutral-800 pb-4'}`}>
-              <h3 className={`text-xl font-heading uppercase ${isBeauty ? 'text-white tracking-normal' : 'text-white tracking-wider'}`}>Editar Cliente</h3>
-            </div>
-
-            <form onSubmit={handleUpdateClient} className="space-y-4">
-              <div>
-                <label className={`block text-xs mb-1 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Nome Completo</label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className={`w-full p-3 outline-none transition-all
-                      ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:border-beauty-neon focus:bg-beauty-dark placeholder-beauty-neon/30'
-                      : 'bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:border-accent-gold placeholder-neutral-600'}
-                  `}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className={`block text-xs mb-2 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Telefone</label>
-                <PhoneInput
-                  value={editPhone}
-                  onChange={setEditPhone}
-                  defaultRegion={region as 'BR' | 'PT'}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <label className={`block text-xs mb-1 ${isBeauty ? 'text-beauty-neon/80 font-sans font-medium' : 'font-mono text-neutral-500'}`}>Email</label>
-                <input
-                  type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
-                  className={`w-full p-3 outline-none transition-all
-                      ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl text-white focus:border-beauty-neon focus:bg-beauty-dark placeholder-beauty-neon/30'
-                      : 'bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:border-accent-gold placeholder-neutral-600'}
-                  `}
-                />
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className={`flex-1 py-3 font-bold uppercase tracking-wider transition-colors
-                      ${isBeauty
-                      ? 'bg-transparent text-white border border-white/10 hover:bg-white/5 rounded-xl'
-                      : 'bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700 rounded-lg'}
-                  `}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className={`flex-1 py-3 font-bold uppercase tracking-wider transition-all disabled:opacity-50
-                      ${isBeauty
-                      ? 'bg-beauty-neon text-black hover:bg-beauty-neonHover rounded-xl shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                      : 'bg-accent-gold text-black hover:bg-accent-goldHover rounded-lg border-2 border-black shadow-brutal-sm'}
-                  `}
-                >
-                  {updating ? 'Salvando...' : 'Salvar'}
-                </button>
-              </div>
-            </form>
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar Cliente" size="md">
+        <form onSubmit={handleUpdateClient} className="space-y-4">
+          <div>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-name">Nome Completo</label>
+            <input
+              id="crm-edit-name"
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className={classes.input}
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className={`block mb-2 ${classes.label}`} htmlFor="crm-edit-phone">Telefone</label>
+            <PhoneInput
+              value={editPhone}
+              onChange={setEditPhone}
+              defaultRegion={region as 'BR' | 'PT'}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-email">Email</label>
+            <input
+              id="crm-edit-email"
+              type="email"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+              className={classes.input}
+            />
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <Button type="button" variant="secondary" fullWidth onClick={() => setShowEditModal(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="primary" fullWidth loading={updating}>
+              {updating ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

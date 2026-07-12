@@ -12,6 +12,7 @@ import { logger } from '../utils/Logger';
 import { useQueueEntries, useBusinessSlug, useQueueTeamMembers, useServiceById, useAddManualQueueEntry, useUpdateQueueStatus, useFinishQueueEntry } from '../hooks/useQueue';
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal, Modal, useToast } from '@/components/ui';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 
 export const QueueManagement: React.FC = () => {
@@ -181,10 +182,10 @@ const confirmFinish = async () => {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'waiting': return 'border border-yellow-400/40 bg-yellow-400/5';
-            case 'calling': return 'border border-green-500/40 bg-green-500/5 animate-pulse';
-            case 'serving': return 'border border-blue-400/40 bg-blue-500/5';
-            default: return 'border border-neutral-700';
+            case 'waiting': return 'border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]';
+            case 'calling': return 'border border-[var(--color-success-border)] bg-[var(--color-success-bg)] animate-pulse';
+            case 'serving': return 'border border-[var(--color-info-border)] bg-[var(--color-info-bg)]';
+            default: return 'border border-theme-border';
         }
     };
 
@@ -240,7 +241,7 @@ const confirmFinish = async () => {
     return (
         <div className="space-y-6 pb-20">
             {/* Header */}
-            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-promax-glass`}>
+            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-[var(--shadow-card)]`}>
                 <div className="mb-4 md:mb-0">
                     <h1 className={`text-2xl md:text-3xl font-heading font-bold ${colors.text} mb-1 flex items-center gap-2`}>
                         <Clock className={`w-8 h-8 ${accent.text}`} />
@@ -266,17 +267,17 @@ const confirmFinish = async () => {
 
             {/* Metrics */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                <Card className="p-4 border border-yellow-400/40">
+                <Card className="p-4 border border-[var(--color-warning-border)]">
                     <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Na Fila</div>
-                    <div className="text-4xl font-heading text-yellow-400">{metrics.waiting}</div>
+                    <div className="text-4xl font-heading text-[var(--color-warning)]">{metrics.waiting}</div>
                 </Card>
-                <Card className="p-4 border border-blue-400/40">
+                <Card className="p-4 border border-[var(--color-info-border)]">
                     <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Atendendo</div>
-                    <div className="text-4xl font-heading text-blue-400">{metrics.serving}</div>
+                    <div className="text-4xl font-heading text-[var(--color-info)]">{metrics.serving}</div>
                 </Card>
-                <Card className="p-4 border border-green-500/40">
+                <Card className="p-4 border border-[var(--color-success-border)]">
                     <div className={`text-xs uppercase ${colors.textMuted} font-bold mb-1 tracking-widest`}>Finalizados</div>
-                    <div className="text-4xl font-heading text-green-500">{metrics.completed}</div>
+                    <div className="text-4xl font-heading text-[var(--color-success)]">{metrics.completed}</div>
                 </Card>
             </div>
 
@@ -289,9 +290,17 @@ const confirmFinish = async () => {
                     </h2>
 
                     {actionableList.length === 0 ? (
-                        <div className={`p-10 border border-dashed ${colors.border} ${colors.surface} rounded-2xl text-center ${colors.textMuted}`}>
-                            <p className="font-mono text-sm">A fila está vazia.</p>
-                        </div>
+                        <EmptyState
+                            bordered
+                            icon={Clock}
+                            title="A fila está vazia"
+                            description="Compartilhe o QR Code ou adicione um cliente manualmente."
+                            action={
+                                <Button variant="secondary" size="sm" onClick={() => setShowAddModal(true)}>
+                                    Adicionar cliente
+                                </Button>
+                            }
+                        />
                     ) : (
                         actionableList.map(entry => (
                             <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
@@ -299,7 +308,7 @@ const confirmFinish = async () => {
                                     <h3 className={`font-bold ${colors.text} text-lg flex items-center gap-2`}>
                                         <span className="font-heading">{entry.client_name}</span>
                                         {entry.status === 'calling' && (
-                                            <span className="text-xs bg-green-500 text-black px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
+                                            <span className="text-xs bg-[var(--color-success)] text-black px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
                                         )}
                                     </h3>
                                     <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>
@@ -312,7 +321,7 @@ const confirmFinish = async () => {
                                     {entry.status === 'waiting' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'calling')}
-                                            className="p-3 bg-green-500/10 text-green-500 rounded-full hover:bg-green-500/20 border border-green-500/20 transition-all hover:scale-105"
+                                            className="p-3 bg-[var(--color-success-bg)] text-[var(--color-success)] rounded-full hover:bg-[var(--color-success-bg)] border border-[var(--color-success-border)] transition-all hover:scale-105"
                                             title="Chamar Cliente"
                                         >
                                             <Megaphone className="w-5 h-5" />
@@ -321,7 +330,7 @@ const confirmFinish = async () => {
                                     {entry.status === 'calling' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'serving')}
-                                            className="p-3 bg-blue-500/10 text-blue-500 rounded-full hover:bg-blue-500/20 border border-blue-500/20 transition-all hover:scale-105"
+                                            className="p-3 bg-[var(--color-info-bg)] text-[var(--color-info)] rounded-full hover:bg-[var(--color-info-bg)] border border-[var(--color-info-border)] transition-all hover:scale-105"
                                             title="Iniciar Atendimento"
                                         >
                                             <Play className="w-5 h-5 fill-current" />
@@ -329,7 +338,7 @@ const confirmFinish = async () => {
                                     )}
                                     <button
                                         onClick={() => setNoShowTarget(entry.id)}
-                                        className="p-3 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 border border-red-500/20 transition-all opacity-60 hover:opacity-100"
+                                        className="p-3 bg-[var(--color-danger-bg)] text-[var(--color-danger)] rounded-full hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] transition-all opacity-60 hover:opacity-100"
                                         title="Não Compareceu"
                                     >
                                         <X className="w-5 h-5" />
@@ -342,15 +351,18 @@ const confirmFinish = async () => {
 
                 {/* Right Column: In Service */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight text-blue-400">
+                    <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tight text-[var(--color-info)]">
                         <User className="w-5 h-5" />
                         Em Atendimento
                     </h2>
 
                     {servingList.length === 0 ? (
-                        <div className={`p-10 border border-dashed ${colors.border} ${colors.surface} rounded-2xl text-center ${colors.textMuted}`}>
-                            <p className="font-mono text-sm">Nenhum atendimento em andamento.</p>
-                        </div>
+                        <EmptyState
+                            bordered
+                            icon={Play}
+                            title="Nenhum atendimento em andamento"
+                            description="Chame o próximo da fila para começar."
+                        />
                     ) : (
                         servingList.map(entry => (
                             <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
@@ -364,7 +376,7 @@ const confirmFinish = async () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => openFinishModal(entry)}
-                                        className="px-5 py-3 bg-neutral-100 text-black font-bold rounded-xl hover:bg-white hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.3)] min-h-[48px]"
+                                        className="px-5 py-3 bg-theme-surface text-black font-bold rounded-xl hover:bg-white hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.3)] min-h-[48px]"
                                         title="Finalizar"
                                     >
                                         <Check className="w-5 h-5" />
@@ -394,7 +406,7 @@ const confirmFinish = async () => {
                                     <div>
                                         <h3 className={`font-bold ${colors.textSecondary} text-base font-heading`}>{entry.client_name}</h3>
                                         <div className={`text-xs ${colors.textMuted} flex items-center gap-2 mt-1`}>
-                                            <Check className="w-3 h-3 text-green-500" />
+                                            <Check className="w-3 h-3 text-[var(--color-success)]" />
                                             Finalizado
                                         </div>
                                     </div>
@@ -555,7 +567,7 @@ const confirmFinish = async () => {
                                 alt="QR Code"
                             />
                         ) : (
-                            <div className="w-48 h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 text-xs">
+                            <div className="w-48 h-48 bg-theme-surface flex items-center justify-center text-theme-textSecondary text-xs">
                                 Carregando...
                             </div>
                         )}

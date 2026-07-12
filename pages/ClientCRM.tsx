@@ -16,6 +16,7 @@ import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
 import { useSemanticMemory } from '../hooks/useSemanticMemory';
 import { useToast } from '../components/ui/Toast';
 import { AISemanticInsights } from '../components/AISemanticInsights';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export const ClientCRM: React.FC = () => {
 const { id } = useParams<{ id: string }>();
@@ -406,9 +407,12 @@ const { id } = useParams<{ id: string }>();
       {/* Visual History - Now using Real Appointments */}
       <Card title={isBeauty ? "Histórico de Visitas" : "Histórico de Cortes"}>
         {client.hairHistory.length === 0 && (!client.appointmentsHistory || client.appointmentsHistory.length === 0) ? (
-          <div className="text-center py-12 text-[var(--color-text-muted)]">
-            <p className="text-sm">{isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}</p>
-          </div>
+          <EmptyState
+            bordered
+            icon={Scissors}
+            title={isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}
+            description="Os atendimentos concluídos deste cliente aparecem aqui."
+          />
         ) : (
           <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             <div className="flex gap-4 md:gap-6 min-w-max">

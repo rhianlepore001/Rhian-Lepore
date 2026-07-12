@@ -8,6 +8,7 @@ import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUp
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
+import { SettingsRow } from '../../components/ui/SettingsRow';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
@@ -71,22 +72,15 @@ export const PublicBookingSettings: React.FC = () => {
         description,
         checked,
         onChange,
-        badge,
     }: {
         title: string;
         description: string;
         checked: boolean;
         onChange: (v: boolean) => void;
-        badge?: React.ReactNode;
     }) => (
-        <div className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-            <div className="flex-1 min-w-0">
-                <h4 className={`${colors.text} text-sm font-bold mb-0.5`}>{title}</h4>
-                <p className={`${colors.textMuted} text-xs leading-relaxed`}>{description}</p>
-                {badge && <div className="mt-2">{badge}</div>}
-            </div>
+        <SettingsRow label={title} help={description}>
             <SettingsSwitch checked={checked} onChange={onChange} />
-        </div>
+        </SettingsRow>
     );
 
     if (!settings && !profile) return (
@@ -146,7 +140,7 @@ export const PublicBookingSettings: React.FC = () => {
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Permite que os clientes escolham com quem desejam realizar o procedimento.
                             </p>
-                            <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                            <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-[var(--color-success-bg)] border border-[var(--color-success-border)] text-[var(--color-success)] text-xs font-bold uppercase tracking-wider">
                                 +114% Retenção
                             </div>
                             <div className="flex justify-end pt-2">
@@ -157,7 +151,7 @@ export const PublicBookingSettings: React.FC = () => {
                 </div>
 
                 <SettingsSection title="Automação e Lembretes">
-                    <div className="space-y-2 divide-y divide-white/5">
+                    <div className="space-y-2 divide-y divide-[var(--color-divider)]">
                         <ToggleRow
                             title="Lembretes por E-mail"
                             description="Aviso automático 24h antes do serviço."

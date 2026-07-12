@@ -12,6 +12,7 @@ import { logger } from '../utils/Logger';
 import { useQueueEntries, useBusinessSlug, useQueueTeamMembers, useServiceById, useAddManualQueueEntry, useUpdateQueueStatus, useFinishQueueEntry } from '../hooks/useQueue';
 import { useQueryClient } from '@tanstack/react-query';
 import { ConfirmModal, Modal, useToast } from '@/components/ui';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 
 export const QueueManagement: React.FC = () => {
@@ -289,9 +290,17 @@ const confirmFinish = async () => {
                     </h2>
 
                     {actionableList.length === 0 ? (
-                        <div className={`p-10 border border-dashed ${colors.border} ${colors.surface} rounded-2xl text-center ${colors.textMuted}`}>
-                            <p className="font-mono text-sm">A fila está vazia.</p>
-                        </div>
+                        <EmptyState
+                            bordered
+                            icon={Clock}
+                            title="A fila está vazia"
+                            description="Compartilhe o QR Code ou adicione um cliente manualmente."
+                            action={
+                                <Button variant="secondary" size="sm" onClick={() => setShowAddModal(true)}>
+                                    Adicionar cliente
+                                </Button>
+                            }
+                        />
                     ) : (
                         actionableList.map(entry => (
                             <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
@@ -348,9 +357,12 @@ const confirmFinish = async () => {
                     </h2>
 
                     {servingList.length === 0 ? (
-                        <div className={`p-10 border border-dashed ${colors.border} ${colors.surface} rounded-2xl text-center ${colors.textMuted}`}>
-                            <p className="font-mono text-sm">Nenhum atendimento em andamento.</p>
-                        </div>
+                        <EmptyState
+                            bordered
+                            icon={Play}
+                            title="Nenhum atendimento em andamento"
+                            description="Chame o próximo da fila para começar."
+                        />
                     ) : (
                         servingList.map(entry => (
                             <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>

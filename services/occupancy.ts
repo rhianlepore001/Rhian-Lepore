@@ -12,6 +12,8 @@ export interface OccupancyResult {
   availableMinutes: number;
   occupancyRate: number;
   totalAppointments: number;
+  /** Presente apenas quando o período é um único dia: mapa hora a hora do expediente. */
+  hourlySlots?: { hour: number; busy: boolean }[];
 }
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -129,7 +131,44 @@ export function calculateOccupancy(
     availableMinutes,
     occupancyRate,
     totalAppointments: appointments.length,
+    hourlySlots: buildHourlySlots(businessHours, appointments, startDate, endDate),
   };
+}
+
+/** Slots por hora do expediente — só para período de 1 dia (visualização do card). */
+function buildHourlySlots(
+  businessHours: BusinessHours,
+  appointments: { appointment_time: string; duration_minutes: number }[],
+  startDate: Date,
+  endDate: Date,
+): { hour: number; busy: boolean }[] | undefined {
+  const sameDay = startDate.toDateString() === endDate.toDateString();
+  if (!sameDay) return undefined;
+
+  const dayConfig = businessHours[getDayKey(startDate)];
+  if (!dayConfig?.isOpen || !dayConfig.blocks?.length) return undefined;
+
+  const openStart = Math.min(...dayConfig.blocks.map(b => parseTimeToMinutes(b.start)));
+  const openEnd = Math.max(...dayConfig.blocks.map(b => parseTimeToMinutes(b.end)));
+  const firstHour = Math.floor(openStart / 60);
+  const lastHour = Math.ceil(openEnd / 60);
+  if (lastHour <= firstHour) return undefined;
+
+  const busyHours = new Set<number>();
+  for (const apt of appointments) {
+    const t = new Date(apt.appointment_time);
+    if (t.toDateString() !== startDate.toDateString()) continue;
+    const startMin = t.getHours() * 60 + t.getMinutes();
+    const endMin = startMin + Math.max(0, Number(apt.duration_minutes) || 30);
+    for (let h = Math.floor(startMin / 60); h < Math.ceil(endMin / 60); h++) {
+      busyHours.add(h);
+    }
+  }
+
+  return Array.from({ length: lastHour - firstHour }, (_, i) => {
+    const hour = firstHour + i;
+    return { hour, busy: busyHours.has(hour) };
+  });
 }
 
 export async function fetchOccupancyRate(

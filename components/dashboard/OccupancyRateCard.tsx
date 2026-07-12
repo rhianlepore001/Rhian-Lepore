@@ -120,12 +120,35 @@ export const OccupancyRateCard: React.FC = () => {
           </div>
 
           <div className="mt-5">
-            <div className={`h-3 rounded-full ${colors.surface} overflow-hidden`}>
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${accent.bg}`}
-                style={{ width: `${Math.min(rate, 100)}%` }}
-              />
-            </div>
+            {period === 'today' && current.hourlySlots && current.hourlySlots.length > 0 ? (
+              <>
+                {/* Mapa hora a hora do expediente — cheio = accent, livre = superfície */}
+                <div className="flex gap-1" aria-hidden="true">
+                  {current.hourlySlots.map((slot) => (
+                    <div
+                      key={slot.hour}
+                      title={`${String(slot.hour).padStart(2, '0')}h — ${slot.busy ? 'ocupado' : 'livre'}`}
+                      className={`h-8 flex-1 rounded-md transition-colors ${
+                        slot.busy
+                          ? `${accent.bgDim} border border-[var(--color-accent-border)]`
+                          : `${colors.surface}`
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className={`mt-1.5 flex items-center justify-between text-xs font-mono ${colors.textMuted}`}>
+                  <span>{String(current.hourlySlots[0].hour).padStart(2, '0')}h</span>
+                  <span>{String(current.hourlySlots[current.hourlySlots.length - 1].hour + 1).padStart(2, '0')}h</span>
+                </div>
+              </>
+            ) : (
+              <div className={`h-3 rounded-full ${colors.surface} overflow-hidden`}>
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ease-out ${accent.bg}`}
+                  style={{ width: `${Math.min(rate, 100)}%` }}
+                />
+              </div>
+            )}
             <div className="mt-2 flex items-center justify-between text-xs font-mono">
               <span className={colors.textSecondary}>
                 {formatDuration(current.occupiedMinutes)} ocupados

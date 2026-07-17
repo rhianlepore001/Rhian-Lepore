@@ -172,7 +172,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <main className="flex-1 min-w-0 min-h-screen flex flex-col w-full max-w-[100vw]">
 
                 {/* Mobile Header + Sticky Nav - PRO MAX REVITALIZATION */}
-                <div className={`md:hidden sticky top-0 z-30 border-b bg-[var(--color-bg)] ${colors.divider}`}>
+                <div className={`md:hidden sticky top-16 z-30 border-b bg-[var(--color-bg)] ${colors.divider}`}>
                     {/* Top Bar */}
                     <div className="flex items-center justify-between px-6 py-4">
                         <div className="flex items-center gap-4">

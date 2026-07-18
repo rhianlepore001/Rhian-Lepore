@@ -25,7 +25,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
 }) => {
     if (data.length === 0) {
         return (
-            <div className="text-center py-12 text-neutral-500">
+            <div className="text-center py-12 text-theme-textSecondary">
                 <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Sem dados históricos disponíveis</p>
             </div>
@@ -48,7 +48,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         <Award className="w-5 h-5 text-green-500" />
                         <p className="text-xs font-mono text-green-500 uppercase">Melhor Mês</p>
                     </div>
-                    <p className="text-lg font-heading text-white">
+                    <p className="text-lg font-heading text-theme-text">
                         {bestMonth.month} {bestMonth.year}
                     </p>
                     <p className="text-sm text-green-500 font-mono">
@@ -61,7 +61,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         <TrendingUp className={`w-5 h-5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                         <p className={`text-xs font-mono ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} uppercase`}>Crescimento Médio</p>
                     </div>
-                    <p className="text-lg font-heading text-white">
+                    <p className="text-lg font-heading text-theme-text">
                         {avgGrowth > 0 ? '+' : ''}{avgGrowth.toFixed(1)}%
                     </p>
                     <p className={`text-sm ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} font-mono`}>
@@ -74,7 +74,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         <TrendingUp className="w-5 h-5 text-blue-500" />
                         <p className="text-xs font-mono text-blue-500 uppercase">Receita Total</p>
                     </div>
-                    <p className="text-lg font-heading text-white">
+                    <p className="text-lg font-heading text-theme-text">
                         12 meses
                     </p>
                     <p className="text-sm text-blue-500 font-mono">
@@ -87,7 +87,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="border-b-2 border-neutral-800 text-text-secondary font-mono text-xs uppercase">
+                        <tr className="border-b-2 border-[var(--color-divider)] text-text-secondary font-mono text-xs uppercase">
                             <th className="p-3">Período</th>
                             <th className="p-3 text-right">Receita</th>
                             <th className="p-3 text-right">Despesas</th>
@@ -95,7 +95,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                             <th className="p-3 text-right">Crescimento</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-neutral-800">
+                    <tbody className="divide-y divide-[var(--color-divider)]">
                         {data.map((month, index) => {
                             const isBest = month.month === bestMonth.month && month.year === bestMonth.year;
                             const isWorst = month.month === worstMonth.month && month.year === worstMonth.year;
@@ -103,11 +103,11 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                             return (
                                 <tr
                                     key={`${month.month}-${month.year}`}
-                                    className={`hover:bg-white/5 transition-colors ${isBest ? 'bg-green-500/5' : isWorst ? 'bg-red-500/5' : ''}`}
+                                    className={`hover:bg-[var(--color-card-hover)] transition-colors ${isBest ? 'bg-green-500/5' : isWorst ? 'bg-red-500/5' : ''}`}
                                 >
                                     <td className="p-3">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium">{month.month} {month.year}</span>
+                                            <span className="text-theme-text font-medium">{month.month} {month.year}</span>
                                             {isBest && <Award className="w-4 h-4 text-green-500" />}
                                         </div>
                                     </td>

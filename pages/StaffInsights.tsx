@@ -106,14 +106,14 @@ export const StaffInsights: React.FC = () => {
     if (!teamMemberId) {
         return (
             <div className="p-6 md:p-8">
-                <h1 className="font-heading text-2xl uppercase text-white tracking-tight mb-6">
+                <h1 className="font-heading text-2xl uppercase text-theme-text tracking-tight mb-6">
                     Meus Resultados
                 </h1>
                 <Card>
                     <div className="text-center py-10">
-                        <TrendingUp className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-                        <p className="text-white font-heading uppercase text-lg mb-2">Vinculação pendente</p>
-                        <p className="text-neutral-500 font-mono text-sm">
+                        <TrendingUp className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+                        <p className="text-theme-text font-heading uppercase text-lg mb-2">Vinculação pendente</p>
+                        <p className="text-theme-textSecondary font-mono text-sm">
                             Você ainda não tem agendamentos registrados.<br />
                             Aguarde o owner vincular seu perfil à equipe.
                         </p>
@@ -127,7 +127,7 @@ export const StaffInsights: React.FC = () => {
         <div className="p-6 md:p-8 space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="font-heading text-2xl uppercase text-white tracking-tight">
+                <h1 className="font-heading text-2xl uppercase text-theme-text tracking-tight">
                     Meus Resultados
                     {fullName && <span className="text-accent-gold"> — {fullName.split(' ')[0]}</span>}
                 </h1>
@@ -141,7 +141,7 @@ export const StaffInsights: React.FC = () => {
                             className={`px-3 py-1.5 min-h-[44px] text-xs font-mono uppercase tracking-wider border-2 rounded-lg transition-all ${
                                 period === p
                                     ? 'bg-accent-gold text-black border-accent-gold shadow-gold'
-                                    : 'border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-white'
+                                    : 'border-[var(--color-input-border)] text-theme-textSecondary hover:border-[var(--color-text-muted)] hover:text-theme-text'
                             }`}
                         >
                             {{ day: 'Hoje', week: 'Semana', month: 'Mês' }[p]}
@@ -158,26 +158,26 @@ export const StaffInsights: React.FC = () => {
                             <Calendar className="w-5 h-5 text-accent-gold" />
                         </div>
                         <div>
-                            <p className="text-neutral-500 font-mono text-xs uppercase">Atendimentos</p>
+                            <p className="text-theme-textSecondary font-mono text-xs uppercase">Atendimentos</p>
                             <p className="text-3xl font-heading text-accent-gold font-bold">
                                 {loading ? '—' : completedCount}
                             </p>
-                            <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>
+                            <p className="text-[var(--color-text-muted)] font-mono text-xs">{periodLabel}</p>
                         </div>
                     </div>
                 </Card>
 
                 <Card>
                     <div className="flex items-start gap-4">
-                        <div className="p-2.5 bg-white/5 rounded-xl">
-                            <Users className="w-5 h-5 text-neutral-400" />
+                        <div className="p-2.5 bg-theme-surface rounded-xl">
+                            <Users className="w-5 h-5 text-theme-textSecondary" />
                         </div>
                         <div>
-                            <p className="text-neutral-500 font-mono text-xs uppercase">Clientes únicos</p>
-                            <p className="text-3xl font-heading text-white font-bold">
+                            <p className="text-theme-textSecondary font-mono text-xs uppercase">Clientes únicos</p>
+                            <p className="text-3xl font-heading text-theme-text font-bold">
                                 {loading ? '—' : uniqueClients}
                             </p>
-                            <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>
+                            <p className="text-[var(--color-text-muted)] font-mono text-xs">{periodLabel}</p>
                         </div>
                     </div>
                 </Card>
@@ -188,11 +188,11 @@ export const StaffInsights: React.FC = () => {
                             <DollarSign className="w-5 h-5 text-accent-gold" />
                         </div>
                         <div>
-                            <p className="text-neutral-500 font-mono text-xs uppercase">Comissões</p>
+                            <p className="text-theme-textSecondary font-mono text-xs uppercase">Comissões</p>
                             <p className="text-3xl font-heading text-accent-gold font-bold">
                                 {loading ? '—' : formatCurrency(commissions)}
                             </p>
-                            <p className="text-neutral-600 font-mono text-xs">{periodLabel}</p>
+                            <p className="text-[var(--color-text-muted)] font-mono text-xs">{periodLabel}</p>
                         </div>
                     </div>
                 </Card>
@@ -202,21 +202,21 @@ export const StaffInsights: React.FC = () => {
                 {/* Próximos agendamentos do dia */}
                 <Card title="Próximos Hoje">
                     {loading ? (
-                        <p className="text-neutral-600 font-mono text-sm">Carregando...</p>
+                        <p className="text-[var(--color-text-muted)] font-mono text-sm">Carregando...</p>
                     ) : todayAppointments.length === 0 ? (
                         <div className="text-center py-6">
-                            <Clock className="w-8 h-8 text-neutral-700 mx-auto mb-2" />
-                            <p className="text-neutral-600 font-mono text-sm">Nenhum agendamento para hoje</p>
+                            <Clock className="w-8 h-8 text-[var(--color-text-muted)] mx-auto mb-2" />
+                            <p className="text-[var(--color-text-muted)] font-mono text-sm">Nenhum agendamento para hoje</p>
                         </div>
                     ) : (
                         <ul className="space-y-3">
                             {todayAppointments.map((apt) => (
-                                <li key={apt.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                <li key={apt.id} className="flex items-center justify-between py-2 border-b border-[var(--color-divider)] last:border-0">
                                     <div>
-                                        <p className="text-white text-sm font-medium">
+                                        <p className="text-theme-text text-sm font-medium">
                                             {apt.clients?.name || 'Cliente'}
                                         </p>
-                                        <p className="text-neutral-500 font-mono text-xs">{apt.service}</p>
+                                        <p className="text-theme-textSecondary font-mono text-xs">{apt.service}</p>
                                     </div>
                                     <span className="text-accent-gold font-mono text-xs font-bold">
                                         {new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -230,19 +230,19 @@ export const StaffInsights: React.FC = () => {
                 {/* Top serviços do mês */}
                 <Card title="Top Serviços do Mês">
                     {loading ? (
-                        <p className="text-neutral-600 font-mono text-sm">Carregando...</p>
+                        <p className="text-[var(--color-text-muted)] font-mono text-sm">Carregando...</p>
                     ) : topServices.length === 0 ? (
                         <div className="text-center py-6">
-                            <Scissors className="w-8 h-8 text-neutral-700 mx-auto mb-2" />
-                            <p className="text-neutral-600 font-mono text-sm">Nenhum serviço realizado</p>
+                            <Scissors className="w-8 h-8 text-[var(--color-text-muted)] mx-auto mb-2" />
+                            <p className="text-[var(--color-text-muted)] font-mono text-sm">Nenhum serviço realizado</p>
                         </div>
                     ) : (
                         <ol className="space-y-3">
                             {topServices.map(([service, count], i) => (
-                                <li key={service} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                <li key={service} className="flex items-center justify-between py-2 border-b border-[var(--color-divider)] last:border-0">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-neutral-600 font-heading text-sm w-5">{i + 1}.</span>
-                                        <span className="text-white text-sm">{service}</span>
+                                        <span className="text-[var(--color-text-muted)] font-heading text-sm w-5">{i + 1}.</span>
+                                        <span className="text-theme-text text-sm">{service}</span>
                                     </div>
                                     <span className="text-accent-gold font-mono text-xs font-bold">
                                         {count as number}x

@@ -378,7 +378,7 @@ export const UiPreview: React.FC = () => {
                     onRowClick={(user) => setSelectedUser(user)}
                     emptyMessage="Nenhum usuário cadastrado neste preview de testes."
                     mobileRender={(user) => (
-                      <div className="p-4 border rounded-xl bg-white/5 space-y-2">
+                      <div className="p-4 border rounded-xl bg-theme-surface space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="font-bold">{user.name}</span>
                           <Badge variant={user.role === 'admin' ? 'accent' : 'neutral'}>{user.role}</Badge>
@@ -395,9 +395,9 @@ export const UiPreview: React.FC = () => {
                   />
 
                   {selectedUser && (
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center">
+                    <div className="p-4 rounded-xl bg-theme-surface border border-[var(--color-divider)] flex justify-between items-center">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Linha Selecionada (onClick):</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-theme-textSecondary">Linha Selecionada (onClick):</p>
                         <p className="text-sm font-bold">{selectedUser.name} ({selectedUser.email})</p>
                       </div>
                       <Button size="sm" variant="ghost" onClick={() => setSelectedUser(null)}>
@@ -485,10 +485,10 @@ export const UiPreview: React.FC = () => {
             <p className="text-sm">
               Este modal foi renderizado através de um Portal do React no body.
             </p>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
+            <div className="p-4 rounded-xl bg-theme-surface border border-[var(--color-divider)] flex items-center gap-3">
               <CheckCircle className="text-emerald-400 w-8 h-8 shrink-0" />
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Acessibilidade Garantida</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-theme-textSecondary">Acessibilidade Garantida</p>
                 <p className="text-xs text-text-secondary">Pressione ESC para sair ou clique no fundo de overlay.</p>
               </div>
             </div>

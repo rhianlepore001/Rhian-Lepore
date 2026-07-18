@@ -153,7 +153,7 @@ export const MembershipPlansSettings: React.FC = () => {
                 </header>
 
                 {!isBeauty && (
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                    <div className={`flex items-center gap-2 text-xs ${colors.textMuted}`}>
                         <a href="#/configuracoes/clube/pix" className={`${accent.text} underline`}>← Configurar Pix</a>
                     </div>
                 )}
@@ -169,7 +169,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleEdit(plan)}
-                                        className="p-2 rounded-lg bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm transition-colors"
+                                        className="p-2 rounded-lg bg-[color-mix(in_srgb,var(--color-bg)_60%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-bg)_80%,transparent)] text-theme-text backdrop-blur-sm transition-colors"
                                         aria-label="Editar plano"
                                     >
                                         <Edit2 className="w-3.5 h-3.5" />
@@ -188,7 +188,7 @@ export const MembershipPlansSettings: React.FC = () => {
                     </div>
                 ) : (
                     <div className={`${colors.card} ${colors.border} border rounded-2xl p-12 text-center space-y-3`}>
-                        <Users className="w-12 h-12 mx-auto text-neutral-600" />
+                        <Users className={`w-12 h-12 mx-auto ${colors.textMuted}`} />
                         <p className={`${colors.text} text-lg font-bold uppercase`}>Nenhum plano ainda</p>
                         <p className={`${colors.textSecondary} text-sm`}>
                             Crie seu primeiro plano para começar a receber assinaturas.
@@ -307,7 +307,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                                     onClick={() => toggleService(s.id)}
                                                     className={[
                                                         'w-full text-left p-2 rounded-lg text-sm flex items-center gap-2 transition-colors',
-                                                        selected ? `${accent.bgDim} ${colors.text}` : `${colors.textSecondary} hover:bg-white/5`,
+                                                        selected ? `${accent.bgDim} ${colors.text}` : `${colors.textSecondary} ${colors.surfaceHover}`,
                                                     ].join(' ')}
                                                 >
                                                     <span className={[

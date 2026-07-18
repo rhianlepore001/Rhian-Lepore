@@ -118,7 +118,7 @@ export const TeamSettings: React.FC = () => {
                                     w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-mono text-sm uppercase transition-all
                                     ${copiedLink
                                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                        : `${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} hover:border-[var(--color-accent-border)]`
+                                        : `${colors.inputBg} hover:bg-[var(--color-card-hover)] ${colors.text} ${colors.border} hover:border-[var(--color-accent-border)]`
                                     }
                                 `}
                             >
@@ -146,7 +146,7 @@ export const TeamSettings: React.FC = () => {
                 ) : cardMembers.length === 0 ? (
                     <Card className="p-12 text-center border-dashed">
                         <div className={`w-20 h-20 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-6 border ${colors.border}`}>
-                            <UserCheck className="w-10 h-10 text-neutral-500" />
+                            <UserCheck className="w-10 h-10 text-[var(--color-text-muted)]" />
                         </div>
                         <h3 className={`text-2xl font-heading ${colors.text} uppercase mb-3`}>
                             Comece sua equipe
@@ -156,7 +156,7 @@ export const TeamSettings: React.FC = () => {
                         </p>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className={`px-8 py-4 ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border ${colors.border}`}
+                            className={`px-8 py-4 ${colors.inputBg} hover:bg-[var(--color-card-hover)] ${colors.text} font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border ${colors.border}`}
                         >
                             Cadastrar Primeiro Perfil
                         </button>

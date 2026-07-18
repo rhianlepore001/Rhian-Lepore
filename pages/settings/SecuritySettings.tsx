@@ -89,9 +89,9 @@ export const SecuritySettings: React.FC = () => {
                                         <div className="space-y-4">
                                             <h4 className={`${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] mb-4`}>Métodos Verificados</h4>
                                             {factors.map(factor => (
-                                                <div key={factor.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:bg-white/10 transition-all">
+                                                <div key={factor.id} className={`${colors.surface} border ${colors.divider} p-4 rounded-2xl flex justify-between items-center group hover:bg-[var(--color-card-hover)] transition-all`}>
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5">
+                                                        <div className={`w-10 h-10 rounded-xl ${colors.inputBg} flex items-center justify-center border ${colors.divider}`}>
                                                             <Smartphone className={`w-5 h-5 ${colors.textSecondary}`} />
                                                         </div>
                                                         <div>

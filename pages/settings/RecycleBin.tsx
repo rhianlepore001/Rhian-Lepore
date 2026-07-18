@@ -132,11 +132,11 @@ export const RecycleBin: React.FC = () => {
                             <p className={`${colors.textSecondary} text-sm`}>Nenhum item deletado recentemente</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-neutral-800">
+                        <div className="divide-y divide-[var(--color-divider)]">
                             {items.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="p-4 hover:bg-white/5 transition-colors"
+                                    className="p-4 hover:bg-[var(--color-card-hover)] transition-colors"
                                 >
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3 flex-1">

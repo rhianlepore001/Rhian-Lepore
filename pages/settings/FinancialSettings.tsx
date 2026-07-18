@@ -9,7 +9,7 @@ import { SettingsSwitch } from '../../components/SettingsSwitch';
 
 export const FinancialSettings: React.FC = () => {
   const { companyId } = useAuth();
-  const { isBeauty, accent, colors, classes } = useBrutalTheme();
+  const { accent, colors, classes } = useBrutalTheme();
   const { data: settings, isLoading } = useBusinessSettings();
   const updateSettingsMutation = useUpdateBusinessSettings();
 
@@ -43,7 +43,7 @@ export const FinancialSettings: React.FC = () => {
     return (
       <SettingsLayout>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+          <Loader2 className={`w-6 h-6 animate-spin ${colors.textSecondary}`} />
         </div>
       </SettingsLayout>
     );

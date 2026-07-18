@@ -398,7 +398,7 @@ export const AuditLogs: React.FC = () => {
                           </div>
                         ) : shot ? (
                           <a href={shot} target="_blank" rel="noopener noreferrer" className="block">
-                            <img src={shot} alt="Imagem do problema" className={`w-full max-h-72 object-contain ${radius.input} border ${colors.border} bg-black/20`} />
+                            <img src={shot} alt="Imagem do problema" className={`w-full max-h-72 object-contain ${radius.input} border ${colors.border} ${colors.surface}`} />
                           </a>
                         ) : (
                           <span className={`text-xs ${colors.textMuted}`}>Não consegui carregar a imagem.</span>

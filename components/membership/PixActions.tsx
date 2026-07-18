@@ -51,7 +51,7 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
 
     if (isLoading) {
         return (
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
+            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                 <Loader2 className="w-3 h-3 animate-spin" /> Pix...
             </div>
         );

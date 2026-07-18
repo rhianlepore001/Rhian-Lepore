@@ -113,7 +113,7 @@ export const SubscriptionSettings: React.FC = () => {
                 </div>
 
                 {/* Status Atual */}
-                <div className={`p-6 mb-8 transition-all ${isBeauty ? 'bg-beauty-dark/30 border border-beauty-neon/20 rounded-xl' : 'bg-neutral-900 border-2 border-neutral-800 rounded-lg'}`}>
+                <div className={`p-6 mb-8 transition-all bg-theme-card ${isBeauty ? 'border border-[var(--color-divider)] rounded-xl' : 'border-2 border-[var(--color-divider)] rounded-lg'}`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
                             <div className={`p-4 rounded-full ${isBeauty ? 'bg-beauty-neon/10 text-beauty-neon' : 'bg-accent-gold/10 text-accent-gold'}`}>

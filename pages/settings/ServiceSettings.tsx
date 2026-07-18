@@ -17,7 +17,7 @@ import type { ServiceItem } from '@/types/serviceSettings';
 export const ServiceSettings: React.FC = () => {
     const { companyId, user, region } = useAuth();
     const effectiveCompanyId = companyId ?? user?.id ?? null;
-    const { accent, colors, classes, isBeauty } = useBrutalTheme();
+    const { accent, colors, classes } = useBrutalTheme();
     const { categories, services, loading, refetch } = useServiceSettings(effectiveCompanyId);
     const createCategory = useCreateServiceCategory();
     const deleteCategory = useDeleteServiceCategory();
@@ -141,7 +141,7 @@ export const ServiceSettings: React.FC = () => {
                                             categoryServices.map(service => (
                                                 <div
                                                     key={service.id}
-                                                    className={`p-4 flex items-center gap-4 hover:bg-white/5 transition-all group cursor-pointer active:scale-[0.99]`}
+                                                    className={`p-4 flex items-center gap-4 hover:bg-[var(--color-card-hover)] transition-all group cursor-pointer active:scale-[0.99]`}
                                                     onClick={() => {
                                                         setEditingService(service);
                                                         setIsServiceModalOpen(true);
@@ -156,7 +156,7 @@ export const ServiceSettings: React.FC = () => {
                                                                 <img src={service.image_url} alt={service.name} className="relative z-10 max-w-full max-h-full object-cover" />
                                                             </>
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-white/10">
+                                                            <div className={`w-full h-full flex items-center justify-center ${colors.textMuted} opacity-40`}>
                                                                 <Package className="w-6 h-6" />
                                                             </div>
                                                         )}
@@ -198,16 +198,13 @@ export const ServiceSettings: React.FC = () => {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setIsCategoryModalOpen(false)}
-                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'}`}
+                                className={`px-4 py-2 rounded-lg ${classes.buttonGhost}`}
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleAddCategory}
-                                className={`px-5 py-2.5 font-bold transition-all ${isBeauty
-                                    ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white rounded-xl hover:shadow-neon'
-                                    : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
-                                    }`}
+                                className={`px-5 py-2.5 ${classes.buttonPrimary}`}
                             >
                                 Salvar
                             </button>
@@ -220,11 +217,8 @@ export const ServiceSettings: React.FC = () => {
                         onChange={e => setNewCategoryName(e.target.value)}
                         placeholder="Ex: Cabelo, Barba, Tratamentos..."
                         className={`
-                            w-full p-3 outline-none transition-all duration-300
-                            ${isBeauty
-                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                                : 'bg-neutral-800 border-2 border-neutral-700 focus:border-accent-gold'
-                            }
+                            w-full p-3 outline-none transition-all duration-300 rounded-lg
+                            ${colors.inputBg} border ${colors.inputBorder} focus:border-theme-accent
                             ${colors.text}
                         `}
                         autoFocus

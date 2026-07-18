@@ -40,7 +40,7 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
       <div
         className={`
           ${sizeClasses[size]}
-          bg-white/[0.04] border border-white/10 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-input-focus)] rounded-full peer
+          bg-theme-surface border border-[var(--color-input-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-input-focus)] rounded-full peer
           peer-checked:after:translate-x-full peer-checked:after:border-white after:content-['']
           after:absolute after:bg-white after:rounded-full after:transition-all after:duration-200 after:ease-out
           peer-checked:bg-theme-accent

@@ -111,8 +111,8 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
                     />
                 </div>
             ) : (
-                <div className="w-64 h-64 mx-auto bg-white/5 rounded-xl flex items-center justify-center">
-                    <span className="text-neutral-500 text-sm">Gerando QR…</span>
+                <div className="w-64 h-64 mx-auto bg-theme-surface rounded-xl flex items-center justify-center">
+                    <span className="text-[var(--color-text-muted)] text-sm">Gerando QR…</span>
                 </div>
             )}
 
@@ -125,7 +125,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
                     onClick={handleCopy}
                     className={[
                         'w-full text-left p-3 rounded-xl text-xs font-mono break-all',
-                        'bg-white/5 hover:bg-white/10',
+                        'bg-theme-surface hover:bg-[var(--color-card-hover)]',
                         colors.border,
                         'border',
                         colors.textSecondary,

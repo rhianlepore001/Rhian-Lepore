@@ -343,7 +343,7 @@ export const GeneralSettings: React.FC = () => {
                                     px-3 py-2 rounded-xl text-sm border transition-all active:scale-[0.97]
                                     ${policyTemplate === template.id
                                         ? `${accent.bgDim} ${accent.borderDim} ${accent.text} ${accent.shadow}`
-                                        : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-textSecondary hover:bg-white/[0.06]`
+                                        : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-textSecondary hover:bg-[var(--color-card-hover)]`
                                     }
                                 `}
                             >

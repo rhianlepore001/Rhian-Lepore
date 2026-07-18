@@ -185,7 +185,7 @@ export const MembershipSettings: React.FC = () => {
                     <h2 className={`${font.heading} ${colors.text} text-lg uppercase`}>Próximos passos</h2>
                     <ol className={`${colors.textSecondary} text-sm space-y-2 list-decimal list-inside`}>
                         <li>Crie seus planos em <a href="#/configuracoes/clube" className={`${accent.text} underline`}>Configurações &gt; Clube &gt; Planos</a></li>
-                        <li>Compartilhe o link <code className="px-1.5 py-0.5 bg-white/5 rounded text-xs">/#/clube/[seu-slug]</code> com clientes</li>
+                        <li>Compartilhe o link <code className={`px-1.5 py-0.5 ${colors.surface} rounded text-xs`}>/#/clube/[seu-slug]</code> com clientes</li>
                         <li>Confirme pagamentos manuais na <a href="#/clube/assinantes" className={`${accent.text} underline`}>lista de assinantes</a></li>
                     </ol>
                 </section>

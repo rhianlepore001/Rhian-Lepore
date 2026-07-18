@@ -57,7 +57,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
             <div className="relative p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${style.gradient} text-white`}>
+                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${style.gradient} ${colors.text}`}>
                         {style.icon}
                     </div>
                     {!compact && plan.active && (
@@ -68,14 +68,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                 </div>
 
                 <div>
-                    <h3 className={`text-xl ${font.heading} text-white uppercase tracking-tight`}>{plan.name}</h3>
+                    <h3 className={`text-xl ${font.heading} ${colors.text} uppercase tracking-tight`}>{plan.name}</h3>
                     {plan.description && (
                         <p className={`${colors.textSecondary} text-sm mt-1.5 leading-relaxed`}>{plan.description}</p>
                     )}
                 </div>
 
                 <div className="flex items-baseline gap-1">
-                    <span className={`text-4xl ${font.heading} text-white`}>
+                    <span className={`text-4xl ${font.heading} ${colors.text}`}>
                         {formatCurrency(plan.price_cents / 100, region)}
                     </span>
                     <span className={`${colors.textMuted} text-sm`}>/mês</span>
@@ -99,7 +99,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                             'w-full mt-2 py-3 px-4 rounded-xl font-bold uppercase tracking-wide text-sm',
                             'transition-all active:scale-95',
                             colors.text,
-                            'bg-white/5 hover:bg-white/10',
+                            'bg-theme-surface hover:bg-[var(--color-card-hover)]',
                             colors.border,
                             'border',
                         ].join(' ')}

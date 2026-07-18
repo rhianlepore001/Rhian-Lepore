@@ -71,7 +71,7 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
                     className={`
                         w-16 h-16 flex items-center justify-center rounded-full font-bold shadow-lg transition-all transform hover:scale-105
                         ${disabled
-                            ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                            ? 'bg-theme-surface text-[var(--color-text-muted)] cursor-not-allowed'
                             : `${accent.bg} text-[var(--color-bg)] hover:brightness-110`
                         }
                     `}
@@ -82,14 +82,14 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
             </div>
 
             {/* Mobile Sticky Footer */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-neutral-900/95 backdrop-blur border-t border-neutral-800 z-50">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-theme-card/95 backdrop-blur border-t border-[var(--color-divider)] z-50">
                 <button
                     onClick={onSave}
                     disabled={disabled}
                     className={`
                         w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all
                         ${disabled
-                            ? 'bg-neutral-800 text-neutral-500'
+                            ? 'bg-theme-surface text-[var(--color-text-muted)]'
                             : `${accent.bg} text-[var(--color-bg)]`
                         }
                     `}

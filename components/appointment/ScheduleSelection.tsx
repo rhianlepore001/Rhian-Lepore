@@ -108,7 +108,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             {/* Left: Professionals & Date */}
             <div className="md:w-1/3 space-y-6">
                 <div>
-                    <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                    <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
                         <User className="w-4 h-4" /> Profissional
                     </h4>
                     <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
@@ -117,18 +117,18 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                 key={member.id}
                                 onClick={() => setSelectedProId(member.id)}
                                 className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left
-                                    ${selectedProId === member.id ? activeCardBg : `${cardBg} hover:border-white/30`}
+                                    ${selectedProId === member.id ? activeCardBg : `${cardBg} hover:border-[var(--color-input-border)]`}
                                 `}
                             >
                                 {member.photo_url ? (
-                                    <img src={member.photo_url} className="w-10 h-10 rounded-full object-cover border border-black/20" />
+                                    <img src={member.photo_url} className="w-10 h-10 rounded-full object-cover border border-[var(--color-divider)]" />
                                 ) : (
-                                    <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-full bg-[var(--color-card-hover)] flex items-center justify-center">
                                         <User className="w-5 h-5" />
                                     </div>
                                 )}
                                 <div>
-                                    <p className={`font-bold leading-tight ${selectedProId === member.id ? (isBeauty ? 'text-beauty-dark' : 'text-black') : 'text-white'}`}>{member.name}</p>
+                                    <p className={`font-bold leading-tight ${selectedProId === member.id ? 'text-[var(--color-bg)]' : 'text-theme-text'}`}>{member.name}</p>
                                     <p className="text-xs opacity-70">Disponível</p>
                                 </div>
                             </button>
@@ -137,21 +137,21 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 </div>
 
                 <div>
-                    <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                    <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
                         <Calendar className="w-4 h-4" /> Data
                     </h4>
                     <div className={`p-4 rounded-xl border ${cardBg}`}>
                         <div className="flex items-center justify-between mb-4">
-                            <button onClick={() => changeDate(-1)} className="p-1 hover:bg-white/10 rounded"><ChevronLeft className="w-5 h-5 text-white" /></button>
-                            <span className="text-white font-bold uppercase">{selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-                            <button onClick={() => changeDate(1)} className="p-1 hover:bg-white/10 rounded"><ChevronRight className="w-5 h-5 text-white" /></button>
+                            <button onClick={() => changeDate(-1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronLeft className="w-5 h-5 text-theme-text" /></button>
+                            <span className="text-theme-text font-bold uppercase">{selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
+                            <button onClick={() => changeDate(1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronRight className="w-5 h-5 text-theme-text" /></button>
                         </div>
                         <div className="text-center">
                             <p className={`text-4xl font-heading text-theme-accent`}>{selectedDate.getDate()}</p>
-                            <p className="text-white uppercase text-sm mb-2">{selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
+                            <p className="text-theme-text uppercase text-sm mb-2">{selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
                             <button
                                 onClick={() => setSelectedDate(new Date())}
-                                className="text-xs underline text-neutral-500 hover:text-white"
+                                className="text-xs underline text-[var(--color-text-muted)] hover:text-theme-text"
                             >
                                 Ir para Hoje
                             </button>
@@ -162,23 +162,23 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
 
             {/* Right: Time Slots */}
             <div className="flex-1 flex flex-col">
-                <h4 className="text-white font-bold mb-3 flex items-center gap-2">
+                <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
                     <Clock className="w-4 h-4" /> Horários Disponíveis
                 </h4>
 
                 <div className={`flex-1 rounded-xl border ${cardBg} p-4 overflow-y-auto min-h-[300px]`}>
                     {!selectedProId ? (
-                        <div className="h-full flex flex-col items-center justify-center text-neutral-500 gap-2">
+                        <div className="h-full flex flex-col items-center justify-center text-[var(--color-text-muted)] gap-2">
                             <User className="w-10 h-10 opacity-20" />
                             <p>Selecione um profissional primeiro</p>
                         </div>
                     ) : isLoadingSlots ? (
-                        <div className="h-full flex flex-col items-center justify-center text-neutral-400 gap-2">
+                        <div className="h-full flex flex-col items-center justify-center text-theme-textSecondary gap-2">
                             <Loader2 className="w-8 h-8 animate-spin" />
                             <p>Buscando horários...</p>
                         </div>
                     ) : availableSlots.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-neutral-500 gap-2">
+                        <div className="h-full flex flex-col items-center justify-center text-[var(--color-text-muted)] gap-2">
                             <AlertTriangle className="w-10 h-10 opacity-20" />
                             <p>Nenhum horário disponível para esta data.</p>
                         </div>
@@ -192,7 +192,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                         py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
                                         ${selectedTime === time
                                             ? activeCardBg
-                                            : 'bg-black/20 border-white/5 text-white hover:border-white/30 hover:bg-white/5'
+                                            : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
                                         }
                                     `}
                                 >

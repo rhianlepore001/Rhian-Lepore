@@ -1394,7 +1394,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     </div>
 
                                     <div className={`mt-4 pt-4 ${colors.divider} border-t space-y-3`}>
-                                        <div className="flex items-center gap-3 text-xs text-neutral-300">
+                                        <div className={`flex items-center gap-3 text-xs ${colors.textSecondary}`}>
                                             <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
                                                 <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
@@ -1402,7 +1402,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 {booking.service_ids?.length || 0} serviço(s) • <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-neutral-300">
+                                        <div className={`flex items-center gap-3 text-xs ${colors.textSecondary}`}>
                                             <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
                                                 <User className={`w-3.5 h-3.5 ${accent.text}`} />
                                             </div>
@@ -1552,7 +1552,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 return (
                                                     <div
                                                         key={`${member.id}-${time}`}
-                                                        className={`flex-1 min-w-0 border-r ${colors.divider} last:border-r-0 p-1 flex flex-col gap-1 hover:bg-white/[0.02]`}
+                                                        className={`flex-1 min-w-0 border-r ${colors.divider} last:border-r-0 p-1 flex flex-col gap-1 hover:bg-[var(--color-card-hover)]`}
                                                     >
                                                         {allCellApts.map(apt => {
                                                             const isUnassigned = !apt.professional_id;

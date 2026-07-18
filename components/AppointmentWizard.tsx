@@ -75,12 +75,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
 
     // Styles
-    const modalBg = isBeauty
-        ? 'bg-gradient-to-br from-beauty-card via-neutral-900 to-beauty-dark border border-beauty-neon/30'
-        : 'bg-brutal-card border border-white/5';
+    const modalBg = 'bg-[var(--color-modal-bg)] border border-[var(--color-modal-border)]';
 
-    const cardBg = isBeauty ? 'bg-white/5 border-white/10' : 'bg-brutal-surface border-white/5';
-    const activeCardBg = isBeauty ? 'bg-beauty-neon/20 border-beauty-neon' : 'bg-accent-gold text-black border-accent-gold';
+    const cardBg = 'bg-theme-surface border-[var(--color-divider)]';
+    const activeCardBg = 'bg-theme-accent text-[var(--color-bg)] border-theme-accent';
 
     // --- STEP 2: SERVICES --- 
     const toggleService = (id: string) => {
@@ -261,18 +259,18 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     };
 
     return createPortal(
-        <div className={`fixed inset-0 md:left-64 flex items-center justify-center p-0 md:p-4 ${isBeauty ? 'bg-beauty-dark/95' : 'bg-black/90'} backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
+        <div className={`fixed inset-0 md:left-64 flex items-center justify-center p-0 md:p-4 ${colors.overlay} backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
             <div className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-promax-depth transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
 
                 {/* HEADER */}
-                <div className={`relative p-6 flex items-center justify-between border-b ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-white/5 bg-brutal-main/50'}`}>
+                <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)]`}>
                     <div>
                         <h2 className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
                             Novo Atendimento
                         </h2>
                         {(() => {
 const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
-                             const accentRing = isBeauty ? 'ring-beauty-neon ring-offset-beauty-dark' : 'ring-accent-gold ring-offset-brutal-main';
+                             const accentRing = 'ring-[var(--color-input-focus)] ring-offset-[var(--color-modal-bg)]';
                              return (
                                 <div className="flex items-center gap-0 mt-2 w-full max-w-xs">
                                     {STEPS.map((label, idx) => {
@@ -287,18 +285,18 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                                             ? `${accent.bg} border-0`
                                                             : isCurrent
                                                                 ? `ring-2 ring-offset-2 ${accentRing} bg-transparent`
-                                                                : 'border border-white/20 bg-transparent'
+                                                                : 'border border-[var(--color-input-border)] bg-transparent'
                                                     }`}>
-                                                        {isDone && <Check size={12} className="text-black" />}
+                                                        {isDone && <Check size={12} className="text-[var(--color-bg)]" />}
                                                         {isCurrent && <div className={`w-2 h-2 rounded-full ${accent.bg}`} />}
                                                     </div>
                                                     <span className={`hidden md:block text-xs font-mono uppercase tracking-wider mt-1 ${
                                                         isCurrent ? accent.text
-                                                        : isDone ? 'text-neutral-400' : 'text-neutral-600'
+                                                        : isDone ? colors.textSecondary : colors.textMuted
                                                     }`}>{label}</span>
                                                 </div>
                                                 {idx < STEPS.length - 1 && (
-                                                    <div className={`flex-1 h-px mx-1 mb-3 md:mb-5 ${step > n ? (isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40') : 'bg-white/10'}`} />
+                                                    <div className={`flex-1 h-px mx-1 mb-3 md:mb-5 ${step > n ? 'bg-[var(--color-accent-border)]' : 'bg-[var(--color-divider)]'}`} />
                                                 )}
                                             </React.Fragment>
                                         );
@@ -307,10 +305,10 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             );
                         })()}
                     </div>
-                    <button onClick={onClose} className={`p-2 hover:bg-white/10 rounded-full transition-colors ${colors.text}`}>
+                    <button onClick={onClose} className={`p-2 hover:bg-[var(--color-card-hover)] rounded-full transition-colors ${colors.text}`}>
                         <X className="w-6 h-6" />
                     </button>
-                    <div className={`absolute bottom-0 left-0 right-0 h-[2px] ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} aria-hidden="true" />
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--color-accent-border)]" aria-hidden="true" />
                 </div>
 
                 {/* CONTENT AREA */}
@@ -338,7 +336,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className={`text-2xl font-heading ${colors.text} uppercase tracking-tight`}>Menu de Serviços</h3>
-                                <p className="text-neutral-500 text-xs font-mono">
+                                <p className={`${colors.textMuted} text-xs font-mono`}>
                                     {services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length} Opções
                                 </p>
                             </div>

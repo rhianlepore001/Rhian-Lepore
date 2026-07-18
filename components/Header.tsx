@@ -195,7 +195,7 @@ export const Header: React.FC = () => {
                               setShowNotifications(false);
                             }
                           }}
-                          className={`p-3 hover:bg-white/5 border-b ${colors.divider} last:border-0 cursor-pointer transition-colors group ${alert.actionPath ? '' : 'cursor-default'} ${alert.type === 'danger' ? 'border-l-2 border-l-red-500 pl-2' : ''}`}
+                          className={`p-3 hover:bg-[var(--color-card-hover)] border-b ${colors.divider} last:border-0 cursor-pointer transition-colors group ${alert.actionPath ? '' : 'cursor-default'} ${alert.type === 'danger' ? 'border-l-2 border-l-red-500 pl-2' : ''}`}
                         >
                           <div className="flex items-start gap-2">
                             <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${alert.type === 'danger' ? 'text-red-600' :
@@ -249,14 +249,14 @@ export const Header: React.FC = () => {
               `}>
                   <button
                     onClick={() => { setShowProfileModal(true); setShowProfileMenu(false); }}
-                    className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-white/10 flex items-center gap-2`}
+                    className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-[var(--color-card-hover)] flex items-center gap-2`}
                   >
                     <UserIcon className="w-4 h-4" /> Meu Perfil
                   </button>
                   {role !== 'staff' && (
                     <button
                       onClick={() => { navigate('/configuracoes/geral'); setShowProfileMenu(false); }}
-                      className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-white/10 flex items-center gap-2`}
+                      className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-[var(--color-card-hover)] flex items-center gap-2`}
                     >
                       <Settings className="w-4 h-4" /> Configurações
                     </button>

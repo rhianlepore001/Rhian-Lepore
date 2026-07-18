@@ -20,7 +20,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className = '', variant = 'r
 };
 
 export const SkeletonCard: React.FC = () => (
-    <div className="p-6 rounded-[24px] border border-white/5 bg-white/5 space-y-4 overflow-hidden relative">
+    <div className="p-6 rounded-[24px] border border-[var(--color-divider)] bg-theme-surface space-y-4 overflow-hidden relative">
         <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent bg-[length:200%_100%]"></div>
         <Skeleton variant="text" className="w-1/2 mb-6" />
         <div className="space-y-3">

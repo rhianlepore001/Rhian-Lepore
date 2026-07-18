@@ -127,7 +127,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Selecionar país"
-                    className={`flex items-center gap-1 pl-3 pr-2 h-full shrink-0 border-r ${colors.inputBorder} hover:bg-white/5 transition-colors`}
+                    className={`flex items-center gap-1 pl-3 pr-2 h-full shrink-0 border-r ${colors.inputBorder} hover:bg-[var(--color-card-hover)] transition-colors`}
                 >
                     <span className="text-lg leading-none">{REGIONS[region].flag}</span>
                     <ChevronDown className={`w-3 h-3 ${colors.textMuted}`} />

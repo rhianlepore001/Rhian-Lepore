@@ -131,7 +131,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             relative overflow-hidden rounded-2xl transition-all duration-300 hover:translate-y-[-2px] hover:shadow-promax-glass
             ${isBeauty
                 ? 'bg-silk-card border border-silk-border shadow-silk-shadow hover:shadow-[0_14px_40px_rgba(0,0,0,0.2)]'
-                : 'bg-brutal-card border border-white/5 hover:border-white/10'
+                : 'bg-theme-card border border-white/5 hover:border-white/10'
             }
         `}>
             {/* Status bar — lateral esquerda */}
@@ -287,7 +287,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
             {/* Confirm cancel overlay */}
             {showConfirm && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl p-6 animate-in fade-in duration-200">
+                <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-2xl p-6 animate-in fade-in duration-200">
                     <div className="text-center space-y-4">
                         <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
                         <p className="text-white font-semibold text-sm">Cancelar este agendamento?</p>

@@ -30,7 +30,7 @@ const STATUS_LABELS: Record<MembershipStatus, { label: string; color: string }> 
     active: { label: 'Ativo', color: 'text-green-400' },
     pending: { label: 'Aguardando', color: 'text-amber-400' },
     overdue: { label: 'Atrasado', color: 'text-red-400' },
-    cancelled: { label: 'Cancelado', color: 'text-neutral-500' },
+    cancelled: { label: 'Cancelado', color: 'text-[var(--color-text-muted)]' },
 };
 
 export const MembersList: React.FC = () => {
@@ -149,7 +149,7 @@ export const MembersList: React.FC = () => {
                     ))}
                 </div>
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
                     <input
                         type="text"
                         value={search}

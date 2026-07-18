@@ -17,7 +17,7 @@ interface TabNavProps {
 export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accentBg, className }) => {
   return (
     <div className={`overflow-x-auto pb-1 -mb-1 ${className || ''}`}>
-      <div role="tablist" className="inline-flex bg-black/40 border border-white/[0.06] rounded-full p-1">
+      <div role="tablist" className="inline-flex bg-theme-surface border border-[var(--color-divider)] rounded-full p-1">
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -26,8 +26,8 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
             onClick={() => onChange(tab.id)}
             className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 font-mono text-xs uppercase tracking-wide transition-all duration-200 whitespace-nowrap ${
               activeTab === tab.id
-                ? `${accentBg} text-black font-semibold`
-                : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                ? `${accentBg} text-[var(--color-bg)] font-semibold`
+                : 'text-theme-textSecondary hover:text-theme-text hover:bg-[var(--color-card-hover)]'
             }`}
           >
             {tab.icon}

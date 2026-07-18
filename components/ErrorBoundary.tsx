@@ -33,7 +33,7 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
                 </p>
 
                 {error && process.env.NODE_ENV === 'development' && (
-                    <div className="bg-black/50 p-4 rounded mb-6 text-left overflow-auto max-h-40">
+                    <div className="bg-[var(--color-bg)] p-4 rounded mb-6 text-left overflow-auto max-h-40">
                         <code className="text-red-400 text-xs font-mono">
                             {error.toString()}
                         </code>

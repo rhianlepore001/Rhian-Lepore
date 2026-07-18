@@ -45,7 +45,7 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                     px-4 py-2.5 rounded-2xl text-xs font-semibold max-w-[200px] text-center leading-snug
                     animate-in fade-in slide-in-from-bottom-2 duration-200
                     ${isBeauty
-                        ? 'bg-white text-stone-700 shadow-lg border border-stone-100'
+                        ? 'bg-theme-card text-stone-700 shadow-lg border border-stone-100'
                         : 'bg-zinc-800 text-zinc-200 border border-zinc-700'
                     }
                 `}>

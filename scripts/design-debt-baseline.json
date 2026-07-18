@@ -1,6 +1,5 @@
 {
   "pages/Agenda.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
     "modal custom fixed inset-0 (use ui/Modal)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
@@ -9,101 +8,43 @@
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 4
   },
   "pages/ClientCRM.tsx": {
-    "text-white hardcoded (use colors.text)": 25,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 8,
+    "text-white hardcoded (use colors.text)": 2,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "pages/ClubDemo.tsx": {
-    "text-white hardcoded (use colors.text)": 11,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 12
-  },
-  "pages/Finance.tsx": {
-    "text-white hardcoded (use colors.text)": 9,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 16
   },
   "pages/ForgotPassword.tsx": {
     "text-white hardcoded (use colors.text)": 5,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
-  "pages/JoinClub.tsx": {
-    "text-white hardcoded (use colors.text)": 1
-  },
   "pages/Login.tsx": {
-    "text-white hardcoded (use colors.text)": 14,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
-  "pages/Marketing.tsx": {
-    "text-white hardcoded (use colors.text)": 7
-  },
-  "pages/MembersList.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
-  },
-  "pages/Placeholder.tsx": {
-    "text-white hardcoded (use colors.text)": 1
-  },
-  "pages/ProfessionalPortfolio.tsx": {
-    "text-white hardcoded (use colors.text)": 4,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
+    "text-white hardcoded (use colors.text)": 11,
+    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
   },
   "pages/PublicBooking.tsx": {
     "text-white hardcoded (use colors.text)": 1,
     "modal custom fixed inset-0 (use ui/Modal)": 4
   },
   "pages/QueueJoin.tsx": {
-    "text-white hardcoded (use colors.text)": 7,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 15,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
   "pages/QueueManagement.tsx": {
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
   },
   "pages/QueueStatus.tsx": {
-    "text-white hardcoded (use colors.text)": 5,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 7,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "pages/Register.tsx": {
-    "text-white hardcoded (use colors.text)": 4,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 9
-  },
-  "pages/Reports.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
-  "pages/StaffInsights.tsx": {
-    "text-white hardcoded (use colors.text)": 7,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 16
+    "text-white hardcoded (use colors.text)": 2
   },
   "pages/UpdatePassword.tsx": {
     "text-white hardcoded (use colors.text)": 5,
     "text-neutral hardcoded (use colors.textSecondary/textMuted)": 6
   },
-  "pages/settings/FinancialSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
   "pages/settings/MembershipPlansSettings.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
-  },
-  "pages/settings/PublicBookingSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
-  },
-  "pages/settings/ServiceSettings.tsx": {
-    "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "pages/settings/TeamSettings.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "pages/settings/UiPreview.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
+    "text-white hardcoded (use colors.text)": 1
   },
   "components/AIAssistantChat.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 2
-  },
-  "components/AISemanticInsights.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 6
   },
   "components/AddAuditEntryModal.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1
@@ -112,8 +53,6 @@
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/AppointmentWizard.tsx": {
-    "text-white hardcoded (use colors.text)": 4,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3,
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/BrandIdentitySection.tsx": {
@@ -130,8 +69,7 @@
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/BusinessGalleryManager.tsx": {
-    "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3
+    "text-white hardcoded (use colors.text)": 2
   },
   "components/ChatBubble.tsx": {
     "text-white hardcoded (use colors.text)": 4,
@@ -148,58 +86,34 @@
     "text-white hardcoded (use colors.text)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
-  "components/GoalHistory.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 12
-  },
   "components/Header.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/HelpButtons.tsx": {
-    "text-white hardcoded (use colors.text)": 7,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/Modal.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
-  "components/MonthYearSelector.tsx": {
-    "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/MonthlyHistory.tsx": {
-    "text-white hardcoded (use colors.text)": 4,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
   "components/MoreOptionsDrawer.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/OnboardingLayout.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/PaywallModal.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3,
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/PhoneInput.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/ProfessionalCommissionDetails.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 2
   },
-  "components/ProfessionalSelector.tsx": {
-    "text-white hardcoded (use colors.text)": 5,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 7
-  },
   "components/ProfileModal.tsx": {
     "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/PublicBusinessHeader.tsx": {
@@ -207,43 +121,27 @@
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 3
   },
   "components/QuickActionsModal.tsx": {
-    "text-white hardcoded (use colors.text)": 5,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/SaveFooter.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/Screw.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/SearchableSelect.tsx": {
-    "text-white hardcoded (use colors.text)": 5,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/ServiceModal.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
+    "text-white hardcoded (use colors.text)": 1,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/SettingsLayout.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1,
     "modal custom fixed inset-0 (use ui/Modal)": 1
   },
   "components/Sidebar.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1
-  },
-  "components/TabNav.tsx": {
-    "text-white hardcoded (use colors.text)": 1,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/TeamMemberCard.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
   "components/TeamMemberForm.tsx": {
     "text-white hardcoded (use colors.text)": 1
@@ -254,60 +152,15 @@
   "components/TrialBanner.tsx": {
     "text-white hardcoded (use colors.text)": 2
   },
-  "components/UpsellSection.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
   "components/appointment/AppointmentReview.tsx": {
-    "text-white hardcoded (use colors.text)": 10,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 14,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "components/appointment/CategoryFilter.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 2
-  },
-  "components/appointment/ClientSelection.tsx": {
-    "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
-  "components/appointment/ScheduleSelection.tsx": {
-    "text-white hardcoded (use colors.text)": 10,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
-  "components/appointment/ServiceList.tsx": {
-    "text-white hardcoded (use colors.text)": 7,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 7
-  },
-  "components/appointment/ServiceSearchBar.tsx": {
-    "text-white hardcoded (use colors.text)": 3,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 5
   },
   "components/booking/BookingModeToggle.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 2
   },
-  "components/dashboard/FinancialDoctorPanel.tsx": {
-    "text-white hardcoded (use colors.text)": 6
-  },
-  "components/dashboard/SmartRebooking.tsx": {
-    "text-white hardcoded (use colors.text)": 2
-  },
   "components/dashboard/modals/AIOSStrategyModal.tsx": {
-    "text-white hardcoded (use colors.text)": 6,
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "components/marketing/CampaignModal.tsx": {
-    "text-white hardcoded (use colors.text)": 3
-  },
-  "components/membership/PixActions.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/membership/PixDisplay.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/membership/PlanCard.tsx": {
-    "text-white hardcoded (use colors.text)": 3
   },
   "components/onboarding/ActivationBanner.tsx": {
     "text-white hardcoded (use colors.text)": 4,
@@ -317,26 +170,8 @@
     "text-white hardcoded (use colors.text)": 2,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 2
   },
-  "components/onboarding/StepBusinessHours.tsx": {
-    "text-white hardcoded (use colors.text)": 1
-  },
-  "components/onboarding/StepBusinessInfo.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
-  },
-  "components/onboarding/StepMonthlyGoal.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 8
-  },
   "components/onboarding/StepServices.tsx": {
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
-  },
-  "components/onboarding/StepSuccess.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 3
-  },
-  "components/onboarding/StepTeam.tsx": {
-    "text-white hardcoded (use colors.text)": 2,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 7
   },
   "components/onboarding/WizardEngine.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 2,
@@ -344,13 +179,6 @@
   },
   "components/onboarding/WizardOverlay.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1
-  },
-  "components/security/TwoFactorSetup.tsx": {
-    "text-white hardcoded (use colors.text)": 4,
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 4
-  },
-  "components/ui/ConfirmModal.tsx": {
-    "text-neutral hardcoded (use colors.textSecondary/textMuted)": 1
   },
   "components/ui/Modal.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1

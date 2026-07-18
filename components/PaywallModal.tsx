@@ -22,7 +22,7 @@ export const PaywallModal: React.FC = () => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/95 backdrop-blur-md" />
+            <div className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-md" />
 
             {/* Content */}
             <div className="relative w-full max-w-lg animate-in zoom-in-95 duration-300">
@@ -38,12 +38,12 @@ export const PaywallModal: React.FC = () => {
                             <Lock className="w-10 h-10" />
                         </div>
 
-                        <h2 className="text-2xl md:text-3xl font-heading text-white uppercase mb-4 leading-tight">
+                        <h2 className="text-2xl md:text-3xl font-heading text-theme-text uppercase mb-4 leading-tight">
                             Seu período de teste <br />
                             <span className={accent.text}>expirou</span>
                         </h2>
 
-                        <p className="text-neutral-400 text-sm md:text-base mb-8 max-w-sm mx-auto">
+                        <p className="text-theme-textSecondary text-sm md:text-base mb-8 max-w-sm mx-auto">
                             Esperamos que você tenha aproveitado esses 7 dias! Assine agora para continuar usando todas as ferramentas e não perder seus agendamentos.
                         </p>
 
@@ -59,13 +59,13 @@ export const PaywallModal: React.FC = () => {
 
                             <button
                                 onClick={logout}
-                                className="text-neutral-500 hover:text-white transition-colors text-xs uppercase font-mono flex items-center gap-2 mx-auto py-2"
+                                className="text-[var(--color-text-muted)] hover:text-theme-text transition-colors text-xs uppercase font-mono flex items-center gap-2 mx-auto py-2"
                             >
                                 <LogOut className="w-4 h-4" /> Sair da conta
                             </button>
                         </div>
 
-                        <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center gap-4 text-xs text-neutral-600 uppercase font-mono tracking-widest">
+                        <div className="mt-8 pt-8 border-t border-[var(--color-divider)] flex items-center justify-center gap-4 text-xs text-[var(--color-text-muted)] uppercase font-mono tracking-widest">
                             <Sparkles className="w-3 h-3" /> BE {isBeauty ? 'BEAUTY' : 'BARBER'} OS <Sparkles className="w-3 h-3" />
                         </div>
                     </div>

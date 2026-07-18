@@ -122,13 +122,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
 
                 <div className="flex justify-center mb-6">
                     <div
-                        className={`relative w-24 h-24 rounded-full bg-neutral-800 border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-neutral-700'} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
+                        className={`relative w-24 h-24 rounded-full bg-theme-surface border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-[var(--color-input-border)]'} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
                         onClick={() => fileInputRef.current?.click()}
                     >
                         {photoPreview ? (
                             <img src={photoPreview} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
-                            <UserIcon className="w-8 h-8 text-neutral-500" />
+                            <UserIcon className="w-8 h-8 text-[var(--color-text-muted)]" />
                         )}
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <Upload className="w-6 h-6 text-white" />

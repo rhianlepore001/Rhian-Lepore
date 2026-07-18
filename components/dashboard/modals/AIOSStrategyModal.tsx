@@ -40,13 +40,13 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+                className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-md animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
             {/* Modal */}
             <div className={`
-                relative w-full max-w-2xl bg-neutral-900 border-2 ${borderClass} 
+                relative w-full max-w-2xl bg-[var(--color-modal-bg)] border-2 ${borderClass}
                 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300
             `}>
                 {/* Header Gradient */}
@@ -59,11 +59,11 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
                                 <Zap className={`w-4 h-4 ${accentText} animate-pulse`} />
                                 <span className={`text-xs font-mono uppercase tracking-[0.3em] ${accentText}`}>AgendiX Success Playbook</span>
                             </div>
-                            <h2 className="text-2xl md:text-3xl font-heading text-white">Guia para Faturar Mais</h2>
+                            <h2 className="text-2xl md:text-3xl font-heading text-theme-text">Guia para Faturar Mais</h2>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-full bg-white/5 text-white/40 hover:text-white transition-colors"
+                            className="p-2 rounded-full bg-[var(--color-card-hover)] text-[var(--color-text-muted)] hover:text-theme-text transition-colors"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -73,16 +73,16 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
                         {playbooks.map((p, idx) => (
                             <div
                                 key={idx}
-                                className="group p-4 md:p-6 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300"
+                                className="group p-4 md:p-6 bg-theme-surface border border-[var(--color-divider)] rounded-2xl hover:bg-theme-card transition-all duration-300"
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className="mt-1 p-3 rounded-xl bg-black/40 border border-white/5 group-hover:scale-110 transition-transform">
+                                    <div className="mt-1 p-3 rounded-xl bg-theme-card border border-[var(--color-divider)] group-hover:scale-110 transition-transform">
                                         {p.icon}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
-                                            <h3 className="font-heading text-lg text-white">{p.title}</h3>
-                                            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-white/40 border border-white/5">
+                                            <h3 className="font-heading text-lg text-theme-text">{p.title}</h3>
+                                            <span className="text-[8px] font-mono px-2 py-0.5 rounded-full bg-[var(--color-card-hover)] text-[var(--color-text-muted)] border border-[var(--color-divider)]">
                                                 {p.tag}
                                             </span>
                                         </div>
@@ -95,11 +95,11 @@ export const AIOSStrategyModal: React.FC<AIOSStrategyModalProps> = ({ isOpen, on
                         ))}
                     </div>
 
-                    <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-theme-surface border border-[var(--color-divider)]">
                         <div className="flex items-center gap-4 text-left">
                             <Rocket className={`w-8 h-8 ${accentText} opacity-40`} />
                             <div>
-                                <p className="text-xs text-white uppercase font-bold tracking-widest mb-1">Dica Pro:</p>
+                                <p className="text-xs text-theme-text uppercase font-bold tracking-widest mb-1">Dica Pro:</p>
                                 <p className="text-xs text-text-secondary max-w-xs font-mono">
                                     Ative o 2FA para garantir que seus dados estratégicos estejam blindados.
                                 </p>

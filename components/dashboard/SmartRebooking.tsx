@@ -59,19 +59,19 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
     const nowCount = suggestions.filter(s => s.urgency === 'now').length;
 
     return (
-        <div className="rounded-2xl border border-white/8 bg-neutral-900/60 backdrop-blur-md overflow-hidden">
+        <div className="rounded-2xl border border-[var(--color-divider)] bg-theme-card backdrop-blur-md overflow-hidden">
             {/* Header */}
             <button
                 onClick={() => setExpanded(v => !v)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--color-card-hover)] transition-colors"
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-theme-surface flex items-center justify-center flex-shrink-0">
                         <RefreshCw className={`w-4 h-4 ${accentText}`} />
                     </div>
                     <div className="text-left">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-bold font-heading text-white">Clientes para chamar de volta</h3>
+                            <h3 className="text-sm font-bold font-heading text-theme-text">Clientes para chamar de volta</h3>
                             <InfoButton text="Baseado na frequência de visitas de cada cliente, calculamos quando é hora de entrar em contato para agendar o próximo atendimento." />
                         </div>
                         <p className="text-xs text-text-secondary font-mono">
@@ -102,14 +102,14 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ isBeauty, limit 
                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${config.bg}`}
                             >
                                 {/* Avatar */}
-                                <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0">
+                                <div className="w-9 h-9 rounded-full bg-theme-surface flex items-center justify-center flex-shrink-0">
                                     <User className="w-4 h-4 text-text-secondary" />
                                 </div>
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
-                                        <p className="text-sm font-semibold text-white truncate">{suggestion.clientName}</p>
+                                        <p className="text-sm font-semibold text-theme-text truncate">{suggestion.clientName}</p>
                                         <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded-full ${config.badgeBg}`}>
                                             {config.label}
                                         </span>

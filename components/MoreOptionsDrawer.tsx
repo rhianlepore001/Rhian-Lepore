@@ -141,7 +141,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
       aria-label="Menu de navegação"
     >
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity"
         onClick={handleClose}
         aria-hidden="true"
       />

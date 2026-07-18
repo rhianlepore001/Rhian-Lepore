@@ -58,10 +58,10 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
                 <div className={`w-16 h-16 rounded-full ${accentBg} flex items-center justify-center mx-auto mb-5 animate-bounce-slow`}>
                     <CheckCircle className={`w-8 h-8 ${accentClass}`} />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
+                <h2 className="text-2xl md:text-3xl font-heading text-theme-text uppercase mb-2">
                     Tudo Pronto
                 </h2>
-                <p className="text-neutral-400 text-sm max-w-xs mx-auto">
+                <p className="text-theme-textSecondary text-sm max-w-xs mx-auto">
                     Por onde quer começar?
                 </p>
             </div>
@@ -79,7 +79,7 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className={`font-heading font-bold uppercase text-sm ${accentClass}`}>{primary.label}</p>
-                    <p className="text-neutral-400 text-xs mt-0.5">{primary.description}</p>
+                    <p className="text-theme-textSecondary text-xs mt-0.5">{primary.description}</p>
                 </div>
                 <div className={`${accentClass} opacity-60 group-hover:opacity-100 transition-opacity`}>
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -92,12 +92,12 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
                     <button
                         key={step.path}
                         onClick={() => handleFinish(step.path)}
-                        className="flex flex-col items-center gap-2 p-3 bg-white/4 border border-white/8 rounded-lg hover:border-white/20 hover:bg-white/8 transition-all text-center group"
+                        className="flex flex-col items-center gap-2 p-3 bg-theme-surface border border-[var(--color-divider)] rounded-lg hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)] transition-all text-center group"
                     >
                         <div className={`${accentClass} opacity-70 group-hover:opacity-100 transition-opacity`}>
                             {step.icon}
                         </div>
-                        <p className="text-neutral-400 text-xs font-bold leading-tight group-hover:text-white transition-colors">{step.label}</p>
+                        <p className="text-theme-textSecondary text-xs font-bold leading-tight group-hover:text-theme-text transition-colors">{step.label}</p>
                     </button>
                 ))}
             </div>

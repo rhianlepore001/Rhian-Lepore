@@ -118,9 +118,9 @@ export const JoinClub: React.FC = () => {
 
     if (!slug) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 bg-black">
+            <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-bg)]">
                 <div className="text-center max-w-md">
-                    <p className="text-white text-lg">Link inválido. Solicite o link correto ao estabelecimento.</p>
+                    <p className="text-theme-text text-lg">Link inválido. Solicite o link correto ao estabelecimento.</p>
                 </div>
             </div>
         );

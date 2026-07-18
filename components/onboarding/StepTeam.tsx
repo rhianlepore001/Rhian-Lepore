@@ -37,17 +37,17 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
     return (
         <div className="space-y-6">
             <div className="bg-neutral-800/50 rounded-lg p-4 border border-neutral-800">
-                <p className="text-neutral-400 text-sm mb-4">
+                <p className="text-theme-textSecondary text-sm mb-4">
                     Adicione os profissionais que trabalham com você. Se você também atende clientes, adicione seu perfil de profissional aqui.
                 </p>
 
                 {loading ? (
-                    <div className="text-center py-4 text-neutral-500">Carregando...</div>
+                    <div className="text-center py-4 text-[var(--color-text-muted)]">Carregando...</div>
                 ) : members.length === 0 ? (
-                    <div className="text-center py-10 px-6 border-2 border-dashed border-neutral-700 rounded-xl bg-black/20">
-                        <Users className="w-10 h-10 text-neutral-600 mx-auto mb-4" />
-                        <h4 className="text-white font-bold mb-2">Quem fará os atendimentos?</h4>
-                        <p className="text-neutral-500 text-sm mb-6 max-w-xs mx-auto">
+                    <div className="text-center py-10 px-6 border-2 border-dashed border-[var(--color-divider)] rounded-xl bg-theme-surface">
+                        <Users className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-4" />
+                        <h4 className="text-theme-text font-bold mb-2">Quem fará os atendimentos?</h4>
+                        <p className="text-[var(--color-text-muted)] text-sm mb-6 max-w-xs mx-auto">
                             O sistema precisa de pelo menos um profissional para gerar sua agenda e link de agendamento.
                         </p>
 
@@ -72,7 +72,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                                     setIsOwnerMode(false);
                                     setIsModalOpen(true);
                                 }}
-                                className="w-full py-3 px-4 bg-transparent border border-neutral-700 text-neutral-400 font-bold rounded-lg hover:bg-neutral-800 hover:text-white transition-colors"
+                                className="w-full py-3 px-4 bg-transparent border border-[var(--color-input-border)] text-theme-textSecondary font-bold rounded-lg hover:bg-[var(--color-card-hover)] hover:text-theme-text transition-colors"
                             >
                                 Tenho uma equipe
                             </button>
@@ -110,7 +110,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
             <div className="flex gap-3 pt-4">
                 <button
                     onClick={onBack}
-                    className="px-5 py-4 text-neutral-500 hover:text-neutral-300 font-bold transition-colors text-sm"
+                    className="px-5 py-4 text-[var(--color-text-muted)] hover:text-theme-textSecondary font-bold transition-colors text-sm"
                 >
                     Voltar
                 </button>

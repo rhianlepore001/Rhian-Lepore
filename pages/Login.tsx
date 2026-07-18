@@ -186,9 +186,7 @@ export const Login: React.FC = () => {
 
     // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────
     return (
-        <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden
-            ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
-        `}>
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[var(--color-bg)]">
             {isBeauty
                 ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/[0.05] rounded-full blur-[120px] pointer-events-none" />
                 : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-gold/[0.04] rounded-full blur-[120px] pointer-events-none" />
@@ -197,7 +195,7 @@ export const Login: React.FC = () => {
             {/* Voltar */}
             <button
                 onClick={() => setShowGateway(true)}
-                className="absolute top-6 left-6 z-20 font-mono text-xs uppercase tracking-widest text-neutral-600 hover:text-white transition-colors flex items-center gap-1.5"
+                className="absolute top-6 left-6 z-20 font-mono text-xs uppercase tracking-widest text-[var(--color-text-muted)] hover:text-theme-text transition-colors flex items-center gap-1.5"
             >
                 ← Voltar
             </button>
@@ -226,11 +224,11 @@ export const Login: React.FC = () => {
                         `}>
                             {isBeauty ? 'Salões & Studios' : 'Barbearia'}
                         </p>
-                        <h2 className="font-heading text-4xl text-white uppercase leading-none tracking-tight mb-4">
+                        <h2 className="font-heading text-4xl text-theme-text uppercase leading-none tracking-tight mb-4">
                             {isBeauty ? 'Seu salão,\nseu ritmo.' : 'Seu corte,\nsua regra.'}
                         </h2>
                         <p className={`text-xs leading-relaxed
-                            ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
+                            ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-[var(--color-text-muted)] font-mono'}
                         `}>
                             Tudo o que o seu negócio precisa, em um só lugar.
                         </p>
@@ -263,11 +261,11 @@ export const Login: React.FC = () => {
                         </div>
 
                         <div className="mb-8">
-                            <h2 className="font-heading text-3xl text-white uppercase tracking-tight mb-1">
+                            <h2 className="font-heading text-3xl text-theme-text uppercase tracking-tight mb-1">
                                 Entrar
                             </h2>
                             <p className={`text-xs uppercase tracking-widest
-                                ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
+                                ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-[var(--color-text-muted)] font-mono'}
                             `}>
                                 Que bom te ver de novo
                             </p>

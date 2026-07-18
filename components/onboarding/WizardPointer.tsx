@@ -211,7 +211,7 @@ export function WizardPointer({ target, isExiting = false }: WizardPointerProps)
     >
       {POINTER_SVGS[target.position]}
       <span
-        className="text-xs text-amber-300 bg-black/80 px-2 py-1 rounded-full
+        className="text-xs text-amber-300 bg-[var(--color-modal-bg)] border border-[var(--color-divider)] px-2 py-1 rounded-full
                    whitespace-nowrap max-w-[200px] text-center leading-tight"
       >
         {target.message}

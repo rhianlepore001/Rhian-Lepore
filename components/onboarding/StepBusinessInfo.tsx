@@ -36,7 +36,7 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor })
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-neutral-500" />
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" />
             </div>
         );
     }

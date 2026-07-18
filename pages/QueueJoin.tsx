@@ -119,15 +119,15 @@ export const QueueJoin: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
-    if (!business) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Estabelecimento não encontrado</div>;
+    if (loading) return <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center"><Loader2 className="animate-spin" /></div>;
+    if (!business) return <div className="min-h-screen bg-theme-bg text-theme-text flex items-center justify-center">Estabelecimento não encontrado</div>;
 
     const accentColor = business.user_type === 'beauty' ? 'text-beauty-neon' : 'text-accent-gold';
     const borderColor = business.user_type === 'beauty' ? 'border-beauty-neon/20' : 'border-accent-gold/20';
     const bgCard = business.user_type === 'beauty'
-        ? 'bg-white/[0.06] backdrop-blur-xl border-white/15'
-        : 'bg-white/[0.04] backdrop-blur-lg border-white/10';
-    const inputBg = business.user_type === 'beauty' ? 'bg-white/[0.05]' : 'bg-white/[0.03]';
+        ? 'bg-theme-surface backdrop-blur-xl border-[var(--color-divider)]'
+        : 'bg-theme-surface backdrop-blur-lg border-[var(--color-divider)]';
+    const inputBg = 'bg-[var(--color-input-bg)]';
 
     // Filtering Logic
     const filteredServices = services.filter(s => {
@@ -137,7 +137,7 @@ export const QueueJoin: React.FC = () => {
     });
 
     return (
-        <div className="min-h-screen bg-neutral-950 font-sans text-neutral-200 pb-12 relative overflow-hidden">
+        <div className="min-h-screen bg-theme-bg font-sans text-theme-text pb-12 relative overflow-hidden">
             {/* Background blobs for Beauty Mode */}
             {business.user_type === 'beauty' && (
                 <>
@@ -148,17 +148,17 @@ export const QueueJoin: React.FC = () => {
 
             {/* Header / Hero */}
             <div className="relative h-48 w-full overflow-hidden z-10">
-                <div className="absolute inset-0 bg-neutral-900">
+                <div className="absolute inset-0 bg-theme-card">
                     {business.cover_photo_url && <img src={business.cover_photo_url} className="w-full h-full object-cover opacity-50" />}
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)] to-transparent"></div>
 
                 <div className="absolute bottom-0 left-0 w-full p-6 flex items-end gap-4">
-                    <div className={`w-16 h-16 rounded-full border-2 ${borderColor} overflow-hidden bg-neutral-800 shadow-xl`}>
-                        {business.logo_url ? <img src={business.logo_url} className="w-full h-full object-cover" /> : <Scissors className="m-auto mt-4 text-neutral-500" />}
+                    <div className={`w-16 h-16 rounded-full border-2 ${borderColor} overflow-hidden bg-theme-surface shadow-xl`}>
+                        {business.logo_url ? <img src={business.logo_url} className="w-full h-full object-cover" /> : <Scissors className="m-auto mt-4 text-[var(--color-text-muted)]" />}
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white leading-none mb-1">{business.business_name}</h1>
+                        <h1 className="text-2xl font-bold text-theme-text leading-none mb-1">{business.business_name}</h1>
                         <p className={`text-sm font-bold uppercase tracking-wider ${accentColor}`}>Fila Digital</p>
                     </div>
                 </div>
@@ -168,28 +168,28 @@ export const QueueJoin: React.FC = () => {
 
                 {/* Intro Card */}
                 <div className={`${bgCard} border ${borderColor} rounded-2xl p-5 shadow-xl`}>
-                    <h2 className="text-lg font-bold text-white mb-2">Entre na fila sem esperar em pé!</h2>
-                    <p className="text-sm text-neutral-400">Preencha seus dados, escolha o serviço e acompanhe sua vez pelo celular.</p>
+                    <h2 className="text-lg font-bold text-theme-text mb-2">Entre na fila sem esperar em pé!</h2>
+                    <p className="text-sm text-theme-textSecondary">Preencha seus dados, escolha o serviço e acompanhe sua vez pelo celular.</p>
                 </div>
 
                 {/* Form */}
                 <div className={`${bgCard} border ${borderColor} rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl`}>
                     <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 mb-1.5 ml-1">Seu Nome</label>
+                        <label className="block text-xs font-bold uppercase text-[var(--color-text-muted)] mb-1.5 ml-1">Seu Nome</label>
                         <div className="relative">
                             <input
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                className={`w-full ${inputBg} border ${borderColor} rounded-xl p-4 pl-12 text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400/60 transition-all font-medium`}
+                                className={`w-full ${inputBg} border ${borderColor} rounded-xl p-4 pl-12 text-theme-text placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-theme-accent transition-all font-medium`}
                                 placeholder="Como quer ser chamado?"
                             />
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 mb-1.5 ml-1">WhatsApp</label>
+                        <label className="block text-xs font-bold uppercase text-[var(--color-text-muted)] mb-1.5 ml-1">WhatsApp</label>
                         <PhoneInput
                             value={phone}
                             onChange={setPhone}
@@ -201,7 +201,7 @@ export const QueueJoin: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 mb-1.5 ml-1">Serviço</label>
+                        <label className="block text-xs font-bold uppercase text-[var(--color-text-muted)] mb-1.5 ml-1">Serviço</label>
 
                         {/* Search & Filter UI */}
                         <div className="space-y-3 mb-3">
@@ -210,7 +210,7 @@ export const QueueJoin: React.FC = () => {
                                 <div className="flex gap-2 overflow-x-auto pb-1 noscroll">
                                     <button
                                         onClick={() => setSelectedCategory('all')}
-                                        className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === 'all' ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/15 text-beauty-neon border-beauty-neon/35' : 'bg-accent-gold/15 text-accent-gold border-accent-gold/35'}` : 'bg-white/[0.03] border-white/10 text-neutral-400'}`}
+                                        className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === 'all' ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/15 text-beauty-neon border-beauty-neon/35' : 'bg-accent-gold/15 text-accent-gold border-accent-gold/35'}` : 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary'}`}
                                     >
                                         Todos
                                     </button>
@@ -218,7 +218,7 @@ export const QueueJoin: React.FC = () => {
                                         <button
                                             key={cat.id}
                                             onClick={() => setSelectedCategory(cat.id)}
-                                            className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/15 text-beauty-neon border-beauty-neon/35' : 'bg-accent-gold/15 text-accent-gold border-accent-gold/35'}` : 'bg-white/[0.03] border-white/10 text-neutral-400'}`}
+                                            className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? `${business.user_type === 'beauty' ? 'bg-beauty-neon/15 text-beauty-neon border-beauty-neon/35' : 'bg-accent-gold/15 text-accent-gold border-accent-gold/35'}` : 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary'}`}
                                         >
                                             {cat.name}
                                         </button>
@@ -233,26 +233,26 @@ export const QueueJoin: React.FC = () => {
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                     placeholder="Buscar serviço..."
-                                    className={`w-full ${inputBg} border ${borderColor} rounded-xl p-3.5 pl-10 text-base text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-400 transition-all`}
+                                    className={`w-full ${inputBg} border ${borderColor} rounded-xl p-3.5 pl-10 text-base text-theme-text placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-theme-accent transition-all`}
                                 />
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
                             </div>
                         </div>
 
                         <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                             {filteredServices.length === 0 ? (
-                                <div className="text-center text-neutral-500 text-sm py-4">Nenhum serviço encontrado.</div>
+                                <div className="text-center text-[var(--color-text-muted)] text-sm py-4">Nenhum serviço encontrado.</div>
                             ) : (
                                 filteredServices.map(service => (
                                     <button
                                         key={service.id}
                                         onClick={() => setSelectedService(service.id)}
-                                        className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? `bg-white/[0.08] ${borderColor} border-opacity-100 shadow-[0_0_15px_rgba(168,85,247,0.12)]` : `${inputBg} border-white/5 hover:border-white/15`}`}
+                                        className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? `bg-[var(--color-card-hover)] ${borderColor} border-opacity-100 shadow-[0_0_15px_rgba(168,85,247,0.12)]` : `${inputBg} border-[var(--color-divider)] hover:border-[var(--color-input-border)]`}`}
                                     >
-                                        <span className="font-medium text-white text-base">{service.name}</span>
+                                        <span className="font-medium text-theme-text text-base">{service.name}</span>
                                         <div className="text-right">
-                                            <span className="block text-sm text-neutral-300 font-bold">{formatCurrency(service.price, business.region || 'BR')}</span>
-                                            <span className="text-xs text-neutral-500">{service.duration_minutes} min</span>
+                                            <span className="block text-sm text-theme-textSecondary font-bold">{formatCurrency(service.price, business.region || 'BR')}</span>
+                                            <span className="text-xs text-[var(--color-text-muted)]">{service.duration_minutes} min</span>
                                         </div>
                                     </button>
                                 ))
@@ -261,14 +261,14 @@ export const QueueJoin: React.FC = () => {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 mb-1.5 ml-1">Profissional (Opcional)</label>
+                        <label className="block text-xs font-bold uppercase text-[var(--color-text-muted)] mb-1.5 ml-1">Profissional (Opcional)</label>
                         <div className="flex gap-2 overflow-x-auto pb-2 noscroll">
                             <button
                                 onClick={() => setSelectedProfessional(null)}
-                                className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === null ? `bg-white/[0.08] ${borderColor}` : `${inputBg} border-white/5`}`}
+                                className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === null ? `bg-[var(--color-card-hover)] ${borderColor}` : `${inputBg} border-[var(--color-divider)]`}`}
                             >
-                                <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center border border-white/10">
-                                    <Users className="w-5 h-5 text-neutral-400" />
+                                <div className="w-10 h-10 rounded-full bg-theme-surface flex items-center justify-center border border-[var(--color-divider)]">
+                                    <Users className="w-5 h-5 text-theme-textSecondary" />
                                 </div>
                                 <span className="text-xs font-bold text-center">Qualquer</span>
                             </button>
@@ -276,12 +276,12 @@ export const QueueJoin: React.FC = () => {
                                 <button
                                     key={pro.id}
                                     onClick={() => setSelectedProfessional(pro.id)}
-                                    className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === pro.id ? `bg-white/[0.08] ${borderColor}` : `${inputBg} border-white/5`}`}
+                                    className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === pro.id ? `bg-[var(--color-card-hover)] ${borderColor}` : `${inputBg} border-[var(--color-divider)]`}`}
                                 >
                                     {pro.photo_url ? (
-                                        <img src={pro.photo_url} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                                        <img src={pro.photo_url} className="w-10 h-10 rounded-full object-cover border border-[var(--color-divider)]" />
                                     ) : (
-                                        <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center border border-white/10">
+                                        <div className="w-10 h-10 rounded-full bg-theme-surface flex items-center justify-center border border-[var(--color-divider)]">
                                             <span className="text-xs font-bold">{pro.name.substring(0, 2)}</span>
                                         </div>
                                     )}
@@ -305,7 +305,7 @@ export const QueueJoin: React.FC = () => {
                                 Não foi possível entrar na fila. Tente novamente ou avise no balcão.
                             </p>
                         )}
-                        <p className="text-center text-xs text-neutral-500 mt-3">
+                        <p className="text-center text-xs text-[var(--color-text-muted)] mt-3">
                             Você receberá atualizações em tempo real nesta página.
                         </p>
                     </div>

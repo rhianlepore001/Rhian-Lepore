@@ -184,7 +184,7 @@ const confirmFinish = async () => {
             case 'waiting': return 'border border-yellow-400/40 bg-yellow-400/5';
             case 'calling': return 'border border-green-500/40 bg-green-500/5 animate-pulse';
             case 'serving': return 'border border-blue-400/40 bg-blue-500/5';
-            default: return 'border border-neutral-700';
+            default: return 'border border-[var(--color-divider)]';
         }
     };
 

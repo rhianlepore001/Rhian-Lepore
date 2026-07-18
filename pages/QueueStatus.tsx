@@ -101,8 +101,8 @@ export const QueueStatus: React.FC = () => {
         prevStatusRef.current = entry?.status ?? null;
     }, [entry?.status]);
 
-    if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>;
-    if (!entry) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Não encontramos você na fila. O link pode ter expirado — entre na fila de novo pelo balcão ou QR code.</div>;
+    if (loading) return <div className="min-h-screen bg-theme-bg flex items-center justify-center text-theme-text"><Loader2 className="animate-spin" /></div>;
+    if (!entry) return <div className="min-h-screen bg-theme-bg flex items-center justify-center text-theme-text">Não encontramos você na fila. O link pode ter expirado — entre na fila de novo pelo balcão ou QR code.</div>;
 
     const formatTime = (seconds: number) => {
         const isNegative = seconds < 0;
@@ -149,12 +149,12 @@ export const QueueStatus: React.FC = () => {
                 };
             case 'completed':
                 return {
-                    color: 'text-neutral-400',
-                    bg: 'bg-neutral-800',
-                    border: 'border-neutral-700',
+                    color: 'text-theme-textSecondary',
+                    bg: 'bg-theme-card',
+                    border: 'border-[var(--color-divider)]',
                     title: 'Finalizado',
                     desc: 'Obrigado pela preferência!',
-                    icon: <CheckCircle className="w-12 h-12 text-neutral-400 mb-4" />
+                    icon: <CheckCircle className="w-12 h-12 text-theme-textSecondary mb-4" />
                 };
             default:
                 return {
@@ -171,7 +171,7 @@ export const QueueStatus: React.FC = () => {
     const statusUI = getStatusDisplay(entry);
 
     return (
-        <div className="min-h-screen bg-neutral-950 font-sans text-white p-6 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="min-h-screen bg-theme-bg font-sans text-theme-text p-6 flex flex-col items-center justify-center relative overflow-hidden">
             {isBeauty ? (
                 <>
                     <div className={`absolute top-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-green-500/20' : 'bg-beauty-acid/20'} blur-[100px] pointer-events-none`}></div>
@@ -185,11 +185,11 @@ export const QueueStatus: React.FC = () => {
             )}
 
             <div className="relative z-10 w-full max-w-sm text-center">
-                <h1 className="text-xl font-bold mb-8 text-neutral-400 uppercase tracking-widest">{business?.business_name}</h1>
+                <h1 className="text-xl font-bold mb-8 text-theme-textSecondary uppercase tracking-widest">{business?.business_name}</h1>
 
                 <div className={`rounded-3xl p-8 ${statusUI.bg} border-2 ${statusUI.border} backdrop-blur-xl shadow-2xl relative overflow-hidden transition-all duration-500`}>
                     {entry.status === 'waiting' && position && (
-                        <div className="absolute top-0 left-0 w-full h-2 bg-neutral-800">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-theme-surface">
                             <div className={`h-full ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'} animate-pulse w-full`}></div>
                         </div>
                     )}
@@ -197,24 +197,24 @@ export const QueueStatus: React.FC = () => {
                     <div className="flex flex-col items-center">
                         {statusUI.icon}
                         <h2 className={`text-3xl font-bold ${statusUI.color} mb-2 uppercase tracking-tight`}>{statusUI.title}</h2>
-                        <p className="text-neutral-400 text-sm mb-6">{statusUI.desc}</p>
+                        <p className="text-theme-textSecondary text-sm mb-6">{statusUI.desc}</p>
 
                         {entry.status === 'waiting' && position ? (
                             <div className="grid grid-cols-2 gap-3 w-full mb-6">
-                                <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                    <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Sua Posição</span>
-                                    <div className="text-4xl font-black text-white">{position}º</div>
+                                <div className="bg-theme-surface rounded-2xl p-4 border border-[var(--color-divider)]">
+                                    <span className="block text-[var(--color-text-muted)] text-xs uppercase font-bold tracking-widest mb-1">Sua Posição</span>
+                                    <div className="text-4xl font-black text-theme-text">{position}º</div>
                                 </div>
-                                <div className="bg-neutral-900/50 rounded-2xl p-4 border border-white/5">
-                                    <span className="block text-neutral-500 text-xs uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
-                                    <div className={`text-2xl font-black text-white mt-2 flex items-center justify-center gap-1 font-mono`}>
+                                <div className="bg-theme-surface rounded-2xl p-4 border border-[var(--color-divider)]">
+                                    <span className="block text-[var(--color-text-muted)] text-xs uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
+                                    <div className="text-2xl font-black text-theme-text mt-2 flex items-center justify-center gap-1 font-mono">
                                         {timeLeft === null ? '--:--' : timeLeft <= 0 ? 'Agora' : formatTime(timeLeft)}
                                     </div>
                                 </div>
                             </div>
                         ) : null}
 
-                        <div className="flex items-center gap-2 text-xs font-mono text-neutral-500 bg-black/20 px-3 py-1 rounded-full border border-white/5">
+                        <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-text-muted)] bg-theme-surface px-3 py-1 rounded-full border border-[var(--color-divider)]">
                             ID: {entry.id.substring(0, 8)}
                         </div>
                     </div>

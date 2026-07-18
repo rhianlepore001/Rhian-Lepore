@@ -70,7 +70,7 @@ export const Header: React.FC = () => {
       >
         <div className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-shrink">
             {isSettingsRoute ? (
               <Link to="/" className="flex items-center gap-3 group hover:opacity-90 transition-all ml-1 md:ml-0" title="Voltar ao Dashboard">
                 <ArrowLeft className={`w-5 h-5 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
@@ -92,11 +92,11 @@ export const Header: React.FC = () => {
                     <ArrowLeft className={`w-5 h-5 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>
                 )}
-                <div className="flex flex-col">
-                  <h1 className={`font-heading text-lg md:text-2xl ${colors.text} tracking-widest leading-none flex items-center gap-2`}>
-                    {businessName || 'GESTÃO'}
+                <div className="flex flex-col min-w-0">
+                  <h1 className={`font-heading text-lg md:text-2xl ${colors.text} tracking-widest leading-none flex items-center gap-2 min-w-0`}>
+                    <span className="truncate">{businessName || 'GESTÃO'}</span>
                     <span
-                      className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"
+                      className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse flex-shrink-0"
                       aria-label="Online"
                       title="Negócio ativo"
                     />
@@ -115,7 +115,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Right: Profile & Actions */}
-          <div className="flex items-center gap-3 md:gap-6">
+          <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
             {/* Dev Theme Switcher */}
             {isDev && (
               <button

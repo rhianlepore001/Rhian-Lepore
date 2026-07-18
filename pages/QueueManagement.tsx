@@ -249,17 +249,21 @@ const confirmFinish = async () => {
                     </h1>
                     <p className={`${colors.textSecondary} text-sm font-mono`}>Gerencie atendimentos em tempo real</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />} className="hidden md:flex">
+                {/* Desktop: botoes com texto */}
+                <div className="hidden md:flex gap-2">
+                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />}>
                         Adicionar
                     </Button>
-                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" className="md:hidden !min-w-0 !px-3.5 !rounded-full">
-                        <User className="w-5 h-5" />
-                    </Button>
-                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />} className="hidden md:flex">
+                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />}>
                         Gerar QR Code
                     </Button>
-                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" className="md:hidden !min-w-0 !px-3.5 !rounded-full">
+                </div>
+                {/* Mobile: apenas icones — display controlado no wrapper (evita conflito de ordem de classes no Tailwind CDN) */}
+                <div className="flex md:hidden gap-3">
+                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" aria-label="Adicionar cliente na fila" className="!min-w-0 !px-3.5 !rounded-full">
+                        <User className="w-5 h-5" />
+                    </Button>
+                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" aria-label="Gerar QR Code" className="!min-w-0 !px-3.5 !rounded-full">
                         <QrCode className="w-5 h-5" />
                     </Button>
                 </div>
@@ -376,7 +380,7 @@ const confirmFinish = async () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => openFinishModal(entry)}
-                                        className="px-5 py-3 bg-theme-surface text-black font-bold rounded-xl hover:bg-white hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.3)] min-h-[48px]"
+className={`px-5 py-3 ${accent.bgDim} ${accent.text} font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2 ${accent.shadowStrong} min-h-[48px]`}
                                         title="Finalizar"
                                     >
                                         <Check className="w-5 h-5" />

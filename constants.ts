@@ -18,20 +18,21 @@ export interface SettingsItem {
   path: string;
   icon: LucideIcon;
   devOnly?: boolean;
+  group: 'Negócio' | 'Financeiro' | 'Conta' | 'Sistema';
 }
 
 export const SETTINGS_ITEMS: SettingsItem[] = [
-  { label: 'Geral', path: '/configuracoes/geral', icon: Settings },
-  { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar },
-  { label: 'Equipe', path: '/configuracoes/equipe', icon: Users },
-  { label: 'Serviços', path: '/configuracoes/servicos', icon: Package },
-  { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign },
-  { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell },
-  { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
-  { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield },
-  { label: 'Preview UI', path: '/configuracoes/ui-preview', icon: ClipboardList, devOnly: true },
-  { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ShieldAlert, devOnly: true },
-  { label: 'Lixeira', path: '/configuracoes/lixeira', icon: Trash2, devOnly: true },
+  { label: 'Geral', path: '/configuracoes/geral', icon: Settings, group: 'Negócio' },
+  { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
+  { label: 'Equipe', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
+  { label: 'Serviços', path: '/configuracoes/servicos', icon: Package, group: 'Negócio' },
+  { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign, group: 'Financeiro' },
+  { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard, group: 'Financeiro' },
+  { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell, group: 'Conta' },
+  { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield, group: 'Conta' },
+  { label: 'Preview UI', path: '/configuracoes/ui-preview', icon: ClipboardList, devOnly: true, group: 'Sistema' },
+  { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ShieldAlert, devOnly: true, group: 'Sistema' },
+  { label: 'Lixeira', path: '/configuracoes/lixeira', icon: Trash2, devOnly: true, group: 'Sistema' },
 ];
 export const PREDEFINED_SERVICES = {
   barber: [

@@ -131,6 +131,10 @@ const [searchParams, setSearchParams] = useSearchParams();
 
   const { accent, colors, isBeauty, isDark, classes, font, density, status } = useBrutalTheme();
 
+  // Classes compartilhadas dos formulários (modal de transação / filtro)
+  const inputClass = 'w-full p-3 rounded-lg text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] placeholder:text-[var(--color-text-muted)] transition-all focus:outline-none focus:border-theme-accent';
+  const labelClass = `font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-theme-textSecondary'}`;
+
   const chartTheme = useMemo(() => ({
     grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
     axis: isDark ? '#A0A0A0' : '#6B5E45',
@@ -828,13 +832,13 @@ useEffect(() => {
             <div className="space-y-4">
               {/* Type Selector */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Tipo</label>
+                <label className={labelClass}>Tipo</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNewTransactionType('income')}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'income'
                       ? 'bg-green-500/20 border-green-500 text-green-500'
-                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                      : 'bg-theme-surface border-[var(--color-input-border)] text-theme-textSecondary hover:border-[var(--color-text-muted)]'
                       }`}
                   >
                     + Receita
@@ -843,7 +847,7 @@ useEffect(() => {
                     onClick={() => setNewTransactionType('expense')}
                     className={`flex-1 py-3 px-4 rounded-lg font-bold transition-colors border-2 ${newTransactionType === 'expense'
                       ? 'bg-red-500/20 border-red-500 text-red-500'
-                      : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600'
+                      : 'bg-theme-surface border-[var(--color-input-border)] text-theme-textSecondary hover:border-[var(--color-text-muted)]'
                       }`}
                   >
                     - Despesa
@@ -853,16 +857,12 @@ useEffect(() => {
 
               {/* Description */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Descrição *</label>
+                <label className={labelClass}>Descrição *</label>
                 <input
                   type="text"
                   value={newTransactionDescription}
                   onChange={(e) => setNewTransactionDescription(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                    ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                `}
+                  className={inputClass}
                   placeholder="Ex: Venda de produto, Pagamento de aluguel..."
                   required
                 />
@@ -871,15 +871,11 @@ useEffect(() => {
               {/* Status and Due Date */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Status</label>
+                  <label className={labelClass}>Status</label>
                   <select
                     value={newTransactionStatus}
                     onChange={(e) => setNewTransactionStatus(e.target.value as 'paid' | 'pending')}
-                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
-                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                  `}
+                    className={inputClass}
                   >
                     <option value="paid">Pago / Recebido</option>
                     <option value="pending">Pendente / Agendado</option>
@@ -887,16 +883,12 @@ useEffect(() => {
                 </div>
                 {newTransactionStatus === 'pending' && (
                   <div>
-                    <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Vencimento</label>
+                    <label className={labelClass}>Vencimento</label>
                     <input
                       type="date"
                       value={newTransactionDueDate}
                       onChange={(e) => setNewTransactionDueDate(e.target.value)}
-                      className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                        ${isBeauty
-                          ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                          : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                      `}
+                      className={inputClass}
                     />
                   </div>
                 )}
@@ -904,18 +896,14 @@ useEffect(() => {
 
               {/* Amount */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Valor ({currencySymbol}) *</label>
+                <label className={labelClass}>Valor ({currencySymbol}) *</label>
                 <input
                   type="number"
                   value={newTransactionAmount}
                   onChange={(e) => setNewTransactionAmount(e.target.value)}
                   step="0.01"
                   min="0"
-                  className={`w-full p-3 rounded-lg text-white font-mono text-lg transition-all outline-none
-                    ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                `}
+                  className={`${inputClass} font-mono text-lg`}
                   placeholder="0.00"
                   required
                 />
@@ -924,44 +912,32 @@ useEffect(() => {
               {/* Date and Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Data</label>
+                  <label className={labelClass}>Data</label>
                   <input
                     type="date"
                     value={newTransactionDate}
                     onChange={(e) => setNewTransactionDate(e.target.value)}
-                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
-                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                  `}
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Horário (opcional)</label>
+                  <label className={labelClass}>Horário (opcional)</label>
                   <input
                     type="time"
                     value={newTransactionTime}
                     onChange={(e) => setNewTransactionTime(e.target.value)}
-                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                      ${isBeauty
-                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                  `}
+                    className={inputClass}
                   />
                 </div>
               </div>
 
               {/* Service */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Serviço (opcional)</label>
+                <label className={labelClass}>Serviço (opcional)</label>
                 <select
                   value={newTransactionService}
                   onChange={(e) => setNewTransactionService(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                    ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                `}
+                  className={inputClass}
                 >
                   <option value="">Selecione um serviço</option>
                   {dropdownServices.map(s => (
@@ -972,15 +948,11 @@ useEffect(() => {
 
               {/* Client */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Cliente (opcional)</label>
+                <label className={labelClass}>Cliente (opcional)</label>
                 <select
                   value={newTransactionClient}
                   onChange={(e) => setNewTransactionClient(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                    ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                `}
+                  className={inputClass}
                 >
                   <option value="">Selecione um cliente</option>
                   {dropdownClients.map(c => (
@@ -991,15 +963,11 @@ useEffect(() => {
 
               {/* Professional */}
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70 font-sans font-medium' : 'text-neutral-400'}`}>Profissional (opcional)</label>
+                <label className={labelClass}>Profissional (opcional)</label>
                 <select
                   value={newTransactionProfessional}
                   onChange={(e) => setNewTransactionProfessional(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                    ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-neutral-700 focus:border-accent-gold`}
-                `}
+                  className={inputClass}
                 >
                   <option value="">Selecione um profissional</option>
                   {dropdownProfessionals.map(p => (
@@ -1033,7 +1001,7 @@ useEffect(() => {
           >
             <div className="space-y-4">
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Tipo de Transação</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-theme-textSecondary'}`}>Tipo de Transação</label>
                 <div className="flex gap-2">
                   {(['all', 'revenue', 'expense'] as const).map((type) => (
                     <button
@@ -1042,7 +1010,7 @@ useEffect(() => {
                       className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterType === type
                           ? `${accent.bg} text-[var(--color-bg)]`
-                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                          : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
                       {type === 'all' ? 'Tudo' : type === 'revenue' ? 'Entradas' : 'Saídas'}
                     </button>
@@ -1051,7 +1019,7 @@ useEffect(() => {
               </div>
 
               <div>
-                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-neutral-400'}`}>Forma de Pagamento</label>
+                <label className={`font-mono text-xs uppercase mb-2 block ${isBeauty ? 'text-beauty-neon/70' : 'text-theme-textSecondary'}`}>Forma de Pagamento</label>
                 <div className="flex flex-wrap gap-2">
                   {['all', 'Dinheiro', ...(region === 'PT' ? ['MBWay'] : ['Pix']), 'Cartão'].map((method) => (
                     <button
@@ -1060,7 +1028,7 @@ useEffect(() => {
                       className={`px-3 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterPaymentMethod === method
                           ? `${accent.bg} text-[var(--color-bg)]`
-                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'}`}
+                          : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
                       {method === 'all' ? 'Todas' : method}
                     </button>

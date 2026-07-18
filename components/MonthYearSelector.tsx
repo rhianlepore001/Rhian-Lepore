@@ -53,10 +53,10 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     const canGoNext = !(selectedYear === currentYear && selectedMonth === currentMonth);
 
     return (
-        <div className="flex items-center justify-between gap-4 p-4 bg-neutral-900 border-2 border-neutral-800 rounded-lg">
+        <div className="flex items-center justify-between gap-4 p-4 bg-theme-card border-2 border-[var(--color-divider)] rounded-lg">
             <button
                 onClick={goToPreviousMonth}
-                className="p-2 hover:bg-neutral-800 rounded transition-colors text-white"
+                className="p-2 hover:bg-[var(--color-card-hover)] rounded transition-colors text-theme-text"
                 title="Mês anterior"
                 aria-label="Mês anterior"
             >
@@ -64,9 +64,9 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
             </button>
 
             <div className="flex items-center gap-3">
-                <Calendar className={`w-5 h-5 ${isCurrentMonth ? `text-theme-accent` : 'text-neutral-500'}`} />
+                <Calendar className={`w-5 h-5 ${isCurrentMonth ? `text-theme-accent` : 'text-[var(--color-text-muted)]'}`} />
                 <div className="text-center">
-                    <p className="text-xl font-heading text-white uppercase tracking-wide">
+                    <p className="text-xl font-heading text-theme-text uppercase tracking-wide">
                         {months[selectedMonth]} {selectedYear}
                     </p>
                     {isCurrentMonth && (
@@ -89,7 +89,7 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
                 <button
                     onClick={goToNextMonth}
                     disabled={!canGoNext}
-                    className={`p-2 rounded transition-colors ${canGoNext ? 'hover:bg-neutral-800 text-white' : 'text-neutral-700 cursor-not-allowed'}`}
+                    className={`p-2 rounded transition-colors ${canGoNext ? 'hover:bg-[var(--color-card-hover)] text-theme-text' : 'text-[var(--color-text-muted)] cursor-not-allowed'}`}
                     title="Próximo mês"
                     aria-label="Próximo mês"
                 >

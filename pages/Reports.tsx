@@ -163,10 +163,10 @@ export const Reports: React.FC = () => {
                             <Brain className={`w-4 h-4 ${accent.text}`} /> O que você verá aqui em breve:
                         </p>
                         <ul className={`text-sm ${colors.textSecondary} space-y-3`}>
-                            <li className="flex gap-2"><DollarSign className="w-4 h-4 text-neutral-500" /> Faturamento médio real por atendimento</li>
-                            <li className="flex gap-2"><AlertCircle className="w-4 h-4 text-neutral-500" /> Alertas de clientes prestes a sumir</li>
-                            <li className="flex gap-2"><Zap className="w-4 h-4 text-neutral-500" /> Receita salva pelas campanhas automáticas</li>
-                            <li className="flex gap-2"><Target className="w-4 h-4 text-neutral-500" /> Quais serviços atraem os clientes mais fiéis</li>
+                            <li className="flex gap-2"><DollarSign className={`w-4 h-4 ${colors.textMuted}`} /> Faturamento médio real por atendimento</li>
+                            <li className="flex gap-2"><AlertCircle className={`w-4 h-4 ${colors.textMuted}`} /> Alertas de clientes prestes a sumir</li>
+                            <li className="flex gap-2"><Zap className={`w-4 h-4 ${colors.textMuted}`} /> Receita salva pelas campanhas automáticas</li>
+                            <li className="flex gap-2"><Target className={`w-4 h-4 ${colors.textMuted}`} /> Quais serviços atraem os clientes mais fiéis</li>
                         </ul>
                     </div>
                 </div>

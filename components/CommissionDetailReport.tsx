@@ -190,7 +190,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                         </thead>
                                         <tbody className={`divide-y ${colors.divider}`}>
                                             {records.map(r => (
-                                                <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
+                                                <tr key={r.id} className="hover:bg-[var(--color-card-hover)] transition-colors">
                                                     <td className={`py-3 ${colors.textSecondary} ${font.mono} text-xs whitespace-nowrap`}>{fmtDate(r.created_at)}</td>
                                                     <td className="py-3 pr-4">
                                                         <p className={`${colors.text} text-xs font-medium`}>{r.service_name}</p>

@@ -42,7 +42,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
     const borderStyle = isBeauty ? 'border-beauty-neon/30 rounded-xl' : 'border-brutal-border border-2';
     const cardStyle = isBeauty
         ? 'bg-beauty-card/30 border border-beauty-neon/20 rounded-xl'
-        : 'bg-neutral-900 border-2 border-brutal-border shadow-brutal-sm';
+        : 'bg-theme-card border-2 border-brutal-border shadow-brutal-sm';
 
     return (
         <div className="space-y-6">
@@ -50,18 +50,18 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {/* Success Rate */}
                 <div className={`p-4 ${cardStyle}`}>
-                    <p className="text-xs font-mono text-neutral-500 uppercase tracking-wider mb-2">Taxa de Sucesso</p>
+                    <p className="text-xs font-mono text-theme-textSecondary uppercase tracking-wider mb-2">Taxa de Sucesso</p>
                     <div className="flex items-baseline gap-2">
                         <span className={`text-3xl font-heading ${accentText}`}>{successRate}%</span>
-                        <span className="text-xs text-neutral-600 font-mono">{successCount}/{history.length}</span>
+                        <span className="text-xs text-[var(--color-text-muted)] font-mono">{successCount}/{history.length}</span>
                     </div>
                 </div>
 
                 {/* Average Performance */}
                 <div className={`p-4 ${cardStyle}`}>
-                    <p className="text-xs font-mono text-neutral-500 uppercase tracking-wider mb-2">Média Mensal</p>
+                    <p className="text-xs font-mono text-theme-textSecondary uppercase tracking-wider mb-2">Média Mensal</p>
                     <div className="flex items-baseline gap-2">
-                        <span className={`text-3xl font-heading ${averagePerformance >= 100 ? accentText : 'text-neutral-400'}`}>
+                        <span className={`text-3xl font-heading ${averagePerformance >= 100 ? accentText : 'text-theme-textSecondary'}`}>
                             {averagePerformance}%
                         </span>
                     </div>
@@ -69,9 +69,9 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
 
                 {/* Total Revenue */}
                 <div className={`p-4 ${cardStyle} md:col-span-2`}>
-                    <p className="text-xs font-mono text-neutral-500 uppercase tracking-wider mb-2">Faturamento Total (6 meses)</p>
+                    <p className="text-xs font-mono text-theme-textSecondary uppercase tracking-wider mb-2">Faturamento Total (6 meses)</p>
                     <div className="flex items-baseline gap-2">
-                        <span className={`text-2xl md:text-3xl font-heading text-white`}>
+                        <span className={`text-2xl md:text-3xl font-heading text-theme-text`}>
                             {formatCurrency(totalAchieved, currencySymbol === '€' ? 'PT' : 'BR')}
                         </span>
                     </div>
@@ -85,12 +85,12 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
                     : 'bg-beauty-card/50 border border-beauty-neon/20'
                 : latestGoal.success
                     ? 'bg-accent-gold/10 border-2 border-accent-gold/50'
-                    : 'bg-neutral-900/50 border-2 border-neutral-700'
+                    : 'bg-theme-card border-2 border-[var(--color-divider)]'
                 } ${isBeauty ? 'rounded-xl' : ''}`}>
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="text-sm font-mono text-neutral-500 uppercase tracking-wider">
+                            <span className="text-sm font-mono text-theme-textSecondary uppercase tracking-wider">
                                 {latestGoal.month} {latestGoal.year}
                             </span>
                             {latestGoal.success ? (
@@ -102,7 +102,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
                         <h3 className={`text-2xl font-heading ${accentText} mb-1`}>
                             {latestGoal.percentage}% da Meta
                         </h3>
-                        <p className="text-sm text-neutral-400 font-mono">
+                        <p className="text-sm text-theme-textSecondary font-mono">
                             {formatCurrency(latestGoal.achieved, currencySymbol === '€' ? 'PT' : 'BR')} de {formatCurrency(latestGoal.goal, currencySymbol === '€' ? 'PT' : 'BR')}
                         </p>
                     </div>
@@ -120,7 +120,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
                 </div>
 
                 {/* Progress Bar */}
-                <div className={`relative h-3 ${isBeauty ? 'bg-beauty-dark/50 rounded-full' : 'bg-neutral-950 border-2 border-black'} overflow-hidden`}>
+                <div className={`relative h-3 bg-[var(--color-input-bg)] ${isBeauty ? 'rounded-full' : 'border-2 border-black'} overflow-hidden`}>
                     <div
                         className={`absolute top-0 left-0 h-full ${accentBg} transition-all duration-1000 ${isBeauty ? '' : 'border-r-2 border-black'
                             }`}
@@ -136,17 +136,17 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
             {/* History Timeline */}
             <div>
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-mono text-neutral-500 uppercase tracking-wider">
+                    <h4 className="text-sm font-mono text-theme-textSecondary uppercase tracking-wider">
                         Histórico de Performance
                     </h4>
                     <div className="flex items-center gap-4 text-xs font-mono">
                         <div className="flex items-center gap-1.5">
                             <div className={`w-3 h-3 ${isBeauty ? 'bg-beauty-neon rounded-full' : 'bg-accent-gold'}`}></div>
-                            <span className="text-neutral-500">Atingida</span>
+                            <span className="text-theme-textSecondary">Atingida</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className={`w-3 h-3 ${isBeauty ? 'bg-red-500/50 rounded-full' : 'bg-red-900'}`}></div>
-                            <span className="text-neutral-500">Não Atingida</span>
+                            <span className="text-theme-textSecondary">Não Atingida</span>
                         </div>
                     </div>
                 </div>
@@ -172,7 +172,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
                                     </div>
                                 )}
                                 <div className="flex items-center justify-between mb-2">
-                                    <p className="text-xs font-mono text-neutral-400 uppercase tracking-wide">
+                                    <p className="text-xs font-mono text-theme-textSecondary uppercase tracking-wide">
                                         {item.month.substring(0, 3)}
                                     </p>
                                     <span className="text-lg leading-none">
@@ -183,7 +183,7 @@ export const GoalHistory: React.FC<GoalHistoryProps> = ({
                                     }`}>
                                     {item.percentage}%
                                 </p>
-                                <p className="text-xs text-neutral-500 font-mono">
+                                <p className="text-xs text-theme-textSecondary font-mono">
                                     {currencySymbol} {(item.achieved / 1000).toFixed(1)}k
                                 </p>
                                 {item.percentage >= 100 && (

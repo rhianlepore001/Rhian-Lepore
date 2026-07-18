@@ -26,7 +26,6 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     services,
     selectedServiceIds,
     toggleService,
-    isBeauty,
     currencyRegion,
     searchQuery,
     activeCategory,
@@ -73,10 +72,10 @@ export const ServiceList: React.FC<ServiceListProps> = ({
 
     if (!hasServices) {
         return (
-            <div className={`text-center py-12 px-4 rounded-xl border border-dashed ${isBeauty ? 'border-white/10 bg-beauty-card/30' : 'border-white/5 bg-brutal-card/30'}`}>
-                <Sparkles className={`w-12 h-12 mx-auto mb-4 ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}`} />
-                <h3 className="text-white font-bold text-lg mb-2">Nenhum serviço encontrado</h3>
-                <p className="text-neutral-400 text-sm mb-4">
+            <div className="text-center py-12 px-4 rounded-xl border border-dashed border-[var(--color-divider)] bg-theme-surface">
+                <Sparkles className="w-12 h-12 mx-auto mb-4 text-theme-accent opacity-60" />
+                <h3 className="text-theme-text font-bold text-lg mb-2">Nenhum serviço encontrado</h3>
+                <p className="text-theme-textSecondary text-sm mb-4">
                     {searchQuery
                         ? `Não encontramos serviços com "${searchQuery}"`
                         : 'Não há serviços nesta categoria'}
@@ -84,7 +83,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                 {searchQuery && (
                     <button
                         onClick={() => setSearchQuery('')}
-                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${isBeauty ? 'bg-beauty-neon text-black hover:bg-beauty-neon/80' : 'bg-accent-gold text-black hover:bg-accent-gold/80'}`}
+                        className="px-4 py-2 rounded-lg font-bold text-sm transition-all bg-theme-accent text-[var(--color-bg)] hover:brightness-110"
                     >
                         Limpar pesquisa
                     </button>
@@ -97,9 +96,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
         <div key={categoryId} className="space-y-3">
             {/* Category Header (only show if not filtering by specific category) */}
             {activeCategory === 'all' && (
-                <h3 className={`text-sm font-mono uppercase tracking-widest pb-2 border-l-2 pl-3 ${
-                    isBeauty ? 'text-beauty-neon/70 border-beauty-neon/40' : 'text-neutral-400 border-accent-gold/40'
-                }`}>
+                <h3 className="text-sm font-mono uppercase tracking-widest pb-2 border-l-2 pl-3 text-theme-textSecondary border-[var(--color-accent-border)]">
                     {getCategoryName(categoryId)}
                 </h3>
             )}
@@ -116,31 +113,27 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                                         relative cursor-pointer transition-all duration-200 group overflow-hidden flex items-center gap-4 p-4
                                         rounded-xl border
                                         ${isSelected
-                                    ? (isBeauty
-                                        ? 'bg-beauty-card border-beauty-neon shadow-neon'
-                                        : 'bg-brutal-card border-accent-gold shadow-heavy-sm')
-                                    : (isBeauty
-                                        ? 'bg-beauty-card/30 border-white/5 hover:border-beauty-neon/30 hover:bg-beauty-card/50'
-                                        : 'bg-white/[0.06] border-white/[0.09] hover:bg-white/[0.10] hover:border-white/[0.16]')}
+                                    ? 'bg-theme-card border-theme-accent shadow-[var(--shadow-card-accent)]'
+                                    : 'bg-theme-surface border-[var(--color-divider)] hover:bg-[var(--color-card-hover)] hover:border-[var(--color-input-border)]'}
                                     `}
                         >
                             {/* Selection Indicator */}
                             <div className={`
                                         shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
                                         ${isSelected
-                                    ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
-                                    : 'border-neutral-600 bg-transparent'}
+                                    ? 'bg-theme-accent border-theme-accent'
+                                    : 'border-[var(--color-input-border)] bg-transparent'}
                                     `}>
-                                {isSelected && <Check className="w-4 h-4 text-black" />}
+                                {isSelected && <Check className="w-4 h-4 text-[var(--color-bg)]" />}
                             </div>
 
                             {/* Service Info */}
                             <div className="flex-1 min-w-0">
-                                <h4 className={`font-bold text-base leading-tight truncate ${isSelected ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-white'}`}>
+                                <h4 className={`font-bold text-base leading-tight truncate ${isSelected ? 'text-theme-accent' : 'text-theme-text'}`}>
                                     {service.name}
                                 </h4>
                                 {service.description && (
-                                    <p className="text-neutral-400 text-xs mt-1 line-clamp-1">
+                                    <p className="text-theme-textSecondary text-xs mt-1 line-clamp-1">
                                         {service.description}
                                     </p>
                                 )}
@@ -148,10 +141,10 @@ export const ServiceList: React.FC<ServiceListProps> = ({
 
                             {/* Price and Duration */}
                             <div className="shrink-0 text-right">
-                                <div className={`text-lg font-mono font-bold ${isBeauty ? 'text-white' : 'text-white'}`}>
+                                <div className="text-lg font-mono font-bold text-theme-text">
                                     {formatCurrency(service.price, currencyRegion)}
                                 </div>
-                                <div className="flex items-center justify-end gap-1 text-neutral-400 text-xs font-mono mt-1">
+                                <div className="flex items-center justify-end gap-1 text-theme-textSecondary text-xs font-mono mt-1">
                                     <Clock className="w-3 h-3" />
                                     {service.duration_minutes}min
                                 </div>
@@ -167,15 +160,15 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     // Updated: Always show custom service option regardless of category filter
     result.push(
         <div key="custom-service-item" className="mt-8 space-y-3">
-            <h3 className="text-lg font-heading text-white uppercase tracking-tight border-b border-white/10 pb-2">
+            <h3 className="text-lg font-heading text-theme-text uppercase tracking-tight border-b border-[var(--color-divider)] pb-2">
                 Outros / Personalizado
             </h3>
             <div
                 className={`
                         p-4 rounded-xl border transition-all duration-200
                         ${isCustomService
-                        ? (isBeauty ? 'bg-beauty-card border-beauty-neon shadow-neon' : 'bg-neutral-900 border-accent-gold shadow-heavy-sm')
-                        : (isBeauty ? 'bg-beauty-card/30 border-white/5' : 'bg-brutal-card border-transparent')}
+                        ? 'bg-theme-card border-theme-accent shadow-[var(--shadow-card-accent)]'
+                        : 'bg-theme-surface border-[var(--color-divider)]'}
                     `}
             >
                 <div className="flex items-center gap-4 mb-4">
@@ -184,11 +177,11 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                         className={`
                                 shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all
                                 ${isCustomService
-                                ? (isBeauty ? 'bg-beauty-neon border-beauty-neon' : 'bg-accent-gold border-accent-gold')
-                                : 'border-neutral-600 bg-transparent'}
+                                ? 'bg-theme-accent border-theme-accent'
+                                : 'border-[var(--color-input-border)] bg-transparent'}
                             `}
                     >
-                        {isCustomService && <Check className="w-4 h-4 text-black" />}
+                        {isCustomService && <Check className="w-4 h-4 text-[var(--color-bg)]" />}
                     </div>
                     <input
                         value={customServiceName}
@@ -196,11 +189,11 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                             setCustomServiceName(e.target.value);
                             if (!isCustomService) setIsCustomService(true);
                         }}
-                        className={`flex-1 bg-transparent border-none text-white focus:outline-none placeholder:text-neutral-500 font-bold text-base`}
+                        className="flex-1 bg-transparent border-none text-theme-text focus:outline-none placeholder:text-[var(--color-text-muted)] font-bold text-base"
                         placeholder="Descreva o serviço avulso..."
                     />
                     <div className="flex items-center gap-2">
-                        <span className="text-neutral-500 font-mono">{currencySymbol}</span>
+                        <span className="text-[var(--color-text-muted)] font-mono">{currencySymbol}</span>
                         <input
                             type="number"
                             value={customServicePrice}
@@ -208,12 +201,12 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                                 setCustomServicePrice(e.target.value);
                                 if (!isCustomService) setIsCustomService(true);
                             }}
-                            className={`w-20 bg-black/20 text-white p-2 rounded border border-white/10 focus:outline-none focus:border-white/30 font-mono text-right`}
+                            className="w-20 bg-[var(--color-input-bg)] text-theme-text p-2 rounded border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent font-mono text-right"
                             placeholder="0.00"
                         />
                     </div>
                 </div>
-                <p className="text-xs text-neutral-500 italic">
+                <p className="text-xs text-[var(--color-text-muted)] italic">
                     * Use esta opção para pacotes, promoções ou serviços não listados.
                 </p>
             </div>

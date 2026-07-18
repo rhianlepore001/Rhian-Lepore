@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface PhoneInputProps {
     value: string;
@@ -24,8 +24,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     defaultRegion = 'BR',
     forceTheme
 }) => {
-    const { userType } = useAuth();
-    const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
+    const { colors, radius, accent } = useBrutalTheme({ override: forceTheme });
     const [region, setRegion] = useState<'BR' | 'PT'>(defaultRegion || 'BR');
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -123,61 +122,46 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 
     return (
         <div ref={containerRef} className={`relative ${className}`}>
-            <div className="flex items-center">
+            <div className={`flex items-center h-11 border ${radius.input} ${colors.inputBg} ${colors.inputBorder} focus-within:border-[var(--color-input-focus)] focus-within:ring-1 focus-within:ring-[var(--color-input-focus)] transition-colors duration-200`}>
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`flex items-center gap-1 pl-3 pr-2 py-3 border border-r-0 h-[54px] transition-all ${isBeauty
-                        ? 'bg-beauty-card/50 border-beauty-neon/20 rounded-l-2xl hover:bg-beauty-card hover:border-beauty-neon/40'
-                        : 'bg-neutral-900 border-neutral-800 border-2 hover:bg-neutral-800'
-                        }`}
+                    aria-label="Selecionar país"
+                    className={`flex items-center gap-1 pl-3 pr-2 h-full shrink-0 border-r ${colors.inputBorder} hover:bg-white/5 transition-colors`}
                 >
-                    <span className="text-xl leading-none">{REGIONS[region].flag}</span>
-                    <ChevronDown className={`w-3 h-3 ${isBeauty ? 'text-beauty-neon/60' : 'text-neutral-400'}`} />
+                    <span className="text-lg leading-none">{REGIONS[region].flag}</span>
+                    <ChevronDown className={`w-3 h-3 ${colors.textMuted}`} />
                 </button>
-                {isOpen && (
-                    <div className={`absolute top-full left-0 mt-1 w-40 shadow-xl z-50 overflow-hidden ${isBeauty
-                        ? 'bg-beauty-dark border border-beauty-neon/30 rounded-xl shadow-[var(--shadow-card-accent)]'
-                        : 'bg-neutral-900 border-2 border-neutral-800 shadow-heavy'
-                        }`}>
-                        {(Object.keys(REGIONS) as Array<'BR' | 'PT'>).map((r) => (
-                            <button
-                                key={r}
-                                type="button"
-                                onClick={() => {
-                                    setRegion(r);
-                                    setIsOpen(false);
-                                    onChange('');
-                                }}
-                                className={`flex items-center gap-3 w-full px-4 py-3 transition-all text-left ${isBeauty
-                                    ? 'hover:bg-beauty-neon/10'
-                                    : 'hover:bg-accent-gold/10'
-                                    }`}
-                            >
-                                <span className="text-xl">{REGIONS[r].flag}</span>
-                                <span className={`text-sm font-mono font-bold ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'
-                                    }`}>{REGIONS[r].code}</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
-                <div className="flex-1 relative">
-                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm pointer-events-none select-none h-fit ${isBeauty ? 'text-beauty-neon/40' : 'text-accent-gold/50'
-                        }`}>
-                        {REGIONS[region].code}
-                    </span>
-                    <input
-                        type="tel"
-                        value={displayValue}
-                        onChange={handleChange}
-                        className={`w-full pl-14 pr-4 py-3 text-white focus:outline-none font-mono h-[54px] transition-all ${isBeauty
-                            ? 'bg-beauty-card/50 border border-beauty-neon/20 rounded-r-2xl focus:border-beauty-neon focus:bg-beauty-card placeholder-beauty-neon/30 focus:shadow-[var(--shadow-card-accent)]'
-                            : 'bg-neutral-900 border-2 border-neutral-800 border-l-0 focus:border-accent-gold placeholder-neutral-600'
-                            }`}
-                        placeholder={region === 'BR' ? '(99) 99999-9999' : '999 999 999'}
-                    />
-                </div>
+<span className={`pl-3 font-mono text-sm pointer-events-none select-none ${colors.textMuted}`}>
+                    {REGIONS[region].code}
+                </span>
+                <input
+                    type="tel"
+                    value={displayValue}
+                    onChange={handleChange}
+                    className={`flex-1 min-w-0 h-full bg-transparent pl-2 pr-4 text-base sm:text-sm font-mono ${colors.text} placeholder:text-[var(--color-text-muted)] focus:outline-none`}
+                    placeholder={region === 'BR' ? '(99) 99999-9999' : '999 999 999'}
+                />
             </div>
+            {isOpen && (
+                <div className={`absolute top-full left-0 mt-1 w-40 shadow-xl z-50 overflow-hidden border ${radius.input} ${colors.card} ${colors.inputBorder}`}>
+                    {(Object.keys(REGIONS) as Array<'BR' | 'PT'>).map((r) => (
+                        <button
+                            key={r}
+                            type="button"
+                            onClick={() => {
+                                setRegion(r);
+                                setIsOpen(false);
+                                onChange('');
+                            }}
+                            className={`flex items-center gap-3 w-full px-4 py-3 transition-all text-left hover:bg-[var(--color-accent-dim)]`}
+                        >
+                            <span className="text-lg">{REGIONS[r].flag}</span>
+                            <span className={`text-sm font-mono font-bold ${accent.text}`}>{REGIONS[r].code}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

@@ -66,8 +66,8 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
     return (
         <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="text-center">
-                <h3 className="text-xl font-bold text-white mb-2">Quem será atendido hoje?</h3>
-                <p className="text-neutral-400">Selecione um cliente existente ou cadastre um novo.</p>
+                <h3 className="text-xl font-bold text-theme-text mb-2">Quem será atendido hoje?</h3>
+                <p className="text-theme-textSecondary">Selecione um cliente existente ou cadastre um novo.</p>
             </div>
 
             {!isCreatingClient ? (
@@ -82,13 +82,13 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                         }))}
                         value={selectedClientId}
                         onChange={(val) => setSelectedClientId(val)}
-                        accentColor={isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}
+                        accentColor="text-theme-accent"
                     />
 
                     <div className="flex items-center gap-4 my-6">
-                        <div className="h-px bg-white/10 flex-1"></div>
-                        <span className="text-neutral-500 text-sm">OU</span>
-                        <div className="h-px bg-white/10 flex-1"></div>
+                        <div className="h-px bg-[var(--color-divider)] flex-1"></div>
+                        <span className="text-[var(--color-text-muted)] text-sm">OU</span>
+                        <div className="h-px bg-[var(--color-divider)] flex-1"></div>
                     </div>
 
                     <Button
@@ -104,21 +104,21 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                 </div>
             ) : (
                 <div className={`p-6 rounded-xl border ${cardBg} space-y-4`}>
-                    <h4 className="text-white font-bold flex items-center gap-2">
+                    <h4 className="text-theme-text font-bold flex items-center gap-2">
                         <User className="w-5 h-5" /> Novo Cadastro
                     </h4>
                     <div>
-                        <label className="text-sm text-neutral-400 block mb-1">Nome Completo</label>
+                        <label className="text-sm text-theme-textSecondary block mb-1">Nome Completo</label>
                         <input
                             autoFocus
                             value={newClientName}
                             onChange={e => setNewClientName(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30"
+                            className="w-full bg-[var(--color-input-bg)] border border-[var(--color-input-border)] rounded-lg p-3 text-theme-text focus:outline-none focus:border-theme-accent"
                             placeholder="Ex: Maria Silva"
                         />
                     </div>
                     <div>
-                        <label className="text-sm text-neutral-400 block mb-1">Telefone / WhatsApp</label>
+                        <label className="text-sm text-theme-textSecondary block mb-1">Telefone / WhatsApp</label>
                         <PhoneInput
                             value={newClientPhone}
                             onChange={setNewClientPhone}

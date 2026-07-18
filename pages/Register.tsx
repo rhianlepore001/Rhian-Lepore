@@ -212,7 +212,7 @@ export const Register: React.FC = () => {
   }
 
   // ─── REGISTRO COMPLETO ────────────────────────────────────────────────────
-  const subtitle = isBeauty ? 'Seu salão configurado em minutos' : 'Sua barbearia pronta em minutos';
+  const subtitle = isBeauty ? 'Seu salão configurado em menos de 2 minutos' : 'Sua barbearia pronta em menos de 2 minutos';
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}`}>
@@ -229,15 +229,12 @@ export const Register: React.FC = () => {
           <div className={`h-[2px] w-full ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
 
           {/* Header */}
-          <div className={`flex items-center justify-between px-8 py-5 border-b ${isBeauty ? 'bg-beauty-card/90 backdrop-blur-xl border-white/5' : 'bg-[#161616] border-white/5'
+          <div className={`px-8 py-6 border-b ${isBeauty ? 'bg-beauty-card/90 backdrop-blur-xl border-white/5' : 'bg-[#161616] border-white/5'
             }`}>
-            <AgendiXLogo size={30} isBeauty={isBeauty} showText={true} />
-            <div className="text-right">
-              <p className="font-heading text-sm text-white uppercase tracking-tight">Criar conta</p>
-              <p className={`font-mono text-xs uppercase tracking-[0.1em] mt-0.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
-                {subtitle}
-              </p>
-            </div>
+            <h1 className="font-heading text-2xl text-white uppercase tracking-tight">Crie sua conta</h1>
+            <p className={`font-mono text-xs uppercase tracking-[0.1em] mt-1.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
+              {subtitle}
+            </p>
           </div>
 
           {/* Corpo */}

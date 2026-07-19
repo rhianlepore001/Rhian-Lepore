@@ -41,17 +41,17 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                 style={{ backgroundColor: isBeauty ? 'rgba(167,139,250,0.04)' : 'rgba(194,155,64,0.04)' }}
             />
             {/* Header */}
-            <header className="border-b border-white/5 bg-black/30 backdrop-blur-sm z-50 flex-shrink-0">
+            <header className="border-b border-[var(--color-border)] bg-[var(--color-bg)]/30 backdrop-blur-sm z-50 flex-shrink-0">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                     <AgendiXLogo size={28} isBeauty={isBeauty} showText={true} />
-                    <div className="text-xs text-neutral-500 font-mono tracking-widest uppercase">
+                    <div className="text-xs text-[var(--color-text-muted)] font-mono tracking-widest uppercase">
                         {currentStep < totalSteps ? `${currentStep} de ${progressSteps}` : 'Concluído'}
                     </div>
                 </div>
             </header>
 
             {/* Progress Bar */}
-            <div className="h-0.5 bg-white/5 w-full flex-shrink-0">
+            <div className="h-0.5 bg-[var(--color-card-hover)] w-full flex-shrink-0">
                 <div
                     className={`h-full transition-all duration-500 ease-out ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}
                     style={{ width: `${progressPercent}%` }}
@@ -73,7 +73,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                                         ? `w-6 h-1.5 ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`
                                         : isDone
                                         ? `w-1.5 h-1.5 ${isBeauty ? 'bg-beauty-neon/60' : 'bg-accent-gold/60'}`
-                                        : 'w-1.5 h-1.5 bg-white/10'
+                                        : 'w-1.5 h-1.5 bg-[var(--color-card-hover)]'
                                 }`}
                             />
                         );
@@ -91,10 +91,10 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                     }}
                 >
                     <div className="text-center mb-8 md:mb-10">
-                        <h1 className="text-2xl md:text-3xl font-heading text-white uppercase mb-2">
+                        <h1 className="text-2xl md:text-3xl font-heading text-[var(--color-text)] uppercase mb-2">
                             {title}
                         </h1>
-                        <p className="text-neutral-400">
+                        <p className="text-[var(--color-text-muted)]">
                             {description}
                         </p>
                     </div>
@@ -102,7 +102,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                     <div className={`
                         ${isBeauty
                             ? 'bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl shadow-[var(--shadow-card-accent)]'
-                            : 'bg-neutral-900 border border-white/8 rounded-xl shadow-2xl'}
+                            : 'bg-[var(--color-card)] border border-[var(--color-text)]/8 rounded-xl shadow-2xl'}
                         p-6 md:p-8
                     `}>
                         {children}

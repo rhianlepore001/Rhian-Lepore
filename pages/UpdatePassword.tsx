@@ -118,41 +118,41 @@ export const UpdatePassword: React.FC = () => {
 
     if (initializing) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+            <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-green-500 animate-spin mx-auto mb-4" />
-                    <p className="text-neutral-400 font-mono text-sm">Verificando link de recuperação...</p>
+                    <Loader2 className="w-12 h-12 text-[var(--color-success)] animate-spin mx-auto mb-4" />
+                    <p className="text-[var(--color-text-muted)] font-mono text-sm">Verificando link de recuperação...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4 relative overflow-hidden">
             {/* Background Accents */}
             <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-green-500/5 to-transparent pointer-events-none"></div>
 
             <div className="w-full max-w-md z-10">
-                <div className="bg-neutral-900 border-4 border-black shadow-[var(--shadow-brutal)] p-8 relative">
-                    <Screw className="top-[-10px] left-[-10px] text-neutral-800" />
-                    <Screw className="top-[-10px] right-[-10px] text-neutral-800" />
-                    <Screw className="bottom-[-10px] left-[-10px] text-neutral-800" />
-                    <Screw className="bottom-[-10px] right-[-10px] text-neutral-800" />
+                <div className="bg-[var(--color-card)] border-4 border-black shadow-[var(--shadow-brutal)] p-8 relative">
+                    <Screw className="top-[-10px] left-[-10px] text-[var(--color-text-muted)]" />
+                    <Screw className="top-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
+                    <Screw className="bottom-[-10px] left-[-10px] text-[var(--color-text-muted)]" />
+                    <Screw className="bottom-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
 
                     {!success ? (
                         <>
                             <div className="text-center mb-8">
-                                <div className="w-16 h-16 bg-green-500/10 border-2 border-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                    <Lock className="w-8 h-8 text-green-500" />
+                                <div className="w-16 h-16 bg-[var(--color-success-bg)] border-2 border-[var(--color-success-border)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <Lock className="w-8 h-8 text-[var(--color-success)]" />
                                 </div>
-                                <h2 className="font-heading text-2xl text-white uppercase tracking-wider mb-2">Nova Senha</h2>
-                                <p className="font-mono text-sm text-neutral-500">
+                                <h2 className="font-heading text-2xl text-[var(--color-text)] uppercase tracking-wider mb-2">Nova Senha</h2>
+                                <p className="font-mono text-sm text-[var(--color-text-muted)]">
                                     Defina sua nova credencial de acesso.
                                 </p>
                             </div>
 
                             {error && (
-                                <div className="p-4 bg-red-500/10 border-2 border-red-500 text-red-500 text-xs font-mono mb-6 flex items-start gap-3">
+                                <div className="p-4 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger-border)] text-[var(--color-danger)] text-xs font-mono mb-6 flex items-start gap-3">
                                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                     <span>{error}</span>
                                 </div>
@@ -160,7 +160,7 @@ export const UpdatePassword: React.FC = () => {
 
                             <form onSubmit={handleUpdatePassword} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-mono font-bold text-neutral-500 uppercase tracking-widest block">
+                                    <label className="text-xs font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-widest block">
                                         Nova Senha
                                     </label>
                                     <div className="relative">
@@ -169,13 +169,13 @@ export const UpdatePassword: React.FC = () => {
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full p-4 bg-black border-2 border-neutral-800 text-white font-mono text-sm focus:outline-none focus:border-green-500 transition-all"
+                                            className="w-full p-4 bg-[var(--color-bg)] border-2 border-[var(--color-border)] text-[var(--color-text)] font-mono text-sm focus:outline-none focus:border-[var(--color-success-border)] transition-all"
                                             placeholder="••••••••"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(prev => !prev)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-white transition-colors"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                                         >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                         </button>
@@ -183,7 +183,7 @@ export const UpdatePassword: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-mono font-bold text-neutral-500 uppercase tracking-widest block">
+                                    <label className="text-xs font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-widest block">
                                         Confirmar Senha
                                     </label>
                                     <input
@@ -191,7 +191,7 @@ export const UpdatePassword: React.FC = () => {
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full p-4 bg-black border-2 border-neutral-800 text-white font-mono text-sm focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full p-4 bg-[var(--color-bg)] border-2 border-[var(--color-border)] text-[var(--color-text)] font-mono text-sm focus:outline-none focus:border-[var(--color-success-border)] transition-all"
                                         placeholder="••••••••"
                                     />
                                 </div>
@@ -199,7 +199,7 @@ export const UpdatePassword: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={loading || !password}
-                                    className="w-full h-14 bg-white hover:bg-neutral-200 text-black font-heading text-lg uppercase tracking-wider transition-all border-2 border-black flex items-center justify-center gap-3 disabled:opacity-50"
+                                    className="w-full h-14 bg-white hover:bg-neutral-200 text-[var(--color-bg)] font-heading text-lg uppercase tracking-wider transition-all border-2 border-black flex items-center justify-center gap-3 disabled:opacity-50"
                                 >
                                     {loading ? (
                                         <span className="animate-pulse">SALVANDO...</span>
@@ -214,11 +214,11 @@ export const UpdatePassword: React.FC = () => {
                         </>
                     ) : (
                         <div className="text-center py-4">
-                            <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <ShieldCheck className="w-10 h-10 text-green-500" />
+                            <div className="w-20 h-20 bg-[var(--color-success-bg)] border-2 border-[var(--color-success-border)] rounded-full flex items-center justify-center mx-auto mb-6">
+                                <ShieldCheck className="w-10 h-10 text-[var(--color-success)]" />
                             </div>
-                            <h2 className="font-heading text-2xl text-white uppercase mb-4">Senha Atualizada!</h2>
-                            <p className="font-mono text-sm text-neutral-400 mb-8 leading-relaxed">
+                            <h2 className="font-heading text-2xl text-[var(--color-text)] uppercase mb-4">Senha Atualizada!</h2>
+                            <p className="font-mono text-sm text-[var(--color-text-muted)] mb-8 leading-relaxed">
                                 Sua senha foi alterada com sucesso. Você será redirecionado para o login em instantes.
                             </p>
                         </div>

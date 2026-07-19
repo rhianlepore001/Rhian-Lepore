@@ -11,7 +11,7 @@ interface DataMaturityBadgeProps {
 function getMaturityLabel(score: number, status: ReturnType<typeof useBrutalTheme>['status'], colors: ReturnType<typeof useBrutalTheme>['colors']): { label: string; color: string } {
     if (score >= 75) return { label: 'Dados Maduros', color: status.success };
     if (score >= 50) return { label: 'Em Crescimento', color: status.warning };
-    if (score >= 25) return { label: 'Em Aprendizado', color: 'text-blue-400' };
+    if (score >= 25) return { label: 'Em Aprendizado', color: 'text-[var(--color-info)]' };
     return { label: 'Início de Jornada', color: colors.textSecondary };
 }
 

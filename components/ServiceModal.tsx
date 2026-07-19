@@ -208,9 +208,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     key={i}
                                     type="button"
                                     onClick={() => handleApplySuggestion(s)}
-                                    className={`whitespace-nowrap px-3 py-1.5 text-xs text-white transition-all flex items-center gap-2 rounded-xl ${isBeauty
+                                    className={`whitespace-nowrap px-3 py-1.5 text-xs text-[var(--color-text)] transition-all flex items-center gap-2 rounded-xl ${isBeauty
                                         ? `${colors.card} ${accent.border} hover:bg-theme-accent`
-                                        : `${colors.card} ${colors.border} hover:bg-white/10`
+                                        : `${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)]`
                                         }`}
                                 >
                                     {s.name}
@@ -229,20 +229,20 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {imagePreview ? (
-                                    <div className="w-full h-full bg-black flex items-center justify-center relative">
+                                    <div className="w-full h-full bg-[var(--color-bg)] flex items-center justify-center relative">
                                         <div className="absolute inset-0 scale-125 blur-xl opacity-50">
                                             <img src={imagePreview} alt="" className="w-full h-full object-cover" />
                                         </div>
                                         <img src={imagePreview} alt="Preview" className="relative z-10 max-w-full max-h-full object-contain p-2 shadow-2xl" />
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center text-neutral-500">
+                                    <div className="flex flex-col items-center text-[var(--color-text-muted)]">
                                         <ImageIcon className="w-8 h-8 mb-2" />
                                         <span className="text-xs">Adicionar Foto</span>
                                     </div>
                                 )}
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <Upload className="w-6 h-6 text-white" />
+                                <div className="absolute inset-0 bg-[var(--color-bg)]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <Upload className="w-6 h-6 text-[var(--color-text)]" />
                                 </div>
                             </div>
                             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
@@ -309,9 +309,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                 <label className={`${colors.text} font-bold text-sm mb-2 block flex items-center gap-2`}>🚀 Upsells (Sugestões)</label>
                                 <div className={`max-h-32 overflow-y-auto space-y-2 ${colors.card} p-2 rounded-lg border ${colors.border}`}>
                                     {allServices.filter(s => s.id !== service?.id).map(s => (
-                                        <div key={s.id} onClick={() => toggleUpsell(s.id)} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `${accent.bgDim} ${colors.text}` : `hover:bg-white/5 ${colors.textSecondary}`}`}>
+                                        <div key={s.id} onClick={() => toggleUpsell(s.id)} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `${accent.bgDim} ${colors.text}` : `hover:bg-[var(--color-card-hover)] ${colors.textSecondary}`}`}>
                                             <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedUpsells.includes(s.id) ? `${accent.border} ${accent.bg}` : `${colors.border}`}`}>
-                                                {selectedUpsells.includes(s.id) && <Check className="w-3 h-3 text-black" />}
+                                                {selectedUpsells.includes(s.id) && <Check className="w-3 h-3 text-[var(--color-bg)]" />}
                                             </div>
                                             <span className="text-sm">{s.name}</span>
                                         </div>

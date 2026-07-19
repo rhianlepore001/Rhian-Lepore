@@ -39,7 +39,7 @@ export const DashboardHero = React.memo(({ isBeauty, isStaff = false }: Dashboar
                                 {firstName[0]}
                             </div>
                         )}
-                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[color:var(--color-bg)] bg-emerald-400`} />
+                        <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[color:var(--color-bg)] bg-[var(--color-success)]`} />
                     </div>
 
                     {/* Linha de acento lateral */}

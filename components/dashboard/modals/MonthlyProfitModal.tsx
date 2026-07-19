@@ -144,7 +144,7 @@ export const MonthlyProfitModal: React.FC<MonthlyProfitModalProps> = ({
                         {history.map((item, idx) => (
                             <div
                                 key={`${item.month}-${item.year}`}
-                                className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${idx === 0 ? `${colors.card} ${colors.border} ring-1 ring-white/20` : `${colors.inputBg} ${colors.border} hover:bg-white/5`}`}
+                                className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${idx === 0 ? `${colors.card} ${colors.border} ring-1 ring-white/20` : `${colors.inputBg} ${colors.border} hover:bg-[var(--color-card-hover)]`}`}
                             >
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">

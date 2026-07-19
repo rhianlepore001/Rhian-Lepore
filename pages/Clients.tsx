@@ -305,7 +305,7 @@ export const Clients: React.FC = () => {
                               e.stopPropagation();
                               window.open(`https://wa.me/${client.phone.replace(/\D/g, '')}`, '_blank');
                             }}
-                            className="p-1 rounded-full hover:bg-green-500/10 transition-colors text-green-500"
+                            className="p-1 rounded-full hover:bg-[var(--color-success-bg)] transition-colors text-[var(--color-success)]"
                             title="WhatsApp"
                           >
                             <MessageCircle className="w-4 h-4" />

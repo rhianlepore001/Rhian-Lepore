@@ -51,7 +51,7 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
 
     if (isLoading) {
         return (
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
+            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                 <Loader2 className="w-3 h-3 animate-spin" /> Pix...
             </div>
         );
@@ -65,11 +65,11 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
             className={`flex flex-col gap-2 mt-2 p-3 rounded-xl ${colors.surface} ${colors.border} border`}
         >
             <div className="flex items-center gap-2 text-xs">
-                <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                <Zap className="w-3.5 h-3.5 text-[var(--color-warning)]" />
                 <span className={`${font.mono} uppercase tracking-wider ${colors.textSecondary}`}>
                     Pix pendente
                 </span>
-                <span className="text-yellow-300 font-bold">
+                <span className="text-[var(--color-warning)] font-bold">
                     R$ {(pix.amount_cents / 100).toFixed(2).replace('.', ',')}
                 </span>
             </div>

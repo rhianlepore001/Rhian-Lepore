@@ -134,7 +134,7 @@ function SuccessOverlay({ targetElementId }: { targetElementId: string }) {
 
   return (
     <div
-      className="fixed z-[9999] bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg animate-check-complete"
+      className="fixed z-[9999] bg-[var(--color-success)] text-[var(--color-text)] rounded-full flex items-center justify-center shadow-lg animate-check-complete"
       style={{
         top: rect.top + rect.height / 2 - 24,
         left: rect.left + rect.width / 2 - 24,
@@ -169,21 +169,21 @@ function OnboardingToast({
   const nextStepName = data.nextStepId ? STEP_LABELS[data.nextStepId as WizardStepId] : null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] bg-surface bg-zinc-900 border border-white/10 rounded-xl shadow-2xl p-5 min-w-[320px] max-w-sm animate-in slide-in-from-bottom-6 fade-in duration-300 ease-out">
+    <div className="fixed bottom-6 right-6 z-[9999] bg-surface bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl shadow-2xl p-5 min-w-[320px] max-w-sm animate-in slide-in-from-bottom-6 fade-in duration-300 ease-out">
       <div className="flex items-start gap-4">
-        <div className="bg-green-500/20 p-2 rounded-full mt-1">
-          <Check className="w-5 h-5 text-green-500" strokeWidth={3} />
+        <div className="bg-[var(--color-success-bg)] p-2 rounded-full mt-1">
+          <Check className="w-5 h-5 text-[var(--color-success)]" strokeWidth={3} />
         </div>
         <div className="flex-1">
-          <h4 className="text-white font-medium text-sm">✓ {stepName} concluído!</h4>
+          <h4 className="text-[var(--color-text)] font-medium text-sm">✓ {stepName} concluído!</h4>
           {nextStepName ? (
-            <p className="text-gray-400 text-sm mt-1">Próximo: {nextStepName}</p>
+            <p className="text-[var(--color-text-muted)] text-sm mt-1">Próximo: {nextStepName}</p>
           ) : (
-            <p className="text-gray-400 text-sm mt-1">Você está quase lá!</p>
+            <p className="text-[var(--color-text-muted)] text-sm mt-1">Você está quase lá!</p>
           )}
           <button 
             onClick={onGoDashboard}
-            className="mt-4 text-amber-500 hover:text-amber-400 text-sm font-medium flex items-center gap-1 transition-colors"
+            className="mt-4 text-[var(--color-warning)] hover:text-[var(--color-warning)] text-sm font-medium flex items-center gap-1 transition-colors"
           >
             Voltar ao dashboard <ChevronRight className="w-4 h-4" />
           </button>

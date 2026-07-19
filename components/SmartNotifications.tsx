@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 
 const TYPE_CONFIG: Record<SmartNotification['type'], { icon: React.ElementType; color: string; bgColor: string }> = {
-    reactivation: { icon: UserCheck, color: 'text-orange-400', bgColor: 'bg-orange-400/10' },
-    gap: { icon: Clock, color: 'text-blue-400', bgColor: 'bg-blue-400/10' },
+    reactivation: { icon: UserCheck, color: 'text-[var(--color-warning)]', bgColor: 'bg-orange-400/10' },
+    gap: { icon: Clock, color: 'text-[var(--color-info)]', bgColor: 'bg-blue-400/10' },
     vip: { icon: MessageCircle, color: 'text-purple-400', bgColor: 'bg-purple-400/10' },
-    upsell: { icon: Send, color: 'text-green-400', bgColor: 'bg-green-400/10' },
-    tip: { icon: Lightbulb, color: 'text-yellow-400', bgColor: 'bg-yellow-400/10' },
+    upsell: { icon: Send, color: 'text-[var(--color-success)]', bgColor: 'bg-green-400/10' },
+    tip: { icon: Lightbulb, color: 'text-[var(--color-warning)]', bgColor: 'bg-yellow-400/10' },
 };
 
 export const SmartNotificationsBanner: React.FC = () => {

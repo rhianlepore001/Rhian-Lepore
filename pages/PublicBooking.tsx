@@ -151,7 +151,7 @@ export const PublicBooking: React.FC = () => {
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
     const { colors, accent, classes, shadow, radius, font, isDark } = useBrutalTheme({ override: themeOverride });
 
-    const accentTextOnAccent = isBeauty ? 'text-white' : 'text-black';
+    const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-bg)]';
     // Classes literais estáticas (variante interpolada não gera CSS no build estático do Tailwind)
     const selectionClasses = isBeauty
         ? 'selection:bg-theme-accent selection:text-[#fff]'
@@ -320,8 +320,8 @@ export const PublicBooking: React.FC = () => {
         if (business) {
             const originalBg = document.body.style.backgroundColor;
             const originalColor = document.body.style.color;
-            const targetBg = isBeauty ? '#1F1B2E' : '#121212';
-            const targetColor = '#EAEAEA';
+            const targetBg = isBeauty ? 'var(--color-card)' : '#121212';
+            const targetColor = 'var(--color-text)';
 
             document.body.style.backgroundColor = targetBg;
             document.body.style.color = targetColor;
@@ -691,7 +691,7 @@ export const PublicBooking: React.FC = () => {
             {/* Sophisticated Glows */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
                 <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] ${accent.bgDim}`}></div>
-                <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] bg-black/40`}></div>
+                <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] bg-[var(--color-bg)]/40`}></div>
             </div>
 
             <PublicBusinessHeader
@@ -756,7 +756,7 @@ export const PublicBooking: React.FC = () => {
                                         <button onClick={() => setActiveCategory('all')}
                                             className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
-                                                    : `${colors.textMuted} hover:bg-white/5`
+                                                    : `${colors.textMuted} hover:bg-[var(--color-card-hover)]`
                                                 }`}>
                                             Todos
                                         </button>
@@ -764,7 +764,7 @@ export const PublicBooking: React.FC = () => {
                                             <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                                                 className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
-                                                        : `${colors.textMuted} ${colors.border} hover:bg-white/5`
+                                                        : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
                                                     }`}>
                                                 {cat.name}
                                             </button>
@@ -794,7 +794,7 @@ export const PublicBooking: React.FC = () => {
                                                     : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
                                                 }
                                             `}>
-                                            <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
+                                            <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
                                                 {service.image_url ? (
                                                     <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                 ) : (
@@ -806,7 +806,7 @@ export const PublicBooking: React.FC = () => {
                                                 <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                                                     {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
                                                 </div>
-                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-[var(--color-bg)]/20 border-[var(--color-border-strong)] text-transparent'}`}>
                                                     <Check className="w-6 h-6" />
                                                 </div>
                                             </div>
@@ -1164,7 +1164,7 @@ export const PublicBooking: React.FC = () => {
                                                                 <button onClick={() => setActiveCategory('all')}
                                                                     className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
                                                                             ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
-                                                                            : `${colors.textMuted} hover:bg-white/5`
+                                                                            : `${colors.textMuted} hover:bg-[var(--color-card-hover)]`
                                                                         }`}>
                                                                     Todos
                                                                 </button>
@@ -1172,7 +1172,7 @@ export const PublicBooking: React.FC = () => {
                                                                     <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                                                                         className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
                                                                                 ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
-                                                                                : `${colors.textMuted} ${colors.border} hover:bg-white/5`
+                                                                                : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
                                                                             }`}>
                                                                         {cat.name}
                                                                     </button>
@@ -1215,7 +1215,7 @@ export const PublicBooking: React.FC = () => {
                                                                             ? `md:scale-[1.03] ${shadow.glow} ring-2 ${accent.ring}`
                                                                             : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
                                                                         }`}>
-                                                                    <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-neutral-900">
+                                                                    <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
                                                                         {service.image_url ? (
                                                                             <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                                         ) : (
@@ -1227,7 +1227,7 @@ export const PublicBooking: React.FC = () => {
                                                                         <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                                                                             {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
                                                                         </div>
-                                                                        <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-black/20 border-white/20 text-transparent'}`}>
+                                                                        <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-[var(--color-bg)]/20 border-[var(--color-border-strong)] text-transparent'}`}>
                                                                             <Check className="w-6 h-6" />
                                                                         </div>
                                                                     </div>
@@ -1409,7 +1409,7 @@ export const PublicBooking: React.FC = () => {
                                     <div className="flex flex-col gap-5">
                                         <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
                                             className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
-                                            <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
+                                            <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
                                                 <Send className="w-5 h-5" />
                                             </div>
                                             <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
@@ -1464,7 +1464,7 @@ export const PublicBooking: React.FC = () => {
 
             {/* Chat Flow: Modal/Bottom Sheet de Contato e Resumo */}
             {bookingMode === 'chat' && step === 'contact' && (
-                <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
+                <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-[var(--color-bg)]/50 backdrop-blur-sm animate-in fade-in duration-300" style={{ zIndex: 'var(--z-modal)' }}>
                     <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: false, fallbackFocus: '[data-booking-contact-dialog]' }}>
                     <div
                         data-booking-contact-dialog
@@ -1476,7 +1476,7 @@ export const PublicBooking: React.FC = () => {
                         className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
-                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:text-theme-text transition-colors rounded-full p-2 hover:bg-white/5`}>
+                            <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:text-theme-text transition-colors rounded-full p-2 hover:bg-[var(--color-card-hover)]`}>
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -1585,7 +1585,7 @@ export const PublicBooking: React.FC = () => {
                             <div className="flex flex-col items-start z-10">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-bold uppercase opacity-60">Total</span>
-                                    <span className={`px-1.5 py-0.5 rounded-md text-xs font-black bg-black/15`}>
+                                    <span className={`px-1.5 py-0.5 rounded-md text-xs font-black bg-[var(--color-bg)]/15`}>
                                         {selectedServices.length} {selectedServices.length === 1 ? 'ITEM' : 'ITENS'}
                                     </span>
                                 </div>
@@ -1666,7 +1666,7 @@ export const PublicBooking: React.FC = () => {
                     <div className="flex flex-col gap-5">
                         <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
                             className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
-                            <div className={`p-2 bg-white/10 rounded-lg group-hover:bg-white/20`}>
+                            <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
                                 <Send className="w-5 h-5" />
                             </div>
                             <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
@@ -1733,7 +1733,7 @@ export const PublicBooking: React.FC = () => {
             {/* Policy Modal */}
             {showPolicyModal && (
                 <div
-                    className="fixed inset-0 flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-300"
+                    className="fixed inset-0 flex items-center justify-center p-6 bg-[var(--color-bg)]/95 backdrop-blur-md animate-in fade-in duration-300"
                     style={{ zIndex: 'var(--z-modal)' }}
                     onClick={() => setShowPolicyModal(false)}
                 >

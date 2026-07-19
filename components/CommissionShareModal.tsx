@@ -97,7 +97,7 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
         try {
             const html2canvas = (await import('html2canvas')).default;
             const canvas = await html2canvas(target, {
-                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card').trim() || '#171717',
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card').trim() || 'var(--color-card)',
                 scale: 2
             });
             const link = document.createElement('a');

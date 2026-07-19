@@ -31,7 +31,7 @@ interface Rect {
   h: number;
 }
 
-const RECT_COLOR = '#ef4444';
+const RECT_COLOR = 'var(--color-danger)';
 const MIN_SIZE = 0.01; // ignora cliques sem arrasto
 
 function clamp01(n: number): number {

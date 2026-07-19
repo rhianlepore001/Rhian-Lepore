@@ -118,9 +118,9 @@ export const JoinClub: React.FC = () => {
 
     if (!slug) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 bg-black">
+            <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-bg)]">
                 <div className="text-center max-w-md">
-                    <p className="text-white text-lg">Link inválido. Solicite o link correto ao estabelecimento.</p>
+                    <p className="text-[var(--color-text)] text-lg">Link inválido. Solicite o link correto ao estabelecimento.</p>
                 </div>
             </div>
         );
@@ -258,7 +258,7 @@ export const JoinClub: React.FC = () => {
                                 description="Escaneie o QR Code ou copie o código. A confirmação chega em segundos."
                             />
                         ) : paymentMethod === 'pix' && !pixReady && !pixLoading ? (
-                            <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-amber-200 text-sm">
+                            <div className="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] rounded-2xl p-4 text-[var(--color-warning)] text-sm">
                                 O estabelecimento ainda não configurou o Pix. Escolha pagar no balcão ou aguarde.
                             </div>
                         ) : null}
@@ -286,8 +286,8 @@ export const JoinClub: React.FC = () => {
                 {step === 'confirmation' && selectedPlan && (
                     <div className="space-y-4">
                         <div className={`${colors.card} ${colors.border} border rounded-2xl p-8 text-center space-y-4`}>
-                            <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                                <Check className="w-8 h-8 text-green-400" />
+                            <div className="w-16 h-16 mx-auto rounded-full bg-[var(--color-success-bg)] flex items-center justify-center">
+                                <Check className="w-8 h-8 text-[var(--color-success)]" />
                             </div>
                             <h2 className={`text-2xl ${font.heading} ${colors.text} uppercase`}>
                                 Solicitação enviada!

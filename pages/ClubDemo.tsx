@@ -140,13 +140,13 @@ export const ClubDemo: React.FC = () => {
                 <header className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500/30 to-amber-600/10">
-                            <Crown className="w-6 h-6 text-yellow-300" />
+                            <Crown className="w-6 h-6 text-[var(--color-warning)]" />
                         </div>
                         <div>
-                            <h1 className={`text-xl md:text-2xl ${font.heading} text-white uppercase tracking-tight`}>
+                            <h1 className={`text-xl md:text-2xl ${font.heading} text-[var(--color-text)] uppercase tracking-tight`}>
                                 Clube — Demo
                             </h1>
-                            <p className="text-neutral-400 text-xs md:text-sm">
+                            <p className="text-[var(--color-text-muted)] text-xs md:text-sm">
                                 Fluxo end-to-end sem login
                             </p>
                         </div>
@@ -192,7 +192,7 @@ export const ClubDemo: React.FC = () => {
 
                 {step === 'plan' && (
                     <div className="space-y-4">
-                        <p className="text-neutral-300 text-sm">
+                        <p className="text-[var(--color-text-secondary)] text-sm">
                             Escolha o plano ideal pra você. Cancelamento a qualquer momento.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -213,7 +213,7 @@ export const ClubDemo: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setStep('plan')}
-                            className="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1"
+                            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1"
                         >
                             <ArrowLeft className="w-4 h-4" /> Trocar plano
                         </button>
@@ -221,10 +221,10 @@ export const ClubDemo: React.FC = () => {
                         <div className={`${colors.card} ${colors.border} border rounded-2xl p-6 space-y-4`}>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className={`text-lg ${font.heading} text-white uppercase`}>
+                                    <h2 className={`text-lg ${font.heading} text-[var(--color-text)] uppercase`}>
                                         {selectedPlan.name}
                                     </h2>
-                                    <p className="text-neutral-400 text-sm">
+                                    <p className="text-[var(--color-text-muted)] text-sm">
                                         R$ {(selectedPlan.price_cents / 100).toFixed(2).replace('.', ',')} / mês
                                     </p>
                                 </div>
@@ -265,9 +265,9 @@ export const ClubDemo: React.FC = () => {
                                                 : `${colors.inputBg} ${colors.border}`,
                                         ].join(' ')}
                                     >
-                                        <Zap className="w-5 h-5 text-yellow-400 mb-1" />
-                                        <span className={`${font.heading} text-white uppercase text-sm block`}>Pix agora</span>
-                                        <p className="text-xs text-neutral-400">Ativação em segundos.</p>
+                                        <Zap className="w-5 h-5 text-[var(--color-warning)] mb-1" />
+                                        <span className={`${font.heading} text-[var(--color-text)] uppercase text-sm block`}>Pix agora</span>
+                                        <p className="text-xs text-[var(--color-text-muted)]">Ativação em segundos.</p>
                                     </button>
                                     <button
                                         type="button"
@@ -279,9 +279,9 @@ export const ClubDemo: React.FC = () => {
                                                 : `${colors.inputBg} ${colors.border}`,
                                         ].join(' ')}
                                     >
-                                        <Store className="w-5 h-5 text-blue-400 mb-1" />
-                                        <span className={`${font.heading} text-white uppercase text-sm block`}>No balcão</span>
-                                        <p className="text-xs text-neutral-400">Dinheiro ou cartão.</p>
+                                        <Store className="w-5 h-5 text-[var(--color-info)] mb-1" />
+                                        <span className={`${font.heading} text-[var(--color-text)] uppercase text-sm block`}>No balcão</span>
+                                        <p className="text-xs text-[var(--color-text-muted)]">Dinheiro ou cartão.</p>
                                     </button>
                                 </div>
                             </div>
@@ -308,7 +308,7 @@ export const ClubDemo: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setStep('pay')}
-                            className="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1"
+                            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1"
                         >
                             <ArrowLeft className="w-4 h-4" /> Voltar
                         </button>
@@ -331,7 +331,7 @@ export const ClubDemo: React.FC = () => {
                             data-testid="simulate-pix-confirm"
                             className={[
                                 'w-full py-4 rounded-xl font-bold uppercase tracking-wide',
-                                'bg-yellow-500 text-black',
+                                'bg-[var(--color-warning)] text-[var(--color-bg)]',
                                 'active:scale-95 transition-transform',
                                 'flex items-center justify-center gap-2',
                             ].join(' ')}
@@ -346,27 +346,27 @@ export const ClubDemo: React.FC = () => {
                     <div className="space-y-4">
                         <div
                             data-testid="active-banner"
-                            className="relative overflow-hidden rounded-2xl p-6 border-2 border-yellow-500/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/5"
+                            className="relative overflow-hidden rounded-2xl p-6 border-2 border-[var(--color-warning-border)]/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/5"
                         >
-                            <div className="absolute -right-4 -top-4 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+                            <div className="absolute -right-4 -top-4 w-32 h-32 bg-[var(--color-warning-bg)] rounded-full blur-3xl pointer-events-none" />
                             <div className="relative space-y-3 text-center">
-                                <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                                    <Check className="w-8 h-8 text-green-400" />
+                                <div className="w-16 h-16 mx-auto rounded-full bg-[var(--color-success-bg)] flex items-center justify-center">
+                                    <Check className="w-8 h-8 text-[var(--color-success)]" />
                                 </div>
-                                <h2 className={`text-2xl ${font.heading} text-yellow-100 uppercase`}>
+                                <h2 className={`text-2xl ${font.heading} text-[var(--color-warning)] uppercase`}>
                                     Bem-vindo ao Clube {selectedPlan.name}!
                                 </h2>
-                                <p className="text-yellow-100/80 text-sm max-w-md mx-auto">
+                                <p className="text-[var(--color-warning)]/80 text-sm max-w-md mx-auto">
                                     Sua assinatura está ativa. Agende um serviço agora e veja o desconto na hora.
                                 </p>
                             </div>
                         </div>
 
                         <div className={`${colors.card} ${colors.border} border rounded-2xl p-5`}>
-                            <h3 className={`${font.heading} text-white uppercase text-sm tracking-wide mb-3`}>
+                            <h3 className={`${font.heading} text-[var(--color-text)] uppercase text-sm tracking-wide mb-3`}>
                                 Agendar um serviço
                             </h3>
-                            <p className="text-neutral-400 text-xs mb-4">
+                            <p className="text-[var(--color-text-muted)] text-xs mb-4">
                                 Selecione um serviço. Os cobertos pelo plano saem de graça.
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -381,21 +381,21 @@ export const ClubDemo: React.FC = () => {
                                             className={[
                                                 'flex items-center justify-between p-3 rounded-xl border text-left transition-all',
                                                 covered
-                                                    ? 'border-yellow-500/40 bg-yellow-500/5 hover:bg-yellow-500/10'
+                                                    ? 'border-[var(--color-warning-border)]/40 bg-[var(--color-warning)]/5 hover:bg-[var(--color-warning-bg)]'
                                                     : `${colors.border} ${colors.inputBg} hover:brightness-110`,
                                             ].join(' ')}
                                         >
                                             <div className="flex items-center gap-2 min-w-0">
                                                 {covered ? (
-                                                    <Sparkles className="w-4 h-4 text-yellow-400 shrink-0" />
+                                                    <Sparkles className="w-4 h-4 text-[var(--color-warning)] shrink-0" />
                                                 ) : (
-                                                    <Calendar className="w-4 h-4 text-neutral-500 shrink-0" />
+                                                    <Calendar className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
                                                 )}
                                                 <span className={`${colors.text} text-sm font-medium truncate`}>{svc.name}</span>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {covered ? (
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-yellow-300 bg-yellow-500/15 px-2 py-0.5 rounded-md">
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-warning)] bg-[var(--color-warning-bg)] px-2 py-0.5 rounded-md">
                                                         Grátis
                                                     </span>
                                                 ) : (
@@ -417,7 +417,7 @@ export const ClubDemo: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => setStep('active')}
-                            className="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1"
+                            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1"
                         >
                             <ArrowLeft className="w-4 h-4" /> Voltar
                         </button>
@@ -427,25 +427,25 @@ export const ClubDemo: React.FC = () => {
                             className={[
                                 'relative overflow-hidden rounded-2xl p-5 border-2',
                                 discount.covered
-                                    ? 'border-yellow-500/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/5'
+                                    ? 'border-[var(--color-warning-border)]/60 bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/5'
                                     : 'border-[var(--color-border)] bg-theme-card',
                             ].join(' ')}
                         >
                             <div className="flex items-start gap-3">
-                                <Crown className="w-5 h-5 text-yellow-300 shrink-0 mt-0.5" />
+                                <Crown className="w-5 h-5 text-[var(--color-warning)] shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`text-sm ${font.heading} text-yellow-100 uppercase tracking-wide`}>
+                                        <span className={`text-sm ${font.heading} text-[var(--color-warning)] uppercase tracking-wide`}>
                                             Clube {selectedPlan.name}
                                         </span>
                                         <MembershipBadge color={selectedPlan.badge_color} />
                                     </div>
                                     {discount.covered ? (
-                                        <p className="text-sm text-yellow-100/80 mt-1.5">
+                                        <p className="text-sm text-[var(--color-warning)]/80 mt-1.5">
                                             Atendimento incluso. Você não paga nada.
                                         </p>
                                     ) : (
-                                        <p className="text-sm text-yellow-100/80 mt-1.5">
+                                        <p className="text-sm text-[var(--color-warning)]/80 mt-1.5">
                                             Plano não cobre este serviço.
                                         </p>
                                     )}
@@ -454,14 +454,14 @@ export const ClubDemo: React.FC = () => {
                         </div>
 
                         <div className={`${colors.card} ${colors.border} border rounded-2xl p-5 space-y-3`}>
-                            <h3 className={`${font.heading} text-white uppercase text-sm tracking-wide`}>
+                            <h3 className={`${font.heading} text-[var(--color-text)] uppercase text-sm tracking-wide`}>
                                 Resumo do atendimento
                             </h3>
                             <div className="flex items-center justify-between text-sm">
                                 <span className={colors.textSecondary}>{checkoutService.name}</span>
                                 <span className={colors.text}>
                                     {discount.covered ? (
-                                        <span className="line-through text-neutral-500">R$ {checkoutService.price.toFixed(2).replace('.', ',')}</span>
+                                        <span className="line-through text-[var(--color-text-muted)]">R$ {checkoutService.price.toFixed(2).replace('.', ',')}</span>
                                     ) : (
                                         `R$ ${checkoutService.price.toFixed(2).replace('.', ',')}`
                                     )}
@@ -469,16 +469,16 @@ export const ClubDemo: React.FC = () => {
                             </div>
                             {discount.covered && (
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="text-green-400">Desconto Clube</span>
-                                    <span className="text-green-400 font-bold">− R$ {checkoutService.price.toFixed(2).replace('.', ',')}</span>
+                                    <span className="text-[var(--color-success)]">Desconto Clube</span>
+                                    <span className="text-[var(--color-success)] font-bold">− R$ {checkoutService.price.toFixed(2).replace('.', ',')}</span>
                                 </div>
                             )}
                             <div className={`h-px ${colors.divider}`} />
                             <div className="flex items-center justify-between">
-                                <span className={`${font.heading} text-white uppercase`}>Total</span>
+                                <span className={`${font.heading} text-[var(--color-text)] uppercase`}>Total</span>
                                 <span
                                     data-testid="checkout-final-price"
-                                    className={`${font.heading} text-2xl font-black tabular-nums ${discount.covered ? 'text-green-400' : 'text-white'}`}
+                                    className={`${font.heading} text-2xl font-black tabular-nums ${discount.covered ? 'text-[var(--color-success)]' : 'text-[var(--color-text)]'}`}
                                 >
                                     R$ {discount.finalPrice.toFixed(2).replace('.', ',')}
                                 </span>
@@ -502,7 +502,7 @@ export const ClubDemo: React.FC = () => {
                     </div>
                 )}
 
-                <footer className="text-center text-xs text-neutral-600 pt-8 pb-2">
+                <footer className="text-center text-xs text-[var(--color-text-muted)] pt-8 pb-2">
                     Demo Club Sprint D+1 — sem dados reais, sem cobrança.
                 </footer>
             </div>

@@ -38,7 +38,7 @@ export const BottomMobileNav: React.FC = () => {
                     aria-current={isActive('/agenda') ? 'page' : undefined}
                     className={`${navItemBase} h-full ${isActive('/agenda') ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${isActive('/agenda') ? 'bg-white/5' : ''}`}>
+                    <div className={`p-2 rounded-xl transition-all ${isActive('/agenda') ? 'bg-[var(--color-card-hover)]' : ''}`}>
                         <Calendar className="w-6 h-6" strokeWidth={isActive('/agenda') ? 2.5 : 2} aria-hidden="true" />
                     </div>
                     <span className="text-xs font-bold tracking-tight">Agenda</span>
@@ -52,7 +52,7 @@ export const BottomMobileNav: React.FC = () => {
                     aria-current={isActive('/clientes') ? 'page' : undefined}
                     className={`${navItemBase} h-full ${isActive('/clientes') ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${isActive('/clientes') ? 'bg-white/5' : ''}`}>
+                    <div className={`p-2 rounded-xl transition-all ${isActive('/clientes') ? 'bg-[var(--color-card-hover)]' : ''}`}>
                         <Users className="w-6 h-6" strokeWidth={isActive('/clientes') ? 2.5 : 2} aria-hidden="true" />
                     </div>
                     <span className="text-xs font-bold tracking-tight">Clientes</span>
@@ -68,7 +68,7 @@ export const BottomMobileNav: React.FC = () => {
                         aria-label="Ações rápidas"
                         title="Ações rápidas"
                     >
-                        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute inset-0 bg-[var(--color-card-hover)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         <Plus className="w-10 h-10 relative z-10" strokeWidth={3} aria-hidden="true" />
                     </button>
                     {/* Ring Glow */}
@@ -84,7 +84,7 @@ export const BottomMobileNav: React.FC = () => {
                         aria-current={isActive('/financeiro') ? 'page' : undefined}
                         className={`${navItemBase} h-full ${isActive('/financeiro') ? accent.text : colors.textSecondary}`}
                     >
-                        <div className={`p-2 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-white/5' : ''}`}>
+                        <div className={`p-2 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-[var(--color-card-hover)]' : ''}`}>
                             <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} aria-hidden="true" />
                         </div>
                         <span className="text-xs font-bold tracking-tight">Financeiro</span>
@@ -97,7 +97,7 @@ export const BottomMobileNav: React.FC = () => {
                         aria-current={isActive('/meus-insights') ? 'page' : undefined}
                         className={`${navItemBase} h-full ${isActive('/meus-insights') ? accent.text : colors.textSecondary}`}
                     >
-                        <div className={`p-2 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-white/5' : ''}`}>
+                        <div className={`p-2 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-[var(--color-card-hover)]' : ''}`}>
                             <TrendingUp className="w-6 h-6" strokeWidth={isActive('/meus-insights') ? 2.5 : 2} aria-hidden="true" />
                         </div>
                         <span className="text-xs font-bold tracking-tight">Insights</span>
@@ -112,7 +112,7 @@ export const BottomMobileNav: React.FC = () => {
                     aria-expanded={showMoreMenu}
                     className={`${navItemBase} h-full ${showMoreMenu ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-white/5' : ''}`}>
+                    <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-[var(--color-card-hover)]' : ''}`}>
                         <Menu className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
                     </div>
                     <span className="text-xs font-bold tracking-tight">Mais</span>

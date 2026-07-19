@@ -87,12 +87,12 @@ export const Login: React.FC = () => {
                 </div>
 
                 <div className="text-center mb-10 md:mb-14 max-w-xl">
-                    <p className="font-mono text-xs uppercase tracking-[0.12em] text-white/50 mb-4">
+                    <p className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--color-text)]/50 mb-4">
                         O sistema que trabalha enquanto você atende.
                     </p>
-                    <h1 className="font-heading text-4xl md:text-6xl text-white uppercase leading-[0.95] tracking-tight">
+                    <h1 className="font-heading text-4xl md:text-6xl text-[var(--color-text)] uppercase leading-[0.95] tracking-tight">
                         Escolha o seu<br />
-                        <span className="text-neutral-400">negócio</span>
+                        <span className="text-[var(--color-text-muted)]">negócio</span>
                     </h1>
                 </div>
 
@@ -107,7 +107,7 @@ export const Login: React.FC = () => {
                     >
                         <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
                             <div
-                                className="absolute -inset-[2px] bg-black bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                className="absolute -inset-[2px] bg-[var(--color-bg)] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
                                 style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80)' }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
@@ -115,18 +115,18 @@ export const Login: React.FC = () => {
                         </div>
 
                         {/* Corner accent — risco querendo fechar um quadrado */}
-                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-white/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
-                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-white/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
+                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-[var(--color-text)]/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
+                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-[var(--color-text)]/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
 
                         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
-                            <h2 className="font-heading text-3xl md:text-4xl text-white uppercase tracking-tight mb-3 group-hover:text-accent-gold transition-colors duration-300">
+                            <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-accent-gold transition-colors duration-300">
                                 Barbearias
                             </h2>
                             {/* Traço horizontal com animação de crescer */}
                             <div className="w-0 h-[1px] bg-accent-gold/60 group-hover:w-16 transition-all duration-500 mb-5" />
-                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-accent-gold/40 group-hover:bg-accent-gold/10 transition-all duration-300">
-                                <span className="font-mono text-xs text-white/90 uppercase tracking-widest">Entrar</span>
-                                <ArrowRight className="w-3.5 h-3.5 text-white/70 group-hover:text-accent-gold group-hover:translate-x-0.5 transition-all duration-300" />
+                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-card-hover)] backdrop-blur-sm border border-[var(--color-border)] group-hover:border-accent-gold/40 group-hover:bg-accent-gold/10 transition-all duration-300">
+                                <span className="font-mono text-xs text-[var(--color-text)]/90 uppercase tracking-widest">Entrar</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text)]/70 group-hover:text-accent-gold group-hover:translate-x-0.5 transition-all duration-300" />
                             </div>
                         </div>
                     </button>
@@ -140,7 +140,7 @@ export const Login: React.FC = () => {
                     >
                         <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
                             <div
-                                className="absolute -inset-[2px] bg-black bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                className="absolute -inset-[2px] bg-[var(--color-bg)] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
                                 style={{ backgroundImage: 'url("/mulher-studio.png")' }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
@@ -148,18 +148,18 @@ export const Login: React.FC = () => {
                         </div>
 
                         {/* Corner accent — risco querendo fechar um quadrado */}
-                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-white/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
-                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-white/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
+                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-[var(--color-text)]/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
+                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-[var(--color-text)]/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
 
                         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
-                            <h2 className="font-heading text-3xl md:text-4xl text-white uppercase tracking-tight mb-3 group-hover:text-beauty-neon transition-colors duration-300">
+                            <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-beauty-neon transition-colors duration-300">
                                 Studios
                             </h2>
                             {/* Traço horizontal com animação de crescer */}
                             <div className="w-0 h-[1px] bg-beauty-neon/60 group-hover:w-16 transition-all duration-500 mb-5" />
-                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-beauty-neon/40 group-hover:bg-beauty-neon/10 transition-all duration-300">
-                                <span className="font-mono text-xs text-white/90 uppercase tracking-widest">Entrar</span>
-                                <ArrowRight className="w-3.5 h-3.5 text-white/70 group-hover:text-beauty-neon group-hover:translate-x-0.5 transition-all duration-300" />
+                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-card-hover)] backdrop-blur-sm border border-[var(--color-border)] group-hover:border-beauty-neon/40 group-hover:bg-beauty-neon/10 transition-all duration-300">
+                                <span className="font-mono text-xs text-[var(--color-text)]/90 uppercase tracking-widest">Entrar</span>
+                                <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text)]/70 group-hover:text-beauty-neon group-hover:translate-x-0.5 transition-all duration-300" />
                             </div>
                         </div>
                     </button>
@@ -167,13 +167,13 @@ export const Login: React.FC = () => {
                 </div>
 
                 <div className="mt-10 md:mt-14 w-full max-w-md">
-                    <div className="border-t border-neutral-800 pt-8 flex flex-col items-center gap-4">
-                        <p className="font-mono text-xs text-white/40 uppercase tracking-[0.1em]">
+                    <div className="border-t border-[var(--color-border)] pt-8 flex flex-col items-center gap-4">
+                        <p className="font-mono text-xs text-[var(--color-text)]/40 uppercase tracking-[0.1em]">
                             Primeira vez por aqui?
                         </p>
                         <Link
                             to="/register"
-                            className="w-full flex items-center justify-center py-3.5 rounded-xl border border-white/15 hover:border-white/25 text-white text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-white/[0.04] hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+                            className="w-full flex items-center justify-center py-3.5 rounded-xl border border-[var(--color-text)]/15 hover:border-[var(--color-text)]/25 text-[var(--color-text)] text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-[var(--color-card-hover)] hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                         >
                             Criar conta — 10 dias grátis
                         </Link>
@@ -197,7 +197,7 @@ export const Login: React.FC = () => {
             {/* Voltar */}
             <button
                 onClick={() => setShowGateway(true)}
-                className="absolute top-6 left-6 z-20 font-mono text-xs uppercase tracking-widest text-neutral-600 hover:text-white transition-colors flex items-center gap-1.5"
+                className="absolute top-6 left-6 z-20 font-mono text-xs uppercase tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1.5"
             >
                 ← Voltar
             </button>
@@ -205,8 +205,8 @@ export const Login: React.FC = () => {
             {/* Card split */}
             <div className={`w-full max-w-3xl relative z-10 flex overflow-hidden
                 ${isBeauty
-                    ? 'rounded-3xl border border-white/10 shadow-[var(--elevation-3)]'
-                    : 'rounded-2xl border border-white/5 shadow-[var(--elevation-3)]'}
+                    ? 'rounded-3xl border border-[var(--color-border)] shadow-[var(--elevation-3)]'
+                    : 'rounded-2xl border border-[var(--color-border)] shadow-[var(--elevation-3)]'}
             `}>
 
                 {/* Painel esquerdo — decorativo (só desktop) */}
@@ -226,11 +226,11 @@ export const Login: React.FC = () => {
                         `}>
                             {isBeauty ? 'Salões & Studios' : 'Barbearia'}
                         </p>
-                        <h2 className="font-heading text-4xl text-white uppercase leading-none tracking-tight mb-4">
+                        <h2 className="font-heading text-4xl text-[var(--color-text)] uppercase leading-none tracking-tight mb-4">
                             {isBeauty ? 'Seu salão,\nseu ritmo.' : 'Seu corte,\nsua regra.'}
                         </h2>
                         <p className={`text-xs leading-relaxed
-                            ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
+                            ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-[var(--color-text-muted)] font-mono'}
                         `}>
                             Tudo o que o seu negócio precisa, em um só lugar.
                         </p>
@@ -251,8 +251,8 @@ export const Login: React.FC = () => {
                     {/* Screws (Barber Only) */}
                     {!isBeauty && (
                         <>
-                            <Screw className="top-[-10px] right-[-10px] text-neutral-800" />
-                            <Screw className="bottom-[-10px] right-[-10px] text-neutral-800" />
+                            <Screw className="top-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
+                            <Screw className="bottom-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
                         </>
                     )}
 
@@ -263,11 +263,11 @@ export const Login: React.FC = () => {
                         </div>
 
                         <div className="mb-8">
-                            <h2 className="font-heading text-3xl text-white uppercase tracking-tight mb-1">
+                            <h2 className="font-heading text-3xl text-[var(--color-text)] uppercase tracking-tight mb-1">
                                 Entrar
                             </h2>
                             <p className={`text-xs uppercase tracking-widest
-                                ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-neutral-600 font-mono'}
+                                ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-[var(--color-text-muted)] font-mono'}
                             `}>
                                 Que bom te ver de novo
                             </p>
@@ -356,7 +356,7 @@ export const Login: React.FC = () => {
 
             </div>
 
-            <div className="absolute bottom-5 font-mono text-xs text-white/15 uppercase tracking-[0.2em]">
+            <div className="absolute bottom-5 font-mono text-xs text-[var(--color-text)]/15 uppercase tracking-[0.2em]">
 AgendiX
             </div>
         </div>

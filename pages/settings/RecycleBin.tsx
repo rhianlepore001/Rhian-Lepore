@@ -58,15 +58,15 @@ export const RecycleBin: React.FC = () => {
     };
 
     const getDaysColor = (days: number) => {
-        if (days <= 7) return 'text-red-500';
+        if (days <= 7) return 'text-[var(--color-danger)]';
         if (days <= 15) return 'text-orange-500';
-        return 'text-green-500';
+        return 'text-[var(--color-success)]';
     };
 
     return (
         <SettingsLayout>
             <div className="space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-white/10 pb-4">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[var(--color-border)] pb-4">
                     <div>
                         <h2 className={`text-2xl md:text-4xl font-heading ${colors.text} uppercase flex items-center gap-3`}>
                             <Trash2 className={`w-8 h-8 ${accent.text}`} />
@@ -94,7 +94,7 @@ export const RecycleBin: React.FC = () => {
                             <h3 className={`${colors.text} font-bold mb-1`}>Atenção: Exclusão Permanente</h3>
                             <p className={`${colors.textSecondary} text-sm`}>
                                 Itens permanecem na lixeira por <span className={`${colors.text} font-bold`}>30 dias</span>.
-                                Após esse período, serão <span className="text-red-500 font-bold">excluídos permanentemente</span> e
+                                Após esse período, serão <span className="text-[var(--color-danger)] font-bold">excluídos permanentemente</span> e
                                 não poderão ser recuperados.
                             </p>
                         </div>
@@ -107,7 +107,7 @@ export const RecycleBin: React.FC = () => {
                         <select
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className={`flex-1 md:flex-initial ${colors.surface} border ${colors.border} rounded-lg px-4 py-2 ${colors.text} focus:outline-none focus:border-white/30`}
+                            className={`flex-1 md:flex-initial ${colors.surface} border ${colors.border} rounded-lg px-4 py-2 ${colors.text} focus:outline-none focus:border-[var(--color-text)]/30`}
                         >
                             <option value="">Todos os tipos</option>
                             <option value="appointments">Agendamentos</option>
@@ -127,7 +127,7 @@ export const RecycleBin: React.FC = () => {
                         </div>
                     ) : items.length === 0 ? (
                         <div className="p-8 text-center">
-                            <CheckCircle2 className="w-12 h-12 mx-auto text-green-500 mb-2" />
+                            <CheckCircle2 className="w-12 h-12 mx-auto text-[var(--color-success)] mb-2" />
                             <p className={`${colors.text} font-bold mb-1`}>Lixeira Vazia</p>
                             <p className={`${colors.textSecondary} text-sm`}>Nenhum item deletado recentemente</p>
                         </div>
@@ -136,7 +136,7 @@ export const RecycleBin: React.FC = () => {
                             {items.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="p-4 hover:bg-white/5 transition-colors"
+                                    className="p-4 hover:bg-[var(--color-card-hover)] transition-colors"
                                 >
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3 flex-1">

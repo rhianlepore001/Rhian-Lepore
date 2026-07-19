@@ -39,7 +39,7 @@ export const GoogleReviewPrompt: React.FC<GoogleReviewPromptProps> = ({
 
                 <div className="flex gap-1 py-2">
                     {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                        <Star key={s} className="w-6 h-6 text-[var(--color-warning)] fill-[var(--color-warning)]" />
                     ))}
                 </div>
 

@@ -150,7 +150,7 @@ export const SubscriptionSettings: React.FC = () => {
                             className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-' + accentColor : ''}`}
                         >
                             {plan.recommended && (
-                                <div className={`absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'}`}>
+                                <div className={`absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter ${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'}`}>
                                     Recomendado
                                 </div>
                             )}

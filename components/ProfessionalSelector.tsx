@@ -24,11 +24,11 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
     isBeauty = false
 }) => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const cardBg = isBeauty ? 'bg-white/5 border border-white/10 rounded-xl' : 'bg-black/40 border-2 border-neutral-800';
+    const cardBg = isBeauty ? 'bg-[var(--color-card-hover)] border border-[var(--color-border)] rounded-xl' : 'bg-[var(--color-bg)]/40 border-2 border-[var(--color-border)]';
 
     return (
         <div className={`${cardBg} p-6 mb-6`}>
-            <h3 className="text-white font-heading text-lg uppercase mb-4">
+            <h3 className="text-[var(--color-text)] font-heading text-lg uppercase mb-4">
                 Escolha seu Profissional
             </h3>
 
@@ -41,7 +41,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
               flex flex-col items-center gap-2 p-4 rounded-lg transition-all
               ${selectedProfessional === null
                                 ? `border-2 border-theme-accent bg-theme-accent/10`
-                                : 'border-2 border-neutral-700 hover:border-neutral-600'
+                                : 'border-2 border-[var(--color-border)] hover:border-[var(--color-border)]'
                             }
               min-w-[120px]
             `}
@@ -50,14 +50,14 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
               w-20 h-20 rounded-full flex items-center justify-center
               ${selectedProfessional === null
                                 ? `bg-theme-accent/20`
-                                : 'bg-neutral-800'
+                                : 'bg-[var(--color-card)]'
                             }
             `}>
-                            <User className={`w-10 h-10 ${selectedProfessional === null ? `text-theme-accent` : 'text-neutral-500'}`} />
+                            <User className={`w-10 h-10 ${selectedProfessional === null ? `text-theme-accent` : 'text-[var(--color-text-muted)]'}`} />
                         </div>
                         <div className="text-center">
-                            <div className="text-white text-sm font-bold">Qualquer</div>
-                            <div className="text-neutral-400 text-xs">Profissional</div>
+                            <div className="text-[var(--color-text)] text-sm font-bold">Qualquer</div>
+                            <div className="text-[var(--color-text-muted)] text-xs">Profissional</div>
                         </div>
                     </button>
 
@@ -73,7 +73,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                   flex flex-col items-center gap-2 p-4 rounded-lg transition-all
                   ${isSelected
                                         ? `border-2 border-theme-accent bg-theme-accent/10`
-                                        : 'border-2 border-neutral-700 hover:border-neutral-600'
+                                        : 'border-2 border-[var(--color-border)] hover:border-[var(--color-border)]'
                                     }
                   min-w-[120px]
                 `}
@@ -90,29 +90,29 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                            <User className="w-10 h-10 text-neutral-500" />
+                                        <div className="w-full h-full bg-[var(--color-card)] flex items-center justify-center">
+                                            <User className="w-10 h-10 text-[var(--color-text-muted)]" />
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Name */}
                                 <div className="text-center">
-                                    <div className="text-white text-sm font-bold">
+                                    <div className="text-[var(--color-text)] text-sm font-bold">
                                         {professional.full_name.split(' ')[0]}
                                     </div>
 
                                     {/* Rating */}
                                     <div className="flex items-center justify-center gap-1 mt-1">
                                         <Star className={`w-3 h-3 text-theme-accent fill-current`} />
-                                        <span className="text-white text-xs font-bold">
+                                        <span className="text-[var(--color-text)] text-xs font-bold">
                                             {professional.individual_rating.toFixed(1)}
                                         </span>
                                     </div>
 
                                     {/* Specialties */}
                                     {professional.specialties.length > 0 && (
-                                        <div className="text-neutral-400 text-xs mt-1 truncate max-w-[100px]">
+                                        <div className="text-[var(--color-text-muted)] text-xs mt-1 truncate max-w-[100px]">
                                             {professional.specialties.slice(0, 2).join(', ')}
                                         </div>
                                     )}
@@ -125,7 +125,7 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
 
             {/* Selected Professional Info */}
             {selectedProfessional && (
-                <div className="mt-4 pt-4 border-t border-neutral-700">
+                <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                     {(() => {
                         const selected = professionals.find(p => p.id === selectedProfessional);
                         if (!selected) return null;
@@ -140,19 +140,19 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                            <User className="w-6 h-6 text-neutral-500" />
+                                        <div className="w-full h-full bg-[var(--color-card)] flex items-center justify-center">
+                                            <User className="w-6 h-6 text-[var(--color-text-muted)]" />
                                         </div>
                                     )}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-white font-bold">{selected.full_name}</div>
-                                    <div className="text-neutral-400 text-sm">
+                                    <div className="text-[var(--color-text)] font-bold">{selected.full_name}</div>
+                                    <div className="text-[var(--color-text-muted)] text-sm">
                                         {selected.specialties.join(', ')}
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
                                         <Star className={`w-3 h-3 text-theme-accent fill-current`} />
-                                        <span className="text-neutral-400 text-xs">
+                                        <span className="text-[var(--color-text-muted)] text-xs">
                                             {selected.individual_rating.toFixed(1)} ({selected.total_reviews} avaliações)
                                         </span>
                                     </div>

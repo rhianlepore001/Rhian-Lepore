@@ -82,7 +82,7 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
             <div className="flex gap-4 pt-4">
                 <button
                     onClick={onBack}
-                    className="flex-1 py-4 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors"
+                    className="flex-1 py-4 bg-[var(--color-card)] text-white font-bold rounded-lg hover:bg-[var(--color-card)] transition-colors"
                 >
                     Voltar
                 </button>

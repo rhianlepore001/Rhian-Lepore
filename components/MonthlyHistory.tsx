@@ -25,7 +25,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
 }) => {
     if (data.length === 0) {
         return (
-            <div className="text-center py-12 text-neutral-500">
+            <div className="text-center py-12 text-[var(--color-text-muted)]">
                 <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Sem dados históricos disponíveis</p>
             </div>
@@ -43,15 +43,15 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
         <div className="space-y-6">
             {/* Insights Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                <div className="bg-[var(--color-success-bg)] border border-[var(--color-success-border)] rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <Award className="w-5 h-5 text-green-500" />
-                        <p className="text-xs font-mono text-green-500 uppercase">Melhor Mês</p>
+                        <Award className="w-5 h-5 text-[var(--color-success)]" />
+                        <p className="text-xs font-mono text-[var(--color-success)] uppercase">Melhor Mês</p>
                     </div>
-                    <p className="text-lg font-heading text-white">
+                    <p className="text-lg font-heading text-[var(--color-text)]">
                         {bestMonth.month} {bestMonth.year}
                     </p>
-                    <p className="text-sm text-green-500 font-mono">
+                    <p className="text-sm text-[var(--color-success)] font-mono">
                         {currencySymbol} {bestMonth.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                 </div>
@@ -61,7 +61,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         <TrendingUp className={`w-5 h-5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                         <p className={`text-xs font-mono ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} uppercase`}>Crescimento Médio</p>
                     </div>
-                    <p className="text-lg font-heading text-white">
+                    <p className="text-lg font-heading text-[var(--color-text)]">
                         {avgGrowth > 0 ? '+' : ''}{avgGrowth.toFixed(1)}%
                     </p>
                     <p className={`text-sm ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} font-mono`}>
@@ -69,15 +69,15 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                     </p>
                 </div>
 
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <div className="bg-[var(--color-info-bg)] border border-[var(--color-info-border)] rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5 text-blue-500" />
-                        <p className="text-xs font-mono text-blue-500 uppercase">Receita Total</p>
+                        <TrendingUp className="w-5 h-5 text-[var(--color-info)]" />
+                        <p className="text-xs font-mono text-[var(--color-info)] uppercase">Receita Total</p>
                     </div>
-                    <p className="text-lg font-heading text-white">
+                    <p className="text-lg font-heading text-[var(--color-text)]">
                         12 meses
                     </p>
-                    <p className="text-sm text-blue-500 font-mono">
+                    <p className="text-sm text-[var(--color-info)] font-mono">
                         {currencySymbol} {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
                 </div>
@@ -87,7 +87,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="border-b-2 border-neutral-800 text-text-secondary font-mono text-xs uppercase">
+                        <tr className="border-b-2 border-[var(--color-border)] text-text-secondary font-mono text-xs uppercase">
                             <th className="p-3">Período</th>
                             <th className="p-3 text-right">Receita</th>
                             <th className="p-3 text-right">Despesas</th>
@@ -103,25 +103,25 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                             return (
                                 <tr
                                     key={`${month.month}-${month.year}`}
-                                    className={`hover:bg-white/5 transition-colors ${isBest ? 'bg-green-500/5' : isWorst ? 'bg-red-500/5' : ''}`}
+                                    className={`hover:bg-[var(--color-card-hover)] transition-colors ${isBest ? 'bg-[var(--color-success)]/5' : isWorst ? 'bg-[var(--color-danger)]/5' : ''}`}
                                 >
                                     <td className="p-3">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-white font-medium">{month.month} {month.year}</span>
-                                            {isBest && <Award className="w-4 h-4 text-green-500" />}
+                                            <span className="text-[var(--color-text)] font-medium">{month.month} {month.year}</span>
+                                            {isBest && <Award className="w-4 h-4 text-[var(--color-success)]" />}
                                         </div>
                                     </td>
-                                    <td className="p-3 text-right font-mono text-green-500">
+                                    <td className="p-3 text-right font-mono text-[var(--color-success)]">
                                         {currencySymbol} {month.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </td>
-                                    <td className="p-3 text-right font-mono text-red-500">
+                                    <td className="p-3 text-right font-mono text-[var(--color-danger)]">
                                         {currencySymbol} {month.expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </td>
-                                    <td className={`p-3 text-right font-mono font-bold ${month.profit >= 0 ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-red-500'}`}>
+                                    <td className={`p-3 text-right font-mono font-bold ${month.profit >= 0 ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-[var(--color-danger)]'}`}>
                                         {currencySymbol} {month.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </td>
                                     <td className="p-3 text-right">
-                                        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono ${month.growth >= 0 ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono ${month.growth >= 0 ? 'bg-[var(--color-success-bg)] text-[var(--color-success)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
                                             {month.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                             {month.growth > 0 ? '+' : ''}{month.growth.toFixed(1)}%
                                         </div>

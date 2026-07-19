@@ -26,12 +26,12 @@ interface ScreenshotAnnotatorProps {
 }
 
 const PRESET_COLORS = [
-  { name: 'vermelho', value: '#ef4444' },
-  { name: 'amarelo', value: '#eab308' },
-  { name: 'verde', value: '#22c55e' },
-  { name: 'azul', value: '#3b82f6' },
-  { name: 'branco', value: '#ffffff' },
-  { name: 'preto', value: '#000000' },
+  { name: 'vermelho', value: 'var(--color-danger)' },
+  { name: 'amarelo', value: 'var(--color-warning)' },
+  { name: 'verde', value: 'var(--color-success)' },
+  { name: 'azul', value: 'var(--color-info)' },
+  { name: 'branco', value: 'var(--color-text)' },
+  { name: 'preto', value: 'var(--color-bg)' },
 ];
 
 const STROKE_WIDTHS = [2, 4, 6, 10];

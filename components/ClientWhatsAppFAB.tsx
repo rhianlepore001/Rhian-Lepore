@@ -80,7 +80,7 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                         className="flex items-center gap-2.5 bg-[#25D366] text-theme-text px-5 py-3.5 rounded-full shadow-2xl font-bold text-sm hover:bg-[#1ebe5a] transition-all hover:scale-105 animate-in zoom-in duration-200"
                         aria-label="Abrir WhatsApp"
                     >
-                        <MessageCircle className="w-5 h-5 fill-white" />
+                        <MessageCircle className="w-5 h-5 fill-[var(--color-text)]" />
                         Abrir WhatsApp
                     </a>
                 ) : (
@@ -89,7 +89,7 @@ export const ClientWhatsAppFAB: React.FC<ClientWhatsAppFABProps> = ({
                         className="w-14 h-14 rounded-full bg-[#25D366] text-theme-text shadow-2xl flex items-center justify-center hover:bg-[#1ebe5a] hover:scale-110 transition-all"
                         aria-label={`Falar com ${businessName} no WhatsApp`}
                     >
-                        <MessageCircle className="w-7 h-7 fill-white" />
+                        <MessageCircle className="w-7 h-7 fill-[var(--color-text)]" />
                     </button>
                 )}
             </div>

@@ -113,21 +113,20 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
     if (loading) return null;
 
     return (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 md:p-6 mb-6">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h3 className="text-white font-bold text-base md:text-lg mb-1">
-                        Galeria do Portfólio
-                    </h3>
-                    <p className="text-xs text-neutral-500">
-                        Mostre seus melhores trabalhos para atrair mais clientes
-                    </p>
-                </div>
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className={`flex items-center gap-2 px-4 py-2 bg-theme-accent text-black font-bold rounded-lg hover:scale-105 transition-all text-xs active:scale-95 disabled:opacity-50`}
-                >
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-4 md:p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 className="text-[var(--color-text)] font-bold text-base md:text-lg mb-1">
+                                Galeria do Negócio
+                            </h3>
+                            <p className="text-xs text-[var(--color-text-muted)]">
+                                Adicione fotos dos seus cortes, ambiente, equipe ou trabalhos
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`flex items-center gap-2 px-4 py-2 bg-theme-accent text-[var(--color-bg)] font-bold rounded-lg hover:scale-105 transition-all text-xs active:scale-95 disabled:opacity-50`}
+                        >
                     {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Adicionar Foto
                 </button>
@@ -142,20 +141,20 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
             />
 
             {gallery.length === 0 ? (
-                <div className="border-2 border-dashed border-neutral-800 rounded-xl p-8 text-center bg-black/20">
-                    <ImageIcon className="w-10 h-10 text-neutral-700 mx-auto mb-3" />
-                    <p className="text-neutral-500 text-sm">Sua galeria está vazia.</p>
-                    <p className="text-neutral-600 text-xs mt-1">Adicione fotos dos seus cortes, barbas ou ambiente.</p>
+                <div className="border-2 border-dashed border-[var(--color-border)] rounded-xl p-8 text-center bg-[var(--color-bg)]/20">
+                    <ImageIcon className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" />
+                    <p className="text-[var(--color-text-muted)] text-sm">Sua galeria está vazia.</p>
+                    <p className="text-[var(--color-text-muted)] text-xs mt-1">Adicione fotos dos seus cortes, barbas ou ambiente.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {gallery.map((item) => (
-                        <div key={item.id} className="relative group aspect-square rounded-lg overflow-hidden border border-neutral-800 bg-neutral-800">
+                        <div key={item.id} className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)]">
                             <img src={item.image_url} alt="Gallery" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <div className="absolute inset-0 bg-[var(--color-bg)]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                 <button
                                     onClick={() => handleDelete(item.id, item.image_url)}
-                                    className="p-2 bg-red-500/80 rounded-full text-white hover:bg-red-600 transition-colors"
+                                    className="p-2 bg-[var(--color-danger)]/80 rounded-full text-[var(--color-text)] hover:brightness-110 transition-colors"
                                     title="Excluir"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -164,7 +163,7 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
                                     href={item.image_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-2 bg-white/20 rounded-full text-white hover:bg-white/40 transition-colors"
+                                    className="p-2 bg-[var(--color-card-hover)] rounded-full text-[var(--color-text)] hover:bg-[var(--color-divider)] transition-colors"
                                     title="Ver imagem completa"
                                 >
                                     <ExternalLink className="w-4 h-4" />

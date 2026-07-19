@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const isSettingsRoute = pathname.startsWith('/configuracoes');
-  const { accent, colors, isBeauty } = useBrutalTheme();
+  const { accent, colors, status, isBeauty } = useBrutalTheme();
 
   // Fechar menus ao clicar fora
   useEffect(() => {
@@ -96,7 +96,7 @@ export const Header: React.FC = () => {
                   <h1 className={`font-heading text-lg md:text-2xl ${colors.text} tracking-widest leading-none flex items-center gap-2 min-w-0`}>
                     <span className="truncate">{businessName || 'GESTÃO'}</span>
                     <span
-                      className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse flex-shrink-0"
+                      className="w-1.5 h-1.5 bg-[var(--color-success)] rounded-full animate-pulse flex-shrink-0"
                       aria-label="Online"
                       title="Negócio ativo"
                     />
@@ -175,7 +175,7 @@ export const Header: React.FC = () => {
               </button>
 
               {showNotifications && (
-                <div className={`fixed inset-x-4 md:inset-auto md:absolute md:right-0 top-20 md:top-full mt-2 md:w-80 z-50 animate-in fade-in slide-in-from-top-2 shadow-promax-glass ring-1 ring-white/5
+                <div className={`fixed inset-x-4 md:inset-auto md:absolute md:right-0 top-20 md:top-full mt-2 md:w-80 z-50 animate-in fade-in slide-in-from-top-2 shadow-promax-glass ring-1 ring-[var(--color-border)]
                 ${colors.card} border ${colors.border} rounded-xl
               `}>
                   <div className={`p-3 border-b ${colors.divider} font-bold ${colors.text} uppercase text-xs tracking-wider`}>Avisos Importantes</div>
@@ -195,11 +195,11 @@ export const Header: React.FC = () => {
                               setShowNotifications(false);
                             }
                           }}
-                          className={`p-3 hover:bg-white/5 border-b ${colors.divider} last:border-0 cursor-pointer transition-colors group ${alert.actionPath ? '' : 'cursor-default'} ${alert.type === 'danger' ? 'border-l-2 border-l-red-500 pl-2' : ''}`}
+                          className={`p-3 hover:bg-[var(--color-card-hover)] border-b ${colors.divider} last:border-0 cursor-pointer transition-colors group ${alert.actionPath ? '' : 'cursor-default'} ${alert.type === 'danger' ? 'border-l-2 border-l-[var(--color-danger)] pl-2' : ''}`}
                         >
                           <div className="flex items-start gap-2">
-                            <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${alert.type === 'danger' ? 'text-red-600' :
-                              alert.type === 'warning' ? 'text-yellow-500' : 'text-green-500'
+                            <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${alert.type === 'danger' ? 'text-[var(--color-danger)]' :
+                              alert.type === 'warning' ? 'text-[var(--color-warning)]' : 'text-[var(--color-success)]'
                               }`} />
                             <div className="flex-1">
                               <p className={`text-sm ${colors.text} ${alert.actionPath ? `group-hover:text-theme-accent` : ''} transition-colors`}>
@@ -249,14 +249,14 @@ export const Header: React.FC = () => {
               `}>
                   <button
                     onClick={() => { setShowProfileModal(true); setShowProfileMenu(false); }}
-                    className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-white/10 flex items-center gap-2`}
+                    className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-[var(--color-card-hover)] flex items-center gap-2`}
                   >
                     <UserIcon className="w-4 h-4" /> Meu Perfil
                   </button>
                   {role !== 'staff' && (
                     <button
                       onClick={() => { navigate('/configuracoes/geral'); setShowProfileMenu(false); }}
-                      className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-white/10 flex items-center gap-2`}
+                      className={`w-full text-left px-4 py-3 text-sm ${colors.text} hover:bg-[var(--color-card-hover)] flex items-center gap-2`}
                     >
                       <Settings className="w-4 h-4" /> Configurações
                     </button>
@@ -264,7 +264,7 @@ export const Header: React.FC = () => {
                   <div className={`border-t ${colors.divider} my-1`}></div>
                   <button
                     onClick={logout}
-                    className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-900/20 flex items-center gap-2"
+                    className={`w-full text-left px-4 py-3 text-sm ${status.danger} hover:bg-[var(--color-danger-bg)] flex items-center gap-2`}
                   >
                     <LogOut className="w-4 h-4" /> Sair
                   </button>

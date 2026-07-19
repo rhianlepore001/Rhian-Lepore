@@ -76,7 +76,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         {/* Padrão decorativo no fallback */}
                         <div className="absolute inset-0 opacity-10"
                             style={{
-                                backgroundImage: `repeating-linear-gradient(45deg, ${isBeauty ? '#A78BFA' : '#C29B40'} 0, ${isBeauty ? '#A78BFA' : '#C29B40'} 1px, transparent 0, transparent 50%)`,
+                                backgroundImage: `repeating-linear-gradient(45deg, ${isBeauty ? 'var(--color-accent)' : 'var(--color-accent)'} 0, ${isBeauty ? 'var(--color-accent)' : 'var(--color-accent)'} 1px, transparent 0, transparent 50%)`,
                                 backgroundSize: '20px 20px'
                             }} />
                     </div>
@@ -88,7 +88,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
 
                 {/* Nome gigante no fundo (detalhe brutalista) */}
                 <div className="absolute -bottom-4 -left-4 opacity-[0.06] select-none hidden lg:block pointer-events-none overflow-hidden">
-                    <span className="font-black text-white whitespace-nowrap"
+                    <span className="font-black text-[var(--color-text)] whitespace-nowrap"
                         style={{ fontSize: '9rem', fontFamily: 'Chivo, sans-serif', textTransform: 'uppercase', letterSpacing: '-0.04em', lineHeight: 1 }}>
                         {businessName}
                     </span>
@@ -176,7 +176,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         {/* Rating badge */}
                         {googleRating && googleRating > 0 ? (
                             <div className={`inline-flex items-center gap-2 px-3 py-1.5 mb-3 rounded-full border ${colors.card} ${colors.border} ${colors.text} backdrop-blur-xl`}>
-                                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                                <Star className="w-3.5 h-3.5 text-[var(--color-warning)] fill-amber-400" />
                                 <span className="text-sm font-black tracking-tight">{googleRating.toFixed(1)}</span>
                                 <div className="w-px h-3 bg-current opacity-20" />
                                 <span className="text-xs uppercase font-bold tracking-[0.1em] opacity-60">
@@ -197,21 +197,21 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         <div className="flex items-center gap-3 mt-1 flex-wrap">
                             {instagramLink && (
                                 <a href={instagramLink} target="_blank" rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-gradient-to-tr hover:from-purple-500 hover:to-pink-500 hover:text-white hover:border-transparent`}>
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-gradient-to-tr hover:from-purple-500 hover:to-pink-500 hover:text-[var(--color-text)] hover:border-transparent`}>
                                     <Instagram className="w-4 h-4" />
                                     <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">Instagram</span>
                                 </a>
                             )}
                             {whatsappLink && (
                                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-green-500 hover:text-white hover:border-transparent`}>
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-success)] hover:text-[var(--color-text)] hover:border-transparent`}>
                                     <Phone className="w-4 h-4" />
                                     <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">WhatsApp</span>
                                 </a>
                             )}
                             {mapsLink && (
                                 <a href={mapsLink} target="_blank" rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-blue-500 hover:text-white hover:border-transparent`}>
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-info)] hover:text-[var(--color-text)] hover:border-transparent`}>
                                     <MapPin className="w-4 h-4" />
                                     <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">Como chegar</span>
                                 </a>

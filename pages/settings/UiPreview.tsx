@@ -378,13 +378,13 @@ export const UiPreview: React.FC = () => {
                     onRowClick={(user) => setSelectedUser(user)}
                     emptyMessage="Nenhum usuário cadastrado neste preview de testes."
                     mobileRender={(user) => (
-                      <div className="p-4 border rounded-xl bg-white/5 space-y-2">
+                      <div className="p-4 border rounded-xl bg-[var(--color-card-hover)] space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="font-bold">{user.name}</span>
                           <Badge variant={user.role === 'admin' ? 'accent' : 'neutral'}>{user.role}</Badge>
                         </div>
                         <p className="text-xs text-text-secondary">{user.email}</p>
-                        <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                        <div className="flex justify-between items-center pt-2 border-t border-[var(--color-border)]">
                           <span className="text-xs">Status:</span>
                           <Badge variant={user.status === 'active' ? 'success' : user.status === 'pending' ? 'warning' : 'danger'}>
                             {user.status}
@@ -395,7 +395,7 @@ export const UiPreview: React.FC = () => {
                   />
 
                   {selectedUser && (
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center">
+                    <div className="p-4 rounded-xl bg-[var(--color-card-hover)] border border-[var(--color-border)] flex justify-between items-center">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wider text-theme-textSecondary">Linha Selecionada (onClick):</p>
                         <p className="text-sm font-bold">{selectedUser.name} ({selectedUser.email})</p>
@@ -485,8 +485,8 @@ export const UiPreview: React.FC = () => {
             <p className="text-sm">
               Este modal foi renderizado através de um Portal do React no body.
             </p>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
-              <CheckCircle className="text-emerald-400 w-8 h-8 shrink-0" />
+            <div className="p-4 rounded-xl bg-[var(--color-card-hover)] border border-[var(--color-border)] flex items-center gap-3">
+              <CheckCircle className="text-[var(--color-success)] w-8 h-8 shrink-0" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-theme-textSecondary">Acessibilidade Garantida</p>
                 <p className="text-xs text-text-secondary">Pressione ESC para sair ou clique no fundo de overlay.</p>

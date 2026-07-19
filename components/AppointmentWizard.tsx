@@ -433,7 +433,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                 </div>
 
                 {/* FOOTER */}
-                <div className={`p-4 border-t ${isBeauty ? 'border-beauty-neon/20 bg-beauty-neon/5' : 'border-white/5 bg-brutal-main/50'} flex justify-between items-center`}>
+                <div className={`p-4 border-t ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'} flex justify-between items-center`}>
                     {step > 1 ? (
                         <button
                             onClick={() => setStep(prev => (prev - 1) as any)}

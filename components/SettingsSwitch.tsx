@@ -40,8 +40,8 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
       <div
         className={`
           ${sizeClasses[size]}
-          bg-white/[0.04] border border-white/10 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-input-focus)] rounded-full peer
-          peer-checked:after:translate-x-full peer-checked:after:border-white after:content-['']
+          bg-[var(--color-card-hover)] border border-[var(--color-border)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-input-focus)] rounded-full peer
+          peer-checked:after:translate-x-full peer-checked:after:border-[var(--color-text)] after:content-['']
           after:absolute after:bg-white after:rounded-full after:transition-all after:duration-200 after:ease-out
           peer-checked:bg-theme-accent
           shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)]

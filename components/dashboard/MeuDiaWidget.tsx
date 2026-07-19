@@ -129,7 +129,7 @@ export const MeuDiaWidget: React.FC = () => {
                     </div>
                     <div className="flex flex-col items-center text-center">
                         <span className={`text-xs md:text-xs uppercase font-mono ${colors.textSecondary}`}>Faturamento</span>
-                        <span className={`text-xl md:text-3xl font-bold font-heading text-emerald-400`}>
+                        <span className={`text-xl md:text-3xl font-bold font-heading text-[var(--color-success)]`}>
                             {formatCurrency(summary.dailyEarnings, currencyRegion)}
                         </span>
                     </div>

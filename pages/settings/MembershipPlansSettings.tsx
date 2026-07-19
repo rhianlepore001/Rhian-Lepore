@@ -169,7 +169,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleEdit(plan)}
-                                        className="p-2 rounded-lg bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm transition-colors"
+                                        className="p-2 rounded-lg bg-[var(--color-bg)]/60 hover:bg-[var(--color-bg)]/80 text-[var(--color-text)] backdrop-blur-sm transition-colors"
                                         aria-label="Editar plano"
                                     >
                                         <Edit2 className="w-3.5 h-3.5" />
@@ -177,7 +177,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleDelete(plan)}
-                                        className="p-2 rounded-lg bg-red-500/60 hover:bg-red-500/80 text-white backdrop-blur-sm transition-colors"
+                                        className="p-2 rounded-lg bg-[var(--color-danger)]/60 hover:bg-[var(--color-danger-bg)] text-[var(--color-text)] backdrop-blur-sm transition-colors"
                                         aria-label="Excluir plano"
                                     >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -307,7 +307,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                                     onClick={() => toggleService(s.id)}
                                                     className={[
                                                         'w-full text-left p-2 rounded-lg text-sm flex items-center gap-2 transition-colors',
-                                                        selected ? `${accent.bgDim} ${colors.text}` : `${colors.textSecondary} hover:bg-white/5`,
+                                                        selected ? `${accent.bgDim} ${colors.text}` : `${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
                                                     ].join(' ')}
                                                 >
                                                     <span className={[

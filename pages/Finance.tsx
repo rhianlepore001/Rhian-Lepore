@@ -133,14 +133,14 @@ const [searchParams, setSearchParams] = useSearchParams();
 
   const chartTheme = useMemo(() => ({
     grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
-    axis: isDark ? '#A0A0A0' : '#6B5E45',
-    tooltipBg: isDark ? '#1E1E1E' : '#FFFFFF',
+    axis: isDark ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
+    tooltipBg: isDark ? 'var(--color-card)' : 'var(--color-card)',
     tooltipBorder: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-    tooltipText: isDark ? '#EAEAEA' : '#1A1A1A',
-    revenueStroke: '#34d399',
-    revenueFill: '#10B981',
-    expenseStroke: '#f87171',
-    expenseFill: '#EF4444',
+    tooltipText: isDark ? 'var(--color-text)' : 'var(--color-text)',
+    revenueStroke: 'var(--color-success)',
+    revenueFill: 'var(--color-success)',
+    expenseStroke: 'var(--color-danger)',
+    expenseFill: 'var(--color-danger)',
   }), [isDark]);
   const { showToast } = useToast();
   const { region: currencyRegion, currencySymbol } = useTenantLocale();
@@ -702,7 +702,7 @@ useEffect(() => {
                     <XAxis dataKey="name" stroke={chartTheme.axis} style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} />
                     <YAxis stroke={chartTheme.axis} style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} tickFormatter={(v) => `${currencyRegion === 'PT' ? '€' : 'R$'}${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: chartTheme.tooltipBg, border: `1px solid ${chartTheme.tooltipBorder}`, borderRadius: '12px', boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.08)', padding: '12px 16px' }}
+                      contentStyle={{ backgroundColor: chartTheme.tooltipBg, border: `1px solid ${chartTheme.tooltipBorder}`, borderRadius: '12px', boxShadow: 'var(--shadow-modal)', padding: '12px 16px' }}
                       labelStyle={{ color: chartTheme.tooltipText, fontWeight: 'bold', marginBottom: '4px' }}
                       itemStyle={{ fontSize: '13px', padding: '2px 0' }}
                       formatter={(value: number) => [formatCurrency(value, currencyRegion), undefined]}
@@ -879,11 +879,11 @@ useEffect(() => {
                   type="text"
                   value={newTransactionDescription}
                   onChange={(e) => setNewTransactionDescription(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                      className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                     ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-theme-border focus:border-accent-gold`}
-                `}
+                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                      : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
+                  `}
                   placeholder="Ex: Venda de produto, Pagamento de aluguel..."
                   required
                 />
@@ -896,10 +896,10 @@ useEffect(() => {
                   <select
                     value={newTransactionStatus}
                     onChange={(e) => setNewTransactionStatus(e.target.value as 'paid' | 'pending')}
-                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                    className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-theme-border focus:border-accent-gold`}
+                        : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
                   `}
                   >
                     <option value="paid">Pago / Recebido</option>
@@ -913,11 +913,11 @@ useEffect(() => {
                       type="date"
                       value={newTransactionDueDate}
                       onChange={(e) => setNewTransactionDueDate(e.target.value)}
-                      className={`w-full p-3 rounded-lg text-white transition-all outline-none
-                        ${isBeauty
-                          ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                          : `bg-black border border-theme-border focus:border-accent-gold`}
-                      `}
+                    className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
+                      ${isBeauty
+                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                        : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
+                  `}
                     />
                   </div>
                 )}
@@ -932,11 +932,11 @@ useEffect(() => {
                   onChange={(e) => setNewTransactionAmount(e.target.value)}
                   step="0.01"
                   min="0"
-                  className={`w-full p-3 rounded-lg text-white font-mono text-lg transition-all outline-none
-                    ${isBeauty
-                      ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon placeholder-beauty-neon/30'
-                      : `bg-black border border-theme-border focus:border-accent-gold`}
-                `}
+                  className={`w-full p-3 rounded-lg text-[var(--color-text)] font-mono text-lg transition-all outline-none
+                      ${isBeauty
+                        ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
+                        : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
+                    `}
                   placeholder="0.00"
                   required
                 />
@@ -950,10 +950,10 @@ useEffect(() => {
                     type="date"
                     value={newTransactionDate}
                     onChange={(e) => setNewTransactionDate(e.target.value)}
-                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                    className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-theme-border focus:border-accent-gold`}
+                        : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
                   `}
                   />
                 </div>
@@ -963,10 +963,10 @@ useEffect(() => {
                     type="time"
                     value={newTransactionTime}
                     onChange={(e) => setNewTransactionTime(e.target.value)}
-                    className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                    className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                       ${isBeauty
                         ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                        : `bg-black border border-theme-border focus:border-accent-gold`}
+                        : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
                   `}
                   />
                 </div>
@@ -978,10 +978,10 @@ useEffect(() => {
                 <select
                   value={newTransactionService}
                   onChange={(e) => setNewTransactionService(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                  className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-theme-border focus:border-accent-gold`}
+                      : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um serviço</option>
@@ -997,10 +997,10 @@ useEffect(() => {
                 <select
                   value={newTransactionClient}
                   onChange={(e) => setNewTransactionClient(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                  className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-theme-border focus:border-accent-gold`}
+                      : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um cliente</option>
@@ -1016,10 +1016,10 @@ useEffect(() => {
                 <select
                   value={newTransactionProfessional}
                   onChange={(e) => setNewTransactionProfessional(e.target.value)}
-                  className={`w-full p-3 rounded-lg text-white transition-all outline-none
+                  className={`w-full p-3 rounded-lg text-[var(--color-text)] transition-all outline-none
                     ${isBeauty
                       ? 'bg-beauty-dark/50 border border-beauty-neon/20 focus:border-beauty-neon'
-                      : `bg-black border border-theme-border focus:border-accent-gold`}
+                      : `bg-[var(--color-bg)] border border-theme-border focus:border-accent-gold`}
                 `}
                 >
                   <option value="">Selecione um profissional</option>

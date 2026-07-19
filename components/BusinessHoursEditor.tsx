@@ -133,7 +133,7 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
                         className={`
                             px-3 py-1.5 text-xs md:text-sm rounded-xl border transition-all
                             ${colors.inputBg} ${colors.border} ${colors.textSecondary}
-                            hover:text-theme-text hover:bg-white/[0.06]
+                            hover:text-theme-text hover:bg-[var(--color-card-hover)]
                             active:scale-[0.97]
                         `}
                     >
@@ -179,7 +179,7 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
                                         className={`
                                             flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-all
                                             ${colors.inputBg} ${colors.border} ${colors.textMuted}
-                                            hover:text-theme-textSecondary hover:bg-white/[0.06]
+                                                hover:text-theme-textSecondary hover:bg-[var(--color-card-hover)]
                                         `}
                                         title={`Copiar de ${DAYS[index - 1].short}`}
                                     >
@@ -217,7 +217,7 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
                                             {dayData.blocks.length > 1 && (
                                                 <button
                                                     onClick={() => removeBlock(day.key, blockIndex)}
-                                                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-[var(--color-danger)] hover:brightness-110 hover:bg-[var(--color-danger-bg)] rounded-lg transition-colors"
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>
@@ -231,7 +231,7 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
                                             className={`
                                                 flex items-center gap-1 px-3 py-2 text-xs rounded-lg transition-all w-full justify-center
                                                 ${colors.inputBg} ${colors.border} ${colors.textMuted}
-                                                hover:text-theme-textSecondary hover:bg-white/[0.06]
+                                            hover:text-theme-textSecondary hover:bg-[var(--color-card-hover)]
                                             `}
                                         >
                                             <Plus className="w-3 h-3" />

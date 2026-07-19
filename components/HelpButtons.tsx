@@ -76,8 +76,8 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                 onMouseLeave={() => !('ontouchstart' in window) && setShowTooltip(false)}
                 onKeyDown={(e) => e.key === 'Enter' && handleToggle(e)}
                 className={`group cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300 ${showTooltip
-                    ? 'bg-white/20 text-white ring-2 ring-white/10'
-                    : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white'
+                    ? 'bg-[var(--color-card-hover)] text-[var(--color-text)] ring-2 ring-[var(--color-border)]'
+                    : 'bg-[var(--color-card-hover)] text-text-secondary hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]'
                     }`}
             >
                 <Info className={`w-3.5 h-3.5 transition-transform duration-300 ${showTooltip ? 'scale-110' : 'group-hover:scale-110'}`} />
@@ -94,22 +94,22 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                         transform: 'translate(-50%, -100%)',
                         zIndex: 9999
                     }}
-                    className="w-64 md:w-72 max-w-[calc(100vw-32px)] p-4 bg-neutral-900/90 backdrop-blur-xl border border-white/20 text-xs text-white 
+                    className="w-64 md:w-72 max-w-[calc(100vw-32px)] p-4 bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border-strong)] text-xs text-[var(--color-text)] 
                                rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-left 
                                animate-in fade-in zoom-in-95 duration-200 pointer-events-auto"
                 >
                     <div className="flex items-start gap-3">
-                        <div className="mt-0.5 p-1.5 rounded-lg bg-white/10 shrink-0">
-                            <Bot className="w-3.5 h-3.5 text-blue-400" />
+                        <div className="mt-0.5 p-1.5 rounded-lg bg-[var(--color-card-hover)] shrink-0">
+                            <Bot className="w-3.5 h-3.5 text-[var(--color-info)]" />
                         </div>
                         <div className="space-y-1.5">
-                            <p className="font-bold text-xs uppercase tracking-wider text-blue-400 font-mono">Dica do Assistente</p>
-                            <p className="text-xs leading-relaxed text-neutral-200 font-medium">{text}</p>
+                            <p className="font-bold text-xs uppercase tracking-wider text-[var(--color-info)] font-mono">Dica do Assistente</p>
+                            <p className="text-xs leading-relaxed text-[var(--color-text-secondary)] font-medium">{text}</p>
                         </div>
                     </div>
                     {/* Seta do Tooltip */}
                     <div
-                        className="absolute top-full left-1/2 transform -translate-x-1/2 border-[6px] border-transparent border-t-neutral-900/90"
+                        className="absolute top-full left-1/2 transform -translate-x-1/2 border-[6px] border-transparent border-t-[var(--color-card)]/90"
                     ></div>
                 </div>,
                 document.body
@@ -158,15 +158,15 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
             </button>
 
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-neutral-900 border-2 border-neutral-700 w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[600px]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)]/50 backdrop-blur-sm p-4">
+                    <div className="bg-[var(--color-card)] border-2 border-[var(--color-border)] w-full max-w-md rounded-xl shadow-2xl flex flex-col max-h-[600px]">
                         {/* Header */}
-                        <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
+                        <div className="p-4 border-b border-[var(--color-border)] flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <Bot className={`w-5 h-5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
-                                <h3 className="font-bold text-white">Assistente BarberOS</h3>
+                                <h3 className="font-bold text-[var(--color-text)]">Assistente BarberOS</h3>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-white" aria-label="Fechar assistente" title="Fechar">
+                            <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-[var(--color-text)]" aria-label="Fechar assistente" title="Fechar">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -176,8 +176,8 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] p-3 rounded-lg text-sm ${msg.role === 'user'
-                                        ? `${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} font-bold`
-                                        : 'bg-neutral-800 text-white border border-neutral-700'
+                                        ? `${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'} font-bold`
+                                        : 'bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)]'
                                         }`}>
                                         {msg.content}
                                     </div>
@@ -186,18 +186,18 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 border-t border-neutral-800 flex gap-2">
+                        <div className="p-4 border-t border-[var(--color-border)] flex gap-2">
                             <input
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                                 placeholder="Digite sua dúvida..."
-                                className="flex-1 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-neutral-500"
+                                className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-[var(--color-text)] text-sm focus:outline-none focus:border-[var(--color-input-focus)]"
                             />
                             <button
                                 onClick={handleSend}
-                                className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon text-black' : 'bg-accent-gold text-black'} hover:opacity-90 transition-opacity`}
+                                className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'} hover:opacity-90 transition-opacity`}
                             >
                                 <Send className="w-4 h-4" />
                             </button>

@@ -167,8 +167,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             <User className={`w-8 h-8 ${colors.textMuted}`} />
                         )}
 
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Upload className="w-6 h-6 text-white" />
+                        <div className="absolute inset-0 bg-[var(--color-bg)]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload className="w-6 h-6 text-[var(--color-text)]" />
                         </div>
                     </div>
                     <input

@@ -48,9 +48,9 @@ vi.mock('../../components/SettingsSwitch', () => ({
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
     isBeauty: false,
-    accent: { text: 'text-amber-400', bgDim: 'bg-amber-400/10', borderDim: 'border-amber-400/30' },
-    colors: { text: 'text-white', textSecondary: 'text-neutral-400', textMuted: 'text-neutral-400', inputBg: 'bg-neutral-900', border: 'border-neutral-700', divider: 'border-neutral-800' },
-    classes: { label: 'text-sm font-bold', input: 'w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl' },
+    accent: { text: 'text-[var(--color-warning)]', bgDim: 'bg-amber-400/10', borderDim: 'border-amber-400/30' },
+    colors: { text: 'text-[var(--color-text)]', textSecondary: 'text-[var(--color-text-muted)]', textMuted: 'text-[var(--color-text-muted)]', inputBg: 'bg-[var(--color-card)]', border: 'border-[var(--color-border)]', divider: 'border-[var(--color-border)]' },
+    classes: { label: 'text-sm font-bold', input: 'w-full px-4 py-3 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl' },
     radius: { card: 'rounded-xl', button: 'rounded-xl', input: 'rounded-xl', badge: 'rounded-md', avatar: 'rounded-xl', modal: 'rounded-xl' },
     density: { cardPadding: 'p-4' },
     shadow: { card: 'shadow-sm' },

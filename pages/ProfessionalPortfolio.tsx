@@ -44,15 +44,15 @@ export const ProfessionalPortfolio: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-white animate-spin" />
+            <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-[var(--color-text)] animate-spin" />
             </div>
         );
     }
 
     if (!professional || !business) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-white">
+            <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center text-[var(--color-text)]">
                 <h1 className="text-2xl font-bold mb-4">Profissional não encontrado</h1>
                 <Button onClick={() => navigate('/')}>Voltar</Button>
             </div>
@@ -64,11 +64,11 @@ export const ProfessionalPortfolio: React.FC = () => {
     const bgClass = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
 
     return (
-        <div className={`min-h-screen ${bgClass} text-white`}>
+        <div className={`min-h-screen ${bgClass} text-[var(--color-text)]`}>
             {/* Hero Section */}
             <div className="relative h-[60vh] min-h-[500px]">
                 {/* Background Image / Gradient */}
-                <div className="absolute inset-0 bg-neutral-900">
+                <div className="absolute inset-0 bg-[var(--color-card)]">
                     {professional.photo_url ? (
                         <>
                             <img
@@ -99,8 +99,8 @@ export const ProfessionalPortfolio: React.FC = () => {
                                 {professional.photo_url ? (
                                     <img src={professional.photo_url} alt={professional.name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                        <User className="w-20 h-20 text-neutral-500" />
+                                    <div className="w-full h-full bg-[var(--color-card)] flex items-center justify-center">
+                                        <User className="w-20 h-20 text-[var(--color-text-muted)]" />
                                     </div>
                                 )}
                             </div>
@@ -115,19 +115,19 @@ export const ProfessionalPortfolio: React.FC = () => {
                                     </h1>
                                 </div>
 
-                                <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-neutral-300">
-                                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-[var(--color-text-secondary)]">
+                                    <div className="flex items-center gap-2 bg-[var(--color-card-hover)] px-3 py-1.5 rounded-full backdrop-blur-sm">
                                         <MapPin className="w-4 h-4" />
                                         <span>{business.business_name}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                    <div className="flex items-center gap-2 bg-[var(--color-card-hover)] px-3 py-1.5 rounded-full backdrop-blur-sm">
                                         <Star className={`w-4 h-4 fill-theme-accent text-theme-accent`} />
                                         <span>5.0 (Avaliações)</span>
                                     </div>
                                 </div>
 
                                 {professional.bio && (
-                                    <p className="text-neutral-400 max-w-xl text-lg leading-relaxed">
+                                    <p className="text-[var(--color-text-muted)] max-w-xl text-lg leading-relaxed">
                                         {professional.bio}
                                     </p>
                                 )}
@@ -142,11 +142,11 @@ export const ProfessionalPortfolio: React.FC = () => {
                 <Card className={`border-t-4 border-theme-accent p-8 flex flex-col md:flex-row items-center justify-between gap-6`}>
                     <div>
                         <h3 className="text-2xl font-bold uppercase mb-2">Pronto para transformar seu visual?</h3>
-                        <p className="text-neutral-400">Agende agora com {professional.name.split(' ')[0]} e garanta seu horário.</p>
+                        <p className="text-[var(--color-text-muted)]">Agende agora com {professional.name.split(' ')[0]} e garanta seu horário.</p>
                     </div>
                     <Button
                         onClick={() => navigate(`/book/${business.business_slug}?pro=${professional.id}`)}
-                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-black font-bold whitespace-nowrap`}
+                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-[var(--color-bg)] font-bold whitespace-nowrap`}
                     >
                         <span className="flex items-center gap-2">
                             <Calendar className="w-5 h-5" /> Agendar Horário
@@ -159,9 +159,9 @@ export const ProfessionalPortfolio: React.FC = () => {
             </div>
 
             {/* Business Footer */}
-            <div className="border-t border-neutral-800 bg-black py-12 text-center">
-                <p className="text-neutral-500 uppercase tracking-widest text-sm mb-4">Membro da Equipe</p>
-                <h3 className="text-2xl font-heading text-white">{business.business_name}</h3>
+            <div className="border-t border-[var(--color-border)] bg-[var(--color-bg)] py-12 text-center">
+                <p className="text-[var(--color-text-muted)] uppercase tracking-widest text-sm mb-4">Membro da Equipe</p>
+                <h3 className="text-2xl font-heading text-[var(--color-text)]">{business.business_name}</h3>
             </div>
         </div>
     );

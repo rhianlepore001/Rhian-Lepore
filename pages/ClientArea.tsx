@@ -345,7 +345,7 @@ export const ClientArea: React.FC = () => {
                                             disabled:opacity-40
                                             ${isBeauty
                                                 ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]'
-                                                : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'
+                                                : 'bg-theme-card text-[var(--color-bg)] hover:bg-[var(--color-card-hover)]'
                                             }
                                         `}
                                     >
@@ -391,7 +391,7 @@ export const ClientArea: React.FC = () => {
                                         disabled={gateSubmitting}
                                         className={`
                                             w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40
-                                            ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'}
+                                            ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-[var(--color-bg)] hover:bg-[var(--color-card-hover)]'}
                                         `}
                                     >
                                         {gateSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar minha área'}
@@ -457,7 +457,7 @@ export const ClientArea: React.FC = () => {
                         </div>
                         <Link
                             to={`/book/${slug}`}
-                            className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${isBeauty ? 'bg-theme-card text-theme-text shadow-md' : 'bg-theme-card text-black'}`}
+                                className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${isBeauty ? 'bg-theme-card text-theme-text shadow-md' : 'bg-theme-card text-[var(--color-bg)]'}`}
                         >
                             <Calendar className="w-3.5 h-3.5" />
                             Novo Agendamento
@@ -489,7 +489,7 @@ export const ClientArea: React.FC = () => {
                             {tab.icon}
                             {tab.label}
                             {tab.id === 'upcoming' && upcomingBookings.length > 0 && (
-                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-card text-black'}`}>
+                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-card text-[var(--color-bg)]'}`}>
                                     {upcomingBookings.length}
                                 </span>
                             )}
@@ -629,7 +629,7 @@ export const ClientArea: React.FC = () => {
                                                 <button
                                                     onClick={handleSaveProfile}
                                                     disabled={profileSaving}
-                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50 ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'}`}
+                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50 ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-[var(--color-bg)] hover:bg-[var(--color-card-hover)]'}`}
                                                 >
                                                     {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Check className="w-3.5 h-3.5" /> Salvar</>}
                                                 </button>
@@ -688,7 +688,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, cta, 
         {cta && (
             <Link
                 to={cta.to}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-black hover:bg-[var(--color-card-hover)]'}`}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-card text-[var(--color-bg)] hover:bg-[var(--color-card-hover)]'}`}
             >
                 {cta.label}
             </Link>

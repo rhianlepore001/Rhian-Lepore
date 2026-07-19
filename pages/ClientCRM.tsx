@@ -245,11 +245,11 @@ const { id } = useParams<{ id: string }>();
   };
 
   if (loading) {
-    return <div className="text-white text-center p-10">Carregando dados do cliente...</div>;
+    return <div className="text-[var(--color-text)] text-center p-10">Carregando dados do cliente...</div>;
   }
 
   if (!client) {
-    return <div className="text-white text-center p-10">Cliente não encontrado.</div>;
+    return <div className="text-[var(--color-text)] text-center p-10">Cliente não encontrado.</div>;
   }
 
   return (
@@ -257,7 +257,7 @@ const { id } = useParams<{ id: string }>();
       {/* Back Button */}
       <button
         onClick={() => navigate('/clientes')}
-        className="flex items-center gap-2 text-theme-textSecondary hover:text-white transition-colors mb-2"
+        className="flex items-center gap-2 text-theme-textSecondary hover:text-[var(--color-text)] transition-colors mb-2"
       >
         <ArrowLeft className="w-5 h-5" />
         <span className="font-mono text-sm uppercase">Voltar para Clientes</span>
@@ -276,7 +276,7 @@ const { id } = useParams<{ id: string }>();
               )}
 
               {/* Photo Upload Overlay */}
-              <label className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <label className="absolute inset-0 bg-[var(--color-bg)]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 <input
                   type="file"
                   accept="image/*"
@@ -320,7 +320,7 @@ const { id } = useParams<{ id: string }>();
                     }
                   }}
                 />
-                <span className="text-white text-xs font-bold uppercase border border-white px-2 py-1">Alterar</span>
+                <span className="text-[var(--color-text)] text-xs font-bold uppercase border border-[var(--color-text)] px-2 py-1">Alterar</span>
               </label>
             </div>
             <div className="flex flex-col justify-center md:items-center md:w-full">
@@ -341,10 +341,10 @@ const { id } = useParams<{ id: string }>();
             <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-theme-border pb-4 mb-4 gap-4 md:gap-0">
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl md:text-3xl font-heading text-white uppercase leading-none">{client.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-heading text-[var(--color-text)] uppercase leading-none">{client.name}</h1>
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="text-[var(--color-text-muted)] hover:text-white transition-colors"
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
                     aria-label="Editar nome do cliente"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -362,7 +362,7 @@ const { id } = useParams<{ id: string }>();
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="border-red-900 text-red-500 hover:bg-red-900/20 hover:text-red-400"
+                  className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] hover:brightness-110"
                   onClick={handleDeleteClient}
                   disabled={deleting}
                   aria-label="Desativar cliente"
@@ -372,7 +372,7 @@ const { id } = useParams<{ id: string }>();
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`border-green-900/50 ${isBeauty ? 'text-green-400 hover:text-green-300 hover:bg-green-400/10' : 'text-green-600 hover:text-green-500 hover:bg-green-500/10'}`}
+                  className={`border-[var(--color-success-border)] ${isBeauty ? 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]' : 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]'}`}
                   onClick={handleWhatsAppClick}
                   title="Abrir WhatsApp"
                   aria-label="Abrir WhatsApp"
@@ -460,7 +460,7 @@ const { id } = useParams<{ id: string }>();
                           <span className={`${accent.bg} text-[var(--color-bg)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
                         )}
                         {hasDiscount && (
-                          <span className="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 flex items-center gap-1">
+                          <span className="bg-[var(--color-danger-bg)] text-[var(--color-danger)] text-xs font-bold px-2 py-1 flex items-center gap-1">
                             <Tag className="w-3 h-3" /> {discountPercentage}% OFF
                           </span>
                         )}
@@ -482,12 +482,12 @@ const { id } = useParams<{ id: string }>();
                 <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
                   <div className={`relative border-2 border-theme-border hover:border-[var(--color-accent-border)] transition-colors`}>
                     <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-3 border-t border-theme-border">
-                      <p className="text-white font-bold font-heading text-sm md:text-base">{record.service}</p>
+                    <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-bg)]/80 p-3 border-t border-theme-border">
+                      <p className="text-[var(--color-text)] font-bold font-heading text-sm md:text-base">{record.service}</p>
                       <p className="text-xs md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
                     </div>
                     <div className="absolute top-2 right-2">
-                      <span className="bg-theme-surface text-white text-xs font-bold px-2 py-1 uppercase border border-theme-border">Foto</span>
+                      <span className="bg-theme-surface text-[var(--color-text)] text-xs font-bold px-2 py-1 uppercase border border-theme-border">Foto</span>
                     </div>
                   </div>
                 </div>
@@ -533,17 +533,17 @@ const { id } = useParams<{ id: string }>();
                   <Sparkles className="w-5 h-5 animate-pulse" />
                   <h3 className="font-heading text-lg uppercase tracking-wider">Cliente Inativo</h3>
                 </div>
-                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'} px-2 py-1 text-xs font-bold border uppercase tracking-widest`}>Sugestão de IA</span>
+                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)]'} px-2 py-1 text-xs font-bold border uppercase tracking-widest`}>Sugestão de IA</span>
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm text-text-secondary leading-relaxed bg-white/[0.03] rounded-lg p-3">
-                  Detectamos que o valor médio por atendimento de <span className="text-white font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${accent.text} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-white font-bold">{isAtRisk.days_since_last_visit} dias</span>.
+                <p className="text-sm text-text-secondary leading-relaxed bg-[var(--color-card-hover)] rounded-lg p-3">
+                  Detectamos que o valor médio por atendimento de <span className="text-[var(--color-text)] font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${accent.text} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-[var(--color-text)] font-bold">{isAtRisk.days_since_last_visit} dias</span>.
                 </p>
 
-                <div className="bg-white/5 p-3 rounded border border-white/5">
+                <div className="bg-[var(--color-card-hover)] p-3 rounded border border-[var(--color-border)]">
                   <p className="text-xs uppercase font-mono text-text-secondary mb-1">Sugestão da IA:</p>
-                  <p className="text-xs italic text-white/80">&quot;Enviar mensagem de saudades e oferecer um horário prioritário para esta semana.&quot;</p>
+                  <p className="text-xs italic text-[var(--color-text)]/80">&quot;Enviar mensagem de saudades e oferecer um horário prioritário para esta semana.&quot;</p>
                 </div>
 
                 <Button

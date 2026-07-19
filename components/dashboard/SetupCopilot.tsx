@@ -241,7 +241,7 @@ export const SetupCopilot: React.FC = () => {
     const nextStep = steps.find(s => !s.completed);
     const resumeStep = steps.find(s => s.id === resumeStepId);
 
-    const successTextClass = classes.badgeSuccess.split(' ').find(c => c.startsWith('text-')) || 'text-emerald-400';
+    const successTextClass = classes.badgeSuccess.split(' ').find(c => c.startsWith('text-')) || 'text-[var(--color-success)]';
     const successBgClass = classes.badgeSuccess.split(' ').find(c => c.startsWith('bg-')) || 'bg-emerald-500/10';
 
     return (

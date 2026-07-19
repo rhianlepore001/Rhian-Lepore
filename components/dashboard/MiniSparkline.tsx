@@ -11,7 +11,7 @@ interface MiniSparklineProps {
 
 export const MiniSparkline: React.FC<MiniSparklineProps> = ({
   data,
-  color = '#C29B40',
+  color = 'var(--color-accent)',
   height = 40,
   showArea = true,
   animate = true,

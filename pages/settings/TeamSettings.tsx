@@ -117,7 +117,7 @@ export const TeamSettings: React.FC = () => {
                                 className={`
                                     w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-mono text-sm uppercase transition-all
                                     ${copiedLink
-                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                        ? 'bg-emerald-500/10 text-[var(--color-success)] border border-emerald-500/30'
                                         : `${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} hover:border-[var(--color-accent-border)]`
                                     }
                                 `}

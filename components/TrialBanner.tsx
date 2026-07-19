@@ -21,12 +21,12 @@ export const TrialBanner: React.FC = () => {
     // Expirado: bloqueante — mantém vermelho, mas em 1 linha compacta
     if (isExpired) {
         return (
-<div className="w-full h-10 px-3 md:px-4 flex items-center justify-center gap-2 bg-red-600 text-white text-xs md:text-sm font-bold z-[60] relative whitespace-nowrap">
+<div className="w-full h-10 px-3 md:px-4 flex items-center justify-center gap-2 bg-[var(--color-danger)] text-[var(--color-text)] text-xs md:text-sm font-bold z-[60] relative whitespace-nowrap">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="truncate">Período de teste expirado — assine para continuar usando.</span>
                 <button
                     onClick={goToPlans}
-                    className="bg-white text-red-600 px-3 py-1 rounded-full text-xs hover:bg-neutral-100 transition-colors flex items-center gap-1 shrink-0"
+                    className="bg-white text-[var(--color-danger)] px-3 py-1 rounded-full text-xs hover:bg-neutral-100 transition-colors flex items-center gap-1 shrink-0"
                 >
                     Ver planos <ArrowRight className="w-3 h-3" />
                 </button>
@@ -51,12 +51,12 @@ export const TrialBanner: React.FC = () => {
     // Crítico: urgência real — mantém fundo amarelo, 1 linha compacta
     if (isCritical) {
         return (
-            <div className="w-full h-10 px-3 md:px-4 flex items-center justify-center gap-2 bg-yellow-400 text-black text-xs md:text-sm font-bold z-[60] relative whitespace-nowrap">
+            <div className="w-full h-10 px-3 md:px-4 flex items-center justify-center gap-2 bg-yellow-400 text-[var(--color-bg)] text-xs md:text-sm font-bold z-[60] relative whitespace-nowrap">
                 <AlertTriangle className="w-4 h-4 shrink-0 animate-pulse" />
                 <span className="truncate">Seu teste {remainingText}.</span>
                 <button
                     onClick={goToPlans}
-                    className="bg-black text-white px-3 py-1 rounded-full text-xs hover:bg-neutral-900 transition-colors flex items-center gap-1 shrink-0"
+                    className="bg-[var(--color-bg)] text-[var(--color-text)] px-3 py-1 rounded-full text-xs hover:bg-[var(--color-card)] transition-colors flex items-center gap-1 shrink-0"
                 >
                     Assinar <ArrowRight className="w-3 h-3" />
                 </button>

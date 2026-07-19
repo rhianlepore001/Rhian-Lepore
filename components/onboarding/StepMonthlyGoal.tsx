@@ -55,17 +55,17 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                 <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${isBeauty ? 'bg-beauty-neon/20' : 'bg-accent-gold/20'}`}>
                     <Target className={`w-8 h-8 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
                 </div>
-                <p className="text-neutral-400 text-sm">
+                <p className="text-[var(--color-text-muted)] text-sm">
                     Com uma meta definida, você acompanha seu progresso no dashboard e recebe alertas quando está perto de bater.
                 </p>
             </div>
 
             <div>
-                <label className="text-white font-mono text-sm mb-2 block">
+                <label className="text-[var(--color-text)] font-mono text-sm mb-2 block">
                     Quanto você quer faturar este mês?
                 </label>
                 <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-lg">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] font-mono text-lg">
                         {currencySymbol}
                     </span>
                     <input
@@ -74,7 +74,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                         onChange={e => setGoal(e.target.value)}
                         placeholder="0,00"
                         id="wizard-monthly-goal"
-                        className={`w-full p-4 pl-14 bg-neutral-800 border border-neutral-700 text-white focus:outline-none text-2xl font-bold font-mono transition-all
+                        className={`w-full p-4 pl-14 bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none text-2xl font-bold font-mono transition-all
                             ${isBeauty ? 'rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]' : 'rounded-lg focus:border-accent-gold'}`}
                         autoFocus
                     />
@@ -82,7 +82,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
             </div>
 
             <div>
-                <p className="text-neutral-500 text-xs mb-2 font-mono">Sugestões rápidas:</p>
+                <p className="text-[var(--color-text-muted)] text-xs mb-2 font-mono">Sugestões rápidas:</p>
                 <div className="flex gap-2">
                     {suggestedGoals.map(val => (
                         <button
@@ -93,7 +93,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                                     ? isBeauty
                                         ? 'border-beauty-neon bg-beauty-neon/10 text-beauty-neon'
                                         : 'border-accent-gold bg-accent-gold/10 text-accent-gold'
-                                    : 'border-neutral-700 text-neutral-400 hover:border-neutral-500'
+                                    : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)]'
                                 }`}
                         >
                             {currencySymbol} {val.toLocaleString()}
@@ -105,7 +105,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
             <div className="flex gap-3 pt-4">
                 <button
                     onClick={onBack}
-                    className="px-5 py-4 text-neutral-500 hover:text-neutral-300 font-bold transition-colors text-sm"
+                    className="px-5 py-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] font-bold transition-colors text-sm"
                 >
                     Voltar
                 </button>
@@ -120,7 +120,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                 <button
                     onClick={handleSkip}
                     disabled={submitting}
-                    className="px-5 py-4 text-neutral-500 hover:text-neutral-300 font-bold transition-colors text-sm"
+                    className="px-5 py-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] font-bold transition-colors text-sm"
                 >
                     Pular
                 </button>

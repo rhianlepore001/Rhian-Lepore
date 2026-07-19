@@ -78,7 +78,7 @@ export const FinancialSettings: React.FC = () => {
             </div>
 
             {machineFeeEnabled && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[var(--color-border)]">
                 <div>
                   <label htmlFor="debit-fee" className={classes.label}>
                     Taxa Débito (%)

@@ -79,7 +79,7 @@ export const BrandIdentitySection: React.FC<BrandIdentitySectionProps> = ({
             {preview && (
                 <button
                     onClick={onRemove}
-                    className="absolute -top-2 -right-2 bg-red-500/90 p-1.5 rounded-full text-white hover:bg-red-600 transition-colors shadow-lg"
+                    className="absolute -top-2 -right-2 bg-[var(--color-danger)]/90 p-1.5 rounded-full text-[var(--color-text)] hover:brightness-110 transition-colors shadow-lg"
                 >
                     <Trash2 className="w-3 h-3" />
                 </button>

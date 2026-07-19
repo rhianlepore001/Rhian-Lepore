@@ -277,7 +277,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
             {/* Confirm cancel overlay */}
             {showConfirm && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl p-6 animate-in fade-in duration-200">
+                <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg)]/80 backdrop-blur-sm rounded-2xl p-6 animate-in fade-in duration-200">
                     <div className="text-center space-y-4">
                         <AlertCircle className="w-10 h-10 text-[var(--color-danger)] mx-auto" />
                         <p className="text-theme-text font-semibold text-sm">Cancelar este agendamento?</p>

@@ -50,7 +50,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
     if (isTyping) {
         return (
             <div className="flex justify-start mb-6 animate-fade-in">
-                <div className={`px-6 py-4 ${borderRadius} ${isBeauty ? 'bg-theme-surface border border-theme-border' : 'bg-obsidian-card border border-white/5 shadow-heavy'}`}>
+                <div className={`px-6 py-4 ${borderRadius} ${isBeauty ? 'bg-theme-surface border border-theme-border' : 'bg-obsidian-card border border-[var(--color-border)] shadow-heavy'}`}>
                     <Loader2 className={`w-5 h-5 animate-spin ${isBeauty ? 'text-theme-text' : 'text-obsidian-accent opacity-50'}`} />
                 </div>
             </div>
@@ -65,7 +65,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
 
                 {/* Assistant Avatar - Premium Identity */}
                 {isAssistant && (
-                    <div className={`w-8 h-8 md:w-10 md:h-10 shrink-0 flex items-center justify-center border transition-all duration-500 shadow-lg mb-2 ${isBeauty ? 'bg-theme-surface text-theme-text rounded-full border-theme-border' : 'bg-accent-gold text-black rounded-none border-black font-black'}`}>
+                    <div className={`w-8 h-8 md:w-10 md:h-10 shrink-0 flex items-center justify-center border transition-all duration-500 shadow-lg mb-2 ${isBeauty ? 'bg-theme-surface text-theme-text rounded-full border-theme-border' : 'bg-accent-gold text-[var(--color-bg)] rounded-none border-[var(--color-bg)] font-black'}`}>
                         <span className="text-xs md:text-xs tracking-tighter">AI</span>
                     </div>
                 )}
@@ -82,7 +82,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                         px-7 py-5 shadow-2xl transition-all duration-500
                         ${isAssistant
                             ? (isBeauty ? 'bg-theme-card border border-theme-border text-theme-text rounded-2xl rounded-bl-none shadow-[var(--elevation-2)]' : 'fragment-obsidian text-theme-text border border-accent-gold/30')
-                            : (isBeauty ? 'bg-theme-surface text-theme-text rounded-2xl rounded-br-none shadow-lg' : 'bg-accent-gold text-black font-black border-4 border-black shadow-heavy-lg')
+                            : (isBeauty ? 'bg-theme-surface text-theme-text rounded-2xl rounded-br-none shadow-lg' : 'bg-accent-gold text-[var(--color-bg)] font-black border-4 border-[var(--color-bg)] shadow-heavy-lg')
                         }
                     `}>
                         {typeof message === 'string' ? (

@@ -61,7 +61,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                     <Sparkles className="w-4 h-4" />
                     <h3 className="font-heading text-sm uppercase tracking-wider">Memória da IA</h3>
                 </div>
-                <span className="text-xs bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded border border-neutral-700 font-mono">EMBEDDINGS-004</span>
+                <span className="text-xs bg-[var(--color-card)] text-[var(--color-text-muted)] px-1.5 py-0.5 rounded border border-[var(--color-border)] font-mono">EMBEDDINGS-004</span>
             </div>
 
             <div className="grid gap-3">
@@ -75,14 +75,14 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
                                 {insight.context_type === 'style' ? <History className="w-3 h-3" /> : <Lightbulb className="w-3 h-3" />}
                             </div>
                             <div className="flex-1">
-                                <p className="text-xs text-white/90 leading-relaxed italic">
+                                <p className="text-xs text-[var(--color-text)]/90 leading-relaxed italic">
                                     &quot;{insight.observation}&quot;
                                 </p>
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-xs text-neutral-500 font-mono uppercase">
+                                    <span className="text-xs text-[var(--color-text-muted)] font-mono uppercase">
                                         {insight.context_type === 'style' ? 'Estilo' : 'Preferência'}
                                     </span>
-                                    <span className="text-xs text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-xs text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity">
                                         Match: {Math.round((insight.similarity || 0) * 100)}%
                                     </span>
                                 </div>
@@ -95,7 +95,7 @@ export const AISemanticInsights: React.FC<AISemanticInsightsProps> = ({ clientId
             </div>
 
             <div className={`mt-2 p-2 rounded ${accent.bgDim} border border-dashed ${accent.border}`}>
-                <p className="text-xs text-neutral-400 text-center">
+                <p className="text-xs text-[var(--color-text-muted)] text-center">
                     A IA está relacionando notas passadas para este atendimento.
                 </p>
             </div>

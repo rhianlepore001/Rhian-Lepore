@@ -15,13 +15,13 @@ interface State {
 }
 
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
-    const { colors, font } = useBrutalTheme({ override: 'barber' as ThemeVariant });
+    const { colors, font, status } = useBrutalTheme({ override: 'barber' as ThemeVariant });
 
     return (
-        <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
-            <div className={`${colors.card} ${colors.border} border-4 border-red-600 p-8 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(220,38,38,0.5)]`}>
-                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-red-500/20">
-                    <AlertTriangle className="w-10 h-10 text-red-500" />
+            <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
+            <div className={`${colors.card} ${colors.border} border-4 ${status.dangerBorder} p-8 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(220,38,38,0.5)]`}>
+                <div className={`w-20 h-20 ${status.dangerBg} rounded-full flex items-center justify-center mx-auto mb-6 border-2 ${status.dangerBorder}`}>
+                    <AlertTriangle className={`w-10 h-10 ${status.danger}`} />
                 </div>
 
                 <h2 className={`text-2xl font-bold ${colors.text} mb-4 uppercase tracking-wider`}>
@@ -33,8 +33,8 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
                 </p>
 
                 {error && process.env.NODE_ENV === 'development' && (
-                    <div className="bg-black/50 p-4 rounded mb-6 text-left overflow-auto max-h-40">
-                        <code className="text-red-400 text-xs font-mono">
+                    <div className="bg-[var(--color-bg)]/50 p-4 rounded mb-6 text-left overflow-auto max-h-40">
+                        <code className={`${status.danger} text-xs font-mono`}>
                             {error.toString()}
                         </code>
                     </div>

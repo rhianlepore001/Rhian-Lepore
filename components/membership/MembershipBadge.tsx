@@ -10,7 +10,7 @@ interface MembershipBadgeProps {
 }
 
 const COLORS: Record<MembershipBadgeColor, { bg: string; text: string; icon: React.ReactNode }> = {
-    gold: { bg: 'bg-yellow-500/20', text: 'text-yellow-300', icon: <Crown className="w-3 h-3" /> },
+    gold: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning)]', icon: <Crown className="w-3 h-3" /> },
     silver: { bg: 'bg-slate-400/20', text: 'text-slate-200', icon: <Sparkles className="w-3 h-3" /> },
     bronze: { bg: 'bg-orange-700/20', text: 'text-orange-300', icon: <Sparkles className="w-3 h-3" /> },
 };

@@ -1311,7 +1311,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 {getInitials(member.name)}
                                             </div>
                                         )}
-                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[var(--color-success)] border-2 border-black rounded-full" />
+                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[var(--color-success)] border-2 border-[var(--color-bg)] rounded-full" />
                                     </div>
                                     <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
                                         {isSelf ? 'Você' : member.name.split(' ')[0]}

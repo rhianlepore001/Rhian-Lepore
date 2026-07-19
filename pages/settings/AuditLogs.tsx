@@ -85,8 +85,8 @@ function levelClasses(level: number | null): string {
     case 5: return 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger-border)]';
     case 4: return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
     case 3: return 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)]';
-    case 2: return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-    case 1: return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+    case 2: return 'bg-[var(--color-warning-bg)] text-yellow-600 border-[var(--color-warning-border)]/20';
+    case 1: return 'bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info-border)]';
     default: return 'bg-[var(--color-card-hover)] text-theme-textSecondary border-[var(--color-divider)]';
   }
 }
@@ -398,7 +398,7 @@ export const AuditLogs: React.FC = () => {
                           </div>
                         ) : shot ? (
                           <a href={shot} target="_blank" rel="noopener noreferrer" className="block">
-                            <img src={shot} alt="Imagem do problema" className={`w-full max-h-72 object-contain ${radius.input} border ${colors.border} bg-black/20`} />
+                            <img src={shot} alt="Imagem do problema" className={`w-full max-h-72 object-contain ${radius.input} border ${colors.border} bg-[var(--color-bg)]/20`} />
                           </a>
                         ) : (
                           <span className={`text-xs ${colors.textMuted}`}>Não consegui carregar a imagem.</span>

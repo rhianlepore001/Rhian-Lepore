@@ -190,7 +190,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                         </thead>
                                         <tbody className={`divide-y ${colors.divider}`}>
                                             {records.map(r => (
-                                                <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
+                                                <tr key={r.id} className="hover:bg-[var(--color-card-hover)] transition-colors">
                                                     <td className={`py-3 ${colors.textSecondary} ${font.mono} text-xs whitespace-nowrap`}>{fmtDate(r.created_at)}</td>
                                                     <td className="py-3 pr-4">
                                                         <p className={`${colors.text} text-xs font-medium`}>{r.service_name}</p>
@@ -202,7 +202,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                                     </td>
                                                     <td className="py-3 text-right hidden md:table-cell whitespace-nowrap">
                                                         {r.machine_fee_percent > 0 ? (
-                                                            <span className="text-orange-400 text-xs font-mono">−{fmt(r.machine_fee_amount)}</span>
+                                                            <span className="text-[var(--color-warning)] text-xs font-mono">−{fmt(r.machine_fee_amount)}</span>
                                                         ) : (
                                                             <span className={`${colors.textMuted} opacity-50 text-xs`}>—</span>
                                                         )}
@@ -225,7 +225,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                     {totalFee > 0 && (
                                         <div className="flex justify-between text-sm">
                                             <span className={colors.textMuted}>(−) Taxa maquininha</span>
-                                            <span className="text-orange-400 font-mono">{fmt(totalFee)}</span>
+                                            <span className="text-[var(--color-warning)] font-mono">{fmt(totalFee)}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between text-sm">

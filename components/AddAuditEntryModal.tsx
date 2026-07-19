@@ -196,7 +196,7 @@ export const AddAuditEntryModal: React.FC<AddAuditEntryModalProps> = ({ onClose,
               />
               {preview ? (
                 <div className={['relative overflow-hidden border', colors.border, radius.card].join(' ')}>
-                  <img src={preview} alt="Pré-visualização" className="w-full max-h-64 object-contain bg-black/20" />
+                  <img src={preview} alt="Pré-visualização" className="w-full max-h-64 object-contain bg-[var(--color-bg)]/20" />
                   <button
                     type="button"
                     onClick={() => setFile(null)}

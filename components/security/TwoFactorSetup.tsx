@@ -74,11 +74,11 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
         <div className="space-y-6">
             {step === 'intro' && (
                 <div className="space-y-4">
-                    <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg flex gap-3">
-                        <QrCode className="w-12 h-12 text-blue-400 flex-shrink-0" />
+                    <div className="bg-[var(--color-info-bg)] border border-[var(--color-info-border)] p-4 rounded-lg flex gap-3">
+                        <QrCode className="w-12 h-12 text-[var(--color-info)] flex-shrink-0" />
                         <div>
-                            <h3 className="text-white font-bold mb-1">Aumente sua segurança</h3>
-                            <p className="text-neutral-400 text-sm">
+                            <h3 className="text-[var(--color-text)] font-bold mb-1">Aumente sua segurança</h3>
+                            <p className="text-[var(--color-text-muted)] text-sm">
                                 A autenticação em dois fatores (2FA) adiciona uma camada extra de proteção.
                                 Mesmo que alguém descubra sua senha, não conseguirá acessar sua conta sem o código do seu celular.
                             </p>
@@ -99,8 +99,8 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
             {step === 'scan' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
                     <div className="text-center space-y-2">
-                        <h3 className="text-xl font-bold text-white">Escaneie o QR Code</h3>
-                        <p className="text-neutral-400 text-sm">
+                        <h3 className="text-xl font-bold text-[var(--color-text)]">Escaneie o QR Code</h3>
+                        <p className="text-[var(--color-text-muted)] text-sm">
                             Abra seu aplicativo autenticador (Google Authenticator, Authy, etc) e escaneie a imagem abaixo.
                         </p>
                     </div>
@@ -110,7 +110,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                     </div>
 
                     <div className="text-center">
-                        <p className="text-neutral-500 text-xs mb-2">Não consegue escanear?</p>
+                        <p className="text-[var(--color-text-muted)] text-xs mb-2">Não consegue escanear?</p>
                         <button
                             onClick={copyToClipboard}
                             className={`text-xs ${accent.text} hover:underline flex items-center gap-1 mx-auto`}
@@ -133,8 +133,8 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
             {step === 'verify' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300">
                     <div className="text-center space-y-2">
-                        <h3 className="text-xl font-bold text-white">Verifique e Ative</h3>
-                        <p className="text-neutral-400 text-sm">
+                        <h3 className="text-xl font-bold text-[var(--color-text)]">Verifique e Ative</h3>
+                        <p className="text-[var(--color-text-muted)] text-sm">
                             Digite o código de 6 dígitos que aparece no seu aplicativo autenticador para confirmar.
                         </p>
                     </div>
@@ -146,12 +146,12 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                             value={verificationCode}
                             onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ''))}
                             placeholder="000000"
-                            className="w-full bg-black/50 border border-white/20 rounded-xl p-4 text-center text-3xl tracking-[1em] text-white focus:outline-none focus:border-white/50 font-mono"
+                            className="w-full bg-black/50 border border-[var(--color-border-strong)] rounded-xl p-4 text-center text-3xl tracking-[1em] text-[var(--color-text)] focus:outline-none focus:border-[var(--color-border)]0 font-mono"
                         />
                     </div>
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                        <div className="bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)]/30 p-3 rounded-lg flex items-center gap-2 text-[var(--color-danger)] text-sm">
                             <AlertTriangle className="w-4 h-4" />
                             {error}
                         </div>

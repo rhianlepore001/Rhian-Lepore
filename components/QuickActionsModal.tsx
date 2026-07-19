@@ -29,22 +29,22 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
     };
 
     const modalContent = (
-        <div className="fixed inset-0 flex items-end justify-center sm:items-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" style={{ zIndex: 'var(--z-modal)' }}>
+        <div className="fixed inset-0 flex items-end justify-center sm:items-center bg-[var(--color-overlay)] backdrop-blur-sm animate-in fade-in duration-200" style={{ zIndex: 'var(--z-modal)' }}>
             <div
                 className="absolute inset-0"
                 onClick={onClose}
             />
             <FocusTrap active={true}>
                 <div className={`relative w-full max-w-sm mx-4 mb-24 sm:mb-0 rounded-2xl shadow-promax-glass overflow-hidden animate-in slide-in-from-bottom-10 duration-300
-        ${isBeauty ? 'bg-gradient-to-br from-beauty-card/95 to-beauty-dark/95 border border-white/10 backdrop-blur-2xl' : 'bg-brutal-card/80 border border-white/10 backdrop-blur-2xl'}
+        ${isBeauty ? 'bg-gradient-to-br from-beauty-card/95 to-beauty-dark/95 border border-[var(--color-border)] backdrop-blur-2xl' : 'bg-brutal-card/80 border border-[var(--color-border)] backdrop-blur-2xl'}
       `}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="quick-actions-title"
                 >
-                <div className={`p-4 flex justify-between items-center ${isBeauty ? 'border-b border-white/10 bg-white/5' : 'border-b border-white/5 bg-white/[0.02]'}`}>
-                    <h3 id="quick-actions-title" className="font-heading font-bold text-white">Ações Rápidas</h3>
-                    <button onClick={onClose} className={`p-2 -mr-2 rounded-full transition-colors ${isBeauty ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-accent-gold/60 hover:text-accent-gold hover:bg-accent-gold/10'}`} aria-label="Fechar ações rápidas" title="Fechar">
+                <div className={`p-4 flex justify-between items-center ${isBeauty ? 'border-b border-[var(--color-divider)] bg-[var(--color-card-hover)]' : 'border-b border-[var(--color-divider)] bg-[var(--color-card-hover)]'}`}>
+                    <h3 id="quick-actions-title" className="font-heading font-bold text-[var(--color-text)]">Ações Rápidas</h3>
+                    <button onClick={onClose} className={`p-2 -mr-2 rounded-full transition-colors ${isBeauty ? 'text-[var(--color-text)]/60 hover:text-[var(--color-text)] hover:bg-[var(--color-card-hover)]' : 'text-accent-gold/60 hover:text-accent-gold hover:bg-accent-gold/10'}`} aria-label="Fechar ações rápidas" title="Fechar">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -54,15 +54,15 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                         onClick={() => handleAction('/agenda?new=true')}
                         className={`animate-in fade-in duration-300 delay-[0ms] flex min-h-[144px] flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-200 active:scale-95 hover:scale-[1.02]
               ${isBeauty
-                                ? 'border-beauty-neon/20 bg-white/[0.05] hover:bg-beauty-neon/10 hover:shadow-neon'
-                                : 'border-accent-gold/20 bg-white/[0.04] hover:bg-accent-gold/10 hover:border-accent-gold/40 hover:shadow-gold'}
+                                ? 'border-[var(--color-accent-border)] bg-[var(--color-card-hover)] hover:bg-[var(--color-accent-dim)] hover:shadow-neon'
+                                : 'border-accent-gold/20 bg-[var(--color-card-hover)] hover:bg-accent-gold/10 hover:border-accent-gold/40 hover:shadow-gold'}
             `}
                     >
-                        <div className={`p-3 rounded-2xl mb-3 ${isBeauty ? 'bg-beauty-neon/15 text-beauty-neon' : 'bg-accent-gold/15 text-accent-gold'}`}>
+                        <div className={`p-3 rounded-2xl mb-3 ${isBeauty ? 'bg-[var(--color-accent-dim)] text-theme-accent' : 'bg-accent-gold/15 text-accent-gold'}`}>
                             <Calendar className="w-8 h-8" />
                         </div>
-                        <span className="font-bold text-sm text-white text-center">Novo Atendimento</span>
-                        <span className="text-xs font-mono text-neutral-500 uppercase mt-1">Agenda</span>
+                        <span className="font-bold text-sm text-[var(--color-text)] text-center">Novo Atendimento</span>
+                        <span className="text-xs font-mono text-[var(--color-text-muted)] uppercase mt-1">Agenda</span>
                     </button>
 
                     {!isStaff && (
@@ -70,15 +70,15 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                             onClick={() => handleAction('/financeiro?new=true')}
                             className={`animate-in fade-in duration-300 delay-[50ms] flex min-h-[144px] flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-200 active:scale-95 hover:scale-[1.02]
                   ${isBeauty
-                                    ? 'border-green-500/20 bg-white/[0.05] hover:bg-green-500/10 hover:shadow-[0_0_12px_rgba(52,211,153,0.15)]'
-                                    : 'border-green-500/20 bg-white/[0.04] hover:bg-green-500/10 hover:border-green-500/40 hover:shadow-[0_0_12px_rgba(52,211,153,0.15)]'}
+                                    ? 'border-[var(--color-success-border)] bg-[var(--color-card-hover)] hover:bg-[var(--color-success-bg)] hover:shadow-[0_0_12px_rgba(52,211,153,0.15)]'
+                                    : 'border-[var(--color-success-border)] bg-[var(--color-card-hover)] hover:bg-[var(--color-success-bg)] hover:border-[var(--color-success-border)] hover:shadow-[0_0_12px_rgba(52,211,153,0.15)]'}
                 `}
                         >
-                            <div className="p-3 rounded-2xl mb-3 bg-green-500/15 text-green-400">
+                            <div className="p-3 rounded-2xl mb-3 bg-[var(--color-success-bg)] text-[var(--color-success)]">
                                 <DollarSign className="w-8 h-8" />
                             </div>
-                            <span className="font-bold text-sm text-white text-center">Nova Transação</span>
-                            <span className="text-xs font-mono text-neutral-500 uppercase mt-1">Financeiro</span>
+                            <span className="font-bold text-sm text-[var(--color-text)] text-center">Nova Transação</span>
+                            <span className="text-xs font-mono text-[var(--color-text-muted)] uppercase mt-1">Financeiro</span>
                         </button>
                     )}
                 </div>

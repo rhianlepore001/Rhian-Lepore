@@ -312,7 +312,7 @@ const confirmFinish = async () => {
                                     <h3 className={`font-bold ${colors.text} text-lg flex items-center gap-2`}>
                                         <span className="font-heading">{entry.client_name}</span>
                                         {entry.status === 'calling' && (
-                                            <span className="text-xs bg-[var(--color-success)] text-black px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
+                                            <span className="text-xs bg-[var(--color-success)] text-[var(--color-bg)] px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
                                         )}
                                     </h3>
                                     <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>

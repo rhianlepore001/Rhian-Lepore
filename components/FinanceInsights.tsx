@@ -34,8 +34,20 @@ interface FinanceInsightsProps {
   currencyRegion: Region;
 }
 
-const DONUT_COLORS_BARBER = ['#d4a843', '#c49333', '#b48323', '#a47313', '#946303'];
-const DONUT_COLORS_BEAUTY = ['#a78bfa', '#9270e5', '#7d55d0', '#683abb', '#531fa6'];
+const DONUT_COLORS_BARBER = [
+  'var(--color-accent)',
+  'var(--color-accent-hover)',
+  'var(--color-accent-dim)',
+  'var(--color-accent-border)',
+  'var(--color-text-muted)',
+];
+const DONUT_COLORS_BEAUTY = [
+  'var(--color-accent)',
+  'var(--color-accent-hover)',
+  'var(--color-accent-dim)',
+  'var(--color-accent-border)',
+  'var(--color-text-muted)',
+];
 const METHOD_OPACITIES = [1, 0.75, 0.5];
 
 export const FinanceInsights: React.FC<FinanceInsightsProps> = ({
@@ -48,7 +60,7 @@ export const FinanceInsights: React.FC<FinanceInsightsProps> = ({
   const [showExpenses, setShowExpenses] = useState(false);
 
   const COLORS = isBeauty ? DONUT_COLORS_BEAUTY : DONUT_COLORS_BARBER;
-  const accentBarColor = isBeauty ? '#a78bfa' : '#d4a843';
+  const accentBarColor = isBeauty ? 'var(--color-accent)' : 'var(--color-accent)';
 
   const currentDay = new Date().getDate();
   const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
@@ -328,7 +340,7 @@ export const FinanceInsights: React.FC<FinanceInsightsProps> = ({
                 />
                 <Bar dataKey="revenue" fill={accentBarColor} radius={[4, 4, 0, 0]} name="Receita" isAnimationActive={false} />
                 {showExpenses && (
-                  <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} opacity={0.6} name="Despesas" isAnimationActive={false} />
+                  <Bar dataKey="expenses" fill="var(--color-danger)" radius={[4, 4, 0, 0]} opacity={0.6} name="Despesas" isAnimationActive={false} />
                 )}
               </BarChart>
             </ResponsiveContainer>

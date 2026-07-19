@@ -126,7 +126,7 @@ export const ServiceSettings: React.FC = () => {
                                     action={
                                         <button
                                             onClick={() => handleDeleteCategory(category.id)}
-                                            className={`${colors.textMuted} hover:text-red-400 p-2 transition-colors active:scale-[0.97]`}
+                                            className={`${colors.textMuted} hover:text-[var(--color-danger)] p-2 transition-colors active:scale-[0.97]`}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -141,7 +141,7 @@ export const ServiceSettings: React.FC = () => {
                                             categoryServices.map(service => (
                                                 <div
                                                     key={service.id}
-                                                    className={`p-4 flex items-center gap-4 hover:bg-white/5 transition-all group cursor-pointer active:scale-[0.99]`}
+                                                    className={`p-4 flex items-center gap-4 hover:bg-[var(--color-card-hover)] transition-all group cursor-pointer active:scale-[0.99]`}
                                                     onClick={() => {
                                                         setEditingService(service);
                                                         setIsServiceModalOpen(true);
@@ -156,7 +156,7 @@ export const ServiceSettings: React.FC = () => {
                                                                 <img src={service.image_url} alt={service.name} className="relative z-10 max-w-full max-h-full object-cover" />
                                                             </>
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-white/10">
+                                                            <div className="w-full h-full flex items-center justify-center text-[var(--color-text)]/10">
                                                                 <Package className="w-6 h-6" />
                                                             </div>
                                                         )}
@@ -166,7 +166,7 @@ export const ServiceSettings: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h4 className={`${colors.text} font-bold tracking-tight truncate`}>{service.name}</h4>
                                                             {!service.active && (
-                                                                <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Inativo</span>
+                                                                <span className="text-xs bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]/20 px-1.5 py-0.5 rounded uppercase font-bold">Inativo</span>
                                                             )}
                                                         </div>
                                                         <p className={`text-sm font-mono ${colors.textMuted}`}>
@@ -198,15 +198,15 @@ export const ServiceSettings: React.FC = () => {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setIsCategoryModalOpen(false)}
-                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-theme-textSecondary hover:text-white hover:bg-[var(--color-card-hover)]'}`}
+                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-theme-textSecondary hover:text-[var(--color-text)] hover:bg-[var(--color-card-hover)]'}`}
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleAddCategory}
                                 className={`px-5 py-2.5 font-bold transition-all ${isBeauty
-                                    ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-white rounded-xl hover:shadow-neon'
-                                    : 'bg-accent-gold text-black hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
+                                    ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-[var(--color-text)] rounded-xl hover:shadow-neon'
+                                    : 'bg-accent-gold text-[var(--color-bg)] hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
                                     }`}
                             >
                                 Salvar

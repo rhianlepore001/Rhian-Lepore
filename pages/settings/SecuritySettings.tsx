@@ -60,12 +60,12 @@ export const SecuritySettings: React.FC = () => {
                             </p>
 
                             {!isEnabled ? (
-                                <div className="flex items-center gap-2 text-orange-400 mb-6 bg-orange-500/5 border border-orange-500/10 p-3 rounded-xl w-fit">
+                                <div className="flex items-center gap-2 text-[var(--color-warning)] mb-6 bg-orange-500/5 border border-orange-500/10 p-3 rounded-xl w-fit">
                                     <Lock className="w-4 h-4" />
                                     <span className="text-xs font-bold uppercase tracking-wider">Proteção Desativada</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2 text-green-400 mb-6 bg-green-500/5 border border-green-500/10 p-3 rounded-xl w-fit">
+                                <div className="flex items-center gap-2 text-[var(--color-success)] mb-6 bg-[var(--color-success)]/5 border border-[var(--color-success-border)]/10 p-3 rounded-xl w-fit">
                                     <CheckCircle2 className="w-4 h-4" />
                                     <span className="text-xs font-bold uppercase tracking-wider">Conta Protegida</span>
                                 </div>
@@ -89,9 +89,9 @@ export const SecuritySettings: React.FC = () => {
                                         <div className="space-y-4">
                                             <h4 className={`${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] mb-4`}>Métodos Verificados</h4>
                                             {factors.map(factor => (
-                                                <div key={factor.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center group hover:bg-white/10 transition-all">
+                                                <div key={factor.id} className="bg-[var(--color-card-hover)] border border-[var(--color-border)] p-4 rounded-2xl flex justify-between items-center group hover:bg-[var(--color-card-hover)] transition-all">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5">
+                                                        <div className="w-10 h-10 rounded-xl bg-[var(--color-bg)]/40 flex items-center justify-center border border-[var(--color-border)]">
                                                             <Smartphone className={`w-5 h-5 ${colors.textSecondary}`} />
                                                         </div>
                                                         <div>
@@ -101,7 +101,7 @@ export const SecuritySettings: React.FC = () => {
                                                     </div>
                                                     <button
                                                         onClick={() => handleUnenroll(factor.id)}
-                                                        className={`p-2 hover:bg-red-500/20 rounded-xl ${colors.textMuted} hover:text-red-400 transition-all active:animate-haptic-click`}
+                                                        className={`p-2 hover:bg-[var(--color-danger-bg)] rounded-xl ${colors.textMuted} hover:text-[var(--color-danger)] transition-all active:animate-haptic-click`}
                                                         title="Remover"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

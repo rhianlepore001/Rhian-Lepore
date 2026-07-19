@@ -10,7 +10,7 @@ const baseProps = {
   selectedProId: 'p1',
   selectedDate: new Date('2026-04-07'),
   selectedTime: '10:00',
-  cardBg: 'bg-neutral-800',
+  cardBg: 'bg-[var(--color-card)]',
   activeCardBg: 'bg-accent-gold',
   selectedServicesDetails: [{ id: 's1', name: 'Corte Feminino' }],
   isCustomService: false,

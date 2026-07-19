@@ -128,16 +128,16 @@ export const MembershipSettings: React.FC = () => {
                             value={pixKeyValue}
                             onChange={e => setPixKeyValue(e.target.value)}
                             placeholder={selectedType.placeholder}
-                            className={`${classes.input} ${pixValid === false ? 'border-red-500/60' : ''}`}
+                            className={`${classes.input} ${pixValid === false ? 'border-[var(--color-danger-border)]/60' : ''}`}
                         />
                         {pixValid === false && (
-                            <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                            <p className="text-[var(--color-danger)] text-xs mt-1.5 flex items-center gap-1">
                                 <AlertCircle className="w-3 h-3" />
                                 {selectedType.helper}
                             </p>
                         )}
                         {pixValid === true && (
-                            <p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
+                            <p className="text-[var(--color-success)] text-xs mt-1.5 flex items-center gap-1">
                                 <Check className="w-3 h-3" />
                                 Chave válida
                             </p>
@@ -185,7 +185,7 @@ export const MembershipSettings: React.FC = () => {
                     <h2 className={`${font.heading} ${colors.text} text-lg uppercase`}>Próximos passos</h2>
                     <ol className={`${colors.textSecondary} text-sm space-y-2 list-decimal list-inside`}>
                         <li>Crie seus planos em <a href="#/configuracoes/clube" className={`${accent.text} underline`}>Configurações &gt; Clube &gt; Planos</a></li>
-                        <li>Compartilhe o link <code className="px-1.5 py-0.5 bg-white/5 rounded text-xs">/#/clube/[seu-slug]</code> com clientes</li>
+                        <li>Compartilhe o link <code className="px-1.5 py-0.5 bg-[var(--color-card-hover)] rounded text-xs">/#/clube/[seu-slug]</code> com clientes</li>
                         <li>Confirme pagamentos manuais na <a href="#/clube/assinantes" className={`${accent.text} underline`}>lista de assinantes</a></li>
                     </ol>
                 </section>

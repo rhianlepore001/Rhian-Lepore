@@ -295,7 +295,7 @@ export const CommissionsSettings: React.FC = () => {
                                             transition-all p-4 rounded-xl border
                                             ${isBeauty
                                                 ? 'bg-beauty-dark/40 border-beauty-neon/20 hover:border-beauty-neon/50'
-                                                : `${colors.inputBg} ${isEditing ? accent.border : colors.border} hover:border-white/10`
+                                                : `${colors.inputBg} ${isEditing ? accent.border : colors.border} hover:border-[var(--color-border)]`
                                             }
                                         `}
                                     >
@@ -343,7 +343,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                 className={`w-24 px-3 py-2 rounded-lg ${colors.text} font-mono text-center outline-none transition-all
                                                                     ${isBeauty
                                                                         ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
-                                                                        : `bg-black border-2 ${accent.border}`
+                                                                        : `bg-[var(--color-bg)] border-2 ${accent.border}`
                                                                     }
                                                                 `}
                                                                 autoFocus
@@ -525,7 +525,7 @@ export const CommissionsSettings: React.FC = () => {
 
                 <Card className={`${colors.inputBg} ${colors.border}`}>
                     <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="w-5 h-5 text-[var(--color-info)] flex-shrink-0 mt-0.5" />
                         <div className={`text-sm ${colors.textMuted} space-y-2`}>
                             <p className={`font-bold ${colors.text}`}>Como funciona:</p>
                             <ul className="list-disc list-inside space-y-1 ml-2">

@@ -56,7 +56,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
                     type: 'svg',
                     margin: 1,
                     width: 256,
-                    color: { dark: '#000000', light: '#FFFFFF' },
+                    color: { dark: 'var(--color-bg)', light: 'var(--color-text)' },
                     errorCorrectionLevel: 'M',
                 });
                 if (active) setQrSvg(svg);
@@ -82,7 +82,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
 
     if (error) {
         return (
-            <div className={`p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm ${className}`}>
+            <div className={`p-4 rounded-xl bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)]/30 text-[var(--color-danger)] text-sm ${className}`}>
                 {error}
             </div>
         );
@@ -111,8 +111,8 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
                     />
                 </div>
             ) : (
-                <div className="w-64 h-64 mx-auto bg-white/5 rounded-xl flex items-center justify-center">
-                    <span className="text-neutral-500 text-sm">Gerando QR…</span>
+                <div className="w-64 h-64 mx-auto bg-[var(--color-card-hover)] rounded-xl flex items-center justify-center">
+                    <span className="text-[var(--color-text-muted)] text-sm">Gerando QR…</span>
                 </div>
             )}
 
@@ -125,7 +125,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
                     onClick={handleCopy}
                     className={[
                         'w-full text-left p-3 rounded-xl text-xs font-mono break-all',
-                        'bg-white/5 hover:bg-white/10',
+                        'bg-[var(--color-card-hover)] hover:bg-[var(--color-card-hover)]',
                         colors.border,
                         'border',
                         colors.textSecondary,

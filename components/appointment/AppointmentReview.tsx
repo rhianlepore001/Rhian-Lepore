@@ -114,16 +114,16 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
                     </div>
                 </div>
 
-                <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${sendWhatsapp ? 'bg-green-500/10 border-green-500/50' : cardBg}`}>
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${sendWhatsapp ? 'bg-green-500 border-green-500 text-black' : 'border-[var(--color-input-border)]'}`}>
+                <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${sendWhatsapp ? 'bg-[var(--color-success-bg)] border-[var(--color-success-border)]' : cardBg}`}>
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${sendWhatsapp ? 'bg-[var(--color-success)] border-[var(--color-success-border)] text-black' : 'border-[var(--color-input-border)]'}`}>
                         {sendWhatsapp && <Check className="w-3 h-3" />}
                     </div>
                     <input type="checkbox" checked={sendWhatsapp} onChange={e => setSendWhatsapp(e.target.checked)} className="hidden" />
                     <div className="flex-1">
-                        <span className={`font-bold block ${sendWhatsapp ? 'text-green-400' : 'text-theme-textSecondary'}`}>Enviar confirmação no WhatsApp</span>
+                        <span className={`font-bold block ${sendWhatsapp ? 'text-[var(--color-success)]' : 'text-theme-textSecondary'}`}>Enviar confirmação no WhatsApp</span>
                         <span className="text-xs text-[var(--color-text-muted)]">Abre o WhatsApp Web após salvar</span>
                     </div>
-                    <MessageCircle className={`w-5 h-5 ${sendWhatsapp ? 'text-green-500' : 'text-[var(--color-text-muted)]'}`} />
+                    <MessageCircle className={`w-5 h-5 ${sendWhatsapp ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`} />
                 </label>
             </div>
 

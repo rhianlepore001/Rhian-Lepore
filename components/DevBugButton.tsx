@@ -65,9 +65,9 @@ export const DevBugButton: React.FC = () => {
           className={[
             'fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[var(--z-modal)]',
             'inline-flex items-center justify-center w-12 h-12 rounded-full',
-            'bg-red-600 text-white shadow-lg shadow-red-600/30',
-            'hover:bg-red-500 active:scale-95 transition-all duration-150',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400',
+            'bg-[var(--color-danger)] text-[var(--color-text)] shadow-lg shadow-[var(--color-danger)]/30',
+            'hover:brightness-110 active:scale-95 transition-all duration-150',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-danger)]',
           ].join(' ')}
         >
           <Bug className="w-5 h-5" aria-hidden="true" />

@@ -182,7 +182,7 @@ const AppRoutes: React.FC = () => {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
-          <Route path="/fila" element={<OwnerRouteGuard><QueueManagement /></OwnerRouteGuard>} />
+          <Route path="/fila" element={<QueueManagement />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientCRM />} />
           <Route path="/produtos" element={<Products />} />

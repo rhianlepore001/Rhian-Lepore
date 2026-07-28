@@ -4,6 +4,7 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useCopyInviteLink } from '../../hooks/useCopyInviteLink';
 import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TeamMember as TeamMemberType } from '../../types/team';
@@ -19,7 +20,7 @@ export const TeamSettings: React.FC = () => {
     const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
-    const [copiedLink, setCopiedLink] = useState(false);
+    const { copied: copiedLink, copy: handleCopyInviteLink } = useCopyInviteLink();
 
     const cardMembers = members.map(m => ({ ...m, photo_url: m.photo_url ?? null }));
 
@@ -35,53 +36,6 @@ export const TeamSettings: React.FC = () => {
 
     const owners = cardMembers.filter(m => m.is_owner);
     const staff = cardMembers.filter(m => !m.is_owner);
-
-    const handleCopyInviteLink = async () => {
-        const inviteLink = `${window.location.origin}/#/register?company=${user?.id}`;
-
-        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            try {
-                await navigator.share({
-                    title: 'Convite para Equipe - AgendiX',
-                    text: 'Cadastre-se na nossa equipe e gerencie sua agenda:',
-                    url: inviteLink
-                });
-                return;
-            } catch (error) {
-                // fallback
-            }
-        }
-
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(inviteLink);
-                setCopiedLink(true);
-                setTimeout(() => setCopiedLink(false), 2000);
-            } else {
-                throw new Error('Clipboard API unavailable');
-            }
-        } catch (err) {
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = inviteLink;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                textArea.style.top = "0";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textArea);
-
-                if (successful) {
-                    setCopiedLink(true);
-                    setTimeout(() => setCopiedLink(false), 2000);
-                }
-            } catch (fallbackErr) {
-                console.error('Fallback copy failed', fallbackErr);
-            }
-        }
-    };
 
     return (
         <SettingsLayout>

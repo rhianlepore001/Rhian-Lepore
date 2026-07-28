@@ -281,29 +281,40 @@ describe('AuthContext', () => {
         const mockUser = { id: 'staff-new', email: 'staff@example.com' };
         const insertedProfiles: any[] = [];
         const insertedTeamMembers: any[] = [];
+        const updatedTeamMembers: any[] = [];
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
             data: { user: mockUser },
             error: null,
         });
-        (supabase.from as any).mockImplementation((table: string) => ({
-            insert: vi.fn().mockImplementation((rows) => {
-                if (table === 'profiles') {
-                    insertedProfiles.push(...rows);
-                }
-
-                if (table === 'team_members') {
-                    insertedTeamMembers.push(...rows);
-                }
-
+        (supabase.from as any).mockImplementation((table: string) => {
+            const queryChain: any = {
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
+                ilike: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            };
+            (queryChain as any).insert = vi.fn().mockImplementation((rows) => {
+                if (table === 'profiles') insertedProfiles.push(...rows);
+                if (table === 'team_members') insertedTeamMembers.push(...rows);
                 return Promise.resolve({ data: null, error: null });
-            }),
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }));
-        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+            });
+            (queryChain as any).update = vi.fn().mockImplementation((updates) => {
+                if (table === 'team_members') updatedTeamMembers.push(updates);
+                return Promise.resolve({ data: null, error: null });
+            });
+            return queryChain;
+        });
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'upsert_onboarding_progress') {
+                return Promise.resolve({ data: null, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
 
         const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -328,6 +339,7 @@ describe('AuthContext', () => {
             company_id: 'owner-123',
             tutorial_completed: false,
         });
+        // Pré-cadastro não achado → INSERT novo (caminho atual mantido)
         expect(insertedTeamMembers[0]).toMatchObject({
             user_id: 'owner-123',
             staff_user_id: mockUser.id,
@@ -335,7 +347,68 @@ describe('AuthContext', () => {
             active: true,
             is_owner: false,
         });
+        expect(updatedTeamMembers).toHaveLength(0);
         expect(supabase.rpc).not.toHaveBeenCalledWith('upsert_onboarding_progress', expect.anything());
+    });
+
+    it('vincula staff_user_id em team_member pré-cadastrado (sem duplicar)', async () => {
+        const mockUser = { id: 'staff-existing', email: 'existing@example.com' };
+        const insertedTeamMembers: any[] = [];
+        const updatedTeamMembers: any[] = [];
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: mockUser },
+            error: null,
+        });
+        (supabase.from as any).mockImplementation((table: string) => {
+            const queryChain: any = {
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
+                ilike: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            };
+            (queryChain as any).maybeSingle = vi.fn().mockImplementation(() => {
+                if (table === 'team_members') {
+                    return Promise.resolve({ data: { id: 'pre-cadastrado-uuid' }, error: null });
+                }
+                return Promise.resolve({ data: null, error: null });
+            });
+            (queryChain as any).insert = vi.fn().mockImplementation((rows) => {
+                if (table === 'team_members') insertedTeamMembers.push(...rows);
+                return Promise.resolve({ data: null, error: null });
+            });
+            (queryChain as any).update = vi.fn().mockImplementation((updates) => {
+                if (table === 'team_members') updatedTeamMembers.push(updates);
+                return queryChain;
+            });
+            return queryChain;
+        });
+        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'existing@example.com',
+                password: 'Password123!',
+                fullName: 'Lucas Oliveira',
+                businessName: '',
+                userType: 'barber',
+                region: 'BR',
+                phone: '11988888888',
+                companyId: 'owner-123',
+            });
+        });
+
+        expect(registerResult.error).toBeNull();
+        // Pré-cadastro achado → UPDATE (sem INSERT, sem duplicar)
+        expect(insertedTeamMembers).toHaveLength(0);
+        expect(updatedTeamMembers).toHaveLength(1);
+        expect(updatedTeamMembers[0]).toEqual({ staff_user_id: mockUser.id });
     });
 
     it('marks owner onboarding as completed in onboarding_progress', async () => {

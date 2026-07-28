@@ -324,26 +324,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (onboardingError) return { error: onboardingError };
         }
 
-        // Se for um registro de equipe (tem companyId), cria também o registro em team_members
+        // Se for um registro de equipe (tem companyId), vincula ou cria o team_member
         if (data.companyId) {
-          const { error: teamError } = await supabase
-            .from('team_members')
-            .insert([
-              {
-                user_id: data.companyId, // ID do dono
-                staff_user_id: authData.user.id, // ID real do profissional
-                name: data.fullName,
-                role: 'Profissional',
-                active: true,
-                is_owner: false,
-                commission_rate: 0,
-                slug: data.fullName.toLowerCase().trim().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
-              }
-            ]);
+          const trimmedName = data.fullName.trim();
 
-          if (teamError) {
-            console.error('Erro ao adicionar membro à listagem de equipe:', teamError);
-            // Não retornamos erro de forma ríspida pois a conta em si já foi criada
+          // 1. Tentar vincular a um team_member pré-cadastrado pelo dono (mesmo nome, sem staff ainda)
+          const { data: existing } = await supabase
+            .from('team_members')
+            .select('id')
+            .eq('user_id', data.companyId)
+            .is('staff_user_id', null)
+            .ilike('name', trimmedName)
+            .limit(1)
+            .maybeSingle();
+
+          if (existing?.id) {
+            // 2a. UPDATE: vincula o staff_user_id ao pré-cadastrado (sem duplicar)
+            const { error: linkError } = await supabase
+              .from('team_members')
+              .update({ staff_user_id: authData.user.id })
+              .eq('id', existing.id);
+
+            if (linkError) {
+              console.error('Erro ao vincular team_member pré-cadastrado:', linkError);
+            }
+          } else {
+            // 2b. INSERT: caminho atual (cria novo team_member, sem pré-cadastro correspondente)
+            const { error: teamError } = await supabase
+              .from('team_members')
+              .insert([
+                {
+                  user_id: data.companyId,
+                  staff_user_id: authData.user.id,
+                  name: trimmedName,
+                  role: 'Profissional',
+                  active: true,
+                  is_owner: false,
+                  commission_rate: 0,
+                  slug: trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
+                }
+              ]);
+
+            if (teamError) {
+              console.error('Erro ao adicionar membro à listagem de equipe:', teamError);
+            }
           }
         }
       }

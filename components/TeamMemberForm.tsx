@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
+import { Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -26,6 +28,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const { colors, accent, font } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
 
     const [name, setName] = useState(initialData?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
+    const { copied: copiedInviteLink, copy: copyInviteLink } = useCopyInviteLink({
+        recipientName: name.trim() || undefined,
+    });
     const [role, setRole] = useState(initialData?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
     const [slug, setSlug] = useState(initialData?.slug || '');
     const [bio, setBio] = useState(initialData?.bio || '');
@@ -154,6 +159,36 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     >
                         Sou eu quem atende (Usar meu perfil)
                     </button>
+                )}
+
+                {!initialData && name.trim() && (
+                    <div className={`p-4 rounded-lg border ${colors.border} ${colors.surface} flex flex-col gap-2`}>
+                        <p className={`text-xs ${colors.textSecondary}`}>
+                            Convide <span className={colors.text + ' font-semibold'}>{name.trim()}</span> pra equipe
+                            {businessName && <> {businessName}</>}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={copyInviteLink}
+                            className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-xs ${font.label} uppercase transition-all ${
+                                copiedInviteLink
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                    : `${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} hover:border-[var(--color-accent-border)]`
+                            }`}
+                        >
+                            {copiedInviteLink ? (
+                                <>
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    <span>Link Copiado!</span>
+                                </>
+                            ) : (
+                                <>
+                                    <LinkIcon className="w-4 h-4" />
+                                    <span>Copiar Link de Convite</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 )}
 
                 <div className="flex justify-center mb-6">

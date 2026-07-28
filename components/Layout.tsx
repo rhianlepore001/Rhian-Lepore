@@ -44,7 +44,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isSettingsRoute && <Sidebar />}
       <Header />
 
-      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-24 md:pb-8 relative z-10`} style={{ willChange: 'transform' }}>
+      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-32 md:pb-8 relative z-10`} style={{ willChange: 'transform' }}>
         <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}>
           {children}
         </div>

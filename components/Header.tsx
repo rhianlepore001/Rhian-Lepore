@@ -92,7 +92,7 @@ export const Header: React.FC = () => {
                     <ArrowLeft className={`w-5 h-5 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>
                 )}
-                <div className="flex flex-col min-w-0">
+                <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
                   <h1 className={`font-heading text-lg md:text-2xl ${colors.text} tracking-widest leading-none flex items-center gap-2 min-w-0`}>
                     <span className="truncate">{businessName || 'GESTÃO'}</span>
                     <span
@@ -115,7 +115,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Right: Profile & Actions */}
-          <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
+          <div className="flex items-center gap-2 md:gap-6 shrink-0">
             {/* Dev Theme Switcher */}
             {isDev && (
               <button

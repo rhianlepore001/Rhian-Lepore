@@ -119,7 +119,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     { name: 'Clientes', icon: Users, path: '/clientes' },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
     { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
-    { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: true },
+    { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: false },
     { name: 'Insights', icon: TrendingUp, path: '/insights', ownerOnly: true },
     { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true },
   ];

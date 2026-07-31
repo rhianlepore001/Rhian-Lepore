@@ -1119,7 +1119,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         <h1 className={`text-3xl md:text-4xl font-heading ${colors.text} uppercase`}>Agenda</h1>
                         <p className={`${colors.textSecondary} mt-1`}>Gerencie os agendamentos por profissional</p>
                     </div>
-                    <div className="flex gap-3 w-full md:w-auto">
+                    <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
                         <Button
                             variant="secondary"
                             icon={<History />}

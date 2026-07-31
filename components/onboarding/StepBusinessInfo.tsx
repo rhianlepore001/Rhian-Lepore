@@ -3,16 +3,21 @@ import { Loader2, ArrowRight, SkipForward } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
+import { useToast } from '../ui/Toast';
+import { mapError, formatUserFacingError } from '../../utils/mapError';
 
 interface StepWelcomeProps {
-    onNext: () => void;
+    onNext: () => Promise<void> | void;
+    onSkip: () => Promise<void> | void;
     accentColor: string;
 }
 
-export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor }) => {
+export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, onSkip, accentColor }) => {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [businessName, setBusinessName] = useState('');
     const [loading, setLoading] = useState(true);
+    const [busy, setBusy] = useState<'next' | 'skip' | null>(null);
 
     const themeVariant: ThemeVariant = accentColor === 'beauty-neon' ? 'beauty' : 'barber';
     const { accent, classes } = useBrutalTheme({ override: themeVariant });
@@ -32,6 +37,24 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor })
         };
         loadProfile();
     }, [user]);
+
+    const runAction = async (kind: 'next' | 'skip', action: () => Promise<void> | void) => {
+        if (busy) return;
+        setBusy(kind);
+        try {
+            await action();
+        } catch (error: unknown) {
+            const ui = mapError(
+                error,
+                kind === 'skip'
+                    ? 'Não foi possível pular a configuração. Tente de novo.'
+                    : 'Não foi possível avançar. Verifique sua conexão e tente de novo.',
+            );
+            showToast(formatUserFacingError(ui), 'error');
+        } finally {
+            setBusy(null);
+        }
+    };
 
     if (loading) {
         return (
@@ -69,24 +92,46 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, accentColor })
             <div className="space-y-3">
                 <button
                     type="button"
-                    onClick={onNext}
+                    onClick={() => runAction('next', onNext)}
+                    disabled={!!busy}
                     id="wizard-welcome-next"
                     className={`group w-full py-4 px-6 font-bold text-lg rounded-xl transition-all duration-200 
                                flex items-center justify-center gap-2.5 active:scale-[0.98]
+                               disabled:opacity-60 disabled:pointer-events-none
                                ${classes.buttonPrimary}`}
                 >
-                    Começar configuração
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform duration-200" />
+                    {busy === 'next' ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Abrindo...
+                        </>
+                    ) : (
+                        <>
+                            Começar configuração
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform duration-200" />
+                        </>
+                    )}
                 </button>
 
                 <button
                     type="button"
-                    onClick={onNext}
+                    onClick={() => runAction('skip', onSkip)}
+                    disabled={!!busy}
                     className="w-full py-3 text-sm text-muted-foreground hover:text-foreground transition-colors
-                               flex items-center justify-center gap-2 font-medium"
+                               flex items-center justify-center gap-2 font-medium
+                               disabled:opacity-60 disabled:pointer-events-none"
                 >
-                    <SkipForward className="w-4 h-4" />
-                    Fazer depois
+                    {busy === 'skip' ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Saindo...
+                        </>
+                    ) : (
+                        <>
+                            <SkipForward className="w-4 h-4" />
+                            Fazer depois
+                        </>
+                    )}
                 </button>
             </div>
         </div>

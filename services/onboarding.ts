@@ -60,23 +60,38 @@ export async function saveOnboardingStep(
   return data as OnboardingProgressRecord;
 }
 
+function requireTenantId(companyId: string | null | undefined): string {
+  const tenantId = (companyId || '').trim();
+  if (!tenantId) {
+    throw new Error('Sessão incompleta: company_id ausente. Recarregue a página ou entre novamente.');
+  }
+  return tenantId;
+}
+
 export async function upsertOnboardingStep(companyId: string, step: number): Promise<void> {
-  await saveOnboardingStep(companyId, step, [], {});
+  const tenantId = requireTenantId(companyId);
+  await saveOnboardingStep(tenantId, step, [], {});
 }
 
 export async function completeOnboardingProgress(companyId: string): Promise<void> {
-  const { error } = await supabase
-    .from('onboarding_progress')
-    .upsert(
-      {
-        company_id: companyId,
-        current_step: 5,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-      },
-      { onConflict: 'company_id' },
-    );
+  const tenantId = requireTenantId(companyId);
+  const { error } = await supabase.rpc('upsert_onboarding_progress', {
+    p_company_id: tenantId,
+    p_current_step: 5,
+    p_completed_steps: [1, 2, 3, 4, 5],
+    p_step_data: {},
+  });
   if (error) throw error;
+
+  const { error: completeError } = await supabase
+    .from('onboarding_progress')
+    .update({
+      is_completed: true,
+      completed_at: new Date().toISOString(),
+      current_step: 5,
+    })
+    .eq('company_id', tenantId);
+  if (completeError) throw completeError;
 }
 
 export const completeOnboarding = completeOnboardingProgress;

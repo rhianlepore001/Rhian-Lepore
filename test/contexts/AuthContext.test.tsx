@@ -342,12 +342,17 @@ describe('AuthContext', () => {
         const mockUser = { id: 'owner-complete', email: 'owner@example.com' };
         const mockSession = { user: mockUser };
         const upsertOnboarding = vi.fn().mockResolvedValue({ data: null, error: null });
+        const updateProfile = vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        });
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: mockSession }, error: null });
         (supabase.from as any).mockImplementation((table: string) => ({
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            update: vi.fn().mockReturnThis(),
+            update: table === 'profiles'
+                ? updateProfile
+                : vi.fn().mockReturnThis(),
             upsert: table === 'onboarding_progress'
                 ? upsertOnboarding
                 : vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -383,7 +388,42 @@ describe('AuthContext', () => {
             }),
             { onConflict: 'company_id' }
         );
+        expect(updateProfile).toHaveBeenCalledWith({ tutorial_completed: true });
         expect(result.current.tutorialCompleted).toBe(true);
+    });
+
+    it('hydrates companyId immediately after owner register', async () => {
+        const mockUser = { id: 'owner-hydrate', email: 'owner-hydrate@example.com' };
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: mockUser },
+            error: null,
+        });
+        (supabase.from as any).mockImplementation(() => ({
+            insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }));
+        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await result.current.register({
+                email: 'owner-hydrate@example.com',
+                password: 'Password123!',
+                fullName: 'Owner Hydrate',
+                businessName: 'Barbearia Hydrate',
+                userType: 'barber',
+                region: 'BR',
+                phone: '11999999999',
+            });
+        });
+
+        expect(result.current.companyId).toBe(mockUser.id);
+        expect(result.current.role).toBe('owner');
     });
 
     it('marks staff tutorial as completed in profile', async () => {

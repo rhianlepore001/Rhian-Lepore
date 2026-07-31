@@ -248,11 +248,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', session.user.id);
         if (error) throw error;
       } else {
+        const tenantId = companyId || session.user.id;
         const { error } = await supabase
           .from('onboarding_progress')
           .upsert(
             {
-              company_id: companyId || session.user.id,
+              company_id: tenantId,
               current_step: 5,
               completed_steps: [1, 2, 3, 4, 5],
               is_completed: true,
@@ -262,6 +263,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           );
 
         if (error) throw error;
+
+        // Mantém profiles.tutorial_completed alinhado ao gate legado / relatórios.
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ tutorial_completed: true })
+          .eq('id', session.user.id);
+        if (profileError) throw profileError;
       }
 
       setTutorialCompleted(true);
@@ -317,6 +325,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ]);
 
         if (profileError) return { error: profileError };
+
+        // Hidrata o AuthContext imediatamente — evita race em que o wizard
+        // abre com companyId null e os botões falham em silêncio.
+        const resolvedCompanyId = data.companyId || authData.user.id;
+        setCompanyId(resolvedCompanyId);
+        setRole(data.companyId ? 'staff' : 'owner');
+        setUserType(data.userType);
+        setRegion(data.region);
+        setBusinessName(data.businessName);
+        setFullName(data.fullName);
+        setTutorialCompleted(false);
 
         if (!data.companyId) {
           const { error: onboardingError } = await supabase.rpc('upsert_onboarding_progress', {

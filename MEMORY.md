@@ -187,6 +187,11 @@ npm test             # Vitest
 - CLI: `vercel ls rhian-lepore`, `vercel env ls`, `vercel redeploy <url>`.
 - **`VITE_DEV_EMAIL` (obrigatória p/ modo admin):** desde `221d5f6` (9 Jul 2026) o e-mail hardcoded saiu do código. Sem essa env na Vercel (Production + Preview), **Auditoria / Lixeira / Preview UI** somem do menu Ajustes e `DevRouteGuard` redireciona. Definir com o e-mail da conta admin e **redeploy**. Local: `.env.local`. Helper: `utils/devAccess.ts` (`resolveIsDev`); setado também no `initSession` (boot frio).
 - **Deploy 31 Jul 2026:** PR #10 merged em `main` (`c9c18a7`) — fix financeiro PGRST204 + modo admin no boot + CI placeholders. Vercel production Ready: `https://vercel.com/rhians-projects-df168429/rhian-lepore/86QAcftYS7FRrX8b4po72Qyu7Zwc`. **Pendente humano:** setar `VITE_DEV_EMAIL` na Vercel e redeploy para a Auditoria voltar na conta admin.
+- **Fix onboarding travado (31 Jul 2026, branch `cursor/fix-onboarding-travado-fda3`):**
+  - **Causa:** RPC `upsert_onboarding_progress` 403 quando `get_auth_company_id()` era NULL (race pós-cadastro); UI engolia o erro; "Fazer depois" chamava o mesmo `onNext` em vez de skip.
+  - **Banco (já aplicado em prod via MCP):** `COALESCE(get_auth_company_id(), auth.uid()::TEXT)` — migration `20260731120000_fix_onboarding_upsert_auth_fallback.sql`.
+  - **App:** `tenantId = companyId || user.id`; register hidrata `companyId` na hora; skip real + toasts; `completeOnboardingProgress` via RPC + `is_completed`; owner synca `profiles.tutorial_completed`.
+  - Gates: typecheck/lint/build/**364 testes**.
 
 ---
 

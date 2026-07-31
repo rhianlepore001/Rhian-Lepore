@@ -34,7 +34,7 @@ describe('useOnboardingState', () => {
       companyId: 'company-001',
       user: { id: 'user-001' },
       tutorialCompleted: false,
-      markTutorialCompleted: vi.fn(),
+      markTutorialCompleted: vi.fn().mockResolvedValue({ error: null }),
     });
   });
 
@@ -46,6 +46,26 @@ describe('useOnboardingState', () => {
     const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
     expect(result.current.step).toBe(1);
     expect(result.current.completed).toBe(false);
+    expect(result.current.loading).toBe(true);
+  });
+
+  it('usa user.id como tenant quando companyId ainda nao hidratou', async () => {
+    (useAuth as any).mockReturnValue({
+      companyId: null,
+      user: { id: 'user-fallback' },
+      tutorialCompleted: false,
+      markTutorialCompleted: vi.fn().mockResolvedValue({ error: null }),
+    });
+    (onboardingService.fetchOnboardingProgress as any).mockResolvedValue({
+      step: 1,
+      completed: false,
+    });
+
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(onboardingService.fetchOnboardingProgress).toHaveBeenCalledWith('user-fallback');
+    expect(result.current.tenantReady).toBe(true);
   });
 
   it('retoma step do banco após fetch', async () => {
@@ -93,7 +113,7 @@ describe('useOnboardingState', () => {
   });
 
   it('completeOnboarding chama service e marca tutorial', async () => {
-    const mockMarkTutorial = vi.fn();
+    const mockMarkTutorial = vi.fn().mockResolvedValue({ error: null });
     (useAuth as any).mockReturnValue({
       companyId: 'company-001',
       user: { id: 'user-001' },
@@ -116,6 +136,32 @@ describe('useOnboardingState', () => {
     expect(onboardingService.completeOnboardingProgress).toHaveBeenCalledWith('company-001');
     expect(mockMarkTutorial).toHaveBeenCalled();
 
+    await waitFor(() => expect(result.current.completed).toBe(true));
+  });
+
+  it('skipOnboarding completa o progresso como "fazer depois"', async () => {
+    const mockMarkTutorial = vi.fn().mockResolvedValue({ error: null });
+    (useAuth as any).mockReturnValue({
+      companyId: 'company-001',
+      user: { id: 'user-001' },
+      tutorialCompleted: false,
+      markTutorialCompleted: mockMarkTutorial,
+    });
+    (onboardingService.fetchOnboardingProgress as any).mockResolvedValue({
+      step: 1,
+      completed: false,
+    });
+    (onboardingService.completeOnboardingProgress as any).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useOnboardingState(), { wrapper: createWrapper() });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.skipOnboarding();
+    });
+
+    expect(onboardingService.completeOnboardingProgress).toHaveBeenCalledWith('company-001');
+    expect(mockMarkTutorial).toHaveBeenCalled();
     await waitFor(() => expect(result.current.completed).toBe(true));
   });
 });

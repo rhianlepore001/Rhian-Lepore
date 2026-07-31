@@ -101,13 +101,32 @@ describe('onboarding service', () => {
     });
   });
 
-  it('completeOnboardingProgress faz upsert com is_completed=true', async () => {
-    (supabase.from as any).mockReturnValue({
-      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-    });
+  it('completeOnboardingProgress chama RPC e marca is_completed=true', async () => {
+    const eq = vi.fn().mockResolvedValue({ data: null, error: null });
+    const update = vi.fn().mockReturnValue({ eq });
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+    (supabase.from as any).mockReturnValue({ update });
 
     await completeOnboardingProgress('company-001');
+
+    expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', {
+      p_company_id: 'company-001',
+      p_current_step: 5,
+      p_completed_steps: [1, 2, 3, 4, 5],
+      p_step_data: {},
+    });
     expect(supabase.from).toHaveBeenCalledWith('onboarding_progress');
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        is_completed: true,
+        current_step: 5,
+      }),
+    );
+    expect(eq).toHaveBeenCalledWith('company_id', 'company-001');
+  });
+
+  it('upsertOnboardingStep rejeita companyId vazio', async () => {
+    await expect(upsertOnboardingStep('', 2)).rejects.toThrow(/company_id ausente/);
   });
 
   it('getOnboardingProgress retorna null quando registro não existe', async () => {

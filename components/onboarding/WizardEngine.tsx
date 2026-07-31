@@ -40,8 +40,9 @@ function StepLoadingFallback() {
 
 export function WizardEngine() {
   const { state, dispatch } = useWizard();
-  const { companyId, markTutorialCompleted } = useAuth();
+  const { companyId, user, markTutorialCompleted } = useAuth();
   const navigate = useNavigate();
+  const tenantId = companyId || user?.id || null;
 
   const { isBeauty, accent, colors, shadow } = useBrutalTheme();
 
@@ -56,31 +57,40 @@ export function WizardEngine() {
   const completeStep = useCallback(async (step: WizardStep) => {
     dispatch({ type: 'COMPLETE_STEP', step });
 
-    if (!companyId) return;
+    if (!tenantId) {
+      throw new Error('Sessão incompleta: company_id ausente. Recarregue a página ou entre novamente.');
+    }
 
     const nextStep = Math.min(step + 1, TOTAL_STEPS) as WizardStep;
     const newCompleted = [...new Set([...completedSteps, step])];
 
-    try {
-      if (step === TOTAL_STEPS) {
-        await completeOnboarding(companyId);
-        await markTutorialCompleted();
-        dispatch({ type: 'COMPLETE_WIZARD' });
-        navigate('/', { replace: true });
-      } else {
-        await saveOnboardingStep(companyId, nextStep, newCompleted);
-      }
-    } catch (err) {
-      console.error('[WizardEngine] Erro ao persistir progresso:', err);
+    if (step === TOTAL_STEPS) {
+      await completeOnboarding(tenantId);
+      await markTutorialCompleted();
+      dispatch({ type: 'COMPLETE_WIZARD' });
+      navigate('/', { replace: true });
+    } else {
+      await saveOnboardingStep(tenantId, nextStep, newCompleted);
     }
-  }, [companyId, completedSteps, dispatch, navigate]);
+  }, [tenantId, completedSteps, dispatch, markTutorialCompleted, navigate]);
+
+  const skipWizard = useCallback(async () => {
+    if (!tenantId) {
+      throw new Error('Sessão incompleta: company_id ausente. Recarregue a página ou entre novamente.');
+    }
+    await completeOnboarding(tenantId);
+    await markTutorialCompleted();
+    dispatch({ type: 'COMPLETE_WIZARD' });
+    navigate('/', { replace: true });
+  }, [tenantId, markTutorialCompleted, dispatch, navigate]);
 
   function renderCurrentStepContent() {
     switch (currentStep) {
       case 1:
         return (
           <StepWelcome
-            onNext={() => void completeStep(1)}
+            onNext={() => completeStep(1)}
+            onSkip={skipWizard}
             accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
           />
         );

@@ -15,7 +15,7 @@ const TOTAL_STEPS = 6; // 5 etapas + tela de sucesso (welcome, services, team, h
 export const OnboardingWizard: React.FC = () => {
     const { isBeauty, colors } = useBrutalTheme();
     const navigate = useNavigate();
-    const { step, loading, completed, goToStep } = useOnboardingState();
+    const { step, loading, completed, goToStep, skipOnboarding } = useOnboardingState();
 
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
@@ -46,6 +46,10 @@ export const OnboardingWizard: React.FC = () => {
             component: (
                 <StepBusinessInfo
                     onNext={() => goToStep(2 as OnboardingStep)}
+                    onSkip={async () => {
+                        await skipOnboarding();
+                        navigate('/', { replace: true });
+                    }}
                     accentColor={accentColor}
                 />
             ),

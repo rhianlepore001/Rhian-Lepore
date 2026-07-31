@@ -185,6 +185,7 @@ npm test             # Vitest
 - Env vars `VITE_*` são embutidas em **build-time** → mudança de env exige **redeploy**.
 - Rollback seguro: Vercel Dashboard → Deployments → deploy anterior → Promote/Instant Rollback.
 - CLI: `vercel ls rhian-lepore`, `vercel env ls`, `vercel redeploy <url>`.
+- **`VITE_DEV_EMAIL` (obrigatória p/ modo admin):** desde `221d5f6` (9 Jul 2026) o e-mail hardcoded saiu do código. Sem essa env na Vercel (Production + Preview), **Auditoria / Lixeira / Preview UI** somem do menu Ajustes e `DevRouteGuard` redireciona. Definir com o e-mail da conta admin e **redeploy**. Local: `.env.local`. Helper: `utils/devAccess.ts` (`resolveIsDev`); setado também no `initSession` (boot frio).
 
 ---
 

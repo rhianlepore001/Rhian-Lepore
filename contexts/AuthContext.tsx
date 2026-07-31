@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
+import { resolveIsDev } from '../utils/devAccess';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -147,7 +148,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         if (session?.user?.id) {
+          // Boot frio: sem isso, isDev fica false até um evento de auth
+          // posterior (e as telas devOnly somem após refresh).
+          setIsDev(resolveIsDev(session.user.email));
           await fetchProfileData(session.user.id);
+        } else {
+          setIsDev(false);
         }
       } catch (error) {
         console.error('Error initializing session:', error);
@@ -169,8 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (session?.user?.id) {
-        const devEmail = import.meta.env.VITE_DEV_EMAIL;
-        setIsDev(!!devEmail && session.user.email === devEmail);
+        setIsDev(resolveIsDev(session.user.email));
         // Re-fetch profile data on sign in/change
         fetchProfileData(session.user.id).then(() => {
           setLoading(false);

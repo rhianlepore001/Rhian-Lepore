@@ -14,6 +14,7 @@ import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
 import { formatCurrency } from '../utils/formatters';
+import { combineDateAndTime, getTodayDateString } from '../utils/date';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
@@ -410,11 +411,12 @@ useEffect(() => {
       const clientName = dropdownClients.find(c => c.id === newTransactionClient)?.name || '';
       const professionalName = dropdownProfessionals.find(p => p.id === newTransactionProfessional)?.name || 'Manual';
 
-      const transactionDateTime = new Date(newTransactionDate);
-      if (newTransactionTime) {
-        const [hours, minutes] = newTransactionTime.split(':');
-        transactionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      }
+      // Data/hora do formulário são locais: montar via UTC deslocaria o dia
+      // em fusos negativos (Brasil).
+      const transactionDateTime = combineDateAndTime(
+        newTransactionDate || getTodayDateString(),
+        newTransactionTime || '00:00',
+      );
 
       const isPaid = newTransactionStatus === 'paid';
 
@@ -427,7 +429,6 @@ useEffect(() => {
         paymentMethod: newTransactionType === 'income' ? 'Dinheiro' : null,
         professionalId: newTransactionProfessional || null,
         professionalName,
-        clientId: newTransactionClient || null,
         clientName,
         serviceName,
         appointmentId: null,
@@ -435,6 +436,8 @@ useEffect(() => {
           ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString())
           : null,
         commissionPaid: newTransactionType === 'expense' ? isPaid : true,
+        status: newTransactionStatus,
+        createdAt: transactionDateTime.toISOString(),
       });
 
       showToast(`${newTransactionType === 'income' ? 'Receita' : 'Despesa'} registrada com sucesso!`, 'success');

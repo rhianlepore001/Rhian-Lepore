@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   calcCommission,
   calcSettlementDate,
+  createFinanceRecord,
   deleteFinanceTransaction,
   fetchDropdownOptions,
   fetchFinanceStats,
@@ -159,6 +160,80 @@ describe('finance service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('mark_expense_as_paid', {
       p_record_id: 'rec-001',
       p_user_id: 'company-001',
+    });
+  });
+
+  describe('createFinanceRecord', () => {
+    const baseInput = {
+      companyId: 'company-001',
+      description: 'Venda de produto',
+      paymentMethod: null,
+      professionalId: null,
+      professionalName: 'Manual',
+      clientName: 'Joana',
+      serviceName: 'Corte Feminino',
+      appointmentId: null,
+      dueDate: null,
+      createdAt: '2026-07-28T21:43:00.000Z',
+    };
+
+    async function captureInsert(input: Parameters<typeof createFinanceRecord>[0]) {
+      const insert = vi.fn().mockResolvedValue({ error: null });
+      (supabase.from as any).mockReturnValue({ insert });
+      await createFinanceRecord(input);
+      expect(supabase.from).toHaveBeenCalledWith('finance_records');
+      return insert.mock.calls[0][0];
+    }
+
+    it('grava receita manual em revenue e nunca em colunas inexistentes', async () => {
+      const record = await captureInsert({
+        ...baseInput,
+        type: 'revenue',
+        amount: 10,
+        expense: 0,
+        commissionPaid: true,
+        status: 'paid',
+      });
+
+      expect(record.revenue).toBe(10);
+      expect(record.commission_value).toBe(0);
+      expect(record.status).toBe('paid');
+      expect(record.created_at).toBe('2026-07-28T21:43:00.000Z');
+      expect(Object.keys(record)).not.toContain('amount');
+      expect(Object.keys(record)).not.toContain('expense');
+      expect(Object.keys(record)).not.toContain('client_id');
+    });
+
+    it('grava despesa manual em commission_value mantendo revenue zerada', async () => {
+      const record = await captureInsert({
+        ...baseInput,
+        type: 'expense',
+        amount: 0,
+        expense: 10,
+        commissionPaid: false,
+        status: 'pending',
+        dueDate: '2026-07-30T00:00:00.000Z',
+      });
+
+      expect(record.revenue).toBe(0);
+      expect(record.commission_value).toBe(10);
+      expect(record.commission_paid).toBe(false);
+      expect(record.status).toBe('pending');
+      expect(record.due_date).toBe('2026-07-30T00:00:00.000Z');
+    });
+
+    it('propaga erro do Supabase para a camada de UI tratar', async () => {
+      const insert = vi.fn().mockResolvedValue({ error: { code: 'PGRST204', message: 'coluna ausente' } });
+      (supabase.from as any).mockReturnValue({ insert });
+
+      await expect(createFinanceRecord({
+        ...baseInput,
+        type: 'revenue',
+        amount: 10,
+        expense: 0,
+        commissionPaid: true,
+        status: 'paid',
+      })).rejects.toMatchObject({ code: 'PGRST204' });
     });
   });
 

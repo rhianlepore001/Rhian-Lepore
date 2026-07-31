@@ -117,31 +117,37 @@ export async function createFinanceRecord(input: {
   amount: number;
   expense: number;
   description: string;
-  paymentMethod: string;
+  paymentMethod: string | null;
   professionalId: string | null;
   professionalName: string;
-  clientId: string | null;
   clientName: string;
   serviceName: string;
   appointmentId: string | null;
   dueDate: string | null;
   commissionPaid: boolean;
+  status: 'paid' | 'pending';
+  createdAt: string;
 }): Promise<void> {
+  // A tabela guarda entrada em `revenue` e saída em `commission_value`;
+  // as RPCs de finanças somam exatamente essas duas colunas.
+  const isExpense = input.type === 'expense';
   const record: Record<string, any> = {
     user_id: input.companyId,
     type: input.type,
-    amount: input.amount,
-    expense: input.expense,
+    revenue: isExpense ? 0 : input.amount,
+    commission_value: isExpense ? input.expense : 0,
+    commission_rate: 0,
     description: input.description,
     payment_method: input.paymentMethod,
     professional_id: input.professionalId,
     barber_name: input.professionalName,
-    client_id: input.clientId,
     client_name: input.clientName,
     service_name: input.serviceName,
     appointment_id: input.appointmentId,
     due_date: input.dueDate,
     commission_paid: input.commissionPaid,
+    status: input.status,
+    created_at: input.createdAt,
   };
   const { error } = await supabase.from('finance_records').insert(record);
   if (error) throw error;

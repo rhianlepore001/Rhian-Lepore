@@ -186,6 +186,7 @@ npm test             # Vitest
 - Rollback seguro: Vercel Dashboard → Deployments → deploy anterior → Promote/Instant Rollback.
 - CLI: `vercel ls rhian-lepore`, `vercel env ls`, `vercel redeploy <url>`.
 - **`VITE_DEV_EMAIL` (obrigatória p/ modo admin):** desde `221d5f6` (9 Jul 2026) o e-mail hardcoded saiu do código. Sem essa env na Vercel (Production + Preview), **Auditoria / Lixeira / Preview UI** somem do menu Ajustes e `DevRouteGuard` redireciona. Definir com o e-mail da conta admin e **redeploy**. Local: `.env.local`. Helper: `utils/devAccess.ts` (`resolveIsDev`); setado também no `initSession` (boot frio).
+- **Deploy 31 Jul 2026:** PR #10 merged em `main` (`c9c18a7`) — fix financeiro PGRST204 + modo admin no boot + CI placeholders. Vercel production Ready: `https://vercel.com/rhians-projects-df168429/rhian-lepore/86QAcftYS7FRrX8b4po72Qyu7Zwc`. **Pendente humano:** setar `VITE_DEV_EMAIL` na Vercel e redeploy para a Auditoria voltar na conta admin.
 
 ---
 

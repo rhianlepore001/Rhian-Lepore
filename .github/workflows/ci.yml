@@ -10,6 +10,11 @@ jobs:
   test:
     name: Lint, Typecheck & Tests
     runs-on: ubuntu-latest
+    # Placeholders só para o suite carregar `lib/supabase.ts` no Vitest.
+    # Não são credenciais reais; produção usa as envs da Vercel.
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_ANON_KEY: test-anon-key-for-ci
 
     steps:
       - uses: actions/checkout@v4

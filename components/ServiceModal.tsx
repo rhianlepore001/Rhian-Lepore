@@ -127,8 +127,9 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             onClose();
         } catch (error) {
             console.error('Error saving service:', error);
-            const message = error instanceof Error ? error.message : JSON.stringify(error);
-            alert(`Erro ao salvar serviço: ${message}`);
+            const { mapError, formatUserFacingError } = await import('../utils/mapError');
+            const ui = mapError(error, 'Não foi possível salvar o serviço. Tente de novo.');
+            alert(formatUserFacingError(ui));
         } finally {
             setLoading(false);
         }

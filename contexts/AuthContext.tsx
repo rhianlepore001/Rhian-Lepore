@@ -66,13 +66,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfileData = async (userId: string) => {
     try {
-      const { data: profile, error } = await supabase
+      let { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
+
+      // Self-heal: auth user sem profiles (órfão) — cria mínimo e reidrata.
+      // Sem isso, services.user_id FK e get_auth_company_id() quebram o onboarding.
+      if (!profile) {
+        const { error: ensureError } = await supabase.rpc('ensure_caller_profile');
+        if (ensureError) {
+          console.error('Error ensuring caller profile:', ensureError);
+          return;
+        }
+        const retry = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        profile = retry.data;
+        error = retry.error;
+        if (error && error.code !== 'PGRST116') throw error;
+        if (!profile) return;
+      }
 
       if (profile) {
         // Para staff, userType será definido a partir do perfil do owner (evita flicker de tema)
@@ -248,35 +267,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', session.user.id);
         if (error) throw error;
       } else {
-        const tenantId = companyId || session.user.id;
-        const { error } = await supabase
-          .from('onboarding_progress')
-          .upsert(
-            {
-              company_id: tenantId,
-              current_step: 5,
-              completed_steps: [1, 2, 3, 4, 5],
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-            },
-            { onConflict: 'company_id' }
-          );
-
+        // RPC SECURITY DEFINER: garante profile + marca onboarding/tutorial
+        // sem depender de RLS frágil quando get_auth_company_id() é NULL.
+        const { error } = await supabase.rpc('complete_onboarding_for_caller');
         if (error) throw error;
-
-        // Mantém profiles.tutorial_completed alinhado ao gate legado / relatórios.
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ tutorial_completed: true })
-          .eq('id', session.user.id);
-        if (profileError) throw profileError;
+        if (!companyId) {
+          setCompanyId(session.user.id);
+        }
       }
 
       setTutorialCompleted(true);
       return { error: null };
     } catch (error) {
       console.error('Error marking tutorial as complete:', error);
-      return { error: error instanceof Error ? error : new Error('Erro ao concluir o tutorial.') };
+      if (error instanceof Error) return { error };
+      if (error && typeof error === 'object') {
+        const raw = error as { message?: string; code?: string };
+        const wrapped = new Error(raw.message || 'Erro ao concluir o tutorial.') as Error & {
+          code?: string;
+        };
+        if (raw.code) wrapped.code = raw.code;
+        return { error: wrapped };
+      }
+      return { error: new Error('Erro ao concluir o tutorial.') };
     }
   };
 

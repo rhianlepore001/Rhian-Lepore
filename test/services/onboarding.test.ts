@@ -5,6 +5,7 @@ import {
   saveOnboardingStep,
   upsertOnboardingStep,
   completeOnboardingProgress,
+  ensureCallerProfile,
 } from '@/services/onboarding';
 import { supabase } from '@/lib/supabase';
 
@@ -101,28 +102,20 @@ describe('onboarding service', () => {
     });
   });
 
-  it('completeOnboardingProgress chama RPC e marca is_completed=true', async () => {
-    const eq = vi.fn().mockResolvedValue({ data: null, error: null });
-    const update = vi.fn().mockReturnValue({ eq });
+  it('completeOnboardingProgress chama RPC atômica complete_onboarding_for_caller', async () => {
     (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
-    (supabase.from as any).mockReturnValue({ update });
 
     await completeOnboardingProgress('company-001');
 
-    expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', {
-      p_company_id: 'company-001',
-      p_current_step: 5,
-      p_completed_steps: [1, 2, 3, 4, 5],
-      p_step_data: {},
-    });
-    expect(supabase.from).toHaveBeenCalledWith('onboarding_progress');
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        is_completed: true,
-        current_step: 5,
-      }),
-    );
-    expect(eq).toHaveBeenCalledWith('company_id', 'company-001');
+    expect(supabase.rpc).toHaveBeenCalledWith('complete_onboarding_for_caller');
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it('ensureCallerProfile chama RPC e retorna company_id', async () => {
+    (supabase.rpc as any).mockResolvedValue({ data: 'company-001', error: null });
+
+    await expect(ensureCallerProfile()).resolves.toBe('company-001');
+    expect(supabase.rpc).toHaveBeenCalledWith('ensure_caller_profile');
   });
 
   it('upsertOnboardingStep rejeita companyId vazio', async () => {

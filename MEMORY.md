@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Fix onboarding skip/serviço + scroll Agenda (1 Ago 2026, branch `cursor/fix-onboarding-agenda-scroll-3672`):**
+  - **Causa:** usuários sem row em `profiles` quebravam FK `services_user_id_fkey` e o skip (RLS/`get_auth_company_id()` NULL → `#unknown`).
+  - **Fix DB (aplicado em prod):** RPCs `ensure_caller_profile` + `complete_onboarding_for_caller`; RLS onboarding com fallback `auth.uid()`.
+  - **Fix app:** AuthContext self-heal de profile; skip/complete via RPC; StepServices garante profile; Layout/Agenda `overflow-x-hidden` + faixa semanal contida.
+  - Gates: typecheck/lint/build/365 testes.
 - **E2E ciclo de receita — FECHAMENTO (8 Jul 2026, tarde, branch `test/e2e-ciclo-receita`):**
   - **✅ PRONTO:** spec `e2e/ciclo-de-receita.spec.ts` revisado por júri multi-agente (3 jurados + evaluator; pareceres em `/tmp/jury/` da VPS) e os 3 P1 corrigidos no commit `87a441f`: try/finally no contexto do João; verificação de fuso UTC→BRT no modal de detalhes ("Data e Hora" — o card da grade NÃO exibe horário); aceite filtrado pelo cliente do run (não aprova mais solicitações alheias da conta compartilhada).
   - **✅ MIGRATIONS APLICADAS pelo Rhian no SQL Editor (8 Jul):** `20260413_checkout_fields.sql` e `20260417_checkout_comanda_fields.sql`. Cada uma destravou um erro 42703 do checkout (`received_by`, depois `completed_at`).

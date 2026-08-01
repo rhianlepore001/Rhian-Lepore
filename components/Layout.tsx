@@ -31,7 +31,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div
-      className={`h-[100dvh] overflow-y-auto ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-bg)] font-medium relative transition-colors duration-300`}
+      className={`h-[100dvh] overflow-y-auto overflow-x-hidden ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-bg)] font-medium relative transition-colors duration-300`}
       style={{ '--header-top': headerTop } as React.CSSProperties}
     >
       {/* Background layer — now handled by CSS variables in index.html */}
@@ -44,8 +44,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isSettingsRoute && <Sidebar />}
       <Header />
 
-      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-24 md:pb-8 relative z-10`} style={{ willChange: 'transform' }}>
-        <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}>
+      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-24 md:pb-8 relative z-10 min-w-0 overflow-x-hidden`} style={{ willChange: 'transform' }}>
+        <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap} min-w-0`}>
           {children}
         </div>
       </main>

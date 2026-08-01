@@ -73,25 +73,23 @@ export async function upsertOnboardingStep(companyId: string, step: number): Pro
   await saveOnboardingStep(tenantId, step, [], {});
 }
 
-export async function completeOnboardingProgress(companyId: string): Promise<void> {
-  const tenantId = requireTenantId(companyId);
-  const { error } = await supabase.rpc('upsert_onboarding_progress', {
-    p_company_id: tenantId,
-    p_current_step: 5,
-    p_completed_steps: [1, 2, 3, 4, 5],
-    p_step_data: {},
-  });
+export async function ensureCallerProfile(): Promise<string> {
+  const { data, error } = await supabase.rpc('ensure_caller_profile');
   if (error) throw error;
+  const companyId = typeof data === 'string' ? data.trim() : '';
+  if (!companyId) {
+    throw new Error('Não foi possível garantir o perfil da conta. Recarregue e tente de novo.');
+  }
+  return companyId;
+}
 
-  const { error: completeError } = await supabase
-    .from('onboarding_progress')
-    .update({
-      is_completed: true,
-      completed_at: new Date().toISOString(),
-      current_step: 5,
-    })
-    .eq('company_id', tenantId);
-  if (completeError) throw completeError;
+export async function completeOnboardingProgress(companyId?: string | null): Promise<void> {
+  // companyId opcional: a RPC deriva o tenant do auth.uid() (evita RLS/órfãos).
+  if (companyId != null && companyId !== '') {
+    requireTenantId(companyId);
+  }
+  const { error } = await supabase.rpc('complete_onboarding_for_caller');
+  if (error) throw error;
 }
 
 export const completeOnboarding = completeOnboardingProgress;

@@ -338,24 +338,17 @@ describe('AuthContext', () => {
         expect(supabase.rpc).not.toHaveBeenCalledWith('upsert_onboarding_progress', expect.anything());
     });
 
-    it('marks owner onboarding as completed in onboarding_progress', async () => {
+    it('marks owner onboarding as completed via complete_onboarding_for_caller', async () => {
         const mockUser = { id: 'owner-complete', email: 'owner@example.com' };
         const mockSession = { user: mockUser };
-        const upsertOnboarding = vi.fn().mockResolvedValue({ data: null, error: null });
-        const updateProfile = vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-        });
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: mockSession }, error: null });
+        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
         (supabase.from as any).mockImplementation((table: string) => ({
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            update: table === 'profiles'
-                ? updateProfile
-                : vi.fn().mockReturnThis(),
-            upsert: table === 'onboarding_progress'
-                ? upsertOnboarding
-                : vi.fn().mockResolvedValue({ data: null, error: null }),
+            update: vi.fn().mockReturnThis(),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
             single: vi.fn().mockResolvedValue({
                 data: table === 'profiles'
                     ? {
@@ -379,16 +372,7 @@ describe('AuthContext', () => {
             await result.current.markTutorialCompleted();
         });
 
-        expect(upsertOnboarding).toHaveBeenCalledWith(
-            expect.objectContaining({
-                company_id: mockUser.id,
-                current_step: 5,
-                completed_steps: [1, 2, 3, 4, 5],
-                is_completed: true,
-            }),
-            { onConflict: 'company_id' }
-        );
-        expect(updateProfile).toHaveBeenCalledWith({ tutorial_completed: true });
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_onboarding_for_caller');
         expect(result.current.tutorialCompleted).toBe(true);
     });
 

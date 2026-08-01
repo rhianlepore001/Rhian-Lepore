@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Package, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
 import { ServiceModal } from '../ServiceModal';
+import { ensureCallerProfile } from '@/services/onboarding';
+import { useToast } from '../ui/Toast';
+import { mapError, formatUserFacingError } from '../../utils/mapError';
 
 interface StepServicesProps {
     onNext: () => void;
@@ -13,7 +16,8 @@ interface StepServicesProps {
 
 export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, accentColor }) => {
     const { user, companyId, region } = useAuth();
-    const effectiveCompanyId = companyId ?? user?.id ?? null;
+    const { showToast } = useToast();
+    const [tenantId, setTenantId] = useState<string | null>(companyId ?? user?.id ?? null);
     const [services, setServices] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -23,31 +27,54 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
     const themeVariant: ThemeVariant = accentColor === 'beauty-neon' ? 'beauty' : 'barber';
     const { accent, classes } = useBrutalTheme({ override: themeVariant });
 
-    useEffect(() => {
-        fetchData();
-    }, [user]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!user) return;
+        setLoading(true);
+        try {
+            // Garante profiles.id antes de qualquer insert (FK services_user_id_fkey).
+            const ensuredTenantId = await ensureCallerProfile();
+            const effectiveTenantId = companyId || ensuredTenantId || user.id;
+            setTenantId(effectiveTenantId);
 
-        // Ensure at least one category exists
-        const { data: cats } = await supabase.from('service_categories').select('*').eq('user_id', user.id);
+            const { data: cats, error: catsError } = await supabase
+                .from('service_categories')
+                .select('*')
+                .eq('user_id', effectiveTenantId);
+            if (catsError) throw catsError;
 
-        if (!cats || cats.length === 0) {
-            const { data: newCat } = await supabase.from('service_categories').insert({
-                user_id: user.id,
-                name: 'Geral',
-                display_order: 0
-            }).select();
-            setCategories(newCat || []);
-        } else {
-            setCategories(cats);
+            if (!cats || cats.length === 0) {
+                const { data: newCat, error: insertCatError } = await supabase
+                    .from('service_categories')
+                    .insert({
+                        user_id: effectiveTenantId,
+                        name: 'Geral',
+                        display_order: 0,
+                    })
+                    .select();
+                if (insertCatError) throw insertCatError;
+                setCategories(newCat || []);
+            } else {
+                setCategories(cats);
+            }
+
+            const { data: servs, error: servsError } = await supabase
+                .from('services')
+                .select('*')
+                .eq('user_id', effectiveTenantId);
+            if (servsError) throw servsError;
+            setServices(servs || []);
+        } catch (error: unknown) {
+            const ui = mapError(error, 'Não foi possível carregar os serviços. Tente de novo.');
+            showToast(formatUserFacingError(ui), 'error');
+            setServices([]);
+        } finally {
+            setLoading(false);
         }
+    }, [user, companyId, showToast]);
 
-        const { data: servs } = await supabase.from('services').select('*').eq('user_id', user.id);
-        setServices(servs || []);
-        setLoading(false);
-    };
+    useEffect(() => {
+        void fetchData();
+    }, [fetchData]);
 
     const hasServices = services.length > 0;
 
@@ -126,9 +153,9 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                 </button>
             </div>
 
-            {isModalOpen && effectiveCompanyId && (
+            {isModalOpen && tenantId && (
                 <ServiceModal
-                    companyId={effectiveCompanyId}
+                    companyId={tenantId}
                     categories={categories}
                     allServices={services}
                     onClose={() => setIsModalOpen(false)}

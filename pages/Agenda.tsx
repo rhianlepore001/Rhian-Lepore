@@ -1111,7 +1111,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     }
 
     return (
-        <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8`}>
+        <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8 overflow-x-hidden min-w-0`}>
             {/* Header */}
             <div className={`${classes.section} px-4 pt-6 md:px-6`}>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1224,11 +1224,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
 
             {/* Date Navigator */}
-            <div className="px-4 md:px-6 flex items-center justify-between gap-2">
+            <div className="px-3 sm:px-4 md:px-6 flex items-center justify-between gap-1 sm:gap-2 min-w-0">
                 <button
                     onClick={() => changeDate(-7)}
                     aria-label="Semana anterior"
-                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
+                    className={`flex-shrink-0 p-2 sm:p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
                 </button>
@@ -1236,7 +1236,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 {/* Faixa semanal (seg–dom da data selecionada). Clicar num dia só TROCA a seleção
                     — a faixa não desliza. As setas avançam/voltam uma semana inteira.
                     Único carrossel horizontal da tela é o dos avatares de profissionais. */}
-                <div className="flex-1 flex items-center gap-1.5 py-1">
+                <div className="flex-1 min-w-0 flex items-center gap-0.5 sm:gap-1.5 py-1 overflow-hidden">
                     {Array.from({ length: 7 }).map((_, i) => {
                         const d = new Date(selectedDate);
                         const dow = (d.getDay() + 6) % 7; // segunda = 0
@@ -1252,10 +1252,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     const newDateStr = formatLocalDateString(d);
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} text-[var(--color-bg)] border-transparent shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[56px] sm:h-[64px] rounded-xl sm:rounded-2xl transition-all border px-0.5 ${isSelected ? `${accent.bg} text-[var(--color-bg)] border-transparent shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
-                                <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
-                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-[var(--color-bg)]' : colors.text}`}>{dayNum}</span>
+                                <span className="text-xs font-medium capitalize mb-0.5 truncate max-w-full">{dayName}</span>
+                                <span className={`text-base sm:text-xl font-heading font-bold ${isSelected ? 'text-[var(--color-bg)]' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
                     })}
@@ -1264,7 +1264,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 <button
                     onClick={() => changeDate(7)}
                     aria-label="Próxima semana"
-                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
+                    className={`flex-shrink-0 p-2 sm:p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
                 >
                     <ChevronRight className={`w-5 h-5 ${colors.text}`} />
                 </button>
@@ -1272,8 +1272,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
             {/* Professional Filter - Avatars */}
             {teamMembers.length > 0 && (
-                <div className="px-4 md:px-6">
-                    <div className={`flex items-center gap-5 overflow-x-auto pb-3 pt-1 snap-x snap-mandatory scrollbar-hide`}>
+                <div className="px-4 md:px-6 min-w-0">
+                    <div className={`flex items-center gap-5 overflow-x-auto overscroll-x-contain max-w-full pb-3 pt-1 snap-x snap-mandatory scrollbar-hide`}>
                         {/* "Todos" só para owner — staff nunca vê agenda completa de uma vez (R27) */}
                         {!isStaff && (
                             <button

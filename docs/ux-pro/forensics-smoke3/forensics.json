@@ -1,0 +1,1526 @@
+{
+  "geradoEm": "2026-08-02T09:12:55.777Z",
+  "base": "http://localhost:4173",
+  "personas": [
+    "owner",
+    "staff"
+  ],
+  "temasSolicitados": [
+    "barber",
+    "beauty"
+  ],
+  "modos": [
+    "dark"
+  ],
+  "viewports": [
+    "390x844"
+  ],
+  "slugDisponivel": false,
+  "controleDeTema": {
+    "owner": {
+      "controlavel": false,
+      "temaFixo": "barber"
+    },
+    "staff": {
+      "controlavel": false,
+      "temaFixo": "barber"
+    }
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "dashboard",
+      "grupo": "nucleo",
+      "hashSolicitado": "/",
+      "hashFinal": "#/",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 272,
+        "tipografia": {
+          "combinacoesDistintas": 15,
+          "tamanhosDistintos": 8,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 10,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 16,
+            "14px / 500 / 20px": 12,
+            "12px / 500 / 16px": 9,
+            "14px / 600 / 20px": 6,
+            "12px / 600 / 16px": 4,
+            "16px / 700 / 24px": 4,
+            "14px / 500 / 22.75px": 3,
+            "14px / 700 / 20px": 2,
+            "20px / 700 / 28px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "24px / 700 / 32px": 1,
+            "30px / 900 / 36px": 1,
+            "48px / 900 / 48px": 1,
+            "24px / 900 / 32px": 1
+          },
+          "tamanhos": {
+            "12px": 30,
+            "14px": 23,
+            "16px": 4,
+            "24px": 2,
+            "20px": 2,
+            "18px": 1,
+            "30px": 1,
+            "48px": 1
+          },
+          "pesos": {
+            "500": 25,
+            "600": 10,
+            "700": 26,
+            "900": 3
+          },
+          "alturasLinha": {
+            "16px": 29,
+            "20px": 20,
+            "24px": 4,
+            "22.75px": 3,
+            "32px": 2,
+            "28px": 2,
+            "18px": 1,
+            "12px": 1,
+            "36px": 1,
+            "48px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 38,
+            "JetBrains Mono": 18,
+            "Chivo": 8
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 94,
+            "8px": 61,
+            "16px": 57,
+            "4px": 32,
+            "10px": 14,
+            "20px": 14,
+            "6px": 13,
+            "2px": 9,
+            "24px": 9,
+            "64px": 1,
+            "128px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 14
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 13
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 9
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 2,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 16,
+            "8px": 12,
+            "12px": 12,
+            "16px": 8,
+            "4px": 3,
+            "6px": 3,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4,
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(240, 235, 224)": 1
+          },
+          "largurasBorda": {
+            "1px": 61,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 64,
+          "violacoes": 11,
+          "violacoesTextoNormal": 11,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.gap-3 > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "texto": "Semana",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(33, 32, 28)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.48,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.gap-3 > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "texto": "Mês",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(33, 32, 28)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.48,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.mt-6.flex.items-end > div.flex.items-center.gap-1.5",
+              "texto": "Crítica",
+              "cor": "rgb(239, 68, 68)",
+              "fundo": "rgb(43, 28, 26)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button.w-full.flex.items-center > div.flex-1.min-w-0 > div.flex.items-center.gap-2 > p.text-sm.font-medium.text-[var(--color-text-muted)]",
+              "texto": "Cadastrar serviços",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(25, 37, 31)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button.w-full.flex.items-center > div.flex-1.min-w-0 > div.flex.items-center.gap-2 > p.text-sm.font-medium.text-[var(--color-text-muted)]",
+              "texto": "Adicionar equipe",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(25, 37, 31)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button.w-full.flex.items-center > div.flex-1.min-w-0 > div.flex.items-center.gap-2 > p.text-sm.font-medium.text-[var(--color-text-muted)]",
+              "texto": "Adicionar clientes",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(25, 37, 31)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button.w-full.flex.items-center > div.flex-1.min-w-0 > div.flex.items-center.gap-2 > p.text-sm.font-medium.text-[var(--color-text-muted)]",
+              "texto": "Configurar horários",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(25, 37, 31)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button.w-full.flex.items-center > div.flex-1.min-w-0 > div.flex.items-center.gap-2 > span.text-xs.font-mono.font-bold",
+              "texto": "Próximo",
+              "cor": "rgb(201, 162, 74)",
+              "fundo": "rgb(89, 74, 41)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.6,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div > button.w-full.flex.items-center > div.flex-1.min-w-0 > p.text-xs.text-theme-textSecondary.mt-0.5",
+              "texto": "Ative e envie o link para seus clientes agendarem online.",
+              "cor": "rgb(168, 154, 130)",
+              "fundo": "rgb(61, 52, 32)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.47,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button.w-full.flex.items-center > div.flex-1.min-w-0 > div.flex.items-center.gap-2 > p.text-sm.font-medium.text-[var(--color-text-muted)]",
+              "texto": "Criar primeiro agendamento",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(25, 37, 31)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 8,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.gap-3 > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "rotulo": "Hoje",
+              "largura": 52.3,
+              "altura": 24,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.gap-3 > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "rotulo": "Semana",
+              "largura": 74.6,
+              "altura": 24,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.gap-3 > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "rotulo": "Mês",
+              "largura": 46.4,
+              "altura": 24,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.animate-in.fade-in.slide-in-from-bottom-4 > div.relative.rounded-2xl.border > div.w-full.flex.items-center > button.ml-2.p-1.5.rounded-full",
+              "rotulo": "",
+              "largura": 28,
+              "altura": 28,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 11,
+            "201": 1,
+            "210": 1,
+            "302": 1,
+            "317": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > header.w-full.flex.flex-col",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-2.gap-3",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-2.gap-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 165
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-2.gap-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 165
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-3 > div.animate-in.fade-in.slide-in-from-bottom-4 > div.relative.rounded-2xl.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.animate-in.fade-in.slide-in-from-bottom-4 > div.relative.rounded-2xl.border > div.w-full.flex.items-center > button.ml-2.p-1.5.rounded-full",
+              "x": 317,
+              "largura": 28
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.p-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > section.grid.grid-cols-2.gap-3 > div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5",
+              "scrollWidth": 137,
+              "clientWidth": 131,
+              "excesso": 6
+            },
+            {
+              "selector": "section.grid.grid-cols-2.gap-3 > div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.items-center.justify-between",
+              "scrollWidth": 121,
+              "clientWidth": 99,
+              "excesso": 22
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "insights",
+      "grupo": "nucleo",
+      "hashSolicitado": "/insights",
+      "hashFinal": "#/insights",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/insights",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 310,
+        "tipografia": {
+          "combinacoesDistintas": 16,
+          "tamanhosDistintos": 9,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 10,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "12px / 700 / 16px": 19,
+            "12px / 500 / 16px": 17,
+            "11px / 500 / 16.5px": 11,
+            "14px / 700 / 20px": 5,
+            "30px / 500 / 36px": 5,
+            "16px / 700 / 24px": 5,
+            "14px / 500 / 20px": 4,
+            "20px / 500 / 28px": 4,
+            "24px / 900 / 32px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "24px / 700 / 32px": 1,
+            "30px / 900 / 36px": 1,
+            "48px / 900 / 48px": 1,
+            "16px / 500 / 24px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 37,
+            "11px": 12,
+            "14px": 9,
+            "30px": 6,
+            "16px": 6,
+            "20px": 4,
+            "24px": 3,
+            "18px": 1,
+            "48px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 43,
+            "700": 31,
+            "900": 4
+          },
+          "alturasLinha": {
+            "16px": 36,
+            "16.5px": 12,
+            "20px": 9,
+            "36px": 6,
+            "24px": 6,
+            "28px": 4,
+            "32px": 3,
+            "18px": 1,
+            "12px": 1,
+            "48px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 44,
+            "JetBrains Mono": 19,
+            "Chivo": 15,
+            "Inter": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "16px": 92,
+            "8px": 79,
+            "12px": 63,
+            "4px": 35,
+            "10px": 22,
+            "6px": 14,
+            "32px": 5,
+            "20px": 4,
+            "24px": 3,
+            "-16px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "96px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 22
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 14
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 15,
+            "8px": 13,
+            "3.35544e+07px": 6,
+            "6px": 6,
+            "4px": 4,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 101,
+            "2px": 12
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 79,
+          "violacoes": 4,
+          "violacoesTextoNormal": 4,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.items-start.justify-between > div.flex.items-center.gap-1.5",
+              "texto": "6 críticos",
+              "cor": "rgb(239, 68, 68)",
+              "fundo": "rgb(43, 28, 26)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.36,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-start.justify-between > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "texto": "Semana",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(33, 32, 28)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.48,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-start.justify-between > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "texto": "Trimestre",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(33, 32, 28)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.48,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 15,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.w-full.md:w-auto > div.flex.flex-col.sm:flex-row > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.flex-col.sm:flex-row > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.w-full.md:w-auto > div.flex.flex-col.sm:flex-row > div.relative > button.inline-flex.items-center.gap-2",
+              "rotulo": "Exportar",
+              "largura": 131.3,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "ul.mt-5.space-y-2 > li.p-3.rounded-xl.border > div.flex.items-center.justify-between > button.shrink-0.inline-flex.items-center",
+              "rotulo": "Agenda",
+              "largura": 91.4,
+              "altura": 26,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "ul.mt-5.space-y-2 > li.p-3.rounded-xl.border > div.flex.items-center.justify-between > button.shrink-0.inline-flex.items-center",
+              "rotulo": "Agenda",
+              "largura": 91.4,
+              "altura": 26,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "ul.mt-5.space-y-2 > li.p-3.rounded-xl.border > div.flex.items-center.justify-between > button.shrink-0.inline-flex.items-center",
+              "rotulo": "Agenda",
+              "largura": 91.4,
+              "altura": 26,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > ul.mt-5.space-y-2 > li > button.w-full.text-center.text-xs",
+              "rotulo": "+ 3 horários vagos",
+              "largura": 332,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-start.justify-between > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "rotulo": "Semana",
+              "largura": 74.6,
+              "altura": 24,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-start.justify-between > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "rotulo": "Mês",
+              "largura": 46.4,
+              "altura": 24,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-start.justify-between > div.flex.items-center.gap-1 > button.px-2.5.py-1.text-xs",
+              "rotulo": "Trimestre",
+              "largura": 89.9,
+              "altura": 24,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 8,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "12": 12,
+            "29": 1,
+            "30": 1,
+            "201": 1,
+            "210": 1,
+            "302": 1,
+            "256.6": 3
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 29,
+              "x2": 30,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-10.pb-24 > header.w-full.flex.flex-col",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > div.flex.flex-col.sm:flex-row > div.flex.items-center.justify-between",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.flex.w-full.md:w-auto > div.flex.flex-col.sm:flex-row > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 30,
+              "largura": 36
+            },
+            {
+              "selector": "div.flex.w-full.md:w-auto > div.flex.flex-col.sm:flex-row > div.relative > button.inline-flex.items-center.gap-2",
+              "x": 12,
+              "largura": 131.3
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "ul.mt-5.space-y-2 > li.p-3.rounded-xl.border > div.flex.items-center.justify-between > button.shrink-0.inline-flex.items-center",
+              "x": 256.6,
+              "largura": 91.4
+            },
+            {
+              "selector": "ul.mt-5.space-y-2 > li.p-3.rounded-xl.border > div.flex.items-center.justify-between > button.shrink-0.inline-flex.items-center",
+              "x": 256.6,
+              "largura": 91.4
+            },
+            {
+              "selector": "ul.mt-5.space-y-2 > li.p-3.rounded-xl.border > div.flex.items-center.justify-between > button.shrink-0.inline-flex.items-center",
+              "x": 256.6,
+              "largura": 91.4
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.mt-5.grid.grid-cols-2 > div.p-3.rounded-xl.border",
+              "x": 29,
+              "largura": 160
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.mt-5.grid.grid-cols-2 > div.p-3.rounded-xl.border",
+              "x": 201,
+              "largura": 160
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-10.pb-24 > div.space-y-8.fade-in > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 6,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div.space-y-8.fade-in > div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border",
+              "scrollWidth": 434,
+              "clientWidth": 364,
+              "excesso": 70
+            },
+            {
+              "selector": "div > div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5",
+              "scrollWidth": 434,
+              "clientWidth": 364,
+              "excesso": 70
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.items-start.justify-between",
+              "scrollWidth": 418,
+              "clientWidth": 332,
+              "excesso": 86
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "dashboard",
+      "grupo": "nucleo",
+      "hashSolicitado": "/",
+      "hashFinal": "#/",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 406 ()",
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 106,
+        "tipografia": {
+          "combinacoesDistintas": 7,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 2,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 8,
+            "12px / 700 / 16px": 5,
+            "20px / 700 / 28px": 3,
+            "14px / 700 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 500 / 20px": 1,
+            "24px / 700 / 32px": 1
+          },
+          "tamanhos": {
+            "12px": 13,
+            "14px": 3,
+            "20px": 3,
+            "18px": 1,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 10,
+            "700": 11
+          },
+          "alturasLinha": {
+            "16px": 13,
+            "20px": 3,
+            "28px": 3,
+            "18px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 9,
+            "ui-sans-serif": 7,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "8px": 42,
+            "16px": 23,
+            "12px": 18,
+            "4px": 6,
+            "2px": 2,
+            "24px": 2,
+            "32px": 2,
+            "137px": 2,
+            "64px": 1,
+            "128px": 1,
+            "-8px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "137px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 6,
+            "8px": 4,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 32,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 21,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 4,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 2,
+            "210": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#dashboard-meu-dia",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-4 > div.group > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 5,
+          "detalhes": [
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6 > div",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.space-y-6 > div > div.flex.items-center.justify-between",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div.bg-theme-card.rounded-lg.overflow-hidden > div > div.p-4.md:p-6.flex > div.flex.justify-between.items-start",
+              "scrollWidth": 312,
+              "clientWidth": 310,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "insights",
+      "grupo": "nucleo",
+      "hashSolicitado": "/insights",
+      "hashFinal": "#/",
+      "redirecionado": true,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 106,
+        "tipografia": {
+          "combinacoesDistintas": 7,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 2,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 8,
+            "12px / 700 / 16px": 5,
+            "20px / 700 / 28px": 3,
+            "14px / 700 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 500 / 20px": 1,
+            "24px / 700 / 32px": 1
+          },
+          "tamanhos": {
+            "12px": 13,
+            "14px": 3,
+            "20px": 3,
+            "18px": 1,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 10,
+            "700": 11
+          },
+          "alturasLinha": {
+            "16px": 13,
+            "20px": 3,
+            "28px": 3,
+            "18px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 9,
+            "ui-sans-serif": 7,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "8px": 42,
+            "16px": 23,
+            "12px": 18,
+            "4px": 6,
+            "2px": 2,
+            "24px": 2,
+            "32px": 2,
+            "137px": 2,
+            "64px": 1,
+            "128px": 1,
+            "-8px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "137px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 6,
+            "8px": 4,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 32,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 21,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 4,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 2,
+            "210": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#dashboard-meu-dia",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-4 > div.group > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 5,
+          "detalhes": [
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6 > div",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.space-y-6 > div > div.flex.items-center.justify-between",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div.bg-theme-card.rounded-lg.overflow-hidden > div > div.p-4.md:p-6.flex > div.flex.justify-between.items-start",
+              "scrollWidth": 312,
+              "clientWidth": 310,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "naoAuditadas": [
+    {
+      "persona": "owner",
+      "theme": "beauty",
+      "motivo": "tema nao controlavel: data-theme vem de profiles.user_type (\"barber\") e a conta de teste nao e' a conta VITE_DEV_EMAIL, logo o switcher dev nao existe"
+    },
+    {
+      "persona": "staff",
+      "theme": "beauty",
+      "motivo": "tema nao controlavel: data-theme vem de profiles.user_type (\"barber\") e a conta de teste nao e' a conta VITE_DEV_EMAIL, logo o switcher dev nao existe"
+    }
+  ],
+  "resumo": {
+    "rotasAuditadas": 2,
+    "execucoesTotais": 4,
+    "naoAuditadas": 2,
+    "temasEfetivosVistos": [
+      "barber-dark"
+    ],
+    "combinacoesComTemaDivergente": 0,
+    "combinacoesComModoDivergente": 0,
+    "porRota": [
+      {
+        "rota": "insights",
+        "grupo": "nucleo",
+        "execucoes": 2,
+        "maxTamanhosFonte": 9,
+        "maxEspacamentos": 14,
+        "maxForaDaEscala4px": 3,
+        "maxRaios": 8,
+        "maxSombras": 1,
+        "maxLargurasBorda": 2,
+        "totalViolacoesContraste": 4,
+        "maxAlvosPequenos": 15,
+        "overflowEm390": false,
+        "maxQuaseAlinhamentos": 1
+      },
+      {
+        "rota": "dashboard",
+        "grupo": "nucleo",
+        "execucoes": 2,
+        "maxTamanhosFonte": 8,
+        "maxEspacamentos": 11,
+        "maxForaDaEscala4px": 3,
+        "maxRaios": 8,
+        "maxSombras": 2,
+        "maxLargurasBorda": 2,
+        "totalViolacoesContraste": 11,
+        "maxAlvosPequenos": 8,
+        "overflowEm390": false,
+        "maxQuaseAlinhamentos": 0
+      }
+    ]
+  }
+}

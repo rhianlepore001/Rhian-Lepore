@@ -1,0 +1,59 @@
+{
+  "geradoEm": "2026-08-02T09:06:54.826Z",
+  "slugDisponivel": false,
+  "rotasAuditadas": 3,
+  "execucoesTotais": 3,
+  "naoAuditadas": 0,
+  "temasEfetivosVistos": [
+    "null-dark",
+    "barber-dark"
+  ],
+  "combinacoesComTemaDivergente": 1,
+  "porRota": [
+    {
+      "rota": "dashboard",
+      "grupo": "nucleo",
+      "execucoes": 1,
+      "maxTamanhosFonte": 8,
+      "maxEspacamentos": 11,
+      "maxForaDaEscala4px": 3,
+      "maxRaios": 8,
+      "maxSombras": 2,
+      "maxLargurasBorda": 2,
+      "totalViolacoesContraste": 11,
+      "maxAlvosPequenos": 8,
+      "overflowEm390": false,
+      "maxQuaseAlinhamentos": 0
+    },
+    {
+      "rota": "login-gateway",
+      "grupo": "auth",
+      "execucoes": 1,
+      "maxTamanhosFonte": 5,
+      "maxEspacamentos": 9,
+      "maxForaDaEscala4px": 2,
+      "maxRaios": 3,
+      "maxSombras": 0,
+      "maxLargurasBorda": 1,
+      "totalViolacoesContraste": 0,
+      "maxAlvosPequenos": 0,
+      "overflowEm390": false,
+      "maxQuaseAlinhamentos": 0
+    },
+    {
+      "rota": "login-form-barber",
+      "grupo": "auth",
+      "execucoes": 1,
+      "maxTamanhosFonte": 4,
+      "maxEspacamentos": 9,
+      "maxForaDaEscala4px": 2,
+      "maxRaios": 4,
+      "maxSombras": 1,
+      "maxLargurasBorda": 1,
+      "totalViolacoesContraste": 0,
+      "maxAlvosPequenos": 2,
+      "overflowEm390": false,
+      "maxQuaseAlinhamentos": 0
+    }
+  ]
+}

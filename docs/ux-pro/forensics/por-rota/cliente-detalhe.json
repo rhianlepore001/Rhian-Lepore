@@ -1,0 +1,3102 @@
+{
+  "rota": "cliente-detalhe",
+  "resumo": {
+    "rota": "cliente-detalhe",
+    "grupo": "nucleo",
+    "execucoes": 8,
+    "maxTamanhosFonte": 6,
+    "maxEspacamentos": 11,
+    "maxForaDaEscala4px": 3,
+    "maxRaios": 8,
+    "maxSombras": 1,
+    "maxLargurasBorda": 2,
+    "totalViolacoesContraste": 33,
+    "maxAlvosPequenos": 23,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 1
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 244,
+        "tipografia": {
+          "combinacoesDistintas": 10,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 22,
+            "12px / 700 / 16px": 10,
+            "16px / 700 / 24px": 6,
+            "18px / 700 / 22.5px": 4,
+            "14px / 500 / 20px": 2,
+            "12px / 600 / 16px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 35,
+            "16px": 6,
+            "18px": 5,
+            "14px": 3,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 26,
+            "600": 2,
+            "700": 22
+          },
+          "alturasLinha": {
+            "16px": 34,
+            "24px": 7,
+            "22.5px": 4,
+            "20px": 3,
+            "18px": 1,
+            "12px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 24,
+            "ui-sans-serif": 19,
+            "Chivo": 7
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 10,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 77,
+            "16px": 71,
+            "12px": 61,
+            "4px": 22,
+            "10px": 8,
+            "6px": 8,
+            "-16px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 15,
+            "6px": 4,
+            "12px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 5
+          },
+          "largurasBorda": {
+            "1px": 91,
+            "2px": 17
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 50,
+          "violacoes": 1,
+          "violacoesTextoNormal": 1,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 13,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > button.flex.items-center.gap-2",
+              "rotulo": "Voltar para Clientes",
+              "largura": 196,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.items-center.gap-3 > button.text-[var(--color-text-muted)].hover:text-[var(--color-text)].transition-colors",
+              "rotulo": "Editar nome do cliente",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Desativar cliente",
+              "largura": 40,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Abrir WhatsApp",
+              "largura": 40,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 12,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "12": 4,
+            "29": 2,
+            "30": 1,
+            "77": 1,
+            "210": 1,
+            "270": 1,
+            "302": 1,
+            "510": 1,
+            "750": 1,
+            "235.2": 1,
+            "111.5": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 29,
+              "x2": 30,
+              "delta": 1,
+              "ocorrencias1": 2,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.md:flex-row > div.flex.flex-row.md:flex-col > div.w-20.h-20.md:w-32",
+              "x": 29,
+              "largura": 80
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 29,
+              "largura": 40
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 77,
+              "largura": 40
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 30,
+              "largura": 222
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 270,
+              "largura": 222
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 510,
+              "largura": 222
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 750,
+              "largura": 222
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.md:col-span-2.h-full > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.justify-end.mt-2 > button.relative.inline-flex.items-center",
+              "x": 235.2,
+              "largura": 125.8
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 111.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "scrollWidth": 382,
+              "clientWidth": 366,
+              "excesso": 16
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 64,
+        "tipografia": {
+          "combinacoesDistintas": 5,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 2,
+          "alturasLinhaDistintas": 4,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 4,
+            "18px / 500 / 18px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 20px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 5,
+            "18px": 1,
+            "14px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 3,
+            "700": 5
+          },
+          "alturasLinha": {
+            "16px": 5,
+            "18px": 1,
+            "20px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 5,
+            "Chivo": 2,
+            "JetBrains Mono": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 8,
+          "foraDaEscala4px": 1,
+          "valores": {
+            "8px": 30,
+            "12px": 13,
+            "16px": 6,
+            "40px": 4,
+            "4px": 4,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 4,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "8px": 1,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 17,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 8,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 5,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "210": 1,
+            "302": 1,
+            "111.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 111.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 267,
+        "tipografia": {
+          "combinacoesDistintas": 13,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 19,
+            "14px / 500 / 20px": 13,
+            "12px / 700 / 16px": 6,
+            "18px / 700 / 28px": 6,
+            "12px / 600 / 16px": 5,
+            "18px / 700 / 22.5px": 4,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 500 / 30px": 1
+          },
+          "tamanhos": {
+            "12px": 32,
+            "14px": 14,
+            "18px": 10,
+            "24px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "500": 35,
+            "600": 5,
+            "700": 19,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 30,
+            "20px": 13,
+            "28px": 6,
+            "22.5px": 4,
+            "24px": 3,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "30px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 28,
+            "JetBrains Mono": 24,
+            "Chivo": 8
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "12px": 85,
+            "8px": 72,
+            "16px": 49,
+            "4px": 34,
+            "20px": 24,
+            "6px": 16,
+            "24px": 13,
+            "32px": 5,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 16
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 23,
+            "3.35544e+07px": 4,
+            "6px": 4,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 98,
+            "2px": 18
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 60,
+          "violacoes": 1,
+          "violacoesTextoNormal": 1,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 23,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > button.flex.items-center.gap-2",
+              "rotulo": "Voltar para Clientes",
+              "largura": 196,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.items-center.gap-3 > button.text-[var(--color-text-muted)].hover:text-[var(--color-text)].transition-colors",
+              "rotulo": "Editar nome do cliente",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Desativar cliente",
+              "largura": 40,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Abrir WhatsApp",
+              "largura": 40,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Novo Corte",
+              "largura": 108.9,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.justify-end.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Salvar Observação",
+              "largura": 125.8,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 15,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 3,
+            "301": 1,
+            "302": 1,
+            "582": 1,
+            "862": 1,
+            "1142": 1,
+            "1094.8": 1,
+            "1222.8": 1,
+            "1190.1": 1,
+            "1238.1": 1,
+            "882.5": 1,
+            "1053.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 301,
+              "x2": 302,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1094.8,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.md:flex-row > div.flex.flex-row.md:flex-col > div.w-20.h-20.md:w-32",
+              "x": 301,
+              "largura": 128
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 1190.1,
+              "largura": 40
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 1238.1,
+              "largura": 40
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 302,
+              "largura": 254
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 582,
+              "largura": 254
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 862,
+              "largura": 254
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 1142,
+              "largura": 254
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.md:col-span-2.h-full > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 749.3
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.justify-end.mt-2 > button.relative.inline-flex.items-center",
+              "x": 882.5,
+              "largura": 125.8
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 1053.3,
+              "largura": 362.7
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 42,
+              "clientWidth": 40,
+              "excesso": 2
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "scrollWidth": 379,
+              "clientWidth": 363,
+              "excesso": 16
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 78,
+        "tipografia": {
+          "combinacoesDistintas": 9,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 7,
+            "24px / 900 / 24px": 1,
+            "12px / 600 / 16px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "14px": 8,
+            "12px": 3,
+            "24px": 2,
+            "16px": 2
+          },
+          "pesos": {
+            "500": 11,
+            "600": 1,
+            "700": 2,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 7,
+            "24px": 4,
+            "16px": 2,
+            "17.5px": 1,
+            "15px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 10,
+            "Chivo": 3,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 10,
+          "foraDaEscala4px": 1,
+          "valores": {
+            "12px": 33,
+            "8px": 24,
+            "16px": 10,
+            "4px": 10,
+            "24px": 7,
+            "40px": 4,
+            "32px": 3,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 7,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 1
+          },
+          "largurasBorda": {
+            "1px": 24,
+            "2px": 5
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 15,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 11,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 5,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "1030.3": 1,
+            "1158.3": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1030.3,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 248,
+        "tipografia": {
+          "combinacoesDistintas": 10,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 22,
+            "12px / 700 / 16px": 10,
+            "16px / 700 / 24px": 6,
+            "18px / 700 / 22.5px": 4,
+            "14px / 500 / 20px": 2,
+            "12px / 600 / 16px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 35,
+            "16px": 6,
+            "18px": 5,
+            "14px": 3,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 26,
+            "600": 2,
+            "700": 22
+          },
+          "alturasLinha": {
+            "16px": 34,
+            "24px": 7,
+            "22.5px": 4,
+            "20px": 3,
+            "18px": 1,
+            "12px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 24,
+            "ui-sans-serif": 19,
+            "Chivo": 7
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 10,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 77,
+            "16px": 71,
+            "12px": 61,
+            "4px": 22,
+            "10px": 8,
+            "6px": 8,
+            "-16px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 15,
+            "6px": 4,
+            "12px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 5
+          },
+          "largurasBorda": {
+            "1px": 91,
+            "2px": 17
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 50,
+          "violacoes": 11,
+          "violacoesTextoNormal": 11,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div.flex.flex-row.md:flex-col > div.flex.flex-col.justify-center > p.text-xs.text-text-secondary.md:hidden",
+              "texto": "Membro desde 2021",
+              "cor": "rgb(160, 160, 160)",
+              "fundo": "rgb(255, 255, 255)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 2.61,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.flex-col.sm:flex-row > span.flex.items-center.gap-2",
+              "texto": "aline.lima@example.com",
+              "cor": "rgb(160, 160, 160)",
+              "fundo": "rgb(255, 255, 255)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 2.61,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.flex-col.sm:flex-row > span.flex.items-center.gap-2",
+              "texto": "+55 619923489031",
+              "cor": "rgb(160, 160, 160)",
+              "fundo": "rgb(255, 255, 255)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 2.61,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Novo Corte",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-surface.p-3.border > p.text-base.md:text-lg.font-bold",
+              "texto": "R$ 170,00",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(216, 216, 216)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.57,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.grid.grid-cols-2.md:grid-cols-4 > div.col-span-2.md:col-span-1.bg-theme-surface > p.text-xs.text-theme-accent.uppercase",
+              "texto": "Próxima Visita",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(216, 216, 216)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.57,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.top-2.right-2 > span.bg-theme-accent.text-[var(--color-bg)].text-xs",
+              "texto": "Último",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.md:col-span-2.h-full > div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > textarea.w-full.h-40.bg-theme-surface",
+              "texto": "Cliente VIP - prefere horário da tarde",
+              "cor": "rgb(234, 234, 234)",
+              "fundo": "rgb(216, 216, 216)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 1.18,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > span.text-xs.font-bold.tracking-tight",
+              "texto": "Clientes",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 13,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > button.flex.items-center.gap-2",
+              "rotulo": "Voltar para Clientes",
+              "largura": 196,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.items-center.gap-3 > button.text-[var(--color-text-muted)].hover:text-[var(--color-text)].transition-colors",
+              "rotulo": "Editar nome do cliente",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Desativar cliente",
+              "largura": 40,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Abrir WhatsApp",
+              "largura": 40,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 224,
+              "altura": 34,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 12,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "12": 4,
+            "29": 2,
+            "30": 1,
+            "77": 1,
+            "210": 1,
+            "270": 1,
+            "302": 1,
+            "510": 1,
+            "750": 1,
+            "235.2": 1,
+            "111.5": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 29,
+              "x2": 30,
+              "delta": 1,
+              "ocorrencias1": 2,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.md:flex-row > div.flex.flex-row.md:flex-col > div.w-20.h-20.md:w-32",
+              "x": 29,
+              "largura": 80
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 29,
+              "largura": 40
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 77,
+              "largura": 40
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 30,
+              "largura": 222
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 270,
+              "largura": 222
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 510,
+              "largura": 222
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 750,
+              "largura": 222
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.md:col-span-2.h-full > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.justify-end.mt-2 > button.relative.inline-flex.items-center",
+              "x": 235.2,
+              "largura": 125.8
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 111.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "scrollWidth": 382,
+              "clientWidth": 366,
+              "excesso": 16
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 68,
+        "tipografia": {
+          "combinacoesDistintas": 5,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 2,
+          "alturasLinhaDistintas": 4,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 4,
+            "18px / 500 / 18px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 20px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 5,
+            "18px": 1,
+            "14px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 3,
+            "700": 5
+          },
+          "alturasLinha": {
+            "16px": 5,
+            "18px": 1,
+            "20px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 5,
+            "Chivo": 2,
+            "JetBrains Mono": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 8,
+          "foraDaEscala4px": 1,
+          "valores": {
+            "8px": 30,
+            "12px": 13,
+            "16px": 6,
+            "40px": 4,
+            "4px": 4,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 4,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "8px": 1,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 17,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 8,
+          "violacoes": 2,
+          "violacoesTextoNormal": 2,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.13,
+          "detalhes": [
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > span.text-xs.font-bold.tracking-tight",
+              "texto": "Clientes",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 5,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "210": 1,
+            "302": 1,
+            "111.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 111.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)",
+        "Failed to load resource: the server responded with a status of 403 ()",
+        "Error searching semantic memory: Error: Falha ao gerar embedding vetorial.\n    at Ae (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1131)\n    at async n (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1529)\n    at async u (http://localhost:4173/assets/ClientCRM-IGdhu7Uz.js:217:1989)"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 271,
+        "tipografia": {
+          "combinacoesDistintas": 13,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 19,
+            "14px / 500 / 20px": 13,
+            "12px / 700 / 16px": 6,
+            "18px / 700 / 28px": 6,
+            "12px / 600 / 16px": 5,
+            "18px / 700 / 22.5px": 4,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 500 / 30px": 1
+          },
+          "tamanhos": {
+            "12px": 32,
+            "14px": 14,
+            "18px": 10,
+            "24px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "500": 35,
+            "600": 5,
+            "700": 19,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 30,
+            "20px": 13,
+            "28px": 6,
+            "22.5px": 4,
+            "24px": 3,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "30px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 28,
+            "JetBrains Mono": 24,
+            "Chivo": 8
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "12px": 85,
+            "8px": 72,
+            "16px": 49,
+            "4px": 34,
+            "20px": 24,
+            "6px": 16,
+            "24px": 13,
+            "32px": 5,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 16
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 23,
+            "3.35544e+07px": 4,
+            "6px": 4,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 98,
+            "2px": 18
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 60,
+          "violacoes": 14,
+          "violacoesTextoNormal": 14,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "texto": "Clientes CRM",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(218, 214, 204)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.51,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Crescimento",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Sistema",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.flex-col.sm:flex-row > span.flex.items-center.gap-2",
+              "texto": "aline.lima@example.com",
+              "cor": "rgb(160, 160, 160)",
+              "fundo": "rgb(255, 255, 255)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 2.61,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.flex-col.sm:flex-row > span.flex.items-center.gap-2",
+              "texto": "+55 619923489031",
+              "cor": "rgb(160, 160, 160)",
+              "fundo": "rgb(255, 255, 255)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 2.61,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Novo Corte",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-surface.p-3.border > p.text-base.md:text-lg.font-bold",
+              "texto": "R$ 170,00",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(216, 216, 216)",
+              "fontSize": "18px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.57,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.grid.grid-cols-2.md:grid-cols-4 > div.col-span-2.md:col-span-1.bg-theme-surface > p.text-xs.text-theme-accent.uppercase",
+              "texto": "Próxima Visita",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(216, 216, 216)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.57,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.top-2.right-2 > span.bg-theme-accent.text-[var(--color-bg)].text-xs",
+              "texto": "Último",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.md:col-span-2.h-full > div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > textarea.w-full.h-40.bg-theme-surface",
+              "texto": "Cliente VIP - prefere horário da tarde",
+              "cor": "rgb(234, 234, 234)",
+              "fundo": "rgb(216, 216, 216)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 1.18,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 23,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > button.flex.items-center.gap-2",
+              "rotulo": "Voltar para Clientes",
+              "largura": 196,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex.flex-col.md:flex-row > div > div.flex.items-center.gap-3 > button.text-[var(--color-text-muted)].hover:text-[var(--color-text)].transition-colors",
+              "rotulo": "Editar nome do cliente",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Desativar cliente",
+              "largura": 40,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Abrir WhatsApp",
+              "largura": 40,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "rotulo": "Novo Corte",
+              "largura": 108.9,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.overflow-x-auto.pb-4.-mx-4 > div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > button.w-full.mt-3.bg-theme-surface",
+              "rotulo": "Repetir Estilo",
+              "largura": 256,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.justify-end.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Salvar Observação",
+              "largura": 125.8,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 15,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 3,
+            "301": 1,
+            "302": 1,
+            "582": 1,
+            "862": 1,
+            "1142": 1,
+            "1094.8": 1,
+            "1222.8": 1,
+            "1190.1": 1,
+            "1238.1": 1,
+            "882.5": 1,
+            "1053.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 301,
+              "x2": 302,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1094.8,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.md:flex-row > div.flex.flex-row.md:flex-col > div.w-20.h-20.md:w-32",
+              "x": 301,
+              "largura": 128
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 1190.1,
+              "largura": 40
+            },
+            {
+              "selector": "div.flex-1.w-full.mt-2 > div.flex.flex-col.md:flex-row > div.flex.gap-2.w-full > button.relative.inline-flex.items-center",
+              "x": 1238.1,
+              "largura": 40
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 302,
+              "largura": 254
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 582,
+              "largura": 254
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 862,
+              "largura": 254
+            },
+            {
+              "selector": "div.flex.gap-4.md:gap-6 > div.w-56.md:w-64.flex-shrink-0 > div.relative.border.border-theme-border > div.absolute.bottom-0.left-0",
+              "x": 1142,
+              "largura": 254
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.md:col-span-2.h-full > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 749.3
+            },
+            {
+              "selector": "div.bg-theme-card.border-theme-border.border > div.p-4.md:p-5 > div.flex.justify-end.mt-2 > button.relative.inline-flex.items-center",
+              "x": 882.5,
+              "largura": 125.8
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 1053.3,
+              "largura": 362.7
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 42,
+              "clientWidth": 40,
+              "excesso": 2
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.grid.grid-cols-1.md:grid-cols-3 > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "scrollWidth": 379,
+              "clientWidth": 363,
+              "excesso": 16
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "cliente-detalhe",
+      "grupo": "nucleo",
+      "hashSolicitado": "/clientes",
+      "hashFinal": "#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clientes/a0b26466-e3f6-46af-98b6-b5994805adc3",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 82,
+        "tipografia": {
+          "combinacoesDistintas": 9,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 7,
+            "24px / 900 / 24px": 1,
+            "12px / 600 / 16px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "14px": 8,
+            "12px": 3,
+            "24px": 2,
+            "16px": 2
+          },
+          "pesos": {
+            "500": 11,
+            "600": 1,
+            "700": 2,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 7,
+            "24px": 4,
+            "16px": 2,
+            "17.5px": 1,
+            "15px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 10,
+            "Chivo": 3,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 10,
+          "foraDaEscala4px": 1,
+          "valores": {
+            "12px": 33,
+            "8px": 24,
+            "16px": 10,
+            "4px": 10,
+            "24px": 7,
+            "40px": 4,
+            "32px": 3,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 7,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 1
+          },
+          "largurasBorda": {
+            "1px": 24,
+            "2px": 5
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 15,
+          "violacoes": 4,
+          "violacoesTextoNormal": 4,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.13,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "texto": "Clientes CRM",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(218, 214, 204)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.51,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 11,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 5,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "1030.3": 1,
+            "1158.3": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1030.3,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

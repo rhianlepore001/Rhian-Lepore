@@ -52,8 +52,9 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 - **Meus Insights (colaborador) — polish UX + histórico (2 Ago 2026):**
   - `/meus-insights` redesenhado: KPIs (atendimentos, clientes, comissões, produtos), todos os serviços do período, produtos vendidos (agregado + últimas vendas), próximos de hoje.
   - Navegação de meses anteriores via `MonthYearSelector` + chips Hoje/Semana/Mês.
+  - **Privacidade:** só quantidade + comissão — sem preço/receita bruta de serviço ou produto (validado Playwright).
   - Service `services/staffInsights.ts` + hook `useStaffInsights` — sempre filtra `professional_id` + tenant do session.
-  - Branch: `cursor/staff-insights-polish-da7a`.
+  - Branch: `cursor/staff-insights-polish-da7a` · PR #12.
 - **UX-pro sweep — em produção via `main` (2 Ago 2026):**
   - Merge `186fdaf` (sweep + booking/produtos/fila) + hotfix `48a8bf3` (`createFinanceRecord` created_at opcional).
   - Gate A–E shipped com ressalva: percepção evaluator 6,5 (REPROVAR) — não bloqueou. Delta forense: contraste −60%, alvos&lt;44 −31%.

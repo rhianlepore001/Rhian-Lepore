@@ -126,7 +126,7 @@ export async function createFinanceRecord(input: {
   dueDate: string | null;
   commissionPaid: boolean;
   status: 'paid' | 'pending';
-  createdAt: string;
+  createdAt?: string;
 }): Promise<void> {
   // A tabela guarda entrada em `revenue` e saída em `commission_value`;
   // as RPCs de finanças somam exatamente essas duas colunas.
@@ -147,8 +147,10 @@ export async function createFinanceRecord(input: {
     due_date: input.dueDate,
     commission_paid: input.commissionPaid,
     status: input.status,
-    created_at: input.createdAt,
   };
+  if (input.createdAt) {
+    record.created_at = input.createdAt;
+  }
   const { error } = await supabase.from('finance_records').insert(record);
   if (error) throw error;
 }

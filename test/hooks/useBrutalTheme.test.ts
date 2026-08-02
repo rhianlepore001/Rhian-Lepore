@@ -149,7 +149,7 @@ describe('useBrutalTheme', () => {
         const { result } = renderHook(() => useBrutalTheme({ override: 'beauty' }));
 
         expect(result.current.classes.buttonPrimary).toContain('bg-theme-accent');
-        expect(result.current.classes.buttonPrimary).toContain('text-[var(--color-bg)]');
+        expect(result.current.classes.buttonPrimary).toContain('text-[var(--color-on-accent)]');
         expect(result.current.classes.error).toContain('text-[var(--color-danger)]');
     });
 });

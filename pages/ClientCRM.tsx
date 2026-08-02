@@ -1,4 +1,4 @@
-import { Card, Button, Modal, ConfirmModal } from '../components/ui';
+﻿import { Card, Button, Modal, ConfirmModal, PageHeader } from '../components/ui';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -338,57 +338,62 @@ const { id } = useParams<{ id: string }>();
 
           {/* Info */}
           <div className="flex-1 w-full mt-2 md:mt-0">
-            <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-theme-border pb-4 mb-4 gap-4 md:gap-0">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl md:text-3xl font-heading text-[var(--color-text)] uppercase leading-none">{client.name}</h1>
+            <div className="border-b-2 border-theme-border mb-4">
+              <PageHeader
+                title={client.name}
+                subtitle={
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 font-mono text-xs md:text-sm">
+                    <span className="flex items-center gap-2"><Mail className="w-3 h-3" /> {client.email}</span>
+                    <span className="flex items-center gap-2">
+                      <Phone className="w-3 h-3" />
+                      {client.phone ? formatPhone(client.phone, region as any) : 'Sem telefone'}
+                    </span>
+                  </div>
+                }
+                meta={
                   <button
+                    type="button"
                     onClick={() => setShowEditModal(true)}
-                    className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                     aria-label="Editar nome do cliente"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-text-secondary font-mono text-xs md:text-sm">
-                  <span className="flex items-center gap-2"><Mail className="w-3 h-3" /> {client.email}</span>
-                  <span className="flex items-center gap-2">
-                    <Phone className="w-3 h-3" />
-                    {client.phone ? formatPhone(client.phone, region as any) : 'Sem telefone'}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2 w-full md:w-auto">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] hover:brightness-110"
-                  onClick={handleDeleteClient}
-                  disabled={deleting}
-                  aria-label="Desativar cliente"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`border-[var(--color-success-border)] ${isBeauty ? 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]' : 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]'}`}
-                  onClick={handleWhatsAppClick}
-                  title="Abrir WhatsApp"
-                  aria-label="Abrir WhatsApp"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="primary"
-                  icon={<Scissors />}
-                  size="sm"
-                  className="flex-1 md:flex-none"
-                  onClick={() => navigate(`/agenda?clientId=${client.id}`)}
-                >
-                  {isBeauty ? 'Novo Serviço' : 'Novo Corte'}
-                </Button>
-              </div>
+                }
+                action={
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] hover:brightness-110"
+                      onClick={handleDeleteClient}
+                      disabled={deleting}
+                      aria-label="Desativar cliente"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`border-[var(--color-success-border)] ${isBeauty ? 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]' : 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]'}`}
+                      onClick={handleWhatsAppClick}
+                      title="Abrir WhatsApp"
+                      aria-label="Abrir WhatsApp"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="primary"
+                      icon={<Scissors />}
+                      size="sm"
+                      className="flex-1 md:flex-none"
+                      onClick={() => navigate(`/agenda?clientId=${client.id}`)}
+                    >
+                      {isBeauty ? 'Novo Serviço' : 'Novo Corte'}
+                    </Button>
+                  </div>
+                }
+              />
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -457,7 +462,7 @@ const { id } = useParams<{ id: string }>();
                       {/* Badges */}
                       <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {index === 0 && (
-                          <span className={`${accent.bg} text-[var(--color-bg)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
+                          <span className={`${accent.bg} text-[var(--color-on-accent)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
                         )}
                         {hasDiscount && (
                           <span className="bg-[var(--color-danger-bg)] text-[var(--color-danger)] text-xs font-bold px-2 py-1 flex items-center gap-1">
@@ -469,7 +474,7 @@ const { id } = useParams<{ id: string }>();
                     {/* Repeat Service Button for each card */}
                     <button
                       onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
+                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-on-accent)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>

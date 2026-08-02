@@ -1,0 +1,192 @@
+{
+  "rota": "login-form-barber",
+  "resumo": {
+    "rota": "login-form-barber",
+    "grupo": "auth",
+    "execucoes": 1,
+    "maxTamanhosFonte": 4,
+    "maxEspacamentos": 9,
+    "maxForaDaEscala4px": 2,
+    "maxRaios": 4,
+    "maxSombras": 1,
+    "maxLargurasBorda": 1,
+    "totalViolacoesContraste": 0,
+    "maxAlvosPequenos": 2,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 0
+  },
+  "execucoes": [
+    {
+      "persona": "anon",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "login-form-barber",
+      "grupo": "auth",
+      "hashSolicitado": "/login",
+      "hashFinal": "#/login",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/login",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 40,
+        "tipografia": {
+          "combinacoesDistintas": 6,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 4,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 400 / 16px": 4,
+            "12px / 600 / 16px": 2,
+            "17px / 700 / 17px": 1,
+            "30px / 400 / 36px": 1,
+            "14px / 600 / 20px": 1,
+            "12px / 700 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 7,
+            "17px": 1,
+            "30px": 1,
+            "14px": 1
+          },
+          "pesos": {
+            "400": 5,
+            "600": 3,
+            "700": 2
+          },
+          "alturasLinha": {
+            "16px": 7,
+            "17px": 1,
+            "36px": 1,
+            "20px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 7,
+            "Chivo": 2,
+            "Inter": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 9,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "16px": 14,
+            "8px": 7,
+            "32px": 6,
+            "10px": 6,
+            "6px": 4,
+            "20px": 3,
+            "4px": 1,
+            "40px": 1,
+            "24px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 1,
+          "raios": {
+            "3.35544e+07px": 3,
+            "6px": 2,
+            "16px": 1,
+            "8px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 21
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 9,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.69,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 2,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div#root > div.min-h-screen.flex.items-center > button.absolute.top-6.left-6",
+              "rotulo": "← Voltar",
+              "largura": 67.2,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.w-full > div.relative > span.absolute.right-3.top-1/2 > button.pointer-events-auto.text-[var(--color-text-muted)].hover:text-theme-text",
+              "rotulo": "Mostrar senha",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 1,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "371": 2
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div.min-h-screen.flex.items-center > div.w-full.max-w-3xl.relative > div.flex-1.relative.bg-[#1C1C1C] > div.absolute.w-3.h-3",
+              "x": 371,
+              "largura": 12
+            },
+            {
+              "selector": "div.min-h-screen.flex.items-center > div.w-full.max-w-3xl.relative > div.flex-1.relative.bg-[#1C1C1C] > div.absolute.w-3.h-3",
+              "x": 371,
+              "largura": 12
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div#root > div.min-h-screen.flex.items-center",
+              "scrollWidth": 500,
+              "clientWidth": 390,
+              "excesso": 110
+            },
+            {
+              "selector": "div#root > div.min-h-screen.flex.items-center > div.w-full.max-w-3xl.relative",
+              "scrollWidth": 366,
+              "clientWidth": 356,
+              "excesso": 10
+            },
+            {
+              "selector": "div#root > div.min-h-screen.flex.items-center > div.w-full.max-w-3xl.relative > div.flex-1.relative.bg-[#1C1C1C]",
+              "scrollWidth": 366,
+              "clientWidth": 356,
+              "excesso": 10
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
+import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,17 +14,21 @@ import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
+import { AgendaEmptySlotCell } from '../components/agenda/AgendaEmptySlotCell';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
+import { mapError, formatUserFacingError } from '../utils/mapError';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
+import { copyBookingProductsToAppointment } from '../services/catalog';
 import { deleteAppointmentWithFinance } from '../services/scheduling';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
-import { formatDateForInput, formatLocalDateString } from '../utils/date';
+import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
+import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
-import { combineDateAndTime } from '../utils/date';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../utils/appointmentStatus';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
@@ -109,8 +114,11 @@ export const Agenda: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
+    /** Prefill ao clicar numa célula vazia da grade (profissional + horário) */
+    const [wizardPrefill, setWizardPrefill] = useState<{ professionalId: string; time: string } | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
@@ -300,52 +308,53 @@ export const Agenda: React.FC = () => {
         }
     }, [showNewAppointmentModal, selectedDate, selectedProfessionalIds, teamMembers, isStaff, teamMemberId]);
 
-    // Handle clientId and service from URL (coming from CRM history)
+    // Deep-link: ?new=true (QuickActions etc.) e clientId/service do CRM
     useEffect(() => {
         const clientIdParam = searchParams.get('clientId');
         const serviceNameParam = searchParams.get('service');
         const isNewQuery = searchParams.get('new') === 'true';
 
         if (isNewQuery) {
+            setWizardPrefill(null);
             setShowNewAppointmentModal(true);
-            // Limpar o parâmetro da URL para evitar reabrir ao atualizar
-            searchParams.delete('new');
-            navigate({ search: searchParams.toString() }, { replace: true });
-        } else if (showNewAppointmentModal) {
-            // Ensure URL has ?new=true if modal is open via state, so Layout hides nav
-            // But be careful not to trigger loop. 
-            // Better approach: when opening modal via button, use navigate.
+            // Preserva date= e demais params; só remove new
+            const next = new URLSearchParams(searchParams);
+            next.delete('new');
+            navigate({ search: next.toString() }, { replace: true });
         }
 
         if (clientIdParam && clients.length > 0) {
-            // Pre-select the client
             setSelectedClient(clientIdParam);
-
-            // Pre-select service if provided
             if (serviceNameParam && services.length > 0) {
                 const matchedService = services.find(s => s.name === serviceNameParam);
                 if (matchedService) {
                     setSelectedServices([matchedService.id]);
                 }
             }
-
-            // Open the new appointment modal
             setShowNewAppointmentModal(true);
         }
     }, [searchParams, clients, services]);
 
-    const fetchData = async () => {
-        await Promise.all([
-            fetchTeamMembers(),
-            fetchAppointments(),
-            fetchPublicBookings(),
-            fetchClients(),
-            fetchServices(),
-            fetchCategories(),
-            fetchBusinessProfile(),
-            fetchCheckoutData()
-        ]);
-        setLoading(false);
+    const fetchData = async (dateOverride?: Date) => {
+        setLoading(true);
+        setFetchError(null);
+        try {
+            await Promise.all([
+                fetchTeamMembers(),
+                fetchAppointments(dateOverride),
+                fetchPublicBookings(),
+                fetchClients(),
+                fetchServices(),
+                fetchCategories(),
+                fetchBusinessProfile(),
+                fetchCheckoutData()
+            ]);
+        } catch (error) {
+            logger.error('Error fetching agenda data', error);
+            setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar a agenda.')));
+        } finally {
+            setLoading(false);
+        }
     };
 
     const fetchCheckoutData = async () => {
@@ -379,11 +388,12 @@ export const Agenda: React.FC = () => {
         if (data) setTeamMembers(data);
     };
 
-    const fetchAppointments = async () => {
+    const fetchAppointments = async (dateOverride?: Date) => {
         if (!user) return;
-        const startOfDay = new Date(selectedDate);
+        const day = dateOverride ?? selectedDate;
+        const startOfDay = new Date(day);
         startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(selectedDate);
+        const endOfDay = new Date(day);
         endOfDay.setHours(23, 59, 59, 999);
         const now = new Date();
 
@@ -701,32 +711,25 @@ export const Agenda: React.FC = () => {
                 }
             }
 
-            if (booking.is_edit) {
-                await createAcceptedAppointmentFromBooking({
-                    businessId: user.id,
-                    clientId,
-                    professionalId: finalProfessionalId,
-                    serviceNames,
-                    bookingId: booking.id,
-                    appointmentTime: booking.appointment_time,
-                    totalPrice: booking.total_price,
-                    durationMinutes: booking.duration_minutes || 30,
-                    preservePublicBookingLink: true,
-                });
-            } else {
-                await createAcceptedAppointmentFromBooking({
-                    businessId: user.id,
-                    clientId,
-                    professionalId: finalProfessionalId,
-                    serviceNames,
-                    bookingId: booking.id,
-                    appointmentTime: booking.appointment_time,
-                    totalPrice: booking.total_price,
-                    durationMinutes: booking.duration_minutes || 30,
-                    preservePublicBookingLink: false,
-                });
-            }
+            const appointmentId = await createAcceptedAppointmentFromBooking({
+                businessId: user.id,
+                clientId,
+                professionalId: finalProfessionalId,
+                serviceNames,
+                bookingId: booking.id,
+                appointmentTime: booking.appointment_time,
+                totalPrice: booking.total_price,
+                durationMinutes: booking.duration_minutes || 30,
+                preservePublicBookingLink: !!booking.is_edit,
+            });
 
+            if (appointmentId) {
+                try {
+                    await copyBookingProductsToAppointment(booking.id, appointmentId);
+                } catch (productCopyError) {
+                    console.error('Failed to copy booking products:', productCopyError);
+                }
+            }
 
             await confirmPublicBooking(booking.id, user.id);
 
@@ -1009,14 +1012,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         return publicBookings.filter(booking => booking.professional_id === professionalId);
     };
 
-    // Generate time slots with half-hour intervals
-    const timeSlots = [];
-    for (let hour = 8; hour <= 20; hour++) {
-        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-        if (hour < 20) {
-            timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
-        }
-    }
+    const openNewAppointmentAt = (professionalId: string, time: string) => {
+        setWizardPrefill({ professionalId, time });
+        setShowNewAppointmentModal(true);
+    };
+
+    // Grade padrão 06:00–23:30; madrugada (00:00–05:59) só aparece se houver agendamento
+    const timeSlots = buildAgendaGridSlots(appointments.map((a) => a.appointment_time));
 
     // Filtrar profissionais exibidos (R27)
     // selectedProfessionalIds = [] significa "Todos" — disponível só para owner.
@@ -1104,49 +1106,68 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
     if (loading) {
         return (
-            <div className={`flex items-center justify-center h-screen ${colors.bg}`}>
-                <div className={`${colors.textSecondary} text-xl animate-pulse`}>Carregando agenda...</div>
+            <div className={`flex items-center justify-center h-screen ${colors.bg}`} role="status" aria-busy="true">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className={`w-8 h-8 animate-spin ${accent.text}`} aria-hidden="true" />
+                    <div className={`${colors.textSecondary} text-xl`}>Carregando agenda...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (fetchError) {
+        return (
+            <div className={`${colors.bg} min-h-screen flex items-center justify-center px-4`}>
+                <ErrorState
+                    title="Não foi possível carregar a agenda"
+                    message={fetchError}
+                    onRetry={() => { void fetchData(); }}
+                />
             </div>
         );
     }
 
     return (
         <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8`}>
-            {/* Header */}
-            <div className={`${classes.section} px-4 pt-6 md:px-6`}>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 className={`text-3xl md:text-4xl font-heading ${colors.text} uppercase`}>Agenda</h1>
-                        <p className={`${colors.textSecondary} mt-1`}>Gerencie os agendamentos por profissional</p>
-                    </div>
-                    <div className="flex gap-3 w-full md:w-auto">
-                        <Button
-                            variant="secondary"
-                            icon={<History />}
-                            onClick={() => setShowHistoryModal(true)}
-                            className="flex-1 md:flex-none"
-                        >
-                            <span className="hidden md:inline">Histórico</span>
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            icon={<Calendar />}
-                            onClick={() => setShowAllAppointmentsModal(true)}
-                            className="flex-1 md:flex-none"
-                        >
-                            <span className="hidden md:inline">Todos Agendamentos</span>
-                        </Button>
-                        <Button
-                            id="btn-new-appointment"
-                            variant="primary"
-                            icon={<Plus />}
-                            onClick={() => navigate('?new=true')}
-                            className="hidden md:flex"
-                        >
-                            Novo Agendamento
-                        </Button>
-                    </div>
-                </div>
+            <div className={`${classes.section} pt-2`}>
+                <PageHeader
+                    title="Agenda"
+                    subtitle="Gerencie os agendamentos por profissional"
+                    action={
+                        <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
+                            <Button
+                                variant="secondary"
+                                icon={<History />}
+                                onClick={() => setShowHistoryModal(true)}
+                                className="flex-1 md:flex-none"
+                                aria-label="Histórico"
+                            >
+                                <span className="hidden md:inline">Histórico</span>
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                icon={<Calendar />}
+                                onClick={() => setShowAllAppointmentsModal(true)}
+                                className="flex-1 md:flex-none"
+                                aria-label="Todos os agendamentos"
+                            >
+                                <span className="hidden md:inline">Todos Agendamentos</span>
+                            </Button>
+                            <Button
+                                id="btn-new-appointment"
+                                variant="primary"
+                                icon={<Plus />}
+                                onClick={() => {
+                                    setWizardPrefill(null);
+                                    setShowNewAppointmentModal(true);
+                                }}
+                                className="hidden md:flex"
+                            >
+                                Novo Agendamento
+                            </Button>
+                        </div>
+                    }
+                />
             </div>
 
             {/* --- Agendamentos Atrasados (Overdue) --- */}
@@ -1252,10 +1273,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     const newDateStr = formatLocalDateString(d);
                                     navigate(`/agenda?date=${newDateStr}`);
                                 }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} text-[var(--color-bg)] border-transparent shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
+                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} text-[var(--color-on-accent)] border-transparent shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
                             >
                                 <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
-                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-[var(--color-bg)]' : colors.text}`}>{dayNum}</span>
+                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-[var(--color-on-accent)]' : colors.text}`}>{dayNum}</span>
                             </button>
                         );
                     })}
@@ -1280,7 +1301,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 onClick={() => setSelectedProfessionalIds([])}
                                 className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
                             >
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
                                     <Users className="w-5 h-5" />
                                 </div>
                                 <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
@@ -1307,7 +1328,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                 className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[var(--shadow-card-accent)]` : colors.border}`}
                                             />
                                         ) : (
-                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-bg)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
                                                 {getInitials(member.name)}
                                             </div>
                                         )}
@@ -1364,7 +1385,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     )}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
-                                            <span className={`text-xs font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-bg)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
+                                            <span className={`text-xs font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-on-accent)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
                                                 {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
@@ -1458,7 +1479,15 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             if (dayApts.length === 0) {
                                 return (
                                     <Card variant="outlined">
-                                        <EmptyState icon={Calendar} message="Nenhum agendamento neste dia." ctaLabel="Novo Agendamento" onCta={() => navigate('?new=true')} />
+                                        <EmptyState
+                                            icon={Calendar}
+                                            message="Nenhum agendamento neste dia."
+                                            ctaLabel="Novo Agendamento"
+                                            onCta={() => {
+                                                setWizardPrefill(null);
+                                                setShowNewAppointmentModal(true);
+                                            }}
+                                        />
                                     </Card>
                                 );
                             }
@@ -1554,10 +1583,22 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                     ? appointments.filter(a => !a.professional_id).filter(matchesTime) : [];
                                                 const allCellApts = [...unassignedApts, ...aptsAtTime];
 
+                                                if (allCellApts.length === 0) {
+                                                    return (
+                                                        <AgendaEmptySlotCell
+                                                            key={`${member.id}-${time}`}
+                                                            time={time}
+                                                            professionalName={member.name}
+                                                            onClick={() => openNewAppointmentAt(member.id, time)}
+                                                            className={colors.divider}
+                                                        />
+                                                    );
+                                                }
+
                                                 return (
                                                     <div
                                                         key={`${member.id}-${time}`}
-                                                        className={`flex-1 min-w-0 border-r ${colors.divider} last:border-r-0 p-1 flex flex-col gap-1 hover:bg-[var(--color-card-hover)]`}
+                                                        className={`flex-1 min-w-0 border-r ${colors.divider} last:border-r-0 p-1 flex flex-col gap-1`}
                                                     >
                                                         {allCellApts.map(apt => {
                                                             const isUnassigned = !apt.professional_id;
@@ -1977,14 +2018,23 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 <AppointmentWizard
                     onClose={() => {
                         setShowNewAppointmentModal(false);
-                        navigate(location.pathname, { replace: true });
+                        setWizardPrefill(null);
                     }}
-                    onSuccess={(date) => {
+                    onSuccess={async (date) => {
                         const newDateStr = formatLocalDateString(date);
                         setShowNewAppointmentModal(false);
+                        setWizardPrefill(null);
+                        const nextDate = new Date(date);
+                        nextDate.setHours(0, 0, 0, 0);
+                        setSelectedDate(nextDate);
                         navigate(`/agenda?date=${newDateStr}`, { replace: true });
+                        // Refetch com a data do agendamento (evita closure stale de selectedDate)
+                        await fetchData(nextDate);
+                        showToast('Agendamento criado com sucesso!', 'success');
                     }}
                     initialDate={selectedDate}
+                    initialProfessionalId={wizardPrefill?.professionalId}
+                    initialTime={wizardPrefill?.time}
                     teamMembers={teamMembers}
                     services={services}
                     categories={categories}

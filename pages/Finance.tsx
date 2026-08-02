@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -14,7 +14,7 @@ import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
 import { formatCurrency } from '../utils/formatters';
-import { combineDateAndTime, getTodayDateString } from '../utils/date';
+import { combineDateAndTime, formatLocalDateString, getTodayDateString } from '../utils/date';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';

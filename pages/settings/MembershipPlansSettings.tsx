@@ -136,7 +136,7 @@ export const MembershipPlansSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-5xl pb-20 md:pb-0 space-y-6">
+            <div className="w-full pb-20 md:pb-0 space-y-6">
                 <header className="flex items-start justify-between gap-4">
                     <div>
                         <h1 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase mb-2`}>

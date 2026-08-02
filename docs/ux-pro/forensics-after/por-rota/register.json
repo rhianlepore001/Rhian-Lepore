@@ -1,0 +1,533 @@
+{
+  "rota": "register",
+  "resumo": {
+    "rota": "register",
+    "grupo": "auth",
+    "execucoes": 2,
+    "maxTamanhosFonte": 4,
+    "maxEspacamentos": 11,
+    "maxForaDaEscala4px": 3,
+    "maxRaios": 4,
+    "maxSombras": 1,
+    "maxLargurasBorda": 1,
+    "totalViolacoesContraste": 6,
+    "maxAlvosPequenos": 8,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 1
+  },
+  "execucoes": [
+    {
+      "persona": "anon",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "register",
+      "grupo": "auth",
+      "hashSolicitado": "/register",
+      "hashFinal": "#/register",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": null,
+      "modoSolicitadoBateComEfetivo": null,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/register",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 87,
+        "tipografia": {
+          "combinacoesDistintas": 8,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 600 / 16px": 10,
+            "12px / 400 / 16px": 9,
+            "14px / 400 / 14px": 2,
+            "24px / 400 / 32px": 1,
+            "18px / 400 / 18px": 1,
+            "14px / 400 / 20px": 1,
+            "14px / 600 / 20px": 1,
+            "12px / 700 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 20,
+            "14px": 4,
+            "24px": 1,
+            "18px": 1
+          },
+          "pesos": {
+            "400": 14,
+            "600": 11,
+            "700": 1
+          },
+          "alturasLinha": {
+            "16px": 20,
+            "14px": 2,
+            "20px": 2,
+            "32px": 1,
+            "18px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 18,
+            "Inter": 5,
+            "Chivo": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "16px": 21,
+            "12px": 12,
+            "20px": 12,
+            "6px": 10,
+            "8px": 10,
+            "24px": 7,
+            "32px": 6,
+            "40px": 4,
+            "2px": 2,
+            "4px": 2,
+            "10px": 2
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 10
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 1,
+          "raios": {
+            "6px": 8,
+            "8px": 3,
+            "3.35544e+07px": 1,
+            "16px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 47
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 23,
+          "violacoes": 3,
+          "violacoesTextoNormal": 3,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.21,
+          "detalhes": [
+            {
+              "selector": "div.grid.grid-cols-2.gap-3 > button.flex.items-center.gap-3 > div.text-left > p.font-heading.text-sm.uppercase",
+              "texto": "Studio",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(37, 37, 37)",
+              "fontSize": "14px",
+              "fontWeight": "400",
+              "textoGrande": false,
+              "razao": 4.21,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-2.gap-3 > button.flex.items-center.gap-3 > div.text-left > p.font-mono.text-xs.text-current",
+              "texto": "Beauty salon",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(37, 37, 37)",
+              "fontSize": "12px",
+              "fontWeight": "400",
+              "textoGrande": false,
+              "razao": 4.21,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "texto": "Portugal · EUR",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(37, 37, 37)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.21,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 8,
+          "semNomeAcessivel": 1,
+          "detalhes": [
+            {
+              "selector": "div > div.relative > div.flex.items-center.h-11 > button.flex.items-center.gap-1",
+              "rotulo": "Selecionar país",
+              "largura": 53.9,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div > div.relative > div.flex.items-center.h-11 > input.flex-1.min-w-0.h-full",
+              "rotulo": "",
+              "largura": 198.9,
+              "altura": 42,
+              "temNomeAcessivel": false
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "rotulo": "Brasil · BRL",
+              "largura": 142,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "rotulo": "Portugal · EUR",
+              "largura": 142,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.w-full > div.relative > span.absolute.right-3.top-1/2 > button.pointer-events-auto.text-[var(--color-text-muted)].hover:text-theme-text",
+              "rotulo": "Mostrar confirmação",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "form.space-y-6 > div.pt-2.space-y-4 > p.text-center.font-mono.text-xs > a.underline.hover:text-[var(--color-text-secondary)].transition-colors",
+              "rotulo": "Termos",
+              "largura": 50.4,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "form.space-y-6 > div.pt-2.space-y-4 > p.text-center.font-mono.text-xs > a.underline.hover:text-[var(--color-text-secondary)].transition-colors",
+              "rotulo": "Privacidade",
+              "largura": 92.4,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "form.space-y-6 > div.pt-2.space-y-4 > p.text-center.border-t.border-[var(--color-border)] > a.font-bold.transition-colors.text-accent-gold/70",
+              "rotulo": "Fazer login",
+              "largura": 85.8,
+              "altura": 16,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 3,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "50": 1,
+            "199": 1,
+            "201": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 199,
+              "x2": 201,
+              "delta": 2,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "form.space-y-6 > div > div.grid.grid-cols-2.gap-3 > button.flex.items-center.gap-3",
+              "x": 201,
+              "largura": 140
+            },
+            {
+              "selector": "div > div.relative > div.flex.items-center.h-11 > button.flex.items-center.gap-1",
+              "x": 50,
+              "largura": 53.9
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "x": 199,
+              "largura": 142
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "div#root > div.min-h-screen.flex.items-center",
+              "scrollWidth": 500,
+              "clientWidth": 390,
+              "excesso": 110
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "anon",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "register",
+      "grupo": "auth",
+      "hashSolicitado": "/register",
+      "hashFinal": "#/register",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": null,
+      "modoSolicitadoBateComEfetivo": null,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/register",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 87,
+        "tipografia": {
+          "combinacoesDistintas": 8,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 600 / 16px": 10,
+            "12px / 400 / 16px": 9,
+            "14px / 400 / 14px": 2,
+            "24px / 400 / 32px": 1,
+            "18px / 400 / 18px": 1,
+            "14px / 400 / 20px": 1,
+            "14px / 600 / 20px": 1,
+            "12px / 700 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 20,
+            "14px": 4,
+            "24px": 1,
+            "18px": 1
+          },
+          "pesos": {
+            "400": 14,
+            "600": 11,
+            "700": 1
+          },
+          "alturasLinha": {
+            "16px": 20,
+            "14px": 2,
+            "20px": 2,
+            "32px": 1,
+            "18px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 18,
+            "Inter": 5,
+            "Chivo": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "16px": 21,
+            "12px": 12,
+            "20px": 12,
+            "6px": 10,
+            "8px": 10,
+            "24px": 7,
+            "40px": 6,
+            "32px": 4,
+            "2px": 2,
+            "4px": 2,
+            "10px": 2
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 10
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 1,
+          "raios": {
+            "6px": 8,
+            "8px": 3,
+            "3.35544e+07px": 1,
+            "16px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 47
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 23,
+          "violacoes": 3,
+          "violacoesTextoNormal": 3,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.21,
+          "detalhes": [
+            {
+              "selector": "div.grid.grid-cols-2.gap-3 > button.flex.items-center.gap-3 > div.text-left > p.font-heading.text-sm.uppercase",
+              "texto": "Studio",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(37, 37, 37)",
+              "fontSize": "14px",
+              "fontWeight": "400",
+              "textoGrande": false,
+              "razao": 4.21,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-2.gap-3 > button.flex.items-center.gap-3 > div.text-left > p.font-mono.text-xs.text-current",
+              "texto": "Beauty salon",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(37, 37, 37)",
+              "fontSize": "12px",
+              "fontWeight": "400",
+              "textoGrande": false,
+              "razao": 4.21,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "texto": "Portugal · EUR",
+              "cor": "rgb(143, 133, 116)",
+              "fundo": "rgb(37, 37, 37)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.21,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 8,
+          "semNomeAcessivel": 1,
+          "detalhes": [
+            {
+              "selector": "div > div.relative > div.flex.items-center.h-11 > button.flex.items-center.gap-1",
+              "rotulo": "Selecionar país",
+              "largura": 53.9,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div > div.relative > div.flex.items-center.h-11 > input.flex-1.min-w-0.h-full",
+              "rotulo": "",
+              "largura": 189.9,
+              "altura": 42,
+              "temNomeAcessivel": false
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "rotulo": "Brasil · BRL",
+              "largura": 137.5,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "rotulo": "Portugal · EUR",
+              "largura": 137.5,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.w-full > div.relative > span.absolute.right-3.top-1/2 > button.pointer-events-auto.text-[var(--color-text-muted)].hover:text-theme-text",
+              "rotulo": "Mostrar confirmação",
+              "largura": 16,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "form.space-y-6 > div.pt-2.space-y-4 > p.text-center.font-mono.text-xs > a.underline.hover:text-[var(--color-text-secondary)].transition-colors",
+              "rotulo": "Termos",
+              "largura": 50.4,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "form.space-y-6 > div.pt-2.space-y-4 > p.text-center.font-mono.text-xs > a.underline.hover:text-[var(--color-text-secondary)].transition-colors",
+              "rotulo": "Privacidade",
+              "largura": 92.4,
+              "altura": 16,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "form.space-y-6 > div.pt-2.space-y-4 > p.text-center.border-t.border-[var(--color-border)] > a.font-bold.transition-colors.text-accent-gold/70",
+              "rotulo": "Fazer login",
+              "largura": 85.8,
+              "altura": 16,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 3,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "426": 1,
+            "726": 1,
+            "570.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "form.space-y-6 > div > div.grid.grid-cols-2.gap-3 > button.flex.items-center.gap-3",
+              "x": 726,
+              "largura": 289
+            },
+            {
+              "selector": "div > div.relative > div.flex.items-center.h-11 > button.flex.items-center.gap-1",
+              "x": 426,
+              "largura": 53.9
+            },
+            {
+              "selector": "div.space-y-5 > div > div.flex.gap-2 > button.flex-1.py-3.text-xs",
+              "x": 570.5,
+              "largura": 137.5
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 0,
+          "detalhes": []
+        }
+      }
+    }
+  ]
+}

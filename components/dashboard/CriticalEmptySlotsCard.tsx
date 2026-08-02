@@ -37,28 +37,30 @@ export const CriticalEmptySlotsCard: React.FC = () => {
       : status.successBorder;
 
   return (
-    <Card variant="outlined" className="overflow-hidden">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl ${accent.bgDim} ${accent.text}`}>
+    <Card variant="outlined">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className={`p-2.5 rounded-xl shrink-0 ${accent.bgDim} ${accent.text}`}>
             <Calendar className="w-5 h-5" />
           </div>
-          <div>
-            <h2 className={`font-heading text-base font-bold ${colors.text}`}>Horários Vagos Críticos</h2>
+          <div className="min-w-0">
+            <h2 className={`font-heading text-base font-bold ${colors.text} text-pretty`}>
+              Horários Vagos Críticos
+            </h2>
             <p className={`text-sm ${colors.textSecondary}`}>Próximos 7 dias</p>
           </div>
         </div>
 
         {isLoading || !data ? (
-          <div className={`h-7 w-20 rounded-full ${colors.surface} animate-pulse`} />
+          <div className={`h-7 w-20 rounded-full ${colors.surface} animate-pulse shrink-0`} />
         ) : (
           <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${statusBg} ${statusBorder} ${statusColor}`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold shrink-0 ${statusBg} ${statusBorder} ${statusColor}`}
           >
             {overallSeverity === 'ok' ? (
-              <TrendingUp className="w-3.5 h-3.5" />
+              <TrendingUp className="w-3.5 h-3.5 shrink-0" />
             ) : (
-              <AlertCircle className="w-3.5 h-3.5" />
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             )}
             {overallSeverity === 'critical'
               ? `${criticalCount} críticos`

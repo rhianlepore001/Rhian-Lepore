@@ -1,0 +1,2324 @@
+{
+  "rota": "produtos",
+  "resumo": {
+    "rota": "produtos",
+    "grupo": "nucleo",
+    "execucoes": 8,
+    "maxTamanhosFonte": 5,
+    "maxEspacamentos": 14,
+    "maxForaDaEscala4px": 3,
+    "maxRaios": 8,
+    "maxSombras": 1,
+    "maxLargurasBorda": 2,
+    "totalViolacoesContraste": 6,
+    "maxAlvosPequenos": 14,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 1
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 106,
+        "tipografia": {
+          "combinacoesDistintas": 9,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 5,
+            "12px / 700 / 16px": 4,
+            "14px / 600 / 20px": 3,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "20px / 700 / 28px": 1,
+            "16px / 700 / 24px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 11,
+            "14px": 4,
+            "18px": 1,
+            "20px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 6,
+            "600": 4,
+            "700": 8
+          },
+          "alturasLinha": {
+            "16px": 10,
+            "20px": 4,
+            "18px": 1,
+            "12px": 1,
+            "28px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 13,
+            "JetBrains Mono": 3,
+            "Chivo": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 40,
+            "12px": 22,
+            "16px": 16,
+            "4px": 8,
+            "10px": 8,
+            "20px": 4,
+            "6px": 4,
+            "2px": 2,
+            "64px": 1,
+            "128px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 6,
+            "12px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "6px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 30,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 18,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 4,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.border-t.border-[var(--color-divider)].pt-3 > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Mais opções",
+              "largura": 40,
+              "altura": 44,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "12": 1,
+            "198": 1,
+            "302": 1,
+            "321": 1,
+            "189.6": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.md:hidden.space-y-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.border-t.border-[var(--color-divider)].pt-3 > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 189.6,
+              "largura": 55.6
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.border-t.border-[var(--color-divider)].pt-3 > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 321,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 92,
+        "tipografia": {
+          "combinacoesDistintas": 7,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 4,
+            "12px / 500 / 16px": 3,
+            "14px / 600 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 700 / 20px": 1,
+            "20px / 700 / 28px": 1,
+            "16px / 700 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 7,
+            "14px": 3,
+            "18px": 1,
+            "20px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 4,
+            "600": 2,
+            "700": 7
+          },
+          "alturasLinha": {
+            "16px": 7,
+            "20px": 3,
+            "18px": 1,
+            "28px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 9,
+            "Chivo": 2,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "8px": 38,
+            "12px": 18,
+            "16px": 15,
+            "4px": 5,
+            "2px": 2,
+            "10px": 2,
+            "20px": 2,
+            "64px": 1,
+            "128px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 4,
+            "8px": 3,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "6px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 30,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 13,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 3,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "12": 1,
+            "198": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.md:hidden.space-y-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 150,
+        "tipografia": {
+          "combinacoesDistintas": 12,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 14,
+            "12px / 700 / 16px": 7,
+            "12px / 600 / 16px": 5,
+            "12px / 500 / 16px": 2,
+            "12px / 700 / 12px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 600 / 20px": 1
+          },
+          "tamanhos": {
+            "12px": 17,
+            "14px": 16,
+            "24px": 3,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 18,
+            "600": 6,
+            "700": 12,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 15,
+            "16px": 14,
+            "24px": 3,
+            "12px": 2,
+            "17.5px": 1,
+            "15px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 20,
+            "JetBrains Mono": 14,
+            "Chivo": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 49,
+            "16px": 46,
+            "8px": 36,
+            "10px": 32,
+            "4px": 18,
+            "6px": 12,
+            "24px": 9,
+            "2px": 4,
+            "32px": 3,
+            "20px": 2,
+            "80px": 1,
+            "256px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 32
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 14,
+            "3.35544e+07px": 4,
+            "6px": 4,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 41,
+            "2px": 9
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 37,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 14,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Vender",
+              "largura": 62.4,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Editar",
+              "largura": 55.6,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Mais opções",
+              "largura": 40,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 9,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 1,
+            "281": 2,
+            "1086.8": 1,
+            "1222.8": 1,
+            "1204.7": 1,
+            "1268.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 280,
+              "x2": 281,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 2
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1086.8,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.hidden.md:block > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > thead > tr.sticky.top-0.z-10",
+              "x": 281,
+              "largura": 1134
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > tbody > tr.border-b.border-[var(--color-divider)].last:border-b-0",
+              "x": 281,
+              "largura": 1134
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1204.7,
+              "largura": 55.6
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1268.3,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 122,
+        "tipografia": {
+          "combinacoesDistintas": 11,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 11,
+            "12px / 700 / 16px": 5,
+            "12px / 600 / 16px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "24px / 700 / 32px": 1,
+            "12px / 700 / 12px": 1
+          },
+          "tamanhos": {
+            "14px": 12,
+            "12px": 10,
+            "24px": 3,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 14,
+            "600": 2,
+            "700": 9,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 11,
+            "16px": 8,
+            "24px": 3,
+            "17.5px": 1,
+            "15px": 1,
+            "32px": 1,
+            "12px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 14,
+            "JetBrains Mono": 9,
+            "Chivo": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 39,
+            "16px": 32,
+            "8px": 30,
+            "10px": 22,
+            "4px": 10,
+            "24px": 9,
+            "2px": 4,
+            "6px": 4,
+            "32px": 3,
+            "80px": 1,
+            "256px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 22
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 9,
+            "6px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 41,
+            "2px": 5
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 26,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 10,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Vender",
+              "largura": 62.4,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 7,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "280": 1,
+            "281": 2,
+            "1022.3": 1,
+            "1158.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 280,
+              "x2": 281,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 2
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1022.3,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.hidden.md:block > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > thead > tr.sticky.top-0.z-10",
+              "x": 281,
+              "largura": 1134
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > tbody > tr.border-b.border-[var(--color-divider)].last:border-b-0",
+              "x": 281,
+              "largura": 1134
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 110,
+        "tipografia": {
+          "combinacoesDistintas": 9,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 5,
+            "12px / 700 / 16px": 4,
+            "14px / 600 / 20px": 3,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "20px / 700 / 28px": 1,
+            "16px / 700 / 24px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 11,
+            "14px": 4,
+            "18px": 1,
+            "20px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 6,
+            "600": 4,
+            "700": 8
+          },
+          "alturasLinha": {
+            "16px": 10,
+            "20px": 4,
+            "18px": 1,
+            "12px": 1,
+            "28px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 13,
+            "JetBrains Mono": 3,
+            "Chivo": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 40,
+            "12px": 22,
+            "16px": 16,
+            "4px": 8,
+            "10px": 8,
+            "20px": 4,
+            "6px": 4,
+            "2px": 2,
+            "64px": 1,
+            "128px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 6,
+            "12px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "6px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 30,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 18,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.51,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 4,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.border-t.border-[var(--color-divider)].pt-3 > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Mais opções",
+              "largura": 40,
+              "altura": 44,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "12": 1,
+            "198": 1,
+            "302": 1,
+            "321": 1,
+            "189.6": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.md:hidden.space-y-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.border-t.border-[var(--color-divider)].pt-3 > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 189.6,
+              "largura": 55.6
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.border-t.border-[var(--color-divider)].pt-3 > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 321,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 96,
+        "tipografia": {
+          "combinacoesDistintas": 7,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 5,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 4,
+            "12px / 500 / 16px": 3,
+            "14px / 600 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 700 / 20px": 1,
+            "20px / 700 / 28px": 1,
+            "16px / 700 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 7,
+            "14px": 3,
+            "18px": 1,
+            "20px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 4,
+            "600": 2,
+            "700": 7
+          },
+          "alturasLinha": {
+            "16px": 7,
+            "20px": 3,
+            "18px": 1,
+            "28px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 9,
+            "Chivo": 2,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "8px": 38,
+            "12px": 18,
+            "16px": 15,
+            "4px": 5,
+            "2px": 2,
+            "10px": 2,
+            "20px": 2,
+            "64px": 1,
+            "128px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 4,
+            "8px": 3,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "6px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 30,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 13,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.51,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 3,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "12": 1,
+            "198": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.md:hidden.space-y-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 366
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 154,
+        "tipografia": {
+          "combinacoesDistintas": 12,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 14,
+            "12px / 700 / 16px": 7,
+            "12px / 600 / 16px": 5,
+            "12px / 500 / 16px": 2,
+            "12px / 700 / 12px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 600 / 20px": 1
+          },
+          "tamanhos": {
+            "12px": 17,
+            "14px": 16,
+            "24px": 3,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 18,
+            "600": 6,
+            "700": 12,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 15,
+            "16px": 14,
+            "24px": 3,
+            "12px": 2,
+            "17.5px": 1,
+            "15px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 20,
+            "JetBrains Mono": 14,
+            "Chivo": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 49,
+            "16px": 46,
+            "8px": 36,
+            "10px": 32,
+            "4px": 18,
+            "6px": 12,
+            "24px": 9,
+            "2px": 4,
+            "32px": 3,
+            "20px": 2,
+            "80px": 1,
+            "256px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 32
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 14,
+            "3.35544e+07px": 4,
+            "6px": 4,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 41,
+            "2px": 9
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 37,
+          "violacoes": 4,
+          "violacoesTextoNormal": 4,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.22,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Crescimento",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Sistema",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 14,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Vender",
+              "largura": 62.4,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Editar",
+              "largura": 55.6,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Mais opções",
+              "largura": 40,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 9,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 1,
+            "281": 2,
+            "1086.8": 1,
+            "1222.8": 1,
+            "1204.7": 1,
+            "1268.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 280,
+              "x2": 281,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 2
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1086.8,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.hidden.md:block > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > thead > tr.sticky.top-0.z-10",
+              "x": 281,
+              "largura": 1134
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > tbody > tr.border-b.border-[var(--color-divider)].last:border-b-0",
+              "x": 281,
+              "largura": 1134
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1204.7,
+              "largura": 55.6
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1268.3,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "produtos",
+      "grupo": "nucleo",
+      "hashSolicitado": "/produtos",
+      "hashFinal": "#/produtos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/produtos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 126,
+        "tipografia": {
+          "combinacoesDistintas": 11,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 11,
+            "12px / 700 / 16px": 5,
+            "12px / 600 / 16px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "24px / 700 / 32px": 1,
+            "12px / 700 / 12px": 1
+          },
+          "tamanhos": {
+            "14px": 12,
+            "12px": 10,
+            "24px": 3,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 14,
+            "600": 2,
+            "700": 9,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 11,
+            "16px": 8,
+            "24px": 3,
+            "17.5px": 1,
+            "15px": 1,
+            "32px": 1,
+            "12px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 14,
+            "JetBrains Mono": 9,
+            "Chivo": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 39,
+            "16px": 32,
+            "8px": 30,
+            "10px": 22,
+            "4px": 10,
+            "24px": 9,
+            "2px": 4,
+            "6px": 4,
+            "32px": 3,
+            "80px": 1,
+            "256px": 1,
+            "40px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 22
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 9,
+            "6px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 41,
+            "2px": 5
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 26,
+          "violacoes": 2,
+          "violacoesTextoNormal": 2,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.22,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 10,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "tr.border-b.border-[var(--color-divider)].last:border-b-0 > td.px-4.py-2.5.text-sm > div.flex.items-center.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Vender",
+              "largura": 62.4,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 7,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "280": 1,
+            "281": 2,
+            "1022.3": 1,
+            "1158.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 280,
+              "x2": 281,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 2
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1022.3,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-4.md:space-y-6 > div.hidden.md:block > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > thead > tr.sticky.top-0.z-10",
+              "x": 281,
+              "largura": 1134
+            },
+            {
+              "selector": "div.overflow-x-auto > table.w-full.border-collapse > tbody > tr.border-b.border-[var(--color-divider)].last:border-b-0",
+              "x": 281,
+              "largura": 1134
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

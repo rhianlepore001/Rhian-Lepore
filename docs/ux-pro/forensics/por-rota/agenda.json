@@ -1,0 +1,3822 @@
+{
+  "rota": "agenda",
+  "resumo": {
+    "rota": "agenda",
+    "grupo": "nucleo",
+    "execucoes": 8,
+    "maxTamanhosFonte": 6,
+    "maxEspacamentos": 13,
+    "maxForaDaEscala4px": 3,
+    "maxRaios": 7,
+    "maxSombras": 1,
+    "maxLargurasBorda": 2,
+    "totalViolacoesContraste": 54,
+    "maxAlvosPequenos": 13,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 1
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 153,
+        "tipografia": {
+          "combinacoesDistintas": 10,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 9,
+            "12px / 500 / 16px": 8,
+            "18px / 700 / 28px": 7,
+            "14px / 700 / 20px": 5,
+            "14px / 600 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "30px / 500 / 36px": 1,
+            "16px / 500 / 24px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 19,
+            "18px": 8,
+            "14px": 7,
+            "30px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 11,
+            "600": 3,
+            "700": 22
+          },
+          "alturasLinha": {
+            "16px": 18,
+            "20px": 7,
+            "28px": 7,
+            "18px": 1,
+            "12px": 1,
+            "36px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 24,
+            "Chivo": 10,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 51,
+            "16px": 25,
+            "12px": 24,
+            "4px": 10,
+            "2px": 8,
+            "24px": 8,
+            "10px": 8,
+            "20px": 8,
+            "6px": 5,
+            "40px": 2,
+            "64px": 1,
+            "128px": 1,
+            "32px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 5
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 12,
+            "16px": 11,
+            "8px": 6,
+            "12px": 4,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 8
+          },
+          "largurasBorda": {
+            "1px": 65,
+            "2px": 44
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 36,
+          "violacoes": 1,
+          "violacoesTextoNormal": 1,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 12,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "seg27",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "ter28",
+              "largura": 27.2,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qua29",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qui30",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sex31",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sáb1",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "dom2",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 19,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "28": 3,
+            "36": 1,
+            "82": 1,
+            "128": 1,
+            "199": 1,
+            "210": 1,
+            "220": 1,
+            "302": 1,
+            "312": 1,
+            "316": 1,
+            "404": 1,
+            "115.1": 1,
+            "148.3": 1,
+            "181.4": 1,
+            "214.6": 1,
+            "247.7": 1,
+            "280.9": 1,
+            "48.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 28,
+              "largura": 163
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 199,
+              "largura": 163
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 28,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 82,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 115.1,
+              "largura": 27.2
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 148.3,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 181.4,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 214.6,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 247.7,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 280.9,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 316,
+              "largura": 46
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.w-14.h-14.rounded-full",
+              "x": 36,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 128,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 220,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 404,
+              "largura": 56
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.md:hidden.px-4.pb-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 48.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 145,
+        "tipografia": {
+          "combinacoesDistintas": 9,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 8,
+            "12px / 700 / 16px": 8,
+            "18px / 700 / 28px": 7,
+            "14px / 700 / 20px": 5,
+            "14px / 600 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "30px / 500 / 36px": 1,
+            "16px / 500 / 24px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 17,
+            "18px": 8,
+            "14px": 7,
+            "30px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 11,
+            "600": 3,
+            "700": 20
+          },
+          "alturasLinha": {
+            "16px": 17,
+            "20px": 7,
+            "28px": 7,
+            "18px": 1,
+            "36px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 23,
+            "Chivo": 10,
+            "JetBrains Mono": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 49,
+            "16px": 25,
+            "12px": 24,
+            "2px": 8,
+            "24px": 8,
+            "4px": 8,
+            "10px": 8,
+            "20px": 8,
+            "6px": 5,
+            "40px": 2,
+            "64px": 1,
+            "128px": 1,
+            "32px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 5
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "16px": 11,
+            "3.35544e+07px": 10,
+            "8px": 6,
+            "12px": 4,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 8
+          },
+          "largurasBorda": {
+            "1px": 65,
+            "2px": 36
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 34,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 12,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "seg27",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "ter28",
+              "largura": 27.2,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qua29",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qui30",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sex31",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sáb1",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "dom2",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 18,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "28": 3,
+            "36": 1,
+            "82": 1,
+            "128": 1,
+            "199": 1,
+            "210": 1,
+            "220": 1,
+            "302": 1,
+            "312": 1,
+            "316": 1,
+            "115.1": 1,
+            "148.3": 1,
+            "181.4": 1,
+            "214.6": 1,
+            "247.7": 1,
+            "280.9": 1,
+            "48.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 28,
+              "largura": 163
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 199,
+              "largura": 163
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 28,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 82,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 115.1,
+              "largura": 27.2
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 148.3,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 181.4,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 214.6,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 247.7,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 280.9,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 316,
+              "largura": 46
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 36,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 128,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 220,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.md:hidden.px-4.pb-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 48.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 565,
+        "tipografia": {
+          "combinacoesDistintas": 15,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 24,
+            "14px / 500 / 20px": 9,
+            "12px / 500 / 16px": 9,
+            "14px / 700 / 20px": 8,
+            "20px / 700 / 28px": 7,
+            "12px / 600 / 16px": 3,
+            "14px / 600 / 20px": 3,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "36px / 500 / 40px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 38,
+            "14px": 21,
+            "20px": 7,
+            "24px": 2,
+            "16px": 2,
+            "36px": 1
+          },
+          "pesos": {
+            "500": 22,
+            "600": 6,
+            "700": 42,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 36,
+            "20px": 20,
+            "28px": 7,
+            "24px": 4,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "40px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 57,
+            "Chivo": 11,
+            "JetBrains Mono": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "4px": 599,
+            "8px": 55,
+            "12px": 51,
+            "6px": 38,
+            "16px": 18,
+            "24px": 17,
+            "2px": 8,
+            "20px": 8,
+            "32px": 7,
+            "10px": 6,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 38
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 14,
+            "8px": 12,
+            "16px": 10,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 7
+          },
+          "largurasBorda": {
+            "1px": 256,
+            "2px": 45
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 71,
+          "violacoes": 1,
+          "violacoesTextoNormal": 1,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 13,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 21,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "304": 1,
+            "312": 1,
+            "358": 1,
+            "404": 1,
+            "496": 1,
+            "588": 1,
+            "680": 1,
+            "1346": 1,
+            "1094.8": 1,
+            "1222.8": 1,
+            "848.1": 1,
+            "983.2": 1,
+            "498.8": 1,
+            "639.7": 1,
+            "780.6": 1,
+            "921.4": 1,
+            "1062.3": 1,
+            "1203.1": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 496,
+              "x2": 498.8,
+              "delta": 2.8,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1094.8,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 848.1,
+              "largura": 123.1
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 983.2,
+              "largura": 204
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 304,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 358,
+              "largura": 134.8
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 498.8,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 639.7,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 780.6,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 921.4,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1062.3,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1203.1,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 1346,
+              "largura": 46
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 404,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 496,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 588,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 680,
+              "largura": 56
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 42,
+              "clientWidth": 40,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 325,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 23,
+            "12px / 500 / 16px": 9,
+            "14px / 500 / 20px": 7,
+            "20px / 700 / 28px": 7,
+            "14px / 700 / 20px": 5,
+            "14px / 600 / 20px": 3,
+            "24px / 900 / 24px": 1,
+            "12px / 600 / 16px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "36px / 500 / 40px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 34,
+            "14px": 16,
+            "20px": 7,
+            "24px": 2,
+            "16px": 2,
+            "36px": 1
+          },
+          "pesos": {
+            "500": 20,
+            "600": 4,
+            "700": 37,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 33,
+            "20px": 15,
+            "28px": 7,
+            "24px": 4,
+            "17.5px": 1,
+            "15px": 1,
+            "40px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 49,
+            "Chivo": 11,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "4px": 159,
+            "12px": 45,
+            "8px": 43,
+            "6px": 38,
+            "24px": 17,
+            "16px": 12,
+            "2px": 8,
+            "20px": 8,
+            "32px": 7,
+            "10px": 6,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 38
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 12,
+            "8px": 10,
+            "16px": 10,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 7
+          },
+          "largurasBorda": {
+            "1px": 148,
+            "2px": 37
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 62,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 11,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 20,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "304": 1,
+            "312": 1,
+            "358": 1,
+            "404": 1,
+            "496": 1,
+            "588": 1,
+            "1346": 1,
+            "1030.3": 1,
+            "1158.3": 1,
+            "848.1": 1,
+            "983.2": 1,
+            "498.8": 1,
+            "639.7": 1,
+            "780.6": 1,
+            "921.4": 1,
+            "1062.3": 1,
+            "1203.1": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 496,
+              "x2": 498.8,
+              "delta": 2.8,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1030.3,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 848.1,
+              "largura": 123.1
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 983.2,
+              "largura": 204
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 304,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 358,
+              "largura": 134.8
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 498.8,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 639.7,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 780.6,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 921.4,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1062.3,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1203.1,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 1346,
+              "largura": 46
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 404,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 496,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 588,
+              "largura": 56
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 157,
+        "tipografia": {
+          "combinacoesDistintas": 10,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 9,
+            "12px / 500 / 16px": 8,
+            "18px / 700 / 28px": 7,
+            "14px / 700 / 20px": 5,
+            "14px / 600 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "30px / 500 / 36px": 1,
+            "16px / 500 / 24px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 19,
+            "18px": 8,
+            "14px": 7,
+            "30px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 11,
+            "600": 3,
+            "700": 22
+          },
+          "alturasLinha": {
+            "16px": 18,
+            "20px": 7,
+            "28px": 7,
+            "18px": 1,
+            "12px": 1,
+            "36px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 24,
+            "Chivo": 10,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 51,
+            "16px": 25,
+            "12px": 24,
+            "4px": 10,
+            "2px": 8,
+            "24px": 8,
+            "10px": 8,
+            "20px": 8,
+            "6px": 5,
+            "40px": 2,
+            "64px": 1,
+            "128px": 1,
+            "32px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 5
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 12,
+            "16px": 11,
+            "8px": 6,
+            "12px": 4,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 8
+          },
+          "largurasBorda": {
+            "1px": 65,
+            "2px": 44
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 36,
+          "violacoes": 12,
+          "violacoesTextoNormal": 12,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#btn-new-appointment > span.truncate",
+              "texto": "Novo Agendamento",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "14px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0 > span.text-xs.sm:text-xs.font-medium",
+              "texto": "dom",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0 > span.text-lg.sm:text-xl.font-heading",
+              "texto": "2",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "18px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Todos",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Bob",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Bob",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Diego",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Marcos",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.items-center > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Novo Agendamento",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > span.text-xs.font-bold.tracking-tight",
+              "texto": "Agenda",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 12,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "seg27",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "ter28",
+              "largura": 27.2,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qua29",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qui30",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sex31",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sáb1",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "dom2",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 19,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "28": 3,
+            "36": 1,
+            "82": 1,
+            "128": 1,
+            "199": 1,
+            "210": 1,
+            "220": 1,
+            "302": 1,
+            "312": 1,
+            "316": 1,
+            "404": 1,
+            "115.1": 1,
+            "148.3": 1,
+            "181.4": 1,
+            "214.6": 1,
+            "247.7": 1,
+            "280.9": 1,
+            "48.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 28,
+              "largura": 163
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 199,
+              "largura": 163
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 28,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 82,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 115.1,
+              "largura": 27.2
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 148.3,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 181.4,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 214.6,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 247.7,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 280.9,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 316,
+              "largura": 46
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.w-14.h-14.rounded-full",
+              "x": 36,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 128,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 220,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 404,
+              "largura": 56
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.md:hidden.px-4.pb-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 48.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 149,
+        "tipografia": {
+          "combinacoesDistintas": 9,
+          "tamanhosDistintos": 5,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 500 / 16px": 8,
+            "12px / 700 / 16px": 8,
+            "18px / 700 / 28px": 7,
+            "14px / 700 / 20px": 5,
+            "14px / 600 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "30px / 500 / 36px": 1,
+            "16px / 500 / 24px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 17,
+            "18px": 8,
+            "14px": 7,
+            "30px": 1,
+            "16px": 1
+          },
+          "pesos": {
+            "500": 11,
+            "600": 3,
+            "700": 20
+          },
+          "alturasLinha": {
+            "16px": 17,
+            "20px": 7,
+            "28px": 7,
+            "18px": 1,
+            "36px": 1,
+            "24px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 23,
+            "Chivo": 10,
+            "JetBrains Mono": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 49,
+            "16px": 25,
+            "12px": 24,
+            "2px": 8,
+            "24px": 8,
+            "4px": 8,
+            "10px": 8,
+            "20px": 8,
+            "6px": 5,
+            "40px": 2,
+            "64px": 1,
+            "128px": 1,
+            "32px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 5
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "16px": 11,
+            "3.35544e+07px": 10,
+            "8px": 6,
+            "12px": 4,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 8
+          },
+          "largurasBorda": {
+            "1px": 65,
+            "2px": 36
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 34,
+          "violacoes": 11,
+          "violacoesTextoNormal": 11,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.13,
+          "detalhes": [
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#btn-new-appointment > span.truncate",
+              "texto": "Novo Agendamento",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "14px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0 > span.text-xs.sm:text-xs.font-medium",
+              "texto": "dom",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0 > span.text-lg.sm:text-xl.font-heading",
+              "texto": "2",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "18px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Bob",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "texto": "BF",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Você",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Diego",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Marcos",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.items-center > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Novo Agendamento",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > span.text-xs.font-bold.tracking-tight",
+              "texto": "Agenda",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 12,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "seg27",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "ter28",
+              "largura": 27.2,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qua29",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "qui30",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sex31",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "sáb1",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "rotulo": "dom2",
+              "largura": 27.1,
+              "altura": 64,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 18,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "28": 3,
+            "36": 1,
+            "82": 1,
+            "128": 1,
+            "199": 1,
+            "210": 1,
+            "220": 1,
+            "302": 1,
+            "312": 1,
+            "316": 1,
+            "115.1": 1,
+            "148.3": 1,
+            "181.4": 1,
+            "214.6": 1,
+            "247.7": 1,
+            "280.9": 1,
+            "48.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 28,
+              "largura": 163
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 199,
+              "largura": 163
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 28,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 82,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 115.1,
+              "largura": 27.2
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 148.3,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 181.4,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 214.6,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 247.7,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 280.9,
+              "largura": 27.1
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 316,
+              "largura": 46
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 36,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 128,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 220,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.md:hidden.px-4.pb-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 48.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 569,
+        "tipografia": {
+          "combinacoesDistintas": 15,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 24,
+            "14px / 500 / 20px": 9,
+            "12px / 500 / 16px": 9,
+            "14px / 700 / 20px": 8,
+            "20px / 700 / 28px": 7,
+            "12px / 600 / 16px": 3,
+            "14px / 600 / 20px": 3,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "36px / 500 / 40px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 38,
+            "14px": 21,
+            "20px": 7,
+            "24px": 2,
+            "16px": 2,
+            "36px": 1
+          },
+          "pesos": {
+            "500": 22,
+            "600": 6,
+            "700": 42,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 36,
+            "20px": 20,
+            "28px": 7,
+            "24px": 4,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "40px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 57,
+            "Chivo": 11,
+            "JetBrains Mono": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "4px": 599,
+            "8px": 55,
+            "12px": 51,
+            "6px": 38,
+            "16px": 18,
+            "24px": 17,
+            "2px": 8,
+            "20px": 8,
+            "32px": 7,
+            "10px": 6,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 38
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 14,
+            "8px": 12,
+            "16px": 10,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 7
+          },
+          "largurasBorda": {
+            "1px": 256,
+            "2px": 45
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 71,
+          "violacoes": 16,
+          "violacoesTextoNormal": 16,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "texto": "Agenda",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(218, 214, 204)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.51,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Crescimento",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Sistema",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#btn-new-appointment > span.truncate",
+              "texto": "Novo Agendamento",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "14px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0 > span.text-xs.sm:text-xs.font-medium",
+              "texto": "dom",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Todos",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Bob",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Bob",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Diego",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Marcos",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.min-w-[640px] > div.flex.border-b.border-[var(--color-divider)] > div.w-16.flex-shrink-0.text-center > span.text-xs.font-bold.text-[var(--color-text-muted)]",
+              "texto": "Horário",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.hidden.md:block.px-6 > div.min-w-[640px] > p.text-center.text-xs.text-[var(--color-text-muted)]",
+              "texto": "Nenhum agendamento neste dia.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 13,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 21,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "304": 1,
+            "312": 1,
+            "358": 1,
+            "404": 1,
+            "496": 1,
+            "588": 1,
+            "680": 1,
+            "1346": 1,
+            "1094.8": 1,
+            "1222.8": 1,
+            "848.1": 1,
+            "983.2": 1,
+            "498.8": 1,
+            "639.7": 1,
+            "780.6": 1,
+            "921.4": 1,
+            "1062.3": 1,
+            "1203.1": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 496,
+              "x2": 498.8,
+              "delta": 2.8,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1094.8,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 848.1,
+              "largura": 123.1
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 983.2,
+              "largura": 204
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 304,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 358,
+              "largura": 134.8
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 498.8,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 639.7,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 780.6,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 921.4,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1062.3,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1203.1,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 1346,
+              "largura": 46
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 404,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 496,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 588,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 680,
+              "largura": 56
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 42,
+              "clientWidth": 40,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "agenda",
+      "grupo": "nucleo",
+      "hashSolicitado": "/agenda",
+      "hashFinal": "#/agenda",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/agenda",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 329,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 23,
+            "12px / 500 / 16px": 9,
+            "14px / 500 / 20px": 7,
+            "20px / 700 / 28px": 7,
+            "14px / 700 / 20px": 5,
+            "14px / 600 / 20px": 3,
+            "24px / 900 / 24px": 1,
+            "12px / 600 / 16px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "36px / 500 / 40px": 1,
+            "16px / 500 / 24px": 1
+          },
+          "tamanhos": {
+            "12px": 34,
+            "14px": 16,
+            "20px": 7,
+            "24px": 2,
+            "16px": 2,
+            "36px": 1
+          },
+          "pesos": {
+            "500": 20,
+            "600": 4,
+            "700": 37,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 33,
+            "20px": 15,
+            "28px": 7,
+            "24px": 4,
+            "17.5px": 1,
+            "15px": 1,
+            "40px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 49,
+            "Chivo": 11,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "4px": 159,
+            "12px": 45,
+            "8px": 43,
+            "6px": 38,
+            "24px": 17,
+            "16px": 12,
+            "2px": 8,
+            "20px": 8,
+            "32px": 7,
+            "10px": 6,
+            "80px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 38
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "3.35544e+07px": 12,
+            "8px": 10,
+            "16px": 10,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 7
+          },
+          "largurasBorda": {
+            "1px": 148,
+            "2px": 37
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 62,
+          "violacoes": 13,
+          "violacoesTextoNormal": 13,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.13,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "texto": "Agenda",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(218, 214, 204)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.51,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#btn-new-appointment > span.truncate",
+              "texto": "Novo Agendamento",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "14px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0 > span.text-xs.sm:text-xs.font-medium",
+              "texto": "dom",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Bob",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "texto": "BF",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Você",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Diego",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.px-4.md:px-6 > div.flex.items-center.gap-5 > button.flex.flex-col.items-center > span.text-xs.font-bold.uppercase",
+              "texto": "Marcos",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.min-w-[640px] > div.flex.border-b.border-[var(--color-divider)] > div.w-16.flex-shrink-0.text-center > span.text-xs.font-bold.text-[var(--color-text-muted)]",
+              "texto": "Horário",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.hidden.md:block.px-6 > div.min-w-[640px] > p.text-center.text-xs.text-[var(--color-text-muted)]",
+              "texto": "Nenhum agendamento neste dia.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 11,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 20,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "304": 1,
+            "312": 1,
+            "358": 1,
+            "404": 1,
+            "496": 1,
+            "588": 1,
+            "1346": 1,
+            "1030.3": 1,
+            "1158.3": 1,
+            "848.1": 1,
+            "983.2": 1,
+            "498.8": 1,
+            "639.7": 1,
+            "780.6": 1,
+            "921.4": 1,
+            "1062.3": 1,
+            "1203.1": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 496,
+              "x2": 498.8,
+              "delta": 2.8,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1030.3,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 848.1,
+              "largura": 123.1
+            },
+            {
+              "selector": "div.space-y-4.md:space-y-5.px-4 > div.flex.flex-col.md:flex-row > div.flex.flex-wrap.gap-2 > button.relative.inline-flex.items-center",
+              "x": 983.2,
+              "largura": 204
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 304,
+              "largura": 46
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 358,
+              "largura": 134.8
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 498.8,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 639.7,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 780.6,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 921.4,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1062.3,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > div.flex-1.flex.items-center > button.flex.flex-1.min-w-0",
+              "x": 1203.1,
+              "largura": 134.9
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.bg-theme-bg.min-h-screen.pb-8 > div.px-4.md:px-6.flex > button.p-3.rounded-2xl.transition-colors",
+              "x": 1346,
+              "largura": 46
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 312,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 404,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 496,
+              "largura": 56
+            },
+            {
+              "selector": "div.flex.items-center.gap-5 > button.flex.flex-col.items-center > div.relative > div.w-14.h-14.rounded-full",
+              "x": 588,
+              "largura": 56
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

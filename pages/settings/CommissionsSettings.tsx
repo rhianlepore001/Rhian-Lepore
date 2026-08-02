@@ -35,8 +35,9 @@ export const CommissionsSettings: React.FC = () => {
         photo_url: m.photo_url ?? undefined,
         commission_rate: m.commission_rate ?? m.commission_percent ?? 0,
         active: m.active,
-        commission_payment_frequency: 'monthly' as const,
-        commission_payment_day: 5,
+        commission_payment_frequency:
+            ((m as { commission_payment_frequency?: 'weekly' | 'monthly' }).commission_payment_frequency) ?? 'monthly',
+        commission_payment_day: ((m as { commission_payment_day?: number }).commission_payment_day) ?? 5,
     }));
 
     const [settlementDay, setSettlementDay] = useState<number | string>(5);
@@ -116,13 +117,13 @@ export const CommissionsSettings: React.FC = () => {
                 return;
             }
 
-            const member = teamMembers.find(m => m.id === memberId);
+            const member = getMemberDisplay(memberId);
             const { error } = await supabase
                 .from('team_members')
                 .update({
                     commission_rate: rate,
-                    commission_payment_frequency: member?.commission_payment_frequency || 'monthly',
-                    commission_payment_day: member?.commission_payment_day || 5,
+                    commission_payment_frequency: member.commission_payment_frequency || 'monthly',
+                    commission_payment_day: member.commission_payment_day || 5,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', memberId)
@@ -355,7 +356,7 @@ export const CommissionsSettings: React.FC = () => {
 
                                                         <div className="flex flex-col gap-1">
                                                             <select
-                                                                value={member.commission_payment_frequency || 'monthly'}
+                                                                value={displayMember.commission_payment_frequency || 'monthly'}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value as 'weekly' | 'monthly';
                                                                     setEditedMembers(prev => ({
@@ -369,7 +370,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                 <option value="weekly">Semanal</option>
                                                             </select>
                                                             <select
-                                                                value={member.commission_payment_day || 5}
+                                                                value={displayMember.commission_payment_day || 5}
                                                                 onChange={(e) => {
                                                                     const val = parseInt(e.target.value);
                                                                     setEditedMembers(prev => ({
@@ -379,7 +380,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                 }}
                                                                 className={`${colors.inputBg} ${colors.text} text-xs p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
                                                             >
-                                                                {member.commission_payment_frequency === 'weekly' ? (
+                                                                {displayMember.commission_payment_frequency === 'weekly' ? (
                                                                     <>
                                                                         <option value={1}>Segunda</option>
                                                                         <option value={2}>Terça</option>
@@ -423,10 +424,10 @@ export const CommissionsSettings: React.FC = () => {
                                             ) : (
                                                 <div className="flex flex-col items-end gap-2">
                                                     <div className={`text-xs uppercase font-mono ${colors.textMuted} whitespace-nowrap ${colors.inputBg} px-2 py-1 rounded`}>
-                                                        {member.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal'} •
-                                                        {member.commission_payment_frequency === 'weekly'
-                                                            ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][member.commission_payment_day || 0]
-                                                            : ` Dia ${member.commission_payment_day || 5}`
+                                                        {displayMember.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal'} •
+                                                        {displayMember.commission_payment_frequency === 'weekly'
+                                                            ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][displayMember.commission_payment_day || 0]
+                                                            : ` Dia ${displayMember.commission_payment_day || 5}`
                                                         }
                                                     </div>
                                                     <Button

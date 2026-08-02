@@ -49,6 +49,62 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **UX-pro sweep — ciclo encerrado na branch `design/ux-pro-sweep` (2 Ago 2026):**
+  - Gate A–E entregue (on-accent, honesty, PageHeader×5, Checkbox, wizard→`ui/Modal`, AFTER versionado). Delta forense: contraste −60%, alvos&lt;44 −31%.
+  - Fase 9: R1 e R2 **REPROVAR** (evaluator R2 média 6,5). Validador R2: 25 ENTREGUE / 2 PARCIAL / 1 NÃO (C4-007=F). Limite de 2 rodadas — sem 3ª.
+  - Relatório: `docs/ux-pro/RELATORIO-FINAL.md`. Impasse: percepção (header 390, Agenda 3 CTAs, Dashboard microcopy) exige Fase F / chrome — fora do Gate.
+  - Pendência humana: aceitar ganho parcial + milestone F, ou ciclo focado nos 5 itens do evaluator. Sem push/PR sem pedido.
+- **Nav SPA / rolatividade — fix (2 Ago 2026):**
+  - Sintoma: URL mudava (ex. `#/financeiro`) mas o conteúdo ficava na página anterior até F5.
+  - Causa: React Router 7 `HashRouter` usa `startTransition` por padrão; em rotas pesadas (Agenda) a transição “starvava” e o Outlet não trocava.
+  - Fix: `<HashRouter unstable_useTransitions={false}>` + sidebar `navigate` antes de `closeSidebar`. Spec: `e2e/nav-spa-rotation.spec.ts` (passou).
+- **Produtos v2 — regras de negócio (2 Ago 2026):**
+  - Discovery/PRD: `.pipeline/discovery-notes-products-v2.md` + RF-PRD-06..09.
+  - Migration `20260802000001_products_v2.sql`: `commission_percent`, `show_in_public`, `appointment_product_lines`, `public_bookings.product_lines`, `business_settings.public_products_enabled`, RPC `sell_product` com comissão/cliente/vendedor, `get_public_products_catalog`, `copy_booking_products_to_appointment`.
+  - UI: venda avulsa com vendedor + cliente opcional; produtos no wizard/edit/checkout; toggle + aba Produtos no booking público; comissão no CommissionsManagement.
+  - **Migration aplicada no remoto (2 Ago 2026)** via `scripts/apply_migration_remote.mjs` (project `lcqwrngscsziysyfhpfj`).
+  - Gates: typecheck, lint, 367 testes, build OK.
+- **Financeiro — produto no checkout (2 Ago 2026):**
+  - Gap: ao finalizar agendamento com produto, só o serviço aparecia no Financeiro.
+  - Causa: `get_finance_stats` ignorava `finance_records` com `appointment_id` (anti-duplicação do serviço); vendas de produto no checkout caíam nesse filtro.
+  - Fix: migration `20260802000002_finance_include_product_sales.sql` — inclui revenue/transações ligadas a `product_sales`; `sell_product` grava `payment_method` + `client_name`. Checkout passa `paymentMethod` na venda.
+  - **Migration aplicada no remoto (2 Ago 2026).** Vendas antigas já linkadas a `product_sales` passam a aparecer sem backfill.
+- **Financeiro — preço do produto virava preço do serviço (2 Ago 2026):**
+  - Gap: produto aparecia no Financeiro com valor do serviço (ex. R$ 80 em vez de R$ 20).
+  - Causa: checkout chama `sell_product` antes de `complete_appointment`; a RPC via `appointment_id` existente e fazia `UPDATE finance_records SET revenue = preco_servico`, sobrescrevendo a venda.
+  - Fix: migration `20260802000003_fix_complete_appointment_product_overwrite.sql` — idempotency/UPDATE ignoram registros de `product_sales`; backfill restaura `revenue` a partir de `product_sales.total_revenue`.
+- **Comissões vazias no Financeiro (2 Ago 2026):**
+  - Gap: aba Comissões mostrava "Tudo em dia" sem profissionais.
+  - Causa: app chama `get_commissions_due()` sem args; remoto ainda exigia `p_user_id text` → RPC falhava em silêncio.
+  - Fix: migration `20260802000004_fix_get_commissions_due_auth.sql` — overload sem args, tenant via auth, colunas rate/total_paid; empty state + toast de erro no UI.
+- **Comissões — UX + taxa no histórico (2 Ago 2026):**
+  - Visual `opacity-40/50` removido (lista “apagada”).
+  - Detalhe do colaborador: datas locais (sem shift UTC); ignora `finance_records` de produto; taxa exibida = taxa do lançamento.
+  - Editor de taxa padrão no histórico (+ clique no % do card); `recalculate_pending_commissions` / `update_commission_record` seguros e sem tocar vendas de produto (`20260802000005`).
+- **Comissões — serviços + produtos (2 Ago 2026):**
+  - `get_commissions_due` passa a devolver `services_month`, `products_sold_month`, `services_pending`, `products_pending` (`20260802000006`).
+  - Card do colaborador mostra Serviços e Produtos; painel lista ambos com filtro Tudo/Serviços/Produtos.
+- **Insights do gestor (2 Ago 2026):**
+  - `/insights` redesenhado: 4 KPIs, rankings Serviços/Produtos (top 5), equipe compacta, gráfico PT, clientes + agenda.
+  - Removidos blocos repetidos (Fidelização / Campeões / 6 KPIs). Eixo do gráfico: meses PT + tooltip "Novos clientes".
+  - `services/insights.ts` + `RankingList`; mês filtra performance; export CSV/PDF.
+- **Mobile — texto cortado header/dashboard (2 Ago 2026):**
+  - Header: nome com `line-clamp-2`, tracking menor no mobile, ações mais compactas, flex `min-w-0`.
+  - `PageHeader`: removeu `truncate` agressivo; subtítulo quebra em linhas.
+  - Occupancy/Cancellation/CriticalEmptySlots: layout empilha no mobile; label "livres".
+  - Removido padding duplo Dashboard/Finance vs Layout.
+  - Audit Playwright: `scripts/audit-mobile-truncate.mjs` (360px; Dashboard/Insights/Financeiro sem clip).
+- **Ajustes UX shell (2 Ago 2026):**
+  - Desktop: conteúdo `max-w-6xl`/`7xl` (fim do vão à direita); páginas sem `max-w-4xl` local.
+  - Mobile: drawer vertical removido; chips horizontais sticky + auto-scroll do ativo; atalho voltar.
+- **Agenda — clique na célula vazia → novo agendamento (2 Ago 2026):**
+  - Célula vazia desktop: hover com "+" animado (`AgendaEmptySlotCell`); clique abre wizard com profissional + horário pré-preenchidos.
+  - `WizardProps`: `initialProfessionalId` / `initialTime`.
+- **Agenda — grade 06h–00h + criação manual livre (1 Ago 2026):**
+  - Grade gestora padrão: `06:00`→`23:30` (até meia-noite). Horários `00:00`–`05:59` só aparecem se houver agendamento, **no topo** antes das 06h.
+  - Novo util `utils/agendaTimeSlots.ts` (+ testes). Wizard interno / edição usam slots do dia inteiro — **não** chamam mais `get_available_slots` (expediente).
+  - Booking online (`PublicBooking` + RPC) permanece limitado ao horário de funcionamento.
+  - Gates: typecheck, lint, 367 testes, build OK.
 - **E2E ciclo de receita — FECHAMENTO (8 Jul 2026, tarde, branch `test/e2e-ciclo-receita`):**
   - **✅ PRONTO:** spec `e2e/ciclo-de-receita.spec.ts` revisado por júri multi-agente (3 jurados + evaluator; pareceres em `/tmp/jury/` da VPS) e os 3 P1 corrigidos no commit `87a441f`: try/finally no contexto do João; verificação de fuso UTC→BRT no modal de detalhes ("Data e Hora" — o card da grade NÃO exibe horário); aceite filtrado pelo cliente do run (não aprova mais solicitações alheias da conta compartilhada).
   - **✅ MIGRATIONS APLICADAS pelo Rhian no SQL Editor (8 Jul):** `20260413_checkout_fields.sql` e `20260417_checkout_comanda_fields.sql`. Cada uma destravou um erro 42703 do checkout (`received_by`, depois `completed_at`).

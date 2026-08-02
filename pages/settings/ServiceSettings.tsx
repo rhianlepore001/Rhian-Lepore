@@ -53,7 +53,7 @@ export const ServiceSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-5xl pb-20 md:pb-0">
+            <div className="w-full pb-20 md:pb-0">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div className="flex-1" />
                     <div className="flex gap-3">
@@ -206,7 +206,7 @@ export const ServiceSettings: React.FC = () => {
                                 onClick={handleAddCategory}
                                 className={`px-5 py-2.5 font-bold transition-all ${isBeauty
                                     ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-[var(--color-text)] rounded-xl hover:shadow-neon'
-                                    : 'bg-accent-gold text-[var(--color-bg)] hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
+                                    : 'bg-theme-accent text-[var(--color-on-accent)] hover:brightness-110 shadow-[var(--shadow-btn-primary)]'
                                     }`}
                             >
                                 Salvar

@@ -1,0 +1,29 @@
+{
+  "geradoEm": "2026-08-02T09:08:55.318Z",
+  "slugDisponivel": false,
+  "rotasAuditadas": 1,
+  "execucoesTotais": 1,
+  "naoAuditadas": 0,
+  "temasEfetivosVistos": [
+    "barber-light"
+  ],
+  "combinacoesComTemaDivergente": 1,
+  "combinacoesComModoDivergente": 0,
+  "porRota": [
+    {
+      "rota": "dashboard",
+      "grupo": "nucleo",
+      "execucoes": 1,
+      "maxTamanhosFonte": 8,
+      "maxEspacamentos": 11,
+      "maxForaDaEscala4px": 3,
+      "maxRaios": 8,
+      "maxSombras": 2,
+      "maxLargurasBorda": 2,
+      "totalViolacoesContraste": 8,
+      "maxAlvosPequenos": 8,
+      "overflowEm390": false,
+      "maxQuaseAlinhamentos": 0
+    }
+  ]
+}

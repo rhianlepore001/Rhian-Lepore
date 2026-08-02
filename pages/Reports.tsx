@@ -1,8 +1,9 @@
 import { Card, PageHeader } from '../components/ui';
 import { SkeletonCard } from '../components/ui/Skeleton';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
 import { CancellationRateCard } from '../components/dashboard/CancellationRateCard';
+import { RankingList } from '../components/insights/RankingList';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/Toast';
@@ -11,310 +12,427 @@ import { useReportsData } from '../hooks/useReports';
 import { ExportButton } from '../components/ExportButton';
 import { exportToCsv, exportToPdf } from '../utils/exporters';
 import {
-    TrendingUp,
-    DollarSign,
-    Target,
-    AlertCircle,
-    Brain,
-    Zap
+  TrendingUp,
+  Target,
+  AlertCircle,
+  Scissors,
+  Package,
+  Users,
+  ShoppingBag,
 } from 'lucide-react';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
+const MONTH_EN_TO_PT: Record<string, string> = {
+  Jan: 'Jan',
+  Feb: 'Fev',
+  Mar: 'Mar',
+  Apr: 'Abr',
+  May: 'Mai',
+  Jun: 'Jun',
+  Jul: 'Jul',
+  Aug: 'Ago',
+  Sep: 'Set',
+  Oct: 'Out',
+  Nov: 'Nov',
+  Dec: 'Dez',
+};
+
 export const Reports: React.FC = () => {
-    const { user, companyId, region } = useAuth();
-    const { showToast } = useToast();
-    const effectiveUserId = companyId ?? user?.id;
-    const { accent, isBeauty, colors, status } = useBrutalTheme();
-    const currentDate = new Date();
-    const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
-    const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const { user, companyId } = useAuth();
+  const { showToast } = useToast();
+  const effectiveUserId = companyId ?? user?.id;
+  const { accent, isBeauty, colors, status, font } = useBrutalTheme();
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-    const { stats, clientInsights, loading } = useReportsData(effectiveUserId);
+  const { stats, clientInsights, performance, loading, performanceLoading } = useReportsData(
+    effectiveUserId,
+    selectedMonth,
+    selectedYear,
+  );
 
-    const { region: currencyRegion } = useTenantLocale();
+  const { region: currencyRegion } = useTenantLocale();
 
-    const handleMonthChange = (month: number, year: number) => {
-        setSelectedMonth(month);
-        setSelectedYear(year);
-    };
+  const handleMonthChange = (month: number, year: number) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
 
-    const hasSufficientData = stats && (stats.appointments_total > 5 || stats.total_profit > 0 || clientInsights.top_clients.length > 0);
+  const monthLabel = useMemo(() => {
+    const date = new Date(selectedYear, selectedMonth, 1);
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  }, [selectedMonth, selectedYear]);
 
-    const monthLabel = useMemo(() => {
-        const date = new Date(selectedYear, selectedMonth, 1);
-        return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    }, [selectedMonth, selectedYear]);
+  const monthRevenue = performance.summary.servicesRevenue + performance.summary.productsRevenue;
+  const monthTicket =
+    performance.summary.appointmentsCount > 0
+      ? performance.summary.servicesRevenue / performance.summary.appointmentsCount
+      : 0;
 
-    const handleExportCsv = () => {
-        if (!stats || !hasSufficientData) {
-            showToast('Ainda não há dados suficientes para exportar.', 'warning');
-            return;
-        }
-        const rows = clientInsights.top_clients.map(c => ({
-            cliente: c.name,
-            visitas: c.visits,
-            total_gasto: formatCurrency(c.revenue, currencyRegion),
-            ultima_visita: c.last_visit,
-        }));
-        const summary = [
-            { metrica: 'Média por atendimento', valor: formatCurrency(stats.avg_ticket || 0, currencyRegion) },
-            { metrica: 'Crescimento semanal', valor: `${stats.weekly_growth || 0}%` },
-            { metrica: 'Recorrência', valor: `${stats.repeat_client_rate || 0}%` },
-            { metrica: 'Clientes em risco', valor: String(stats.churn_risk_count || 0) },
-            { metrica: 'Atendimentos no mês', valor: String(stats.appointments_total || 0) },
-        ];
-        exportToCsv({
-            filename: `relatorio-agendix-${monthLabel.replace(/\s/g, '-')}`,
-            data: [...summary, ...rows],
-            columns: [
-                { key: 'metrica', label: 'Métrica / Cliente', format: r => (r as { metrica?: string }).metrica ?? (r as { cliente?: string }).cliente ?? '' },
-                { key: 'valor', label: 'Valor', format: r => (r as { valor?: string }).valor ?? '' },
-                { key: 'visitas', label: 'Visitas', format: r => (r as { visitas?: number }).visitas ?? '' },
-                { key: 'total_gasto', label: 'Total Gasto', format: r => (r as { total_gasto?: string }).total_gasto ?? '' },
-                { key: 'ultima_visita', label: 'Última Visita', format: r => (r as { ultima_visita?: string }).ultima_visita ?? '' },
-            ],
-        });
-        showToast('Relatório CSV exportado. Abra no Excel ou Google Sheets.', 'success');
-    };
+  const growthChartData = useMemo(
+    () =>
+      (clientInsights.client_growth_by_month || []).map((row) => ({
+        ...row,
+        month: MONTH_EN_TO_PT[row.month] || row.month,
+        novos_clientes: row.new_clients,
+      })),
+    [clientInsights.client_growth_by_month],
+  );
 
-    const handleExportPdf = () => {
-        if (!stats || !hasSufficientData) {
-            showToast('Ainda não há dados suficientes para exportar.', 'warning');
-            return;
-        }
-        const rows = clientInsights.top_clients.map(c => ({
-            cliente: c.name,
-            visitas: c.visits,
-            total_gasto: formatCurrency(c.revenue, currencyRegion),
-            ultima_visita: c.last_visit,
-        }));
-        const summary = [
-            { metrica: 'Média por atendimento', valor: formatCurrency(stats.avg_ticket || 0, currencyRegion) },
-            { metrica: 'Crescimento semanal', valor: `${stats.weekly_growth || 0}%` },
-            { metrica: 'Recorrência', valor: `${stats.repeat_client_rate || 0}%` },
-            { metrica: 'Clientes em risco', valor: String(stats.churn_risk_count || 0) },
-        ];
-        exportToPdf({
-            filename: `Relatório AgendiX · ${monthLabel}`,
-            data: [...summary, ...rows],
-            columns: [
-                { key: 'metrica', label: 'Métrica / Cliente', format: r => (r as { metrica?: string }).metrica ?? (r as { cliente?: string }).cliente ?? '' },
-                { key: 'valor', label: 'Valor', format: r => (r as { valor?: string }).valor ?? '' },
-                { key: 'visitas', label: 'Visitas', format: r => (r as { visitas?: number }).visitas ?? '' },
-                { key: 'total_gasto', label: 'Total Gasto', format: r => (r as { total_gasto?: string }).total_gasto ?? '' },
-                { key: 'ultima_visita', label: 'Última Visita', format: r => (r as { ultima_visita?: string }).ultima_visita ?? '' },
-            ],
-        });
-    };
+  const hasMonthData =
+    performance.summary.appointmentsCount > 0 ||
+    performance.summary.productsUnits > 0 ||
+    clientInsights.top_clients.length > 0 ||
+    (stats?.appointments_total || 0) > 0;
 
-    if (loading && !stats) {
-        return (
-            <div className="space-y-6 pb-24">
-                <SkeletonCard className="min-h-[88px]" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    <SkeletonCard className="min-h-[140px]" />
-                    <SkeletonCard className="min-h-[140px]" />
-                    <SkeletonCard className="min-h-[140px]" />
-                    <SkeletonCard className="min-h-[140px]" />
-                </div>
-                <SkeletonCard className="min-h-[280px]" />
-            </div>
-        );
+  const topServices = performance.services.slice(0, 5);
+  const topProducts = performance.products.slice(0, 5);
+  const topPros = performance.professionals.slice(0, 5);
+
+  const handleExportCsv = () => {
+    if (!hasMonthData) {
+      showToast('Ainda não há dados suficientes para exportar.', 'warning');
+      return;
     }
 
+    const rows = [
+      ...topServices.map((s, idx) => ({
+        ranking: idx + 1,
+        tipo: 'Serviço',
+        nome: s.name,
+        quantidade: s.count,
+        receita: formatCurrency(s.revenue, currencyRegion),
+        participacao: `${s.share}%`,
+      })),
+      ...topProducts.map((p, idx) => ({
+        ranking: idx + 1,
+        tipo: 'Produto',
+        nome: p.name,
+        quantidade: p.count,
+        receita: formatCurrency(p.revenue, currencyRegion),
+        participacao: `${p.share}%`,
+      })),
+    ];
+
+    exportToCsv({
+      filename: `insights-agendix-${monthLabel.replace(/\s/g, '-')}`,
+      data: rows,
+      columns: [
+        { key: 'ranking', label: '#', format: (r) => String((r as { ranking: number }).ranking) },
+        { key: 'tipo', label: 'Tipo', format: (r) => String((r as { tipo: string }).tipo) },
+        { key: 'nome', label: 'Nome', format: (r) => String((r as { nome: string }).nome) },
+        { key: 'quantidade', label: 'Qtd', format: (r) => String((r as { quantidade: number }).quantidade) },
+        { key: 'receita', label: 'Receita', format: (r) => String((r as { receita: string }).receita) },
+        { key: 'participacao', label: '%', format: (r) => String((r as { participacao: string }).participacao) },
+      ],
+    });
+    showToast('Ranking exportado em CSV.', 'success');
+  };
+
+  const handleExportPdf = () => {
+    if (!hasMonthData) {
+      showToast('Ainda não há dados suficientes para exportar.', 'warning');
+      return;
+    }
+    const rows = [
+      ...topServices.map((s) => ({
+        tipo: 'Serviço',
+        nome: s.name,
+        qtd: s.count,
+        receita: formatCurrency(s.revenue, currencyRegion),
+      })),
+      ...topProducts.map((p) => ({
+        tipo: 'Produto',
+        nome: p.name,
+        qtd: p.count,
+        receita: formatCurrency(p.revenue, currencyRegion),
+      })),
+    ];
+    exportToPdf({
+      filename: `Insights AgendiX · ${monthLabel}`,
+      data: rows,
+      columns: [
+        { key: 'tipo', label: 'Tipo', format: (r) => String((r as { tipo: string }).tipo) },
+        { key: 'nome', label: 'Nome', format: (r) => String((r as { nome: string }).nome) },
+        { key: 'qtd', label: 'Qtd', format: (r) => String((r as { qtd: number }).qtd) },
+        { key: 'receita', label: 'Receita', format: (r) => String((r as { receita: string }).receita) },
+      ],
+    });
+  };
+
+  if (loading && !stats) {
     return (
-        <div className="space-y-6 md:space-y-10 pb-24">
-            <PageHeader
-                title="Insights do negócio"
-                subtitle="Assistente de negócios: analisando seus resultados"
-                action={
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <MonthYearSelector
-                            selectedMonth={selectedMonth}
-                            selectedYear={selectedYear}
-                            onChange={handleMonthChange}
-                            accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
-                        />
-                        <ExportButton
-                            onExportCsv={handleExportCsv}
-                            onExportPdf={handleExportPdf}
-                        />
-                    </div>
-                }
-            />
-
-            {!hasSufficientData ? (
-                <div className="flex flex-col items-center justify-center my-16 text-center px-4 fade-in">
-                    <div className={`w-24 h-24 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-6`}>
-                        <TrendingUp className={`w-12 h-12 ${accent.text}`} />
-                    </div>
-                    <h2 className={`text-3xl font-heading ${colors.text} uppercase mb-4`}>Coletando dados...</h2>
-                    <p className={`${colors.textSecondary} max-w-xl mx-auto leading-relaxed`}>
-                        Nossa IA está acompanhando seus agendamentos diários. Para que o Assistente de Negócios gere relatórios precisos sobre clientes fiéis, serviços campeões e receitas recuperadas, precisamos de mais histórico do seu negócio.
-                    </p>
-                    <p className={`${colors.textMuted} text-sm mt-4`}>
-                        Continue controlando sua agenda por aqui e logo seus insights estarão disponíveis.
-                    </p>
-                    <div className={`mt-8 p-6 ${colors.surface} rounded-xl border ${colors.border} max-w-md w-full text-left`}>
-                        <p className={`text-sm font-bold ${colors.text} mb-4 flex items-center gap-2`}>
-                            <Brain className={`w-4 h-4 ${accent.text}`} /> O que você verá aqui em breve:
-                        </p>
-                        <ul className={`text-sm ${colors.textSecondary} space-y-3`}>
-                            <li className="flex gap-2"><DollarSign className="w-4 h-4 text-[var(--color-text-muted)]" /> Faturamento médio real por atendimento</li>
-                            <li className="flex gap-2"><AlertCircle className="w-4 h-4 text-[var(--color-text-muted)]" /> Alertas de clientes prestes a sumir</li>
-                            <li className="flex gap-2"><Zap className="w-4 h-4 text-[var(--color-text-muted)]" /> Receita salva pelas campanhas automáticas</li>
-                            <li className="flex gap-2"><Target className="w-4 h-4 text-[var(--color-text-muted)]" /> Quais serviços atraem os clientes mais fiéis</li>
-                        </ul>
-                    </div>
-                </div>
-            ) : (
-                <div className="space-y-8 fade-in">
-                    <div>
-                        <h2 className={`text-xl font-heading ${colors.text} uppercase mb-4 tracking-wider`}>Visão geral</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                            <Card>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className={`p-2 rounded-xl ${accent.bgDim} ${accent.text}`}>
-                                        <DollarSign className="w-5 h-5" />
-                                    </div>
-                                    <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Média por atendimento</span>
-                                </div>
-                                <h3 className={`text-3xl font-heading ${colors.text}`}>{formatCurrency(stats?.avg_ticket || 0, currencyRegion)}</h3>
-                                <p className={`text-xs ${colors.textMuted} mt-2`}>Últimos 90 dias</p>
-                            </Card>
-
-                            <Card>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className={`p-2 rounded-xl ${status.successBg} ${status.success}`}>
-                                        <TrendingUp className="w-5 h-5" />
-                                    </div>
-                                    <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Crescimento</span>
-                                </div>
-                                <h3 className={`text-3xl font-heading ${(stats?.weekly_growth || 0) > 0 ? status.success : (stats?.weekly_growth || 0) < 0 ? status.danger : colors.text}`}>
-                                    {(stats?.weekly_growth || 0) > 0 ? '+' : ''}{stats?.weekly_growth || 0}%
-                                </h3>
-                                <p className={`text-xs ${colors.textMuted} mt-2`}>Vs. semana anterior</p>
-                            </Card>
-
-                            <Card>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className={`p-2 rounded-xl ${status.infoBg} ${status.info}`}>
-                                        <Target className="w-5 h-5" />
-                                    </div>
-                                    <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Recorrência</span>
-                                </div>
-                                <h3 className={`text-3xl font-heading ${colors.text}`}>{stats?.repeat_client_rate || 0}%</h3>
-                                <p className={`text-xs ${colors.textMuted} mt-2`}>Clientes que voltaram</p>
-                            </Card>
-
-                            <Card>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className={`p-2 rounded-xl ${status.dangerBg} ${status.danger}`}>
-                                        <AlertCircle className="w-5 h-5" />
-                                    </div>
-                                    <span className={`${colors.textSecondary} font-mono text-xs uppercase tracking-widest`}>Clientes em Risco</span>
-                                </div>
-                                <h3 className={`text-3xl font-heading ${colors.text}`}>{stats?.churn_risk_count || 0}</h3>
-                                <p className={`text-xs ${colors.textMuted} mt-2`}>Há mais de 45 dias sem vir</p>
-                            </Card>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h2 className={`text-xl font-heading ${colors.text} uppercase mb-4 tracking-wider`}>Ocupação e cancelamentos</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <CriticalEmptySlotsCard />
-                            <CancellationRateCard />
-                        </div>
-                    </div>
-
-
-                    <div>
-                        <h2 className={`text-xl font-heading ${colors.text} uppercase mb-4 tracking-wider`}>Performance e crescimento</h2>
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <Card title="Evolução de Clientes (6 Meses)" className="lg:col-span-2">
-                                <div className="h-[250px] w-full mt-4">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={clientInsights.client_growth_by_month}>
-                                            <defs>
-                                                <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={accent.hex} stopOpacity={0.3} />
-                                                    <stop offset="95%" stopColor={accent.hex} stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
-                                            <XAxis dataKey="month" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                                            <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-divider)', borderRadius: '12px' }}
-                                                itemStyle={{ color: 'var(--color-text)' }}
-                                            />
-                                            <Area
-                                                type="monotone"
-                                                dataKey="new_clients"
-                                                stroke={accent.hex}
-                                                fillOpacity={1}
-                                                fill="url(#colorGrowth)"
-                                                strokeWidth={3}
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </Card>
-
-                            <Card title="Serviço Campeão" className="flex flex-col justify-center items-center text-center">
-                                <div className={`w-16 h-16 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-4`}>
-                                    <TrendingUp className={`w-8 h-8 ${accent.text}`} />
-                                </div>
-                                <h2 className={`text-3xl md:text-4xl font-heading ${accent.text} uppercase mb-2`}>{stats?.top_service || 'N/A'}</h2>
-                                <p className={`${colors.textMuted} text-sm`}>Serviço mais vendido do período recente</p>
-                            </Card>
-                        </div>
-                    </div>
-
-                    <Card title="Nossos Melhores Clientes">
-                        <div className="overflow-x-auto -mx-4 md:mx-0">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className={`border-b ${colors.divider}`}>
-                                        <th scope="col" className={`px-4 py-4 text-xs font-mono ${colors.textMuted} uppercase`}>Cliente</th>
-                                        <th scope="col" className={`px-4 py-4 text-xs font-mono ${colors.textMuted} uppercase text-center`}>Visitas</th>
-                                        <th scope="col" className={`px-4 py-4 text-xs font-mono ${colors.textMuted} uppercase text-right`}>Total gasto</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[var(--color-divider)]">
-                                    {clientInsights.top_clients.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={3} className={`px-4 py-8 text-center ${colors.textMuted}`}>Ainda gerando histórico...</td>
-                                        </tr>
-                                    ) : (
-                                        clientInsights.top_clients.map((client, idx) => (
-                                            <tr key={idx} className="hover:bg-[var(--color-card-hover)] transition-colors group">
-                                                <td className="px-4 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${accent.bgDim} ${accent.text}`}>
-                                                            {client.name.charAt(0)}
-                                                        </div>
-                                                        <div>
-                                                            <p className={`${colors.text} font-bold transition-colors`}>{client.name}</p>
-                                                            <p className={`text-xs ${colors.textMuted} mt-0.5`}>Última em {client.last_visit}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className={`px-4 py-4 text-center font-mono ${colors.text} text-lg`}>{client.visits}</td>
-                                                <td className={`px-4 py-4 text-right font-bold text-lg ${accent.text}`}>{formatCurrency(client.revenue, currencyRegion)}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </Card>
-                </div>
-            )}
+      <div className="space-y-6 pb-24">
+        <SkeletonCard className="min-h-[88px]" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonCard className="min-h-[120px]" />
+          <SkeletonCard className="min-h-[120px]" />
+          <SkeletonCard className="min-h-[120px]" />
+          <SkeletonCard className="min-h-[120px]" />
         </div>
+        <SkeletonCard className="min-h-[280px]" />
+      </div>
     );
+  }
+
+  return (
+    <div className="space-y-6 md:space-y-8 pb-24">
+      <PageHeader
+        title="Insights"
+        subtitle={
+          <>
+            <span className="block">O que vende, quem performa e quem volta</span>
+            <span className="block mt-0.5 first-letter:uppercase">{monthLabel}</span>
+          </>
+        }
+        action={
+          <div className="flex flex-col sm:flex-row gap-2">
+            <MonthYearSelector
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onChange={handleMonthChange}
+              accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
+            />
+            <ExportButton onExportCsv={handleExportCsv} onExportPdf={handleExportPdf} />
+          </div>
+        }
+      />
+
+      {!hasMonthData ? (
+        <div className="flex flex-col items-center justify-center my-16 text-center px-4 fade-in">
+          <div className={`w-20 h-20 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-5`}>
+            <TrendingUp className="w-10 h-10" />
+          </div>
+          <h2 className={`text-2xl font-heading ${colors.text} uppercase mb-3`}>Sem dados neste período</h2>
+          <p className={`${colors.textSecondary} max-w-md mx-auto leading-relaxed text-sm`}>
+            Conclua atendimentos e registre vendas de produtos para ver rankings e indicadores do mês.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6 md:space-y-8 fade-in">
+          {/* 4 KPIs — sem blocos repetidos de ticket/crescimento */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="p-3.5 md:p-4">
+              <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-1 flex items-center gap-1`}>
+                <ShoppingBag className="w-3.5 h-3.5" /> Receita
+              </p>
+              <p className={`text-lg md:text-xl font-heading ${colors.text}`}>{formatCurrency(monthRevenue, currencyRegion)}</p>
+              <p className={`text-xs ${colors.textMuted} mt-1`}>
+                serv. {formatCurrency(performance.summary.servicesRevenue, currencyRegion)}
+              </p>
+            </Card>
+            <Card className="p-3.5 md:p-4">
+              <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-1 flex items-center gap-1`}>
+                <Scissors className="w-3.5 h-3.5" /> Atendimentos
+              </p>
+              <p className={`text-lg md:text-xl font-heading ${colors.text}`}>{performance.summary.appointmentsCount}</p>
+              <p className={`text-xs ${colors.textMuted} mt-1`}>ticket {formatCurrency(monthTicket, currencyRegion)}</p>
+            </Card>
+            <Card className="p-3.5 md:p-4">
+              <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-1 flex items-center gap-1`}>
+                <Package className="w-3.5 h-3.5" /> Produtos
+              </p>
+              <p className={`text-lg md:text-xl font-heading ${colors.text}`}>{performance.summary.productsUnits} un.</p>
+              <p className={`text-xs ${colors.textMuted} mt-1`}>
+                {formatCurrency(performance.summary.productsRevenue, currencyRegion)}
+              </p>
+            </Card>
+            <Card className="p-3.5 md:p-4">
+              <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-1 flex items-center gap-1`}>
+                <Target className="w-3.5 h-3.5" /> Saúde
+              </p>
+              <p className={`text-lg md:text-xl font-heading ${colors.text}`}>
+                {stats?.repeat_client_rate || 0}%
+                <span className={`text-xs ${colors.textMuted} font-sans font-normal ml-1`}>recorr.</span>
+              </p>
+              <p className={`text-xs ${colors.textMuted} mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5`}>
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>
+                  {(stats?.weekly_growth || 0) > 0 ? '+' : ''}
+                  {stats?.weekly_growth || 0}% sem. · {stats?.churn_risk_count || 0} risco
+                </span>
+              </p>
+            </Card>
+          </div>
+
+          {/* Rankings principais */}
+          <section>
+            <div className="flex items-end justify-between gap-3 mb-3 min-w-0">
+              <div className="min-w-0">
+                <h2 className={`text-lg font-heading ${colors.text} uppercase tracking-wide md:tracking-wider text-pretty`}>
+                  O que mais vende
+                </h2>
+                <p className={`text-xs ${colors.textMuted}`}>Top 5 por receita no mês</p>
+              </div>
+              {performanceLoading && (
+                <span className={`text-xs ${colors.textMuted} ${font.mono} uppercase`}>Atualizando…</span>
+              )}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <RankingList
+                title="Serviços"
+                subtitle="Atendimentos concluídos"
+                icon={Scissors}
+                items={topServices}
+                currencyRegion={currencyRegion}
+                emptyTitle="Nenhum serviço no mês"
+                emptyDescription="Conclua atendimentos para ver o ranking."
+                countLabel={(item) => `${item.count}×`}
+              />
+              <RankingList
+                title="Produtos"
+                subtitle="Vendas no checkout ou avulso"
+                icon={Package}
+                items={topProducts}
+                currencyRegion={currencyRegion}
+                emptyTitle="Nenhuma venda de produto"
+                emptyDescription="Venda produtos para ranquear."
+                countLabel={(item) => `${item.count} un.`}
+                showMargin
+              />
+            </div>
+          </section>
+
+          {/* Equipe + clientes + gráfico — uma faixa, sem campeões duplicados */}
+          <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <Card className="xl:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <div className={`p-2 rounded-xl ${accent.bgDim} ${accent.text}`}>
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className={`text-base font-heading ${colors.text} uppercase`}>Equipe</h3>
+                  <p className={`text-xs ${colors.textMuted}`}>Receita de serviços no mês</p>
+                </div>
+              </div>
+              {topPros.length === 0 ? (
+                <p className={`text-sm ${colors.textMuted}`}>Sem atendimentos atribuídos neste mês.</p>
+              ) : (
+                <ol className="space-y-3">
+                  {topPros.map((pro, idx) => (
+                    <li key={pro.id} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={`w-6 h-6 rounded-md text-xs font-bold ${font.mono} flex items-center justify-center ${
+                            idx === 0 ? `${accent.bg} text-[var(--color-bg)]` : `${colors.surface} ${colors.textSecondary}`
+                          }`}
+                        >
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <p className={`${colors.text} font-semibold truncate`}>{pro.name}</p>
+                          <p className={`text-xs ${colors.textMuted}`}>{pro.count} serviços</p>
+                        </div>
+                      </div>
+                      <p className={`${accent.text} ${font.mono} text-sm font-bold shrink-0`}>
+                        {formatCurrency(pro.revenue, currencyRegion)}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </Card>
+
+            <Card className="xl:col-span-2">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div>
+                  <h3 className={`text-base font-heading ${colors.text} uppercase`}>Novos clientes</h3>
+                  <p className={`text-xs ${colors.textMuted}`}>Últimos 6 meses</p>
+                </div>
+              </div>
+              <div className="h-[220px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={growthChartData}>
+                    <defs>
+                      <linearGradient id="colorGrowthPt" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={accent.hex} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={accent.hex} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
+                    <XAxis dataKey="month" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--color-card)',
+                        border: '1px solid var(--color-divider)',
+                        borderRadius: '12px',
+                      }}
+                      labelStyle={{ color: 'var(--color-text-muted)' }}
+                      formatter={(value) => [Number(value ?? 0), 'Novos clientes']}
+                      labelFormatter={(label) => `Mês: ${label}`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="novos_clientes"
+                      name="Novos clientes"
+                      stroke={accent.hex}
+                      fillOpacity={1}
+                      fill="url(#colorGrowthPt)"
+                      strokeWidth={3}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <Card className="lg:col-span-3" title="Melhores clientes">
+              <div className="overflow-x-auto -mx-2">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className={`border-b ${colors.divider}`}>
+                      <th className={`px-2 py-3 text-xs font-mono ${colors.textMuted} uppercase`}>Cliente</th>
+                      <th className={`px-2 py-3 text-xs font-mono ${colors.textMuted} uppercase text-center`}>Visitas</th>
+                      <th className={`px-2 py-3 text-xs font-mono ${colors.textMuted} uppercase text-right`}>Gasto</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-divider)]">
+                    {clientInsights.top_clients.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className={`px-2 py-8 text-center ${colors.textMuted}`}>
+                          Ainda gerando histórico...
+                        </td>
+                      </tr>
+                    ) : (
+                      clientInsights.top_clients.slice(0, 6).map((client, idx) => (
+                        <tr key={idx}>
+                          <td className="px-2 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${accent.bgDim} ${accent.text}`}>
+                                {client.name.charAt(0)}
+                              </div>
+                              <div>
+                                <p className={`${colors.text} font-semibold text-sm`}>{client.name}</p>
+                                <p className={`text-xs ${colors.textMuted}`}>Última em {client.last_visit}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className={`px-2 py-3 text-center font-mono ${colors.text}`}>{client.visits}</td>
+                          <td className={`px-2 py-3 text-right font-bold ${accent.text} text-sm`}>
+                            {formatCurrency(client.revenue, currencyRegion)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className={`text-lg font-heading ${colors.text} uppercase tracking-wider`}>Agenda</h2>
+              <CriticalEmptySlotsCard />
+              <CancellationRateCard />
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
 };

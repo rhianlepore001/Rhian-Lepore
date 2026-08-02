@@ -50,6 +50,7 @@ vi.mock('@/components/ui', () => ({
 
 vi.mock('@/hooks/useCatalog', () => ({
   useProducts: () => ({ data: [] }),
+  useAppointmentProductLines: () => ({ data: [], isFetched: true }),
   useSellProduct: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 

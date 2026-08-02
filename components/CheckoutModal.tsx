@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Button, useToast } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrutalTheme } from '@/hooks/useBrutalTheme';
@@ -10,7 +10,7 @@ import type { Appointment } from '@/types';
 import { calcCheckoutNetAmount, calcMachineFee, getMachineFeePercent } from '@/services/scheduling';
 import { useCheckout } from '@/hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
-import { useProducts, useSellProduct } from '@/hooks/useCatalog';
+import { useAppointmentProductLines, useProducts, useSellProduct } from '@/hooks/useCatalog';
 import type { Product } from '@/types/catalog';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
@@ -118,6 +118,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     includeInactive: false,
   });
 
+  const { data: pendingLines = [], isFetched: pendingLinesFetched } = useAppointmentProductLines(
+    companyId ?? '',
+    appointment?.id
+  );
+  const cartSeededFor = useRef<string | null>(null);
+
   const availableProducts = useMemo(
     () => products.filter((p: Product) => p.is_active && p.stock_quantity > 0),
     [products]
@@ -142,11 +148,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const remainingReais = Math.max(0, remainingCents / 100);
       setFinalPrice(remainingReais);
       setErrors({});
-      setCart([]);
       setSelectedProductId('');
       reset();
     }
   }, [appointment?.id, reset, discount.hasActiveSubscription, discount.coveredCents]);
+
+  useEffect(() => {
+    if (!appointment?.id) {
+      cartSeededFor.current = null;
+      setCart([]);
+      return;
+    }
+    if (!pendingLinesFetched) return;
+    if (cartSeededFor.current === appointment.id) return;
+    cartSeededFor.current = appointment.id;
+    setCart(
+      pendingLines.map(line => ({
+        productId: line.product_id,
+        quantity: line.quantity,
+      }))
+    );
+  }, [appointment?.id, pendingLines, pendingLinesFetched]);
 
   useEffect(() => {
     const defaultFeePercent = getMachineFeePercent(paymentMethod, financialSettings);
@@ -237,17 +259,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setErrors({});
 
     try {
+      const sellerId =
+        receivedBy && receivedBy !== 'owner'
+          ? receivedBy
+          : (appointment as { professional_id?: string | null }).professional_id ?? null;
+      const clientId = (appointment as { client_id?: string | null }).client_id ?? null;
+
+      const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
+      // Coberto pela assinatura: registra como 'membership' pra nao poluir o Pix no financeiro
+      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'membership' : (paymentMethod as CheckoutPaymentMethod);
+
       for (const line of cart) {
         await sellProductMutation.mutateAsync({
           productId: line.productId,
           quantity: line.quantity,
           appointmentId: appointment.id,
+          professionalId: sellerId,
+          clientId,
+          paymentMethod: effectiveMethod,
         });
       }
-
-      const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
-      // Coberto pela assinatura: registra como 'membership' pra nao poluir o Pix no financeiro
-      const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'membership' : (paymentMethod as CheckoutPaymentMethod);
 
       await mutateAsync({
         appointmentId: appointment.id,

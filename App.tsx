@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AlertsProvider } from './contexts/AlertsContext';
@@ -11,6 +11,7 @@ import { ActivationBanner } from './components/onboarding/ActivationBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DynamicBranding } from './components/DynamicBranding';
 import { DevBugButton } from './components/DevBugButton';
+import { HashRouterSync } from './components/HashRouterSync';
 
 
 // Lazy Load Pages
@@ -60,6 +61,29 @@ const LoadingFull = () => (
   </div>
 );
 
+/**
+ * Força remount do conteúdo da rota a cada pathname.
+ * Evita regressão em que o hash/URL muda (ex.: /agenda → /financeiro)
+ * mas o Outlet continua exibindo a página anterior até um F5.
+ */
+const RoutedOutlet = () => {
+  const location = useLocation();
+
+  // Expõe pathname atual p/ debug E2E / diagnóstico de desync hash↔router
+  React.useEffect(() => {
+    document.body.dataset.rrPath = location.pathname;
+    document.body.dataset.rrSearch = location.search;
+  }, [location.pathname, location.search]);
+
+  return (
+    <ErrorBoundary key={location.pathname}>
+      <Suspense fallback={<LoadingFull />} key={location.pathname}>
+        <Outlet key={location.pathname} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
+
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
   const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
@@ -85,12 +109,7 @@ const ProtectedLayout = () => {
 
   return (
     <Layout>
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingFull />}>
-          <Outlet />
-        </Suspense>
-      </ErrorBoundary>
-
+      <RoutedOutlet />
     </Layout>
   );
 };
@@ -182,7 +201,7 @@ const AppRoutes: React.FC = () => {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
-          <Route path="/fila" element={<OwnerRouteGuard><QueueManagement /></OwnerRouteGuard>} />
+          <Route path="/fila" element={<QueueManagement />} />
           <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:id" element={<ClientCRM />} />
           <Route path="/produtos" element={<Products />} />
@@ -228,8 +247,12 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // unstable_useTransitions={false}: no RR7 o HashRouter aplica startTransition
+  // nas mudanças de location. Em rotas pesadas (Agenda) a transição fica “starved”
+  // — o hash muda, mas o Outlet continua na página anterior até F5.
   return (
-    <HashRouter>
+    <HashRouter unstable_useTransitions={false}>
+      <HashRouterSync />
       <DesignSystemProvider>
         <AuthProvider>
           <ToastProvider>

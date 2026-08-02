@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight } from 'lucide-react';
 
 export const ProfessionalPortfolio: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -120,10 +120,6 @@ export const ProfessionalPortfolio: React.FC = () => {
                                         <MapPin className="w-4 h-4" />
                                         <span>{business.business_name}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 bg-[var(--color-card-hover)] px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                        <Star className={`w-4 h-4 fill-theme-accent text-theme-accent`} />
-                                        <span>5.0 (Avaliações)</span>
-                                    </div>
                                 </div>
 
                                 {professional.bio && (
@@ -146,7 +142,7 @@ export const ProfessionalPortfolio: React.FC = () => {
                     </div>
                     <Button
                         onClick={() => navigate(`/book/${business.business_slug}?pro=${professional.id}`)}
-                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-[var(--color-bg)] font-bold whitespace-nowrap`}
+                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-[var(--color-on-accent)] font-bold whitespace-nowrap`}
                     >
                         <span className="flex items-center gap-2">
                             <Calendar className="w-5 h-5" /> Agendar Horário

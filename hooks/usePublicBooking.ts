@@ -11,6 +11,7 @@ import {
   fetchPublicClientByPhone,
   fetchPublicGallery,
   fetchPublicProfessionals,
+  fetchPublicProductsCatalog,
   fetchPublicServices,
   fetchClientByPhone,
   getActiveBookingByPhone,
@@ -75,6 +76,15 @@ export function usePublicCategories(businessId: string | null) {
     queryFn: () => fetchPublicCategories(businessId!),
     enabled: !!businessId,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function usePublicProducts(businessId: string | null) {
+  return useQuery({
+    queryKey: ['public-booking', 'products', businessId],
+    queryFn: () => fetchPublicProductsCatalog(businessId!),
+    enabled: !!businessId,
+    staleTime: 2 * 60 * 1000,
   });
 }
 

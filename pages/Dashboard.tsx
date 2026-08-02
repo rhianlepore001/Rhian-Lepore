@@ -123,7 +123,7 @@ export const Dashboard: React.FC = () => {
     : ['Seus indicadores aparecem após o primeiro mês.', 'Continue registrando atendimentos para liberar os insights.'];
 
   return (
-    <div className={`space-y-6 md:space-y-8 ${density.pagePadding} md:px-0`}>
+    <div className="space-y-6 md:space-y-8">
       {!isStaff && (
         <PageHeader
           title={`Olá, ${firstName}`}
@@ -161,11 +161,11 @@ export const Dashboard: React.FC = () => {
               </p>
               {dailyGoalProgress != null ? (
                 <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className={colors.textMuted}>
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
+                    <span className={`${colors.textMuted} min-w-0`}>
                       Meta do dia: {formatCurrency(dailyGoal, currencyRegion)}
                     </span>
-                    <span className={`font-semibold tabular-nums ${todayRevenue >= dailyGoal ? status.success : colors.textMuted}`}>
+                    <span className={`font-semibold tabular-nums shrink-0 ${todayRevenue >= dailyGoal ? status.success : colors.textMuted}`}>
                       {dailyGoalProgress}%{todayRevenue >= dailyGoal ? ' · atingida ✓' : ''}
                     </span>
                   </div>
@@ -340,11 +340,11 @@ export const Dashboard: React.FC = () => {
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.62fr)]">
             <Card variant="outlined">
               <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className={iconClass}><Target className="h-5 w-5" /></div>
-                  <div>
+                <div className="flex items-start gap-4 min-w-0">
+                  <div className={`${iconClass} shrink-0`}><Target className="h-5 w-5" /></div>
+                  <div className="min-w-0">
                     <h2 className={`font-heading text-base font-bold ${colors.text}`}>Meta mensal</h2>
-                    <p className={`mt-1 text-sm ${colors.textSecondary}`}>
+                    <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
                       Você já fez {formatCurrency(currentMonthRevenue, currencyRegion)} de {formatCurrency(monthlyGoal, currencyRegion)}.
                     </p>
                   </div>
@@ -369,12 +369,12 @@ export const Dashboard: React.FC = () => {
             </Card>
 
             <Card variant="outlined">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={iconClass}><Activity className="h-5 w-5" /></div>
-                  <div>
+              <div className="flex items-start justify-between gap-3 min-w-0">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className={`${iconClass} shrink-0`}><Activity className="h-5 w-5" /></div>
+                  <div className="min-w-0">
                     <h2 className={`font-heading text-base font-bold ${colors.text}`}>Saúde do negócio</h2>
-                    <p className={`text-sm ${colors.textSecondary}`}>
+                    <p className={`text-sm ${colors.textSecondary} text-pretty`}>
                       Nota de 0 a 100: clientes que voltam, ticket médio e risco de perda.
                     </p>
                   </div>
@@ -398,11 +398,11 @@ export const Dashboard: React.FC = () => {
           </section>
 
           <Card variant="outlined">
-            <div className="flex items-start gap-4">
-              <div className={iconClass}><Sparkles className="h-5 w-5" /></div>
-              <div>
+            <div className="flex items-start gap-4 min-w-0">
+              <div className={`${iconClass} shrink-0`}><Sparkles className="h-5 w-5" /></div>
+              <div className="min-w-0">
                 <h2 className={`font-heading text-base font-bold ${colors.text}`}>Dica para hoje</h2>
-                <p className={`mt-1 text-sm ${colors.textSecondary}`}>
+                <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
                   {weeklyGrowth > 0
                     ? `Você está ${weeklyGrowth}% acima da média recente. Mantenha a agenda cheia nos horários de maior procura.`
                     : weeklyGrowth < 0

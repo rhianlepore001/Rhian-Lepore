@@ -144,6 +144,7 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
       p_customer_phone: parsed.customerPhone,
       p_total_price: parsed.totalPrice,
       p_duration_minutes: parsed.durationMinutes,
+      p_product_lines: parsed.productLines ?? [],
     });
 
     if (updateError) throw updateError;
@@ -177,6 +178,7 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
       total_price: parsed.totalPrice,
       status: 'pending',
       duration_minutes: parsed.durationMinutes,
+      product_lines: parsed.productLines ?? [],
     });
 
   if (insertError) throw insertError;
@@ -198,7 +200,9 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
   return activeBooking;
 }
 
-export async function createAcceptedAppointmentFromBooking(input: CreateAcceptedAppointmentInput): Promise<void> {
+export async function createAcceptedAppointmentFromBooking(
+  input: CreateAcceptedAppointmentInput
+): Promise<string> {
   const parsed = createAcceptedAppointmentInputSchema.parse(input);
   const payload: Record<string, unknown> = {
     user_id: parsed.businessId,
@@ -215,11 +219,14 @@ export async function createAcceptedAppointmentFromBooking(input: CreateAccepted
     payload.public_booking_id = parsed.bookingId;
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('appointments')
-    .insert(payload);
+    .insert(payload)
+    .select('id')
+    .single();
 
   if (error) throw error;
+  return data.id as string;
 }
 
 export async function confirmPublicBooking(bookingId: string, businessId: string): Promise<void> {
@@ -349,6 +356,14 @@ export async function fetchBusinessSettings(businessId: string) {
 
   if (error) throw error;
   return data ?? null;
+}
+
+export async function fetchPublicProductsCatalog(businessId: string) {
+  const { data, error } = await supabase.rpc('get_public_products_catalog', {
+    p_business_id: businessId,
+  });
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchPublicServices(businessId: string) {

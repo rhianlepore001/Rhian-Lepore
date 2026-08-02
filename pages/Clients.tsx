@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/Logger';
 import { PhoneInput } from '../components/PhoneInput';
@@ -10,6 +10,7 @@ import {
   Card,
   Button,
   EmptyState,
+  ErrorState,
   Input,
   Modal,
   SkeletonCard,
@@ -27,6 +28,7 @@ export const Clients: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [showModal, setShowModal] = useState(false);
 
@@ -39,6 +41,8 @@ export const Clients: React.FC = () => {
   const [filterType, setFilterType] = useState<'Todos' | 'VIP' | 'Inativo' | 'Novos'>('Todos');
 
   const fetchClients = async () => {
+    setLoading(true);
+    setFetchError(false);
     try {
       if (effectiveUserId) {
         await syncPublicClientsToCrm(effectiveUserId);
@@ -82,6 +86,8 @@ export const Clients: React.FC = () => {
       }
     } catch (error) {
       logger.error('Error fetching clients', error);
+      setFetchError(true);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -218,7 +224,7 @@ export const Clients: React.FC = () => {
                 'px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap min-h-[44px]',
                 radius.button,
                 filterType === type
-                  ? `${accent.bg} text-[var(--color-bg)]`
+                  ? `${accent.bg} text-[var(--color-on-accent)]`
                   : `${colors.surface} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
               ].join(' ')}
             >
@@ -235,6 +241,13 @@ export const Clients: React.FC = () => {
             <SkeletonCard />
             <SkeletonCard />
           </>
+        ) : fetchError ? (
+          <div className="col-span-full">
+            <ErrorState
+              title="Não foi possível carregar os clientes"
+              onRetry={() => { void fetchClients(); }}
+            />
+          </div>
         ) : filteredClients.length === 0 ? (
           <div className="col-span-full">
             <EmptyState
@@ -271,7 +284,7 @@ export const Clients: React.FC = () => {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {totalVisits >= 5 && (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${accent.bg} text-[var(--color-bg)]`}>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${accent.bg} text-[var(--color-on-accent)]`}>
                           VIP
                         </span>
                       )}

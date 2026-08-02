@@ -4,7 +4,6 @@ import {
   calcSettlementDate,
   createFinanceRecord,
   deleteFinanceTransaction,
-  fetchDropdownOptions,
   fetchFinanceStats,
   fetchMonthlyHistory,
   filterStaffTransactions,
@@ -243,5 +242,77 @@ describe('finance service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('delete_finance_transaction', {
       p_record_id: 'fin-001',
     });
+  });
+
+  it('createFinanceRecord grava receita em revenue (nao amount)', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    (supabase.from as any).mockReturnValue({ insert });
+
+    await createFinanceRecord({
+      companyId: 'company-001',
+      type: 'revenue',
+      amount: 45,
+      expense: 0,
+      description: 'Venda de pomada',
+      paymentMethod: 'cash',
+      professionalId: null,
+      professionalName: 'Manual',
+      clientId: null,
+      clientName: '',
+      serviceName: '',
+      appointmentId: null,
+      dueDate: null,
+      commissionPaid: true,
+      status: 'paid',
+      createdAt: '2026-07-31T12:00:00.000Z',
+    });
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      user_id: 'company-001',
+      type: 'revenue',
+      revenue: 45,
+      commission_value: 0,
+      payment_method: 'cash',
+      status: 'paid',
+      created_at: '2026-07-31T12:00:00.000Z',
+    }));
+    const payload = insert.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('amount');
+    expect(payload).not.toHaveProperty('expense');
+  });
+
+  it('createFinanceRecord grava despesa em commission_value (nao expense)', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    (supabase.from as any).mockReturnValue({ insert });
+
+    await createFinanceRecord({
+      companyId: 'company-001',
+      type: 'expense',
+      amount: 0,
+      expense: 120,
+      description: 'Aluguel',
+      paymentMethod: null,
+      professionalId: null,
+      professionalName: 'Manual',
+      clientId: null,
+      clientName: '',
+      serviceName: '',
+      appointmentId: null,
+      dueDate: null,
+      commissionPaid: false,
+      status: 'pending',
+    });
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'expense',
+      revenue: 0,
+      commission_value: 120,
+      status: 'pending',
+      commission_paid: false,
+    }));
+    const payload = insert.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('amount');
+    expect(payload).not.toHaveProperty('expense');
+    expect(payload).not.toHaveProperty('created_at');
   });
 });

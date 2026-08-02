@@ -1,4 +1,4 @@
-import { Card, Button } from '../components/ui';
+import { Card, Button, PageHeader } from '../components/ui';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,16 +16,17 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 
 export const QueueManagement: React.FC = () => {
-    const { user, region } = useAuth();
+    const { user, role, region, companyId } = useAuth();
+    const isStaff = role === 'staff';
     const { accent, isBeauty, classes, colors } = useBrutalTheme();
     const { showToast } = useToast();
     const queryClient = useQueryClient();
     const addManualMutation = useAddManualQueueEntry();
     const updateStatusMutation = useUpdateQueueStatus();
     const finishMutation = useFinishQueueEntry();
-    const { data: rawEntries = [], isLoading: loadingEntries, refetch: refetchEntries } = useQueueEntries(user?.id ?? '');
-    const { data: businessSlug } = useBusinessSlug(user?.id ?? '');
-    const { data: teamMembers = [] } = useQueueTeamMembers(user?.id ?? '');
+    const { data: rawEntries = [], isLoading: loadingEntries, refetch: refetchEntries } = useQueueEntries(companyId ?? '');
+    const { data: businessSlug } = useBusinessSlug(companyId ?? '');
+    const { data: teamMembers = [] } = useQueueTeamMembers(companyId ?? '');
 
     const [showQrModal, setShowQrModal] = useState(false);
     const [selectedQrPro, setSelectedQrPro] = useState<string | null>(null);
@@ -75,10 +76,10 @@ export const QueueManagement: React.FC = () => {
     }), [entries]);
 
     useEffect(() => {
-        if (!user) return;
+        if (!companyId) return;
 
         const channel = supabase.channel('queue_manage')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'queue_entries', filter: `business_id=eq.${user.id}` },
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'queue_entries', filter: `business_id=eq.${companyId}` },
                 () => {
                     queryClient.invalidateQueries({ queryKey: ['queue', 'entries'] });
                 })
@@ -87,7 +88,7 @@ export const QueueManagement: React.FC = () => {
         return () => {
             supabase.removeChannel(channel);
         }
-    }, [user, queryClient]);
+    }, [companyId, queryClient]);
 
 const handleManualAdd = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -240,33 +241,35 @@ const confirmFinish = async () => {
 
     return (
         <div className="space-y-6 pb-20">
-            {/* Header */}
-            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-[var(--shadow-card)]`}>
-                <div className="mb-4 md:mb-0">
-                    <h1 className={`text-2xl md:text-3xl font-heading font-bold ${colors.text} mb-1 flex items-center gap-2`}>
-                        <Clock className={`w-8 h-8 ${accent.text}`} />
-                        Fila Digital
-                    </h1>
-                    <p className={`${colors.textSecondary} text-sm font-mono`}>Gerencie atendimentos em tempo real</p>
-                </div>
-                {/* Desktop: botoes com texto */}
-                <div className="hidden md:flex gap-2">
-                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />}>
-                        Adicionar
-                    </Button>
-                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />}>
-                        Gerar QR Code
-                    </Button>
-                </div>
-                {/* Mobile: apenas icones — display controlado no wrapper (evita conflito de ordem de classes no Tailwind CDN) */}
-                <div className="flex md:hidden gap-3">
-                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" aria-label="Adicionar cliente na fila" className="!min-w-0 !px-3.5 !rounded-full">
-                        <User className="w-5 h-5" />
-                    </Button>
-                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" aria-label="Gerar QR Code" className="!min-w-0 !px-3.5 !rounded-full">
-                        <QrCode className="w-5 h-5" />
-                    </Button>
-                </div>
+            <div className={`sticky top-0 z-30 ${colors.card} ${colors.border} p-4 md:p-5 rounded-xl border shadow-[var(--shadow-card)]`}>
+                <PageHeader
+                    title="Fila Digital"
+                    subtitle="Gerencie atendimentos em tempo real"
+                    action={
+                        <>
+                            <div className="hidden md:flex gap-2">
+                                {!isStaff && (
+                                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />}>
+                                        Adicionar
+                                    </Button>
+                                )}
+                                <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />}>
+                                    Gerar QR Code
+                                </Button>
+                            </div>
+                            <div className="flex md:hidden gap-3">
+                                {!isStaff && (
+                                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" aria-label="Adicionar cliente na fila" className="!min-w-0 !px-3.5 !rounded-full">
+                                        <User className="w-5 h-5" />
+                                    </Button>
+                                )}
+                                <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" aria-label="Gerar QR Code" className="!min-w-0 !px-3.5 !rounded-full">
+                                    <QrCode className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        </>
+                    }
+                />
             </div>
 
             {/* Metrics */}
@@ -298,11 +301,13 @@ const confirmFinish = async () => {
                             bordered
                             icon={Clock}
                             title="A fila está vazia"
-                            description="Compartilhe o QR Code ou adicione um cliente manualmente."
+                            description={isStaff ? "Aguardando o próximo cliente entrar via QR Code." : "Compartilhe o QR Code ou adicione um cliente manualmente."}
                             action={
-                                <Button variant="secondary" size="sm" onClick={() => setShowAddModal(true)}>
-                                    Adicionar cliente
-                                </Button>
+                                !isStaff ? (
+                                    <Button variant="secondary" size="sm" onClick={() => setShowAddModal(true)}>
+                                        Adicionar cliente
+                                    </Button>
+                                ) : undefined
                             }
                         />
                     ) : (
@@ -340,13 +345,15 @@ const confirmFinish = async () => {
                                             <Play className="w-5 h-5 fill-current" />
                                         </button>
                                     )}
-                                    <button
-                                        onClick={() => setNoShowTarget(entry.id)}
-                                        className="p-3 bg-[var(--color-danger-bg)] text-[var(--color-danger)] rounded-full hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] transition-all opacity-60 hover:opacity-100"
-                                        title="Não Compareceu"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
+                                    {!isStaff && (
+                                        <button
+                                            onClick={() => setNoShowTarget(entry.id)}
+                                            className="p-3 bg-[var(--color-danger-bg)] text-[var(--color-danger)] rounded-full hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] transition-all opacity-60 hover:opacity-100"
+                                            title="Não Compareceu"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))

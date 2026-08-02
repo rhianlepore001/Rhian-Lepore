@@ -299,7 +299,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       cardAccent: `bg-theme-card border-[var(--color-accent-border)] border ${radius.card} overflow-hidden select-none touch-pan-y shadow-[var(--shadow-card-accent)] transition-[box-shadow,transform] duration-200 ease-out`,
       cardGlow: `bg-theme-card border-theme-border border ${radius.card} overflow-hidden select-none touch-pan-y shadow-[var(--shadow-card-glow)] ring-[var(--color-input-focus)] transition-[box-shadow,transform] duration-200 ease-out`,
 
-      buttonPrimary: `bg-theme-accent text-[var(--color-bg)] font-bold ${radius.button} shadow-[var(--shadow-btn-primary)] hover:brightness-110 active:scale-[0.97] transition-all duration-150 ease-out`,
+      buttonPrimary: `bg-theme-accent text-[var(--color-on-accent)] font-bold ${radius.button} shadow-[var(--shadow-btn-primary)] hover:brightness-110 active:scale-[0.97] transition-all duration-150 ease-out`,
       buttonSecondary: `bg-[var(--color-card-hover)] text-theme-text border-[var(--color-border)] border font-bold ${radius.button} hover:bg-[var(--color-divider)] transition-all duration-150 ease-out`,
       buttonGhost: `bg-transparent border-transparent text-theme-accent hover:bg-[var(--color-card-hover)] transition-all duration-150 ease-out`,
       buttonDanger: `bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,

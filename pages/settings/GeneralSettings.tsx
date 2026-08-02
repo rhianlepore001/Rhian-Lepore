@@ -204,7 +204,7 @@ export const GeneralSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-4xl pb-20 md:pb-0">
+            <div className="w-full pb-20 md:pb-0 space-y-6">
                 <SettingsSection
                     title="Identidade Visual"
                     description="Logo e capa que aparecem na sua página pública de agendamento."

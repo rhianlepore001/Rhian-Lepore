@@ -1,0 +1,2665 @@
+{
+  "rota": "clube-assinantes",
+  "resumo": {
+    "rota": "clube-assinantes",
+    "grupo": "ajustes",
+    "execucoes": 8,
+    "maxTamanhosFonte": 7,
+    "maxEspacamentos": 15,
+    "maxForaDaEscala4px": 3,
+    "maxRaios": 8,
+    "maxSombras": 1,
+    "maxLargurasBorda": 2,
+    "totalViolacoesContraste": 14,
+    "maxAlvosPequenos": 16,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 1
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/clube/assinantes",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clube/assinantes",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 117,
+        "tipografia": {
+          "combinacoesDistintas": 11,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "12px / 700 / 16px": 9,
+            "12px / 500 / 16px": 5,
+            "30px / 700 / 36px": 4,
+            "14px / 500 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 600 / 20px": 1,
+            "18px / 500 / 28px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 15,
+            "14px": 4,
+            "30px": 4,
+            "18px": 2,
+            "24px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 9,
+            "600": 1,
+            "700": 16
+          },
+          "alturasLinha": {
+            "16px": 14,
+            "20px": 4,
+            "36px": 4,
+            "18px": 1,
+            "12px": 1,
+            "32px": 1,
+            "28px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 21,
+            "Chivo": 3,
+            "JetBrains Mono": 2,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 15,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 47,
+            "16px": 39,
+            "12px": 24,
+            "4px": 12,
+            "24px": 3,
+            "10px": 2,
+            "20px": 2,
+            "48px": 2,
+            "126px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "32px": 1,
+            "96px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "126px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 9,
+            "8px": 7,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "6px": 1,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 61,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 27,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 8,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Todos",
+              "largura": 75.4,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Ativos",
+              "largura": 79.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Pendentes",
+              "largura": 107.5,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Atrasados",
+              "largura": 110.1,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Cancelados",
+              "largura": 118.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 5,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "28": 5,
+            "198": 1,
+            "201": 2,
+            "302": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 198,
+              "x2": 201,
+              "delta": 3,
+              "ocorrencias1": 1,
+              "ocorrencias2": 2
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 161
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 161
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 161
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 161
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 334
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/",
+      "redirecionado": true,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 107,
+        "tipografia": {
+          "combinacoesDistintas": 8,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "12px / 500 / 16px": 8,
+            "12px / 700 / 16px": 5,
+            "20px / 700 / 28px": 3,
+            "14px / 700 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 500 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 13,
+            "14px": 3,
+            "20px": 3,
+            "18px": 1,
+            "24px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 10,
+            "700": 11
+          },
+          "alturasLinha": {
+            "16px": 13,
+            "20px": 3,
+            "28px": 3,
+            "18px": 1,
+            "32px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 9,
+            "ui-sans-serif": 7,
+            "Chivo": 5,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "8px": 42,
+            "16px": 23,
+            "12px": 18,
+            "4px": 6,
+            "2px": 2,
+            "24px": 2,
+            "32px": 2,
+            "137px": 2,
+            "64px": 1,
+            "128px": 1,
+            "-8px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "137px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 6,
+            "8px": 4,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 32,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 22,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 2,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 2,
+            "198": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#dashboard-meu-dia",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-4 > div.group > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6 > div",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.space-y-6 > div > div.flex.items-center.justify-between",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/clube/assinantes",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clube/assinantes",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 141,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "14px / 500 / 20px": 11,
+            "12px / 500 / 16px": 5,
+            "30px / 700 / 36px": 5,
+            "12px / 700 / 16px": 5,
+            "12px / 600 / 16px": 3,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "14px / 600 / 20px": 1,
+            "18px / 500 / 28px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 15,
+            "14px": 13,
+            "30px": 5,
+            "24px": 2,
+            "16px": 1,
+            "18px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 19,
+            "600": 4,
+            "700": 13,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 13,
+            "20px": 12,
+            "36px": 5,
+            "24px": 3,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "28px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 30,
+            "Chivo": 4,
+            "JetBrains Mono": 3,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 15,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 48,
+            "8px": 44,
+            "16px": 28,
+            "4px": 24,
+            "20px": 23,
+            "24px": 12,
+            "32px": 4,
+            "10px": 2,
+            "48px": 2,
+            "507px": 2,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1,
+            "96px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "507px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 15,
+            "12px": 6,
+            "3.35544e+07px": 4,
+            "4px": 2,
+            "6px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 1
+          },
+          "largurasBorda": {
+            "1px": 64,
+            "2px": 9
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 38,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 16,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Todos",
+              "largura": 75.4,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Ativos",
+              "largura": 79.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Pendentes",
+              "largura": 107.5,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Atrasados",
+              "largura": 110.1,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Cancelados",
+              "largura": 118.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 10,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 8,
+            "256": 2,
+            "296": 3,
+            "575": 1,
+            "854": 1,
+            "1133": 1,
+            "1086.8": 1,
+            "1222.8": 1,
+            "1227.6": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1086.8,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col",
+              "x": 296,
+              "largura": 1104
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "x": 1227.6,
+              "largura": 172.4
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 296,
+              "largura": 267
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 575,
+              "largura": 267
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 854,
+              "largura": 267
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 1133,
+              "largura": 267
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 296,
+              "largura": 1104
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/",
+      "redirecionado": true,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 124,
+        "tipografia": {
+          "combinacoesDistintas": 12,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "14px / 500 / 20px": 9,
+            "12px / 500 / 16px": 7,
+            "30px / 700 / 36px": 4,
+            "24px / 900 / 24px": 1,
+            "12px / 600 / 16px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "14px / 700 / 20px": 1,
+            "12px / 700 / 16px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "14px": 11,
+            "12px": 10,
+            "30px": 4,
+            "24px": 2,
+            "16px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 18,
+            "600": 1,
+            "700": 8,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 10,
+            "16px": 9,
+            "36px": 4,
+            "24px": 3,
+            "17.5px": 1,
+            "15px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 12,
+            "JetBrains Mono": 10,
+            "Chivo": 6,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "12px": 34,
+            "8px": 34,
+            "16px": 17,
+            "24px": 15,
+            "4px": 12,
+            "20px": 8,
+            "32px": 5,
+            "2px": 2,
+            "530px": 2,
+            "80px": 1,
+            "256px": 1,
+            "-8px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "530px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 10,
+            "3.35544e+07px": 3,
+            "12px": 3,
+            "4px": 2
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 39,
+            "2px": 5
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 29,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 9,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "280": 2,
+            "1022.3": 1,
+            "1158.3": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1022.3,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div#dashboard-meu-dia",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-4 > div.group > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 280,
+              "largura": 1136
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6",
+              "scrollWidth": 1102,
+              "clientWidth": 1094,
+              "excesso": 8
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6 > div",
+              "scrollWidth": 1102,
+              "clientWidth": 1094,
+              "excesso": 8
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.space-y-6 > div > div.flex.items-center.justify-between",
+              "scrollWidth": 1102,
+              "clientWidth": 1094,
+              "excesso": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/clube/assinantes",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clube/assinantes",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 121,
+        "tipografia": {
+          "combinacoesDistintas": 11,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "12px / 700 / 16px": 9,
+            "12px / 500 / 16px": 5,
+            "30px / 700 / 36px": 4,
+            "14px / 500 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 600 / 20px": 1,
+            "18px / 500 / 28px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 15,
+            "14px": 4,
+            "30px": 4,
+            "18px": 2,
+            "24px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 9,
+            "600": 1,
+            "700": 16
+          },
+          "alturasLinha": {
+            "16px": 14,
+            "20px": 4,
+            "36px": 4,
+            "18px": 1,
+            "12px": 1,
+            "32px": 1,
+            "28px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 21,
+            "Chivo": 3,
+            "JetBrains Mono": 2,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 15,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "8px": 47,
+            "16px": 39,
+            "12px": 24,
+            "4px": 12,
+            "24px": 3,
+            "10px": 2,
+            "20px": 2,
+            "48px": 2,
+            "126px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "32px": 1,
+            "96px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "126px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 8,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 9,
+            "8px": 7,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "6px": 1,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 61,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 27,
+          "violacoes": 4,
+          "violacoesTextoNormal": 4,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.87,
+          "detalhes": [
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Ativos",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Pendentes",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Atrasados",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Cancelados",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 8,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Todos",
+              "largura": 75.4,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Ativos",
+              "largura": 79.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Pendentes",
+              "largura": 107.5,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Atrasados",
+              "largura": 110.1,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Cancelados",
+              "largura": 118.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 5,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "28": 5,
+            "198": 1,
+            "201": 2,
+            "302": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 198,
+              "x2": 201,
+              "delta": 3,
+              "ocorrencias1": 1,
+              "ocorrencias2": 2
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "x": 28,
+              "largura": 334
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 161
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 161
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 161
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 161
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 28,
+              "largura": 334
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/",
+      "redirecionado": true,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 111,
+        "tipografia": {
+          "combinacoesDistintas": 8,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 6,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "12px / 500 / 16px": 8,
+            "12px / 700 / 16px": 5,
+            "20px / 700 / 28px": 3,
+            "14px / 700 / 20px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 500 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 13,
+            "14px": 3,
+            "20px": 3,
+            "18px": 1,
+            "24px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 10,
+            "700": 11
+          },
+          "alturasLinha": {
+            "16px": 13,
+            "20px": 3,
+            "28px": 3,
+            "18px": 1,
+            "32px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "JetBrains Mono": 9,
+            "ui-sans-serif": 7,
+            "Chivo": 5,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 11,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "8px": 42,
+            "16px": 23,
+            "12px": 18,
+            "4px": 6,
+            "2px": 2,
+            "24px": 2,
+            "32px": 2,
+            "137px": 2,
+            "64px": 1,
+            "128px": 1,
+            "-8px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "137px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "12px": 6,
+            "8px": 4,
+            "3.35544e+07px": 2,
+            "4px": 2,
+            "28px": 1,
+            "16px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 32,
+            "2px": 4
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 22,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.85,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 2,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 4,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 2,
+            "198": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#dashboard-meu-dia",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-4 > div.group > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6 > div",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.space-y-6 > div > div.flex.items-center.justify-between",
+              "scrollWidth": 316,
+              "clientWidth": 308,
+              "excesso": 8
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/clube/assinantes",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/clube/assinantes",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 145,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "14px / 500 / 20px": 11,
+            "12px / 500 / 16px": 5,
+            "30px / 700 / 36px": 5,
+            "12px / 700 / 16px": 5,
+            "12px / 600 / 16px": 3,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "14px / 600 / 20px": 1,
+            "18px / 500 / 28px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "12px": 15,
+            "14px": 13,
+            "30px": 5,
+            "24px": 2,
+            "16px": 1,
+            "18px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 19,
+            "600": 4,
+            "700": 13,
+            "900": 1
+          },
+          "alturasLinha": {
+            "16px": 13,
+            "20px": 12,
+            "36px": 5,
+            "24px": 3,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "28px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 30,
+            "Chivo": 4,
+            "JetBrains Mono": 3,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 15,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 48,
+            "8px": 44,
+            "16px": 28,
+            "4px": 24,
+            "20px": 23,
+            "24px": 12,
+            "32px": 4,
+            "10px": 2,
+            "48px": 2,
+            "507px": 2,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1,
+            "96px": 1,
+            "36px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "507px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 15,
+            "12px": 6,
+            "3.35544e+07px": 4,
+            "4px": 2,
+            "6px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 1
+          },
+          "largurasBorda": {
+            "1px": 64,
+            "2px": 9
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 38,
+          "violacoes": 8,
+          "violacoesTextoNormal": 8,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.87,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Crescimento",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Sistema",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Ativos",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Pendentes",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Atrasados",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "texto": "Cancelados",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(220, 220, 220)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.87,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 16,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Todos",
+              "largura": 75.4,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Ativos",
+              "largura": 79.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Pendentes",
+              "largura": 107.5,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Atrasados",
+              "largura": 110.1,
+              "altura": 34,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > div.flex.flex-col.md:flex-row > div.flex.gap-2.overflow-x-auto > button.px-4.py-2.rounded-xl",
+              "rotulo": "Cancelados",
+              "largura": 118.8,
+              "altura": 34,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 10,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 8,
+            "256": 2,
+            "296": 3,
+            "575": 1,
+            "854": 1,
+            "1133": 1,
+            "1086.8": 1,
+            "1222.8": 1,
+            "1227.6": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1086.8,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col",
+              "x": 296,
+              "largura": 1104
+            },
+            {
+              "selector": "div.max-w-6xl.mx-auto.px-4 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "x": 1227.6,
+              "largura": 172.4
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 296,
+              "largura": 267
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 575,
+              "largura": 267
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 854,
+              "largura": 267
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.grid.grid-cols-2.md:grid-cols-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 1133,
+              "largura": 267
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.max-w-6xl.mx-auto.px-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 296,
+              "largura": 1104
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "clube-assinantes",
+      "grupo": "ajustes",
+      "hashSolicitado": "/clube/assinantes",
+      "hashFinal": "#/",
+      "redirecionado": true,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 404 ()",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "forense": {
+        "url": "http://localhost:4173/#/",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 128,
+        "tipografia": {
+          "combinacoesDistintas": 12,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "14px / 500 / 20px": 9,
+            "12px / 500 / 16px": 7,
+            "30px / 700 / 36px": 4,
+            "24px / 900 / 24px": 1,
+            "12px / 600 / 16px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "14px / 700 / 20px": 1,
+            "12px / 700 / 16px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "14px": 11,
+            "12px": 10,
+            "30px": 4,
+            "24px": 2,
+            "16px": 1,
+            "11px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 18,
+            "600": 1,
+            "700": 8,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 10,
+            "16px": 9,
+            "36px": 4,
+            "24px": 3,
+            "17.5px": 1,
+            "15px": 1,
+            "16.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 12,
+            "JetBrains Mono": 10,
+            "Chivo": 6,
+            "monospace": 1
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 12,
+          "foraDaEscala4px": 2,
+          "valores": {
+            "12px": 34,
+            "8px": 34,
+            "16px": 17,
+            "24px": 15,
+            "4px": 12,
+            "20px": 8,
+            "32px": 5,
+            "2px": 2,
+            "530px": 2,
+            "80px": 1,
+            "256px": 1,
+            "-8px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "2px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "530px",
+              "ocorrencias": 2
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 4,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 10,
+            "3.35544e+07px": 3,
+            "12px": 3,
+            "4px": 2
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 39,
+            "2px": 5
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 29,
+          "violacoes": 2,
+          "violacoesTextoNormal": 2,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.85,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 9,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "280": 2,
+            "1022.3": 1,
+            "1158.3": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1022.3,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "div#dashboard-meu-dia",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.p-3 > div.space-y-4 > div.group > div.bg-theme-card.rounded-lg.overflow-hidden",
+              "x": 280,
+              "largura": 1136
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 4,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6",
+              "scrollWidth": 1102,
+              "clientWidth": 1094,
+              "excesso": 8
+            },
+            {
+              "selector": "div#dashboard-meu-dia > div.p-4.md:p-5 > div.space-y-6 > div",
+              "scrollWidth": 1102,
+              "clientWidth": 1094,
+              "excesso": 8
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.space-y-6 > div > div.flex.items-center.justify-between",
+              "scrollWidth": 1102,
+              "clientWidth": 1094,
+              "excesso": 8
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

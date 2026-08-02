@@ -1,0 +1,44 @@
+{
+  "geradoEm": "2026-08-02T09:12:55.777Z",
+  "slugDisponivel": false,
+  "rotasAuditadas": 2,
+  "execucoesTotais": 4,
+  "naoAuditadas": 2,
+  "temasEfetivosVistos": [
+    "barber-dark"
+  ],
+  "combinacoesComTemaDivergente": 0,
+  "combinacoesComModoDivergente": 0,
+  "porRota": [
+    {
+      "rota": "insights",
+      "grupo": "nucleo",
+      "execucoes": 2,
+      "maxTamanhosFonte": 9,
+      "maxEspacamentos": 14,
+      "maxForaDaEscala4px": 3,
+      "maxRaios": 8,
+      "maxSombras": 1,
+      "maxLargurasBorda": 2,
+      "totalViolacoesContraste": 4,
+      "maxAlvosPequenos": 15,
+      "overflowEm390": false,
+      "maxQuaseAlinhamentos": 1
+    },
+    {
+      "rota": "dashboard",
+      "grupo": "nucleo",
+      "execucoes": 2,
+      "maxTamanhosFonte": 8,
+      "maxEspacamentos": 11,
+      "maxForaDaEscala4px": 3,
+      "maxRaios": 8,
+      "maxSombras": 2,
+      "maxLargurasBorda": 2,
+      "totalViolacoesContraste": 11,
+      "maxAlvosPequenos": 8,
+      "overflowEm390": false,
+      "maxQuaseAlinhamentos": 0
+    }
+  ]
+}

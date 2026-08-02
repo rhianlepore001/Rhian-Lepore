@@ -18,12 +18,10 @@ export const PublicBookingSettings: React.FC = () => {
     const updateSettingsMutation = useUpdateBusinessSettings();
     const updateProfileMutation = useUpdateProfileFields();
 
-    const [enableUpsells, setEnableUpsells] = useState(false);
-    const [enableProfessionalSelection, setEnableProfessionalSelection] = useState(false);
+    const [publicProductsEnabled, setPublicProductsEnabled] = useState(false);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
     const [leadTimeHours, setLeadTimeHours] = useState(2);
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
-    const [enableEmailReminders, setEnableEmailReminders] = useState(true);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -32,6 +30,7 @@ export const PublicBookingSettings: React.FC = () => {
     useEffect(() => {
         if (settings) {
             setEnableSelfRescheduling(settings.enable_self_rescheduling ?? true);
+            setPublicProductsEnabled(settings.public_products_enabled ?? false);
         }
     }, [settings]);
 
@@ -49,6 +48,7 @@ export const PublicBookingSettings: React.FC = () => {
         try {
             await updateSettingsMutation.mutateAsync({
                 enable_self_rescheduling: enableSelfRescheduling,
+                public_products_enabled: publicProductsEnabled,
             });
 
             await updateProfileMutation.mutateAsync({
@@ -91,7 +91,7 @@ export const PublicBookingSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-4xl space-y-6 pb-20 md:pb-0">
+            <div className="w-full space-y-6 pb-20 md:pb-0">
                 <PublicLinkCard businessSlug={businessSlug} publicBookingEnabled={publicBookingEnabled} />
 
                 <SettingsSection
@@ -110,20 +110,20 @@ export const PublicBookingSettings: React.FC = () => {
                     <SettingsSection
                         title={
                             <div className="flex items-center gap-2">
-                                <span className="text-sm">Upsells Inteligentes</span>
+                                <span className="text-sm">Produtos no link público</span>
                                 <HelpCircle className="w-4 h-4 text-[var(--color-text-muted)]" />
                             </div>
                         }
                     >
                         <div className="space-y-4">
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                                Sugere serviços extras para o cliente gastar mais por visita, automaticamente.
+                                Exibe a seção Produtos no agendamento online. O estoque só baixa quando o atendimento for cobrado.
                             </p>
-                            <div className={`inline-flex items-center px-3 py-1.5 rounded-xl ${accent.bgDim} ${accent.borderDim} ${accent.text} text-xs font-bold uppercase tracking-wider`}>
-                                +R$ 1.200/mês méd.
-                            </div>
                             <div className="flex justify-end pt-2">
-                                <SettingsSwitch checked={enableUpsells} onChange={setEnableUpsells} />
+                                <SettingsSwitch
+                                    checked={publicProductsEnabled}
+                                    onChange={setPublicProductsEnabled}
+                                />
                             </div>
                         </div>
                     </SettingsSection>
@@ -136,15 +136,15 @@ export const PublicBookingSettings: React.FC = () => {
                             </div>
                         }
                     >
-                        <div className="space-y-4">
+                        <div className="space-y-4 opacity-60">
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Permite que os clientes escolham com quem desejam realizar o procedimento.
                             </p>
-                            <div className="inline-flex items-center px-3 py-1.5 rounded-xl bg-[var(--color-success-bg)] border border-[var(--color-success-border)] text-[var(--color-success)] text-xs font-bold uppercase tracking-wider">
-                                +114% Retenção
-                            </div>
-                            <div className="flex justify-end pt-2">
-                                <SettingsSwitch checked={enableProfessionalSelection} onChange={setEnableProfessionalSelection} />
+                            <p className={`${colors.textMuted} text-xs`}>
+                                Em breve — esta opção ainda não está disponível para salvar.
+                            </p>
+                            <div className="flex justify-end pt-2 pointer-events-none" aria-disabled="true">
+                                <SettingsSwitch checked={false} onChange={() => undefined} />
                             </div>
                         </div>
                     </SettingsSection>
@@ -152,12 +152,14 @@ export const PublicBookingSettings: React.FC = () => {
 
                 <SettingsSection title="Automação e Lembretes">
                     <div className="space-y-2 divide-y divide-[var(--color-divider)]">
-                        <ToggleRow
-                            title="Lembretes por E-mail"
-                            description="Aviso automático 24h antes do serviço."
-                            checked={enableEmailReminders}
-                            onChange={setEnableEmailReminders}
-                        />
+                        <SettingsRow
+                            label="Lembretes por E-mail"
+                            help="Aviso automático 24h antes do serviço. Em breve — ainda não disponível para salvar."
+                        >
+                            <div className="opacity-60 pointer-events-none" aria-disabled="true">
+                                <SettingsSwitch checked={false} onChange={() => undefined} />
+                            </div>
+                        </SettingsRow>
                         <ToggleRow
                             title="Reagendamento Autônomo"
                             description="Cliente reagenda sozinho via link de e-mail."

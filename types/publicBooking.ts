@@ -8,6 +8,11 @@ export const publicBookingStatusSchema = z.enum([
   'completed',
 ]);
 
+export const publicBookingProductLineSchema = z.object({
+  product_id: z.string().min(1),
+  quantity: z.number().int().positive(),
+});
+
 export const publicBookingSchema = z.object({
   id: z.string().min(1),
   business_id: z.string().min(1),
@@ -22,6 +27,7 @@ export const publicBookingSchema = z.object({
   status: publicBookingStatusSchema,
   duration_minutes: z.number().int().positive().nullish(),
   is_edit: z.boolean().nullish(),
+  product_lines: z.array(publicBookingProductLineSchema).nullish(),
 });
 
 export const submitPublicBookingInputSchema = z.object({
@@ -35,6 +41,7 @@ export const submitPublicBookingInputSchema = z.object({
   durationMinutes: z.number().int().positive(),
   editingBookingId: z.string().min(1).nullish(),
   originalAppointmentTime: z.string().nullish(),
+  productLines: z.array(publicBookingProductLineSchema).optional().default([]),
 });
 
 export const createAcceptedAppointmentInputSchema = z.object({
@@ -51,5 +58,5 @@ export const createAcceptedAppointmentInputSchema = z.object({
 
 export type PublicBookingStatus = z.infer<typeof publicBookingStatusSchema>;
 export type PublicBookingRecord = z.infer<typeof publicBookingSchema>;
-export type SubmitPublicBookingInput = z.infer<typeof submitPublicBookingInputSchema>;
-export type CreateAcceptedAppointmentInput = z.infer<typeof createAcceptedAppointmentInputSchema>;
+export type SubmitPublicBookingInput = z.input<typeof submitPublicBookingInputSchema>;
+export type CreateAcceptedAppointmentInput = z.input<typeof createAcceptedAppointmentInputSchema>;

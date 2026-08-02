@@ -1,0 +1,3722 @@
+{
+  "rota": "financeiro",
+  "resumo": {
+    "rota": "financeiro",
+    "grupo": "nucleo",
+    "execucoes": 8,
+    "maxTamanhosFonte": 8,
+    "maxEspacamentos": 14,
+    "maxForaDaEscala4px": 4,
+    "maxRaios": 7,
+    "maxSombras": 1,
+    "maxLargurasBorda": 2,
+    "totalViolacoesContraste": 39,
+    "maxAlvosPequenos": 23,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 0
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 268,
+        "tipografia": {
+          "combinacoesDistintas": 16,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 16,
+            "14px / 600 / 20px": 7,
+            "12px / 600 / 16px": 5,
+            "12px / 500 / 16px": 4,
+            "14px / 500 / 20px": 4,
+            "12px / 700 / 16px": 4,
+            "24px / 900 / 32px": 3,
+            "20px / 700 / 28px": 3,
+            "16px / 700 / 24px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 17,
+            "12px": 15,
+            "14px": 12,
+            "24px": 4,
+            "20px": 4,
+            "16px": 2,
+            "18px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 27,
+            "600": 12,
+            "700": 12,
+            "900": 3
+          },
+          "alturasLinha": {
+            "16.5px": 17,
+            "16px": 13,
+            "20px": 12,
+            "32px": 4,
+            "28px": 4,
+            "24px": 2,
+            "18px": 1,
+            "12px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 22,
+            "monospace": 17,
+            "JetBrains Mono": 12,
+            "Chivo": 4
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "16px": 66,
+            "8px": 47,
+            "12px": 43,
+            "4px": 22,
+            "6px": 20,
+            "24px": 10,
+            "10px": 8,
+            "2px": 4,
+            "14px": 4,
+            "48px": 2,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 20
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 14,
+            "3.35544e+07px": 8,
+            "12px": 7,
+            "16px": 5,
+            "4px": 4,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 59,
+            "2px": 12
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 55,
+          "violacoes": 1,
+          "violacoesTextoNormal": 1,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 11,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Visão Geral",
+              "largura": 134.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Comissões",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Histórico",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 10,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 12,
+            "42": 1,
+            "51": 1,
+            "210": 1,
+            "283": 1,
+            "302": 1,
+            "151.8": 1,
+            "163.5": 1,
+            "238.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 151.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 42,
+              "largura": 36
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 163.5,
+              "largura": 119.5
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 283,
+              "largura": 119.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-center.gap-3 > div.flex.h-9.w-9 > svg.[object.SVGAnimatedString]",
+              "x": 51,
+              "largura": 16
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 238.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 216,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 16,
+            "12px / 600 / 16px": 5,
+            "12px / 700 / 16px": 4,
+            "14px / 500 / 20px": 3,
+            "14px / 600 / 20px": 3,
+            "12px / 500 / 16px": 2,
+            "24px / 900 / 32px": 2,
+            "16px / 700 / 24px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 17,
+            "12px": 12,
+            "14px": 7,
+            "24px": 3,
+            "16px": 2,
+            "18px": 1,
+            "20px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 24,
+            "600": 8,
+            "700": 8,
+            "900": 2
+          },
+          "alturasLinha": {
+            "16.5px": 17,
+            "16px": 11,
+            "20px": 7,
+            "32px": 3,
+            "24px": 2,
+            "18px": 1,
+            "28px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 17,
+            "monospace": 17,
+            "JetBrains Mono": 5,
+            "Chivo": 4
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "8px": 47,
+            "16px": 44,
+            "12px": 34,
+            "4px": 19,
+            "6px": 12,
+            "24px": 9,
+            "10px": 8,
+            "14px": 4,
+            "48px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 10,
+            "3.35544e+07px": 5,
+            "4px": 4,
+            "16px": 4,
+            "12px": 4,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 43,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 43,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 9,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Meu Financeiro",
+              "largura": 157,
+              "altura": 28,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 7,
+            "42": 1,
+            "210": 1,
+            "302": 1,
+            "151.8": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 151.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 42,
+              "largura": 36
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 351,
+        "tipografia": {
+          "combinacoesDistintas": 18,
+          "tamanhosDistintos": 8,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 11,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 36,
+            "14px / 500 / 20px": 13,
+            "12px / 600 / 16px": 8,
+            "14px / 600 / 20px": 7,
+            "12px / 500 / 16px": 4,
+            "24px / 900 / 32px": 3,
+            "20px / 700 / 28px": 3,
+            "18px / 700 / 28px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 37,
+            "14px": 21,
+            "12px": 15,
+            "24px": 5,
+            "20px": 4,
+            "18px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 57,
+            "600": 15,
+            "700": 9,
+            "900": 4
+          },
+          "alturasLinha": {
+            "16.5px": 37,
+            "20px": 20,
+            "16px": 12,
+            "28px": 6,
+            "24px": 3,
+            "32px": 3,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "monospace": 37,
+            "ui-sans-serif": 31,
+            "JetBrains Mono": 13,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 64,
+            "8px": 45,
+            "20px": 41,
+            "16px": 35,
+            "4px": 34,
+            "6px": 28,
+            "24px": 15,
+            "32px": 9,
+            "2px": 4,
+            "14px": 4,
+            "48px": 2,
+            "80px": 1,
+            "256px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 28
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 22,
+            "3.35544e+07px": 9,
+            "12px": 4,
+            "4px": 4,
+            "16px": 4
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 66,
+            "2px": 13
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 86,
+          "violacoes": 1,
+          "violacoesTextoNormal": 1,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(18, 16, 14)",
+              "fundo": "rgb(18, 16, 14)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 23,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Filtrar",
+              "largura": 79.8,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Exportar",
+              "largura": 92.5,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Visão Geral",
+              "largura": 134.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Comissões",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Histórico",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 13,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 8,
+            "298": 1,
+            "539": 1,
+            "664": 2,
+            "1048": 2,
+            "1079": 1,
+            "1094.8": 1,
+            "1222.8": 1,
+            "407.8": 1,
+            "419.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1094.8,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 407.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 298,
+              "largura": 36
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 419.5,
+              "largura": 119.5
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 539,
+              "largura": 119.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-center.gap-3 > div.flex.h-9.w-9 > svg.[object.SVGAnimatedString]",
+              "x": 1079,
+              "largura": 16
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 42,
+              "clientWidth": 40,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 289,
+        "tipografia": {
+          "combinacoesDistintas": 16,
+          "tamanhosDistintos": 8,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 10,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 36,
+            "14px / 500 / 20px": 10,
+            "12px / 600 / 16px": 6,
+            "14px / 600 / 20px": 3,
+            "12px / 500 / 16px": 2,
+            "24px / 900 / 32px": 2,
+            "18px / 700 / 28px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 37,
+            "14px": 14,
+            "12px": 10,
+            "24px": 4,
+            "18px": 2,
+            "16px": 1,
+            "30px": 1,
+            "20px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 52,
+            "600": 9,
+            "700": 5,
+            "900": 3
+          },
+          "alturasLinha": {
+            "16.5px": 37,
+            "20px": 13,
+            "16px": 8,
+            "24px": 3,
+            "28px": 3,
+            "32px": 2,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "monospace": 37,
+            "ui-sans-serif": 22,
+            "JetBrains Mono": 6,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 49,
+            "8px": 41,
+            "4px": 25,
+            "20px": 25,
+            "16px": 23,
+            "6px": 20,
+            "24px": 15,
+            "32px": 8,
+            "14px": 4,
+            "48px": 2,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 20
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 16,
+            "3.35544e+07px": 6,
+            "4px": 4,
+            "16px": 3,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 46,
+            "2px": 9
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 70,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 19,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo claro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Filtrar",
+              "largura": 79.8,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Exportar",
+              "largura": 92.5,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Meu Financeiro",
+              "largura": 157,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 9,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 6,
+            "256": 2,
+            "280": 6,
+            "298": 1,
+            "664": 1,
+            "1030.3": 1,
+            "1158.3": 1,
+            "407.8": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1030.3,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 407.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 298,
+              "largura": 36
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 272,
+        "tipografia": {
+          "combinacoesDistintas": 16,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 16,
+            "14px / 600 / 20px": 7,
+            "12px / 600 / 16px": 5,
+            "12px / 500 / 16px": 4,
+            "14px / 500 / 20px": 4,
+            "12px / 700 / 16px": 4,
+            "24px / 900 / 32px": 3,
+            "20px / 700 / 28px": 3,
+            "16px / 700 / 24px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 17,
+            "12px": 15,
+            "14px": 12,
+            "24px": 4,
+            "20px": 4,
+            "16px": 2,
+            "18px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 27,
+            "600": 12,
+            "700": 12,
+            "900": 3
+          },
+          "alturasLinha": {
+            "16.5px": 17,
+            "16px": 13,
+            "20px": 12,
+            "32px": 4,
+            "28px": 4,
+            "24px": 2,
+            "18px": 1,
+            "12px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 22,
+            "monospace": 17,
+            "JetBrains Mono": 12,
+            "Chivo": 4
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "16px": 66,
+            "8px": 47,
+            "12px": 43,
+            "4px": 22,
+            "6px": 20,
+            "24px": 10,
+            "10px": 8,
+            "2px": 4,
+            "14px": 4,
+            "48px": 2,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 20
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 14,
+            "3.35544e+07px": 8,
+            "12px": 7,
+            "16px": 5,
+            "4px": 4,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 59,
+            "2px": 12
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 55,
+          "violacoes": 9,
+          "violacoesTextoNormal": 9,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Filtrar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Exportar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Visão Geral",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Histórico",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > span.text-xs.font-bold.tracking-tight",
+              "texto": "Financeiro",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 11,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Visão Geral",
+              "largura": 134.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Comissões",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Histórico",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 10,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 12,
+            "42": 1,
+            "51": 1,
+            "210": 1,
+            "283": 1,
+            "302": 1,
+            "151.8": 1,
+            "163.5": 1,
+            "238.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 151.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 42,
+              "largura": 36
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 163.5,
+              "largura": 119.5
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 283,
+              "largura": 119.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-center.gap-3 > div.flex.h-9.w-9 > svg.[object.SVGAnimatedString]",
+              "x": 51,
+              "largura": 16
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > button.flex.flex-col.items-center > div.p-2.rounded-xl.transition-all",
+              "x": 238.5,
+              "largura": 40
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 38,
+              "clientWidth": 36,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 220,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 16,
+            "12px / 600 / 16px": 5,
+            "12px / 700 / 16px": 4,
+            "14px / 500 / 20px": 3,
+            "14px / 600 / 20px": 3,
+            "12px / 500 / 16px": 2,
+            "24px / 900 / 32px": 2,
+            "16px / 700 / 24px": 2,
+            "18px / 500 / 18px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 17,
+            "12px": 12,
+            "14px": 7,
+            "24px": 3,
+            "16px": 2,
+            "18px": 1,
+            "20px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 24,
+            "600": 8,
+            "700": 8,
+            "900": 2
+          },
+          "alturasLinha": {
+            "16.5px": 17,
+            "16px": 11,
+            "20px": 7,
+            "32px": 3,
+            "24px": 2,
+            "18px": 1,
+            "28px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 17,
+            "monospace": 17,
+            "JetBrains Mono": 5,
+            "Chivo": 4
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "8px": 47,
+            "16px": 44,
+            "12px": 34,
+            "4px": 19,
+            "6px": 12,
+            "24px": 9,
+            "10px": 8,
+            "14px": 4,
+            "48px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 10,
+            "3.35544e+07px": 5,
+            "4px": 4,
+            "16px": 4,
+            "12px": 4,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 43,
+            "2px": 8
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 43,
+          "violacoes": 6,
+          "violacoesTextoNormal": 6,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.13,
+          "detalhes": [
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "14px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Filtrar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Exportar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Meu Financeiro",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 9,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 44,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Meu Financeiro",
+              "largura": 157,
+              "altura": 28,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 3,
+            "24": 7,
+            "42": 1,
+            "210": 1,
+            "302": 1,
+            "151.8": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 210,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 151.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 42,
+              "largura": 36
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 194,
+              "excesso": 19
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 355,
+        "tipografia": {
+          "combinacoesDistintas": 18,
+          "tamanhosDistintos": 8,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 11,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 36,
+            "14px / 500 / 20px": 13,
+            "12px / 600 / 16px": 8,
+            "14px / 600 / 20px": 7,
+            "12px / 500 / 16px": 4,
+            "24px / 900 / 32px": 3,
+            "20px / 700 / 28px": 3,
+            "18px / 700 / 28px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 37,
+            "14px": 21,
+            "12px": 15,
+            "24px": 5,
+            "20px": 4,
+            "18px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 57,
+            "600": 15,
+            "700": 9,
+            "900": 4
+          },
+          "alturasLinha": {
+            "16.5px": 37,
+            "20px": 20,
+            "16px": 12,
+            "28px": 6,
+            "24px": 3,
+            "32px": 3,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "monospace": 37,
+            "ui-sans-serif": 31,
+            "JetBrains Mono": 13,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 64,
+            "8px": 45,
+            "20px": 41,
+            "16px": 35,
+            "4px": 34,
+            "6px": 28,
+            "24px": 15,
+            "32px": 9,
+            "2px": 4,
+            "14px": 4,
+            "48px": 2,
+            "80px": 1,
+            "256px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 28
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 22,
+            "3.35544e+07px": 9,
+            "12px": 4,
+            "4px": 4,
+            "16px": 4
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 66,
+            "2px": 13
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 86,
+          "violacoes": 14,
+          "violacoesTextoNormal": 14,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Crescimento",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "texto": "Financeiro",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(218, 214, 204)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 3.51,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Sistema",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-notifications-btn > span.absolute.-top-0.5.-right-0.5",
+              "texto": "1",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 1,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Filtrar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Exportar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Visão Geral",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Comissões",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Histórico",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 23,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Filtrar",
+              "largura": 79.8,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Exportar",
+              "largura": 92.5,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Visão Geral",
+              "largura": 134.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Comissões",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Histórico",
+              "largura": 119.5,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 13,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 8,
+            "298": 1,
+            "539": 1,
+            "664": 2,
+            "1048": 2,
+            "1079": 1,
+            "1094.8": 1,
+            "1222.8": 1,
+            "407.8": 1,
+            "419.5": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1094.8,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 407.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 298,
+              "largura": 36
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 419.5,
+              "largura": 119.5
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "x": 539,
+              "largura": 119.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.items-center.gap-3 > div.flex.h-9.w-9 > svg.[object.SVGAnimatedString]",
+              "x": 1079,
+              "largura": 16
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 42,
+              "clientWidth": 40,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "financeiro",
+      "grupo": "nucleo",
+      "hashSolicitado": "/financeiro",
+      "hashFinal": "#/financeiro",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/financeiro",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 293,
+        "tipografia": {
+          "combinacoesDistintas": 16,
+          "tamanhosDistintos": 8,
+          "pesosDistintos": 5,
+          "alturasLinhaDistintas": 10,
+          "familiasDistintas": 4,
+          "combinacoes": {
+            "11px / 500 / 16.5px": 36,
+            "14px / 500 / 20px": 10,
+            "12px / 600 / 16px": 6,
+            "14px / 600 / 20px": 3,
+            "12px / 500 / 16px": 2,
+            "24px / 900 / 32px": 2,
+            "18px / 700 / 28px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1,
+            "20px / 500 / 28px": 1,
+            "12px / 500 / 19.5px": 1,
+            "11px / 400 / 16.5px": 1
+          },
+          "tamanhos": {
+            "11px": 37,
+            "14px": 14,
+            "12px": 10,
+            "24px": 4,
+            "18px": 2,
+            "16px": 1,
+            "30px": 1,
+            "20px": 1
+          },
+          "pesos": {
+            "400": 1,
+            "500": 52,
+            "600": 9,
+            "700": 5,
+            "900": 3
+          },
+          "alturasLinha": {
+            "16.5px": 37,
+            "20px": 13,
+            "16px": 8,
+            "24px": 3,
+            "28px": 3,
+            "32px": 2,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1,
+            "19.5px": 1
+          },
+          "familias": {
+            "monospace": 37,
+            "ui-sans-serif": 22,
+            "JetBrains Mono": 6,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 49,
+            "8px": 41,
+            "4px": 25,
+            "20px": 25,
+            "16px": 23,
+            "6px": 20,
+            "24px": 15,
+            "32px": 8,
+            "14px": 4,
+            "48px": 2,
+            "2px": 1,
+            "80px": 1,
+            "256px": 1,
+            "-4px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 20
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 16,
+            "3.35544e+07px": 6,
+            "4px": 4,
+            "16px": 3,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 46,
+            "2px": 9
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 70,
+          "violacoes": 8,
+          "violacoesTextoNormal": 8,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 3.13,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "button#header-profile-btn > div.w-8.h-8.md:w-10 > div.w-full.h-full.flex",
+              "texto": "B",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(207, 203, 192)",
+              "fontSize": "16px",
+              "fontWeight": "700",
+              "textoGrande": false,
+              "razao": 3.13,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Filtrar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Exportar",
+              "cor": "rgb(139, 105, 20)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "texto": "Meu Financeiro",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center > span.truncate",
+              "texto": "Registrar receita",
+              "cor": "rgb(229, 229, 229)",
+              "fundo": "rgb(139, 105, 20)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.04,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 19,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "rotulo": "Ativar modo escuro",
+              "largura": 38,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "rotulo": "Abrir notificações",
+              "largura": 42,
+              "altura": 42,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.ml-2.p-1.rounded-full",
+              "rotulo": "Abrir assistente IA",
+              "largura": 24,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Filtrar",
+              "largura": 79.8,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "rotulo": "Exportar",
+              "largura": 92.5,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col > div.flex.w-full.md:w-auto > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "rotulo": "Mês anterior",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > div.flex.items-center.gap-2 > button.p-2.rounded.transition-colors",
+              "rotulo": "Próximo mês",
+              "largura": 36,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.relative > div.overflow-x-auto.pb-1.-mb-1 > div.inline-flex.bg-[var(--color-bg)]/40.border > button.flex.items-center.gap-1.5",
+              "rotulo": "Meu Financeiro",
+              "largura": 157,
+              "altura": 28,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.p-4.md:p-5 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Registrar receita",
+              "largura": 134.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 9,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 6,
+            "256": 2,
+            "280": 6,
+            "298": 1,
+            "664": 1,
+            "1030.3": 1,
+            "1158.3": 1,
+            "407.8": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1030.3,
+              "largura": 38
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > header.w-full.flex.flex-col",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "header.w-full.flex.flex-col > div.flex-1.min-w-0.flex > div.mt-2.flex.flex-wrap > button.relative.inline-flex.items-center",
+              "x": 407.8,
+              "largura": 92.5
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.flex.items-center.justify-between > button.p-2.hover:bg-[var(--color-card)].rounded",
+              "x": 298,
+              "largura": 36
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > section.grid.grid-cols-1.gap-4 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.grid.grid-cols-1.gap-6 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.md:space-y-8.pb-20 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 1136
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

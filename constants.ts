@@ -5,7 +5,7 @@ import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, Settings, DollarSig
 export const NAVIGATION_ITEMS = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/', ownerOnly: false, group: 'Operação' },
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false, group: 'Operação' },
-  { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: true, group: 'Operação' },
+  { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
   { name: 'Clientes CRM', icon: Users, path: '/clientes', ownerOnly: false, group: 'Operação' },
   { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: false, group: 'Operação' },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true, group: 'Crescimento' },

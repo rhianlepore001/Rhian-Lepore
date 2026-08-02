@@ -1,0 +1,2634 @@
+{
+  "rota": "fila",
+  "resumo": {
+    "rota": "fila",
+    "grupo": "nucleo",
+    "execucoes": 8,
+    "maxTamanhosFonte": 7,
+    "maxEspacamentos": 14,
+    "maxForaDaEscala4px": 4,
+    "maxRaios": 7,
+    "maxSombras": 1,
+    "maxLargurasBorda": 2,
+    "totalViolacoesContraste": 14,
+    "maxAlvosPequenos": 14,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 3
+  },
+  "execucoes": [
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 125,
+        "tipografia": {
+          "combinacoesDistintas": 12,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 7,
+            "36px / 500 / 40px": 3,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 500 / 16px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 500 / 20px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 12,
+            "14px": 4,
+            "36px": 3,
+            "20px": 2,
+            "18px": 1,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 8,
+            "600": 3,
+            "700": 12
+          },
+          "alturasLinha": {
+            "16px": 9,
+            "20px": 4,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "18px": 1,
+            "12px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 14,
+            "Chivo": 6,
+            "JetBrains Mono": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "16px": 41,
+            "8px": 37,
+            "12px": 19,
+            "4px": 12,
+            "14px": 12,
+            "24px": 6,
+            "10px": 6,
+            "6px": 6,
+            "48px": 4,
+            "32px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "14px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 6
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 7,
+            "3.35544e+07px": 5,
+            "16px": 4,
+            "12px": 4,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 41,
+            "2px": 16
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 23,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 3,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 7,
+          "quaseAlinhamentos1a3px": 3,
+          "coordenadas": {
+            "0": 3,
+            "12": 3,
+            "198": 1,
+            "200": 1,
+            "201": 1,
+            "302": 1,
+            "136.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 198,
+              "x2": 200,
+              "delta": 2,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            },
+            {
+              "x1": 198,
+              "x2": 201,
+              "delta": 3,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            },
+            {
+              "x1": 200,
+              "x2": 201,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.flex.md:hidden.gap-3 > button.relative.inline-flex.items-center",
+              "x": 200,
+              "largura": 50
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            },
+            {
+              "selector": "div.space-y-4 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "x": 136.3,
+              "largura": 117.3
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 117,
+        "tipografia": {
+          "combinacoesDistintas": 10,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 7,
+            "36px / 500 / 40px": 3,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 500 / 20px": 1
+          },
+          "tamanhos": {
+            "12px": 10,
+            "14px": 4,
+            "36px": 3,
+            "20px": 2,
+            "18px": 1,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 8,
+            "600": 2,
+            "700": 11
+          },
+          "alturasLinha": {
+            "16px": 8,
+            "20px": 4,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "18px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 13,
+            "Chivo": 6,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "16px": 41,
+            "8px": 36,
+            "12px": 17,
+            "4px": 10,
+            "14px": 10,
+            "24px": 6,
+            "48px": 4,
+            "10px": 2,
+            "6px": 2,
+            "32px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "14px",
+              "ocorrencias": 10
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 6,
+            "16px": 4,
+            "12px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 37,
+            "2px": 12
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 21,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 3,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "12": 3,
+            "170": 1,
+            "198": 1,
+            "201": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 198,
+              "x2": 201,
+              "delta": 3,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.flex.md:hidden.gap-3 > button.relative.inline-flex.items-center",
+              "x": 170,
+              "largura": 50
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 151,
+        "tipografia": {
+          "combinacoesDistintas": 15,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 10,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 10,
+            "12px / 600 / 16px": 6,
+            "12px / 700 / 16px": 3,
+            "36px / 500 / 40px": 3,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1
+          },
+          "tamanhos": {
+            "12px": 14,
+            "14px": 13,
+            "36px": 3,
+            "24px": 2,
+            "20px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "500": 18,
+            "600": 8,
+            "700": 9,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 12,
+            "16px": 10,
+            "24px": 3,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 25,
+            "Chivo": 7,
+            "JetBrains Mono": 4
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 45,
+            "8px": 37,
+            "16px": 36,
+            "4px": 24,
+            "24px": 17,
+            "6px": 12,
+            "20px": 12,
+            "14px": 8,
+            "32px": 5,
+            "48px": 4,
+            "80px": 2,
+            "2px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 17,
+            "3.35544e+07px": 4,
+            "16px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 48,
+            "2px": 17
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 36,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 14,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Adicionar",
+              "largura": 98.1,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Gerar QR Code",
+              "largura": 129.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-4 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Adicionar cliente",
+              "largura": 117.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 10,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 2,
+            "664": 1,
+            "1048": 1,
+            "1086.8": 1,
+            "1222.8": 1,
+            "1261.7": 1,
+            "497.3": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1086.8,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1261.7,
+              "largura": 129.3
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            },
+            {
+              "selector": "div.space-y-4 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "x": 497.3,
+              "largura": 117.3
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 132,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 8,
+            "12px / 700 / 16px": 3,
+            "36px / 500 / 40px": 3,
+            "12px / 600 / 16px": 2,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1
+          },
+          "tamanhos": {
+            "14px": 11,
+            "12px": 9,
+            "36px": 3,
+            "24px": 2,
+            "20px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "500": 16,
+            "600": 4,
+            "700": 8,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 10,
+            "16px": 6,
+            "24px": 3,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 19,
+            "Chivo": 7,
+            "JetBrains Mono": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 35,
+            "8px": 32,
+            "16px": 30,
+            "24px": 17,
+            "4px": 16,
+            "20px": 12,
+            "14px": 8,
+            "32px": 5,
+            "6px": 4,
+            "48px": 4,
+            "80px": 2,
+            "2px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "14px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 13,
+            "3.35544e+07px": 3,
+            "16px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 44,
+            "2px": 13
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 29,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.68,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 10,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Gerar QR Code",
+              "largura": 129.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 9,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "280": 2,
+            "664": 1,
+            "1048": 1,
+            "1022.3": 1,
+            "1158.3": 1,
+            "1261.7": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1022.3,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1261.7,
+              "largura": 129.3
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 129,
+        "tipografia": {
+          "combinacoesDistintas": 12,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 8,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 7,
+            "36px / 500 / 40px": 3,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 500 / 16px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 500 / 20px": 1,
+            "12px / 600 / 16px": 1
+          },
+          "tamanhos": {
+            "12px": 12,
+            "14px": 4,
+            "36px": 3,
+            "20px": 2,
+            "18px": 1,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 8,
+            "600": 3,
+            "700": 12
+          },
+          "alturasLinha": {
+            "16px": 9,
+            "20px": 4,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "18px": 1,
+            "12px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 14,
+            "Chivo": 6,
+            "JetBrains Mono": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "16px": 41,
+            "8px": 37,
+            "12px": 19,
+            "4px": 12,
+            "14px": 12,
+            "24px": 6,
+            "10px": 6,
+            "6px": 6,
+            "48px": 4,
+            "32px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "14px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 6
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 6
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 7,
+            "3.35544e+07px": 5,
+            "16px": 4,
+            "12px": 4,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 4
+          },
+          "largurasBorda": {
+            "1px": 41,
+            "2px": 16
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 23,
+          "violacoes": 2,
+          "violacoesTextoNormal": 2,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.1,
+          "detalhes": [
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Compartilhe o QR Code ou adicione um cliente manualmente.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Chame o próximo da fila para começar.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 3,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 7,
+          "quaseAlinhamentos1a3px": 3,
+          "coordenadas": {
+            "0": 3,
+            "12": 3,
+            "198": 1,
+            "200": 1,
+            "201": 1,
+            "302": 1,
+            "136.3": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 198,
+              "x2": 200,
+              "delta": 2,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            },
+            {
+              "x1": 198,
+              "x2": 201,
+              "delta": 3,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            },
+            {
+              "x1": 200,
+              "x2": 201,
+              "delta": 1,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.flex.md:hidden.gap-3 > button.relative.inline-flex.items-center",
+              "x": 200,
+              "largura": 50
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            },
+            {
+              "selector": "div.space-y-4 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "x": 136.3,
+              "largura": 117.3
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 3,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "390x844",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 121,
+        "tipografia": {
+          "combinacoesDistintas": 10,
+          "tamanhosDistintos": 6,
+          "pesosDistintos": 3,
+          "alturasLinhaDistintas": 7,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "12px / 700 / 16px": 7,
+            "36px / 500 / 40px": 3,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "18px / 500 / 18px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 20px": 1,
+            "24px / 700 / 32px": 1,
+            "14px / 500 / 20px": 1
+          },
+          "tamanhos": {
+            "12px": 10,
+            "14px": 4,
+            "36px": 3,
+            "20px": 2,
+            "18px": 1,
+            "24px": 1
+          },
+          "pesos": {
+            "500": 8,
+            "600": 2,
+            "700": 11
+          },
+          "alturasLinha": {
+            "16px": 8,
+            "20px": 4,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "18px": 1,
+            "32px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 13,
+            "Chivo": 6,
+            "JetBrains Mono": 2
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 14,
+          "foraDaEscala4px": 4,
+          "valores": {
+            "16px": 41,
+            "8px": 36,
+            "12px": 17,
+            "4px": 10,
+            "14px": 10,
+            "24px": 6,
+            "48px": 4,
+            "10px": 2,
+            "6px": 2,
+            "32px": 2,
+            "2px": 1,
+            "64px": 1,
+            "128px": 1,
+            "80px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "14px",
+              "ocorrencias": 10
+            },
+            {
+              "valor": "10px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 2
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 7,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 6,
+            "16px": 4,
+            "12px": 4,
+            "3.35544e+07px": 3,
+            "4px": 2,
+            "28px": 1,
+            "24px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 37,
+            "2px": 12
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 21,
+          "violacoes": 2,
+          "violacoesTextoNormal": 2,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.1,
+          "detalhes": [
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Aguardando o próximo cliente entrar via QR Code.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Chame o próximo da fila para começar.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 3,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div.h-16.md:h-20.flex > div.flex.items-center.gap-3 > div.flex.items-center.gap-3 > a.md:hidden.flex.items-center",
+              "rotulo": "",
+              "largura": 20,
+              "altura": 20,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 32,
+              "altura": 32,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 6,
+          "quaseAlinhamentos1a3px": 1,
+          "coordenadas": {
+            "0": 3,
+            "12": 3,
+            "170": 1,
+            "198": 1,
+            "201": 1,
+            "302": 1
+          },
+          "quaseAlinhamentos": [
+            {
+              "x1": 198,
+              "x2": 201,
+              "delta": 3,
+              "ocorrencias1": 1,
+              "ocorrencias2": 1
+            }
+          ],
+          "blocos": [
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 198,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 302,
+              "largura": 32
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 0,
+              "largura": 390
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 12,
+              "largura": 366
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.flex.md:hidden.gap-3 > button.relative.inline-flex.items-center",
+              "x": 170,
+              "largura": 50
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 201,
+              "largura": 177
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 12,
+              "largura": 177
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-3",
+              "scrollWidth": 213,
+              "clientWidth": 182,
+              "excesso": 31
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > nav.md:hidden.fixed.bottom-6 > div.relative.-top-10.flex",
+              "scrollWidth": 68,
+              "clientWidth": 64,
+              "excesso": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "owner",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 155,
+        "tipografia": {
+          "combinacoesDistintas": 15,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 10,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 10,
+            "12px / 600 / 16px": 6,
+            "12px / 700 / 16px": 3,
+            "36px / 500 / 40px": 3,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "12px / 700 / 12px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1
+          },
+          "tamanhos": {
+            "12px": 14,
+            "14px": 13,
+            "36px": 3,
+            "24px": 2,
+            "20px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "500": 18,
+            "600": 8,
+            "700": 9,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 12,
+            "16px": 10,
+            "24px": 3,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "12px": 1,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 25,
+            "Chivo": 7,
+            "JetBrains Mono": 4
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 45,
+            "8px": 37,
+            "16px": 36,
+            "4px": 24,
+            "24px": 17,
+            "6px": 12,
+            "20px": 12,
+            "14px": 8,
+            "32px": 5,
+            "48px": 4,
+            "80px": 2,
+            "2px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "6px",
+              "ocorrencias": 12
+            },
+            {
+              "valor": "14px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 17,
+            "3.35544e+07px": 4,
+            "16px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 3
+          },
+          "largurasBorda": {
+            "1px": 48,
+            "2px": 17
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 36,
+          "violacoes": 6,
+          "violacoesTextoNormal": 6,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Crescimento",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Sistema",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Compartilhe o QR Code ou adicione um cliente manualmente.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Chame o próximo da fila para começar.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 14,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Financeiro",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Ajustes",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "BobBarberB",
+              "largura": 121.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Adicionar",
+              "largura": 98.1,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Gerar QR Code",
+              "largura": 129.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-4 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Adicionar cliente",
+              "largura": 117.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 10,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 7,
+            "256": 2,
+            "280": 2,
+            "664": 1,
+            "1048": 1,
+            "1086.8": 1,
+            "1222.8": 1,
+            "1261.7": 1,
+            "497.3": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1086.8,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1222.8,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1261.7,
+              "largura": 129.3
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            },
+            {
+              "selector": "div.space-y-4 > div.flex.flex-col.items-center > div.mt-2 > button.relative.inline-flex.items-center",
+              "x": 497.3,
+              "largura": 117.3
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 2,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            },
+            {
+              "selector": "button#header-notifications-btn",
+              "scrollWidth": 44,
+              "clientWidth": 42,
+              "excesso": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "persona": "staff",
+      "temaSolicitado": "barber",
+      "modo": "light",
+      "viewport": "1440x900",
+      "rota": "fila",
+      "grupo": "nucleo",
+      "hashSolicitado": "/fila",
+      "hashFinal": "#/fila",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": true,
+      "modoSolicitadoBateComEfetivo": true,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/fila",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "light",
+        "nosVisiveis": 136,
+        "tipografia": {
+          "combinacoesDistintas": 14,
+          "tamanhosDistintos": 7,
+          "pesosDistintos": 4,
+          "alturasLinhaDistintas": 9,
+          "familiasDistintas": 3,
+          "combinacoes": {
+            "14px / 500 / 20px": 8,
+            "12px / 700 / 16px": 3,
+            "36px / 500 / 40px": 3,
+            "12px / 600 / 16px": 2,
+            "20px / 700 / 28px": 2,
+            "14px / 600 / 20px": 2,
+            "12px / 500 / 19.5px": 2,
+            "24px / 900 / 24px": 1,
+            "24px / 500 / 24px": 1,
+            "12px / 500 / 16px": 1,
+            "14px / 700 / 17.5px": 1,
+            "12px / 500 / 15px": 1,
+            "16px / 700 / 24px": 1,
+            "30px / 700 / 36px": 1
+          },
+          "tamanhos": {
+            "14px": 11,
+            "12px": 9,
+            "36px": 3,
+            "24px": 2,
+            "20px": 2,
+            "16px": 1,
+            "30px": 1
+          },
+          "pesos": {
+            "500": 16,
+            "600": 4,
+            "700": 8,
+            "900": 1
+          },
+          "alturasLinha": {
+            "20px": 10,
+            "16px": 6,
+            "24px": 3,
+            "40px": 3,
+            "28px": 2,
+            "19.5px": 2,
+            "17.5px": 1,
+            "15px": 1,
+            "36px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 19,
+            "Chivo": 7,
+            "JetBrains Mono": 3
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 13,
+          "foraDaEscala4px": 3,
+          "valores": {
+            "12px": 35,
+            "8px": 32,
+            "16px": 30,
+            "24px": 17,
+            "4px": 16,
+            "20px": 12,
+            "14px": 8,
+            "32px": 5,
+            "6px": 4,
+            "48px": 4,
+            "80px": 2,
+            "2px": 1,
+            "256px": 1
+          },
+          "foraDaEscala": [
+            {
+              "valor": "14px",
+              "ocorrencias": 8
+            },
+            {
+              "valor": "6px",
+              "ocorrencias": 4
+            },
+            {
+              "valor": "2px",
+              "ocorrencias": 1
+            }
+          ]
+        },
+        "geometria": {
+          "raiosDistintos": 5,
+          "sombrasDistintas": 1,
+          "largurasBordaDistintas": 2,
+          "raios": {
+            "8px": 13,
+            "3.35544e+07px": 3,
+            "16px": 3,
+            "4px": 2,
+            "12px": 1
+          },
+          "sombras": {
+            "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0": 2
+          },
+          "largurasBorda": {
+            "1px": 44,
+            "2px": 13
+          }
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 29,
+          "violacoes": 4,
+          "violacoesTextoNormal": 4,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 4.1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > p.px-4.pt-4.pb-1",
+              "texto": "Operação",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "600",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > button.w-full.group.flex",
+              "texto": "Sair",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Aguardando o próximo cliente entrar via QR Code.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            },
+            {
+              "selector": "div.grid.grid-cols-1.md:grid-cols-2 > div.space-y-4 > div.flex.flex-col.items-center > p.text-xs.text-[var(--color-text-muted)].mb-4",
+              "texto": "Chame o próximo da fila para começar.",
+              "cor": "rgb(110, 107, 100)",
+              "fundo": "rgb(229, 229, 229)",
+              "fontSize": "12px",
+              "fontWeight": "500",
+              "textoGrande": false,
+              "razao": 4.22,
+              "exigido": 4.5,
+              "fundoIncerto": false
+            }
+          ]
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 10,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "rotulo": "AgendiX",
+              "largura": 152.2,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Dashboard",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Agenda",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Fila Digital",
+              "largura": 231,
+              "altura": 38,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Clientes CRM",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Produtos",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "rotulo": "Meus Insights",
+              "largura": 231,
+              "altura": 36,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "rotulo": "Ajuda e reportar problema",
+              "largura": 40,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "button#header-profile-btn",
+              "rotulo": "Bob FuncionarioBarberB",
+              "largura": 185.7,
+              "altura": 40,
+              "temNomeAcessivel": true
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "rotulo": "Gerar QR Code",
+              "largura": 129.3,
+              "altura": 36,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 9,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "0": 1,
+            "12": 5,
+            "256": 2,
+            "280": 2,
+            "664": 1,
+            "1048": 1,
+            "1022.3": 1,
+            "1158.3": 1,
+            "1261.7": 1
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "aside#sidebar-container > nav.flex-1.py-4.overflow-y-auto > a.group.relative.flex",
+              "x": 12,
+              "largura": 231
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > header.fixed.left-0.md:left-64",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "button#header-theme-toggle",
+              "x": 1022.3,
+              "largura": 44
+            },
+            {
+              "selector": "header.fixed.left-0.md:left-64 > div.h-16.md:h-20.flex > div.flex.items-center.gap-2 > button.inline-flex.items-center.justify-center",
+              "x": 1158.3,
+              "largura": 40
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20",
+              "x": 0,
+              "largura": 1440
+            },
+            {
+              "selector": "div#root > div.h-[100dvh].overflow-y-auto.bg-theme-bg > main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl",
+              "x": 256,
+              "largura": 1184
+            },
+            {
+              "selector": "main.md:pl-64.pt-16.md:pt-20 > div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row",
+              "x": 280,
+              "largura": 1136
+            },
+            {
+              "selector": "div.space-y-6.pb-20 > div.flex.flex-col.md:flex-row > div.hidden.md:flex.gap-2 > button.relative.inline-flex.items-center",
+              "x": 1261.7,
+              "largura": 129.3
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 280,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 664,
+              "largura": 368
+            },
+            {
+              "selector": "div.p-3.md:p-6.max-w-7xl > div.space-y-6.pb-20 > div.grid.grid-cols-2.lg:grid-cols-3 > div.bg-theme-card.border-theme-border.border",
+              "x": 1048,
+              "largura": 368
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 1,
+          "detalhes": [
+            {
+              "selector": "aside#sidebar-container > div.hidden.md:flex.h-20 > a.relative.flex.items-center",
+              "scrollWidth": 164,
+              "clientWidth": 152,
+              "excesso": 12
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -22,6 +22,10 @@ interface ModalProps {
   closeOnEsc?: boolean;
   showCloseButton?: boolean;
   className?: string;
+  /** Substitui o wrapper padrão do corpo (padding + scroll). Use p-0 + flex para shells tipo wizard. */
+  bodyClassName?: string;
+  /** Quando sem `title`, aponta aria-labelledby para um heading interno (ex.: wizard). */
+  labelledById?: string;
   forceTheme?: ThemeVariant;
 }
 
@@ -46,6 +50,8 @@ export const Modal: React.FC<ModalProps> = ({
   closeOnEsc = true,
   showCloseButton = true,
   className = '',
+  bodyClassName,
+  labelledById,
   forceTheme,
 }) => {
   const { classes, colors } = useBrutalTheme({ override: forceTheme });
@@ -111,7 +117,7 @@ export const Modal: React.FC<ModalProps> = ({
           data-ui-modal-dialog
           role="dialog"
           aria-modal="true"
-          aria-labelledby={title ? 'ui-modal-title' : undefined}
+          aria-labelledby={title ? 'ui-modal-title' : labelledById}
           tabIndex={-1}
           className={[
             'relative w-full',
@@ -154,7 +160,7 @@ export const Modal: React.FC<ModalProps> = ({
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-5 md:p-6">
+          <div className={bodyClassName ?? 'flex-1 overflow-y-auto p-5 md:p-6'}>
             {children}
           </div>
 

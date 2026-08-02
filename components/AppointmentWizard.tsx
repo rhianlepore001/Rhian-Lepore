@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Button } from './ui/Button';
+import { Modal } from './ui/Modal';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import {
-    X, ChevronLeft, Loader2, Plus, Check
+    X, ChevronLeft, Loader2, Check
 } from 'lucide-react';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
@@ -19,17 +18,25 @@ import { ClientSelection } from './appointment/ClientSelection';
 import { ScheduleSelection } from './appointment/ScheduleSelection';
 import { AppointmentReview } from './appointment/AppointmentReview';
 import { logger } from '../utils/Logger';
-import { combineDateAndTime } from '../utils/date';
+import { combineDateAndTime, formatLocalDateString } from '../utils/date';
 import { useCreateAppointment } from '../hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '../types/scheduling';
 import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
+import { useProducts } from '@/hooks/useCatalog';
+import { setAppointmentProductLines } from '@/services/catalog';
+import {
+    ProductLinesPicker,
+    type ProductLineSelection,
+} from './appointment/ProductLinesPicker';
 
 
 export const AppointmentWizard: React.FC<WizardProps> = ({
     onClose,
     onSuccess,
     initialDate = new Date(),
+    initialProfessionalId = '',
+    initialTime = '',
     teamMembers,
     services,
     categories = [],
@@ -37,17 +44,11 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     onRefreshClients
 }) => {
     const { user, region, businessName, companyId } = useAuth();
-    const { setModalOpen } = useUI();
     const { isBeauty, accent, colors } = useBrutalTheme();
     const createAppointment = useCreateAppointment();
     const { showToast } = useToast();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        setModalOpen(true);
-        return () => setModalOpen(false);
-    }, [setModalOpen]);
 
     // Step 2 State
     const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -56,12 +57,12 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [customServiceName, setCustomServiceName] = useState('');
     const [customServicePrice, setCustomServicePrice] = useState('');
 
-    // Data State
+    // Data State — profissional/horário podem vir pré-preenchidos da grade
     const [selectedClientId, setSelectedClientId] = useState<string>('');
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-    const [selectedProId, setSelectedProId] = useState<string>('');
+    const [selectedProId, setSelectedProId] = useState<string>(initialProfessionalId);
     const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
-    const [selectedTime, setSelectedTime] = useState<string>('');
+    const [selectedTime, setSelectedTime] = useState<string>(initialTime);
 
     // Admin Overrides & Review State
     const [customPrice, setCustomPrice] = useState<string>('');
@@ -70,15 +71,19 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState<string>('');
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
+    const [selectedProductLines, setSelectedProductLines] = useState<ProductLineSelection[]>([]);
+
+    const { data: catalogProducts = [] } = useProducts({
+        companyId: companyId ?? user?.id ?? '',
+        includeInactive: false,
+    });
 
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
 
     // Styles
-    const modalBg = 'bg-[var(--color-modal-bg)] border border-[var(--color-modal-border)]';
-
     const cardBg = 'bg-theme-surface border-[var(--color-divider)]';
-    const activeCardBg = 'bg-theme-accent text-[var(--color-bg)] border-theme-accent';
+    const activeCardBg = 'bg-theme-accent text-[var(--color-on-accent)] border-theme-accent';
 
     // --- STEP 2: SERVICES --- 
     const toggleService = (id: string) => {
@@ -168,7 +173,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         setLoading(true);
 
         try {
-            const dateTime = combineDateAndTime(selectedDate.toISOString().split('T')[0], selectedTime);
+            // Usar data LOCAL — toISOString().split('T')[0] rola o dia em fusos ≠ UTC
+            const dateTime = combineDateAndTime(formatLocalDateString(selectedDate), selectedTime);
 
 
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
@@ -194,16 +200,22 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 notes: notes || null,
                 customServiceName: isCustomService ? (customServiceName || 'Servico Personalizado') : null,
                 paymentMethod: paymentMethod ? paymentMethod as CheckoutPaymentMethod : null
-            }) as { success?: boolean; message?: string };
+            }) as { success?: boolean; message?: string; booking_id?: string };
 
             if (!result.success) {
                 showToast(result.message || 'Horário indisponível', 'warning');
                 setLoading(false);
-                // In original, it called fetchSlots(). But here fetchSlots is in child component.
-                // We might need to trigger reload in child? Or just alert.
-                // If collision, user stays on step 4? Or goes back to 3? 
-                // Going back to 3 seems appropriate to pick another time.
                 return;
+            }
+
+            const appointmentId = result.booking_id;
+            const tenantId = companyId ?? user?.id ?? '';
+            if (appointmentId && tenantId && selectedProductLines.length > 0) {
+                await setAppointmentProductLines({
+                    companyId: tenantId,
+                    appointmentId,
+                    lines: selectedProductLines,
+                });
             }
 
             // WhatsApp Notification
@@ -241,8 +253,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'appointment' } }));
 
+            // onSuccess do pai fecha o modal e refetcha a grade — NÃO chamar onClose
+            // em seguida (ele fazia navigate(pathname) e apagava ?date= / estado).
             onSuccess(dateTime);
-            onClose();
         } catch (error) {
             logger.error('Erro ao criar agendamento:', error);
             const ui = mapError(error, 'Não foi possível criar o agendamento. Verifique sua conexão e tente de novo.');
@@ -258,14 +271,21 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         }
     };
 
-    return createPortal(
-        <div className={`fixed inset-0 md:left-64 flex items-center justify-center p-0 md:p-4 ${colors.overlay} backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
-            <div className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-promax-depth transition-all duration-300 ${modalBg} animate-in zoom-in-95`}>
-
+    return (
+        <Modal
+            open
+            onClose={onClose}
+            preventClose={loading}
+            showCloseButton={false}
+            size="xl"
+            labelledById="appointment-wizard-title"
+            bodyClassName="flex flex-col flex-1 min-h-0 overflow-hidden p-0"
+            className="max-w-4xl h-[100dvh] md:h-[85vh] overflow-hidden shadow-promax-depth"
+        >
                 {/* HEADER */}
-                <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)]`}>
+                <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)] shrink-0`}>
                     <div>
-                        <h2 className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
+                        <h2 id="appointment-wizard-title" className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
                             Novo Atendimento
                         </h2>
                         {(() => {
@@ -287,7 +307,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                                                 ? `ring-2 ring-offset-2 ${accentRing} bg-transparent`
                                                                 : 'border border-[var(--color-input-border)] bg-transparent'
                                                     }`}>
-                                                        {isDone && <Check size={12} className="text-[var(--color-bg)]" />}
+                                                        {isDone && <Check size={12} className="text-[var(--color-on-accent)]" />}
                                                         {isCurrent && <div className={`w-2 h-2 rounded-full ${accent.bg}`} />}
                                                     </div>
                                                     <span className={`hidden md:block text-xs font-mono uppercase tracking-wider mt-1 ${
@@ -312,7 +332,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                 </div>
 
                 {/* CONTENT AREA */}
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-neutral-700">
+                <div className="flex-1 min-h-0 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-neutral-700">
 
                     {/* STEP 1: CLIENT */}
                     {step === 1 && (
@@ -373,6 +393,15 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                 setCustomServicePrice={setCustomServicePrice}
                                 currencySymbol={currencySymbol}
                             />
+
+                            <div className="mt-6">
+                                <ProductLinesPicker
+                                    products={catalogProducts}
+                                    value={selectedProductLines}
+                                    onChange={setSelectedProductLines}
+                                    currencyRegion={currencyRegion}
+                                />
+                            </div>
                         </div>
                     )}
 
@@ -433,9 +462,10 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                 </div>
 
                 {/* FOOTER */}
-                <div className={`p-4 border-t ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'} flex justify-between items-center`}>
+                <div className={`p-4 border-t shrink-0 ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'} flex justify-between items-center`}>
                     {step > 1 ? (
                         <button
+                            type="button"
                             onClick={() => setStep(prev => (prev - 1) as any)}
                             className={`${colors.text} hover:opacity-70 px-4 py-2 flex items-center gap-2 transition-opacity`}
                         >
@@ -469,8 +499,6 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         )}
                     </div>
                 </div>
-            </div>
-        </div>,
-        document.body
+        </Modal>
     );
 };

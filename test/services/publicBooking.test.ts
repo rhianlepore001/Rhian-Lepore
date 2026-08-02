@@ -106,6 +106,7 @@ describe('public booking service', () => {
       total_price: 80,
       status: 'pending',
       duration_minutes: 30,
+      product_lines: [],
     });
     expect(supabase.rpc).toHaveBeenCalledWith('upsert_public_client', {
       p_business_id: 'business-001',
@@ -163,11 +164,14 @@ describe('public booking service', () => {
       p_customer_phone: '11999999999',
       p_total_price: 90,
       p_duration_minutes: 45,
+      p_product_lines: [],
     }));
   });
 
   it('cria appointment aceito sem atualizar historico original', async () => {
-    await createAcceptedAppointmentFromBooking({
+    singleMock.mockResolvedValueOnce({ data: { id: 'appt-001' }, error: null });
+
+    const appointmentId = await createAcceptedAppointmentFromBooking({
       businessId: 'business-001',
       clientId: 'client-001',
       professionalId: 'pro-001',
@@ -179,6 +183,7 @@ describe('public booking service', () => {
       preservePublicBookingLink: true,
     });
 
+    expect(appointmentId).toBe('appt-001');
     expect(supabase.from).toHaveBeenCalledWith('appointments');
     expect(insertMock).toHaveBeenCalledWith({
       user_id: 'business-001',

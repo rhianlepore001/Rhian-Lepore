@@ -9,6 +9,7 @@ import { validatePassword } from '../utils/passwordValidation';
 import { AgendiXLogo } from '../components/AgendiXLogo';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { mapError, formatUserFacingError } from '../utils/mapError';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -92,7 +93,7 @@ export const Register: React.FC = () => {
     });
 
     if (error) {
-      setError(error.message);
+      setError(formatUserFacingError(mapError(error, 'Não foi possível criar a conta.')));
       setLoading(false);
     } else {
       if (isInvitedStaff) {
@@ -165,9 +166,10 @@ export const Register: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    hint="Mín. 8 caracteres, 1 maiúscula, 1 número e 1 símbolo"
                     forceTheme={userType}
                     iconRight={
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     }
@@ -330,9 +332,10 @@ export const Register: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
+                      hint="Mín. 8 caracteres, 1 maiúscula, 1 número e 1 símbolo"
                       forceTheme={userType}
                       iconRight={
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                       }

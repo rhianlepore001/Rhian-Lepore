@@ -85,7 +85,7 @@ export const ForgotPassword: React.FC = () => {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="seu.email@exemplo.com"
-                                        className="w-full p-4 bg-[var(--color-bg)] border-2 border-[var(--color-border)] text-[var(--color-text)] font-mono text-sm focus:outline-none focus:border-blue-500 transition-all"
+                                        className="w-full p-4 bg-[var(--color-input-bg)] border-2 border-[var(--color-input-border)] text-[var(--color-text)] font-mono text-sm focus:outline-none focus:border-theme-accent transition-all"
                                     />
                                 </div>
 
@@ -93,7 +93,7 @@ export const ForgotPassword: React.FC = () => {
                                     type="submit"
                                     disabled={loading || !email}
                                     aria-busy={loading}
-                                    className="w-full h-14 bg-blue-600 hover:bg-[var(--color-info)] text-[var(--color-text)] font-heading text-lg uppercase tracking-wider transition-all border-2 border-black flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
+                                    className="w-full h-14 bg-theme-accent hover:brightness-110 text-[var(--color-on-accent)] font-heading text-lg uppercase tracking-wider transition-all border-2 border-[var(--color-border-strong)] flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
                                 >
                                     {loading ? (
                                         <span className="animate-pulse flex items-center gap-2">

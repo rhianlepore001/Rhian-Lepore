@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
@@ -123,10 +123,8 @@ export const Agenda: React.FC = () => {
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
     const [historyMonth, setHistoryMonth] = useState(new Date());
-    // Filtro de profissionais (multi-select). [] = "Todos" (apenas owner).
-    // Staff inicia com o próprio teamMemberId e nunca enxerga "Todos".
+    // Filtro de profissionais (multi-select). [] = "Todos" (owner e staff).
     const [selectedProfessionalIds, setSelectedProfessionalIds] = useState<string[]>([]);
-    const staffFilterInitialized = useRef(false);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
     const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
@@ -285,19 +283,11 @@ export const Agenda: React.FC = () => {
 
 
     // Update selectedAppointmentDate when modal opens or selectedDate changes
-    // Staff inicia vendo apenas a própria agenda (R27).
-    useEffect(() => {
-        if (isStaff && teamMemberId && !staffFilterInitialized.current) {
-            setSelectedProfessionalIds([teamMemberId]);
-            staffFilterInitialized.current = true;
-        }
-    }, [isStaff, teamMemberId]);
-
     useEffect(() => {
         if (showNewAppointmentModal) {
             setSelectedAppointmentDate(formatDateForInput(selectedDate));
 
-            // Auto-select professional: 1 selecionado → ele; staff → o próprio; senão único do time
+            // Auto-select professional: 1 selecionado → ele; staff em "Todos" → o próprio; senão único do time
             if (selectedProfessionalIds.length === 1) {
                 setSelectedProfessional(selectedProfessionalIds[0]);
             } else if (isStaff && teamMemberId) {
@@ -1020,29 +1010,18 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     // Grade padrão 06:00–23:30; madrugada (00:00–05:59) só aparece se houver agendamento
     const timeSlots = buildAgendaGridSlots(appointments.map((a) => a.appointment_time));
 
-    // Filtrar profissionais exibidos (R27)
-    // selectedProfessionalIds = [] significa "Todos" — disponível só para owner.
-    // Staff sem seleção (ainda não inicializado ou sem teamMemberId) NUNCA vê todos: fallback seguro vazio.
+    // Filtrar profissionais exibidos — [] = "Todos" (owner e staff).
     const displayedMembers = selectedProfessionalIds.length > 0
         ? teamMembers.filter(m => selectedProfessionalIds.includes(m.id))
-        : (isStaff ? [] : teamMembers);
+        : teamMembers;
 
-    // Coluna de "não atribuídos" só faz sentido para o owner em modo "Todos".
-    const showUnassigned = !isStaff && selectedProfessionalIds.length === 0;
+    // Coluna de "não atribuídos" só no modo "Todos".
+    const showUnassigned = selectedProfessionalIds.length === 0;
 
     const toggleProfessional = (id: string) => {
         setSelectedProfessionalIds(prev => {
             const has = prev.includes(id);
-            if (isStaff) {
-                // O próprio staff é fixo (não removível); colegas são opcionais.
-                if (id === teamMemberId) return prev;
-                if (has) {
-                    const next = prev.filter(p => p !== id);
-                    return next.length > 0 ? next : (teamMemberId ? [teamMemberId] : []);
-                }
-                return [...prev, id];
-            }
-            // Owner: multi-select simples; lista vazia volta a "Todos".
+            // Multi-select; lista vazia volta a "Todos".
             return has ? prev.filter(p => p !== id) : [...prev, id];
         });
     };
@@ -1295,18 +1274,17 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {teamMembers.length > 0 && (
                 <div className="px-4 md:px-6">
                     <div className={`flex items-center gap-5 overflow-x-auto pb-3 pt-1 snap-x snap-mandatory scrollbar-hide`}>
-                        {/* "Todos" só para owner — staff nunca vê agenda completa de uma vez (R27) */}
-                        {!isStaff && (
-                            <button
-                                onClick={() => setSelectedProfessionalIds([])}
-                                className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
-                            >
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
-                                    <Users className="w-5 h-5" />
-                                </div>
-                                <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
-                            </button>
-                        )}
+                        <button
+                            onClick={() => setSelectedProfessionalIds([])}
+                            className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
+                            aria-pressed={selectedProfessionalIds.length === 0}
+                            data-testid="agenda-filter-all"
+                        >
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
+                        </button>
                         {teamMembers.map(member => {
                             const isSelected = selectedProfessionalIds.includes(member.id);
                             // teamMemberId agora é resolvido também para o dono

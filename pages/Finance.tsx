@@ -563,7 +563,7 @@ useEffect(() => {
   ], [accent.text, colors, currencyRegion, status.danger, status.success]);
 
   return (
-    <div className={`space-y-6 md:space-y-8 pb-20 ${density.pagePadding} md:px-0`}>
+    <div className="space-y-6 md:space-y-8 pb-20">
       <PageHeader
         title="Financeiro"
         subtitle={periodLabel}

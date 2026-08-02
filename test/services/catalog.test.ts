@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => {
     cost_price: 20,
     stock_quantity: 10,
     min_stock_quantity: 2,
+    commission_percent: 10,
+    show_in_public: true,
     is_active: true,
   };
 
@@ -19,11 +21,15 @@ const mocks = vi.hoisted(() => {
     appointment_id: null,
     finance_record_id: '44444444-4444-4444-8444-444444444444',
     sold_by: '55555555-5555-4555-8555-555555555555',
+    professional_id: '66666666-6666-4666-8666-666666666666',
+    client_id: null,
     quantity: 2,
     unit_sale_price: 50,
     unit_cost_price: 20,
     total_revenue: 100,
     total_cost: 40,
+    commission_percent: 10,
+    commission_value: 10,
   };
 
   const singleMock = vi.fn();
@@ -89,7 +95,7 @@ describe('catalog service', () => {
     expect(mocks.activeEqMock).toHaveBeenCalledWith('is_active', true);
   });
 
-  it('cria produto ativo com estoque inicial', async () => {
+  it('cria produto ativo com estoque e comissão', async () => {
     const result = await createProduct({
       companyId: product.company_id,
       name: 'Pomada',
@@ -97,6 +103,8 @@ describe('catalog service', () => {
       costPrice: 20,
       stockQuantity: 10,
       minStockQuantity: 2,
+      commissionPercent: 10,
+      showInPublic: true,
     });
 
     expect(result.id).toBe(product.id);
@@ -107,6 +115,8 @@ describe('catalog service', () => {
       cost_price: 20,
       stock_quantity: 10,
       min_stock_quantity: 2,
+      commission_percent: 10,
+      show_in_public: true,
       is_active: true,
     });
   });
@@ -127,11 +137,13 @@ describe('catalog service', () => {
     expect(mocks.updateEqCompanyMock).toHaveBeenCalledWith('company_id', product.company_id);
   });
 
-  it('vende produto por RPC atomica', async () => {
+  it('vende produto por RPC atomica com vendedor e cliente opcional', async () => {
     const result = await sellProduct({
       productId: product.id,
       quantity: 2,
       appointmentId: null,
+      clientId: null,
+      professionalId: sale.professional_id,
     });
 
     expect(result.total_revenue).toBe(100);
@@ -139,6 +151,9 @@ describe('catalog service', () => {
       p_product_id: product.id,
       p_quantity: 2,
       p_appointment_id: null,
+      p_client_id: null,
+      p_professional_id: sale.professional_id,
+      p_payment_method: null,
     });
   });
 });

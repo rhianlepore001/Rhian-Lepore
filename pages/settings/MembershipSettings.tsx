@@ -87,7 +87,7 @@ export const MembershipSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-2xl pb-20 md:pb-0 space-y-6">
+            <div className="w-full max-w-3xl pb-20 md:pb-0 space-y-6">
                 <header>
                     <h1 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase mb-2`}>
                         Clube de Assinatura

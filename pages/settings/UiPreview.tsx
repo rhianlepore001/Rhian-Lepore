@@ -147,7 +147,7 @@ export const UiPreview: React.FC = () => {
 
   return (
     <SettingsLayout>
-      <div className="space-y-8 max-w-5xl">
+      <div className="space-y-8 w-full">
         {/* Cabeçalho */}
         <div>
           <h1 className={`text-2xl font-black uppercase tracking-tight ${colors.text} ${font.heading}`}>

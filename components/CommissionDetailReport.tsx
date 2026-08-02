@@ -65,8 +65,8 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
             const { data, error } = await supabase
                 .from('finance_records')
                 .select(`
-                    id, created_at, service_name, client_name,
-                    amount, payment_method,
+                    id, created_at, service_name, client_name, description,
+                    revenue, amount, payment_method,
                     commission_rate, commission_value,
                     appointments!appointment_id (machine_fee_percent)
                 `)
@@ -81,7 +81,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
             if (error) throw error;
 
             const formatted: ServiceRecord[] = (data || []).map((r: any) => {
-                const amount = Number(r.amount) || 0;
+                const amount = Number(r.revenue ?? r.amount) || 0;
                 const feePercent = Number(r.appointments?.machine_fee_percent) || 0;
                 const feeAmount = amount * feePercent / 100;
                 const base = amount - feeAmount;
@@ -91,7 +91,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                 return {
                     id: r.id,
                     created_at: r.created_at,
-                    service_name: r.service_name || '—',
+                    service_name: r.service_name || r.description || '—',
                     client_name: r.client_name || null,
                     amount,
                     payment_method: r.payment_method || null,

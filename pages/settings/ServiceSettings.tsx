@@ -53,7 +53,7 @@ export const ServiceSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-5xl pb-20 md:pb-0">
+            <div className="w-full pb-20 md:pb-0">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div className="flex-1" />
                     <div className="flex gap-3">

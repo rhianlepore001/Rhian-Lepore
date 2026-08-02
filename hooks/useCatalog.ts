@@ -1,7 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createProduct, listProducts, sellProduct, updateProduct } from '@/services/catalog';
-import type { CreateProductInput, ListProductsInput, SellProductInput, UpdateProductInput } from '@/types/catalog';
+import {
+  createProduct,
+  fetchPublicProductsCatalog,
+  listAppointmentProductLines,
+  listProducts,
+  sellProduct,
+  setAppointmentProductLines,
+  updateProduct,
+} from '@/services/catalog';
+import type {
+  CreateProductInput,
+  ListProductsInput,
+  SellProductInput,
+  SetAppointmentProductLinesInput,
+  UpdateProductInput,
+} from '@/types/catalog';
 
 export function useProducts(input: ListProductsInput) {
   return useQuery({
@@ -40,7 +54,37 @@ export function useSellProduct() {
     mutationFn: (input: SellProductInput) => sellProduct(input),
     onSuccess: sale => {
       queryClient.invalidateQueries({ queryKey: ['catalog', 'products', sale.company_id] });
+      queryClient.invalidateQueries({ queryKey: ['catalog', 'appointment-lines'] });
       queryClient.invalidateQueries({ queryKey: ['finance'] });
     },
+  });
+}
+
+export function useAppointmentProductLines(companyId: string, appointmentId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['catalog', 'appointment-lines', companyId, appointmentId],
+    queryFn: () => listAppointmentProductLines(companyId, appointmentId!),
+    enabled: !!companyId && !!appointmentId,
+  });
+}
+
+export function useSetAppointmentProductLines() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['catalog', 'appointment-lines', 'set'],
+    mutationFn: (input: SetAppointmentProductLinesInput) => setAppointmentProductLines(input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['catalog', 'appointment-lines', variables.companyId, variables.appointmentId],
+      });
+    },
+  });
+}
+
+export function usePublicProductsCatalog(businessId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ['catalog', 'public-products', businessId],
+    queryFn: () => fetchPublicProductsCatalog(businessId!),
+    enabled: !!businessId && enabled,
   });
 }

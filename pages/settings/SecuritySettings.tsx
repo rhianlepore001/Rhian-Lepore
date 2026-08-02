@@ -40,7 +40,7 @@ export const SecuritySettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-4xl space-y-6 pb-20 md:pb-0">
+            <div className="w-full space-y-6 pb-20 md:pb-0">
                 {/* Header dinâmico no SettingsLayout */}
 
                 {/* 2FA Section */}

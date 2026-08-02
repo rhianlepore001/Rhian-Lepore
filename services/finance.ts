@@ -117,7 +117,7 @@ export async function createFinanceRecord(input: {
   amount: number;
   expense: number;
   description: string;
-  paymentMethod: string;
+  paymentMethod: string | null;
   professionalId: string | null;
   professionalName: string;
   clientId: string | null;
@@ -126,12 +126,15 @@ export async function createFinanceRecord(input: {
   appointmentId: string | null;
   dueDate: string | null;
   commissionPaid: boolean;
+  status?: 'paid' | 'pending';
+  createdAt?: string;
 }): Promise<void> {
+  const isRevenue = input.type === 'revenue';
   const record: Record<string, any> = {
     user_id: input.companyId,
     type: input.type,
-    amount: input.amount,
-    expense: input.expense,
+    revenue: isRevenue ? input.amount : 0,
+    commission_value: isRevenue ? 0 : input.expense,
     description: input.description,
     payment_method: input.paymentMethod,
     professional_id: input.professionalId,
@@ -142,7 +145,11 @@ export async function createFinanceRecord(input: {
     appointment_id: input.appointmentId,
     due_date: input.dueDate,
     commission_paid: input.commissionPaid,
+    status: input.status ?? 'paid',
   };
+  if (input.createdAt) {
+    record.created_at = input.createdAt;
+  }
   const { error } = await supabase.from('finance_records').insert(record);
   if (error) throw error;
 }

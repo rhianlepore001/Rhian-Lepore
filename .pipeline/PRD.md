@@ -216,14 +216,21 @@ Uma plataforma única onde o dono consegue, de um relance:
 - [ ] Deleto transação (cascade com appointment se aplicável)
 
 #### US-009: Produtos
-**Como** dono, **quero** cadastrar e vender produtos, **para** controlar estoque e receita de varejo.
+**Como** dono, **quero** cadastrar e vender produtos, **para** controlar estoque, receita de varejo e comissão dos colaboradores.
 
 **Critérios de aceite:**
-- [ ] Cadastro produtos com preço, custo, estoque
-- [ ] Vendo produto avulso (gera registro financeiro)
-- [ ] Vejo alerta de estoque baixo
-- [ ] Staff pode vender mas não editar catálogo
-- [ ] Staff não vê custo/margem
+- [x] Cadastro produtos com preço, custo, estoque
+- [x] Vendo produto avulso (gera registro financeiro)
+- [x] Vejo alerta de estoque baixo
+- [x] Staff pode vender mas não editar catálogo
+- [x] Staff não vê custo/margem
+- [ ] Cadastro com `%` de comissão de venda por produto
+- [ ] Venda avulsa com vendedor obrigatório e cliente opcional
+- [ ] Produtos anexáveis no wizard de agendamento (intenção até checkout)
+- [ ] Produtos anexáveis ao editar/confirmar agendamento
+- [ ] Toggle “exibir produtos no agendamento online” (default off)
+- [ ] Seção Produtos no booking público quando toggle ligado
+- [ ] Comissão de produto somada às comissões do colaborador vendedor
 
 #### US-010: Configurações Gerais
 **Como** dono, **quero** configurar meu negócio, **para** personalizar o sistema.
@@ -437,11 +444,17 @@ Uma plataforma única onde o dono consegue, de um relance:
 
 | ID | Requisito |
 |----|-----------|
-| RF-PRD-01 | Owner cadastra/edita produtos com preço, custo e estoque |
-| RF-PRD-02 | Venda avulsa via RPC `sell_product` gera `finance_records` |
+| RF-PRD-01 | Owner cadastra/edita produtos com preço, custo, estoque e `commission_percent` |
+| RF-PRD-02 | Venda avulsa via RPC `sell_product` gera `finance_records` com comissão |
 | RF-PRD-03 | Staff pode vender mas não gerencia catálogo |
 | RF-PRD-04 | Alerta visual de estoque baixo |
 | RF-PRD-05 | RLS: staff lê ativos, owner CRUD; sem cross-tenant |
+| RF-PRD-06 | Linhas pendentes em `appointment_product_lines` até o checkout |
+| RF-PRD-07 | Booking público opcional (`public_products_enabled`) com `product_lines` |
+| RF-PRD-08 | Venda avulsa: vendedor obrigatório, cliente opcional |
+| RF-PRD-09 | Comissão de produto atribuída a `professional_id` e visível em Comissões |
+
+Fonte de regras: `.pipeline/discovery-notes-products-v2.md` (R1–R8).
 
 ### 5.10 Configurações
 

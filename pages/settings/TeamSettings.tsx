@@ -39,7 +39,7 @@ export const TeamSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-5xl space-y-8 pb-20">
+            <div className="w-full space-y-8 pb-20">
                 <div className="flex justify-end mb-6">
                     <Button
                         id="btn-add-team-member"

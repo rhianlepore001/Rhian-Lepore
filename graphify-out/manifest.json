@@ -56,8 +56,8 @@
     "hash": "cb9bffa67fcf2ca2bd893e5e4d26bed8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\AppointmentWizard.tsx": {
-    "mtime": 1785673165.3274295,
-    "hash": "84226a62a6034e1c4fe8dd94011247ef"
+    "mtime": 1785680571.267226,
+    "hash": "5ed393a67242e1a087516945d0b8d004"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\BottomMobileNav.tsx": {
     "mtime": 1785673951.1987982,
@@ -184,16 +184,16 @@
     "hash": "135cf33cfaa7ff0ac656fae17e4347ef"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Header.tsx": {
-    "mtime": 1785673585.9554641,
-    "hash": "02ea9ab54e65950262748ee15154eab0"
+    "mtime": 1785679564.6642427,
+    "hash": "c508186d84bdf68566941fd778a81ad4"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\HelpButtons.tsx": {
     "mtime": 1784447255.1889634,
     "hash": "1a2955f6e91d0fcd73d6d413b5f89cf8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Layout.tsx": {
-    "mtime": 1785672311.7639852,
-    "hash": "1ffa714d0aefe6297d03c2fb237d7e85"
+    "mtime": 1785677652.4650471,
+    "hash": "f9dd72ba1a0e2f5ff078e5e684e3a14a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\Modal.tsx": {
     "mtime": 1785479806.2134378,
@@ -236,8 +236,8 @@
     "hash": "6382e6c75421e2e60c0229c1000ac2d7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\PublicBusinessHeader.tsx": {
-    "mtime": 1784447501.6364386,
-    "hash": "4d2a29ef8c9a6601184a0b77eddce446"
+    "mtime": 1785683901.214504,
+    "hash": "9a904c70d777459f746c227ab9b5e50d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\PublicLinkCard.tsx": {
     "mtime": 1785595445.47987,
@@ -268,8 +268,8 @@
     "hash": "90ee057596f66dd1a3e30650497ee7e5"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SettingsLayout.tsx": {
-    "mtime": 1785673245.908961,
-    "hash": "f29a24384eefe48f0812334583205809"
+    "mtime": 1785681407.6821797,
+    "hash": "142cc37016176edc8db389e5c6b90bcf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\SettingsSection.tsx": {
     "mtime": 1785479806.310969,
@@ -376,12 +376,12 @@
     "hash": "96a239a0adf15e0822aa531704d912a8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\CancellationRateCard.tsx": {
-    "mtime": 1784447249.6839008,
-    "hash": "1fa519c015ff6aed0edcd33b7ef59532"
+    "mtime": 1785678392.9697964,
+    "hash": "3fd80aaf5e713bd4bba77063cfffd360"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\CriticalEmptySlotsCard.tsx": {
-    "mtime": 1784447249.6980965,
-    "hash": "f99cd7aae3071523cf3bfbc7a79ba75f"
+    "mtime": 1785678431.311688,
+    "hash": "d6942468a19b0959b32f2023f8cf79fb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\DashboardHero.tsx": {
     "mtime": 1784446431.9111059,
@@ -404,8 +404,8 @@
     "hash": "899c2269c461ab023801a861fb7fbb58"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\OccupancyRateCard.tsx": {
-    "mtime": 1784447249.717481,
-    "hash": "042a931eebdf7a67da2fbcaed3a6edd2"
+    "mtime": 1785677532.3344188,
+    "hash": "74c3a7e093c10dfc60131a6b90b758cf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\dashboard\\ProfitMetrics.tsx": {
     "mtime": 1785479804.5628514,
@@ -440,8 +440,8 @@
     "hash": "531a863aff90be4a1f4e0b67e7f0ca6e"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\insights\\RankingList.tsx": {
-    "mtime": 1785674985.148072,
-    "hash": "036e4c04574295e2e4107a4599631337"
+    "mtime": 1785676701.2646127,
+    "hash": "cd4cfc4c27c4e2cd1b4640bd0ac3b455"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\membership\\MembershipBadge.tsx": {
     "mtime": 1784447405.3224711,
@@ -528,8 +528,8 @@
     "hash": "a57d7e08edc19f0d8a51f338f3ebca19"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Checkbox.tsx": {
-    "mtime": 1785479806.1796193,
-    "hash": "72d3aa71c384abf766c5e9bc1a5dbfb1"
+    "mtime": 1785683866.9479916,
+    "hash": "00c064cc52395e881583ddf89d85f47c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\ConfirmModal.tsx": {
     "mtime": 1785479806.1831498,
@@ -552,12 +552,12 @@
     "hash": "906dcfca4a159f27df4af40aa2392dfa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Modal.tsx": {
-    "mtime": 1785479804.5679905,
-    "hash": "fd511b218108b8781dd555d2ff050bb2"
+    "mtime": 1785680202.6770842,
+    "hash": "b8f1a2696d843e9a9c095446ad46c68f"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\PageHeader.tsx": {
-    "mtime": 1785479806.2205682,
-    "hash": "4efcc3a2c6e47e6d1907589e6230e1ec"
+    "mtime": 1785678195.904464,
+    "hash": "fa117d855200954114df499851bb571a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\components\\ui\\Select.tsx": {
     "mtime": 1781964299.157503,
@@ -900,16 +900,16 @@
     "hash": "36343f69f4e77313f709c1451864a6d7"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Agenda.tsx": {
-    "mtime": 1785673626.3597999,
-    "hash": "ae21be758c5da9a8012f08dfa372d400"
+    "mtime": 1785679871.9275823,
+    "hash": "30b9b8404456c7a293e735e1d6b72743"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ClientArea.tsx": {
     "mtime": 1785673355.8230052,
     "hash": "eef3d5902c09fbd45f459ce8bb2d5c70"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ClientCRM.tsx": {
-    "mtime": 1785672311.8513827,
-    "hash": "3b6ca73ff2e3ca65187e88b19e65b1b7"
+    "mtime": 1785680488.5088105,
+    "hash": "d5211f45f0ea12829cca0ce6c3f17aa3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Clients.tsx": {
     "mtime": 1785672944.0686674,
@@ -920,16 +920,16 @@
     "hash": "e41c2567d17db60b8be4ff5d52ce8ecf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Dashboard.tsx": {
-    "mtime": 1785479806.221587,
-    "hash": "60b30faa1a2d75e23464c2582d5859a8"
+    "mtime": 1785677692.770527,
+    "hash": "a3b164df49ed84143725553175376922"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\DesignReviewDemo.tsx": {
     "mtime": 1782916631.2775884,
     "hash": "0a881a5dc807f2a32fdd8fc0dd340f59"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Finance.tsx": {
-    "mtime": 1785673020.2113512,
-    "hash": "02c5cbe5997081f7b091ed24dc855b4d"
+    "mtime": 1785677724.8928835,
+    "hash": "6e5b8d98f751565d5beba1e8f50fc3b2"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ForgotPassword.tsx": {
     "mtime": 1785673382.0999603,
@@ -964,24 +964,24 @@
     "hash": "1fde6dbadbaeb0ab1080d452fc484a75"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Products.tsx": {
-    "mtime": 1785663196.6624985,
-    "hash": "4ad4675c9cefdfa9a6727c0cf5062a70"
+    "mtime": 1785683732.8217254,
+    "hash": "5b062ede8b02b124b3a47fd9b2922f19"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\ProfessionalPortfolio.tsx": {
-    "mtime": 1785673542.7417293,
-    "hash": "812d84ef1f0ab39e694563a55cbaf464"
+    "mtime": 1785680442.362429,
+    "hash": "e73cc9b9972b9d477c280b7deb74c301"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\PublicBooking.tsx": {
-    "mtime": 1785672312.0451396,
-    "hash": "7165e18100a16284d4739f69fb037397"
+    "mtime": 1785683952.1334453,
+    "hash": "e553f894bf47bbec333785f4f1fb629d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\QueueJoin.tsx": {
     "mtime": 1785479806.1870832,
     "hash": "ddfa7649b63926b64b4745198ff58694"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\QueueManagement.tsx": {
-    "mtime": 1785480774.023623,
-    "hash": "f1bc9e0ccd54af81cc4266b3c1224c84"
+    "mtime": 1785679886.1691096,
+    "hash": "5965a49f9dbc515c412973a94eb69fbb"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\QueueStatus.tsx": {
     "mtime": 1785595445.4824386,
@@ -992,12 +992,12 @@
     "hash": "5b7efb51dc2c80826b6944b7aadfc08c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\Reports.tsx": {
-    "mtime": 1785675022.8762598,
-    "hash": "806be895421e6ebd9e0190cbf02ca6f3"
+    "mtime": 1785678360.7141485,
+    "hash": "e92950c48937f56002cf75d0429412f9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\StaffInsights.tsx": {
-    "mtime": 1785672311.90622,
-    "hash": "4199becea0c6ab4aeb8cbf78a1925cc2"
+    "mtime": 1785679833.4256973,
+    "hash": "45d2665b5b8e0465d126e052d340478c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\StaffOnboarding.tsx": {
     "mtime": 1783862294.0943122,
@@ -1024,44 +1024,44 @@
     "hash": "056f811e083ee5c3ebba887ada0821f8"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\GeneralSettings.tsx": {
-    "mtime": 1784447256.4255931,
-    "hash": "bd267ece3f63872b6c3f62cb7622a335"
+    "mtime": 1785681269.9313703,
+    "hash": "8392f8fb44a9df1d037a29adceddbb29"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\MembershipPlansSettings.tsx": {
-    "mtime": 1784447358.273874,
-    "hash": "0830e69cd69b63578582e0282eff4079"
+    "mtime": 1785681269.9985235,
+    "hash": "a062a60ad86eabc0e4348cad7d15c1fa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\MembershipSettings.tsx": {
-    "mtime": 1784447358.281878,
-    "hash": "c5f489d3be7551bc3d92595777183477"
+    "mtime": 1785681284.970989,
+    "hash": "7c845cf01fdc85f68a939a7e056bfd56"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\PublicBookingSettings.tsx": {
-    "mtime": 1785672398.0921915,
-    "hash": "e17ed7b06740204f1f307bfa3fe03a5d"
+    "mtime": 1785681284.9729733,
+    "hash": "d06a4ad5829d714c1dde9a0b74fb2091"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\RecycleBin.tsx": {
     "mtime": 1785479806.2170212,
     "hash": "e5dd91511a4f945559fbfc98acfe4673"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\SecuritySettings.tsx": {
-    "mtime": 1784447405.883809,
-    "hash": "170ee87c97f60f2844250b8ee832092d"
+    "mtime": 1785681284.9628663,
+    "hash": "fa0edb77f9af0782f79976c3a8541bcf"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\ServiceSettings.tsx": {
-    "mtime": 1785673195.8054347,
-    "hash": "efd52f61ce6ab19cd940e58739660347"
+    "mtime": 1785681270.083628,
+    "hash": "ac26ee61eb70613caee3f3268f6f893b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\SubscriptionSettings.tsx": {
-    "mtime": 1785673942.869408,
-    "hash": "06126c18d7f5cad35fb357f52d99b14c"
+    "mtime": 1785681284.9167943,
+    "hash": "1cf3144ebdf8526e1fb8f432b0be7058"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\TeamSettings.tsx": {
-    "mtime": 1785480665.9340076,
-    "hash": "dd0e0826d6d1754d710515315e88776c"
+    "mtime": 1785681268.0511606,
+    "hash": "78f86722d13b301fe08263e1ef867b2a"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\pages\\settings\\UiPreview.tsx": {
-    "mtime": 1785479806.2114084,
-    "hash": "a90957302e1e2849ac5b998b11b14f79"
+    "mtime": 1785681269.9985235,
+    "hash": "4631bddfbed4cf73ec0f62e0d86b942d"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\public\\verify-brutal-theme.js": {
     "mtime": 1768508566.8945148,
@@ -1074,6 +1074,14 @@
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\apply_migration_remote.mjs": {
     "mtime": 1785666608.5273027,
     "hash": "b9ea1ee323526de02fdbdb31714b4c86"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\audit-booking-ux.mjs": {
+    "mtime": 1785684094.6999369,
+    "hash": "bb89b4ba1c7d9c11ff5249c012cc9ce7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\audit-mobile-truncate.mjs": {
+    "mtime": 1785678907.3660827,
+    "hash": "70eb9f0665baf72b87880706e1329b5b"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\backup-supabase.js": {
     "mtime": 1772373347.1364942,
@@ -1122,6 +1130,10 @@
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\ui-states.mjs": {
     "mtime": 1785665183.6672418,
     "hash": "bc6c2327192e1a827bd9baa3d6227ae9"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\ux-pro-delta.mjs": {
+    "mtime": 1785677175.8963933,
+    "hash": "dff1fb969c17fc92535434b5aa729fe6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\scripts\\ux-pro-report.mjs": {
     "mtime": 1785666264.8563566,
@@ -2068,8 +2080,8 @@
     "hash": "52cd9daaa99bdec717027cb9dee44bd9"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\MEMORY.md": {
-    "mtime": 1785675502.7091923,
-    "hash": "540f8ed9bb67b57e87a2e72da920af1c"
+    "mtime": 1785681466.1540382,
+    "hash": "1272feed0a4090814d93d97a962581c6"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\PRODUCT.md": {
     "mtime": 1781964298.2870684,
@@ -2283,6 +2295,14 @@
     "mtime": 1785479804.5578551,
     "hash": "ac001f9ffe31a30d91ae8cdef4207cdb"
   },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\ANTES-DEPOIS.md": {
+    "mtime": 1785677940.8524303,
+    "hash": "29c8f3dbbabda784fcf83fcf7de021d0"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AVALIACAO-FINAL.md": {
+    "mtime": 1785678936.7916894,
+    "hash": "84c0bd2de05c8a510dffee8d5edcc100"
+  },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\BASELINE.md": {
     "mtime": 1785600471.1152494,
     "hash": "3d9a37d860c1a339b6a2a79b1cd92a7e"
@@ -2292,8 +2312,8 @@
     "hash": "ccf0427055e5b3e2e6bbce3b8b2d15ed"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\PLANO.md": {
-    "mtime": 1785670925.3801174,
-    "hash": "2a1fbb8c28899ade45faca6d367dce43"
+    "mtime": 1785675659.1983187,
+    "hash": "95203a73e3af06a22c9e140c9252f0f3"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\SEED.md": {
     "mtime": 1785662568.3368354,
@@ -2302,6 +2322,10 @@
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\SUPER-PROMPT.md": {
     "mtime": 1785599430.081578,
     "hash": "2f2dc5522f25bfb889c838ae3f062693"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\VALIDACAO-FINAL.md": {
+    "mtime": 1785679791.3573773,
+    "hash": "996fd92109b03c350643021d2f4a3c1c"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\critique\\C1.md": {
     "mtime": 1785669240.2125602,
@@ -2322,6 +2346,14 @@
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\forensics\\RESUMO.md": {
     "mtime": 1785666315.0351734,
     "hash": "1d468ceacec5d24c83db9a25d1abfa5d"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\forensics-after\\DELTA.md": {
+    "mtime": 1785677865.4845023,
+    "hash": "968ec04712951726a086dbd6f7a383e6"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\forensics-after\\RESUMO.md": {
+    "mtime": 1785677863.7159483,
+    "hash": "b2d3d2ef5f4c0862db4616f56ce6d979"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\map\\componentes.md": {
     "mtime": 1785663634.6919374,
@@ -2674,6 +2706,658 @@
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\audit-out\\A3-uiux\\zoom-header-badge.png": {
     "mtime": 1785668344.2853525,
     "hash": "b26e0a88e43f64a2e04edf5e39d77bf7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\audit-out\\insights-ux\\error.png": {
+    "mtime": 1785676375.609005,
+    "hash": "1be5d6e2a54e7e1d1dc542ce47e73b52"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\agenda-1440-owner.png": {
+    "mtime": 1785676668.8608482,
+    "hash": "c80b7d01e7f42ce272362475e91b6488"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\agenda-1440-staff.png": {
+    "mtime": 1785676865.9776175,
+    "hash": "d37738f28c35da09d95beb68a65d712f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\agenda-390-owner.png": {
+    "mtime": 1785676232.1974945,
+    "hash": "5cd0e7ed04dd91d4ec8e0c5483b8b930"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\agenda-390-staff.png": {
+    "mtime": 1785676435.7666986,
+    "hash": "3e1dcc00efc2d42cd20a903625efa1aa"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-agendamento-1440-owner.png": {
+    "mtime": 1785676762.7116573,
+    "hash": "21653466c4f8177ead5258bd39470116"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-agendamento-1440-staff.png": {
+    "mtime": 1785676958.904786,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-agendamento-390-owner.png": {
+    "mtime": 1785676329.320143,
+    "hash": "f4503bd231dfb7024ac3ea9638634f66"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-agendamento-390-staff.png": {
+    "mtime": 1785676529.664216,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-assinatura-1440-owner.png": {
+    "mtime": 1785676800.9799259,
+    "hash": "e6ed1af4b1f135836a710ca00ec5ba67"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-assinatura-1440-staff.png": {
+    "mtime": 1785676996.120365,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-assinatura-390-owner.png": {
+    "mtime": 1785676367.0591278,
+    "hash": "09ed2af0604756a375c5c03fd808963f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-assinatura-390-staff.png": {
+    "mtime": 1785676566.5235097,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-1440-owner.png": {
+    "mtime": 1785676810.311729,
+    "hash": "178b3261f2dff6e8944a31925ac563cf"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-1440-staff.png": {
+    "mtime": 1785677005.324672,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-390-owner.png": {
+    "mtime": 1785676376.551477,
+    "hash": "5ddb1db63c36459e0ca909db046ab395"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-390-staff.png": {
+    "mtime": 1785676575.649638,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-pix-1440-owner.png": {
+    "mtime": 1785676819.6116953,
+    "hash": "85a1f3c3bd4f6332883e2e46503925e4"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-pix-1440-staff.png": {
+    "mtime": 1785677014.687841,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-pix-390-owner.png": {
+    "mtime": 1785676386.421316,
+    "hash": "be502450624d27441aed5331b46111aa"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-clube-pix-390-staff.png": {
+    "mtime": 1785676584.76307,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-comissoes-1440-owner.png": {
+    "mtime": 1785676791.3893726,
+    "hash": "96a22f48d319910517b07614ac034b33"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-comissoes-1440-staff.png": {
+    "mtime": 1785676986.7415504,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-comissoes-390-owner.png": {
+    "mtime": 1785676357.5587606,
+    "hash": "62bfce6efee9bd0ae18af87dd6f82e42"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-comissoes-390-staff.png": {
+    "mtime": 1785676557.302872,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-equipe-1440-owner.png": {
+    "mtime": 1785676772.07486,
+    "hash": "cb2d6afb46fe477ebc135a985167a781"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-equipe-1440-staff.png": {
+    "mtime": 1785676968.1422627,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-equipe-390-owner.png": {
+    "mtime": 1785676338.768824,
+    "hash": "6fd7f732e34b9ab79f0b4ae9d472e13e"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-equipe-390-staff.png": {
+    "mtime": 1785676538.866278,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-geral-1440-owner.png": {
+    "mtime": 1785676753.2541647,
+    "hash": "f83002ec4ba863cf74684c9804cdef49"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-geral-1440-staff.png": {
+    "mtime": 1785676949.2489011,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-geral-390-owner.png": {
+    "mtime": 1785676319.9913306,
+    "hash": "bb030a97aaaec08b1d18ec4f8a7fe8a7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-geral-390-staff.png": {
+    "mtime": 1785676520.532082,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-seguranca-1440-owner.png": {
+    "mtime": 1785676829.2022772,
+    "hash": "27cb5c33f44d176601a5debb617485b3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-seguranca-1440-staff.png": {
+    "mtime": 1785677023.91727,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-seguranca-390-owner.png": {
+    "mtime": 1785676395.9026449,
+    "hash": "0c0916fb332ead25555c5e5080b16601"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-seguranca-390-staff.png": {
+    "mtime": 1785676593.9027822,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-servicos-1440-owner.png": {
+    "mtime": 1785676781.492573,
+    "hash": "1a3d8ff6347eb2302f013af3c522f40e"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-servicos-1440-staff.png": {
+    "mtime": 1785676977.3596175,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-servicos-390-owner.png": {
+    "mtime": 1785676348.0987675,
+    "hash": "b253de631454eaa397466616070d5a01"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cfg-servicos-390-staff.png": {
+    "mtime": 1785676548.072359,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cliente-detalhe-1440-owner.png": {
+    "mtime": 1785676706.2773337,
+    "hash": "aa8d51fda2a7c9399217ef05cf4c04b7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cliente-detalhe-1440-staff.png": {
+    "mtime": 1785676902.7628353,
+    "hash": "c3c60c06f5a0a716e7f2f2cc9e6ab768"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cliente-detalhe-390-owner.png": {
+    "mtime": 1785676271.3900678,
+    "hash": "f796644e3bd628f2d4ca70558e71d59c"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\cliente-detalhe-390-staff.png": {
+    "mtime": 1785676473.2551296,
+    "hash": "18fa701f12543b87987dba1d625c0b52"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clientes-1440-owner.png": {
+    "mtime": 1785676687.4061286,
+    "hash": "5d67951e7d109e1252d5a1a4eee1cf32"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clientes-1440-staff.png": {
+    "mtime": 1785676884.4718223,
+    "hash": "231a150d7ade15a50765d5e8c52472a5"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clientes-390-owner.png": {
+    "mtime": 1785676251.827284,
+    "hash": "ff15f1349e2b67d3192e006539961a38"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clientes-390-staff.png": {
+    "mtime": 1785676454.7799184,
+    "hash": "6d227feda38dd3df28c716057acfae41"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clube-assinantes-1440-owner.png": {
+    "mtime": 1785676838.6882827,
+    "hash": "5f90567d7dd38813fd418289052af5c0"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clube-assinantes-1440-staff.png": {
+    "mtime": 1785677033.2351055,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clube-assinantes-390-owner.png": {
+    "mtime": 1785676405.2128308,
+    "hash": "d4c74ebc22c54095d000a29f7f02385f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clube-assinantes-390-staff.png": {
+    "mtime": 1785676603.1625874,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clube-publico-1440-anon.png": {
+    "mtime": 1785676638.7795174,
+    "hash": "de9defcb98588b101c91ea76071c7def"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\clube-publico-390-anon.png": {
+    "mtime": 1785676197.1517758,
+    "hash": "b8fab91e53fbda2e106d39dcb1191393"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\dashboard-1440-owner.png": {
+    "mtime": 1785676659.6124475,
+    "hash": "059cb83bb7fee6bb41091260c60f2b21"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\dashboard-1440-staff.png": {
+    "mtime": 1785676856.243037,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\dashboard-390-owner.png": {
+    "mtime": 1785676221.6793287,
+    "hash": "504d2a0314553f4609270e4820c32cb2"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\dashboard-390-staff.png": {
+    "mtime": 1785676425.2418382,
+    "hash": "08495c761bd85cab6e2daf533382c152"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\fila-1440-owner.png": {
+    "mtime": 1785676678.078157,
+    "hash": "8eb905d05789e254fbca8a7579ef38b4"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\fila-1440-staff.png": {
+    "mtime": 1785676875.1656365,
+    "hash": "130baf84f148701313c63663bba6573c"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\fila-390-owner.png": {
+    "mtime": 1785676241.6771803,
+    "hash": "21313427c1587eeb1bb231ac733d337a"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\fila-390-staff.png": {
+    "mtime": 1785676445.1881359,
+    "hash": "33743a18e5d42f463f7ad25f912f3c23"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\financeiro-1440-owner.png": {
+    "mtime": 1785676725.0645168,
+    "hash": "59101a39cbc1e0479449ae6ffd1bccf4"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\financeiro-1440-staff.png": {
+    "mtime": 1785676921.2536304,
+    "hash": "517a1600a0f19078176dbe40b19a6c68"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\financeiro-390-owner.png": {
+    "mtime": 1785676291.247474,
+    "hash": "e5e46972c22b3c0f3ace158809bff769"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\financeiro-390-staff.png": {
+    "mtime": 1785676492.4007223,
+    "hash": "f26321ddfbe80a27053ca8f9e6cee437"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\insights-1440-owner.png": {
+    "mtime": 1785676734.590453,
+    "hash": "56f73e72340aa9bb6836cff24b12a592"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\insights-1440-staff.png": {
+    "mtime": 1785676930.5247777,
+    "hash": "28fd7398e4543e2a3cca05737af4b056"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\insights-390-owner.png": {
+    "mtime": 1785676301.1258485,
+    "hash": "5174512bc7f0f673c85aab1d53aa65a6"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\insights-390-staff.png": {
+    "mtime": 1785676502.0818388,
+    "hash": "0522b4f738b3b2773f08606917c2ff50"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\login-form-barber-1440-anon.png": {
+    "mtime": 1785676622.6826198,
+    "hash": "ab1611f943a0e956572bec466ca81cef"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\login-form-barber-390-anon.png": {
+    "mtime": 1785676179.5696154,
+    "hash": "8dd9d7db8374afb4651c05962d249758"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\login-gateway-1440-anon.png": {
+    "mtime": 1785676616.344248,
+    "hash": "c6772ae8f78508c6e1609a97114cbbcc"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\login-gateway-390-anon.png": {
+    "mtime": 1785676172.8542392,
+    "hash": "44708ba71ddf97e0396098687df70b9d"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\meus-insights-1440-owner.png": {
+    "mtime": 1785676743.9255347,
+    "hash": "56f73e72340aa9bb6836cff24b12a592"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\meus-insights-1440-staff.png": {
+    "mtime": 1785676939.9207172,
+    "hash": "5104164e24601287fa0aad9dc254a4f9"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\meus-insights-390-owner.png": {
+    "mtime": 1785676310.5193493,
+    "hash": "5174512bc7f0f673c85aab1d53aa65a6"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\meus-insights-390-staff.png": {
+    "mtime": 1785676511.3270533,
+    "hash": "b972fc293798a5473380c51898871a55"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\produtos-1440-owner.png": {
+    "mtime": 1785676715.583849,
+    "hash": "22a0dae9f878d2f55d578cc5768d35e9"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\produtos-1440-staff.png": {
+    "mtime": 1785676911.9996128,
+    "hash": "40962f805bfa5b051d1ccc23797d8476"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\produtos-390-owner.png": {
+    "mtime": 1785676280.914809,
+    "hash": "29e35c81f2eac8626158ef965d2f0b3c"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\produtos-390-staff.png": {
+    "mtime": 1785676482.4770055,
+    "hash": "eb2a75aa9f9b059f29c7a327a7ef08b8"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\register-1440-anon.png": {
+    "mtime": 1785676629.1999125,
+    "hash": "2d3dd7913c608abeaf802818e4129ac3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\register-390-anon.png": {
+    "mtime": 1785676186.6543465,
+    "hash": "7a3bb7b970d0814ccfba281a7ffc35f5"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\termos-1440-anon.png": {
+    "mtime": 1785676635.4963062,
+    "hash": "deeae7ea9e770cec8c05da973b0fcd26"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-dark\\termos-390-anon.png": {
+    "mtime": 1785676193.8869286,
+    "hash": "61a0c1b723cbe1512bebce8d725456bd"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\agenda-1440-owner.png": {
+    "mtime": 1785677451.76068,
+    "hash": "dfd1233b7fa40cca50d4e27e0f184193"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\agenda-1440-staff.png": {
+    "mtime": 1785677653.4416685,
+    "hash": "8991fd1593bc3e3772e21a455ca4aa0a"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\agenda-390-owner.png": {
+    "mtime": 1785677060.161279,
+    "hash": "5bb08633221a62901f6b6e044dc2ae9e"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\agenda-390-staff.png": {
+    "mtime": 1785677254.5540717,
+    "hash": "40c6066c2ded3249f508e8f3ec37bfce"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-agendamento-1440-owner.png": {
+    "mtime": 1785677549.5144386,
+    "hash": "5173cb389efc22daad2ea41fa59a34e3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-agendamento-1440-staff.png": {
+    "mtime": 1785677747.267278,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-agendamento-390-owner.png": {
+    "mtime": 1785677153.2573864,
+    "hash": "ec411966a9ad420ce53f96fde705dbc9"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-agendamento-390-staff.png": {
+    "mtime": 1785677348.326422,
+    "hash": "40d819f024a401c071319bfd0058aa44"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-assinatura-1440-owner.png": {
+    "mtime": 1785677587.3476746,
+    "hash": "b6de32a68a72bb7c76a45aba11f9c9fc"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-assinatura-1440-staff.png": {
+    "mtime": 1785677784.5338502,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-assinatura-390-owner.png": {
+    "mtime": 1785677190.478,
+    "hash": "8ccc3fd95d68b0f4a7d7c73f0e874443"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-assinatura-390-staff.png": {
+    "mtime": 1785677384.99031,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-1440-owner.png": {
+    "mtime": 1785677596.6286695,
+    "hash": "f9046a58622dcf94062e6825d73804b5"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-1440-staff.png": {
+    "mtime": 1785677793.87141,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-390-owner.png": {
+    "mtime": 1785677199.752482,
+    "hash": "a3c2e5fb2056f7aeebd990c13d45f3e5"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-390-staff.png": {
+    "mtime": 1785677394.3503191,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-pix-1440-owner.png": {
+    "mtime": 1785677606.0952365,
+    "hash": "3fa583514355cf410dbbec7162d0e521"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-pix-1440-staff.png": {
+    "mtime": 1785677803.3950033,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-pix-390-owner.png": {
+    "mtime": 1785677209.09307,
+    "hash": "c459e0aeb1cd21c880841ec499e8aea7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-clube-pix-390-staff.png": {
+    "mtime": 1785677403.4685526,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-comissoes-1440-owner.png": {
+    "mtime": 1785677578.0215056,
+    "hash": "ef3c73184327fe71340bf25825c2760b"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-comissoes-1440-staff.png": {
+    "mtime": 1785677775.0614843,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-comissoes-390-owner.png": {
+    "mtime": 1785677181.010915,
+    "hash": "bc964592205023ca17b25bd5a9b01c91"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-comissoes-390-staff.png": {
+    "mtime": 1785677375.8372598,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-equipe-1440-owner.png": {
+    "mtime": 1785677559.1443644,
+    "hash": "8c70829b6e5f9624c0b2aadea4d1c919"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-equipe-1440-staff.png": {
+    "mtime": 1785677756.4750829,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-equipe-390-owner.png": {
+    "mtime": 1785677162.4285886,
+    "hash": "2014fd3f16db68e42fbc801812069dbd"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-equipe-390-staff.png": {
+    "mtime": 1785677357.5630894,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-geral-1440-owner.png": {
+    "mtime": 1785677540.2233717,
+    "hash": "2a9997c98a5793a42d97f392dc329d3f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-geral-1440-staff.png": {
+    "mtime": 1785677737.8852146,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-geral-390-owner.png": {
+    "mtime": 1785677143.9603012,
+    "hash": "50f5b6934277f7d6b45e006e6fc60591"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-geral-390-staff.png": {
+    "mtime": 1785677338.9866977,
+    "hash": "40d819f024a401c071319bfd0058aa44"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-seguranca-1440-owner.png": {
+    "mtime": 1785677616.3449543,
+    "hash": "98aa479e01eac1b7835c8ef0106637a4"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-seguranca-1440-staff.png": {
+    "mtime": 1785677812.6436572,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-seguranca-390-owner.png": {
+    "mtime": 1785677218.3109567,
+    "hash": "7b93d8611bfaa7b5dcadea0778430243"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-seguranca-390-staff.png": {
+    "mtime": 1785677412.5619507,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-servicos-1440-owner.png": {
+    "mtime": 1785677568.4800262,
+    "hash": "8c4882b87c5838c06a1aefe4cca9af02"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-servicos-1440-staff.png": {
+    "mtime": 1785677765.653668,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-servicos-390-owner.png": {
+    "mtime": 1785677171.6632612,
+    "hash": "1368eedfc5d2dbf96dd9dc2d7143b2ce"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cfg-servicos-390-staff.png": {
+    "mtime": 1785677366.67914,
+    "hash": "9804f1255506ef5d957a682a1ddae6d3"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cliente-detalhe-1440-owner.png": {
+    "mtime": 1785677489.7261283,
+    "hash": "ae00f4eec03b39d90d389bf89b0c3b07"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cliente-detalhe-1440-staff.png": {
+    "mtime": 1785677690.4897864,
+    "hash": "2655a273a13c531186f9a707ceb2fad7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cliente-detalhe-390-owner.png": {
+    "mtime": 1785677097.621171,
+    "hash": "685243481a990a0a5d412646f2cda6f0"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\cliente-detalhe-390-staff.png": {
+    "mtime": 1785677292.0079477,
+    "hash": "b8f626a89b60476fff9aff3be2a233b4"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clientes-1440-owner.png": {
+    "mtime": 1785677470.8616707,
+    "hash": "ee550b116626eef0333dd03d48826f32"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clientes-1440-staff.png": {
+    "mtime": 1785677672.1716552,
+    "hash": "4a49314afb1f8323fcd309f4fa1ac653"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clientes-390-owner.png": {
+    "mtime": 1785677079.277776,
+    "hash": "d8e166e04b29e1ddbb25429e4d98a9fc"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clientes-390-staff.png": {
+    "mtime": 1785677273.4092624,
+    "hash": "3c1b0b198ffb73bdc66183661eaa681d"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clube-assinantes-1440-owner.png": {
+    "mtime": 1785677626.600977,
+    "hash": "c29a3ca19ae9e90424b7dcc6adc33e9e"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clube-assinantes-1440-staff.png": {
+    "mtime": 1785677822.0217297,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clube-assinantes-390-owner.png": {
+    "mtime": 1785677227.573132,
+    "hash": "c0b4ef9c38476f4bcbaaed6257066618"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\clube-assinantes-390-staff.png": {
+    "mtime": 1785677421.7676113,
+    "hash": "40d819f024a401c071319bfd0058aa44"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\dashboard-1440-owner.png": {
+    "mtime": 1785677442.432053,
+    "hash": "cf0cfc4f0048e846135b1ed0a9c27fbb"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\dashboard-1440-staff.png": {
+    "mtime": 1785677643.8363032,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\dashboard-390-owner.png": {
+    "mtime": 1785677050.7090788,
+    "hash": "e5699b3554120ca33b050893cdb4ab6b"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\dashboard-390-staff.png": {
+    "mtime": 1785677245.2662487,
+    "hash": "95a5349d0895a845dd32735283f38bfc"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\fila-1440-owner.png": {
+    "mtime": 1785677461.0155773,
+    "hash": "b1255775a48629559fafea6a219b7468"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\fila-1440-staff.png": {
+    "mtime": 1785677662.7735395,
+    "hash": "b51df5c98dcfb774d54184fc73fdeb3c"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\fila-390-owner.png": {
+    "mtime": 1785677069.2745376,
+    "hash": "ff88de4cb44d3da8278dbc1482daa1c6"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\fila-390-staff.png": {
+    "mtime": 1785677263.9511714,
+    "hash": "f070d059a29d3d49e2e5e9bc6926d161"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\financeiro-1440-owner.png": {
+    "mtime": 1785677510.1660151,
+    "hash": "016274fa6366cac8f8bfa8723dae25e8"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\financeiro-1440-staff.png": {
+    "mtime": 1785677709.273421,
+    "hash": "65c0074a994642ad051d8b0972cdfae7"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\financeiro-390-owner.png": {
+    "mtime": 1785677115.923714,
+    "hash": "94100b436dc91a85e9bfdd6f8a4d467d"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\financeiro-390-staff.png": {
+    "mtime": 1785677310.551187,
+    "hash": "d3f7c458d96cccc2c6c0dd69942281ff"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\insights-1440-owner.png": {
+    "mtime": 1785677521.1610818,
+    "hash": "6f28f61c2582e319422e1b1d79a0a208"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\insights-1440-staff.png": {
+    "mtime": 1785677718.6636746,
+    "hash": "d06ac24893bc605b9e25f9644611e88f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\insights-390-owner.png": {
+    "mtime": 1785677125.251636,
+    "hash": "ae0fcbce7a9dce9d70c5b9731ca6a347"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\insights-390-staff.png": {
+    "mtime": 1785677320.582223,
+    "hash": "6e01804c3b9dbf81741326f7a1a36716"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\meus-insights-1440-owner.png": {
+    "mtime": 1785677530.800327,
+    "hash": "6f28f61c2582e319422e1b1d79a0a208"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\meus-insights-1440-staff.png": {
+    "mtime": 1785677728.3622935,
+    "hash": "b894f9d9c713055d9e12807084148d4d"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\meus-insights-390-owner.png": {
+    "mtime": 1785677134.647808,
+    "hash": "ae0fcbce7a9dce9d70c5b9731ca6a347"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\meus-insights-390-staff.png": {
+    "mtime": 1785677329.7949412,
+    "hash": "b1522ef655e26e6a8c2b7dd3eabb9984"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\produtos-1440-owner.png": {
+    "mtime": 1785677499.133051,
+    "hash": "6d523ae8dd1ae86b98051d2beb722c47"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\produtos-1440-staff.png": {
+    "mtime": 1785677699.917173,
+    "hash": "24a091f22c63d6f0db597b1868317d0f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\produtos-390-owner.png": {
+    "mtime": 1785677106.7607715,
+    "hash": "e82de00693c27919239af9312c9ea50f"
+  },
+  "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\AFTER\\barber-light\\produtos-390-staff.png": {
+    "mtime": 1785677301.292061,
+    "hash": "a7ec546a12bc7b7457496e7be7ddecaa"
   },
   "C:\\Users\\User\\Downloads\\Rhian-Lepore-main\\docs\\ux-pro\\shots\\barber-dark\\agenda-1440-owner.png": {
     "mtime": 1785662948.5105824,

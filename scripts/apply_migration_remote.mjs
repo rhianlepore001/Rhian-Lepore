@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { config } from 'dotenv';
 
 config();
-config({ path: '.env.local' });
+config({ path: '.env.local', override: true });
 
 const sqlFile = process.argv[2];
 const token = String(process.env.SUPABASE_ACCESS_TOKEN || '')

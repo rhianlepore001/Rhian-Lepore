@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { NAVIGATION_ITEMS } from '../constants';
 import { TrendingUp, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
@@ -9,8 +9,9 @@ import { useTheme } from '../contexts/ThemeContext';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isSidebarOpen, closeSidebar } = useUI();
-  const { logout, userType, role } = useAuth();
+  const { logout, role } = useAuth();
 
   const isStaff = role === 'staff';
   const { accent, colors, classes } = useBrutalTheme();
@@ -20,6 +21,14 @@ export const Sidebar: React.FC = () => {
   // Filtra itens de navegação com base no role do usuário
   const visibleItems = NAVIGATION_ITEMS.filter(item => !item.ownerOnly || !isStaff);
 
+  const goTo = (path: string) => {
+    // Navega primeiro — closeSidebar setState não deve atrasar a troca de rota
+    if (location.pathname !== path) {
+      navigate(path);
+    }
+    closeSidebar();
+  };
+
   const renderLink = (path: string, Icon: React.ElementType, label: string) => {
     const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
 
@@ -27,7 +36,12 @@ export const Sidebar: React.FC = () => {
       <Link
         key={path}
         to={path}
-        onClick={closeSidebar}
+        onClick={(e) => {
+          // Impede o <a href="#..."> de mudar o hash fora do React Router
+          e.preventDefault();
+          e.stopPropagation();
+          goTo(path);
+        }}
         className={`
           ${classes.sidebarItem}
           ${isActive ? classes.sidebarItemActive : classes.sidebarItemInactive}
@@ -80,7 +94,14 @@ export const Sidebar: React.FC = () => {
 
         {/* Desktop: Header do menu com Logo */}
         <div className={`hidden md:flex h-20 items-center justify-center border-b ${colors.divider}`}>
-          <Link to="/" onClick={closeSidebar} className="relative flex items-center hover:opacity-80 transition-opacity group">
+          <Link
+            to="/"
+            onClick={(e) => {
+              e.preventDefault();
+              goTo('/');
+            }}
+            className="relative flex items-center hover:opacity-80 transition-opacity group"
+          >
             <div className={`absolute -inset-3 ${accent.bgDim} blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
             <div className="relative flex items-center gap-3">
               <img

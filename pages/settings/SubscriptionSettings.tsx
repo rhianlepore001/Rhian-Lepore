@@ -95,7 +95,7 @@ export const SubscriptionSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="max-w-4xl pb-20">
+            <div className="w-full pb-20">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 md:mb-12">
                     <div>
                         <h1 className={`text-2xl md:text-3xl font-heading ${colors.text} uppercase mb-2`}>

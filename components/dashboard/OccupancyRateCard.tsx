@@ -50,19 +50,21 @@ export const OccupancyRateCard: React.FC = () => {
   };
 
   return (
-    <Card variant="outlined" className="overflow-hidden">
+    <Card variant="outlined">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`p-2.5 rounded-xl ${accent.bgDim} ${accent.text}`}>
+        <div className="flex items-start gap-3 min-w-0">
+          <div className={`p-2.5 rounded-xl shrink-0 ${accent.bgDim} ${accent.text}`}>
             <Clock className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <h2 className={`font-heading text-base font-bold ${colors.text}`}>Agenda cheia</h2>
-            <p className={`text-sm ${colors.textSecondary}`}>Quanto da sua agenda está preenchida</p>
+            <p className={`text-sm ${colors.textSecondary} text-pretty`}>
+              Quanto da sua agenda está preenchida
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-divider)] self-start">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-[var(--color-surface)] border border-[var(--color-divider)] self-start max-w-full flex-wrap">
           {(Object.keys(periodLabel) as OccupancyPeriod[]).map((p) => (
             <button
               key={p}
@@ -86,25 +88,25 @@ export const OccupancyRateCard: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="mt-6 flex items-end justify-between gap-4">
-            <div>
+          <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0">
               <p className={`font-mono text-5xl font-black tabular-nums tracking-tight ${colors.text}`}>
                 {rate}%
               </p>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2 min-w-0">
                 {delta > 0 ? (
                   <span className={`inline-flex items-center gap-1 text-xs font-bold ${status.success}`}>
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    +{delta}% vs {periodLabel[period].toLowerCase()} anterior
+                    <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-pretty">+{delta}% vs {periodLabel[period].toLowerCase()} anterior</span>
                   </span>
                 ) : delta < 0 ? (
                   <span className={`inline-flex items-center gap-1 text-xs font-bold ${status.danger}`}>
-                    <TrendingDown className="w-3.5 h-3.5" />
-                    {delta}% vs {periodLabel[period].toLowerCase()} anterior
+                    <TrendingDown className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-pretty">{delta}% vs {periodLabel[period].toLowerCase()} anterior</span>
                   </span>
                 ) : (
                   <span className={`inline-flex items-center gap-1 text-xs font-bold ${colors.textMuted}`}>
-                    <Minus className="w-3.5 h-3.5" />
+                    <Minus className="w-3.5 h-3.5 shrink-0" />
                     Estável
                   </span>
                 )}
@@ -112,9 +114,9 @@ export const OccupancyRateCard: React.FC = () => {
             </div>
 
             <div
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${statusBg} ${statusBorder} ${statusColor}`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold shrink-0 ${statusBg} ${statusBorder} ${statusColor}`}
             >
-              <StatusIcon className="w-3.5 h-3.5" />
+              <StatusIcon className="w-3.5 h-3.5 shrink-0" />
               {statusLabel}
             </div>
           </div>
@@ -149,12 +151,12 @@ export const OccupancyRateCard: React.FC = () => {
                 />
               </div>
             )}
-            <div className="mt-2 flex items-center justify-between text-xs font-mono">
-              <span className={colors.textSecondary}>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs font-mono">
+              <span className={`${colors.textSecondary} min-w-0`}>
                 {formatDuration(current.occupiedMinutes)} ocupados
               </span>
-              <span className={colors.textSecondary}>
-                {formatDuration(current.availableMinutes)} disponíveis
+              <span className={`${colors.textSecondary} min-w-0`}>
+                {formatDuration(current.availableMinutes)} livres
               </span>
             </div>
           </div>

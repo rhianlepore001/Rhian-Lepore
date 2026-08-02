@@ -12,7 +12,6 @@ import { usePublicClient } from '../contexts/PublicClientContext';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
-import { BookingModeToggle } from '../components/booking/BookingModeToggle';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
@@ -744,7 +743,7 @@ export const PublicBooking: React.FC = () => {
                                             }`}>
                                             {idx < currentQuickStepIndex ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                                         </div>
-                                        <span className={`text-xs font-bold uppercase tracking-[0.1em] transition-all duration-200 ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
+                                        <span className={`hidden sm:block text-xs font-semibold uppercase tracking-wide transition-colors ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
                                     </div>
                                     {idx < quickSteps.length - 1 && (
                                         <div className={`flex-1 h-px mx-2 transition-all duration-300 ${idx < currentQuickStepIndex ? `${accent.bg} opacity-50` : colors.divider}`} />
@@ -1851,4 +1850,7 @@ export const PublicBooking: React.FC = () => {
                     if (pendingCancelBookingId) void handleCancelBooking(pendingCancelBookingId);
                     setPendingCancelBookingId(null);
                 }}
-            />
+            />
+        </div>
+    );
+};

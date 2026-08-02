@@ -9,8 +9,15 @@ import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Button } from './ui/Button';
 import { useToast } from './ui';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
+import { buildManualBookingTimeSlots } from '../utils/agendaTimeSlots';
 
 import { SearchableSelect } from './SearchableSelect';
+import { useProducts } from '@/hooks/useCatalog';
+import { listAppointmentProductLines, setAppointmentProductLines } from '@/services/catalog';
+import {
+    ProductLinesPicker,
+    type ProductLineSelection,
+} from './appointment/ProductLinesPicker';
 
 interface Appointment {
     id: string;
@@ -51,16 +58,6 @@ interface AppointmentEditModalProps {
     currencySymbol: string;
 }
 
-// Generate time slots with half-hour intervals
-const timeSlots = [];
-for (let hour = 8; hour <= 20; hour++) {
-    timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-    if (hour < 20) {
-        timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
-    }
-}
-
-
 export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     appointment,
     teamMembers,
@@ -71,11 +68,37 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     accentColor,
     currencySymbol
 }) => {
-    const { user } = useAuth();
+    const { user, companyId, region } = useAuth();
     const { setModalOpen } = useUI();
     const { colors, accent, classes, status, radius } = useBrutalTheme();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [productLines, setProductLines] = useState<ProductLineSelection[]>([]);
+    const tenantId = companyId ?? user?.id ?? '';
+    const { data: catalogProducts = [] } = useProducts({
+        companyId: tenantId,
+        includeInactive: false,
+    });
+    const currencyRegion = region === 'PT' ? 'PT' : 'BR';
+
+    useEffect(() => {
+        if (!tenantId || !appointment.id) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const lines = await listAppointmentProductLines(tenantId, appointment.id);
+                if (!cancelled) {
+                    setProductLines(lines.map(l => ({
+                        productId: l.product_id,
+                        quantity: l.quantity,
+                    })));
+                }
+            } catch {
+                // silent — edição de serviços continua
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [tenantId, appointment.id]);
 
     useEffect(() => {
         setModalOpen(true);
@@ -95,7 +118,23 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     // Initial state setup
     const initialDate = formatDateForInput(appointment.appointment_time);
-    const initialTime = new Date(appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    const aptDate = new Date(appointment.appointment_time);
+    const initialTime = `${aptDate.getHours().toString().padStart(2, '0')}:${aptDate.getMinutes().toString().padStart(2, '0')}`;
+
+    // Criação/edição interna: qualquer horário (não limitado ao expediente)
+    const timeSlots = useMemo(() => {
+        const slots = buildManualBookingTimeSlots();
+        if (!slots.includes(initialTime)) {
+            const mins = aptDate.getHours() * 60 + aptDate.getMinutes();
+            const idx = slots.findIndex((t) => {
+                const [h, m] = t.split(':').map(Number);
+                return h * 60 + m > mins;
+            });
+            if (idx === -1) slots.push(initialTime);
+            else slots.splice(idx, 0, initialTime);
+        }
+        return slots;
+    }, [initialTime, appointment.appointment_time]);
 
     // Parse initial services ONLY ONCE using useMemo
     const { initialServiceIds, initialCustomPart } = useMemo(() => {
@@ -235,6 +274,14 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
             if (error) throw error;
 
+            if (tenantId) {
+                await setAppointmentProductLines({
+                    companyId: tenantId,
+                    appointmentId: appointment.id,
+                    lines: productLines,
+                });
+            }
+
             showToast('Agendamento atualizado com sucesso!', 'success');
             onSave();
             onClose();
@@ -324,6 +371,14 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         accentColor={accentColor}
                         multiple={true}
                         disabled={loading}
+                    />
+
+                    <ProductLinesPicker
+                        products={catalogProducts}
+                        value={productLines}
+                        onChange={setProductLines}
+                        currencyRegion={currencyRegion}
+                        compact
                     />
 
                     {/* Custom Service Edit */}

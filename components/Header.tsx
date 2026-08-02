@@ -138,7 +138,7 @@ export const Header: React.FC = () => {
               onClick={toggleMode}
               aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
               title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              className={`p-2 rounded border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
+              className={`p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
                 ${colors.card} hover:bg-theme-surface`}
               style={{ transition: 'background 0.2s' }}
             >
@@ -160,14 +160,14 @@ export const Header: React.FC = () => {
               <button
                 id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className={`relative p-2 hover:bg-theme-surface rounded border border-transparent hover:border-[var(--color-divider)] transition-colors`}
+                className={`relative p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center hover:bg-theme-surface rounded border border-transparent hover:border-[var(--color-divider)] transition-colors`}
                 aria-label="Abrir notificações"
                 title="Notificações"
               >
                 <Bell className={`w-5 h-5 md:w-6 md:h-6 ${colors.text}`} />
                 {alertCount > 0 && (
                   <span
-                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 ${colors.bg} animate-pulse flex items-center justify-center text-xs font-mono font-bold text-[var(--color-bg)] leading-none`}
+                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 border-[var(--color-bg)] animate-pulse flex items-center justify-center text-xs font-mono font-bold text-[var(--color-on-accent)] leading-none`}
                   >
                     {alertCount > 9 ? '9+' : alertCount}
                   </span>

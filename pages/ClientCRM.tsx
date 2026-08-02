@@ -1,4 +1,4 @@
-import { Card, Button, Modal, ConfirmModal } from '../components/ui';
+﻿import { Card, Button, Modal, ConfirmModal } from '../components/ui';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
@@ -457,7 +457,7 @@ const { id } = useParams<{ id: string }>();
                       {/* Badges */}
                       <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {index === 0 && (
-                          <span className={`${accent.bg} text-[var(--color-bg)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
+                          <span className={`${accent.bg} text-[var(--color-on-accent)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
                         )}
                         {hasDiscount && (
                           <span className="bg-[var(--color-danger-bg)] text-[var(--color-danger)] text-xs font-bold px-2 py-1 flex items-center gap-1">
@@ -469,7 +469,7 @@ const { id } = useParams<{ id: string }>();
                     {/* Repeat Service Button for each card */}
                     <button
                       onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-bg)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
+                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-on-accent)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
                     >
                       <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
                     </button>

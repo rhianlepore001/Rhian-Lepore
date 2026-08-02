@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Modal } from '@/components/ui';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { User, DollarSign, Check, Loader2, Percent, TrendingUp, Clock, Scissors, Info as InfoIcon, FileText } from 'lucide-react';
+import { User, DollarSign, Loader2, Percent, TrendingUp, Clock, Scissors, Package, Info as InfoIcon, FileText } from 'lucide-react';
 import { InfoButton } from './HelpButtons';
 import { useNavigate } from 'react-router-dom';
 import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
@@ -23,6 +23,10 @@ interface CommissionDue {
     total_pending_records: number;
     commission_rate: number;
     total_paid: number;
+    services_pending: number;
+    products_pending: number;
+    services_month: number;
+    products_sold_month: number;
     cpf?: string | null;
 }
 
@@ -107,6 +111,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     // Inline % prompt
     const [showRatePrompt, setShowRatePrompt] = useState(false);
     const [pendingPayProfessional, setPendingPayProfessional] = useState<CommissionDue | null>(null);
+    const [openPayAfterRateSave, setOpenPayAfterRateSave] = useState(false);
     const [inlineRate, setInlineRate] = useState('');
     const [savingRate, setSavingRate] = useState(false);
 
@@ -166,13 +171,21 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     total_paid: Number(item.total_paid) || 0,
                     commission_rate: Number(item.commission_rate) || 0,
                     total_pending_records: Number(item.total_pending_records) || 0,
+                    services_pending: Number(item.services_pending) || 0,
+                    products_pending: Number(item.products_pending) || 0,
+                    services_month: Number(item.services_month) || 0,
+                    products_sold_month: Number(item.products_sold_month) || 0,
                     cpf: cpfMap[item.professional_id] ?? null
                 }))
+                // Dono não entra na fila de repasse; ainda assim a RPC devolve is_owner
+                // para o filtro funcionar sem depender de join client-side.
                 .filter((item: any) => !item.is_owner);
 
             setCommissionsDue(formatted);
         } catch (error) {
             console.error('Error fetching commissions:', error);
+            showToast('Não foi possível carregar as comissões. Tente novamente.', 'error');
+            setCommissionsDue([]);
         } finally {
             setLoading(false);
         }
@@ -215,6 +228,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         if (!professional.commission_rate || professional.commission_rate === 0) {
             setPendingPayProfessional(professional);
             setInlineRate('');
+            setOpenPayAfterRateSave(true);
             setShowRatePrompt(true);
             return;
         }
@@ -245,19 +259,30 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         try {
             const { error } = await supabase
                 .from('team_members')
-                .update({ commission_rate: rate })
+                .update({
+                    commission_rate: rate,
+                    commission_percent: rate,
+                    updated_at: new Date().toISOString(),
+                })
                 .eq('id', pendingPayProfessional.professional_id)
                 .eq('user_id', user.id);
             if (error) throw error;
 
+            const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
+                p_professional_id: pendingPayProfessional.professional_id,
+                p_new_rate: rate,
+            });
+            if (recalculateError) throw recalculateError;
+
             const updated = { ...pendingPayProfessional, commission_rate: rate };
-            setCommissionsDue(prev => prev.map(p =>
-                p.professional_id === updated.professional_id ? updated : p
-            ));
+            const shouldOpenPay = openPayAfterRateSave;
             setShowRatePrompt(false);
             setPendingPayProfessional(null);
-            openPayModal(updated);
-        } catch (err: any) {
+            setOpenPayAfterRateSave(false);
+            showToast(`Taxa de ${updated.professional_name} atualizada para ${rate}%.`, 'success');
+            await fetchCommissionsDue();
+            if (shouldOpenPay) openPayModal(updated);
+        } catch (err: unknown) {
             console.error('Erro ao salvar comissão:', err);
             showToast('Não foi possível salvar a comissão. Tente novamente.', 'error');
         } finally {
@@ -345,7 +370,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         onClick={() => setActiveTab(tab)}
                         className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                             activeTab === tab
-                                ? `${accent.bg} text-[var(--color-bg)]`
+                                ? `${accent.bg} text-[var(--color-on-accent)]`
                                 : `${colors.textMuted} hover:text-theme-text`
                         }`}
                     >
@@ -392,7 +417,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     )}
 
                     {/* List */}
-                    <div className={`${colors.surface} opacity-40 border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 backdrop-blur-sm overflow-y-auto`}>
+                    <div className={`${colors.surface} border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 overflow-y-auto`}>
                         {loading ? (
                             <div className={`text-center py-24 ${colors.textMuted}`}>
                                 <Loader2 className={`w-12 h-12 mx-auto animate-spin mb-4 ${accentTextClass}`} />
@@ -401,12 +426,18 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         ) : commissionsDue.length === 0 ? (
                             <div className={`text-center py-20 ${colors.card} rounded-2xl border-2 border-dashed ${colors.border} mx-4 md:mx-0`}>
                                 <div className={`w-16 h-16 ${colors.surface} rounded-full flex items-center justify-center mx-auto mb-6`}>
-                                    <Check className={`w-8 h-8 ${status.success}`} />
+                                    <User className={`w-8 h-8 ${colors.textMuted}`} />
                                 </div>
-                                <p className={`text-lg font-bold ${colors.text} mb-2 uppercase ${font.heading}`}>Tudo em dia!</p>
-                                <p className={`${colors.textMuted} max-w-xs mx-auto text-sm px-4`}>
-                                    Nenhum profissional com comissões pendentes no momento.
+                                <p className={`text-lg font-bold ${colors.text} mb-2 uppercase ${font.heading}`}>Sem colaboradores</p>
+                                <p className={`${colors.textMuted} max-w-sm mx-auto text-sm px-4 mb-6`}>
+                                    Cadastre a equipe em Ajustes → Equipe e defina o % de comissão de cada profissional para acompanhar serviços, histórico e repasses aqui.
                                 </p>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => navigate('/configuracoes/equipe')}
+                                >
+                                    Ir para Equipe
+                                </Button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-4 md:gap-6">
@@ -429,14 +460,24 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                                     <User className={`w-6 h-6 md:w-8 md:h-8 ${colors.textMuted}`} />
                                                                 </div>
                                                             )}
-                                                            <div className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-xs font-bold border ${colors.card} ${colors.border} ${accentTextClass}`}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPendingPayProfessional(professional);
+                                                                    setInlineRate(String(professional.commission_rate || 0));
+                                                                    setOpenPayAfterRateSave(false);
+                                                                    setShowRatePrompt(true);
+                                                                }}
+                                                                className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-xs font-bold border ${colors.card} ${colors.border} ${accentTextClass} hover:scale-105 transition-transform`}
+                                                                title="Alterar taxa de comissão"
+                                                            >
                                                                 {(professional.commission_rate || 0)}%
-                                                            </div>
+                                                            </button>
                                                         </div>
                                                         <div>
                                                             <h3 className={`text-base md:text-xl font-bold ${colors.text} leading-tight`}>{professional.professional_name}</h3>
                                                             <p className={`${colors.textMuted} text-xs ${font.mono} mt-1 uppercase tracking-tight flex items-center gap-1`}>
-                                                                Comissão por Serviço
+                                                                {(professional.commission_rate || 0) > 0 ? 'Comissão por serviço' : 'Taxa não configurada'}
                                                                 <TrendingUp className="w-2.5 h-2.5" />
                                                             </p>
                                                         </div>
@@ -449,18 +490,36 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-3 gap-2 md:gap-4">
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
                                                         <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Este Mês</p>
                                                         <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{currencySymbol} {professional.total_earnings_month.toFixed(2)}</p>
                                                     </div>
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
                                                         <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Liquidado</p>
                                                         <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>{currencySymbol} {professional.total_paid.toFixed(2)}</p>
                                                     </div>
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border opacity-50`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Serviços</p>
-                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{professional.total_pending_records || 0}</p>
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter flex items-center gap-1`}>
+                                                            <Scissors className="w-3 h-3" /> Serviços
+                                                        </p>
+                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>
+                                                            {professional.services_month || 0}
+                                                            <span className={`${colors.textMuted} text-xs font-normal ml-1`}>
+                                                                ({professional.services_pending || 0} pend.)
+                                                            </span>
+                                                        </p>
+                                                    </div>
+                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter flex items-center gap-1`}>
+                                                            <Package className="w-3 h-3" /> Produtos
+                                                        </p>
+                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>
+                                                            {professional.products_sold_month || 0}
+                                                            <span className={`${colors.textMuted} text-xs font-normal ml-1`}>
+                                                                ({professional.products_pending || 0} pend.)
+                                                            </span>
+                                                        </p>
                                                     </div>
                                                 </div>
 
@@ -471,7 +530,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                             className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
                                                         >
                                                             <Scissors className="w-3.5 h-3.5" />
-                                                            <span>Serviços</span>
+                                                            <span>Serviços e produtos</span>
                                                         </button>
                                                         <button
                                                             onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
@@ -511,7 +570,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             {/* Paid Tab */}
             {activeTab === 'paid' && (
-                <div className={`${colors.surface} opacity-40 border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 backdrop-blur-sm`}>
+                <div className={`${colors.surface} border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8`}>
                     {loadingPaid ? (
                         <div className="text-center py-24">
                             <Loader2 className={`w-10 h-10 mx-auto animate-spin mb-4 ${accentTextClass}`} />
@@ -560,11 +619,12 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                 <Modal
                     open
                     onClose={() => { setShowRatePrompt(false); setPendingPayProfessional(null); }}
-                    title="Comissão não configurada"
+                    title="Taxa de comissão de serviços"
                     size="sm"
                 >
                     <p className={`${colors.textSecondary} text-sm mb-6`}>
-                        <strong className={colors.text}>{pendingPayProfessional.professional_name}</strong> não tem percentual de comissão definido. Defina agora para calcular automaticamente.
+                        Defina a taxa padrão de <strong className={colors.text}>{pendingPayProfessional.professional_name}</strong>.
+                        As comissões pendentes serão recalculadas; as já pagas não mudam.
                     </p>
                     <label className={`${colors.textMuted} ${font.mono} text-xs uppercase block mb-2`}>Percentual de comissão (%)</label>
                     <div className="flex gap-3 mb-6">
@@ -729,7 +789,16 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     professionalId={detailsProfessional.professional_id}
                     professionalName={detailsProfessional.professional_name}
                     commissionRate={detailsProfessional.commission_rate}
-                    onClose={() => { setShowDetailsModal(false); setDetailsProfessional(null); }}
+                    onClose={() => { setShowDetailsModal(false); setDetailsProfessional(null); fetchCommissionsDue(); }}
+                    onRateUpdated={(rate) => {
+                        setDetailsProfessional((prev) => prev ? { ...prev, commission_rate: rate } : prev);
+                        setCommissionsDue((prev) => prev.map((p) =>
+                            p.professional_id === detailsProfessional.professional_id
+                                ? { ...p, commission_rate: rate }
+                                : p
+                        ));
+                        fetchCommissionsDue();
+                    }}
                     accentColor={accentColor}
                     currencySymbol={currencySymbol}
                 />

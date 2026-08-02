@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Check, TrendingUp, Users } from 'lucide-react';
 
 interface Service {
@@ -79,7 +79,7 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                                             : 'border-[var(--color-border)]'
                                         }
                   `}>
-                                        {isSelected && <Check className="w-4 h-4 text-[var(--color-bg)]" />}
+                                        {isSelected && <Check className="w-4 h-4 text-[var(--color-on-accent)]" />}
                                     </div>
 
                                     {/* Content */}

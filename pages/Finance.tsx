@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
-import { Button, Modal, Table, Badge, ConfirmModal, useToast } from '@/components/ui';
+import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -14,6 +14,7 @@ import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
 import { formatCurrency } from '../utils/formatters';
+import { formatLocalDateString, getTodayDateString, combineDateAndTime } from '../utils/date';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
@@ -87,6 +88,7 @@ export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [summary, setSummary] = useState({
     revenue: 0,
@@ -113,7 +115,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [newTransactionType, setNewTransactionType] = useState<'income' | 'expense'>('income');
   const [newTransactionDescription, setNewTransactionDescription] = useState('');
   const [newTransactionAmount, setNewTransactionAmount] = useState('');
-  const [newTransactionDate, setNewTransactionDate] = useState(new Date().toISOString().split('T')[0]);
+  const [newTransactionDate, setNewTransactionDate] = useState(getTodayDateString());
   const [newTransactionTime, setNewTransactionTime] = useState('');
   const [newTransactionStatus, setNewTransactionStatus] = useState<'paid' | 'pending'>('paid');
   const [newTransactionDueDate, setNewTransactionDueDate] = useState('');
@@ -215,13 +217,15 @@ useEffect(() => {
   const fetchFinanceData = async () => {
     if (!user) return;
 
+    setLoading(true);
+    setFetchError(null);
     try {
-      // Calculate start and end dates for the selected month
+      // Calculate start and end dates for the selected month (local date — never toISOString)
       const startOfMonth = new Date(selectedYear, selectedMonth, 1);
       const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
 
-      const startDateParam = startOfMonth.toISOString().split('T')[0];
-      const endDateParam = endOfMonth.toISOString().split('T')[0];
+      const startDateParam = formatLocalDateString(startOfMonth);
+      const endDateParam = formatLocalDateString(endOfMonth);
 
       const queryUserId = isStaff && companyId ? companyId : user.id;
 
@@ -236,8 +240,8 @@ useEffect(() => {
         // Calculate growth vs previous month
         const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
         const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
-        const prevStartDate = new Date(prevYear, prevMonth, 1).toISOString().split('T')[0];
-        const prevEndDate = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0];
+        const prevStartDate = formatLocalDateString(new Date(prevYear, prevMonth, 1));
+        const prevEndDate = formatLocalDateString(new Date(prevYear, prevMonth + 1, 0));
 
         const prevData = await fetchFinanceStats({
           companyId: queryUserId,
@@ -312,6 +316,7 @@ useEffect(() => {
       }
     } catch (error) {
       logger.error('Error fetching finance data', error);
+      setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar o financeiro.')));
     } finally {
       setLoading(false);
     }
@@ -383,7 +388,7 @@ useEffect(() => {
     setNewTransactionType('income');
     setNewTransactionDescription('');
     setNewTransactionAmount('');
-    setNewTransactionDate(new Date().toISOString().split('T')[0]);
+    setNewTransactionDate(getTodayDateString());
     setNewTransactionTime('');
     setNewTransactionService('');
     setNewTransactionClient('');
@@ -410,21 +415,19 @@ useEffect(() => {
       const clientName = dropdownClients.find(c => c.id === newTransactionClient)?.name || '';
       const professionalName = dropdownProfessionals.find(p => p.id === newTransactionProfessional)?.name || 'Manual';
 
-      const transactionDateTime = new Date(newTransactionDate);
-      if (newTransactionTime) {
-        const [hours, minutes] = newTransactionTime.split(':');
-        transactionDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      }
+      const timePart = newTransactionTime || '12:00';
+      const transactionDateTime = combineDateAndTime(newTransactionDate, timePart);
 
       const isPaid = newTransactionStatus === 'paid';
+      const isIncome = newTransactionType === 'income';
 
       await createRecordMutation.mutateAsync({
         companyId: queryUserId,
-        type: newTransactionType === 'income' ? 'revenue' : 'expense',
-        amount: newTransactionType === 'income' ? amount : 0,
-        expense: newTransactionType === 'expense' ? amount : 0,
+        type: isIncome ? 'revenue' : 'expense',
+        amount: isIncome ? amount : 0,
+        expense: isIncome ? 0 : amount,
         description: newTransactionDescription,
-        paymentMethod: newTransactionType === 'income' ? 'Dinheiro' : null,
+        paymentMethod: isIncome ? 'cash' : null,
         professionalId: newTransactionProfessional || null,
         professionalName,
         clientId: newTransactionClient || null,
@@ -432,9 +435,13 @@ useEffect(() => {
         serviceName,
         appointmentId: null,
         dueDate: newTransactionStatus === 'pending'
-          ? (newTransactionDueDate ? new Date(newTransactionDueDate).toISOString() : transactionDateTime.toISOString())
+          ? (newTransactionDueDate
+            ? combineDateAndTime(newTransactionDueDate, '12:00').toISOString()
+            : transactionDateTime.toISOString())
           : null,
-        commissionPaid: newTransactionType === 'expense' ? isPaid : true,
+        commissionPaid: isIncome ? true : isPaid,
+        status: newTransactionStatus,
+        createdAt: transactionDateTime.toISOString(),
       });
 
       showToast(`${newTransactionType === 'income' ? 'Receita' : 'Despesa'} registrada com sucesso!`, 'success');
@@ -578,8 +585,25 @@ useEffect(() => {
         }
       />
 
+      {loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="status" aria-busy="true">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      )}
+
+      {fetchError && !loading && (
+        <ErrorState
+          title="Não foi possível carregar o financeiro"
+          message={fetchError}
+          onRetry={() => { void fetchFinanceData(); }}
+        />
+      )}
+
       {/* Month/Year Selector */}
-      {activeTab === 'overview' && (
+      {!loading && !fetchError && activeTab === 'overview' && (
         <MonthYearSelector
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
@@ -589,6 +613,8 @@ useEffect(() => {
       )}
 
       {/* Tabs — staff vê apenas Visão Geral */}
+      {!loading && !fetchError && (
+      <>
       <TabNav
         tabs={[
           { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
@@ -820,6 +846,8 @@ useEffect(() => {
           />
         )
       }
+      </>
+      )}
 
       {/* New Transaction Modal */}
       {
@@ -1062,7 +1090,7 @@ useEffect(() => {
                       onClick={() => setFilterType(type)}
                       className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterType === type
-                          ? `${accent.bg} text-[var(--color-bg)]`
+                          ? `${accent.bg} text-[var(--color-on-accent)]`
                           : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
                       {type === 'all' ? 'Tudo' : type === 'revenue' ? 'Entradas' : 'Saídas'}
@@ -1080,7 +1108,7 @@ useEffect(() => {
                       onClick={() => setFilterPaymentMethod(method)}
                       className={`px-3 py-2 rounded-lg font-bold text-xs uppercase transition-all
                       ${filterPaymentMethod === method
-                          ? `${accent.bg} text-[var(--color-bg)]`
+                          ? `${accent.bg} text-[var(--color-on-accent)]`
                           : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
                       {method === 'all' ? 'Todas' : method}

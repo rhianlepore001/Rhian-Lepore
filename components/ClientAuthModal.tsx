@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
@@ -52,7 +52,7 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                         <p className={`${colors.textSecondary} text-sm`}>{client.phone}</p>
                     </div>
                     <div className={`ml-auto w-8 h-8 rounded-full ${accent.bg} flex items-center justify-center`}>
-                        <Check className="w-5 h-5 text-[var(--color-bg)]" />
+                        <Check className="w-5 h-5 text-[var(--color-on-accent)]" />
                     </div>
                 </div>
 

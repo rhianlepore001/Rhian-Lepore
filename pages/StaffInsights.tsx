@@ -1,4 +1,4 @@
-import { Card } from '../components/ui';
+﻿import { Card } from '../components/ui';
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { TrendingUp, Calendar, Users, DollarSign, Clock, Scissors } from 'lucide-react';
@@ -142,7 +142,7 @@ export const StaffInsights: React.FC = () => {
                             onClick={() => setPeriod(p)}
                             className={`px-3 py-1.5 min-h-[44px] text-xs font-mono uppercase tracking-wider border-2 rounded-lg transition-all ${
                                 period === p
-                                    ? `${accent.bg} text-[var(--color-bg)] ${accent.border} shadow-[var(--shadow-card-accent)]`
+                                    ? `${accent.bg} text-[var(--color-on-accent)] ${accent.border} shadow-[var(--shadow-card-accent)]`
                                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text)]'
                             }`}
                         >

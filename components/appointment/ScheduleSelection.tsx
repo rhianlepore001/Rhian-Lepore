@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { User, Calendar, ChevronLeft, ChevronRight, Clock, Loader2, AlertTriangle } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { logger } from '../../utils/Logger';
+﻿import React, { useMemo } from 'react';
+import { User, Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { buildManualBookingTimeSlots } from '../../utils/agendaTimeSlots';
 
 interface ScheduleSelectionProps {
     teamMembers: any[];
@@ -20,6 +19,11 @@ interface ScheduleSelectionProps {
     user: any;
 }
 
+/**
+ * Seleção de horário para agendamento INTERNO (gestor/colaborador).
+ * Não usa get_available_slots / horário de funcionamento — controle total.
+ * Booking online continua limitado via PublicBooking + RPC.
+ */
 export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     teamMembers,
     selectedProId,
@@ -30,14 +34,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     setSelectedTime,
     activeCardBg,
     cardBg,
-    accentColor,
-    isBeauty,
-    services,
-    selectedServiceIds,
-    user
 }) => {
-    const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+    const timeSlots = useMemo(() => buildManualBookingTimeSlots(), []);
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
@@ -45,63 +43,6 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         setSelectedDate(newDate);
         setSelectedTime('');
     };
-
-    useEffect(() => {
-        if (selectedDate && user?.id && selectedProId) {
-            fetchSlots();
-        }
-    }, [selectedDate, selectedProId]);
-
-    const fetchSlots = async () => {
-        setIsLoadingSlots(true);
-        try {
-            const dateStr = selectedDate.toISOString().split('T')[0];
-
-            // Calculate total duration
-            const duration = services
-                .filter(s => selectedServiceIds.includes(s.id))
-                .reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
-
-            logger.info('Buscando horários', {
-                businessId: user?.id,
-                dateStr,
-                selectedProId,
-                duration,
-                selectedServiceIds
-            });
-
-            const { data, error } = await supabase.rpc('get_available_slots', {
-                p_business_id: user?.id,
-                p_date: dateStr,
-                p_professional_id: selectedProId || null,
-                p_duration_min: duration,
-                p_is_professional: true
-            });
-
-            if (error) {
-                logger.error('Erro ao buscar horários:', error, {
-                    message: error.message,
-                    details: error.details,
-                    hint: error.hint
-                });
-            } else {
-                logger.info('Horários recebidos:', {
-                    data,
-                    slotsCount: data?.slots?.length || 0,
-                    slots: data?.slots
-                });
-            }
-
-            if (data?.slots) {
-                setAvailableSlots(data.slots);
-            }
-        } catch (error) {
-            logger.error('Exceção ao buscar horários:', error);
-        } finally {
-            setIsLoadingSlots(false);
-        }
-    };
-
 
     return (
         <div className="h-full flex flex-col md:flex-row gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -121,14 +62,14 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                 `}
                             >
                                 {member.photo_url ? (
-                                    <img src={member.photo_url} className="w-10 h-10 rounded-full object-cover border border-[var(--color-divider)]" />
+                                    <img src={member.photo_url} className="w-10 h-10 rounded-full object-cover border border-[var(--color-divider)]" alt="" />
                                 ) : (
                                     <div className="w-10 h-10 rounded-full bg-[var(--color-card-hover)] flex items-center justify-center">
                                         <User className="w-5 h-5" />
                                     </div>
                                 )}
                                 <div>
-                                    <p className={`font-bold leading-tight ${selectedProId === member.id ? 'text-[var(--color-bg)]' : 'text-theme-text'}`}>{member.name}</p>
+                                    <p className={`font-bold leading-tight ${selectedProId === member.id ? 'text-[var(--color-on-accent)]' : 'text-theme-text'}`}>{member.name}</p>
                                     <p className="text-xs opacity-70">Disponível</p>
                                 </div>
                             </button>
@@ -142,14 +83,15 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                     </h4>
                     <div className={`p-4 rounded-xl border ${cardBg}`}>
                         <div className="flex items-center justify-between mb-4">
-                            <button onClick={() => changeDate(-1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronLeft className="w-5 h-5 text-theme-text" /></button>
+                            <button type="button" onClick={() => changeDate(-1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronLeft className="w-5 h-5 text-theme-text" /></button>
                             <span className="text-theme-text font-bold uppercase">{selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-                            <button onClick={() => changeDate(1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronRight className="w-5 h-5 text-theme-text" /></button>
+                            <button type="button" onClick={() => changeDate(1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronRight className="w-5 h-5 text-theme-text" /></button>
                         </div>
                         <div className="text-center">
-                            <p className={`text-4xl font-heading text-theme-accent`}>{selectedDate.getDate()}</p>
+                            <p className="text-4xl font-heading text-theme-accent">{selectedDate.getDate()}</p>
                             <p className="text-theme-text uppercase text-sm mb-2">{selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
                             <button
+                                type="button"
                                 onClick={() => setSelectedDate(new Date())}
                                 className="text-xs underline text-[var(--color-text-muted)] hover:text-theme-text"
                             >
@@ -163,7 +105,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             {/* Right: Time Slots */}
             <div className="flex-1 flex flex-col">
                 <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Horários Disponíveis
+                    <Clock className="w-4 h-4" /> Horário
                 </h4>
 
                 <div className={`flex-1 rounded-xl border ${cardBg} p-4 overflow-y-auto min-h-[300px]`}>
@@ -172,21 +114,12 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                             <User className="w-10 h-10 opacity-20" />
                             <p>Selecione um profissional primeiro</p>
                         </div>
-                    ) : isLoadingSlots ? (
-                        <div className="h-full flex flex-col items-center justify-center text-theme-textSecondary gap-2">
-                            <Loader2 className="w-8 h-8 animate-spin" />
-                            <p>Buscando horários...</p>
-                        </div>
-                    ) : availableSlots.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-[var(--color-text-muted)] gap-2">
-                            <AlertTriangle className="w-10 h-10 opacity-20" />
-                            <p>Nenhum horário disponível para esta data.</p>
-                        </div>
                     ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                            {availableSlots.map(time => (
+                            {timeSlots.map(time => (
                                 <button
                                     key={time}
+                                    type="button"
                                     onClick={() => setSelectedTime(time)}
                                     className={`
                                         py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border

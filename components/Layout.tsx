@@ -1,4 +1,4 @@
-
+﻿
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -6,8 +6,7 @@ import { TrialBanner } from './TrialBanner';
 import { PaywallModal } from './PaywallModal';
 import { BottomMobileNav } from './BottomMobileNav';
 import { BrutalBackground } from './BrutalBackground';
-import { UIProvider, useUI } from '../contexts/UIContext';
-import { useAuth } from '../contexts/AuthContext';
+import { UIProvider } from '../contexts/UIContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { useLocation } from 'react-router-dom';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -17,7 +16,7 @@ interface LayoutProps {
 }
 
 const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { isTrial, isExpired } = useSubscription();
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBillingRoute = pathname === '/configuracoes/assinatura';
@@ -26,12 +25,12 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const showBanner = !isBillingRoute && (isTrial || isExpired);
   const headerTop = showBanner ? '40px' : '0px';
   const paddingTop = showBanner ? 'pt-[104px] md:pt-[120px]' : 'pt-16 md:pt-20';
-
-  const { isSidebarOpen, isModalOpen } = useUI();
+  const hideMobileNavForNewFlow = Boolean(new URLSearchParams(search).get('new'));
+  const showBottomMobileNav = !isSettingsRoute && !isBillingRoute && !hideMobileNavForNewFlow;
 
   return (
     <div
-      className={`h-[100dvh] overflow-y-auto ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-bg)] font-medium relative transition-colors duration-300`}
+      className={`h-[100dvh] overflow-y-auto ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-on-accent)] font-medium relative transition-colors duration-300`}
       style={{ '--header-top': headerTop } as React.CSSProperties}
     >
       {/* Background layer — now handled by CSS variables in index.html */}
@@ -44,14 +43,15 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {!isSettingsRoute && <Sidebar />}
       <Header />
 
-      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-32 md:pb-8 relative z-10`} style={{ willChange: 'transform' }}>
+      {/* sem willChange:transform — cria containing block e já foi associado a
+          conteúdo “preso” na navegação SPA (URL muda, main não troca). */}
+      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-32 md:pb-8 relative z-10`}>
         <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}>
           {children}
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation - Agora sempre renderizado para manter o estado interno */}
-      {!isSettingsRoute && !isBillingRoute && !new URLSearchParams(useLocation().search).get('new') && <BottomMobileNav />}
+      {showBottomMobileNav && <BottomMobileNav />}
     </div>
   );
 };

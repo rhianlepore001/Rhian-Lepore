@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Minus, Plus } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
@@ -13,7 +13,7 @@ import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { BookingModeToggle } from '../components/booking/BookingModeToggle';
-import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery } from '../hooks/usePublicBooking';
+import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
@@ -93,11 +93,13 @@ export const PublicBooking: React.FC = () => {
     const { data: categoriesData = [] } = usePublicCategories(businessId);
     const { data: professionalsData = [] } = usePublicProfessionals(businessId);
     const { data: galleryData = [] } = usePublicGallery(businessId);
+    const { data: publicProducts = [] } = usePublicProducts(businessId);
 
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
+    const [selectedProductLines, setSelectedProductLines] = useState<Array<{ product_id: string; quantity: number }>>([]);
     
     const [step, setStep] = useState<'edit_options' | 'services' | 'datetime' | 'contact' | 'edit_confirm' | 'success'>('services');
     const [messages, setMessages] = useState<Message[]>([]);
@@ -151,7 +153,7 @@ export const PublicBooking: React.FC = () => {
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
     const { colors, accent, classes, shadow, radius, font, isDark } = useBrutalTheme({ override: themeOverride });
 
-    const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-bg)]';
+    const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]';
     // Classes literais estáticas (variante interpolada não gera CSS no build estático do Tailwind)
     const selectionClasses = isBeauty
         ? 'selection:bg-theme-accent selection:text-[#fff]'
@@ -438,7 +440,22 @@ export const PublicBooking: React.FC = () => {
         );
     };
 
-    const calculateTotal = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
+    const setProductQty = (productId: string, quantity: number, max: number) => {
+        const nextQty = Math.max(0, Math.min(max, quantity));
+        setSelectedProductLines(prev => {
+            const others = prev.filter(l => l.product_id !== productId);
+            if (nextQty <= 0) return others;
+            return [...others, { product_id: productId, quantity: nextQty }];
+        });
+    };
+
+    const productsTotal = selectedProductLines.reduce((sum, line) => {
+        const product = (publicProducts as Array<{ id: string; sale_price: number }>).find(p => p.id === line.product_id);
+        return sum + (product ? Number(product.sale_price) * line.quantity : 0);
+    }, 0);
+
+    const calculateTotal = () =>
+        services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0) + productsTotal;
     const calculateDuration = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration_minutes, 0);
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
@@ -599,6 +616,7 @@ export const PublicBooking: React.FC = () => {
                 durationMinutes: duration,
                 editingBookingId,
                 originalAppointmentTime: originalTimeISO,
+                productLines: selectedProductLines,
             });
 
             setActiveBooking(booking);
@@ -750,7 +768,7 @@ export const PublicBooking: React.FC = () => {
                             </div>
 
                             {/* Category Filters */}
-                            {categories.length > 0 && (
+                            {(categories.length > 0 || publicProducts.length > 0) && (
                                 <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                     <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
                                         <button onClick={() => setActiveCategory('all')}
@@ -769,12 +787,69 @@ export const PublicBooking: React.FC = () => {
                                                 {cat.name}
                                             </button>
                                         ))}
+                                        {publicProducts.length > 0 && (
+                                            <button
+                                                onClick={() => setActiveCategory('__products__')}
+                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === '__products__'
+                                                        ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
+                                                        : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
+                                                    }`}
+                                            >
+                                                Produtos
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )}
 
+                            {/* Products catalog */}
+                            {activeCategory === '__products__' && (
+                                <div className="space-y-3">
+                                    {(publicProducts as Array<{ id: string; name: string; sale_price: number; stock_quantity: number }>).map(product => {
+                                        const qty = selectedProductLines.find(l => l.product_id === product.id)?.quantity ?? 0;
+                                        return (
+                                            <div
+                                                key={product.id}
+                                                className={`flex items-center justify-between gap-3 p-4 rounded-2xl border ${colors.card} ${colors.border}`}
+                                            >
+                                                <div className="min-w-0 flex items-start gap-3">
+                                                    <Package className={`w-5 h-5 shrink-0 mt-0.5 ${accent.text}`} />
+                                                    <div className="min-w-0">
+                                                        <p className={`text-sm font-bold truncate ${colors.text}`}>{product.name}</p>
+                                                        <p className={`text-xs font-mono tabular-nums ${colors.textMuted}`}>
+                                                            {formatCurrency(Number(product.sale_price), currencyRegion)} · {product.stock_quantity} un.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductQty(product.id, qty - 1, product.stock_quantity)}
+                                                        disabled={qty <= 0}
+                                                        className={`w-10 h-10 rounded-xl border flex items-center justify-center ${colors.border} ${colors.text}`}
+                                                        aria-label={`Diminuir ${product.name}`}
+                                                    >
+                                                        <Minus className="w-4 h-4" />
+                                                    </button>
+                                                    <span className={`font-mono tabular-nums w-6 text-center ${colors.text}`}>{qty}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setProductQty(product.id, qty + 1, product.stock_quantity)}
+                                                        disabled={qty >= product.stock_quantity}
+                                                        className={`w-10 h-10 rounded-xl border flex items-center justify-center ${colors.border} ${colors.text}`}
+                                                        aria-label={`Aumentar ${product.name}`}
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
                             {/* Service Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 ${activeCategory === '__products__' ? 'hidden' : ''}`}>
                                 {services.filter(s => {
                                     const matchesCategory = activeCategory === 'all'
                                         || (activeCategory === 'no-category' && !s.category_id)

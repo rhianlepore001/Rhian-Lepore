@@ -61,7 +61,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     return (
         <div className={`relative w-full overflow-hidden ${colors.bg}`}>
             {/* Cover / Hero — Mobile-first height */}
-            <div className="relative h-[35vh] min-h-[220px] md:h-[70vh] w-full overflow-hidden">
+            <div className="relative h-[28vh] min-h-[180px] max-h-[240px] md:h-[42vh] md:max-h-none md:min-h-[280px] w-full overflow-hidden">
                 {coverPhotoUrl ? (
                     <img
                         src={coverPhotoUrl}

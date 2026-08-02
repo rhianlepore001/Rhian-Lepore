@@ -49,11 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **UX-pro sweep — ciclo encerrado na branch `design/ux-pro-sweep` (2 Ago 2026):**
-  - Gate A–E entregue (on-accent, honesty, PageHeader×5, Checkbox, wizard→`ui/Modal`, AFTER versionado). Delta forense: contraste −60%, alvos&lt;44 −31%.
-  - Fase 9: R1 e R2 **REPROVAR** (evaluator R2 média 6,5). Validador R2: 25 ENTREGUE / 2 PARCIAL / 1 NÃO (C4-007=F). Limite de 2 rodadas — sem 3ª.
-  - Relatório: `docs/ux-pro/RELATORIO-FINAL.md`. Impasse: percepção (header 390, Agenda 3 CTAs, Dashboard microcopy) exige Fase F / chrome — fora do Gate.
-  - Pendência humana: aceitar ganho parcial + milestone F, ou ciclo focado nos 5 itens do evaluator. Sem push/PR sem pedido.
+- **UX-pro sweep — em produção via `main` (2 Ago 2026):**
+  - Merge `186fdaf` (sweep + booking/produtos/fila) + hotfix `48a8bf3` (`createFinanceRecord` created_at opcional).
+  - Gate A–E shipped com ressalva: percepção evaluator 6,5 (REPROVAR) — não bloqueou. Delta forense: contraste −60%, alvos&lt;44 −31%.
+  - Relatório: `docs/ux-pro/RELATORIO-FINAL.md`. Backlog: Fase F / chrome mobile (header 390, Agenda 1 CTA, Dashboard microcopy).
+  - Deploy: push `main` → Vercel automático. Confirmar smoke pós-deploy.
 - **Nav SPA / rolatividade — fix (2 Ago 2026):**
   - Sintoma: URL mudava (ex. `#/financeiro`) mas o conteúdo ficava na página anterior até F5.
   - Causa: React Router 7 `HashRouter` usa `startTransition` por padrão; em rotas pesadas (Agenda) a transição “starvava” e o Outlet não trocava.

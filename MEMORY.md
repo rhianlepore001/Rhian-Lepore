@@ -49,10 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **UX-pro sweep — Fases A–E implementadas (2 Ago 2026, branch `design/ux-pro-sweep`):**
-  - Gate humano aprovado: A–E com `--color-on-accent` (E1), fix comissões (E3), toggles C2-001 desabilitados sem migration; Fase F e beauty/seed fora; IA mobile documentada.
-  - Tokens AA light; badge Header; saves honestos; ErrorState Finance/Clients/Agenda; wizard com dialog/FocusTrap/Esc; shadow-heavy e ring interpolado removidos; públicas/auth.
-  - Gates: typecheck, eslint+ratchet, 367 testes, build OK. Artefatos em `docs/ux-pro/`. Próximo: Fase 8 AFTER + Fase 9 auditores.
+- **UX-pro sweep — ciclo encerrado na branch `design/ux-pro-sweep` (2 Ago 2026):**
+  - Gate A–E entregue (on-accent, honesty, PageHeader×5, Checkbox, wizard→`ui/Modal`, AFTER versionado). Delta forense: contraste −60%, alvos&lt;44 −31%.
+  - Fase 9: R1 e R2 **REPROVAR** (evaluator R2 média 6,5). Validador R2: 25 ENTREGUE / 2 PARCIAL / 1 NÃO (C4-007=F). Limite de 2 rodadas — sem 3ª.
+  - Relatório: `docs/ux-pro/RELATORIO-FINAL.md`. Impasse: percepção (header 390, Agenda 3 CTAs, Dashboard microcopy) exige Fase F / chrome — fora do Gate.
+  - Pendência humana: aceitar ganho parcial + milestone F, ou ciclo focado nos 5 itens do evaluator. Sem push/PR sem pedido.
 - **Nav SPA / rolatividade — fix (2 Ago 2026):**
   - Sintoma: URL mudava (ex. `#/financeiro`) mas o conteúdo ficava na página anterior até F5.
   - Causa: React Router 7 `HashRouter` usa `startTransition` por padrão; em rotas pesadas (Agenda) a transição “starvava” e o Outlet não trocava.
@@ -84,8 +85,18 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - `get_commissions_due` passa a devolver `services_month`, `products_sold_month`, `services_pending`, `products_pending` (`20260802000006`).
   - Card do colaborador mostra Serviços e Produtos; painel lista ambos com filtro Tudo/Serviços/Produtos.
 - **Insights do gestor (2 Ago 2026):**
-  - `/insights` redesenhado: snapshot do mês, rankings Melhores serviços / Melhores produtos (com margem), top profissionais, campeões do mês.
-  - `services/insights.ts` + `RankingList`; seletor de mês filtra performance; export CSV/PDF dos rankings.
+  - `/insights` redesenhado: 4 KPIs, rankings Serviços/Produtos (top 5), equipe compacta, gráfico PT, clientes + agenda.
+  - Removidos blocos repetidos (Fidelização / Campeões / 6 KPIs). Eixo do gráfico: meses PT + tooltip "Novos clientes".
+  - `services/insights.ts` + `RankingList`; mês filtra performance; export CSV/PDF.
+- **Mobile — texto cortado header/dashboard (2 Ago 2026):**
+  - Header: nome com `line-clamp-2`, tracking menor no mobile, ações mais compactas, flex `min-w-0`.
+  - `PageHeader`: removeu `truncate` agressivo; subtítulo quebra em linhas.
+  - Occupancy/Cancellation/CriticalEmptySlots: layout empilha no mobile; label "livres".
+  - Removido padding duplo Dashboard/Finance vs Layout.
+  - Audit Playwright: `scripts/audit-mobile-truncate.mjs` (360px; Dashboard/Insights/Financeiro sem clip).
+- **Ajustes UX shell (2 Ago 2026):**
+  - Desktop: conteúdo `max-w-6xl`/`7xl` (fim do vão à direita); páginas sem `max-w-4xl` local.
+  - Mobile: drawer vertical removido; chips horizontais sticky + auto-scroll do ativo; atalho voltar.
 - **Agenda — clique na célula vazia → novo agendamento (2 Ago 2026):**
   - Célula vazia desktop: hover com "+" animado (`AgendaEmptySlotCell`); clique abre wizard com profissional + horário pré-preenchidos.
   - `WizardProps`: `initialProfessionalId` / `initialTime`.

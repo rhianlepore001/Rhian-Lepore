@@ -206,7 +206,7 @@ export const ServiceSettings: React.FC = () => {
                                 onClick={handleAddCategory}
                                 className={`px-5 py-2.5 font-bold transition-all ${isBeauty
                                     ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-[var(--color-text)] rounded-xl hover:shadow-neon'
-                                    : 'bg-accent-gold text-[var(--color-bg)] hover:bg-accent-goldHover shadow-heavy-sm hover:shadow-heavy'
+                                    : 'bg-theme-accent text-[var(--color-on-accent)] hover:brightness-110 shadow-[var(--shadow-btn-primary)]'
                                     }`}
                             >
                                 Salvar

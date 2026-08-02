@@ -17,9 +17,6 @@ export const SubscriptionSettings: React.FC = () => {
     const currency = region === 'PT' ? 'EUR' : 'BRL';
     const [loading, setLoading] = useState<string | null>(null);
 
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-
-    // Pricing Configuration
     // Pricing Configuration
     const pricing = {
         BRL: {
@@ -147,7 +144,7 @@ export const SubscriptionSettings: React.FC = () => {
                         <Card
                             key={plan.id}
                             forceTheme={isBeauty ? 'beauty' : 'barber'}
-                            className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-' + accentColor : ''}`}
+                            className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-[var(--color-accent)]' : ''}`}
                         >
                             {plan.recommended && (
                                 <div className={`absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter ${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'}`}>

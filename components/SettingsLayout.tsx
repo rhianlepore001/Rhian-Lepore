@@ -61,7 +61,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
                                     to={item.path}
                                     onClick={onNavigate}
                                     className={({ isActive }) => `
-                                        relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group shrink-0
+                                        relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl transition-all group shrink-0
                                         active:animate-haptic-click
                                         ${isActive
                                             ? `${accent.bgDim} ${accent.text} font-bold`
@@ -87,9 +87,9 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
 
             <div className={`px-5 py-4 border-t ${colors.divider} flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]`}>
                 <NavLink
-                    to="/dashboard"
+                    to="/"
                     onClick={onNavigate}
-                    className={`flex items-center gap-2 ${colors.textSecondary} hover:text-theme-text transition-colors active:animate-haptic-click`}
+                    className={`flex items-center gap-2 min-h-[44px] ${colors.textSecondary} hover:text-theme-text transition-colors active:animate-haptic-click`}
                 >
                     <ArrowLeft className="w-4 h-4" />
                     <span className="text-sm font-medium">Voltar ao Dashboard</span>
@@ -201,7 +201,7 @@ aria-label="Abrir menu de configurações"
                                         key={item.path}
                                         to={item.path}
                                         className={({ isActive }) => `
-                                            flex items-center gap-2 px-4 py-2 rounded-full transition-all active:animate-haptic-click border
+                                            flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full transition-all active:animate-haptic-click border
                                             ${isActive
 ? `${accent.bgDim} ${accent.text} ${accent.border} shadow-promax-glass`
                                                 : `bg-[var(--color-card-hover)] ${colors.border} ${colors.textSecondary} opacity-80`

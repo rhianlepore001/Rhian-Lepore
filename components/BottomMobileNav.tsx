@@ -30,6 +30,8 @@ export const BottomMobileNav: React.FC = () => {
                 className={`md:hidden fixed bottom-6 left-6 right-6 z-40 flex items-center justify-between px-3 pb-[env(safe-area-inset-bottom)] pt-3 h-[76px] transition-all duration-300 rounded-[28px] border ${colors.divider} shadow-promax-glass backdrop-blur-2xl
                 bg-[color-mix(in_srgb,var(--color-bg)_40%,transparent)]`}
             >
+                {/* IA mobile deliberada (C4-010): 1º nível = Agenda, Clientes, FAB, Financeiro|Insights, Mais.
+                    Dashboard/Fila/Produtos ficam em Mais — alinhado ao espaço do polegar, não omitido por acidente. */}
                 {/* 1. Agenda */}
                 <button
                     type="button"

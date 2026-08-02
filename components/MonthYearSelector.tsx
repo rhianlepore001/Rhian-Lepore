@@ -55,8 +55,9 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
     return (
         <div className="flex items-center justify-between gap-4 p-4 bg-[var(--color-card)] border-2 border-[var(--color-border)] rounded-lg">
             <button
+                type="button"
                 onClick={goToPreviousMonth}
-                className="p-2 hover:bg-[var(--color-card)] rounded transition-colors text-[var(--color-text)]"
+                className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center hover:bg-[var(--color-card)] rounded transition-colors text-[var(--color-text)]"
                 title="Mês anterior"
                 aria-label="Mês anterior"
             >
@@ -87,9 +88,10 @@ export const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
                     </button>
                 )}
                 <button
+                    type="button"
                     onClick={goToNextMonth}
                     disabled={!canGoNext}
-                    className={`p-2 rounded transition-colors ${canGoNext ? 'hover:bg-[var(--color-card)] text-[var(--color-text)]' : 'text-[var(--color-text-muted)] cursor-not-allowed'}`}
+                    className={`p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded transition-colors ${canGoNext ? 'hover:bg-[var(--color-card)] text-[var(--color-text)]' : 'text-[var(--color-text-muted)] cursor-not-allowed'}`}
                     title="Próximo mês"
                     aria-label="Próximo mês"
                 >

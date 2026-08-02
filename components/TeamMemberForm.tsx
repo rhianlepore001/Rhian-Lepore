@@ -183,12 +183,12 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             {name.trim() || 'Profissional'}
                         </p>
                         <p className={`text-sm ${colors.textSecondary} leading-relaxed`}>
-                            {firstName} já está cadastrado(a) na equipe. Compartilhe o link
-                            para que finalize o acesso e comece a usar a agenda.
+                            Tudo certo com {firstName}. Envie o link abaixo para concluir
+                            o acesso e começar a usar a agenda.
                         </p>
                         <p className={`text-xs ${colors.textMuted} leading-relaxed`}>
-                            O nome permanece o que você definiu. No cadastro, {firstName}
-                            informa apenas e-mail, data de nascimento e senha.
+                            O nome fica como você cadastrou. No link, {firstName} preenche
+                            só e-mail, data de nascimento e senha.
                         </p>
                     </div>
 

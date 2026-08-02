@@ -62,7 +62,7 @@ test.describe('Convite de colaborador — domínio do gestor', () => {
     await page.getByRole('button', { name: /Criar e convidar/i }).click();
     const inviteModal = page.getByRole('dialog').filter({ hasText: /Convite pronto/i });
     await expect(inviteModal).toBeVisible({ timeout: 20_000 });
-    await expect(inviteModal.getByText(/já está cadastrado/i)).toBeVisible();
+    await expect(inviteModal.getByText(/Tudo certo com/i)).toBeVisible();
     await expect(inviteModal.getByText(professionalName, { exact: true })).toBeVisible();
 
     await page.screenshot({

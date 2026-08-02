@@ -1,0 +1,285 @@
+{
+  "rota": "termos",
+  "resumo": {
+    "rota": "termos",
+    "grupo": "auth",
+    "execucoes": 2,
+    "maxTamanhosFonte": 4,
+    "maxEspacamentos": 7,
+    "maxForaDaEscala4px": 0,
+    "maxRaios": 0,
+    "maxSombras": 0,
+    "maxLargurasBorda": 0,
+    "totalViolacoesContraste": 0,
+    "maxAlvosPequenos": 1,
+    "overflowEm390": false,
+    "maxQuaseAlinhamentos": 0
+  },
+  "execucoes": [
+    {
+      "persona": "anon",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "390x844",
+      "rota": "termos",
+      "grupo": "auth",
+      "hashSolicitado": "/termos",
+      "hashFinal": "#/termos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": null,
+      "modoSolicitadoBateComEfetivo": null,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/termos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 22,
+        "tipografia": {
+          "combinacoesDistintas": 4,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 2,
+          "alturasLinhaDistintas": 4,
+          "familiasDistintas": 2,
+          "combinacoes": {
+            "20px / 700 / 28px": 4,
+            "14px / 400 / 22.75px": 4,
+            "12px / 400 / 16px": 2,
+            "30px / 700 / 36px": 1
+          },
+          "tamanhos": {
+            "20px": 4,
+            "14px": 4,
+            "12px": 2,
+            "30px": 1
+          },
+          "pesos": {
+            "400": 6,
+            "700": 5
+          },
+          "alturasLinha": {
+            "28px": 4,
+            "22.75px": 4,
+            "16px": 2,
+            "36px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 6,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 6,
+          "foraDaEscala4px": 0,
+          "valores": {
+            "8px": 9,
+            "16px": 4,
+            "32px": 3,
+            "48px": 2,
+            "24px": 2,
+            "40px": 2
+          },
+          "foraDaEscala": []
+        },
+        "geometria": {
+          "raiosDistintos": 0,
+          "sombrasDistintas": 0,
+          "largurasBordaDistintas": 0,
+          "raios": {},
+          "sombras": {},
+          "largurasBorda": {}
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 11,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 5.22,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 1,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div#root > div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > a.inline-flex.items-center.gap-2",
+              "rotulo": "Voltar",
+              "largura": 70.6,
+              "altura": 16,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 1,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "24": 4
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 24,
+              "largura": 342
+            },
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 24,
+              "largura": 342
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 390,
+          "documentoClientWidth": 390,
+          "nosQueTransbordam": 0,
+          "detalhes": []
+        }
+      }
+    },
+    {
+      "persona": "anon",
+      "temaSolicitado": "barber",
+      "modo": "dark",
+      "viewport": "1440x900",
+      "rota": "termos",
+      "grupo": "auth",
+      "hashSolicitado": "/termos",
+      "hashFinal": "#/termos",
+      "redirecionado": false,
+      "temaSolicitadoBateComEfetivo": null,
+      "modoSolicitadoBateComEfetivo": null,
+      "errosDeConsole": [],
+      "forense": {
+        "url": "http://localhost:4173/#/termos",
+        "temaEfetivo": "barber",
+        "modoEfetivo": "dark",
+        "nosVisiveis": 22,
+        "tipografia": {
+          "combinacoesDistintas": 4,
+          "tamanhosDistintos": 4,
+          "pesosDistintos": 2,
+          "alturasLinhaDistintas": 4,
+          "familiasDistintas": 2,
+          "combinacoes": {
+            "20px / 700 / 28px": 4,
+            "14px / 400 / 22.75px": 4,
+            "12px / 400 / 16px": 2,
+            "30px / 700 / 36px": 1
+          },
+          "tamanhos": {
+            "20px": 4,
+            "14px": 4,
+            "12px": 2,
+            "30px": 1
+          },
+          "pesos": {
+            "400": 6,
+            "700": 5
+          },
+          "alturasLinha": {
+            "28px": 4,
+            "22.75px": 4,
+            "16px": 2,
+            "36px": 1
+          },
+          "familias": {
+            "ui-sans-serif": 6,
+            "Chivo": 5
+          }
+        },
+        "espacamento": {
+          "valoresDistintos": 7,
+          "foraDaEscala4px": 0,
+          "valores": {
+            "8px": 9,
+            "16px": 4,
+            "32px": 3,
+            "48px": 2,
+            "24px": 2,
+            "384px": 2,
+            "40px": 2
+          },
+          "foraDaEscala": []
+        },
+        "geometria": {
+          "raiosDistintos": 0,
+          "sombrasDistintas": 0,
+          "largurasBordaDistintas": 0,
+          "raios": {},
+          "sombras": {},
+          "largurasBorda": {}
+        },
+        "contraste": {
+          "nosDeTextoVerificados": 11,
+          "violacoes": 0,
+          "violacoesTextoNormal": 0,
+          "violacoesTextoGrandeOuUI": 0,
+          "piorRazao": 5.22,
+          "detalhes": []
+        },
+        "alvosDeToque": {
+          "abaixoDe44px": 1,
+          "semNomeAcessivel": 0,
+          "detalhes": [
+            {
+              "selector": "div#root > div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > a.inline-flex.items-center.gap-2",
+              "rotulo": "Voltar",
+              "largura": 70.6,
+              "altura": 16,
+              "temNomeAcessivel": true
+            }
+          ]
+        },
+        "alinhamento": {
+          "coordenadasXDistintas": 1,
+          "quaseAlinhamentos1a3px": 0,
+          "coordenadas": {
+            "408": 4
+          },
+          "quaseAlinhamentos": [],
+          "blocos": [
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 408,
+              "largura": 624
+            },
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 408,
+              "largura": 624
+            },
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 408,
+              "largura": 624
+            },
+            {
+              "selector": "div.min-h-screen.bg-theme-bg.text-theme-text > div.max-w-2xl.mx-auto.px-6 > div.space-y-8 > section.space-y-2",
+              "x": 408,
+              "largura": 624
+            }
+          ]
+        },
+        "overflow": {
+          "documentoTransborda": false,
+          "documentoScrollWidth": 1440,
+          "documentoClientWidth": 1440,
+          "nosQueTransbordam": 0,
+          "detalhes": []
+        }
+      }
+    }
+  ]
+}

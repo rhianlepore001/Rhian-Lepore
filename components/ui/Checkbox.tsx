@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
 
 interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   forceTheme?: ThemeVariant;
 }
@@ -49,7 +49,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               ].join(' ')}
             >
               <Check
-                className="h-3.5 w-3.5 text-black opacity-0 scale-75 transition-all duration-150 ease-out"
+                className="h-3.5 w-3.5 text-[var(--color-on-accent)] opacity-0 scale-75 transition-all duration-150 ease-out"
                 strokeWidth={3}
               />
             </span>

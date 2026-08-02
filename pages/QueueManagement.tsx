@@ -1,4 +1,4 @@
-import { Card, Button } from '../components/ui';
+import { Card, Button, PageHeader } from '../components/ui';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -241,37 +241,35 @@ const confirmFinish = async () => {
 
     return (
         <div className="space-y-6 pb-20">
-            {/* Header */}
-            <div className={`flex flex-col md:flex-row justify-between items-center ${colors.card} ${colors.border} p-4 md:p-6 rounded-2xl border backdrop-blur-xl sticky top-0 z-30 shadow-[var(--shadow-card)]`}>
-                <div className="mb-4 md:mb-0">
-                    <h1 className={`text-2xl md:text-3xl font-heading font-bold ${colors.text} mb-1 flex items-center gap-2`}>
-                        <Clock className={`w-8 h-8 ${accent.text}`} />
-                        Fila Digital
-                    </h1>
-                    <p className={`${colors.textSecondary} text-sm font-mono`}>Gerencie atendimentos em tempo real</p>
-                </div>
-                {/* Desktop: botoes com texto */}
-                <div className="hidden md:flex gap-2">
-                    {!isStaff && (
-                        <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />}>
-                            Adicionar
-                        </Button>
-                    )}
-                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />}>
-                        Gerar QR Code
-                    </Button>
-                </div>
-                {/* Mobile: apenas icones — display controlado no wrapper (evita conflito de ordem de classes no Tailwind CDN) */}
-                <div className="flex md:hidden gap-3">
-                    {!isStaff && (
-                        <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" aria-label="Adicionar cliente na fila" className="!min-w-0 !px-3.5 !rounded-full">
-                            <User className="w-5 h-5" />
-                        </Button>
-                    )}
-                    <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" aria-label="Gerar QR Code" className="!min-w-0 !px-3.5 !rounded-full">
-                        <QrCode className="w-5 h-5" />
-                    </Button>
-                </div>
+            <div className={`sticky top-0 z-30 ${colors.card} ${colors.border} p-4 md:p-5 rounded-xl border shadow-[var(--shadow-card)]`}>
+                <PageHeader
+                    title="Fila Digital"
+                    subtitle="Gerencie atendimentos em tempo real"
+                    action={
+                        <>
+                            <div className="hidden md:flex gap-2">
+                                {!isStaff && (
+                                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" icon={<User className="w-4 h-4" />}>
+                                        Adicionar
+                                    </Button>
+                                )}
+                                <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" icon={<QrCode className="w-4 h-4" />}>
+                                    Gerar QR Code
+                                </Button>
+                            </div>
+                            <div className="flex md:hidden gap-3">
+                                {!isStaff && (
+                                    <Button onClick={() => setShowAddModal(true)} size="sm" variant="primary" aria-label="Adicionar cliente na fila" className="!min-w-0 !px-3.5 !rounded-full">
+                                        <User className="w-5 h-5" />
+                                    </Button>
+                                )}
+                                <Button onClick={() => setShowQrModal(true)} size="sm" variant="secondary" aria-label="Gerar QR Code" className="!min-w-0 !px-3.5 !rounded-full">
+                                    <QrCode className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        </>
+                    }
+                />
             </div>
 
             {/* Metrics */}

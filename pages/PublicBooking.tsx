@@ -18,7 +18,7 @@ import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
-import { ConfirmModal, useToast } from '@/components/ui';
+import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
 import FocusTrap from 'focus-trap-react';
 
 interface Message {
@@ -727,16 +727,11 @@ export const PublicBooking: React.FC = () => {
                 businessSlug={slug}
             />
 
-            {/* Mode Toggle */}
-            <div className="container mx-auto px-4 max-w-3xl relative z-10 pt-6">
-                <BookingModeToggle mode={bookingMode} onChange={setBookingMode} forceTheme={themeOverride} />
-            </div>
-
             {/* QUICK DIRECT FLOW */}
             {bookingMode === 'quick' && quickStep !== 'success' && (
-                <div className="container mx-auto px-3 md:px-4 max-w-3xl relative z-10 pt-6 pb-32">
+                <div className="container mx-auto px-3 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4 md:pt-8 pb-32">
                     {/* Quick Stepper */}
-                    <div className={`sticky top-0 z-[60] w-full border-b ${colors.bg}/95 ${colors.divider} backdrop-blur-md mb-8`}>
+                    <div className={`sticky top-0 z-[60] w-full border-b ${colors.divider} ${colors.bg}/95 backdrop-blur-md mb-6 md:mb-8`}>
                         <div className="py-3 flex items-center gap-0">
                             {quickSteps.map((qs, idx) => (
                                 <React.Fragment key={qs.key}>
@@ -1008,132 +1003,144 @@ export const PublicBooking: React.FC = () => {
 
                     {/* Step 4: Contact & Confirm */}
                     {quickStep === 'contact' && (
-                        <div className="space-y-8 animate-reveal-fragment max-w-2xl mx-auto">
+                        <div className="space-y-6 md:space-y-8 animate-reveal-fragment max-w-2xl mx-auto w-full">
                             <div>
-                                <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 ${colors.text}`}>Confirme seu agendamento</h2>
+                                <h2 className={`text-xl md:text-3xl font-bold tracking-tight mb-1.5 ${colors.text}`}>Confirme seu agendamento</h2>
                                 <p className={`${colors.textMuted} text-sm`}>Revise os detalhes e informe seus dados.</p>
                             </div>
 
                             {/* Summary Card */}
-                            <div className={`p-6 ${colors.card} ${colors.border} border rounded-2xl ${shadow.card}`}>
-                                <div className="flex justify-between items-center border-b pb-4 mb-4 ${colors.divider}">
-                                    <span className={`text-xs font-black uppercase tracking-[0.2em] ${colors.textMuted}`}>Resumo do Agendamento</span>
-                                    <div className={`p-1.5 rounded-full ${accent.bgDim} ${accent.text}`}>
-                                        <Star className="w-4 h-4" />
-                                    </div>
+                            <div className={`p-4 md:p-6 ${colors.card} ${colors.border} border rounded-2xl ${shadow.card}`}>
+                                <div className={`flex justify-between items-center border-b pb-3 mb-4 ${colors.divider}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-wider ${colors.textMuted}`}>Resumo</span>
+                                    <span className={`text-base md:text-lg font-bold tabular-nums ${accent.text}`}>
+                                        {formatCurrency(calculateTotal(), currencyRegion)}
+                                    </span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 md:gap-8 mb-4">
-                                    <div className="space-y-1">
-                                        <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
-                                        <p className={`text-lg font-black tracking-tight ${colors.text}`}>
-                                            {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
-                                        </p>
+                                <dl className="space-y-3 text-sm">
+                                    <div className="flex justify-between gap-4">
+                                        <dt className={colors.textMuted}>Data e hora</dt>
+                                        <dd className={`font-semibold text-right ${colors.text}`}>
+                                            {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} · {selectedTime}
+                                        </dd>
                                     </div>
-                                    <div className="space-y-1">
-                                        <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
-                                        <p className={`text-lg font-black tracking-tight ${accent.text}`}>
-                                            {formatCurrency(calculateTotal(), currencyRegion)}
-                                        </p>
+                                    <div className="flex justify-between gap-4">
+                                        <dt className={colors.textMuted}>Serviços</dt>
+                                        <dd className={`font-semibold text-right ${colors.text}`}>
+                                            {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
+                                        </dd>
                                     </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
-                                    <p className={`text-sm font-bold ${colors.textSecondary}`}>
-                                        {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
-                                    </p>
-                                </div>
-                                {selectedProfessional && selectedProfessional !== 'any' && (
-                                    <div className="space-y-1 mt-4 pt-4 border-t ${colors.divider}">
-                                        <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Profissional</p>
-                                        <p className={`text-sm font-bold ${colors.textSecondary}`}>
-                                            {professionals.find(p => p.id === selectedProfessional)?.name || 'Qualquer disponível'}
-                                        </p>
-                                    </div>
-                                )}
+                                    {selectedProfessional && (
+                                        <div className="flex justify-between gap-4">
+                                            <dt className={colors.textMuted}>Profissional</dt>
+                                            <dd className={`font-semibold text-right ${colors.text}`}>
+                                                {selectedProfessional === 'any'
+                                                    ? 'Qualquer disponível'
+                                                    : (professionals.find(p => p.id === selectedProfessional)?.name || '—')}
+                                            </dd>
+                                        </div>
+                                    )}
+                                </dl>
                             </div>
 
                             {/* Contact Form */}
-                            <div className="space-y-6">
+                            <div className="space-y-4 md:space-y-5">
                                 {client ? (
-                                    <div className={`p-4 rounded-xl flex items-center gap-4 ${colors.surface} ${colors.border} border`}>
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${accent.bgDim} ${accent.text} border ${accent.borderDim}`}>
-                                            <User className="w-6 h-6" />
+                                    <div className={`p-3.5 rounded-xl flex items-center gap-3 ${colors.surface} ${colors.border} border`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${accent.bgDim} ${accent.text}`}>
+                                            <User className="w-5 h-5" />
                                         </div>
-                                        <div className="flex-1">
-                                            <p className={`font-bold ${colors.text}`}>{client.name}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`font-semibold truncate ${colors.text}`}>{client.name}</p>
                                             <p className={`text-sm ${colors.textMuted}`}>{client.phone}</p>
                                         </div>
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent.bg} ${accentTextOnAccent}`}>
-                                            <Check className="w-4 h-4" />
-                                        </div>
+                                        <Check className={`w-5 h-5 shrink-0 ${accent.text}`} aria-hidden="true" />
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 gap-4">
-                                        <div className="space-y-2">
-                                            <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>Nome Completo</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                        <div className="space-y-1.5 sm:col-span-2">
+                                            <label className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>Nome completo</label>
                                             <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-                                                className={`w-full py-4 px-5 outline-none transition-all ${classes.input}`}
-                                                placeholder="Como devemos te chamar?" />
+                                                className={`w-full py-3 px-4 outline-none transition-all ${classes.input}`}
+                                                placeholder="Como devemos te chamar?"
+                                                autoComplete="name"
+                                            />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
+                                        <div className="space-y-1.5 sm:col-span-2">
+                                            <label className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>WhatsApp</label>
                                             <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                         </div>
                                     </div>
                                 )}
 
-                                <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
-                                    <input type="checkbox" id="privacy-quick" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                        className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
-                                    <label htmlFor="privacy-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                        Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
-                                    </label>
+                                <div className="space-y-3">
+                                    <Checkbox
+                                        id="privacy-quick"
+                                        checked={acceptedPolicy}
+                                        onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                                        label={
+                                            <>
+                                                Confirmo meu compromisso e aceito as{' '}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
+                                                    className={`font-semibold underline underline-offset-2 ${accent.text}`}
+                                                >
+                                                    diretrizes de cancelamento
+                                                </button>
+                                                .
+                                            </>
+                                        }
+                                    />
+                                    <Checkbox
+                                        id="marketing-optin-quick"
+                                        checked={acceptedMarketing}
+                                        onChange={(e) => setAcceptedMarketing(e.target.checked)}
+                                        label="Quero receber lembretes do agendamento por WhatsApp."
+                                    />
                                 </div>
-
-                                <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
-                                    <input type="checkbox" id="marketing-optin-quick" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
-                                        className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
-                                    <label htmlFor="marketing-optin-quick" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                        Aceito receber lembretes do meu agendamento por WhatsApp. Posso cancelar a qualquer momento.
-                                    </label>
-                                </div>
-
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={(!client && (!customerName || !customerPhone)) || !acceptedPolicy || isSubmitting}
-                                    className={`w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                                    {isSubmitting ? (
-                                        <Loader2 className="w-6 h-6 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <span>Confirmar & Agendar</span>
-                                            <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                        </>
-                                    )}
-                                </button>
                             </div>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* Quick Flow Bottom Navigation */}
+            {/* Quick Flow Bottom Navigation — uma CTA por passo (no confirm = submit) */}
             {bookingMode === 'quick' && quickStep !== 'success' && (
-                <div className="fixed bottom-0 left-0 right-0 w-full transition-all duration-200 ease-out" style={{ zIndex: 'var(--z-modal)' }}>
-                    <div className={`w-full px-4 pt-4 ${colors.bg}/90 backdrop-blur-2xl border-t ${colors.divider} ${shadow.elevated}`} style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
-                        <div className="flex items-center gap-3 max-w-3xl mx-auto pb-4">
+                <div className="fixed bottom-0 left-0 right-0 w-full" style={{ zIndex: 'var(--z-modal)' }}>
+                    <div
+                        className={`${colors.bg}/95 backdrop-blur-xl border-t ${colors.divider} px-4 pt-3`}
+                        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+                    >
+                        <div className="flex items-center gap-2 md:gap-3 max-w-4xl lg:max-w-5xl mx-auto">
                             {quickStep !== 'services' && (
-                                <button onClick={handleQuickBack}
-                                    className={`px-6 py-4 font-bold text-xs uppercase tracking-widest transition-all ${classes.buttonSecondary}`}>
+                                <button
+                                    type="button"
+                                    onClick={handleQuickBack}
+                                    className={`px-4 md:px-5 py-3.5 min-h-12 font-semibold text-sm transition-all ${classes.buttonSecondary}`}
+                                >
                                     Voltar
                                 </button>
                             )}
                             <button
-                                onClick={handleQuickNext}
-                                disabled={!canQuickProceed()}
-                                className={`flex-1 py-4 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                                <span className="font-semibold">Continuar</span>
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                type="button"
+                                onClick={quickStep === 'contact' ? handleSubmit : handleQuickNext}
+                                disabled={!canQuickProceed() || (quickStep === 'contact' && isSubmitting)}
+                                className={`flex-1 py-3.5 min-h-12 flex items-center justify-center gap-2 transition-all ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                {quickStep === 'contact' && isSubmitting ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : quickStep === 'contact' ? (
+                                    <>
+                                        <span className="font-semibold">Confirmar agendamento</span>
+                                        <Check className="w-5 h-5" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-semibold">Continuar</span>
+                                        <ArrowRight className="w-5 h-5" />
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -1601,19 +1608,24 @@ export const PublicBooking: React.FC = () => {
                             )}
 
                             <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
-                                <input type="checkbox" id="privacy" checked={acceptedPolicy} onChange={(e) => setAcceptedPolicy(e.target.checked)}
-                                    className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
+                                <Checkbox
+                                    id="privacy"
+                                    checked={acceptedPolicy}
+                                    onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                                    className="shrink-0"
+                                />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Confirmo meu compromisso e aceito as <button onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
+                                    Confirmo meu compromisso e aceito as <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
                                 </label>
                             </div>
 
-                            <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
-                                <input type="checkbox" id="marketing-optin" checked={acceptedMarketing} onChange={(e) => setAcceptedMarketing(e.target.checked)}
-                                    className={`mt-1 w-5 h-5 rounded cursor-pointer ${accent.bg} ${accentTextOnAccent}`} />
-                                <label htmlFor="marketing-optin" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Aceito receber lembretes do meu agendamento por WhatsApp. Posso cancelar a qualquer momento.
-                                </label>
+                            <div className={`p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
+                                <Checkbox
+                                    id="marketing-optin"
+                                    checked={acceptedMarketing}
+                                    onChange={(e) => setAcceptedMarketing(e.target.checked)}
+                                    label="Aceito receber lembretes do meu agendamento por WhatsApp. Posso cancelar a qualquer momento."
+                                />
                             </div>
 
                             <div className="pt-2">
@@ -1789,22 +1801,6 @@ export const PublicBooking: React.FC = () => {
                 </div>
             )}
 
-            {/* Float Gallery (Desktop) */}
-            {gallery.length > 0 && quickStep !== 'success' && step !== 'success' && (
-                <div className="fixed bottom-10 left-10 z-[60] hidden xl:block animate-fade-in">
-                    <div className={`p-4 ${colors.card} ${colors.border} border ${shadow.elevated} rounded-2xl w-72`}>
-                        <p className={`text-xs uppercase tracking-[0.2em] mb-4 ${colors.textMuted} font-medium`}>Atmosfera & Arte</p>
-                        <div className="grid grid-cols-2 gap-2">
-                            {gallery.slice(0, 4).map((item) => (
-                                <div key={item.id} className={`aspect-square overflow-hidden rounded-lg border ${colors.border}`}>
-                                    <img src={item.image_url} alt="Portfolio" className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.03]" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Policy Modal */}
             {showPolicyModal && (
                 <div
@@ -1855,7 +1851,4 @@ export const PublicBooking: React.FC = () => {
                     if (pendingCancelBookingId) void handleCancelBooking(pendingCancelBookingId);
                     setPendingCancelBookingId(null);
                 }}
-            />
-        </div>
-    );
-};
+            />

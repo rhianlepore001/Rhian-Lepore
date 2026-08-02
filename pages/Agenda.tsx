@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
+import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
 import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -1128,46 +1129,45 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
     return (
         <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8`}>
-            {/* Header */}
-            <div className={`${classes.section} px-4 pt-6 md:px-6`}>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 className={`text-3xl md:text-4xl font-heading ${colors.text} uppercase`}>Agenda</h1>
-                        <p className={`${colors.textSecondary} mt-1`}>Gerencie os agendamentos por profissional</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
-                        <Button
-                            variant="secondary"
-                            icon={<History />}
-                            onClick={() => setShowHistoryModal(true)}
-                            className="flex-1 md:flex-none"
-                            aria-label="Histórico"
-                        >
-                            <span className="hidden md:inline">Histórico</span>
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            icon={<Calendar />}
-                            onClick={() => setShowAllAppointmentsModal(true)}
-                            className="flex-1 md:flex-none"
-                            aria-label="Todos os agendamentos"
-                        >
-                            <span className="hidden md:inline">Todos Agendamentos</span>
-                        </Button>
-                        <Button
-                            id="btn-new-appointment"
-                            variant="primary"
-                            icon={<Plus />}
-                            onClick={() => {
-                                setWizardPrefill(null);
-                                setShowNewAppointmentModal(true);
-                            }}
-                            className="hidden md:flex"
-                        >
-                            Novo Agendamento
-                        </Button>
-                    </div>
-                </div>
+            <div className={`${classes.section} pt-2`}>
+                <PageHeader
+                    title="Agenda"
+                    subtitle="Gerencie os agendamentos por profissional"
+                    action={
+                        <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
+                            <Button
+                                variant="secondary"
+                                icon={<History />}
+                                onClick={() => setShowHistoryModal(true)}
+                                className="flex-1 md:flex-none"
+                                aria-label="Histórico"
+                            >
+                                <span className="hidden md:inline">Histórico</span>
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                icon={<Calendar />}
+                                onClick={() => setShowAllAppointmentsModal(true)}
+                                className="flex-1 md:flex-none"
+                                aria-label="Todos os agendamentos"
+                            >
+                                <span className="hidden md:inline">Todos Agendamentos</span>
+                            </Button>
+                            <Button
+                                id="btn-new-appointment"
+                                variant="primary"
+                                icon={<Plus />}
+                                onClick={() => {
+                                    setWizardPrefill(null);
+                                    setShowNewAppointmentModal(true);
+                                }}
+                                className="hidden md:flex"
+                            >
+                                Novo Agendamento
+                            </Button>
+                        </div>
+                    }
+                />
             </div>
 
             {/* --- Agendamentos Atrasados (Overdue) --- */}

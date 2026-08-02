@@ -1,4 +1,4 @@
-﻿import { Card } from '../components/ui';
+﻿import { Card, PageHeader, Button } from '../components/ui';
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { TrendingUp, Calendar, Users, DollarSign, Clock, Scissors } from 'lucide-react';
@@ -107,10 +107,8 @@ export const StaffInsights: React.FC = () => {
 
     if (!teamMemberId) {
         return (
-            <div className="p-6 md:p-8">
-                <h1 className="font-heading text-2xl uppercase text-[var(--color-text)] tracking-tight mb-6">
-                    Meus Resultados
-                </h1>
+            <div className="space-y-6">
+                <PageHeader title="Meus Resultados" subtitle="Indicadores do seu dia a dia" />
                 <Card>
                     <div className="text-center py-10">
                         <TrendingUp className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
@@ -126,31 +124,29 @@ export const StaffInsights: React.FC = () => {
     }
 
     return (
-        <div className="p-6 md:p-8 space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="font-heading text-2xl uppercase text-[var(--color-text)] tracking-tight">
-                    Meus Resultados
-                    {fullName && <span className={accent.text}> — {fullName.split(' ')[0]}</span>}
-                </h1>
-
-                {/* Período selector */}
-                <div className="flex gap-2">
-                    {(['day', 'week', 'month'] as Period[]).map((p) => (
-                        <button
-                            key={p}
-                            onClick={() => setPeriod(p)}
-                            className={`px-3 py-1.5 min-h-[44px] text-xs font-mono uppercase tracking-wider border-2 rounded-lg transition-all ${
-                                period === p
-                                    ? `${accent.bg} text-[var(--color-on-accent)] ${accent.border} shadow-[var(--shadow-card-accent)]`
-                                    : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text)]'
-                            }`}
-                        >
-                            {{ day: 'Hoje', week: 'Semana', month: 'Mês' }[p]}
-                        </button>
-                    ))}
-                </div>
-            </div>
+        <div className="space-y-6">
+            <PageHeader
+                title={fullName ? `Meus Resultados — ${fullName.split(' ')[0]}` : 'Meus Resultados'}
+                subtitle={periodLabel}
+                action={
+                    <div className="flex gap-2 w-full md:w-auto">
+                        {(['day', 'week', 'month'] as Period[]).map((p) => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPeriod(p)}
+                                className={`px-3 py-1.5 min-h-[44px] text-xs font-mono uppercase tracking-wider border-2 rounded-lg transition-all ${
+                                    period === p
+                                        ? `${accent.bg} text-[var(--color-on-accent)] ${accent.border} shadow-[var(--shadow-card-accent)]`
+                                        : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text)]'
+                                }`}
+                            >
+                                {{ day: 'Hoje', week: 'Semana', month: 'Mês' }[p]}
+                            </button>
+                        ))}
+                    </div>
+                }
+            />
 
             {/* Hero Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

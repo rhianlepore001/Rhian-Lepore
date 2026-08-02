@@ -39,13 +39,15 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             font.heading,
             'text-2xl md:text-3xl font-bold tracking-tight',
             colors.text,
-            'truncate',
+            'break-words',
           ].join(' ')}
         >
           {title}
         </h1>
         {subtitle && (
-          <p className={`text-sm ${colors.textSecondary} truncate`}>{subtitle}</p>
+          <div className={`text-sm ${colors.textSecondary} text-pretty break-words`}>
+            {subtitle}
+          </div>
         )}
         {meta && <div className="mt-2 flex flex-wrap gap-2">{meta}</div>}
       </div>

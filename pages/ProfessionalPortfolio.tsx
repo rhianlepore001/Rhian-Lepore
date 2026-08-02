@@ -142,7 +142,7 @@ export const ProfessionalPortfolio: React.FC = () => {
                     </div>
                     <Button
                         onClick={() => navigate(`/book/${business.business_slug}?pro=${professional.id}`)}
-                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-[var(--color-bg)] font-bold whitespace-nowrap`}
+                        className={`w-full md:w-auto px-8 py-4 text-lg bg-theme-accent hover:bg-theme-accentHover text-[var(--color-on-accent)] font-bold whitespace-nowrap`}
                     >
                         <span className="flex items-center gap-2">
                             <Calendar className="w-5 h-5" /> Agendar Horário

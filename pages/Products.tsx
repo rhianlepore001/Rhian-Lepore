@@ -27,6 +27,7 @@ import {
   ErrorState,
   Input,
   Modal,
+  PageHeader,
   Select,
   SkeletonCard,
   Table,
@@ -438,28 +439,22 @@ export const Products: React.FC = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={`text-xl md:text-2xl font-bold tracking-tight ${colors.text}`}>
-            Produtos
-          </h1>
-          <p className={`text-xs md:text-sm ${colors.textSecondary} mt-0.5`}>
-            Catálogo e vendas avulsas
-          </p>
-        </div>
-        {isOwner && (
-          <Button
-            variant="primary"
-            size="md"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={openCreateModal}
-            className="shrink-0"
-          >
-            Cadastrar
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Produtos"
+        subtitle="Catálogo e vendas avulsas"
+        action={
+          isOwner ? (
+            <Button
+              variant="primary"
+              size="md"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={openCreateModal}
+            >
+              Cadastrar
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Search + Filter */}
       <div className="flex flex-col gap-3 sm:flex-row">

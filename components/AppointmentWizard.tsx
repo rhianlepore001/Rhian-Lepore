@@ -1,14 +1,12 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import FocusTrap from 'focus-trap-react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Button } from './ui/Button';
+import { Modal } from './ui/Modal';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import {
-    X, ChevronLeft, Loader2, Plus, Check
+    X, ChevronLeft, Loader2, Check
 } from 'lucide-react';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
@@ -46,33 +44,11 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     onRefreshClients
 }) => {
     const { user, region, businessName, companyId } = useAuth();
-    const { setModalOpen } = useUI();
     const { isBeauty, accent, colors } = useBrutalTheme();
     const createAppointment = useCreateAppointment();
     const { showToast } = useToast();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        setModalOpen(true);
-        return () => setModalOpen(false);
-    }, [setModalOpen]);
-
-    const handleEscape = useCallback(
-        (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && !loading) onClose();
-        },
-        [onClose, loading]
-    );
-
-    useEffect(() => {
-        document.addEventListener('keydown', handleEscape);
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.body.style.overflow = '';
-        };
-    }, [handleEscape]);
 
     // Step 2 State
     const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -106,8 +82,6 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
 
     // Styles
-    const modalBg = 'bg-[var(--color-modal-bg)] border border-[var(--color-modal-border)]';
-
     const cardBg = 'bg-theme-surface border-[var(--color-divider)]';
     const activeCardBg = 'bg-theme-accent text-[var(--color-on-accent)] border-theme-accent';
 
@@ -297,33 +271,19 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         }
     };
 
-    return createPortal(
-        <div
-            className={`fixed inset-0 md:left-64 flex items-center justify-center p-0 md:p-4 ${colors.overlay} backdrop-blur-sm`}
-            style={{ zIndex: 'var(--z-modal)' }}
-            onClick={(e) => {
-                if (e.target === e.currentTarget && !loading) onClose();
-            }}
+    return (
+        <Modal
+            open
+            onClose={onClose}
+            preventClose={loading}
+            showCloseButton={false}
+            size="xl"
+            labelledById="appointment-wizard-title"
+            bodyClassName="flex flex-col flex-1 min-h-0 overflow-hidden p-0"
+            className="max-w-4xl h-[100dvh] md:h-[85vh] overflow-hidden shadow-promax-depth"
         >
-            <FocusTrap
-                focusTrapOptions={{
-                    escapeDeactivates: false,
-                    allowOutsideClick: true,
-                    initialFocus: false,
-                    fallbackFocus: '[data-appointment-wizard]',
-                }}
-            >
-            <div
-                data-appointment-wizard
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="appointment-wizard-title"
-                tabIndex={-1}
-                className={`w-full max-w-4xl h-[100dvh] md:h-[85vh] flex flex-col relative overflow-hidden md:rounded-2xl shadow-promax-depth transition-all duration-300 ${modalBg} animate-in zoom-in-95 focus:outline-none`}
-            >
-
                 {/* HEADER */}
-                <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)]`}>
+                <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)] shrink-0`}>
                     <div>
                         <h2 id="appointment-wizard-title" className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
                             Novo Atendimento
@@ -372,7 +332,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                 </div>
 
                 {/* CONTENT AREA */}
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-neutral-700">
+                <div className="flex-1 min-h-0 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-neutral-700">
 
                     {/* STEP 1: CLIENT */}
                     {step === 1 && (
@@ -502,9 +462,10 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                 </div>
 
                 {/* FOOTER */}
-                <div className={`p-4 border-t ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'} flex justify-between items-center`}>
+                <div className={`p-4 border-t shrink-0 ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'} flex justify-between items-center`}>
                     {step > 1 ? (
                         <button
+                            type="button"
                             onClick={() => setStep(prev => (prev - 1) as any)}
                             className={`${colors.text} hover:opacity-70 px-4 py-2 flex items-center gap-2 transition-opacity`}
                         >
@@ -538,9 +499,6 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         )}
                     </div>
                 </div>
-            </div>
-            </FocusTrap>
-        </div>,
-        document.body
+        </Modal>
     );
 };

@@ -169,21 +169,26 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const labelClass = `text-xs mb-1 block ${colors.textSecondary} ${font.label}`;
 
     if (step === 'invite') {
+        const firstName = name.trim().split(/\s+/)[0] || 'o profissional';
         return (
             <Modal
                 open
                 onClose={onClose}
-                title="Convide seu profissional"
+                title="Convite pronto"
                 size="md"
             >
                 <div className="space-y-5">
-                    <div className={`p-4 rounded-xl border ${colors.border} ${colors.surface}`}>
-                        <p className={`text-sm ${colors.text} font-semibold`}>
+                    <div className={`p-4 rounded-xl border ${colors.border} ${colors.surface} space-y-2`}>
+                        <p className={`text-base ${colors.text} font-semibold`}>
                             {name.trim() || 'Profissional'}
                         </p>
-                        <p className={`text-xs ${colors.textMuted} mt-1`}>
-                            Perfil criado. Envie o link para que ele entre no sistema.
-                            O nome já está configurado — ele só completa e-mail, data de nascimento e senha.
+                        <p className={`text-sm ${colors.textSecondary} leading-relaxed`}>
+                            {firstName} já está cadastrado(a) na equipe. Compartilhe o link
+                            para que finalize o acesso e comece a usar a agenda.
+                        </p>
+                        <p className={`text-xs ${colors.textMuted} leading-relaxed`}>
+                            O nome permanece o que você definiu. No cadastro, {firstName}
+                            informa apenas e-mail, data de nascimento e senha.
                         </p>
                     </div>
 
@@ -202,7 +207,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             onClick={() => void copyInviteLink()}
                             icon={copiedInviteLink ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         >
-                            {copiedInviteLink ? 'Link copiado!' : 'Copiar link'}
+                            {copiedInviteLink ? 'Link copiado' : 'Copiar link'}
                         </Button>
                         <Button
                             type="button"
@@ -211,12 +216,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             onClick={() => void shareInviteLink()}
                             icon={<Share2 className="w-4 h-4" />}
                         >
-                            Compartilhar
+                            Enviar
                         </Button>
                     </div>
 
-                    <Button type="button" variant="ghost" fullWidth onClick={onClose}>
-                        Concluir
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        fullWidth
+                        onClick={onClose}
+                        data-testid="invite-modal-close"
+                    >
+                        Fechar
                     </Button>
                 </div>
             </Modal>

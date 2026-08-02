@@ -60,9 +60,9 @@ test.describe('Convite de colaborador — domínio do gestor', () => {
     }
 
     await page.getByRole('button', { name: /Criar e convidar/i }).click();
-    const inviteModal = page.getByRole('dialog').filter({ hasText: /Convide seu profissional/i });
+    const inviteModal = page.getByRole('dialog').filter({ hasText: /Convite pronto/i });
     await expect(inviteModal).toBeVisible({ timeout: 20_000 });
-    await expect(inviteModal.getByText(/Envie o link para que ele entre no sistema/i)).toBeVisible();
+    await expect(inviteModal.getByText(/já está cadastrado/i)).toBeVisible();
     await expect(inviteModal.getByText(professionalName, { exact: true })).toBeVisible();
 
     await page.screenshot({
@@ -73,23 +73,25 @@ test.describe('Convite de colaborador — domínio do gestor', () => {
     const inviteUrl = (await inviteModal.getByTestId('invite-link').innerText()).trim();
     expect(inviteUrl).toMatch(/\/#\/register\?company=[0-9a-f-]+&member=[0-9a-f-]+/i);
 
-    await inviteModal.getByRole('button', { name: /Concluir/i }).click();
+    await inviteModal.getByTestId('invite-modal-close').click();
 
     // Cadastro do colaborador via link com member_id
     const staffPage = await context.newPage();
     await staffPage.setViewportSize({ width: 390, height: 844 });
     await staffPage.goto(inviteUrl, { waitUntil: 'domcontentloaded' });
 
-    await expect(staffPage.getByRole('heading', { name: /Você foi convidado/i })).toBeVisible({
+    await expect(staffPage.getByRole('heading', { name: /Bem-vindo à equipe/i })).toBeVisible({
       timeout: 20_000,
     });
     await expect(staffPage.getByText(/Validando convite/i)).toHaveCount(0, { timeout: 15_000 });
     await expect(staffPage.getByText(/Não foi possível validar/i)).toHaveCount(0);
 
-    const nameInput = staffPage.locator('#staff-name');
-    await expect(nameInput).toBeVisible({ timeout: 15_000 });
-    await expect(nameInput).toHaveValue(professionalName);
-    await expect(nameInput).toHaveAttribute('readonly', '');
+    // Nome NÃO é input editável — bloco travado
+    const lockedName = staffPage.getByTestId('staff-name-locked');
+    await expect(lockedName).toBeVisible({ timeout: 15_000 });
+    await expect(lockedName).toContainText(professionalName);
+    await expect(staffPage.locator('input#staff-name')).toHaveCount(0);
+    await expect(staffPage.locator('#staff-name')).toHaveAttribute('aria-readonly', 'true');
 
     await expect(staffPage.getByLabel(/E-mail \(Gmail\)/i)).toBeVisible();
     await expect(staffPage.getByLabel(/Data de nascimento/i)).toBeVisible();

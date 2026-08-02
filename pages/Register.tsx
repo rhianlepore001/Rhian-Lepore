@@ -99,6 +99,8 @@ export const Register: React.FC = () => {
         return;
       }
 
+      // Convites novos exigem member_id (nome definido pelo gestor).
+      // Links antigos sem member ainda abrem a empresa, mas pedem um convite atualizado.
       const { data } = await supabase.rpc('get_company_for_invite', { p_company_id: companyIdFromUrl });
       if (cancelled) return;
       const row = Array.isArray(data) ? data[0] : data;
@@ -106,6 +108,9 @@ export const Register: React.FC = () => {
         setUserType(row.user_type as UserType);
       }
       if (row?.business_name) setOwnerBusinessName(row.business_name);
+      setInviteError(
+        'Este link está incompleto. Peça ao gestor o convite gerado ao cadastrar seu perfil na equipe.'
+      );
       setInviteLoading(false);
     };
 
@@ -201,10 +206,12 @@ export const Register: React.FC = () => {
               <div>
                 <AgendiXLogo size={28} isBeauty={isBeauty} showText={true} />
                 <h1 className="font-heading text-2xl uppercase text-[var(--color-text)] tracking-tight mt-5">
-                  Você foi convidado
+                  Bem-vindo à equipe
                 </h1>
                 <p className={`text-xs font-mono uppercase tracking-[0.1em] mt-1.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
-                  {ownerBusinessName ? `Junte-se à equipe · ${ownerBusinessName}` : 'Crie sua conta para acessar a equipe'}
+                  {ownerBusinessName
+                    ? `Finalize seu acesso · ${ownerBusinessName}`
+                    : 'Finalize seu acesso para entrar na equipe'}
                 </p>
               </div>
 
@@ -222,24 +229,35 @@ export const Register: React.FC = () => {
                 </p>
               ) : (
               <form onSubmit={handleRegister} className="space-y-4">
-                <div>
+                {/* Nome definido pelo gestor — nunca editável no convite com member_id */}
+                {nameLocked ? (
+                  <div data-testid="staff-name-locked">
+                    <p className={`${classes.label} block mb-1.5`}>Nome</p>
+                    <div
+                      id="staff-name"
+                      className={`w-full min-h-[44px] px-4 py-3 rounded-xl border ${colors.inputBorder} bg-[var(--color-card-hover)] ${colors.text} text-sm font-medium select-none pointer-events-none`}
+                      aria-readonly="true"
+                    >
+                      {fullName}
+                    </div>
+                    <p className={`mt-1.5 text-xs ${colors.textMuted}`}>
+                      Definido pelo gestor{memberRole ? ` · ${memberRole}` : ''} — não é possível alterar
+                    </p>
+                    <input type="hidden" name="fullName" value={fullName} />
+                  </div>
+                ) : (
                   <Input
                     id="staff-name"
                     type="text"
                     label="Nome"
                     required
                     value={fullName}
-                    onChange={(e) => {
-                      if (!nameLocked) setFullName(e.target.value);
-                    }}
-                    readOnly={nameLocked}
-                    placeholder="Definido pelo gestor"
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Como o gestor cadastrou"
                     forceTheme={userType}
-                    hint={nameLocked
-                      ? `Configurado pelo gestor${memberRole ? ` · ${memberRole}` : ''}`
-                      : 'Use o nome exatamente como o gestor cadastrou'}
+                    hint="Use o nome exatamente como o gestor cadastrou na equipe"
                   />
-                </div>
+                )}
 
                 <Input
                   id="staff-email"
@@ -250,7 +268,7 @@ export const Register: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seuemail@gmail.com"
                   forceTheme={userType}
-                  hint="Use seu Gmail ou e-mail principal de acesso"
+                  hint="E-mail que você usará para entrar"
                 />
 
                 <Input

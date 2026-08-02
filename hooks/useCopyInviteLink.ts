@@ -35,8 +35,8 @@ export function useCopyInviteLink(opts: UseCopyInviteLinkOptions = {}): UseCopyI
 
     const inviteText = opts.customText
         ?? (opts.recipientName && businessName
-            ? `${opts.recipientName}, seu perfil já está pronto na equipe ${businessName}. Cadastre-se aqui: ${inviteLink}`
-            : `Cadastre-se na nossa equipe e gerencie sua agenda: ${inviteLink}`);
+            ? `Olá, ${opts.recipientName.split(/\s+/)[0]}. A ${businessName} convidou você para integrar a equipe no AgendiX. Finalize seu acesso neste link: ${inviteLink}`
+            : `Você foi convidado(a) a integrar nossa equipe no AgendiX. Finalize seu acesso neste link: ${inviteLink}`);
 
     const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 

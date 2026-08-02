@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { Card, Button } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
+import { Plus, Users, ShieldCheck, UserCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { useCopyInviteLink } from '../../hooks/useCopyInviteLink';
 import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
 import { useQueryClient } from '@tanstack/react-query';
-import type { TeamMember as TeamMemberType } from '../../types/team';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 
 export const TeamSettings: React.FC = () => {
-    const { user, companyId } = useAuth();
+    const { companyId } = useAuth();
     const { accent, colors, isBeauty } = useBrutalTheme();
     const queryClient = useQueryClient();
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
@@ -20,7 +18,6 @@ export const TeamSettings: React.FC = () => {
     const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
-    const { copied: copiedLink, copy: handleCopyInviteLink } = useCopyInviteLink();
 
     const cardMembers = members.map(m => ({ ...m, photo_url: m.photo_url ?? null }));
 
@@ -40,7 +37,10 @@ export const TeamSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="w-full space-y-8 pb-20">
-                <div className="flex justify-end mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-2">
+                    <p className={`text-sm ${colors.textMuted} max-w-xl`}>
+                        Cadastre o profissional com nome e comissão. Depois, envie o link de convite para ele criar a conta.
+                    </p>
                     <Button
                         id="btn-add-team-member"
                         onClick={() => {
@@ -52,46 +52,6 @@ export const TeamSettings: React.FC = () => {
                         Profissional
                     </Button>
                 </div>
-
-                <Card className={`${colors.border}`}>
-                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <Users className={`w-5 h-5 ${accent.text}`} />
-                                <h3 className={`text-lg font-heading uppercase ${colors.text}`}>Convide sua Equipe</h3>
-                            </div>
-                            <p className={`text-sm ${colors.textMuted} max-w-xl`}>
-                                Envie este link exclusivo para seus funcionários. Eles poderão criar a própria conta (e-mail e senha) e acessarão apenas a própria agenda e comissões.
-                            </p>
-                        </div>
-                        <div className="w-full md:w-auto flex-shrink-0">
-                            <button
-                                type="button"
-                                onClick={handleCopyInviteLink}
-                                className={`
-                                    w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-mono text-sm uppercase transition-all
-                                    ${copiedLink
-                                        ? 'bg-emerald-500/10 text-[var(--color-success)] border border-emerald-500/30'
-                                        : `${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} hover:border-[var(--color-accent-border)]`
-                                    }
-                                `}
-                            >
-                                {copiedLink ? (
-                                    <>
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        <span>Link Copiado!</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <LinkIcon className="w-4 h-4" />
-                                        <span>Copiar Link de Convite</span>
-                                        <Copy className="w-3 h-3 ml-1 opacity-50" />
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </Card>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
@@ -109,6 +69,7 @@ export const TeamSettings: React.FC = () => {
                             Você ainda não cadastrou nenhum profissional. Adicione a si mesmo ou seus colaboradores.
                         </p>
                         <button
+                            type="button"
                             onClick={() => setIsModalOpen(true)}
                             className={`px-8 py-4 ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border ${colors.border}`}
                         >

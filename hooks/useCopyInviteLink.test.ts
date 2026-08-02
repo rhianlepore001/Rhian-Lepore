@@ -37,6 +37,16 @@ describe('useCopyInviteLink', () => {
         expect(result.current.inviteLink).toBe('https://app.example.com/#/register?company=owner-uuid-123');
     });
 
+    it('inclui member_id quando informado', () => {
+        const { result } = renderHook(() =>
+            useCopyInviteLink({ memberId: 'member-uuid-9', recipientName: 'Lucas' })
+        );
+        expect(result.current.inviteLink).toBe(
+            'https://app.example.com/#/register?company=owner-uuid-123&member=member-uuid-9'
+        );
+        expect(result.current.inviteText).toContain('seu perfil já está pronto');
+    });
+
     it('texto padrão usa copy genérico quando sem nome destinatário', () => {
         const { result } = renderHook(() => useCopyInviteLink());
         expect(result.current.inviteText).toContain('Cadastre-se na nossa equipe');
@@ -45,7 +55,9 @@ describe('useCopyInviteLink', () => {
 
     it('texto personalizado inclui nome do destinatário + businessName', () => {
         const { result } = renderHook(() => useCopyInviteLink({ recipientName: 'Lucas' }));
-        expect(result.current.inviteText).toBe('Lucas, cadastre-se na equipe Barbearia do Marcos: https://app.example.com/#/register?company=owner-uuid-123');
+        expect(result.current.inviteText).toBe(
+            'Lucas, seu perfil já está pronto na equipe Barbearia do Marcos. Cadastre-se aqui: https://app.example.com/#/register?company=owner-uuid-123'
+        );
     });
 
     it('customText sobrescreve qualquer texto padrão', () => {

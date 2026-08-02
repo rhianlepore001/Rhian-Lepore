@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface UseCopyInviteLinkOptions {
     recipientName?: string;
+    memberId?: string | null;
     customText?: string;
 }
 
@@ -19,17 +20,22 @@ const isMobile = (): boolean => {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 };
 
+export function buildStaffInviteLink(ownerId: string, memberId?: string | null): string {
+    const base = `${window.location.origin}/#/register?company=${ownerId}`;
+    return memberId ? `${base}&member=${memberId}` : base;
+}
+
 export function useCopyInviteLink(opts: UseCopyInviteLinkOptions = {}): UseCopyInviteLinkResult {
     const { user, businessName } = useAuth();
     const [copied, setCopied] = useState(false);
 
     const inviteLink = user
-        ? `${window.location.origin}/#/register?company=${user.id}`
+        ? buildStaffInviteLink(user.id, opts.memberId)
         : '';
 
     const inviteText = opts.customText
         ?? (opts.recipientName && businessName
-            ? `${opts.recipientName}, cadastre-se na equipe ${businessName}: ${inviteLink}`
+            ? `${opts.recipientName}, seu perfil já está pronto na equipe ${businessName}. Cadastre-se aqui: ${inviteLink}`
             : `Cadastre-se na nossa equipe e gerencie sua agenda: ${inviteLink}`);
 
     const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

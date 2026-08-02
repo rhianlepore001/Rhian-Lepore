@@ -1,12 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { Upload, User, Check } from 'lucide-react';
+import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
-import { Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -15,6 +14,8 @@ interface TeamMemberFormProps {
     accentColor: string;
     isOwnerForm?: boolean;
 }
+
+type FormStep = 'form' | 'invite';
 
 export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     initialData,
@@ -27,10 +28,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const isBeauty = accentColor === 'beauty-neon';
     const { colors, accent, font } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
 
+    const [step, setStep] = useState<FormStep>('form');
+    const [createdMemberId, setCreatedMemberId] = useState<string | null>(
+        initialData?.id && !initialData?.staff_user_id ? initialData.id : null
+    );
     const [name, setName] = useState(initialData?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
-    const { copied: copiedInviteLink, copy: copyInviteLink } = useCopyInviteLink({
-        recipientName: name.trim() || undefined,
-    });
     const [role, setRole] = useState(initialData?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
     const [slug, setSlug] = useState(initialData?.slug || '');
     const [bio, setBio] = useState(initialData?.bio || '');
@@ -47,6 +49,12 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo_url || null);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const inviteMemberId = createdMemberId || (initialData?.staff_user_id ? null : initialData?.id) || null;
+    const { inviteLink, copied: copiedInviteLink, copy: copyInviteLink, share: shareInviteLink } = useCopyInviteLink({
+        recipientName: name.trim() || undefined,
+        memberId: inviteMemberId,
+    });
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -121,17 +129,34 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     .eq('id', initialData.id)
                     .eq('user_id', user.id);
                 if (updateError) throw updateError;
+
+                window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
+                onSave();
+
+                if (!isOwner && !initialData.staff_user_id) {
+                    setCreatedMemberId(initialData.id);
+                    setStep('invite');
+                } else {
+                    onClose();
+                }
             } else {
-                const { error: insertError } = await supabase
+                const { data: inserted, error: insertError } = await supabase
                     .from('team_members')
-                    .insert(teamMemberData);
+                    .insert(teamMemberData)
+                    .select('id')
+                    .single();
                 if (insertError) throw insertError;
+
+                window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
+                onSave();
+
+                if (!isOwner && inserted?.id) {
+                    setCreatedMemberId(inserted.id);
+                    setStep('invite');
+                } else {
+                    onClose();
+                }
             }
-
-            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
-
-            onSave();
-            onClose();
         } catch (error: any) {
             console.error('Error saving team member:', error);
             alert(`Erro ao salvar membro da equipe: ${error.message || JSON.stringify(error)}`);
@@ -142,6 +167,61 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
     const inputClass = `w-full p-3 rounded-lg ${colors.text} transition-all outline-none ${colors.inputBg} ${colors.inputBorder} border focus:border-[var(--color-input-focus)]`;
     const labelClass = `text-xs mb-1 block ${colors.textSecondary} ${font.label}`;
+
+    if (step === 'invite') {
+        return (
+            <Modal
+                open
+                onClose={onClose}
+                title="Convide seu profissional"
+                size="md"
+            >
+                <div className="space-y-5">
+                    <div className={`p-4 rounded-xl border ${colors.border} ${colors.surface}`}>
+                        <p className={`text-sm ${colors.text} font-semibold`}>
+                            {name.trim() || 'Profissional'}
+                        </p>
+                        <p className={`text-xs ${colors.textMuted} mt-1`}>
+                            Perfil criado. Envie o link para que ele entre no sistema.
+                            O nome já está configurado — ele só completa e-mail, data de nascimento e senha.
+                        </p>
+                    </div>
+
+                    <div
+                        data-testid="invite-link"
+                        className={`p-3 rounded-lg border border-dashed ${colors.border} break-all text-xs ${font.mono} ${colors.textSecondary}`}
+                    >
+                        {inviteLink || 'Gerando link…'}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Button
+                            type="button"
+                            variant="primary"
+                            fullWidth
+                            onClick={() => void copyInviteLink()}
+                            icon={copiedInviteLink ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        >
+                            {copiedInviteLink ? 'Link copiado!' : 'Copiar link'}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            fullWidth
+                            onClick={() => void shareInviteLink()}
+                            icon={<Share2 className="w-4 h-4" />}
+                        >
+                            Compartilhar
+                        </Button>
+                    </div>
+
+                    <Button type="button" variant="ghost" fullWidth onClick={onClose}>
+                        Concluir
+                    </Button>
+                </div>
+            </Modal>
+        );
+    }
 
     return (
         <Modal
@@ -161,32 +241,21 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     </button>
                 )}
 
-                {!initialData && name.trim() && (
+                {initialData?.id && !initialData?.staff_user_id && !initialData?.is_owner && (
                     <div className={`p-4 rounded-lg border ${colors.border} ${colors.surface} flex flex-col gap-2`}>
                         <p className={`text-xs ${colors.textSecondary}`}>
-                            Convide <span className={colors.text + ' font-semibold'}>{name.trim()}</span> pra equipe
-                            {businessName && <> {businessName}</>}
+                            Este profissional ainda não entrou no sistema. Envie o convite:
                         </p>
                         <button
                             type="button"
-                            onClick={copyInviteLink}
-                            className={`w-full md:w-auto flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-xs ${font.label} uppercase transition-all ${
-                                copiedInviteLink
-                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                    : `${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} hover:border-[var(--color-accent-border)]`
-                            }`}
+                            onClick={() => {
+                                setCreatedMemberId(initialData.id);
+                                setStep('invite');
+                            }}
+                            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-xs ${font.label} uppercase transition-all ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} border`}
                         >
-                            {copiedInviteLink ? (
-                                <>
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    <span>Link Copiado!</span>
-                                </>
-                            ) : (
-                                <>
-                                    <LinkIcon className="w-4 h-4" />
-                                    <span>Copiar Link de Convite</span>
-                                </>
-                            )}
+                            <LinkIcon className="w-4 h-4" />
+                            <span>Abrir convite</span>
                         </button>
                     </div>
                 )}
@@ -341,7 +410,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     loading={loading}
                     icon={!loading ? <Check className="w-5 h-5" /> : undefined}
                 >
-                    {loading ? 'Salvando...' : 'Salvar Profissional'}
+                    {loading ? 'Salvando...' : (initialData ? 'Salvar Profissional' : 'Criar e convidar')}
                 </Button>
             </form>
         </Modal>

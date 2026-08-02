@@ -37,15 +37,28 @@ describe('useCopyInviteLink', () => {
         expect(result.current.inviteLink).toBe('https://app.example.com/#/register?company=owner-uuid-123');
     });
 
+    it('inclui member_id quando informado', () => {
+        const { result } = renderHook(() =>
+            useCopyInviteLink({ memberId: 'member-uuid-9', recipientName: 'Lucas' })
+        );
+        expect(result.current.inviteLink).toBe(
+            'https://app.example.com/#/register?company=owner-uuid-123&member=member-uuid-9'
+        );
+        expect(result.current.inviteText).toContain('integrar a equipe');
+        expect(result.current.inviteText).toContain('Lucas');
+    });
+
     it('texto padrão usa copy genérico quando sem nome destinatário', () => {
         const { result } = renderHook(() => useCopyInviteLink());
-        expect(result.current.inviteText).toContain('Cadastre-se na nossa equipe');
+        expect(result.current.inviteText).toContain('integrar nossa equipe no AgendiX');
         expect(result.current.inviteText).toContain('https://app.example.com/#/register?company=owner-uuid-123');
     });
 
     it('texto personalizado inclui nome do destinatário + businessName', () => {
         const { result } = renderHook(() => useCopyInviteLink({ recipientName: 'Lucas' }));
-        expect(result.current.inviteText).toBe('Lucas, cadastre-se na equipe Barbearia do Marcos: https://app.example.com/#/register?company=owner-uuid-123');
+        expect(result.current.inviteText).toBe(
+            'Olá, Lucas. A Barbearia do Marcos convidou você para integrar a equipe no AgendiX. Finalize seu acesso neste link: https://app.example.com/#/register?company=owner-uuid-123'
+        );
     });
 
     it('customText sobrescreve qualquer texto padrão', () => {

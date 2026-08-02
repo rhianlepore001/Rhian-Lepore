@@ -52,11 +52,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 newPhotoUrl = data.publicUrl;
             }
 
+            // Colaborador: nome é domínio do gestor — só foto pode ser atualizada aqui.
             const authUpdateData: Record<string, any> = {
-                full_name: newFullName,
                 avatar_url: newPhotoUrl,
             };
             if (!isStaff) {
+                authUpdateData.full_name = newFullName;
                 authUpdateData.business_name = newBusinessName;
             }
 
@@ -65,10 +66,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
             if (error) throw error;
 
             const profilePayload: Record<string, any> = {
-                full_name: newFullName,
-                photo_url: newPhotoUrl
+                photo_url: newPhotoUrl,
             };
             if (!isStaff) {
+                profilePayload.full_name = newFullName;
                 profilePayload.business_name = newBusinessName;
             }
 
@@ -144,16 +145,34 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     )}
 
                     <div>
-                        <label className={`block text-xs ${colors.textMuted} mb-1 ${font.label}`} htmlFor="profile-full-name">Seu Nome Completo</label>
-                        <input
-                            id="profile-full-name"
-                            type="text"
-                            value={newFullName}
-                            onChange={(e) => setNewFullName(e.target.value)}
-                            className={`w-full p-3 ${colors.text} outline-none transition-all ${classes.input}`}
-                            placeholder="Ex: Leticia Luiza"
-                            required
-                        />
+                        <label className={`block text-xs ${colors.textMuted} mb-1 ${font.label}`} htmlFor="profile-full-name">
+                            {isStaff ? 'Nome' : 'Seu Nome Completo'}
+                        </label>
+                        {isStaff ? (
+                            <>
+                                <div
+                                    id="profile-full-name"
+                                    data-testid="profile-name-locked"
+                                    className={`w-full min-h-[44px] p-3 ${colors.text} ${colors.surface} border ${colors.border} rounded-xl text-sm font-medium select-none pointer-events-none`}
+                                    aria-readonly="true"
+                                >
+                                    {fullName}
+                                </div>
+                                <p className={`mt-1.5 text-xs ${colors.textMuted}`}>
+                                    Definido pelo gestor da equipe
+                                </p>
+                            </>
+                        ) : (
+                            <input
+                                id="profile-full-name"
+                                type="text"
+                                value={newFullName}
+                                onChange={(e) => setNewFullName(e.target.value)}
+                                className={`w-full p-3 ${colors.text} outline-none transition-all ${classes.input}`}
+                                placeholder="Ex: Leticia Luiza"
+                                required
+                            />
+                        )}
                     </div>
 
                     <div className={`p-4 border rounded ${colors.card} ${colors.border}`}>

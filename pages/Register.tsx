@@ -22,6 +22,7 @@ export const Register: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const typeFromUrl = searchParams.get('type');
   const validType: UserType = typeFromUrl === 'beauty' ? 'beauty' : 'barber';
   const [userType, setUserType] = useState<UserType>(validType);
@@ -30,11 +31,16 @@ export const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [nameLocked, setNameLocked] = useState(false);
 
   const companyIdFromUrl = searchParams.get('company');
+  const memberIdFromUrl = searchParams.get('member');
   const isInvitedStaff = !!companyIdFromUrl;
   const { isBeauty, colors, accent, font, radius, classes } = useBrutalTheme({ override: userType as ThemeVariant });
   const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
+  const [memberRole, setMemberRole] = useState<string>('');
 
   useEffect(() => {
     const typeFromUrl = searchParams.get('type') as UserType;
@@ -50,23 +56,86 @@ export const Register: React.FC = () => {
 
   useEffect(() => {
     if (!companyIdFromUrl) return;
-    supabase
-      .rpc('get_company_for_invite', { p_company_id: companyIdFromUrl })
-      .then(({ data }) => {
+
+    let cancelled = false;
+    setInviteLoading(true);
+    setInviteError(null);
+
+    const loadInvite = async () => {
+      if (memberIdFromUrl) {
+        const { data, error: rpcError } = await supabase.rpc('get_team_member_for_invite', {
+          p_company_id: companyIdFromUrl,
+          p_member_id: memberIdFromUrl,
+        });
+        if (cancelled) return;
+
+        if (rpcError) {
+          console.error('get_team_member_for_invite', rpcError);
+          setInviteError(rpcError.message || 'Não foi possível validar o convite.');
+          setInviteLoading(false);
+          return;
+        }
+
         const row = Array.isArray(data) ? data[0] : data;
-        if (row?.user_type === 'barber' || row?.user_type === 'beauty') {
+        if (!row) {
+          setInviteError('Convite inválido ou profissional não encontrado.');
+          setInviteLoading(false);
+          return;
+        }
+        if (row.staff_user_id) {
+          setInviteError('Este convite já foi utilizado.');
+          setInviteLoading(false);
+          return;
+        }
+
+        setFullName(String(row.name || ''));
+        setNameLocked(true);
+        setMemberRole(String(row.role || ''));
+        if (row.user_type === 'barber' || row.user_type === 'beauty') {
           setUserType(row.user_type as UserType);
         }
-        if (row?.business_name) {
-          setOwnerBusinessName(row.business_name);
-        }
-      });
-  }, [companyIdFromUrl]);
+        if (row.business_name) setOwnerBusinessName(row.business_name);
+        setInviteLoading(false);
+        return;
+      }
+
+      // Convites novos exigem member_id (nome definido pelo gestor).
+      // Links antigos sem member ainda abrem a empresa, mas pedem um convite atualizado.
+      const { data } = await supabase.rpc('get_company_for_invite', { p_company_id: companyIdFromUrl });
+      if (cancelled) return;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row?.user_type === 'barber' || row?.user_type === 'beauty') {
+        setUserType(row.user_type as UserType);
+      }
+      if (row?.business_name) setOwnerBusinessName(row.business_name);
+      setInviteError(
+        'Este link está incompleto. Peça ao gestor o convite gerado ao cadastrar seu perfil na equipe.'
+      );
+      setInviteLoading(false);
+    };
+
+    void loadInvite();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyIdFromUrl, memberIdFromUrl]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (isInvitedStaff && nameLocked && !fullName.trim()) {
+      setError('Nome do profissional não encontrado no convite.');
+      setLoading(false);
+      return;
+    }
+
+    if (isInvitedStaff && !birthDate) {
+      setError('Informe sua data de nascimento.');
+      setLoading(false);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('As senhas não coincidem');
@@ -85,11 +154,13 @@ export const Register: React.FC = () => {
       email,
       password,
       fullName,
-      businessName,
+      businessName: isInvitedStaff ? (ownerBusinessName || '') : businessName,
       userType,
       region,
-      phone,
-      companyId: companyIdFromUrl || undefined
+      phone: isInvitedStaff ? '' : phone,
+      companyId: companyIdFromUrl || undefined,
+      teamMemberId: memberIdFromUrl || undefined,
+      birthDate: isInvitedStaff ? birthDate : undefined,
     });
 
     if (error) {
@@ -135,28 +206,80 @@ export const Register: React.FC = () => {
               <div>
                 <AgendiXLogo size={28} isBeauty={isBeauty} showText={true} />
                 <h1 className="font-heading text-2xl uppercase text-[var(--color-text)] tracking-tight mt-5">
-                  Você foi convidado
+                  Bem-vindo à equipe
                 </h1>
                 <p className={`text-xs font-mono uppercase tracking-[0.1em] mt-1.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
-                  {ownerBusinessName ? `Junte-se à equipe · ${ownerBusinessName}` : 'Crie sua conta para acessar a equipe'}
+                  {ownerBusinessName
+                    ? `Finalize seu acesso · ${ownerBusinessName}`
+                    : 'Finalize seu acesso para entrar na equipe'}
                 </p>
               </div>
 
-              {error && (
+              {(error || inviteError) && (
                 <div role="alert" className="p-3.5 text-xs rounded-xl bg-[var(--color-danger)]/8 border border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono">
-                  {error}
+                  {error || inviteError}
                 </div>
               )}
 
+              {inviteLoading ? (
+                <p className="text-sm text-[var(--color-text-muted)] font-mono">Validando convite…</p>
+              ) : inviteError ? (
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Peça ao gestor um novo link de convite pela tela de Equipe.
+                </p>
+              ) : (
               <form onSubmit={handleRegister} className="space-y-4">
-                <Input id="staff-name" type="text" label="Nome completo" required value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="João Silva" forceTheme={userType} />
+                {/* Nome definido pelo gestor — nunca editável no convite com member_id */}
+                {nameLocked ? (
+                  <div data-testid="staff-name-locked">
+                    <p className={`${classes.label} block mb-1.5`}>Nome</p>
+                    <div
+                      id="staff-name"
+                      className={`w-full min-h-[44px] px-4 py-3 rounded-xl border ${colors.inputBorder} bg-[var(--color-card-hover)] ${colors.text} text-sm font-medium select-none pointer-events-none`}
+                      aria-readonly="true"
+                    >
+                      {fullName}
+                    </div>
+                    <p className={`mt-1.5 text-xs ${colors.textMuted}`}>
+                      Definido pelo gestor{memberRole ? ` · ${memberRole}` : ''} — não é possível alterar
+                    </p>
+                    <input type="hidden" name="fullName" value={fullName} />
+                  </div>
+                ) : (
+                  <Input
+                    id="staff-name"
+                    type="text"
+                    label="Nome"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Como o gestor cadastrou"
+                    forceTheme={userType}
+                    hint="Use o nome exatamente como o gestor cadastrou na equipe"
+                  />
+                )}
 
-                <div>
-                  <label htmlFor="staff-phone" className={`${classes.label} block mb-1.5`}>WhatsApp</label>
-                  <PhoneInput value={phone} onChange={setPhone} forceTheme={userType} />
-                </div>
+                <Input
+                  id="staff-email"
+                  type="email"
+                  label="E-mail (Gmail)"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seuemail@gmail.com"
+                  forceTheme={userType}
+                  hint="E-mail que você usará para entrar"
+                />
 
-                <Input id="staff-email" type="email" label="E-mail" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@email.com" forceTheme={userType} />
+                <Input
+                  id="staff-birthdate"
+                  type="date"
+                  label="Data de nascimento"
+                  required
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  forceTheme={userType}
+                />
 
                 <Input
                     id="staff-password"
@@ -204,6 +327,7 @@ export const Register: React.FC = () => {
                   </Link>
                 </p>
               </form>
+              )}
             </div>
           </div>
 

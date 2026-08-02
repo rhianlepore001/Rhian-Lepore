@@ -49,6 +49,14 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Convite de colaborador — domínio do gestor (2 Ago 2026):**
+  - Removido card genérico "Convide sua Equipe" de `/configuracoes/equipe`.
+  - Após criar profissional (não-dono), modal **Convite pronto** com link `?company=&member=`.
+  - Cadastro staff: nome travado (não é input); e-mail/Gmail + nascimento + senha.
+  - **Meu Perfil:** staff também não edita nome (só foto) — domínio do gestor.
+  - Copy do convite (modal + WhatsApp) humanizada.
+  - Migration `20260802000007` (`birth_date` + RPC `get_team_member_for_invite`) aplicada no remoto.
+  - Branch/PR: `cursor/staff-invite-after-create-da7a` · PR #13.
 - **Meus Insights (colaborador) — polish UX + histórico (2 Ago 2026):**
   - `/meus-insights` redesenhado: KPIs (atendimentos, clientes, comissões, produtos), todos os serviços do período, produtos vendidos (agregado + últimas vendas), próximos de hoje.
   - Navegação de meses anteriores via `MonthYearSelector` + chips Hoje/Semana/Mês.

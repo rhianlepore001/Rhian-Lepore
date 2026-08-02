@@ -160,9 +160,7 @@ export const StaffInsights: React.FC = () => {
               <p className={`text-2xl md:text-3xl font-heading ${accent.text} font-bold tabular-nums`}>
                 {loading ? '—' : data.summary.appointmentsCount}
               </p>
-              <p className={`text-xs ${colors.textMuted} mt-1`}>
-                ticket {formatCurrency(data.summary.avgTicket, currencyRegion)}
-              </p>
+              <p className={`text-xs ${colors.textMuted} mt-1`}>concluídos no período</p>
             </Card>
 
             <Card className="p-3.5 md:p-4">
@@ -182,7 +180,7 @@ export const StaffInsights: React.FC = () => {
               <p className={`text-xl md:text-2xl font-heading ${accent.text} font-bold tabular-nums`}>
                 {loading ? '—' : formatCurrency(data.summary.commissionsTotal, currencyRegion)}
               </p>
-              <p className={`text-xs ${colors.textMuted} mt-1`}>{periodLabel}</p>
+              <p className={`text-xs ${colors.textMuted} mt-1`}>só a sua comissão</p>
             </Card>
 
             <Card className="p-3.5 md:p-4">
@@ -193,9 +191,7 @@ export const StaffInsights: React.FC = () => {
                 {loading ? '—' : data.summary.productsUnits}
                 <span className={`text-sm font-sans font-normal ${colors.textMuted} ml-1`}>un.</span>
               </p>
-              <p className={`text-xs ${colors.textMuted} mt-1`}>
-                {formatCurrency(data.summary.productsRevenue, currencyRegion)}
-              </p>
+              <p className={`text-xs ${colors.textMuted} mt-1`}>vendidas no período</p>
             </Card>
           </div>
 
@@ -254,7 +250,7 @@ export const StaffInsights: React.FC = () => {
                             <div className="min-w-0">
                               <p className={`${colors.text} font-semibold truncate`}>{item.name}</p>
                               <p className={`text-xs ${colors.textMuted} ${font.mono}`}>
-                                {item.count}× · {formatCurrency(item.revenue, currencyRegion)}
+                                {item.count}×
                               </p>
                             </div>
                           </div>
@@ -284,7 +280,7 @@ export const StaffInsights: React.FC = () => {
                   </div>
                   <div>
                     <h3 className={`text-sm font-heading ${colors.text} uppercase`}>Últimos atendimentos</h3>
-                    <p className={`text-xs ${colors.textMuted}`}>Cliente, serviço e valor</p>
+                    <p className={`text-xs ${colors.textMuted}`}>Cliente, serviço e comissão</p>
                   </div>
                 </div>
 
@@ -308,14 +304,10 @@ export const StaffInsights: React.FC = () => {
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className={`${colors.text} text-sm font-semibold tabular-nums`}>
-                            {formatCurrency(line.price, currencyRegion)}
+                          <p className={`${accent.text} text-sm font-semibold tabular-nums ${font.mono}`}>
+                            {formatCurrency(line.commissionValue, currencyRegion)}
                           </p>
-                          {line.commissionValue > 0 && (
-                            <p className={`${accent.text} ${font.mono} text-xs`}>
-                              +{formatCurrency(line.commissionValue, currencyRegion)}
-                            </p>
-                          )}
+                          <p className={`text-xs ${colors.textMuted}`}>comissão</p>
                         </div>
                       </li>
                     ))}
@@ -373,7 +365,7 @@ export const StaffInsights: React.FC = () => {
                             <div className="min-w-0">
                               <p className={`${colors.text} font-semibold truncate`}>{item.name}</p>
                               <p className={`text-xs ${colors.textMuted} ${font.mono}`}>
-                                {item.count} un. · {formatCurrency(item.revenue, currencyRegion)}
+                                {item.count} un.
                                 {item.stockQuantity !== null ? ` · estoque ${item.stockQuantity}` : ''}
                               </p>
                             </div>
@@ -404,7 +396,7 @@ export const StaffInsights: React.FC = () => {
                   </div>
                   <div>
                     <h3 className={`text-sm font-heading ${colors.text} uppercase`}>Últimas vendas</h3>
-                    <p className={`text-xs ${colors.textMuted}`}>Produto, qtd e valor</p>
+                    <p className={`text-xs ${colors.textMuted}`}>Produto, qtd e comissão</p>
                   </div>
                 </div>
 
@@ -431,14 +423,10 @@ export const StaffInsights: React.FC = () => {
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className={`${colors.text} text-sm font-semibold tabular-nums`}>
-                            {formatCurrency(line.totalRevenue, currencyRegion)}
+                          <p className={`${accent.text} text-sm font-semibold tabular-nums ${font.mono}`}>
+                            {formatCurrency(line.commissionValue, currencyRegion)}
                           </p>
-                          {line.commissionValue > 0 && (
-                            <p className={`${accent.text} ${font.mono} text-xs`}>
-                              +{formatCurrency(line.commissionValue, currencyRegion)}
-                            </p>
-                          )}
+                          <p className={`text-xs ${colors.textMuted}`}>comissão</p>
                         </div>
                       </li>
                     ))}

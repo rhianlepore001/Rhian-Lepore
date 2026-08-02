@@ -13,6 +13,9 @@
 --   - INSERT (adicionar cliente manual — escopo F4)
 --   - DELETE (remover entry — escopo F4)
 --   - Mudar business_id (WITH CHECK protege)
+--
+-- queue_entries.business_id é UUID e team_members.user_id é TEXT: sem os casts
+-- o Postgres aborta com "operator does not exist: uuid = text".
 
 -- 1. Staff pode LER queue_entries do tenant
 DROP POLICY IF EXISTS "Staff can view company queue" ON public.queue_entries;
@@ -21,8 +24,8 @@ CREATE POLICY "Staff can view company queue"
   FOR SELECT
   TO authenticated
   USING (
-    business_id IN (
-      SELECT tm.user_id FROM public.team_members tm
+    business_id::TEXT IN (
+      SELECT tm.user_id::TEXT FROM public.team_members tm
       WHERE tm.staff_user_id = auth.uid()
         AND tm.active = true
     )
@@ -37,15 +40,15 @@ CREATE POLICY "Staff can update company queue"
   FOR UPDATE
   TO authenticated
   USING (
-    business_id IN (
-      SELECT tm.user_id FROM public.team_members tm
+    business_id::TEXT IN (
+      SELECT tm.user_id::TEXT FROM public.team_members tm
       WHERE tm.staff_user_id = auth.uid()
         AND tm.active = true
     )
   )
   WITH CHECK (
-    business_id IN (
-      SELECT tm.user_id FROM public.team_members tm
+    business_id::TEXT IN (
+      SELECT tm.user_id::TEXT FROM public.team_members tm
       WHERE tm.staff_user_id = auth.uid()
         AND tm.active = true
     )

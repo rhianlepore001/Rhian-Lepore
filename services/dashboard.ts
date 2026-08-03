@@ -238,30 +238,8 @@ export async function fetchGoalHistory(
   return history;
 }
 
-export async function fetchTodayAppointmentsForProfessional(
-  ownerId: string,
-  professionalId: string,
-): Promise<DashboardAppointment[]> {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayStartIso = todayStart.toISOString();
-
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
-  const todayEndIso = todayEnd.toISOString();
-
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('*, clients(name)')
-    .eq('user_id', ownerId)
-    .eq('professional_id', professionalId)
-    .gte('appointment_time', todayStartIso)
-    .lte('appointment_time', todayEndIso)
-    .order('appointment_time', { ascending: true });
-
-  if (error) throw error;
-
-  return (data || []).map((apt: any) => ({
+function mapAppointmentRow(apt: any): DashboardAppointment {
+  return {
     id: apt.id,
     clientName: apt.clients?.name || 'Cliente Desconhecido',
     service: apt.service || 'Serviço Padrão',
@@ -272,7 +250,64 @@ export async function fetchTodayAppointmentsForProfessional(
     price: Number(apt.price) || 0,
     appointment_time: apt.appointment_time,
     professional_id: apt.professional_id ?? null,
-  }));
+  };
+}
+
+function todayBoundsIso(): { start: string; end: string } {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+  return { start: todayStart.toISOString(), end: todayEnd.toISOString() };
+}
+
+/** Agenda de hoje da loja (todos os profissionais / status). */
+export async function fetchTodayAppointments(
+  ownerId: string,
+): Promise<DashboardAppointment[]> {
+  const { start, end } = todayBoundsIso();
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*, clients(name)')
+    .eq('user_id', ownerId)
+    .gte('appointment_time', start)
+    .lte('appointment_time', end)
+    .order('appointment_time', { ascending: true });
+
+  if (error) throw error;
+  return (data || []).map(mapAppointmentRow);
+}
+
+export async function fetchTodayAppointmentsForProfessional(
+  ownerId: string,
+  professionalId: string,
+): Promise<DashboardAppointment[]> {
+  const { start, end } = todayBoundsIso();
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*, clients(name)')
+    .eq('user_id', ownerId)
+    .eq('professional_id', professionalId)
+    .gte('appointment_time', start)
+    .lte('appointment_time', end)
+    .order('appointment_time', { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []).map(mapAppointmentRow);
+}
+
+/** Contagem de pessoas aguardando na fila digital (waiting + calling). */
+export async function fetchQueueWaitingCount(businessId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('queue_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', businessId)
+    .in('status', ['waiting', 'calling']);
+
+  if (error) return 0;
+  return count ?? 0;
 }
 
 export async function updateAppointmentStatus(id: string, status: string): Promise<void> {

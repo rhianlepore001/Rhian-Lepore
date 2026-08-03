@@ -1,6 +1,6 @@
 # SPEC: Dashboard Cockpit Fase 1
 
-**Status:** in_progress  
+**Status:** done  
 **Criado:** 2026-08-03  
 **Prioridade:** alta
 
@@ -41,4 +41,4 @@ Dashboard vira cockpit do **agora**, não pilha de cards:
 - [x] Owner e staff têm hierarquia “agora → atenção → agenda”
 - [x] typecheck, lint, build, test verdes (390 testes)
 - [x] Prints desktop + mobile do cockpit
-- [ ] Validação humana no PR #15 (merge)
+- [x] Validação humana no PR #15 (merged → produção)

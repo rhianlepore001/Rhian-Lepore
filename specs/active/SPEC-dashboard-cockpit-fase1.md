@@ -38,6 +38,7 @@ Dashboard vira cockpit do **agora**, não pilha de cards:
 
 ## Done when
 
-- [ ] Owner e staff têm hierarquia “agora → atenção → agenda”
-- [ ] typecheck, lint, build, test verdes
-- [ ] Prints desktop + mobile do cockpit
+- [x] Owner e staff têm hierarquia “agora → atenção → agenda”
+- [x] typecheck, lint, build, test verdes (390 testes)
+- [x] Prints desktop + mobile do cockpit
+- [ ] Validação humana no PR #15 (merge)

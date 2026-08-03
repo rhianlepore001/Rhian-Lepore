@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Dashboard Cockpit Fase 1 (3 Ago 2026):**
+  - Início reestruturado: próximo atendimento → KPIs do dia → agenda + inbox/oportunidades.
+  - Dual persona: owner vê receita/fila/saúde; staff vê turno/comissões (sem receita da loja).
+  - Preview `/#/dashboard-cockpit-demo` + prints desktop/mobile.
+  - Branch/PR: `cursor/dashboard-cockpit-fase1-a6a7` · PR #15.
 - **Agenda staff — filtro Todos (2 Ago 2026):**
   - Colaborador entra na Agenda com **Todos** (igual gestor); pode filtrar só o próprio.
   - Branch: `cursor/staff-agenda-all-professionals-da7a`.

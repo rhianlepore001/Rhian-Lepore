@@ -51,6 +51,7 @@ const PlaywrightBugReporterDemo = React.lazy(() => import('./pages/PlaywrightBug
 const DesignReviewDemo = React.lazy(() => import('./pages/DesignReviewDemo').then(module => ({ default: module.DesignReviewDemo })));
 const JoinClub = React.lazy(() => import('./pages/JoinClub').then(module => ({ default: module.JoinClub })));
 const ClubDemo = React.lazy(() => import('./pages/ClubDemo').then(module => ({ default: module.ClubDemo })));
+const DashboardCockpitDemo = React.lazy(() => import('./pages/DashboardCockpitDemo').then(module => ({ default: module.DashboardCockpitDemo })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
 const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
@@ -177,6 +178,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/playwright-bug-reporter-demo" element={<DevRouteGuard><PlaywrightBugReporterDemo /></DevRouteGuard>} />
         <Route path="/design-review-demo" element={<DevRouteGuard><DesignReviewDemo /></DevRouteGuard>} />
         <Route path="/club-demo" element={<ClubDemo />} />
+        <Route path="/dashboard-cockpit-demo" element={<DashboardCockpitDemo />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />

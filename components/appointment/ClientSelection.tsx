@@ -29,22 +29,24 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
     currencyRegion,
     cardBg
 }) => {
-    const { user } = useAuth();
+    const { user, companyId } = useAuth();
+    const tenantId = companyId ?? user?.id;
     const [isCreatingClient, setIsCreatingClient] = useState(false);
     const [newClientName, setNewClientName] = useState('');
     const [newClientPhone, setNewClientPhone] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleCreateClient = async () => {
-        if (!newClientName || !newClientPhone) return;
+        if (!newClientName || !newClientPhone || !tenantId) return;
         setLoading(true);
         try {
             const { data, error } = await supabase
                 .from('clients')
                 .insert({
-                    user_id: user?.id,
+                    user_id: tenantId,
                     name: newClientName,
-                    phone: newClientPhone
+                    phone: newClientPhone,
+                    source: 'manual',
                 })
                 .select()
                 .single();
@@ -54,6 +56,8 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                 onRefreshClients();
                 onClientCreated(data.id);
                 setIsCreatingClient(false);
+                setNewClientName('');
+                setNewClientPhone('');
             }
         } catch (error) {
             logger.error('Erro ao criar cliente:', error);

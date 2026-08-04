@@ -206,8 +206,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/fila" element={<QueueManagement />} />
-          <Route path="/clientes" element={<Clients />} />
-          <Route path="/clientes/:id" element={<ClientCRM />} />
+          <Route path="/clientes" element={<OwnerRouteGuard><Clients /></OwnerRouteGuard>} />
+          <Route path="/clientes/:id" element={<OwnerRouteGuard><ClientCRM /></OwnerRouteGuard>} />
           <Route path="/produtos" element={<Products />} />
           <Route path="/financeiro" element={<Finance />} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />

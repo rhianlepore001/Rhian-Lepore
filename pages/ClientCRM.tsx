@@ -521,10 +521,10 @@ export const ClientCRM: React.FC = () => {
 
       <ConfirmModal
         open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={confirmDeleteClient}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={() => void confirmDeleteClient()}
         title="Desativar cliente?"
-        description="O histórico fica preservado. O cliente some da lista ativa."
+        message="O histórico fica preservado. O cliente some da lista ativa."
         confirmLabel="Desativar"
         variant="danger"
         loading={deleting}

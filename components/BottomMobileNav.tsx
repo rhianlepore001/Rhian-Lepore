@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, Users, DollarSign, Plus, Menu, TrendingUp } from 'lucide-react'; // Icons
+import { Calendar, Clock, Users, DollarSign, Plus, Menu, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { QuickActionsModal } from './QuickActionsModal';
 import { MoreOptionsDrawer } from './MoreOptionsDrawer';
@@ -10,7 +10,7 @@ export const BottomMobileNav: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { role } = useAuth();
-    const { accent, colors, font } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
     const isStaff = role === 'staff';
 
     const [showQuickActions, setShowQuickActions] = useState(false);
@@ -23,6 +23,9 @@ export const BottomMobileNav: React.FC = () => {
     const navItemBase =
         'flex flex-col items-center justify-center w-full min-h-[44px] space-y-1 transition-all active:animate-haptic-click';
 
+    const secondaryPath = isStaff ? '/fila' : '/clientes';
+    const secondaryActive = isActive(secondaryPath);
+
     return (
         <>
             <nav
@@ -30,8 +33,8 @@ export const BottomMobileNav: React.FC = () => {
                 className={`md:hidden fixed bottom-6 left-6 right-6 z-40 flex items-center justify-between px-3 pb-[env(safe-area-inset-bottom)] pt-3 h-[76px] transition-all duration-300 rounded-[28px] border ${colors.divider} shadow-promax-glass backdrop-blur-2xl
                 bg-[color-mix(in_srgb,var(--color-bg)_40%,transparent)]`}
             >
-                {/* IA mobile deliberada (C4-010): 1º nível = Agenda, Clientes, FAB, Financeiro|Insights, Mais.
-                    Dashboard/Fila/Produtos ficam em Mais — alinhado ao espaço do polegar, não omitido por acidente. */}
+                {/* Owner: Agenda, Clientes, FAB, Financeiro, Mais.
+                    Staff: Agenda, Fila, FAB, Insights, Mais — CRM é domínio do gestor. */}
                 {/* 1. Agenda */}
                 <button
                     type="button"
@@ -46,18 +49,22 @@ export const BottomMobileNav: React.FC = () => {
                     <span className="text-xs font-bold tracking-tight">Agenda</span>
                 </button>
 
-                {/* 2. Clientes */}
+                {/* 2. Clientes (dono) / Fila (colaborador) */}
                 <button
                     type="button"
-                    onClick={() => navigate('/clientes')}
-                    aria-label="Clientes"
-                    aria-current={isActive('/clientes') ? 'page' : undefined}
-                    className={`${navItemBase} h-full ${isActive('/clientes') ? accent.text : colors.textSecondary}`}
+                    onClick={() => navigate(secondaryPath)}
+                    aria-label={isStaff ? 'Fila' : 'Clientes'}
+                    aria-current={secondaryActive ? 'page' : undefined}
+                    className={`${navItemBase} h-full ${secondaryActive ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${isActive('/clientes') ? 'bg-[var(--color-card-hover)]' : ''}`}>
-                        <Users className="w-6 h-6" strokeWidth={isActive('/clientes') ? 2.5 : 2} aria-hidden="true" />
+                    <div className={`p-2 rounded-xl transition-all ${secondaryActive ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                        {isStaff ? (
+                            <Clock className="w-6 h-6" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
+                        ) : (
+                            <Users className="w-6 h-6" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
+                        )}
                     </div>
-                    <span className="text-xs font-bold tracking-tight">Clientes</span>
+                    <span className="text-xs font-bold tracking-tight">{isStaff ? 'Fila' : 'Clientes'}</span>
                 </button>
 
                 {/* 3. CENTER PLUS BUTTON */}

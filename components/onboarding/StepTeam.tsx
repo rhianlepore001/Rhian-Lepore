@@ -58,11 +58,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                                     setIsModalOpen(true);
                                 }}
                                 id="wizard-add-team"
-                                className={`w-full py-3 px-4 font-bold rounded-lg transition-all flex items-center justify-center gap-2
-                                    ${accentColor === 'beauty-neon'
-                                        ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90 shadow-[0_0_15px_rgba(167,139,250,0.3)]'
-                                        : 'bg-accent-gold text-black hover:bg-accent-gold/90 shadow-[0_4px_0_0_#8a6d2a]'}
-                                `}
+                                className="w-full py-3 px-4 font-bold rounded-lg transition-all flex items-center justify-center gap-2 bg-theme-accent text-[var(--color-on-accent)] hover:brightness-110 shadow-[var(--shadow-btn-primary)]"
                             >
                                 Sou eu quem atende (Dono + Profissional)
                             </button>
@@ -98,7 +94,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                         <button
                             onClick={() => setIsModalOpen(true)}
                             id="wizard-add-team"
-                            className={accentColor === 'beauty-neon' ? 'w-full py-3 border border-beauty-neon text-beauty-neon font-bold rounded-lg hover:bg-beauty-neon/10 transition-colors flex items-center justify-center gap-2' : 'w-full py-3 border border-accent-gold text-accent-gold font-bold rounded-lg hover:bg-accent-gold/10 transition-colors flex items-center justify-center gap-2'}
+                            className="w-full py-3 border border-[var(--color-accent-border)] text-theme-accent font-bold rounded-lg hover:bg-[var(--color-accent-dim)] transition-colors flex items-center justify-center gap-2"
                         >
                             <Plus className="w-4 h-4" />
                             Adicionar Outro
@@ -117,7 +113,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                 <button
                     onClick={handleContinue}
                     disabled={members.length === 0}
-                    className={`flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${accentColor === 'beauty-neon' ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90' : 'bg-accent-gold text-black hover:bg-accent-gold/90'}`}
+                    className="flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-theme-accent text-[var(--color-on-accent)] hover:brightness-110"
                 >
                     Continuar
                 </button>

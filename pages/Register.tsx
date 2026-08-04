@@ -194,7 +194,7 @@ export const Register: React.FC = () => {
   // ─── STAFF CONVIDADO ──────────────────────────────────────────────────────
   if (isInvitedStaff) {
     return (
-      <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}`}>
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-theme-bg">
         <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] ${isBeauty ? 'bg-beauty-neon/[0.04]' : 'bg-accent-gold/[0.04]'} rounded-full blur-[120px] pointer-events-none`} />
 
         <div className="w-full max-w-md relative z-10">
@@ -341,7 +341,7 @@ export const Register: React.FC = () => {
   const subtitle = isBeauty ? 'Seu salão configurado em menos de 2 minutos' : 'Sua barbearia pronta em menos de 2 minutos';
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}`}>
+    <div className="min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden bg-theme-bg">
       {isBeauty
         ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/[0.05] rounded-full blur-[120px] pointer-events-none" />
         : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-gold/[0.04] rounded-full blur-[120px] pointer-events-none" />

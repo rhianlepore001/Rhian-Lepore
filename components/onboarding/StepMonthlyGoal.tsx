@@ -10,13 +10,12 @@ interface StepMonthlyGoalProps {
     accentColor: string;
 }
 
-export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack, onSkip, accentColor }) => {
+export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack, onSkip }) => {
     const { user, region } = useAuth();
     const [goal, setGoal] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
     const currencySymbol = region === 'PT' ? '€' : 'R$';
-    const isBeauty = accentColor === 'beauty-neon';
 
     const suggestedGoals = region === 'PT'
         ? [2000, 5000, 10000]
@@ -52,8 +51,8 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
     return (
         <div className="space-y-6">
             <div className="text-center mb-2">
-                <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${isBeauty ? 'bg-beauty-neon/20' : 'bg-accent-gold/20'}`}>
-                    <Target className={`w-8 h-8 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--color-accent-dim)]">
+                    <Target className="w-8 h-8 text-theme-accent" />
                 </div>
                 <p className="text-[var(--color-text-muted)] text-sm">
                     Com uma meta definida, você acompanha seu progresso no dashboard e recebe alertas quando está perto de bater.
@@ -74,8 +73,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                         onChange={e => setGoal(e.target.value)}
                         placeholder="0,00"
                         id="wizard-monthly-goal"
-                        className={`w-full p-4 pl-14 bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none text-2xl font-bold font-mono transition-all
-                            ${isBeauty ? 'rounded-xl focus:border-beauty-neon focus:shadow-[0_0_10px_rgba(167,139,250,0.2)]' : 'rounded-lg focus:border-accent-gold'}`}
+                        className="w-full p-4 pl-14 bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none text-2xl font-bold font-mono transition-all rounded-xl focus:border-theme-accent"
                         autoFocus
                     />
                 </div>
@@ -90,9 +88,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                             onClick={() => setGoal(val.toString())}
                             className={`flex-1 py-2 rounded-lg border text-sm font-mono transition-all
                                 ${goal === val.toString()
-                                    ? isBeauty
-                                        ? 'border-beauty-neon bg-beauty-neon/10 text-beauty-neon'
-                                        : 'border-accent-gold bg-accent-gold/10 text-accent-gold'
+                                    ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)] text-theme-accent'
                                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)]'
                                 }`}
                         >
@@ -112,8 +108,7 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
                 <button
                     onClick={handleSubmit}
                     disabled={submitting || !goal}
-                    className={`flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed
-                        ${isBeauty ? 'bg-beauty-neon text-black hover:bg-beauty-neon/90' : 'bg-accent-gold text-black hover:bg-accent-gold/90'}`}
+                    className="flex-1 py-4 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed bg-theme-accent text-[var(--color-on-accent)] hover:brightness-110"
                 >
                     {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Definir Meta'}
                 </button>

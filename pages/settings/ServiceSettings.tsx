@@ -17,7 +17,7 @@ import type { ServiceItem } from '@/types/serviceSettings';
 export const ServiceSettings: React.FC = () => {
     const { companyId, user, region } = useAuth();
     const effectiveCompanyId = companyId ?? user?.id ?? null;
-    const { accent, colors, classes, isBeauty } = useBrutalTheme();
+    const { accent, colors, classes } = useBrutalTheme();
     const { categories, services, loading, refetch } = useServiceSettings(effectiveCompanyId);
     const createCategory = useCreateServiceCategory();
     const deleteCategory = useDeleteServiceCategory();
@@ -198,16 +198,13 @@ export const ServiceSettings: React.FC = () => {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setIsCategoryModalOpen(false)}
-                                className={`px-4 py-2 rounded-lg transition-all ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon hover:bg-beauty-neon/10' : 'text-theme-textSecondary hover:text-[var(--color-text)] hover:bg-[var(--color-card-hover)]'}`}
+                                className={`px-4 py-2 rounded-lg transition-all ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)]`}
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleAddCategory}
-                                className={`px-5 py-2.5 font-bold transition-all ${isBeauty
-                                    ? 'bg-gradient-to-r from-beauty-neon to-beauty-acid text-[var(--color-text)] rounded-xl hover:shadow-neon'
-                                    : 'bg-theme-accent text-[var(--color-on-accent)] hover:brightness-110 shadow-[var(--shadow-btn-primary)]'
-                                    }`}
+                                className={`px-5 py-2.5 font-bold transition-all ${classes.buttonPrimary}`}
                             >
                                 Salvar
                             </button>
@@ -219,14 +216,7 @@ export const ServiceSettings: React.FC = () => {
                         value={newCategoryName}
                         onChange={e => setNewCategoryName(e.target.value)}
                         placeholder="Ex: Cabelo, Barba, Tratamentos..."
-                        className={`
-                            w-full p-3 outline-none transition-all duration-300
-                            ${isBeauty
-                                ? 'bg-beauty-dark/50 border border-beauty-neon/20 rounded-xl focus:border-beauty-neon focus:shadow-neon'
-                                : 'bg-theme-surface border-2 border-theme-border focus:border-accent-gold'
-                            }
-                            ${colors.text}
-                        `}
+                        className={classes.input}
                         autoFocus
                     />
                 </Modal>

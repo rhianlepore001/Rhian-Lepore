@@ -56,7 +56,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - Modal create sem Origem; `birth_date` opcional + indicador 7d; migration `20260804000001` aplicada no remoto + RPC `get_client_profile` com birth_date.
   - CRM enxuto: sem IA/rating/membro-desde/predição; histórico compacto + observações.
   - Staff: `OwnerRouteGuard` em `/clientes`; nav mobile Fila no lugar de Clientes; Agenda cria cliente com `companyId`.
+  - Hardening: staff só SELECT+INSERT em `clients` (sem UPDATE/DELETE); `REVOKE EXECUTE` de `get_client_profile` para `anon`.
   - Gates: typecheck, lint, build, 400 testes.
+- **Cores hardcoded + overflow comissões (4 Ago 2026) — MERGED → produção:**
+  - Modais/cards tokenizados (`beauty-dark`/`beauty-neon` → tokens): Comissões, Nova Transação, Ações Rápidas + afins.
+  - Cards de comissão no mobile: layout empilhado, CTA “Editar comissão”, sem overflow.
+  - PR #17 merged em `main` (`de95e46`) → deploy Vercel automático.
 - **Dashboard Cockpit Fase 1 (3 Ago 2026) — MERGED → produção:**
   - Início reestruturado: próximo atendimento → KPIs do dia → agenda + inbox/oportunidades.
   - Dual persona: owner vê receita/fila/saúde; staff vê turno/comissões (sem receita da loja).

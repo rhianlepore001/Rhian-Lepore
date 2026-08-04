@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import {
-    DollarSign, Calendar, Users, Percent, AlertCircle, Loader2, Check, CreditCard
+    DollarSign, Calendar, Users, AlertCircle, Loader2, Check, CreditCard, Pencil
 } from 'lucide-react';
 
 interface TeamMember {
@@ -27,7 +27,7 @@ export const CommissionsSettings: React.FC = () => {
     const { data: rawMembers, isLoading: membersLoading } = useTeamMembers();
     const { data: settingsData } = useBusinessSettings();
     const queryClient = useQueryClient();
-    const { accent, colors, classes, isBeauty } = useBrutalTheme();
+    const { accent, colors, classes } = useBrutalTheme();
 
     const teamMembers: TeamMember[] = (rawMembers ?? []).filter(m => m.active).map(m => ({
         id: m.id,
@@ -289,157 +289,150 @@ export const CommissionsSettings: React.FC = () => {
                                 const displayMember = getMemberDisplay(member.id);
                                 const currentRate = displayMember.commission_rate || 0;
 
+                                const frequencyLabel = displayMember.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal';
+                                const dayLabel = displayMember.commission_payment_frequency === 'weekly'
+                                    ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][displayMember.commission_payment_day || 0]
+                                    : `Dia ${displayMember.commission_payment_day || 5}`;
+
                                 return (
                                     <div
                                         key={member.id}
                                         className={`
                                             transition-all p-4 rounded-xl border
-                                            ${isBeauty
-                                                ? 'bg-beauty-dark/40 border-beauty-neon/20 hover:border-beauty-neon/50'
-                                                : `${colors.inputBg} ${isEditing ? accent.border : colors.border} hover:border-[var(--color-border)]`
-                                            }
+                                            ${colors.inputBg} ${isEditing ? accent.border : colors.border}
+                                            hover:border-[var(--color-accent-border)]
                                         `}
                                     >
-                                        <div className="flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3 flex-1">
-                                                {member.photo_url ? (
-                                                    <img
-                                                        src={member.photo_url}
-                                                        alt={member.name}
-                                                        className={`w-12 h-12 rounded-full object-cover border-2 ${colors.border}`}
-                                                    />
-                                                ) : (
-                                                    <div className={`w-12 h-12 rounded-full ${colors.inputBg} border-2 ${colors.border} flex items-center justify-center`}>
-                                                        <Users className={`w-6 h-6 ${colors.textMuted}`} />
-                                                    </div>
-                                                )}
-
-                                                <div className="flex-1">
-                                                    <h4 className={`${colors.text} font-bold text-lg`}>{member.name}</h4>
-                                                    {!isEditing && (
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <Percent className={`w-4 h-4 ${accent.text}`} />
-                                                            <span className={`font-mono font-bold ${accent.text}`}>
-                                                                {currentRate}% de comissão
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {isEditing ? (
-                                                <div className="flex flex-col gap-4 w-full md:w-auto">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="relative">
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                max="100"
-                                                                step="0.5"
-                                                                value={tempRates[member.id]}
-                                                                onChange={(e) => setTempRates(prev => ({
-                                                                    ...prev,
-                                                                    [member.id]: e.target.value
-                                                                }))}
-                                                                className={`w-24 px-3 py-2 rounded-lg ${colors.text} font-mono text-center outline-none transition-all
-                                                                    ${isBeauty
-                                                                        ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
-                                                                        : `bg-[var(--color-bg)] border-2 ${accent.border}`
-                                                                    }
-                                                                `}
-                                                                autoFocus
-                                                            />
-                                                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${colors.textMuted} font-mono`}>
-                                                                %
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1">
-                                                            <select
-                                                                value={displayMember.commission_payment_frequency || 'monthly'}
-                                                                onChange={(e) => {
-                                                                    const val = e.target.value as 'weekly' | 'monthly';
-                                                                    setEditedMembers(prev => ({
-                                                                        ...prev,
-                                                                        [member.id]: { ...prev[member.id], commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 }
-                                                                    }));
-                                                                }}
-                                                                className={`${colors.inputBg} ${colors.text} text-xs p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
-                                                            >
-                                                                <option value="monthly">Mensal</option>
-                                                                <option value="weekly">Semanal</option>
-                                                            </select>
-                                                            <select
-                                                                value={displayMember.commission_payment_day || 5}
-                                                                onChange={(e) => {
-                                                                    const val = parseInt(e.target.value);
-                                                                    setEditedMembers(prev => ({
-                                                                        ...prev,
-                                                                        [member.id]: { ...prev[member.id], commission_payment_day: val }
-                                                                    }));
-                                                                }}
-                                                                className={`${colors.inputBg} ${colors.text} text-xs p-2 rounded border ${colors.border} outline-none uppercase font-mono`}
-                                                            >
-                                                                {displayMember.commission_payment_frequency === 'weekly' ? (
-                                                                    <>
-                                                                        <option value={1}>Segunda</option>
-                                                                        <option value={2}>Terça</option>
-                                                                        <option value={3}>Quarta</option>
-                                                                        <option value={4}>Quinta</option>
-                                                                        <option value={5}>Sexta</option>
-                                                                        <option value={6}>Sábado</option>
-                                                                        <option value={0}>Domingo</option>
-                                                                    </>
-                                                                ) : (
-                                                                    Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                                                        <option key={day} value={day}>Dia {day}</option>
-                                                                    ))
-                                                                )}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="primary"
-                                                            size="sm"
-                                                            onClick={() => handleSaveCommissionRate(member.id)}
-                                                            disabled={saving}
-                                                            className="flex-1"
-                                                            icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                                        >
-                                                            {saving ? 'Salvando' : 'Salvar'}
-                                                        </Button>
-
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            className="flex-1"
-                                                            onClick={() => handleCancelEdit(member.id)}
-                                                            disabled={saving}
-                                                        >
-                                                            Cancelar
-                                                        </Button>
-                                                    </div>
-                                                </div>
+                                        <div className="flex items-start gap-3 min-w-0">
+                                            {member.photo_url ? (
+                                                <img
+                                                    src={member.photo_url}
+                                                    alt={member.name}
+                                                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 shrink-0 ${colors.border}`}
+                                                />
                                             ) : (
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <div className={`text-xs uppercase font-mono ${colors.textMuted} whitespace-nowrap ${colors.inputBg} px-2 py-1 rounded`}>
-                                                        {displayMember.commission_payment_frequency === 'weekly' ? 'Semanal' : 'Mensal'} •
-                                                        {displayMember.commission_payment_frequency === 'weekly'
-                                                            ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][displayMember.commission_payment_day || 0]
-                                                            : ` Dia ${displayMember.commission_payment_day || 5}`
-                                                        }
+                                                <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full shrink-0 ${colors.surface} border-2 ${colors.border} flex items-center justify-center`}>
+                                                    <Users className={`w-5 h-5 ${colors.textMuted}`} />
+                                                </div>
+                                            )}
+
+                                            <div className="flex-1 min-w-0 space-y-1 pr-1">
+                                                <h4 className={`${colors.text} font-bold text-base sm:text-lg leading-tight truncate`}>
+                                                    {member.name}
+                                                </h4>
+
+                                                {!isEditing && (
+                                                    <>
+                                                        <p className={`font-mono font-bold text-sm ${accent.text}`}>
+                                                            {currentRate}% de comissão
+                                                        </p>
+                                                        <p className={`text-xs uppercase font-mono ${colors.textMuted}`}>
+                                                            {frequencyLabel} · {dayLabel}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {isEditing ? (
+                                            <div className="mt-4 space-y-3">
+                                                <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
+                                                    <div className="relative col-span-2 sm:col-span-1 sm:w-28">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            step="0.5"
+                                                            value={tempRates[member.id]}
+                                                            onChange={(e) => setTempRates(prev => ({
+                                                                ...prev,
+                                                                [member.id]: e.target.value
+                                                            }))}
+                                                            className={`w-full px-3 py-2.5 rounded-lg ${colors.text} font-mono text-center outline-none transition-all bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:border-theme-accent`}
+                                                            autoFocus
+                                                        />
+                                                        <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${colors.textMuted} font-mono pointer-events-none`}>
+                                                            %
+                                                        </span>
                                                     </div>
+
+                                                    <select
+                                                        value={displayMember.commission_payment_frequency || 'monthly'}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value as 'weekly' | 'monthly';
+                                                            setEditedMembers(prev => ({
+                                                                ...prev,
+                                                                [member.id]: { ...prev[member.id], commission_payment_frequency: val, commission_payment_day: val === 'weekly' ? 1 : 5 }
+                                                            }));
+                                                        }}
+                                                        className={`w-full min-w-0 ${colors.inputBg} ${colors.text} text-xs p-2.5 rounded border ${colors.border} outline-none uppercase font-mono`}
+                                                    >
+                                                        <option value="monthly">Mensal</option>
+                                                        <option value="weekly">Semanal</option>
+                                                    </select>
+                                                    <select
+                                                        value={displayMember.commission_payment_day || 5}
+                                                        onChange={(e) => {
+                                                            const val = parseInt(e.target.value);
+                                                            setEditedMembers(prev => ({
+                                                                ...prev,
+                                                                [member.id]: { ...prev[member.id], commission_payment_day: val }
+                                                            }));
+                                                        }}
+                                                        className={`w-full min-w-0 ${colors.inputBg} ${colors.text} text-xs p-2.5 rounded border ${colors.border} outline-none uppercase font-mono`}
+                                                    >
+                                                        {displayMember.commission_payment_frequency === 'weekly' ? (
+                                                            <>
+                                                                <option value={1}>Segunda</option>
+                                                                <option value={2}>Terça</option>
+                                                                <option value={3}>Quarta</option>
+                                                                <option value={4}>Quinta</option>
+                                                                <option value={5}>Sexta</option>
+                                                                <option value={6}>Sábado</option>
+                                                                <option value={0}>Domingo</option>
+                                                            </>
+                                                        ) : (
+                                                            Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                                                <option key={day} value={day}>Dia {day}</option>
+                                                            ))
+                                                        )}
+                                                    </select>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="primary"
+                                                        size="sm"
+                                                        onClick={() => handleSaveCommissionRate(member.id)}
+                                                        disabled={saving}
+                                                        className="flex-1 min-w-0"
+                                                        icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                                    >
+                                                        {saving ? 'Salvando' : 'Salvar'}
+                                                    </Button>
+
                                                     <Button
                                                         variant="secondary"
                                                         size="sm"
-                                                        onClick={() => setEditingMember(member.id)}
+                                                        className="flex-1 min-w-0"
+                                                        onClick={() => handleCancelEdit(member.id)}
+                                                        disabled={saving}
                                                     >
-                                                        Editar Perfil @ Comissões
+                                                        Cancelar
                                                     </Button>
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                fullWidth
+                                                className="mt-4"
+                                                icon={<Pencil className="w-3.5 h-3.5" />}
+                                                onClick={() => setEditingMember(member.id)}
+                                            >
+                                                Editar comissão
+                                            </Button>
+                                        )}
                                     </div>
                                 );
                             })}

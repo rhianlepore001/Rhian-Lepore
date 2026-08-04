@@ -538,7 +538,7 @@ const { id } = useParams<{ id: string }>();
                   <Sparkles className="w-5 h-5 animate-pulse" />
                   <h3 className="font-heading text-lg uppercase tracking-wider">Cliente Inativo</h3>
                 </div>
-                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)]'} px-2 py-1 text-xs font-bold border uppercase tracking-widest`}>Sugestão de IA</span>
+                <span className="bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)] px-2 py-1 text-xs font-bold border uppercase tracking-widest">Sugestão de IA</span>
               </div>
 
               <div className="space-y-4">

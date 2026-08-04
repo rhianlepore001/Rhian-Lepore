@@ -147,7 +147,7 @@ export const SubscriptionSettings: React.FC = () => {
                             className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-[var(--color-accent)]' : ''}`}
                         >
                             {plan.recommended && (
-                                <div className={`absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter ${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'}`}>
+                                <div className="absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter bg-theme-accent text-[var(--color-on-accent)]">
                                     Recomendado
                                 </div>
                             )}
@@ -170,7 +170,7 @@ export const SubscriptionSettings: React.FC = () => {
                             <div className="space-y-4 mb-8 flex-1">
                                 {plan.features.map((feature, idx) => (
                                     <div key={idx} className="flex items-start gap-3">
-                                        <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                        <Check className="w-5 h-5 flex-shrink-0 mt-0.5 text-theme-accent" />
                                         <span className={`${colors.textSecondary} text-sm`}>{feature}</span>
                                     </div>
                                 ))}

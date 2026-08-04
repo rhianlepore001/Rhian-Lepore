@@ -128,7 +128,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
         { role: 'assistant', content: `Olá! Sou seu assistente pessoal. Como posso ajudar com ${context}?` }
     ]);
     const [input, setInput] = useState('');
-    const { accent, isBeauty } = useBrutalTheme();
+    const { accent } = useBrutalTheme();
 
     const handleSend = () => {
         if (!input.trim()) return;
@@ -163,7 +163,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                         {/* Header */}
                         <div className="p-4 border-b border-[var(--color-border)] flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                                <Bot className={`w-5 h-5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
+                                <Bot className="w-5 h-5 text-theme-accent" />
                                 <h3 className="font-bold text-[var(--color-text)]">Assistente BarberOS</h3>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-[var(--color-text)]" aria-label="Fechar assistente" title="Fechar">
@@ -176,7 +176,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                             {messages.map((msg, i) => (
                                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] p-3 rounded-lg text-sm ${msg.role === 'user'
-                                        ? `${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'} font-bold`
+                                        ? 'bg-theme-accent text-[var(--color-on-accent)] font-bold'
                                         : 'bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)]'
                                         }`}>
                                         {msg.content}
@@ -197,7 +197,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
                             />
                             <button
                                 onClick={handleSend}
-                                className={`p-2 rounded-lg ${isBeauty ? 'bg-beauty-neon text-[var(--color-bg)]' : 'bg-accent-gold text-[var(--color-bg)]'} hover:opacity-90 transition-opacity`}
+                                className="p-2 rounded-lg bg-theme-accent text-[var(--color-on-accent)] hover:opacity-90 transition-opacity"
                             >
                                 <Send className="w-4 h-4" />
                             </button>

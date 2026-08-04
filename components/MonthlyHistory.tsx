@@ -20,8 +20,6 @@ interface MonthlyHistoryProps {
 export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
     data,
     currencySymbol,
-    accentColor = 'accent-gold',
-    isBeauty = false
 }) => {
     if (data.length === 0) {
         return (
@@ -56,15 +54,15 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                     </p>
                 </div>
 
-                <div className={`${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}/10 border ${isBeauty ? 'border-beauty-neon' : 'border-accent-gold'}/30 rounded-lg p-4`}>
+                <div className="bg-[var(--color-accent-dim)] border border-[var(--color-accent-border)] rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className={`w-5 h-5 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'}`} />
-                        <p className={`text-xs font-mono ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} uppercase`}>Crescimento Médio</p>
+                        <TrendingUp className="w-5 h-5 text-theme-accent" />
+                        <p className="text-xs font-mono text-theme-accent uppercase">Crescimento Médio</p>
                     </div>
                     <p className="text-lg font-heading text-[var(--color-text)]">
                         {avgGrowth > 0 ? '+' : ''}{avgGrowth.toFixed(1)}%
                     </p>
-                    <p className={`text-sm ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} font-mono`}>
+                    <p className="text-sm text-theme-accent font-mono">
                         por mês
                     </p>
                 </div>
@@ -117,7 +115,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                                     <td className="p-3 text-right font-mono text-[var(--color-danger)]">
                                         {currencySymbol} {month.expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </td>
-                                    <td className={`p-3 text-right font-mono font-bold ${month.profit >= 0 ? (isBeauty ? 'text-beauty-neon' : 'text-accent-gold') : 'text-[var(--color-danger)]'}`}>
+                                    <td className={`p-3 text-right font-mono font-bold ${month.profit >= 0 ? 'text-theme-accent' : 'text-[var(--color-danger)]'}`}>
                                         {currencySymbol} {month.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </td>
                                     <td className="p-3 text-right">

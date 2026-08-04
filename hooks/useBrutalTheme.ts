@@ -306,7 +306,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       buttonSuccess: `bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
       buttonOutline: `bg-transparent border border-[var(--color-accent-border)] text-theme-accent hover:bg-[var(--color-accent-dim)] ${radius.button} transition-all duration-150 ease-out`,
 
-      input: `w-full px-4 py-3 ${radius.input} text-sm text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:bg-black/50 transition-all`,
+      input: `w-full px-4 py-3 ${radius.input} text-sm text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:bg-[var(--color-card-hover)] transition-all`,
       inputFocus: `focus:outline-none focus:border-theme-accent focus:ring-0`,
       label: `text-xs font-semibold text-theme-textSecondary ${font.label}`,
       error: `p-3.5 ${radius.input} text-xs bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] font-mono`,

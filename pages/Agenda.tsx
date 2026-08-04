@@ -1325,7 +1325,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
                 <div className="px-4 md:px-6 space-y-4">
-                    <Card variant="outlined" className={`${isBeauty ? 'border-beauty-neon/35' : 'border-accent-gold/35'} ${accent.bgDim}`}>
+                    <Card variant="outlined" className={`border-[var(--color-accent-border)] ${accent.bgDim}`}>
                         <div className="flex items-center gap-3">
                             <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
                             <div>

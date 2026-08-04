@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, lazy, Suspense } from 'react';
-import { Activity, Calendar, CheckCircle2, Sparkles, Target } from 'lucide-react';
+import { Calendar, Sparkles, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,11 +32,6 @@ const GoalSettingsModal = lazy(() =>
     default: m.GoalSettingsModal,
   })),
 );
-const GoalHistoryModal = lazy(() =>
-  import('../components/dashboard/modals/GoalHistoryModal').then((m) => ({
-    default: m.GoalHistoryModal,
-  })),
-);
 
 export const Dashboard: React.FC = () => {
   const { role, user, fullName, companyId } = useAuth();
@@ -49,8 +44,7 @@ export const Dashboard: React.FC = () => {
   const [commissionBannerDismissed, setCommissionBannerDismissed] = useState(false);
   const [unfinishedCount, setUnfinishedCount] = useState(0);
   const [unfinishedBannerDismissed, setUnfinishedBannerDismissed] = useState(false);
-  const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [showGoalHistory, setShowGoalHistory] = useState(false);
+  const [isEditingDailyGoal, setIsEditingDailyGoal] = useState(false);
 
   useEffect(() => {
     const msg = sessionStorage.getItem('ownerRouteToast');
@@ -105,14 +99,10 @@ export const Dashboard: React.FC = () => {
   }, [user, unfinishedBannerDismissed, isStaff, companyId]);
 
   const {
-    currentMonthRevenue,
     loading: statsLoading,
-    monthlyGoal,
     dailyGoal,
-    goalHistory,
-    updateGoal,
+    updateDailyGoal,
     profitMetrics,
-    financialDoctor,
     actionItems,
   } = useDashboardData();
 
@@ -127,45 +117,12 @@ export const Dashboard: React.FC = () => {
   const firstName = fullName?.split(' ')[0] || 'Profissional';
   const todayLabel = formatDateLong(new Date(), currencyRegion);
   const todayRevenue = profitMetrics.todayRevenue ?? 0;
-  const goalProgress =
-    monthlyGoal > 0 ? Math.round((currentMonthRevenue / monthlyGoal) * 100) : 0;
   const weeklyGrowth = Math.round(profitMetrics.weeklyGrowth || 0);
   const dailyGoalProgress =
     dailyGoal != null && dailyGoal > 0
       ? Math.min(100, Math.round((todayRevenue / dailyGoal) * 100))
       : null;
   const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
-  const healthScore = Math.min(
-    100,
-    Math.max(
-      0,
-      Math.round(
-        (financialDoctor.repeatClientRate || 0) +
-          (financialDoctor.avgTicket > 0 ? 25 : 0) +
-          (financialDoctor.topService ? 25 : 0) -
-          Math.min(financialDoctor.churnRiskCount || 0, 25),
-      ),
-    ),
-  );
-  const healthSummary =
-    financialDoctor.avgTicket ||
-    financialDoctor.topService ||
-    financialDoctor.repeatClientRate
-      ? [
-          financialDoctor.avgTicket > 0
-            ? `Ticket médio ${formatCurrency(financialDoctor.avgTicket, currencyRegion)}`
-            : null,
-          financialDoctor.topService
-            ? `Mais pedido: ${financialDoctor.topService}`
-            : null,
-          financialDoctor.repeatClientRate > 0
-            ? `${Math.round(financialDoctor.repeatClientRate)}% dos clientes voltam`
-            : null,
-        ].filter(Boolean)
-      : [
-          'Seus indicadores aparecem após o primeiro mês.',
-          'Continue registrando atendimentos para liberar os insights.',
-        ];
 
   const freeSlots = countRemainingFreeHours(occupancy?.hourlySlots);
   const agendaCount = countActiveToday(appointments);
@@ -473,83 +430,42 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="min-w-0">
                     <h2 className={`font-heading text-base font-bold ${colors.text}`}>
-                      Metas
+                      Meta do dia
                     </h2>
                     <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                      Dia{' '}
-                      {dailyGoal != null
-                        ? `${formatCurrency(todayRevenue, currencyRegion)} / ${formatCurrency(dailyGoal, currencyRegion)}`
-                        : 'sem meta diária'}
-                    </p>
-                    <p className={`text-sm ${colors.textSecondary}`}>
-                      Mês {formatCurrency(currentMonthRevenue, currencyRegion)} /{' '}
-                      {formatCurrency(monthlyGoal, currencyRegion)}
+                      {dailyGoal != null && dailyGoal > 0
+                        ? `${formatCurrency(todayRevenue, currencyRegion)} de ${formatCurrency(dailyGoal, currencyRegion)}`
+                        : 'Defina quanto quer faturar hoje'}
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setIsEditingGoal(true)}>
-                  Ajustar
+                <Button variant="outline" size="sm" onClick={() => setIsEditingDailyGoal(true)}>
+                  {dailyGoal != null && dailyGoal > 0 ? 'Ajustar' : 'Definir'}
                 </Button>
               </div>
-              <div className={`mt-4 h-2 overflow-hidden rounded-full ${colors.surface}`}>
-                <div
-                  className={`h-full ${accent.bg} transition-all duration-700`}
-                  style={{ width: `${Math.min(goalProgress, 100)}%` }}
-                />
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <span className={`font-mono text-xs ${colors.textSecondary}`}>
-                  {goalProgress}% no mês
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowGoalHistory(true)}
-                  className={`min-h-[44px] text-sm font-semibold ${accent.text}`}
-                >
-                  Histórico
-                </button>
-              </div>
-            </Card>
-          )}
-
-          {!isStaff && (
-            <Card variant="outlined">
-              <div className="flex items-start justify-between gap-3 min-w-0">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className={`${iconClass} shrink-0`}>
-                    <Activity className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className={`font-heading text-base font-bold ${colors.text}`}>
-                      Saúde do negócio
-                    </h2>
-                    <p className={`text-sm ${colors.textSecondary} text-pretty`}>
-                      Retorno, ticket e risco de perda.
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`font-mono text-2xl font-black tabular-nums ${accent.text}`}
-                >
-                  {healthScore}
-                </span>
-              </div>
-              <div className="mt-4 space-y-2">
-                {healthSummary.slice(0, 2).map((item) => (
-                  <div
-                    key={String(item)}
-                    className={`flex items-start gap-3 rounded-2xl p-3 ${colors.surface}`}
-                  >
-                    <CheckCircle2
-                      className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text}`}
-                      aria-hidden="true"
+              {dailyGoalProgress != null && (
+                <>
+                  <div className={`mt-4 h-2 overflow-hidden rounded-full ${colors.surface}`}>
+                    <div
+                      className={`h-full transition-all duration-700 ${
+                        todayRevenue >= dailyGoal! ? 'bg-[var(--color-success)]' : accent.bg
+                      }`}
+                      style={{ width: `${Math.min(dailyGoalProgress, 100)}%` }}
                     />
-                    <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
-                      {item}
-                    </p>
                   </div>
-                ))}
-              </div>
+                  <p className={`mt-2 font-mono text-xs ${colors.textSecondary}`}>
+                    {dailyGoalProgress}%
+                    {todayRevenue >= dailyGoal! ? ' · meta atingida' : ' do dia'}
+                  </p>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate('/insights')}
+                className={`mt-3 min-h-[44px] text-sm font-semibold ${accent.text}`}
+              >
+                Meta do mês e saúde em Insights →
+              </button>
             </Card>
           )}
 
@@ -579,17 +495,14 @@ export const Dashboard: React.FC = () => {
 
       <Suspense fallback={null}>
         <GoalSettingsModal
-          isOpen={isEditingGoal}
-          onClose={() => setIsEditingGoal(false)}
-          currentGoal={monthlyGoal}
-          onSave={updateGoal}
+          isOpen={isEditingDailyGoal}
+          onClose={() => setIsEditingDailyGoal(false)}
+          currentGoal={dailyGoal ?? 0}
+          onSave={async (value) => {
+            await updateDailyGoal(value);
+          }}
           isBeauty={isBeauty}
-        />
-        <GoalHistoryModal
-          isOpen={showGoalHistory}
-          onClose={() => setShowGoalHistory(false)}
-          history={goalHistory}
-          isBeauty={isBeauty}
+          goalKind="daily"
           currencyRegion={currencyRegion}
         />
       </Suspense>

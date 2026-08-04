@@ -8,7 +8,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import type { DashboardAppointment } from '../types/dashboard';
-import { Activity, Calendar, CheckCircle2, Sparkles, Target } from 'lucide-react';
+import { Calendar, Sparkles, Target } from 'lucide-react';
 
 const MOCK_AGENDA: DashboardAppointment[] = [
   {
@@ -194,39 +194,14 @@ export const DashboardCockpitDemo: React.FC = () => {
                     <Target className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className={`font-heading text-base font-bold ${colors.text}`}>Metas</h2>
-                    <p className={`text-sm ${colors.textSecondary}`}>Dia R$ 620 / R$ 800</p>
-                    <p className={`text-sm ${colors.textSecondary}`}>Mês R$ 2.400 / R$ 5.000</p>
+                    <h2 className={`font-heading text-base font-bold ${colors.text}`}>Meta do dia</h2>
+                    <p className={`text-sm ${colors.textSecondary}`}>R$ 620 de R$ 800</p>
                   </div>
                 </div>
                 <div className={`mt-4 h-2 overflow-hidden rounded-full ${colors.surface}`}>
-                  <div className={`h-full ${accent.bg}`} style={{ width: '48%' }} />
+                  <div className={`h-full ${accent.bg}`} style={{ width: '78%' }} />
                 </div>
-              </Card>
-            )}
-
-            {!isStaff && (
-              <Card variant="outlined">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className={iconClass}>
-                      <Activity className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className={`font-heading text-base font-bold ${colors.text}`}>
-                        Saúde do negócio
-                      </h2>
-                      <p className={`text-sm ${colors.textSecondary}`}>
-                        Receita ok; retorno caiu um pouco.
-                      </p>
-                    </div>
-                  </div>
-                  <span className={`font-mono text-2xl font-black ${accent.text}`}>64</span>
-                </div>
-                <div className={`mt-4 flex items-start gap-3 rounded-2xl p-3 ${colors.surface}`}>
-                  <CheckCircle2 className={`mt-0.5 h-4 w-4 ${accent.text}`} />
-                  <p className={`text-sm ${colors.textSecondary}`}>2 pontos de atenção</p>
-                </div>
+                <p className={`mt-2 text-xs ${accent.text}`}>Meta do mês e saúde em Insights →</p>
               </Card>
             )}
 

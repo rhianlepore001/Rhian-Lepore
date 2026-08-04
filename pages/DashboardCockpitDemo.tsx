@@ -77,7 +77,7 @@ export const DashboardCockpitDemo: React.FC = () => {
     { id: 'revenue', label: 'Receita', value: 'R$ 620', hint: 'Meta R$ 800', progress: 78 },
     { id: 'agenda', label: 'Agenda', value: '8', hint: '8 agendamentos' },
     { id: 'queue', label: 'Na fila', value: '3', hint: 'Aguardando' },
-    { id: 'free', label: 'Livres', value: '5', hint: 'Horários estimados' },
+    { id: 'free', label: 'Livres', value: '5', hint: 'horas livres hoje' },
   ];
 
   const staffKpis = [

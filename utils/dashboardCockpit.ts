@@ -113,6 +113,7 @@ export function countActiveToday(appointments: DashboardAppointment[]): number {
   }).length;
 }
 
+/** Estimativa bruta de slots (capacidade total). Prefira `countRemainingFreeHours` no KPI. */
 export function estimateFreeSlots(
   availableMinutes: number,
   occupiedMinutes: number,
@@ -121,4 +122,18 @@ export function estimateFreeSlots(
   if (slotMinutes <= 0) return 0;
   const free = Math.max(0, availableMinutes - occupiedMinutes);
   return Math.floor(free / slotMinutes);
+}
+
+/**
+ * Horas livres restantes hoje no calendário da loja.
+ * Usa o mapa hora-a-hora (já agrega a agenda do dia) — não multiplica
+ * por profissionais × slots de 30min (que inflava o KPI para 100+).
+ */
+export function countRemainingFreeHours(
+  hourlySlots: { hour: number; busy: boolean }[] | undefined,
+  now: Date = new Date(),
+): number {
+  if (!hourlySlots?.length) return 0;
+  const currentHour = now.getHours();
+  return hourlySlots.filter((slot) => !slot.busy && slot.hour >= currentHour).length;
 }

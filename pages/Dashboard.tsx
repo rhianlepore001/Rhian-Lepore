@@ -23,7 +23,7 @@ import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import {
   countActiveToday,
-  estimateFreeSlots,
+  countRemainingFreeHours,
 } from '../utils/dashboardCockpit';
 import type { ActionItem } from '../types/dashboard';
 
@@ -167,10 +167,7 @@ export const Dashboard: React.FC = () => {
           'Continue registrando atendimentos para liberar os insights.',
         ];
 
-  const freeSlots = estimateFreeSlots(
-    occupancy?.availableMinutes ?? 0,
-    occupancy?.occupiedMinutes ?? 0,
-  );
+  const freeSlots = countRemainingFreeHours(occupancy?.hourlySlots);
   const agendaCount = countActiveToday(appointments);
   const completedToday = appointments.filter((a) => {
     const s = a.status.toLowerCase();
@@ -255,7 +252,7 @@ export const Dashboard: React.FC = () => {
         id: 'free',
         label: 'Livres',
         value: String(freeSlots),
-        hint: 'Horários estimados',
+        hint: freeSlots === 1 ? '1 hora livre' : 'horas livres hoje',
         onClick: () => navigate('/agenda'),
       },
     ];

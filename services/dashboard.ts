@@ -298,13 +298,20 @@ export async function fetchTodayAppointmentsForProfessional(
   return (data || []).map(mapAppointmentRow);
 }
 
-/** Contagem de pessoas aguardando na fila digital (waiting + calling). */
+/**
+ * Pessoas aguardando na fila digital **hoje** (waiting + calling).
+ * Alinhado a `fetchQueueEntries`: ignora entradas órfãs de dias anteriores.
+ */
 export async function fetchQueueWaitingCount(businessId: string): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   const { count, error } = await supabase
     .from('queue_entries')
     .select('id', { count: 'exact', head: true })
     .eq('business_id', businessId)
-    .in('status', ['waiting', 'calling']);
+    .in('status', ['waiting', 'calling'])
+    .gte('joined_at', todayStart.toISOString());
 
   if (error) return 0;
   return count ?? 0;

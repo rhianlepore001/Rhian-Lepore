@@ -5,6 +5,7 @@ import {
   getCockpitAgendaStatus,
   countActiveToday,
   estimateFreeSlots,
+  countRemainingFreeHours,
 } from '@/utils/dashboardCockpit';
 import type { DashboardAppointment } from '@/types/dashboard';
 
@@ -73,5 +74,19 @@ describe('dashboardCockpit', () => {
   it('estimateFreeSlots arredonda para baixo por slot', () => {
     expect(estimateFreeSlots(120, 30, 30)).toBe(3);
     expect(estimateFreeSlots(0, 0, 30)).toBe(0);
+  });
+
+  it('countRemainingFreeHours ignora horas passadas e ocupadas', () => {
+    const slots = [
+      { hour: 9, busy: true },
+      { hour: 10, busy: false },
+      { hour: 11, busy: false },
+      { hour: 14, busy: false },
+      { hour: 15, busy: true },
+    ];
+    // noon = 12h → só 14h livre restante (10/11 já passaram; 15 ocupada)
+    expect(countRemainingFreeHours(slots, noon)).toBe(1);
+    expect(countRemainingFreeHours(undefined, noon)).toBe(0);
+    expect(countRemainingFreeHours([], noon)).toBe(0);
   });
 });

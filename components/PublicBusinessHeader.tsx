@@ -70,7 +70,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                     />
                 ) : (
                     <div className={`w-full h-full ${isBeauty
-                        ? 'bg-gradient-to-br from-beauty-dark via-beauty-card to-black'
+                        ? 'bg-gradient-to-br from-[var(--color-bg)] via-[var(--color-card)] to-[var(--color-surface)]'
                         : 'bg-gradient-to-br from-neutral-900 via-neutral-800 to-black'
                         }`}>
                         {/* Padrão decorativo no fallback */}

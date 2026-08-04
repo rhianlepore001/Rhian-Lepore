@@ -27,7 +27,7 @@ export const CommissionsSettings: React.FC = () => {
     const { data: rawMembers, isLoading: membersLoading } = useTeamMembers();
     const { data: settingsData } = useBusinessSettings();
     const queryClient = useQueryClient();
-    const { accent, colors, classes, isBeauty } = useBrutalTheme();
+    const { accent, colors, classes } = useBrutalTheme();
 
     const teamMembers: TeamMember[] = (rawMembers ?? []).filter(m => m.active).map(m => ({
         id: m.id,
@@ -294,10 +294,8 @@ export const CommissionsSettings: React.FC = () => {
                                         key={member.id}
                                         className={`
                                             transition-all p-4 rounded-xl border
-                                            ${isBeauty
-                                                ? 'bg-beauty-dark/40 border-beauty-neon/20 hover:border-beauty-neon/50'
-                                                : `${colors.inputBg} ${isEditing ? accent.border : colors.border} hover:border-[var(--color-border)]`
-                                            }
+                                            ${colors.inputBg} ${isEditing ? accent.border : colors.border}
+                                            hover:border-[var(--color-accent-border)]
                                         `}
                                     >
                                         <div className="flex items-center justify-between gap-4">
@@ -341,12 +339,7 @@ export const CommissionsSettings: React.FC = () => {
                                                                     ...prev,
                                                                     [member.id]: e.target.value
                                                                 }))}
-                                                                className={`w-24 px-3 py-2 rounded-lg ${colors.text} font-mono text-center outline-none transition-all
-                                                                    ${isBeauty
-                                                                        ? 'bg-beauty-dark/60 border border-beauty-neon/50 focus:border-beauty-neon focus:shadow-neon'
-                                                                        : `bg-[var(--color-bg)] border-2 ${accent.border}`
-                                                                    }
-                                                                `}
+                                                                className={`w-24 px-3 py-2 rounded-lg ${colors.text} font-mono text-center outline-none transition-all bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:border-theme-accent`}
                                                                 autoFocus
                                                             />
                                                             <span className={`absolute right-3 top-1/2 -translate-y-1/2 ${colors.textMuted} font-mono`}>

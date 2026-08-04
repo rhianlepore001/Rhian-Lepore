@@ -34,7 +34,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
     const progressPercent = Math.min((currentStep / progressSteps) * 100, 100);
 
     return (
-        <div className={(isBeauty ? 'min-h-screen bg-beauty-dark flex flex-col' : 'min-h-screen bg-brutal-main flex flex-col') + ' relative'}>
+        <div className="min-h-screen bg-theme-bg flex flex-col relative">
             <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
             <div
                 className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none"
@@ -53,7 +53,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             {/* Progress Bar */}
             <div className="h-0.5 bg-[var(--color-card-hover)] w-full flex-shrink-0">
                 <div
-                    className={`h-full transition-all duration-500 ease-out ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`}
+                    className="h-full transition-all duration-500 ease-out bg-theme-accent"
                     style={{ width: `${progressPercent}%` }}
                 />
             </div>
@@ -70,9 +70,9 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                                 key={i}
                                 className={`rounded-full transition-all duration-300 ${
                                     isCurrent
-                                        ? `w-6 h-1.5 ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}`
+                                        ? 'w-6 h-1.5 bg-theme-accent'
                                         : isDone
-                                        ? `w-1.5 h-1.5 ${isBeauty ? 'bg-beauty-neon/60' : 'bg-accent-gold/60'}`
+                                        ? 'w-1.5 h-1.5 bg-theme-accent/60'
                                         : 'w-1.5 h-1.5 bg-[var(--color-card-hover)]'
                                 }`}
                             />
@@ -99,12 +99,7 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                         </p>
                     </div>
 
-                    <div className={`
-                        ${isBeauty
-                            ? 'bg-gradient-to-br from-beauty-card/90 to-beauty-dark/80 backdrop-blur-xl border border-beauty-neon/20 rounded-2xl shadow-[var(--shadow-card-accent)]'
-                            : 'bg-[var(--color-card)] border border-[var(--color-text)]/8 rounded-xl shadow-2xl'}
-                        p-6 md:p-8
-                    `}>
+                    <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-card)] p-6 md:p-8">
                         {children}
                     </div>
                 </div>

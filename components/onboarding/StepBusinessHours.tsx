@@ -20,7 +20,7 @@ const defaultHours = {
     ]
 };
 
-export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, onBack, accentColor }) => {
+export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, onBack }) => {
     const { user, userType } = useAuth();
     const [loading, setLoading] = useState(false);
     const [businessHours, setBusinessHours] = useState<any>({
@@ -82,14 +82,14 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
             <div className="flex gap-4 pt-4">
                 <button
                     onClick={onBack}
-                    className="flex-1 py-4 bg-[var(--color-card)] text-white font-bold rounded-lg hover:bg-[var(--color-card)] transition-colors"
+                    className="flex-1 py-4 bg-[var(--color-card)] text-theme-text font-bold rounded-lg hover:bg-[var(--color-card-hover)] transition-colors border border-[var(--color-border)]"
                 >
                     Voltar
                 </button>
                 <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className={accentColor === 'beauty-neon' ? 'flex-1 py-4 bg-beauty-neon text-black font-bold rounded-lg hover:bg-beauty-neon/90 transition-colors flex items-center justify-center gap-2' : 'flex-1 py-4 bg-accent-gold text-black font-bold rounded-lg hover:bg-accent-gold/90 transition-colors flex items-center justify-center gap-2'}
+                    className="flex-1 py-4 bg-theme-accent text-[var(--color-on-accent)] font-bold rounded-lg hover:brightness-110 transition-colors flex items-center justify-center gap-2"
                 >
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Continuar'}
                 </button>

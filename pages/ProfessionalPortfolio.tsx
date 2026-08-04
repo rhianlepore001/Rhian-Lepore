@@ -61,7 +61,7 @@ export const ProfessionalPortfolio: React.FC = () => {
 
     const isBeauty = business.user_type === 'beauty';
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
-    const bgClass = isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main';
+    const bgClass = 'bg-theme-bg';
 
     return (
         <div className={`min-h-screen ${bgClass} text-[var(--color-text)]`}>

@@ -187,7 +187,7 @@ export const Login: React.FC = () => {
     // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────
     return (
         <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden
-            ${isBeauty ? 'bg-beauty-dark' : 'bg-brutal-main'}
+            bg-theme-bg
         `}>
             {isBeauty
                 ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/[0.05] rounded-full blur-[120px] pointer-events-none" />

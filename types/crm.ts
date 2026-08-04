@@ -28,7 +28,7 @@ export const createClientInputSchema = z.object({
   photoUrl: z.string().nullable().optional(),
   birthDate: z.string().trim().optional().nullable(),
   /** @deprecated Preferência do sistema; mantido só para legado/importação. */
-  origin: z.enum(['Novo', 'Recente', 'Antigo']).optional().default('Novo'),
+  origin: z.enum(['Novo', 'Recente', 'Antigo']).optional(),
   source: z.string().optional(),
 });
 

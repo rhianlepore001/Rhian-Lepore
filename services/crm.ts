@@ -233,7 +233,7 @@ export async function createClient(input: CreateClientInput): Promise<void> {
     }
   }
 
-  const isLegacy = parsed.origin === 'Antigo';
+  const isLegacy = (parsed.origin ?? 'Novo') === 'Antigo';
   const birthDate = parsed.birthDate?.trim() ? parsed.birthDate.trim() : null;
 
   const { error } = await supabase

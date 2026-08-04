@@ -208,7 +208,7 @@ export const Clients: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 relative">
+    <div className="space-y-5 relative pb-28">
       <PageHeader
         title="Clientes"
         action={
@@ -421,18 +421,27 @@ export const Clients: React.FC = () => {
             <label className={`block text-sm font-medium mb-1.5 ${colors.text}`} htmlFor="client-photo">
               Foto (opcional)
             </label>
-            <input
-              id="client-photo"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+            <label
+              htmlFor="client-photo"
               className={[
-                'w-full p-3 text-sm',
+                'flex items-center justify-between gap-3 w-full p-3 text-sm cursor-pointer min-h-[44px]',
                 radius.input,
                 colors.text,
                 colors.inputBg,
                 `border ${colors.inputBorder}`,
               ].join(' ')}
+            >
+              <span className={photo ? colors.text : colors.textMuted}>
+                {photo ? photo.name : 'Escolher foto'}
+              </span>
+              <span className={`text-xs font-semibold ${accent.text}`}>Selecionar</span>
+            </label>
+            <input
+              id="client-photo"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+              className="sr-only"
             />
           </div>
           <Button type="submit" variant="primary" fullWidth loading={uploading}>

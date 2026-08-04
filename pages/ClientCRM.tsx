@@ -13,7 +13,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react';
-import { Card, Button, Modal, ConfirmModal, PageHeader } from '../components/ui';
+import { Card, Button, Modal, ConfirmModal } from '../components/ui';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PhoneInput } from '../components/PhoneInput';
 import { supabase } from '../lib/supabase';
@@ -247,7 +247,7 @@ export const ClientCRM: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-5">
+    <div className="space-y-4 md:space-y-5 pb-28">
       <button
         type="button"
         onClick={() => navigate('/clientes')}
@@ -258,19 +258,19 @@ export const ClientCRM: React.FC = () => {
       </button>
 
       <Card className="overflow-hidden">
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+        <div className="flex gap-4 items-start">
           <div
-            className={`w-20 h-20 sm:w-24 sm:h-24 shrink-0 ${radius.avatar} border ${accent.border} ${colors.inputBg} overflow-hidden flex items-center justify-center`}
+            className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 ${radius.avatar} border ${accent.border} ${colors.inputBg} overflow-hidden flex items-center justify-center`}
           >
             {client.photo_url ? (
               <img src={client.photo_url} alt="" className="w-full h-full object-cover" />
             ) : (
-              <User className={`w-8 h-8 ${accent.text}`} aria-hidden="true" />
+              <User className={`w-7 h-7 ${accent.text}`} aria-hidden="true" />
             )}
           </div>
 
-          <div className="flex-1 w-full min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               {statusChips.map((chip) => (
                 <span
                   key={chip.label}
@@ -284,98 +284,96 @@ export const ClientCRM: React.FC = () => {
                   <Cake className="w-3.5 h-3.5" aria-hidden="true" />
                   {client.daysToBirthday === 0
                     ? 'Aniversário hoje'
-                    : `Aniversário em ${client.daysToBirthday} dia${client.daysToBirthday === 1 ? '' : 's'}`}
+                    : `Aniversário em ${client.daysToBirthday}d`}
                 </span>
               )}
             </div>
 
-            <PageHeader
-              title={client.name}
-              subtitle={
-                <div className="flex flex-col gap-1.5 font-mono text-xs md:text-sm">
-                  <span className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                    {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
-                  </span>
-                  {client.email ? (
-                    <span className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                      {client.email}
-                    </span>
-                  ) : null}
-                  {client.birth_date ? (
-                    <span className="flex items-center gap-2">
-                      <Cake className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                      {new Date(`${client.birth_date}T12:00:00`).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                      })}
-                    </span>
-                  ) : null}
-                </div>
-              }
-              meta={
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(true)}
-                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                  aria-label="Editar cliente"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              }
-              action={
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={deleting}
-                    aria-label="Desativar cliente"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="border-[var(--color-success-border)] text-[var(--color-success)] hover:bg-[var(--color-success-bg)]"
-                    onClick={handleWhatsAppClick}
-                    aria-label="Abrir WhatsApp"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="primary"
-                    icon={<Scissors />}
-                    size="sm"
-                    className="flex-1 sm:flex-none"
-                    onClick={() => navigate(`/agenda?clientId=${client.id}`)}
-                  >
-                    {isBeauty ? 'Novo serviço' : 'Novo corte'}
-                  </Button>
-                </div>
-              }
-            />
+            <h1 className={`text-xl sm:text-2xl font-heading font-bold ${colors.text} leading-tight truncate`}>
+              {client.name}
+            </h1>
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
-              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
-                <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Última visita</p>
-                <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>
-                  {formatVisitAgo(client.lastVisitAt)}
+            <div className={`mt-2 space-y-1 font-mono text-xs sm:text-sm ${colors.textSecondary}`}>
+              <p className="flex items-center gap-2 min-w-0">
+                <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">
+                  {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
+                </span>
+              </p>
+              {client.email ? (
+                <p className="flex items-center gap-2 min-w-0">
+                  <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{client.email}</span>
                 </p>
-              </div>
-              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
-                <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Visitas</p>
-                <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>{client.totalVisits}</p>
-              </div>
-              <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
-                <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Total gasto</p>
-                <p className={`text-sm sm:text-base font-bold ${accent.text} mt-0.5`}>
-                  {formatCurrency(client.ltv || 0, region)}
+              ) : null}
+              {client.birth_date ? (
+                <p className="flex items-center gap-2">
+                  <Cake className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  {new Date(`${client.birth_date}T12:00:00`).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'long',
+                  })}
                 </p>
-              </div>
+              ) : null}
             </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-4">
+          <Button
+            variant="primary"
+            icon={<Scissors />}
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={() => navigate(`/agenda?clientId=${client.id}`)}
+          >
+            {isBeauty ? 'Novo serviço' : 'Novo corte'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="border-[var(--color-success-border)] text-[var(--color-success)] hover:bg-[var(--color-success-bg)]"
+            onClick={handleWhatsAppClick}
+            aria-label="Abrir WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowEditModal(true)}
+            aria-label="Editar cliente"
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleting}
+            aria-label="Desativar cliente"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+            <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Última visita</p>
+            <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>
+              {formatVisitAgo(client.lastVisitAt)}
+            </p>
+          </div>
+          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+            <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Visitas</p>
+            <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>{client.totalVisits}</p>
+          </div>
+          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+            <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Total gasto</p>
+            <p className={`text-sm sm:text-base font-bold ${accent.text} mt-0.5`}>
+              {formatCurrency(client.ltv || 0, region)}
+            </p>
           </div>
         </div>
       </Card>

@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clientes/CRM v2 — discovery fechado (4 Ago 2026):**
+  - Branch `cursor/discovery-clientes-crm-68c9` · PR #19.
+  - Spec: `specs/active/clientes-crm-v2/` (`context.md` + `spec.md`) + discovery Lion Claw.
+  - Decisões: VIP = top 10 LTV (= Insights); Inativo ≥35d; Novos = 1ª visita 30d ou sem visita; gasto só no CRM; staff fora do CRM (cadastra na Agenda); cadastro sem Origem + `birth_date` opcional (lembrete UI 7d; WhatsApp auto = deferred).
+  - Próximo: design/tasks → implementar.
 - **Dashboard Cockpit Fase 1 (3 Ago 2026) — MERGED → produção:**
   - Início reestruturado: próximo atendimento → KPIs do dia → agenda + inbox/oportunidades.
   - Dual persona: owner vê receita/fila/saúde; staff vê turno/comissões (sem receita da loja).

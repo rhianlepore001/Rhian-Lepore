@@ -1,103 +1,103 @@
-import React, { useState } from 'react';
-import { Target, Check, TrendingUp } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import { Modal } from '../../Modal';
 import { BrutalButton } from '../../BrutalButton';
-import { supabase } from '../../../lib/supabase';
-import { useAuth } from '../../../contexts/AuthContext';
-import { logger } from '../../../utils/Logger';
 import { useBrutalTheme } from '../../../hooks/useBrutalTheme';
+import type { Region } from '../../../utils/formatters';
+
+export type GoalKind = 'daily' | 'monthly';
 
 interface GoalSettingsModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    currentGoal: number;
-    onSave: (newGoal: number) => Promise<any>;
-    isBeauty?: boolean;
+  isOpen: boolean;
+  onClose: () => void;
+  currentGoal: number;
+  onSave: (newGoal: number) => Promise<unknown>;
+  isBeauty?: boolean;
+  goalKind?: GoalKind;
+  currencyRegion?: Region;
 }
 
 export const GoalSettingsModal: React.FC<GoalSettingsModalProps> = ({
-    isOpen,
-    onClose,
-    currentGoal,
-    onSave,
-    isBeauty = false
+  isOpen,
+  onClose,
+  currentGoal,
+  onSave,
+  goalKind = 'monthly',
+  currencyRegion = 'BR',
 }) => {
-    const [value, setValue] = useState(currentGoal.toString());
-    const [isSaving, setIsSaving] = useState(false);
-    const { accent, colors, classes } = useBrutalTheme();
+  const [value, setValue] = useState(currentGoal.toString());
+  const [isSaving, setIsSaving] = useState(false);
+  const { colors } = useBrutalTheme();
+  const currencySymbol = currencyRegion === 'PT' ? '€' : 'R$';
+  const isDaily = goalKind === 'daily';
 
-    const handleSave = async () => {
-        const numValue = parseFloat(value);
-        if (isNaN(numValue) || numValue < 0) return;
+  useEffect(() => {
+    if (isOpen) setValue(String(currentGoal ?? 0));
+  }, [isOpen, currentGoal]);
 
-        setIsSaving(true);
-        try {
-            await onSave(numValue);
-            onClose();
-        } finally {
-            setIsSaving(false);
-        }
-    };
+  const handleSave = async () => {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue < 0) return;
 
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title="Configurar Meta"
-            size="md"
-            footer={
-                <div className="flex gap-3 w-full">
-                    <BrutalButton
-                        variant="ghost"
-                        onClick={onClose}
-                        className="flex-1"
-                    >
-                        Cancelar
-                    </BrutalButton>
-                    <BrutalButton
-                        variant="primary"
-                        onClick={handleSave}
-                        className="flex-1"
-                        disabled={isSaving}
-                        icon={isSaving ? undefined : <Check className="w-4 h-4" />}
-                    >
-                        {isSaving ? 'Salvando...' : 'Salvar Meta'}
-                    </BrutalButton>
-                </div>
-            }
-        >
-            <div className="space-y-6">
-                <div>
-                    <label className={`block text-xs font-mono ${colors.textMuted} uppercase tracking-wider mb-2`}>
-                        Meta de Faturamento Mensal
-                    </label>
-                    <div className="relative">
-                        <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${colors.textSecondary} font-mono`}>
-                            R$
-                        </span>
-                        <input
-                            type="number"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            className={`w-full ${colors.inputBg} border-2 ${accent.border} pl-12 pr-4 py-4 text-2xl font-mono ${colors.text} focus:outline-none focus:ring-2 ${accent.ring} rounded-xl`}
-                            placeholder="0.00"
-                        />
-                    </div>
-                    <p className={`mt-3 text-xs ${colors.textMuted} leading-relaxed`}>
-                        Defina uma meta realista para motivar seu crescimento. Este valor será usado para calcular sua barra de progresso no dashboard deste mês.
-                    </p>
-                </div>
+    setIsSaving(true);
+    try {
+      await onSave(numValue);
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-                <div className={`p-4 ${colors.card} ${colors.border} rounded-xl flex items-center gap-4`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${classes.badgeSuccess.replace(/px-2 py-0\.5 text-xs font-bold uppercase /, '')}`}>
-                        <TrendingUp className={`w-5 h-5 ${classes.badgeSuccess.split(' ').find(c => c.startsWith('text-'))}`} />
-                    </div>
-                    <div>
-                        <p className={`text-sm ${colors.text} font-heading`}>Foco em Crescimento</p>
-                        <p className={`text-xs ${colors.textMuted} font-mono uppercase`}>Mantenha o histórico real de cada mês</p>
-                    </div>
-                </div>
-            </div>
-        </Modal>
-    );
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isDaily ? 'Meta do dia' : 'Meta do mês'}
+      size="md"
+      footer={
+        <div className="flex gap-3 w-full">
+          <BrutalButton variant="ghost" onClick={onClose} className="flex-1">
+            Cancelar
+          </BrutalButton>
+          <BrutalButton
+            variant="primary"
+            onClick={handleSave}
+            className="flex-1"
+            disabled={isSaving}
+            icon={isSaving ? undefined : <Check className="w-4 h-4" />}
+          >
+            {isSaving ? 'Salvando...' : 'Salvar meta'}
+          </BrutalButton>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <div>
+          <label className={`mb-2 block text-xs font-mono uppercase tracking-wider ${colors.textMuted}`}>
+            {isDaily ? 'Meta de faturamento diário' : 'Meta de faturamento mensal'}
+          </label>
+          <div className="relative">
+            <span className={`absolute left-4 top-1/2 -translate-y-1/2 font-mono ${colors.textSecondary}`}>
+              {currencySymbol}
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.01"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className={`w-full rounded-xl border py-3 pl-12 pr-4 font-mono text-lg ${colors.card} ${colors.border} ${colors.text} focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]`}
+              aria-label={isDaily ? 'Valor da meta diária' : 'Valor da meta mensal'}
+            />
+          </div>
+          <p className={`mt-2 text-xs ${colors.textMuted}`}>
+            {isDaily
+              ? 'Aparece no Dashboard para acompanhar o dia.'
+              : 'Aparece em Insights para acompanhar o mês.'}
+          </p>
+        </div>
+      </div>
+    </Modal>
+  );
 };

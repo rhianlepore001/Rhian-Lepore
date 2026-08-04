@@ -7,7 +7,7 @@ import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthYearSelector } from '../components/MonthYearSelector';
@@ -130,19 +130,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const { accent, colors, isBeauty, isDark, classes, font, density, status } = useBrutalTheme();
-
-  const chartTheme = useMemo(() => ({
-    grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
-    axis: isDark ? 'var(--color-text-muted)' : 'var(--color-text-muted)',
-    tooltipBg: isDark ? 'var(--color-card)' : 'var(--color-card)',
-    tooltipBorder: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-    tooltipText: isDark ? 'var(--color-text)' : 'var(--color-text)',
-    revenueStroke: 'var(--color-success)',
-    revenueFill: 'var(--color-success)',
-    expenseStroke: 'var(--color-danger)',
-    expenseFill: 'var(--color-danger)',
-  }), [isDark]);
+  const { accent, colors, isBeauty, classes, font, density, status } = useBrutalTheme();
   const { showToast } = useToast();
   const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
@@ -686,34 +674,12 @@ useEffect(() => {
 
           <div className="grid grid-cols-1 gap-6">
             <Card title={`Entradas e saídas — ${periodLabel}`}>
-              <div className="h-[350px] min-h-[300px] w-full mt-4">
-                <ResponsiveContainer width="99%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={chartTheme.revenueStroke} stopOpacity={0.35} />
-                        <stop offset="50%" stopColor={chartTheme.revenueFill} stopOpacity={0.12} />
-                        <stop offset="100%" stopColor={chartTheme.revenueFill} stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={chartTheme.expenseStroke} stopOpacity={0.28} />
-                        <stop offset="50%" stopColor={chartTheme.expenseFill} stopOpacity={0.1} />
-                        <stop offset="100%" stopColor={chartTheme.expenseFill} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
-                    <XAxis dataKey="name" stroke={chartTheme.axis} style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} />
-                    <YAxis stroke={chartTheme.axis} style={{ fontSize: '11px', fontFamily: 'monospace' }} tickLine={false} axisLine={false} tickFormatter={(v) => `${currencyRegion === 'PT' ? '€' : 'R$'}${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: chartTheme.tooltipBg, border: `1px solid ${chartTheme.tooltipBorder}`, borderRadius: '12px', boxShadow: 'var(--shadow-modal)', padding: '12px 16px' }}
-                      labelStyle={{ color: chartTheme.tooltipText, fontWeight: 'bold', marginBottom: '4px' }}
-                      itemStyle={{ fontSize: '13px', padding: '2px 0' }}
-                      formatter={(value: number) => [formatCurrency(value, currencyRegion), undefined]}
-                    />
-                    <Area type="natural" dataKey="receita" stroke={chartTheme.revenueStroke} strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" name="Entradas" isAnimationActive={false} />
-                    <Area type="natural" dataKey="despesas" stroke={chartTheme.expenseStroke} strokeWidth={2} fillOpacity={1} fill="url(#colorExpense)" name="Saídas" isAnimationActive={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="mt-2 w-full">
+                <FinanceCashflowChart
+                  data={chartData}
+                  currencyRegion={currencyRegion}
+                  height={320}
+                />
               </div>
             </Card>
           </div>

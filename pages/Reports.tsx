@@ -1,6 +1,6 @@
-import { Card, PageHeader } from '../components/ui';
+import { Card, PageHeader, Button } from '../components/ui';
 import { SkeletonCard } from '../components/ui/Skeleton';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, lazy, Suspense } from 'react';
 import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
 import { CancellationRateCard } from '../components/dashboard/CancellationRateCard';
 import { RankingList } from '../components/insights/RankingList';
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/ui/Toast';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useReportsData } from '../hooks/useReports';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { ExportButton } from '../components/ExportButton';
 import { exportToCsv, exportToPdf } from '../utils/exporters';
 import {
@@ -19,11 +20,24 @@ import {
   Package,
   Users,
   ShoppingBag,
+  Activity,
+  CheckCircle2,
 } from 'lucide-react';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 import { formatCurrency } from '../utils/formatters';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+
+const GoalSettingsModal = lazy(() =>
+  import('../components/dashboard/modals/GoalSettingsModal').then((m) => ({
+    default: m.GoalSettingsModal,
+  })),
+);
+const GoalHistoryModal = lazy(() =>
+  import('../components/dashboard/modals/GoalHistoryModal').then((m) => ({
+    default: m.GoalHistoryModal,
+  })),
+);
 
 const MONTH_EN_TO_PT: Record<string, string> = {
   Jan: 'Jan',
@@ -54,8 +68,57 @@ export const Reports: React.FC = () => {
     selectedMonth,
     selectedYear,
   );
+  const {
+    monthlyGoal,
+    currentMonthRevenue,
+    goalHistory,
+    updateGoal,
+    financialDoctor,
+  } = useDashboardData();
+  const [isEditingMonthlyGoal, setIsEditingMonthlyGoal] = useState(false);
+  const [showGoalHistory, setShowGoalHistory] = useState(false);
 
   const { region: currencyRegion } = useTenantLocale();
+
+  const monthlyGoalProgress =
+    monthlyGoal > 0 ? Math.min(100, Math.round((currentMonthRevenue / monthlyGoal) * 100)) : 0;
+
+  const healthScore = Math.min(
+    100,
+    Math.max(
+      0,
+      Math.round(
+        (financialDoctor.repeatClientRate || 0) +
+          (financialDoctor.avgTicket > 0 ? 25 : 0) +
+          (financialDoctor.topService ? 25 : 0) -
+          Math.min(financialDoctor.churnRiskCount || 0, 25),
+      ),
+    ),
+  );
+  const healthSummary =
+    financialDoctor.avgTicket ||
+    financialDoctor.topService ||
+    financialDoctor.repeatClientRate
+      ? [
+          financialDoctor.avgTicket > 0
+            ? `Ticket médio ${formatCurrency(financialDoctor.avgTicket, currencyRegion)}`
+            : null,
+          financialDoctor.topService
+            ? `Mais pedido: ${financialDoctor.topService}`
+            : null,
+          financialDoctor.repeatClientRate > 0
+            ? `${Math.round(financialDoctor.repeatClientRate)}% dos clientes voltam`
+            : null,
+          financialDoctor.churnRiskCount > 0
+            ? `${financialDoctor.churnRiskCount} cliente(s) em risco de não voltar`
+            : null,
+        ].filter(Boolean)
+      : [
+          'Indicadores aparecem após o primeiro mês com atendimentos.',
+          'Continue registrando para liberar a saúde do negócio.',
+        ];
+
+  const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
 
   const handleMonthChange = (month: number, year: number) => {
     setSelectedMonth(month);
@@ -201,6 +264,83 @@ export const Reports: React.FC = () => {
           </div>
         }
       />
+
+      {!loading && (
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card variant="outlined">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={iconClass}>
+                  <Target className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className={`font-heading text-base font-bold ${colors.text}`}>Meta do mês</h2>
+                  <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
+                    {formatCurrency(currentMonthRevenue, currencyRegion)} de{' '}
+                    {formatCurrency(monthlyGoal, currencyRegion)}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setIsEditingMonthlyGoal(true)}>
+                Ajustar
+              </Button>
+            </div>
+            <div className={`mt-4 h-2 overflow-hidden rounded-full ${colors.surface}`}>
+              <div
+                className={`h-full ${accent.bg} transition-all duration-700`}
+                style={{ width: `${monthlyGoalProgress}%` }}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className={`font-mono text-xs ${colors.textSecondary}`}>
+                {monthlyGoalProgress}% no mês
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowGoalHistory(true)}
+                className={`min-h-[44px] text-sm font-semibold ${accent.text}`}
+              >
+                Histórico
+              </button>
+            </div>
+          </Card>
+
+          <Card variant="outlined">
+            <div className="flex items-start justify-between gap-3 min-w-0">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className={iconClass}>
+                  <Activity className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className={`font-heading text-base font-bold ${colors.text}`}>
+                    Saúde do negócio
+                  </h2>
+                  <p className={`text-sm ${colors.textSecondary} text-pretty`}>
+                    Retorno, ticket e risco de perda.
+                  </p>
+                </div>
+              </div>
+              <span className={`font-mono text-2xl font-black tabular-nums ${accent.text}`}>
+                {healthScore}
+              </span>
+            </div>
+            <div className="mt-4 space-y-2">
+              {healthSummary.slice(0, 3).map((item) => (
+                <div
+                  key={String(item)}
+                  className={`flex items-start gap-3 rounded-2xl p-3 ${colors.surface}`}
+                >
+                  <CheckCircle2
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text}`}
+                    aria-hidden="true"
+                  />
+                  <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
+      )}
 
       {!hasMonthData ? (
         <div className="flex flex-col items-center justify-center my-16 text-center px-4 fade-in">
@@ -373,7 +513,12 @@ export const Reports: React.FC = () => {
                       stroke={accent.hex}
                       fillOpacity={1}
                       fill="url(#colorGrowthPt)"
-                      strokeWidth={3}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 0, fill: accent.hex }}
+                      isAnimationActive={false}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -433,6 +578,25 @@ export const Reports: React.FC = () => {
           </section>
         </div>
       )}
+
+      <Suspense fallback={null}>
+        <GoalSettingsModal
+          isOpen={isEditingMonthlyGoal}
+          onClose={() => setIsEditingMonthlyGoal(false)}
+          currentGoal={monthlyGoal}
+          onSave={updateGoal}
+          isBeauty={isBeauty}
+          goalKind="monthly"
+          currencyRegion={currencyRegion}
+        />
+        <GoalHistoryModal
+          isOpen={showGoalHistory}
+          onClose={() => setShowGoalHistory(false)}
+          history={goalHistory}
+          isBeauty={isBeauty}
+          currencyRegion={currencyRegion}
+        />
+      </Suspense>
     </div>
   );
 };

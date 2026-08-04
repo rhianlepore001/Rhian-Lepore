@@ -49,15 +49,15 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Clientes/CRM v2 — implementado (4 Ago 2026):**
-  - Branch `cursor/discovery-clientes-crm-68c9` · PR #19.
+- **Clientes/CRM v2 — MERGED → produção (4 Ago 2026):**
+  - Branch `cursor/discovery-clientes-crm-68c9` · PR #19 → `main` (`4d02e07`) · deploy Vercel automático.
   - Spec/design/tasks: `specs/active/clientes-crm-v2/`.
   - Lista: visitas + última visita relativa; filtros VIP (top 10 LTV), Novos (30d/sem visita), Inativo (≥35d); gasto só no CRM.
-  - Modal create sem Origem; `birth_date` opcional + indicador 7d; migration `20260804000001` aplicada no remoto + RPC `get_client_profile` com birth_date.
+  - Modal create sem Origem; `birth_date` opcional + indicador 7d; migrations `20260804000001/2` aplicadas no remoto.
   - CRM enxuto: sem IA/rating/membro-desde/predição; histórico compacto + observações.
-  - Staff: `OwnerRouteGuard` em `/clientes`; nav mobile Fila no lugar de Clientes; Agenda cria cliente com `companyId`.
-  - Hardening: staff só SELECT+INSERT em `clients` (sem UPDATE/DELETE); `REVOKE EXECUTE` de `get_client_profile` para `anon`.
-  - Gates: typecheck, lint, build, 400 testes.
+  - Staff: `OwnerRouteGuard` + RLS SELECT+INSERT only; `get_client_profile` sem EXECUTE para `anon`.
+  - Residual P1: staff ainda pode SELECT notes/birth_date via API (Postgres RLS é row-level); coluna restrita fica para follow-up.
+  - Gates: typecheck, lint, build, 400 testes; security review + advisors.
 - **Cores hardcoded + overflow comissões (4 Ago 2026) — MERGED → produção:**
   - Modais/cards tokenizados (`beauty-dark`/`beauty-neon` → tokens): Comissões, Nova Transação, Ações Rápidas + afins.
   - Cards de comissão no mobile: layout empilhado, CTA “Editar comissão”, sem overflow.

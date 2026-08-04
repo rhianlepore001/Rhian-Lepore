@@ -1,63 +1,75 @@
-﻿import { Card, Button, Modal, ConfirmModal, PageHeader } from '../components/ui';
-
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-
-
-import { Star, Calendar, Phone, Mail, Sparkles, RefreshCcw, Scissors, ArrowLeft, Trash2, Edit2, Save, X, Tag, MessageCircle } from 'lucide-react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Cake,
+  Calendar,
+  Edit2,
+  Mail,
+  MessageCircle,
+  Phone,
+  RefreshCcw,
+  Scissors,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { Card, Button, Modal, ConfirmModal, PageHeader } from '../components/ui';
+import { EmptyState } from '../components/ui/EmptyState';
 import { PhoneInput } from '../components/PhoneInput';
-import { useParams, useNavigate } from 'react-router-dom';
-import { calculateNextVisitPrediction } from '../utils/tierSystem';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { formatPhone, formatCurrency } from '../utils/formatters';
-import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
-import { useAIOSDiagnostic } from '../hooks/useAIOSDiagnostic';
-import { useSemanticMemory } from '../hooks/useSemanticMemory';
 import { useToast } from '../components/ui/Toast';
-import { AISemanticInsights } from '../components/AISemanticInsights';
-import { EmptyState } from '../components/ui/EmptyState';
+import { formatPhone, formatCurrency } from '../utils/formatters';
+import { getWhatsAppUrl } from '../utils/aiosCopywriter';
+import {
+  BIRTHDAY_WINDOW_DAYS,
+  daysUntilBirthday,
+  formatVisitAgo,
+  getVipClientIds,
+  isBirthdaySoon,
+  isInactiveClient,
+  isNewClient,
+} from '../services/crm';
+
+const HISTORY_PAGE = 10;
+
+interface AppointmentHistoryItem {
+  id: string;
+  service: string;
+  appointment_time: string;
+  price: number;
+  professional_name?: string;
+}
 
 export const ClientCRM: React.FC = () => {
-const { id } = useParams<{ id: string }>();
-  const { user, userType, region, businessName } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  const { user, region, companyId } = useAuth();
+  const tenantId = companyId ?? user?.id;
   const { accent, isBeauty, classes, colors, radius, status } = useBrutalTheme();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
-  const [currencySymbol, setCurrencySymbol] = useState('R$');
-  
-  // Edit State
+  const [showAllHistory, setShowAllHistory] = useState(false);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('');
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  // AIOS Context
-  const { aiosEnabled } = useAuth();
-  const { diagnostic, logCampaignActivity } = useAIOSDiagnostic();
-  const { saveMemory } = useSemanticMemory();
-  const isAtRisk = diagnostic?.at_risk_clients.find(c => c.id === id);
-
-  useEffect(() => {
-    if (region === 'PT') {
-      setCurrencySymbol('€');
-    } else {
-      setCurrencySymbol('R$');
-    }
-  }, [region]);
+  const [isVip, setIsVip] = useState(false);
 
   useEffect(() => {
     const fetchClient = async () => {
-      if (!id || !user) return;
+      if (!id || !user || !tenantId) return;
       try {
-        // US-0309: 3 queries sequenciais → 1 RPC (get_client_profile)
         const { data, error } = await supabase
           .rpc('get_client_profile', { p_client_id: id })
           .single();
@@ -65,37 +77,49 @@ const { id } = useParams<{ id: string }>();
         if (error) throw error;
         if (!data) return;
 
-        const { client: clientData, ltv, appointments_history, hair_history } = data as any;
+        const { client: clientData, ltv, appointments_history } = data as any;
+        const appointmentsData: AppointmentHistoryItem[] = appointments_history || [];
+        const totalVisits = appointmentsData.length;
+        const lastVisitAt = appointmentsData[0]?.appointment_time || null;
+        const firstVisitAt = appointmentsData[appointmentsData.length - 1]?.appointment_time || null;
 
         setNotes(clientData.notes || '');
-
-        const appointmentsData = appointments_history || [];
-        const totalVisits = appointmentsData.length;
-        const lastVisit = appointmentsData[0]?.appointment_time
-          ? new Date(appointmentsData[0].appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-          : 'Nunca';
-        const nextPrediction = calculateNextVisitPrediction(appointmentsData);
-
-        setClient({
-          ...clientData,
-          lastVisit,
-          totalVisits,
-          nextPrediction,
-          ltv,
-          appointmentsHistory: appointmentsData.map((apt: any) => ({
-            ...apt,
-            professional_name: apt.professional_name,
-            basePrice: apt.price
-          })),
-          hairHistory: (hair_history || []).map((h: any) => ({
-            ...h,
-            imageUrl: h.image_url,
-          }))
-        });
-
         setEditName(clientData.name);
         setEditPhone(clientData.phone || '');
         setEditEmail(clientData.email || '');
+        setEditBirthDate(clientData.birth_date || '');
+
+        setClient({
+          ...clientData,
+          lastVisitAt,
+          firstVisitAt,
+          totalVisits,
+          ltv: ltv || 0,
+          appointmentsHistory: appointmentsData,
+          isInactive: isInactiveClient(totalVisits, lastVisitAt),
+          isNew: isNewClient(totalVisits, firstVisitAt),
+          birthdaySoon: isBirthdaySoon(clientData.birth_date, BIRTHDAY_WINDOW_DAYS),
+          daysToBirthday: daysUntilBirthday(clientData.birth_date),
+        });
+
+        // VIP: comparar LTV deste cliente com top 10 do tenant
+        const { data: aptRows } = await supabase
+          .from('appointments')
+          .select('client_id, price')
+          .eq('user_id', tenantId)
+          .eq('status', 'Completed');
+
+        if (aptRows) {
+          const map = new Map<string, { visitCount: number; ltv: number }>();
+          for (const row of aptRows) {
+            if (!row.client_id) continue;
+            const cur = map.get(row.client_id) || { visitCount: 0, ltv: 0 };
+            cur.visitCount += 1;
+            cur.ltv += Number(row.price) || 0;
+            map.set(row.client_id, cur);
+          }
+          setIsVip(getVipClientIds(map).has(id));
+        }
       } catch (error) {
         console.error('Error fetching client:', error);
       } finally {
@@ -103,141 +127,97 @@ const { id } = useParams<{ id: string }>();
       }
     };
 
-    fetchClient();
-  }, [id, user]);
+    void fetchClient();
+  }, [id, user, tenantId]);
+
+  const visibleHistory = useMemo(() => {
+    const history: AppointmentHistoryItem[] = client?.appointmentsHistory || [];
+    return showAllHistory ? history : history.slice(0, HISTORY_PAGE);
+  }, [client, showAllHistory]);
 
   const handleSaveNotes = async () => {
-    if (!client?.id) return;
+    if (!client?.id || !tenantId) return;
     setSavingNotes(true);
     try {
       const { error } = await supabase
         .from('clients')
-        .update({ notes: notes })
+        .update({ notes })
         .eq('id', client.id)
-        .eq('user_id', user.id)
-        .select();
+        .eq('user_id', tenantId);
 
       if (error) throw error;
-
-      // Update local client state with new notes
-      setClient({ ...client, notes: notes });
-      showToast('Notas salvas com sucesso!', 'success');
-    } catch (error: any) {
+      setClient({ ...client, notes });
+      showToast('Observação salva.', 'success');
+    } catch (error) {
       console.error('Error saving notes:', error);
-      showToast('Não foi possível salvar as notas. Tente novamente.', 'error');
+      showToast('Não foi possível salvar a observação.', 'error');
     } finally {
       setSavingNotes(false);
     }
   };
 
-  const handleSaveSemanticNote = async () => {
-    if (!client?.id || !notes.trim()) return;
-    setSavingNotes(true);
-    try {
-      // 1. Save standard note
-      const { error: dbError } = await supabase
-        .from('clients')
-        .update({ notes: notes })
-        .eq('id', client.id)
-        .eq('user_id', user.id);
-
-      if (dbError) throw dbError;
-
-      // 2. Save Semantic Memory (Embedding)
-      await saveMemory(client.id, notes, 'preference');
-
-      setClient({ ...client, notes: notes });
-      showToast('Nota e Memória de IA salvas!', 'success');
-    } catch (error: any) {
-      console.error('Error saving semantic note:', error);
-      showToast('Não foi possível salvar. Tente novamente.', 'error');
-    } finally {
-      setSavingNotes(false);
-    }
-  };
-
-  const handleWhatsAppClick = async () => {
+  const handleWhatsAppClick = () => {
     if (!client?.phone) {
       showToast('Cliente sem telefone cadastrado.', 'info');
       return;
     }
-
-    let url = '';
-    if (isAtRisk && aiosEnabled) {
-      // ✅ AIOS 2.0: Log Campaign Activity for ROI Attribution
-      await logCampaignActivity(
-        client.id,
-        isBeauty ? 'Beauty AI' : 'Barber AI',
-        'reactivation_spark'
-      );
-
-      const message = generateReactivationMessage({
-        name: client.name,
-        businessName: businessName || 'nossa unidade',
-        userType: userType,
-        daysMissing: isAtRisk.days_since_last_visit
-      });
-      url = getWhatsAppUrl(client.phone, message);
-    } else {
-      url = getWhatsAppUrl(client.phone, '');
-    }
-
-    window.open(url, '_blank');
+    window.open(getWhatsAppUrl(client.phone, ''), '_blank');
   };
 
   const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!client?.id) return;
+    if (!client?.id || !tenantId) return;
     setUpdating(true);
     try {
+      const birthDate = editBirthDate.trim() || null;
       const { error } = await supabase
         .from('clients')
         .update({
           name: editName,
           phone: editPhone,
-          email: editEmail
+          email: editEmail,
+          birth_date: birthDate,
         })
         .eq('id', client.id)
-        .eq('user_id', user.id);
+        .eq('user_id', tenantId);
 
       if (error) throw error;
 
-      setClient({ ...client, name: editName, phone: editPhone, email: editEmail });
-      showToast('Cliente atualizado com sucesso!', 'success');
+      setClient({
+        ...client,
+        name: editName,
+        phone: editPhone,
+        email: editEmail,
+        birth_date: birthDate,
+        birthdaySoon: isBirthdaySoon(birthDate, BIRTHDAY_WINDOW_DAYS),
+        daysToBirthday: daysUntilBirthday(birthDate),
+      });
+      showToast('Cliente atualizado.', 'success');
       setShowEditModal(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating client:', error);
-      showToast('Não foi possível atualizar o cliente. Tente novamente.', 'error');
+      showToast('Não foi possível atualizar o cliente.', 'error');
     } finally {
       setUpdating(false);
     }
   };
 
-  const handleDeleteClient = () => {
-    if (!client?.id) return;
-    setShowDeleteConfirm(true);
-  };
-
   const confirmDeleteClient = async () => {
-    if (!client?.id) return;
-
+    if (!client?.id || !tenantId) return;
     setDeleting(true);
     try {
-      // Soft delete - mark client as inactive instead of deleting
-      // This preserves financial records and appointment history
       const { error } = await supabase
         .from('clients')
         .update({ is_active: false })
         .eq('id', client.id)
-        .eq('user_id', user.id);
+        .eq('user_id', tenantId);
 
       if (error) throw error;
-
-      showToast('Cliente desativado com sucesso!', 'success');
+      showToast('Cliente desativado.', 'success');
       navigate('/clientes');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deactivating client:', error);
-      showToast('Não foi possível desativar o cliente. Tente novamente.', 'error');
+      showToast('Não foi possível desativar o cliente.', 'error');
       setDeleting(false);
     } finally {
       setShowDeleteConfirm(false);
@@ -245,338 +225,245 @@ const { id } = useParams<{ id: string }>();
   };
 
   if (loading) {
-    return <div className="text-[var(--color-text)] text-center p-10">Carregando dados do cliente...</div>;
+    return <div className={`${colors.text} text-center p-10`}>Carregando cliente...</div>;
   }
 
   if (!client) {
-    return <div className="text-[var(--color-text)] text-center p-10">Cliente não encontrado.</div>;
+    return <div className={`${colors.text} text-center p-10`}>Cliente não encontrado.</div>;
+  }
+
+  const statusChips: { label: string; className: string }[] = [];
+  if (isVip) statusChips.push({ label: 'VIP', className: `${accent.bg} text-[var(--color-on-accent)]` });
+  if (client.isInactive) {
+    statusChips.push({
+      label: 'Inativo',
+      className: `${status.warningBg} ${status.warning}`,
+    });
+  } else if (client.isNew) {
+    statusChips.push({
+      label: 'Novo',
+      className: `${colors.surface} ${colors.textSecondary} border ${colors.border}`,
+    });
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Back Button */}
+    <div className="space-y-4 md:space-y-5">
       <button
+        type="button"
         onClick={() => navigate('/clientes')}
-        className="flex items-center gap-2 text-theme-textSecondary hover:text-[var(--color-text)] transition-colors mb-2"
+        className={`flex items-center gap-2 ${colors.textSecondary} hover:text-[var(--color-text)] transition-colors min-h-[44px]`}
       >
-        <ArrowLeft className="w-5 h-5" />
-        <span className="font-mono text-sm uppercase">Voltar para Clientes</span>
+        <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+        <span className="font-mono text-sm uppercase">Clientes</span>
       </button>
 
-      {/* Top Header Profile */}
       <Card className="overflow-hidden">
-        <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
-          {/* Avatar & Tier */}
-          <div className="flex flex-row md:flex-col items-center gap-4 w-full md:w-auto">
-            <div className={`w-20 h-20 md:w-32 md:h-32 flex-shrink-0 ${radius.avatar} ${accent.shadowStrong} relative overflow-hidden group`}>
-              {client.photo_url ? (
-                <img src={client.photo_url} alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
-              ) : (
-                <img src="https://picsum.photos/id/1005/300/300" alt={client.name} className="w-full h-full object-cover grayscale contrast-125" />
-              )}
-
-              {/* Photo Upload Overlay */}
-                <label className="absolute inset-0 bg-[var(--color-bg)]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    try {
-                      const fileExt = file.name.split('.').pop();
-                      const fileName = `${client.id}/${Date.now()}.${fileExt}`;
-
-                      // Upload to Supabase
-                      const { error: uploadError } = await supabase.storage
-                        .from('client_photos')
-                        .upload(fileName, file);
-
-                      if (uploadError) throw uploadError;
-
-                      // Get Public URL
-                      const { data: { publicUrl } } = supabase.storage
-                        .from('client_photos')
-                        .getPublicUrl(fileName);
-
-                      // Update Client Record
-                      const { error: updateError } = await supabase
-                        .from('clients')
-                        .update({ photo_url: publicUrl })
-                        .eq('id', client.id)
-                        .eq('user_id', user.id);
-
-                      if (updateError) throw updateError;
-
-                      // Update Local State
-                      setClient({ ...client, photo_url: publicUrl });
-                      showToast('Foto atualizada com sucesso!', 'success');
-
-                    } catch (error: any) {
-                      console.error('Error uploading photo:', error);
-                      showToast('Não foi possível atualizar a foto. Tente novamente.', 'error');
-                    }
-                  }}
-                />
-                <span className="text-[var(--color-text)] text-xs font-bold uppercase border border-[var(--color-text)] px-2 py-1">Alterar</span>
-              </label>
-            </div>
-            <div className="flex flex-col justify-center md:items-center md:w-full">
-              <div className={`flex gap-1 ${accent.text} mb-1`}>
-                {[1, 2, 3, 4, 5].map(i => (
-                  <Star
-                    key={i}
-                    className={`w-3 h-3 md:w-4 md:h-4 ${i <= (client.rating || 0) ? 'fill-current' : 'fill-none'}`}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-text-secondary md:hidden font-mono uppercase">Membro desde 2021</p>
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+          <div
+            className={`w-20 h-20 sm:w-24 sm:h-24 shrink-0 ${radius.avatar} border ${accent.border} ${colors.inputBg} overflow-hidden flex items-center justify-center`}
+          >
+            {client.photo_url ? (
+              <img src={client.photo_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <User className={`w-8 h-8 ${accent.text}`} aria-hidden="true" />
+            )}
           </div>
 
-          {/* Info */}
-          <div className="flex-1 w-full mt-2 md:mt-0">
-            <div className="border-b-2 border-theme-border mb-4">
-              <PageHeader
-                title={client.name}
-                subtitle={
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 font-mono text-xs md:text-sm">
-                    <span className="flex items-center gap-2"><Mail className="w-3 h-3" /> {client.email}</span>
-                    <span className="flex items-center gap-2">
-                      <Phone className="w-3 h-3" />
-                      {client.phone ? formatPhone(client.phone, region as any) : 'Sem telefone'}
-                    </span>
-                  </div>
-                }
-                meta={
-                  <button
-                    type="button"
-                    onClick={() => setShowEditModal(true)}
-                    className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                    aria-label="Editar nome do cliente"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                }
-                action={
-                  <div className="flex gap-2 w-full md:w-auto">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] hover:brightness-110"
-                      onClick={handleDeleteClient}
-                      disabled={deleting}
-                      aria-label="Desativar cliente"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`border-[var(--color-success-border)] ${isBeauty ? 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]' : 'text-[var(--color-success)] hover:brightness-110 hover:bg-[var(--color-success-bg)]'}`}
-                      onClick={handleWhatsAppClick}
-                      title="Abrir WhatsApp"
-                      aria-label="Abrir WhatsApp"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="primary"
-                      icon={<Scissors />}
-                      size="sm"
-                      className="flex-1 md:flex-none"
-                      onClick={() => navigate(`/agenda?clientId=${client.id}`)}
-                    >
-                      {isBeauty ? 'Novo Serviço' : 'Novo Corte'}
-                    </Button>
-                  </div>
-                }
-              />
+          <div className="flex-1 w-full min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              {statusChips.map((chip) => (
+                <span
+                  key={chip.label}
+                  className={`text-xs font-bold px-2 py-0.5 ${radius.button} ${chip.className}`}
+                >
+                  {chip.label}
+                </span>
+              ))}
+              {client.birthdaySoon && (
+                <span className={`text-xs font-medium ${accent.text} inline-flex items-center gap-1`}>
+                  <Cake className="w-3.5 h-3.5" aria-hidden="true" />
+                  {client.daysToBirthday === 0
+                    ? 'Aniversário hoje'
+                    : `Aniversário em ${client.daysToBirthday} dia${client.daysToBirthday === 1 ? '' : 's'}`}
+                </span>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <PageHeader
+              title={client.name}
+              subtitle={
+                <div className="flex flex-col gap-1.5 font-mono text-xs md:text-sm">
+                  <span className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
+                  </span>
+                  {client.email ? (
+                    <span className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      {client.email}
+                    </span>
+                  ) : null}
+                  {client.birth_date ? (
+                    <span className="flex items-center gap-2">
+                      <Cake className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                      {new Date(`${client.birth_date}T12:00:00`).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'long',
+                      })}
+                    </span>
+                  ) : null}
+                </div>
+              }
+              meta={
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(true)}
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                  aria-label="Editar cliente"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              }
+              action={
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={deleting}
+                    aria-label="Desativar cliente"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="border-[var(--color-success-border)] text-[var(--color-success)] hover:bg-[var(--color-success-bg)]"
+                    onClick={handleWhatsAppClick}
+                    aria-label="Abrir WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="primary"
+                    icon={<Scissors />}
+                    size="sm"
+                    className="flex-1 sm:flex-none"
+                    onClick={() => navigate(`/agenda?clientId=${client.id}`)}
+                  >
+                    {isBeauty ? 'Novo serviço' : 'Novo corte'}
+                  </Button>
+                </div>
+              }
+            />
+
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
               <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
-                <p className={`text-xs ${colors.textSecondary} uppercase`}>Última Visita</p>
-                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.lastVisit}</p>
+                <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Última visita</p>
+                <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>
+                  {formatVisitAgo(client.lastVisitAt)}
+                </p>
               </div>
               <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
-                <p className={`text-xs ${colors.textSecondary} uppercase`}>Total Visitas</p>
-                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.totalVisits}</p>
+                <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Visitas</p>
+                <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>{client.totalVisits}</p>
               </div>
               <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
-                <p className={`text-xs ${colors.textSecondary} uppercase`} title="Total gasto neste estabelecimento">Total Gasto</p>
-                <p className={`text-base md:text-lg font-bold ${accent.text}`}>
+                <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Total gasto</p>
+                <p className={`text-sm sm:text-base font-bold ${accent.text} mt-0.5`}>
                   {formatCurrency(client.ltv || 0, region)}
                 </p>
-              </div>
-              <div className={`col-span-2 md:col-span-1 ${colors.surface} p-3 border ${accent.borderDim} ${radius.input}`}>
-                <p className={`text-xs ${accent.text} uppercase flex items-center gap-1`}>
-                  <Sparkles className="w-3 h-3" /> Próxima Visita
-                </p>
-                <p className={`text-base md:text-lg font-bold ${colors.text}`}>{client.nextPrediction}</p>
               </div>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Visual History - Now using Real Appointments */}
-      <Card title={isBeauty ? "Histórico de Visitas" : "Histórico de Cortes"}>
-        {client.hairHistory.length === 0 && (!client.appointmentsHistory || client.appointmentsHistory.length === 0) ? (
+      <Card title={isBeauty ? 'Histórico de visitas' : 'Histórico de cortes'}>
+        {!client.appointmentsHistory?.length ? (
           <EmptyState
             bordered
             icon={Scissors}
-            title={isBeauty ? 'Nenhum registro ainda' : 'Nenhum registro de corte ainda'}
-            description="Os atendimentos concluídos deste cliente aparecem aqui."
+            title="Nenhum atendimento ainda"
+            description="Visitas concluídas deste cliente aparecem aqui."
           />
         ) : (
-          <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-            <div className="flex gap-4 md:gap-6 min-w-max">
-              {/* Show appointments history first (more relevant) */}
-              {client.appointmentsHistory && client.appointmentsHistory.map((apt: any, index: number) => {
-                // Calculate discount info
-                const hasDiscount = apt.basePrice && apt.price < apt.basePrice;
-                const discountPercentage = hasDiscount ? Math.round(((apt.basePrice - apt.price) / apt.basePrice) * 100) : 0;
-
-                return (
-                  <div key={apt.id} className="w-56 md:w-64 flex-shrink-0 group">
-                    <div className={`relative border ${colors.border} hover:border-[var(--color-accent-border)] transition-colors ${colors.surface} ${radius.card} overflow-hidden h-56 md:h-64 flex flex-col items-center justify-center p-4`}>
-                      <Calendar className={`w-12 h-12 ${accent.text} mb-2 opacity-50`} />
-                      <p className={`${colors.text} font-bold font-heading text-lg text-center leading-tight mb-1`}>{apt.service}</p>
-                      <p className={`${colors.textSecondary} font-mono text-xs`}>{new Date(apt.appointment_time).toLocaleDateString('pt-BR')}</p>
-
-                      <div className={`absolute bottom-0 left-0 right-0 ${colors.card} p-3 border-t ${colors.divider}`}>
-                        <p className={`text-xs ${colors.textSecondary} font-mono flex justify-between items-center`}>
-                          <span>{apt.professional_name || 'Profissional'}</span>
-                          <span className="flex items-center gap-2">
-                            {hasDiscount && (
-                              <span className={`${status.danger} line-through text-xs`}>{currencySymbol} {apt.basePrice.toFixed(2)}</span>
-                            )}
-                            <span className={`${colors.text} font-bold`}>{currencySymbol} {apt.price.toFixed(2)}</span>
-                          </span>
-                        </p>
-                      </div>
-
-                      {/* Badges */}
-                      <div className="absolute top-2 right-2 flex flex-col gap-1">
-                        {index === 0 && (
-                          <span className={`${accent.bg} text-[var(--color-on-accent)] text-xs font-bold px-2 py-1 uppercase`}>Último</span>
-                        )}
-                        {hasDiscount && (
-                          <span className="bg-[var(--color-danger-bg)] text-[var(--color-danger)] text-xs font-bold px-2 py-1 flex items-center gap-1">
-                            <Tag className="w-3 h-3" /> {discountPercentage}% OFF
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {/* Repeat Service Button for each card */}
-                    <button
-                      onClick={() => navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)}
-                      className={`w-full mt-3 bg-theme-surface ${accent.bgHover} hover:text-[var(--color-on-accent)] text-[var(--color-text)] py-2 font-mono text-xs uppercase tracking-wider border border-black transition-colors flex items-center justify-center gap-2`}
-                    >
-                      <RefreshCcw className="w-3 h-3" /> {isBeauty ? 'Repetir Serviço' : 'Repetir Estilo'}
-                    </button>
+          <div className="space-y-2">
+            {visibleHistory.map((apt: AppointmentHistoryItem, index: number) => (
+              <div
+                key={apt.id}
+                className={`flex items-center gap-3 p-3 border ${colors.border} ${colors.surface} ${radius.input}`}
+              >
+                <Calendar className={`w-5 h-5 shrink-0 ${accent.text} opacity-70`} aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className={`font-heading font-bold ${colors.text} truncate`}>{apt.service}</p>
+                    {index === 0 && !showAllHistory && (
+                      <span className={`text-xs font-bold px-1.5 py-0.5 ${accent.bg} text-[var(--color-on-accent)] shrink-0`}>
+                        Último
+                      </span>
+                    )}
                   </div>
-                );
-              })}
-
-              {/* Keep existing hair records for backward compatibility */}
-              {client.hairHistory.map((record: any) => (
-                <div key={record.id} className="w-56 md:w-64 flex-shrink-0 group">
-                  <div className={`relative border-2 border-theme-border hover:border-[var(--color-accent-border)] transition-colors`}>
-                    <img src={record.imageUrl} alt="Cut" className="w-full h-56 md:h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-bg)]/80 p-3 border-t border-theme-border">
-                      <p className="text-[var(--color-text)] font-bold font-heading text-sm md:text-base">{record.service}</p>
-                      <p className="text-xs md:text-xs text-text-secondary font-mono">{new Date(record.date).toLocaleDateString('pt-BR')} • {record.barber}</p>
-                    </div>
-                    <div className="absolute top-2 right-2">
-                      <span className="bg-theme-surface text-[var(--color-text)] text-xs font-bold px-2 py-1 uppercase border border-theme-border">Foto</span>
-                    </div>
-                  </div>
+                  <p className={`text-xs font-mono ${colors.textSecondary}`}>
+                    {new Date(apt.appointment_time).toLocaleDateString('pt-BR')}
+                    {apt.professional_name ? ` · ${apt.professional_name}` : ''}
+                  </p>
                 </div>
-              ))}
-            </div>
+                <div className="text-right shrink-0">
+                  <p className={`text-sm font-bold ${colors.text}`}>
+                    {formatCurrency(apt.price || 0, region)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(`/agenda?clientId=${client.id}&service=${encodeURIComponent(apt.service)}`)
+                    }
+                    className={`mt-1 text-xs font-mono uppercase ${accent.text} inline-flex items-center gap-1 min-h-[44px]`}
+                  >
+                    <RefreshCcw className="w-3 h-3" aria-hidden="true" />
+                    Repetir
+                  </button>
+                </div>
+              </div>
+            ))}
+            {client.appointmentsHistory.length > HISTORY_PAGE && (
+              <Button
+                variant="ghost"
+                size="sm"
+                fullWidth
+                onClick={() => setShowAllHistory((v) => !v)}
+              >
+                {showAllHistory
+                  ? 'Ver menos'
+                  : `Ver mais (${client.appointmentsHistory.length - HISTORY_PAGE})`}
+              </Button>
+            )}
           </div>
         )}
       </Card>
 
-      {/* Notes & Preferences */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <div className="md:col-span-2 h-full">
-          <Card title={isBeauty ? "Notas do Profissional" : "Notas do Barbeiro"} className="h-full">
-            <textarea
-              className={`w-full h-40 bg-theme-surface border-2 border-theme-border p-4 text-text-primary font-mono text-sm focus:outline-none focus:border-[var(--color-accent-border)] resize-none`}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Digite observações sobre o cliente..."
-            />
-            <div className="flex justify-end mt-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSaveSemanticNote}
-                disabled={savingNotes}
-              >
-                {savingNotes ? 'Salvando...' : 'Salvar Observação'}
-              </Button>
-            </div>
-          </Card>
+      <Card title="Observações">
+        <textarea
+          className={`w-full h-32 ${colors.inputBg} border ${colors.inputBorder} p-4 ${colors.text} font-mono text-sm focus:outline-none focus:border-[var(--color-input-focus)] resize-none ${radius.input}`}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Preferências, alergias, observações do atendimento..."
+          aria-label="Observações do cliente"
+        />
+        <div className="flex justify-end mt-2">
+          <Button variant="secondary" size="sm" onClick={handleSaveNotes} disabled={savingNotes}>
+            {savingNotes ? 'Salvando...' : 'Salvar observação'}
+          </Button>
         </div>
+      </Card>
 
-        {/* AI Insight Mini Card */}
-        <Card
-          variant="elevated"
-          className="bg-gradient-to-br from-brutal-card to-neutral-900 overflow-hidden relative"
-        >
-          {isAtRisk ? (
-            <div className="relative z-10">
-              {/* ... existing code for at risk ... */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`flex items-center gap-2 ${accent.text} flex-1`}>
-                  <Sparkles className="w-5 h-5 animate-pulse" />
-                  <h3 className="font-heading text-lg uppercase tracking-wider">Cliente Inativo</h3>
-                </div>
-                <span className={`${isBeauty ? 'bg-beauty-neon/20 text-beauty-neon border-beauty-neon' : 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning-border)]'} px-2 py-1 text-xs font-bold border uppercase tracking-widest`}>Sugestão de IA</span>
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-sm text-text-secondary leading-relaxed bg-[var(--color-card-hover)] rounded-lg p-3">
-                  Detectamos que o valor médio por atendimento de <span className="text-[var(--color-text)] font-bold">{client.name.split(' ')[0]}</span> é de <span className={`${accent.text} font-bold`}>{formatCurrency(isAtRisk.avg_ticket, region)}</span>, mas ele não retorna há <span className="text-[var(--color-text)] font-bold">{isAtRisk.days_since_last_visit} dias</span>.
-                </p>
-
-                <div className="bg-[var(--color-card-hover)] p-3 rounded border border-[var(--color-border)]">
-                  <p className="text-xs uppercase font-mono text-text-secondary mb-1">Sugestão da IA:</p>
-                  <p className="text-xs italic text-[var(--color-text)]/80">&quot;Enviar mensagem de saudades e oferecer um horário prioritário para esta semana.&quot;</p>
-                </div>
-
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="w-full shadow-lg"
-                  onClick={handleWhatsAppClick}
-                  icon={<MessageCircle className="w-4 h-4" />}
-                >
-                  Mandar Mensagem
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="relative z-10">
-              <AISemanticInsights clientId={client.id} clientName={client.name} />
-            </div>
-          )}
-
-          {/* Subtle background icon */}
-          <Sparkles className={`absolute -bottom-4 -right-4 w-24 h-24 opacity-5 ${accent.text}`} />
-        </Card>
-      </div>
-      {/* Edit Modal */}
-      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar Cliente" size="md">
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar cliente" size="md">
         <form onSubmit={handleUpdateClient} className="space-y-4">
           <div>
-            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-name">Nome Completo</label>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-name">
+              Nome completo
+            </label>
             <input
               id="crm-edit-name"
               type="text"
@@ -586,9 +473,10 @@ const { id } = useParams<{ id: string }>();
               required
             />
           </div>
-
           <div>
-            <label className={`block mb-2 ${classes.label}`} htmlFor="crm-edit-phone">Telefone</label>
+            <label className={`block mb-2 ${classes.label}`} htmlFor="crm-edit-phone">
+              Telefone
+            </label>
             <PhoneInput
               value={editPhone}
               onChange={setEditPhone}
@@ -596,9 +484,10 @@ const { id } = useParams<{ id: string }>();
               className="w-full"
             />
           </div>
-
           <div>
-            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-email">Email</label>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-email">
+              E-mail
+            </label>
             <input
               id="crm-edit-email"
               type="email"
@@ -607,13 +496,24 @@ const { id } = useParams<{ id: string }>();
               className={classes.input}
             />
           </div>
-
-          <div className="flex gap-3 mt-6">
-            <Button type="button" variant="secondary" fullWidth onClick={() => setShowEditModal(false)}>
+          <div>
+            <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-birth">
+              Data de aniversário
+            </label>
+            <input
+              id="crm-edit-birth"
+              type="date"
+              value={editBirthDate}
+              onChange={(e) => setEditBirthDate(e.target.value)}
+              className={classes.input}
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button type="button" variant="ghost" fullWidth onClick={() => setShowEditModal(false)}>
               Cancelar
             </Button>
             <Button type="submit" variant="primary" fullWidth loading={updating}>
-              {updating ? 'Salvando...' : 'Salvar'}
+              Salvar
             </Button>
           </div>
         </form>
@@ -621,13 +521,13 @@ const { id } = useParams<{ id: string }>();
 
       <ConfirmModal
         open={showDeleteConfirm}
-        title="Desativar cliente"
-        message="Tem certeza que deseja desativar este cliente? O cliente não aparecerá mais na lista, mas o histórico financeiro será mantido."
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteClient}
+        title="Desativar cliente?"
+        description="O histórico fica preservado. O cliente some da lista ativa."
         confirmLabel="Desativar"
         variant="danger"
         loading={deleting}
-        onCancel={() => setShowDeleteConfirm(false)}
-        onConfirm={() => void confirmDeleteClient()}
       />
     </div>
   );

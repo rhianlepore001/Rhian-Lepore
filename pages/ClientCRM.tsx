@@ -399,7 +399,7 @@ export const ClientCRM: React.FC = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className={`font-heading font-bold ${colors.text} truncate`}>{apt.service}</p>
-                    {index === 0 && !showAllHistory && (
+                    {index === 0 && (
                       <span className={`text-xs font-bold px-1.5 py-0.5 ${accent.bg} text-[var(--color-on-accent)] shrink-0`}>
                         Último
                       </span>

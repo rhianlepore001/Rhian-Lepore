@@ -1,9 +1,10 @@
 # SPEC — Clientes / CRM do gestor (Lion Claw discovery)
 
 **Tarefa:** RASCUNHO · **Data:** 2026-08-04  
-**Status:** discovery em andamento (Rhian: melhorar feature de clientes; CRM enxuto; staff sem acesso ao CRM)  
+**Status:** decisões fechadas → spec em `specs/active/clientes-crm-v2/`  
 **Branch:** `cursor/discovery-clientes-crm-68c9`  
-**Fontes:** `pages/Clients.tsx`, `pages/ClientCRM.tsx`, `services/crm.ts`, `App.tsx`, `components/BottomMobileNav.tsx`, `pages/Reports.tsx` (Melhores clientes), `hooks/useAIOSDiagnostic.ts`, `specs/done/SPEC-dashboard-colaborador-wireflow.md`, prints atuais da UI.
+**Fontes:** `pages/Clients.tsx`, `pages/ClientCRM.tsx`, `services/crm.ts`, `App.tsx`, `components/BottomMobileNav.tsx`, `pages/Reports.tsx` (Melhores clientes), `hooks/useAIOSDiagnostic.ts`, `specs/done/SPEC-dashboard-colaborador-wireflow.md`, prints atuais da UI.  
+**Artefatos:** `clientes-crm-v2/context.md` · `clientes-crm-v2/spec.md`
 
 > **Formato Lion Claw:** discovery pergunta-resposta-investigação que força clareza antes de virar sprint. Sem SQL, sem PRD completo. Cada frente tem 4 lentes: (1) pedido literal, (2) estado atual, (3) decisões abertas, (4) impacto provável.  
 > **Quando virar sprint:** promover para `SPEC-clientes-crm-sprints.md` com PRD, schema/RLS, wireflow, DoD e gates.
@@ -54,19 +55,13 @@ Clientes não compete com Insights: **lista/CRM = ação**; **Insights = leitura
 | Nav staff | `/clientes` aberto p/ staff (sem `OwnerRouteGuard`) | Staff vê CRM + LTV da casa |
 | Sync | `syncPublicClientsToCrm` ao abrir lista | Ok; booking público vira cliente |
 
-### 2.3 Decisões abertas (fechar antes do PRD)
+### 2.3 Decisões (FECHADAS 2026-08-04)
 
-- [ ] **D-A1 — Card da lista: o que mostra?**  
-  - Recomendação: **nome · telefone · N visitas · última visita (data relativa: “há 12 dias” / “ontem”)**. Gasto só no detalhe ou no chip VIP.
-- [ ] **D-A2 — Definição de VIP**  
-  - Opções: (1) top N por gasto lifetime; (2) gasto ≥ X; (3) visitas ≥ N; (4) híbrido top gasto **ou** visitas ≥ N; (5) tag manual do gestor.  
-  - Recomendação: **alinhar com Insights (top por gasto)** + badge VIP; visitas sozinhas com limiar 5 é fraco demais.
-- [ ] **D-A3 — Definição de Inativo**  
-  - Recomendação: **≥1 visita concluída E última visita há ≥ 45 dias** (cadência típica de barbearia ~mensal + folga). 35 dias = mais agressivo (mais “em risco”).
-- [ ] **D-A4 — O que fazer com “Novos”?**  
-  - Recomendação: **Novos = primeira visita nos últimos 30 dias** (ou cadastrados sem visita concluída). Separar de “nunca veio”.
-- [ ] **D-A5 — Ordenação padrão da lista**  
-  - Recomendação: **última visita desc** (quem veio recentemente no topo) + busca. Alternativa: alfabética (hoje).
+- [x] **D-A1 — Card da lista:** nome · telefone · N visitas · última visita (relativa). **Gasto só no CRM.**
+- [x] **D-A2 — VIP (CTO):** top **10** por LTV (mesmo ranking Insights “Melhores clientes”); ≥1 visita e LTV > 0. Visitas sozinhas não definem VIP.
+- [x] **D-A3 — Inativo:** ≥1 visita concluída E última visita há **≥ 35 dias**.
+- [x] **D-A4 — Novos:** primeira visita nos últimos **30 dias** OU sem visita concluída. Sistema deriva; sem classificação manual.
+- [x] **D-A5 — Ordenação:** última visita desc + busca.
 
 ### 2.4 Impacto provável
 - UI lista + filtros; possível RPC/agregação `last_visit_at` / `total_spent` (hoje visitas são contadas client-side em loop de appointments).
@@ -128,12 +123,14 @@ Clientes não compete com Insights: **lista/CRM = ação**; **Insights = leitura
 - Clube/assinatura badge (já tem spec própria) — só se clube estiver ativo  
 - Score de risco com copy de IA no meio da ficha (pode virar botão “Recuperar” no filtro Inativos)
 
-### 3.4 Decisões abertas
+### 3.4 Decisões (FECHADAS 2026-08-04)
 
-- [ ] **D-B1 — Nota: quem edita?** Só gestor, ou profissional no checkout também grava observação? (recomendação: **só gestor na ficha**; observação de atendimento no checkout = fase 2)  
-- [ ] **D-B2 — Histórico: quantas visitas?** Últimas 10 + “ver mais”, ou scroll infinito? (recomendação: **10 + ver mais**)  
-- [ ] **D-B3 — Total gasto inclui produtos?** Recomendação: **sim** (serviço + produtos vinculados ao cliente) — alinhar com LTV do RPC atual.  
-- [ ] **D-B4 — Soft-delete permanece?** Recomendação: **sim**, fora do fluxo principal (menu ⋯).
+- [x] **D-B1 — Nota:** só gestor na ficha; staff não vê nesta fase.
+- [x] **D-B2 — Histórico:** últimas 10 + ver mais.
+- [x] **D-B3 — Total gasto:** LTV do perfil (alinhar RPC atual / Insights).
+- [x] **D-B4 — Soft-delete:** permanece, fora do fluxo principal.
+- [x] **D-B5 — Cortes CRM:** aprovados (rating, membro-desde, picsum, IA fixa, origem, predição hero).
+- [x] **D-B6 — Cadastro:** remover Origem Novo/Recente/Antigo; adicionar **aniversário opcional** (`birth_date`) + indicador 7 dias (lembrete UI); campanha WhatsApp automática = deferred.
 
 ### 3.5 Impacto provável
 - Refator visual/estrutural de `ClientCRM.tsx` (arquivo já denso).  
@@ -168,11 +165,11 @@ Clientes não compete com Insights: **lista/CRM = ação**; **Insights = leitura
 - Rotas: `OwnerRouteGuard` em `/clientes` e `/clientes/:id`.  
 - Deep link staff → redirect + toast (padrão já usado).
 
-### 4.4 Decisões abertas
+### 4.4 Decisões (FECHADAS 2026-08-04)
 
-- [ ] **D-C1 — Staff pode cadastrar cliente na Agenda?** Recomendação: **sim** (nome+telefone), sem abrir CRM.  
-- [ ] **D-C2 — Staff vê nota do cliente no card do agendamento?** Recomendação fase 1: **não**; fase 2: trecho curto se gestor quiser.  
-- [ ] **D-C3 — RLS:** só UI guard ou também policy no banco? Recomendação: **UI agora + reforço RLS na sprint** (staff autenticado no mesmo tenant ainda lê `clients` hoje).
+- [x] **D-C1 — Staff cadastra na Agenda:** **sim** (nome+telefone), sem abrir CRM.
+- [x] **D-C2 — Staff vê nota:** **não** nesta fase.
+- [x] **D-C3 — Guard:** `OwnerRouteGuard` + remover nav; RLS endurecido preferível na sprint se couber (senão P1 logo após).
 
 ---
 
@@ -206,14 +203,14 @@ Clientes não compete com Insights: **lista/CRM = ação**; **Insights = leitura
 
 ---
 
-## 7. Gray areas para fechar nesta conversa
+## 7. Gray areas — FECHADAS
 
-1. **VIP** — top por gasto (Insights) vs visitas vs híbrido vs manual?  
-2. **Inativo** — 35 ou 45 dias?  
-3. **Novos** — manter filtro? Qual definição?  
-4. **Staff** — cadastra cliente na Agenda? Vê nota curta?  
-5. **CRM** — concordar com lista de remoções (§3.3)?  
-6. **Gasto no card da lista** — sim/não?
+1. **VIP** → top 10 por LTV (= Insights).  
+2. **Inativo** → 35 dias.  
+3. **Novos** → 1ª visita em 30d ou sem visita.  
+4. **Staff** → cadastra na Agenda; sem nota/CRM.  
+5. **CRM** → cortes aprovados + aniversário opcional no cadastro.  
+6. **Gasto** → só no CRM.
 
 ---
 

@@ -85,7 +85,7 @@ export const BugReportButton: React.FC = () => {
         aria-haspopup="menu"
         title="Ajuda e reportar problema"
         className={[
-          'inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10',
+          'inline-flex items-center justify-center min-h-[44px] min-w-[44px] w-11 h-11 md:w-10 md:h-10',
           'border border-transparent transition-colors duration-150',
           classes.buttonGhost,
           radius.button,

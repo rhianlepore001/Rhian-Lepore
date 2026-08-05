@@ -88,7 +88,12 @@ export const Header: React.FC = () => {
             ) : (
               <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                 {pathname !== '/' && (
-                  <Link to="/" className="md:hidden flex items-center shrink-0 group hover:opacity-90 transition-all" title="Voltar ao Dashboard">
+                  <Link
+                    to="/"
+                    className="md:hidden inline-flex items-center justify-center shrink-0 min-h-[44px] min-w-[44px] rounded-lg group hover:opacity-90 hover:bg-[var(--color-card-hover)] transition-all"
+                    title="Voltar ao Dashboard"
+                    aria-label="Voltar ao Dashboard"
+                  >
                     <ArrowLeft className={`w-5 h-5 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>
                 )}
@@ -115,7 +120,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Right: Profile & Actions */}
-          <div className="flex items-center gap-0.5 sm:gap-2 md:gap-6 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-6 shrink-0">
             {/* Dev Theme Switcher */}
             {isDev && (
               <button
@@ -226,13 +231,14 @@ export const Header: React.FC = () => {
               <button
                 id="header-profile-btn"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className={`flex items-center gap-3 pl-0 md:pl-6 md:border-l-2 ${colors.divider} hover:opacity-80 transition-opacity`}
+                aria-label="Abrir menu do perfil"
+                className={`inline-flex items-center justify-center gap-3 min-h-[44px] min-w-[44px] pl-0 md:pl-6 md:border-l-2 ${colors.divider} hover:opacity-80 transition-opacity`}
               >
                 <div className="text-right hidden sm:block">
                   <p className={`text-sm font-bold ${colors.text} leading-tight`}>{fullName || 'Usuário'}</p>
-                  <p className={`text-xs ${colors.textSecondary} font-mono leading-tight capitalize`}>{isBeauty ? 'Beauty Professional' : 'Barber'}</p>
+                  <p className={`text-xs ${colors.textSecondary} font-mono leading-tight capitalize`}>{isBeauty ? 'Salão' : 'Barbearia'}</p>
                 </div>
-                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
+                <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
                   ) : (

@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Varredura Impeccable + Playwright (5 Ago 2026) — em PR:**
+  - Branch `cursor/impeccable-e2e-sweep-4706`.
+  - 4 sub-agentes Composer (cores/copy/layout/bugs) + forense Playwright (owner/staff/público).
+  - Fixes P0/P1: Button truncate+ícone, FAB bottom nav sem `w-full`, scrim opaco, settings tabs 44px, Team CTA, comissão sem `%` duplo, Header hit areas, Comissões stack mobile.
+  - Relatório: `docs/impeccable-sweep/`; prints BEFORE/AFTER em artifacts + docs.
+  - Backlog: Login/Register hardcodes, alert→ConfirmModal, ErrorState Finance, Agenda CTAs.
+  - Gates: typecheck, lint (+design-debt), build, 400 testes.
 - **Clientes/CRM v2 — MERGED → produção (4 Ago 2026):**
   - Branch `cursor/discovery-clientes-crm-68c9` · PR #19 → `main` (`4d02e07`) · deploy Vercel automático.
   - Spec/design/tasks: `specs/active/clientes-crm-v2/`.

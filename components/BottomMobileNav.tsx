@@ -28,10 +28,15 @@ export const BottomMobileNav: React.FC = () => {
 
     return (
         <>
+            {/* Scrim sólido sob a nav — evita texto da página “vazar” atrás do chrome */}
+            <div
+                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-28 pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-40% via-[var(--color-bg)]/95 to-transparent"
+                aria-hidden="true"
+            />
             <nav
                 aria-label="Navegação principal"
-                className={`md:hidden fixed bottom-6 left-6 right-6 z-40 flex items-center justify-between px-3 pb-[env(safe-area-inset-bottom)] pt-3 h-[76px] transition-all duration-300 rounded-[28px] border ${colors.divider} shadow-promax-glass backdrop-blur-2xl
-                bg-[color-mix(in_srgb,var(--color-bg)_40%,transparent)]`}
+                className={`md:hidden fixed bottom-4 left-3 right-3 z-40 flex items-end justify-between gap-0.5 px-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 h-[72px] transition-all duration-300 rounded-[24px] border ${colors.divider} shadow-promax-glass
+                bg-[var(--color-bg)]`}
             >
                 {/* Owner: Agenda, Clientes, FAB, Financeiro, Mais.
                     Staff: Agenda, Fila, FAB, Insights, Mais — CRM é domínio do gestor. */}
@@ -41,12 +46,12 @@ export const BottomMobileNav: React.FC = () => {
                     onClick={() => navigate('/agenda')}
                     aria-label="Agenda"
                     aria-current={isActive('/agenda') ? 'page' : undefined}
-                    className={`${navItemBase} h-full ${isActive('/agenda') ? accent.text : colors.textSecondary}`}
+                    className={`${navItemBase} flex-1 min-w-0 h-full ${isActive('/agenda') ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${isActive('/agenda') ? 'bg-[var(--color-card-hover)]' : ''}`}>
-                        <Calendar className="w-6 h-6" strokeWidth={isActive('/agenda') ? 2.5 : 2} aria-hidden="true" />
+                    <div className={`p-1.5 rounded-xl transition-all ${isActive('/agenda') ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                        <Calendar className="w-5 h-5" strokeWidth={isActive('/agenda') ? 2.5 : 2} aria-hidden="true" />
                     </div>
-                    <span className="text-xs font-bold tracking-tight">Agenda</span>
+                    <span className="text-xs font-bold tracking-tight truncate max-w-full">Agenda</span>
                 </button>
 
                 {/* 2. Clientes (dono) / Fila (colaborador) */}
@@ -55,33 +60,31 @@ export const BottomMobileNav: React.FC = () => {
                     onClick={() => navigate(secondaryPath)}
                     aria-label={isStaff ? 'Fila' : 'Clientes'}
                     aria-current={secondaryActive ? 'page' : undefined}
-                    className={`${navItemBase} h-full ${secondaryActive ? accent.text : colors.textSecondary}`}
+                    className={`${navItemBase} flex-1 min-w-0 h-full ${secondaryActive ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${secondaryActive ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                    <div className={`p-1.5 rounded-xl transition-all ${secondaryActive ? 'bg-[var(--color-card-hover)]' : ''}`}>
                         {isStaff ? (
-                            <Clock className="w-6 h-6" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
+                            <Clock className="w-5 h-5" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
                         ) : (
-                            <Users className="w-6 h-6" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
+                            <Users className="w-5 h-5" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
                         )}
                     </div>
-                    <span className="text-xs font-bold tracking-tight">{isStaff ? 'Fila' : 'Clientes'}</span>
+                    <span className="text-xs font-bold tracking-tight truncate max-w-full">{isStaff ? 'Fila' : 'Clientes'}</span>
                 </button>
 
-                {/* 3. CENTER PLUS BUTTON */}
-                <div className="relative -top-10 flex justify-center w-full">
+                {/* 3. CENTER PLUS — shrink-0 (nunca w-full: esmagava vizinhos) */}
+                <div className="relative -top-5 flex justify-center shrink-0 basis-14 px-1">
                     <button
                         type="button"
                         onClick={() => setShowQuickActions(true)}
-                        className={`w-16 h-16 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-promax-depth transform transition-all active:scale-95 group relative overflow-hidden
-                        ${accent.bg} text-[var(--color-bg)]`}
+                        className={`w-14 h-14 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-promax-depth transform transition-all active:scale-95 group relative overflow-hidden
+                        ${accent.bg} text-[var(--color-on-accent)]`}
                         aria-label="Ações rápidas"
                         title="Ações rápidas"
                     >
                         <div className="absolute inset-0 bg-[var(--color-card-hover)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <Plus className="w-10 h-10 relative z-10" strokeWidth={3} aria-hidden="true" />
+                        <Plus className="w-7 h-7 relative z-10" strokeWidth={2.75} aria-hidden="true" />
                     </button>
-                    {/* Ring Glow */}
-                    <div className={`absolute -top-1 w-18 h-18 rounded-3xl blur-xl opacity-20 -z-10 ${accent.bg}`}></div>
                 </div>
 
                 {/* 4. Financeiro / Insights */}
@@ -91,25 +94,25 @@ export const BottomMobileNav: React.FC = () => {
                         onClick={() => navigate('/financeiro')}
                         aria-label="Financeiro"
                         aria-current={isActive('/financeiro') ? 'page' : undefined}
-                        className={`${navItemBase} h-full ${isActive('/financeiro') ? accent.text : colors.textSecondary}`}
+                        className={`${navItemBase} flex-1 min-w-0 h-full ${isActive('/financeiro') ? accent.text : colors.textSecondary}`}
                     >
-                        <div className={`p-2 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-[var(--color-card-hover)]' : ''}`}>
-                            <DollarSign className="w-6 h-6" strokeWidth={isActive('/financeiro') ? 2.5 : 2} aria-hidden="true" />
+                        <div className={`p-1.5 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                            <DollarSign className="w-5 h-5" strokeWidth={isActive('/financeiro') ? 2.5 : 2} aria-hidden="true" />
                         </div>
-                        <span className="text-xs font-bold tracking-tight">Financeiro</span>
+                        <span className="text-xs font-bold tracking-tight truncate max-w-full">Financeiro</span>
                     </button>
                 ) : (
                     <button
                         type="button"
                         onClick={() => navigate('/meus-insights')}
-                        aria-label="Insights"
+                        aria-label="Meus resultados"
                         aria-current={isActive('/meus-insights') ? 'page' : undefined}
-                        className={`${navItemBase} h-full ${isActive('/meus-insights') ? accent.text : colors.textSecondary}`}
+                        className={`${navItemBase} flex-1 min-w-0 h-full ${isActive('/meus-insights') ? accent.text : colors.textSecondary}`}
                     >
-                        <div className={`p-2 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-[var(--color-card-hover)]' : ''}`}>
-                            <TrendingUp className="w-6 h-6" strokeWidth={isActive('/meus-insights') ? 2.5 : 2} aria-hidden="true" />
+                        <div className={`p-1.5 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                            <TrendingUp className="w-5 h-5" strokeWidth={isActive('/meus-insights') ? 2.5 : 2} aria-hidden="true" />
                         </div>
-                        <span className="text-xs font-bold tracking-tight">Insights</span>
+                        <span className="text-xs font-bold tracking-tight truncate max-w-full">Resultados</span>
                     </button>
                 )}
 
@@ -119,12 +122,12 @@ export const BottomMobileNav: React.FC = () => {
                     onClick={() => setShowMoreMenu(true)}
                     aria-label="Mais opções"
                     aria-expanded={showMoreMenu}
-                    className={`${navItemBase} h-full ${showMoreMenu ? accent.text : colors.textSecondary}`}
+                    className={`${navItemBase} flex-1 min-w-0 h-full ${showMoreMenu ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-2 rounded-xl transition-all ${showMoreMenu ? 'bg-[var(--color-card-hover)]' : ''}`}>
-                        <Menu className="w-6 h-6" strokeWidth={2} aria-hidden="true" />
+                    <div className={`p-1.5 rounded-xl transition-all ${showMoreMenu ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                        <Menu className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
                     </div>
-                    <span className="text-xs font-bold tracking-tight">Mais</span>
+                    <span className="text-xs font-bold tracking-tight truncate max-w-full">Mais</span>
                 </button>
             </nav>
 

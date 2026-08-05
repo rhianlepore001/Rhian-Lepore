@@ -237,10 +237,10 @@ export const CommissionsSettings: React.FC = () => {
                             Você receberá um alerta no dashboard 2 dias antes.
                         </p>
 
-                        <div className="flex items-center gap-4">
-                            <div className="flex-1 max-w-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                            <div className="flex-1 w-full sm:max-w-xs min-w-0">
                                 <label className={classes.label}>
-                                    Dia do Mês (1-31)
+                                    Dia do mês (1–31)
                                 </label>
                                 <div className="relative">
                                     <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
@@ -253,8 +253,8 @@ export const CommissionsSettings: React.FC = () => {
                                         className={`${classes.input} pl-12 text-lg`}
                                     />
                                 </div>
-                                <p className={`${colors.textMuted} text-xs mt-1 font-mono`}>
-                                    Próximo acerto: Dia {settlementDay} deste mês
+                                <p className={`${colors.textMuted} text-xs mt-1`}>
+                                    Próximo acerto: dia {settlementDay} deste mês
                                 </p>
                             </div>
 
@@ -262,9 +262,9 @@ export const CommissionsSettings: React.FC = () => {
                                 variant="primary"
                                 onClick={handleSaveSettlementDay}
                                 disabled={saving}
-                                className="mt-6"
+                                className="w-full sm:w-auto shrink-0"
                             >
-                                {saving ? 'Salvando...' : 'Salvar Dia'}
+                                {saving ? 'Salvando...' : 'Salvar dia'}
                             </Button>
                         </div>
                     </div>

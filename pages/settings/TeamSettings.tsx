@@ -22,12 +22,11 @@ export const TeamSettings: React.FC = () => {
     const cardMembers = members.map(m => ({ ...m, photo_url: m.photo_url ?? null }));
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir este profissional?')) return;
+        if (!window.confirm('Tem certeza que deseja excluir este profissional?')) return;
         try {
             await deleteMemberMutation.mutateAsync(id);
-        } catch (error) {
-            console.error('Error deleting member:', error);
-            alert('Erro ao excluir.');
+        } catch {
+            window.alert('Não foi possível excluir o profissional. Tente de novo.');
         }
     };
 
@@ -43,13 +42,14 @@ export const TeamSettings: React.FC = () => {
                     </p>
                     <Button
                         id="btn-add-team-member"
+                        className="shrink-0 self-start sm:self-auto"
+                        icon={<Plus className="w-5 h-5" />}
                         onClick={() => {
                             setEditingMember(null);
                             setIsModalOpen(true);
                         }}
                     >
-                        <Plus className="w-5 h-5 mr-1" />
-                        Profissional
+                        Adicionar profissional
                     </Button>
                 </div>
 

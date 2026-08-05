@@ -111,9 +111,9 @@ const MobileSettingsRail: React.FC<{
     <div className="relative border-b border-[var(--color-divider)]">
       <div
         ref={scrollerRef}
-        className="flex gap-2 overflow-x-auto px-4 py-3 hide-scrollbar snap-x snap-mandatory"
+        className="flex gap-2 overflow-x-auto px-4 py-3 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
-        aria-label="Seções de configurações"
+        aria-label="Seções de configurações — deslize para ver mais"
       >
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -125,8 +125,8 @@ const MobileSettingsRail: React.FC<{
               role="tab"
               aria-selected={isActive}
               className={`
-                snap-start inline-flex items-center gap-1.5 shrink-0 px-3.5 py-2 min-h-10 rounded-full
-                text-xs font-semibold tracking-wide transition-colors active:animate-haptic-click
+                snap-start inline-flex items-center gap-1.5 shrink-0 px-3.5 py-2.5 min-h-[44px] rounded-full
+                text-xs font-semibold tracking-wide whitespace-nowrap transition-colors active:animate-haptic-click
                 border
                 ${isActive
                   ? `${accent.bgDim} ${accent.text} ${accent.border}`
@@ -135,13 +135,17 @@ const MobileSettingsRail: React.FC<{
               `}
             >
               <item.icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              <span>{item.label}</span>
+              <span className="truncate max-w-[9.5rem]">{item.label}</span>
             </NavLink>
           );
         })}
       </div>
       <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-bg)] to-transparent"
+        className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--color-bg)] to-transparent opacity-80"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[var(--color-bg)] to-transparent opacity-90"
         aria-hidden="true"
       />
     </div>
@@ -190,7 +194,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             </div>
             <NavLink
               to="/"
-              className={`shrink-0 inline-flex items-center justify-center min-h-10 min-w-10 rounded-lg ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] active:animate-haptic-click`}
+              className={`shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] active:animate-haptic-click`}
               aria-label="Voltar ao Dashboard"
               title="Voltar ao Dashboard"
             >

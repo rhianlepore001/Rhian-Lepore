@@ -11,9 +11,8 @@ import { TeamMemberForm } from '../../components/TeamMemberForm';
 
 export const TeamSettings: React.FC = () => {
     const { companyId } = useAuth();
-    const { accent, colors, isBeauty } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
     const queryClient = useQueryClient();
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const { data: members = [], isLoading: loading } = useTeamMembers();
     const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -98,7 +97,6 @@ export const TeamSettings: React.FC = () => {
                                         <TeamMemberCard
                                             key={member.id}
                                             member={member}
-                                            accentColor={accentColor}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
                                                 setIsModalOpen(true);
@@ -121,7 +119,6 @@ export const TeamSettings: React.FC = () => {
                                         <TeamMemberCard
                                             key={member.id}
                                             member={member}
-                                            accentColor={accentColor}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
                                                 setIsModalOpen(true);

@@ -49,12 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Comissões 446 vs 33 + unificação Equipe/Comissões (5 Ago 2026) — PR aberta:**
-  - Branch `cursor/fix-commissions-unify-team-876f` · PR #22.
+- **Comissões 446 vs 33 + unificação Equipe/Comissões — MERGED → produção (5 Ago 2026):**
+  - Branch `cursor/fix-commissions-unify-team-876f` · PR #22 → `main` · deploy Vercel automático.
   - Causa do 446: alerta do dashboard somava `is_owner` (413 do dono + 33 equipe). Fix em `AlertsContext` + moeda via `formatMoney`.
   - Conta dos prints do bug = Barbearia Silva (PT/€); conta Bob.teste não reproduz o saldo (0).
   - UX: menu único Equipe e Comissões; redirect `/configuracoes/comissoes`; campo % removido do Editar Profissional; frequências semanal/quinzenal/mensal no card.
-  - Gates: typecheck, lint, build, 403 testes. Prints em artifacts da sessão.
+  - Gates: typecheck, lint, build, 403 testes; CI verde no merge.
 - **Varredura Impeccable + Playwright — MERGED → produção (5 Ago 2026):**
   - Branch `cursor/impeccable-e2e-sweep-4706` · PR #20 → `main` (`47413db`) · deploy Vercel automático.
   - Chrome mobile (FAB/Button/tabs/header); toast/ConfirmModal; Login/Register/Queue tokenizados; Finance ErrorState; Agenda 44px.

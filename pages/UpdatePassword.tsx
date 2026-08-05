@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
 import { Screw } from '../components/Screw';
 import { validatePassword } from '../utils/passwordValidation';
+import { mapError } from '../utils/mapError';
 
 export const UpdatePassword: React.FC = () => {
     const navigate = useNavigate();
@@ -108,9 +109,9 @@ export const UpdatePassword: React.FC = () => {
             setTimeout(() => {
                 navigate('/login');
             }, 3000);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error updating password:', err);
-            setError(err.message || 'Erro ao atualizar a senha.');
+            setError(mapError(err, 'Erro ao atualizar a senha.').message);
         } finally {
             setLoading(false);
         }

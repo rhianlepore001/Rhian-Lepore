@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button } from '../../components/ui';
+import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -11,23 +11,30 @@ import { TeamMemberForm } from '../../components/TeamMemberForm';
 
 export const TeamSettings: React.FC = () => {
     const { companyId } = useAuth();
-    const { accent, colors, isBeauty } = useBrutalTheme();
+    const { accent, colors } = useBrutalTheme();
     const queryClient = useQueryClient();
-    const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const { data: members = [], isLoading: loading } = useTeamMembers();
     const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     const cardMembers = members.map(m => ({ ...m, photo_url: m.photo_url ?? null }));
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir este profissional?')) return;
+    const handleDelete = (id: string) => {
+        setPendingDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!pendingDeleteId) return;
         try {
-            await deleteMemberMutation.mutateAsync(id);
-        } catch (error) {
-            console.error('Error deleting member:', error);
-            alert('Erro ao excluir.');
+            await deleteMemberMutation.mutateAsync(pendingDeleteId);
+            showToast('Profissional excluído.', 'success');
+        } catch {
+            showToast('Não foi possível excluir o profissional. Tente de novo.', 'error');
+        } finally {
+            setPendingDeleteId(null);
         }
     };
 
@@ -43,13 +50,14 @@ export const TeamSettings: React.FC = () => {
                     </p>
                     <Button
                         id="btn-add-team-member"
+                        className="shrink-0 self-start sm:self-auto"
+                        icon={<Plus className="w-5 h-5" />}
                         onClick={() => {
                             setEditingMember(null);
                             setIsModalOpen(true);
                         }}
                     >
-                        <Plus className="w-5 h-5 mr-1" />
-                        Profissional
+                        Adicionar profissional
                     </Button>
                 </div>
 
@@ -89,7 +97,6 @@ export const TeamSettings: React.FC = () => {
                                         <TeamMemberCard
                                             key={member.id}
                                             member={member}
-                                            accentColor={accentColor}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
                                                 setIsModalOpen(true);
@@ -112,7 +119,6 @@ export const TeamSettings: React.FC = () => {
                                         <TeamMemberCard
                                             key={member.id}
                                             member={member}
-                                            accentColor={accentColor}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
                                                 setIsModalOpen(true);
@@ -126,10 +132,20 @@ export const TeamSettings: React.FC = () => {
                     </div>
                 )}
 
+                <ConfirmModal
+                    open={!!pendingDeleteId}
+                    title="Excluir profissional"
+                    message="Tem certeza que deseja excluir este profissional?"
+                    confirmLabel="Excluir"
+                    variant="danger"
+                    loading={deleteMemberMutation.isPending}
+                    onCancel={() => setPendingDeleteId(null)}
+                    onConfirm={() => void confirmDelete()}
+                />
+
                 {isModalOpen && (
                     <TeamMemberForm
                         initialData={editingMember}
-                        accentColor={accentColor}
                         onClose={() => setIsModalOpen(false)}
                         onSave={() => {
                             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });

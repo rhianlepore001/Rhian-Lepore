@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
+import { useToast } from './ui/Toast';
+import { mapError } from '../utils/mapError';
 import { Link as LinkIcon, Copy, ExternalLink, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -22,6 +24,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
     const [saving, setSaving] = useState(false);
 
     const { colors, accent, font, status } = useBrutalTheme();
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (!slugInput || slugError) {
@@ -69,6 +72,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
             }
         } catch (error) {
             console.error('Error checking slug availability:', error);
+            showToast(mapError(error, 'Não foi possível verificar a disponibilidade do link.').message, 'error');
         } finally {
             setCheckingAvailability(false);
         }
@@ -87,9 +91,11 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
             if (error) throw error;
 
             if (onSlugCreated) onSlugCreated();
+            showToast('Link de agendamento criado com sucesso!', 'success');
             window.location.reload();
         } catch (error) {
             console.error('Error saving slug:', error);
+            showToast(mapError(error, 'Não foi possível salvar o link. Tente novamente.').message, 'error');
         } finally {
             setSaving(false);
         }

@@ -4,14 +4,17 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
-import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useToast } from './ui/Toast';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
+import { mapError } from '../utils/mapError';
 
 interface TeamMemberFormProps {
     initialData?: any;
     onClose: () => void;
     onSave: () => void;
-    accentColor: string;
+    /** @deprecated Tema vem de useBrutalTheme() / data-theme — prop ignorada */
+    accentColor?: string;
     isOwnerForm?: boolean;
 }
 
@@ -21,12 +24,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     initialData,
     onClose,
     onSave,
-    accentColor,
     isOwnerForm = false
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
-    const isBeauty = accentColor === 'beauty-neon';
-    const { colors, accent, font } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
+    const { showToast } = useToast();
+    const { colors, accent, font } = useBrutalTheme();
 
     const [step, setStep] = useState<FormStep>('form');
     const [createdMemberId, setCreatedMemberId] = useState<string | null>(
@@ -61,7 +63,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             const file = e.target.files[0];
 
             if (file.size > 10 * 1024 * 1024) {
-                alert('A imagem deve ter no máximo 10MB.');
+                showToast('A imagem deve ter no máximo 10MB.', 'error');
                 return;
             }
 
@@ -157,9 +159,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     onClose();
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error saving team member:', error);
-            alert(`Erro ao salvar membro da equipe: ${error.message || JSON.stringify(error)}`);
+            showToast(mapError(error, 'Não foi possível salvar o profissional. Tente de novo.').message, 'error');
         } finally {
             setLoading(false);
         }

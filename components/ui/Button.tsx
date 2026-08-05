@@ -77,7 +77,19 @@ export const Button: React.FC<ButtonProps> = ({
           {icon}
         </span>
       )}
-      {children && <span className="truncate">{children}</span>}
+      {children != null && children !== false && (
+        <span className="inline-flex items-center gap-1.5 min-w-0 max-w-full [&_svg]:shrink-0">
+          {React.Children.map(children, (child) =>
+            typeof child === 'string' || typeof child === 'number' ? (
+              <span key={String(child)} className="truncate">
+                {child}
+              </span>
+            ) : (
+              child
+            ),
+          )}
+        </span>
+      )}
       {iconRight && (
         <span className="shrink-0 [&>svg]:w-4 [&>svg]:h-4" aria-hidden="true">
           {iconRight}

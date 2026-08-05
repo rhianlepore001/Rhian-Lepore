@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button } from '../../components/ui';
+import { Card, Button, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
@@ -24,6 +24,7 @@ interface TeamMember {
 
 export const CommissionsSettings: React.FC = () => {
     const { user, companyId } = useAuth();
+    const { showToast } = useToast();
     const { data: rawMembers, isLoading: membersLoading } = useTeamMembers();
     const { data: settingsData } = useBusinessSettings();
     const queryClient = useQueryClient();
@@ -96,11 +97,11 @@ export const CommissionsSettings: React.FC = () => {
                 }, { onConflict: 'user_id' });
 
             if (error) throw error;
-            alert('Dia de acerto salvo com sucesso!');
+            showToast('Dia de acerto salvo!', 'success');
             queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
         } catch (error) {
             console.error('Error saving settlement day:', error);
-            alert('Erro ao salvar dia de acerto.');
+            showToast('Não foi possível salvar o dia de acerto. Tente de novo.', 'error');
         } finally {
             setSaving(false);
         }
@@ -113,7 +114,7 @@ export const CommissionsSettings: React.FC = () => {
             const rate = parseFloat(tempRates[memberId] || '0');
 
             if (isNaN(rate) || rate < 0 || rate > 100) {
-                alert('A taxa deve ser entre 0% e 100%');
+                showToast('A taxa deve ser entre 0% e 100%.', 'warning');
                 return;
             }
 
@@ -138,14 +139,15 @@ export const CommissionsSettings: React.FC = () => {
 
             if (recalculateError) {
                 console.error('Error recalculating commissions:', recalculateError);
+                showToast('Taxa salva, mas houve erro ao recalcular comissões pendentes.', 'warning');
             }
 
             setEditingMember(null);
             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
-            alert('Taxa de comissão atualizada!');
+            showToast('Taxa de comissão atualizada!', 'success');
         } catch (error) {
             console.error('Error saving commission rate:', error);
-            alert('Erro ao salvar taxa de comissão.');
+            showToast('Não foi possível salvar a taxa de comissão. Tente de novo.', 'error');
         } finally {
             setSaving(false);
         }
@@ -169,11 +171,11 @@ export const CommissionsSettings: React.FC = () => {
         const credit = parseFloat(creditFeePercent);
 
         if (isNaN(debit) || debit < 0 || debit > 100) {
-            alert('Taxa débito deve ser entre 0% e 100%');
+            showToast('A taxa de débito deve ser entre 0% e 100%.', 'warning');
             return;
         }
         if (isNaN(credit) || credit < 0 || credit > 100) {
-            alert('Taxa crédito deve ser entre 0% e 100%');
+            showToast('A taxa de crédito deve ser entre 0% e 100%.', 'warning');
             return;
         }
 
@@ -190,11 +192,11 @@ export const CommissionsSettings: React.FC = () => {
                 }, { onConflict: 'user_id' });
 
             if (error) throw error;
-            alert('Configurações de taxa salvas com sucesso!');
+            showToast('Taxas da maquininha salvas!', 'success');
             queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
         } catch (error) {
             console.error('Erro ao salvar taxa maquininha:', error);
-            alert('Erro ao salvar configurações de taxa.');
+            showToast('Não foi possível salvar as taxas da maquininha. Tente de novo.', 'error');
         } finally {
             setSavingMachineFee(false);
         }
@@ -237,10 +239,10 @@ export const CommissionsSettings: React.FC = () => {
                             Você receberá um alerta no dashboard 2 dias antes.
                         </p>
 
-                        <div className="flex items-center gap-4">
-                            <div className="flex-1 max-w-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                            <div className="flex-1 w-full sm:max-w-xs min-w-0">
                                 <label className={classes.label}>
-                                    Dia do Mês (1-31)
+                                    Dia do mês (1–31)
                                 </label>
                                 <div className="relative">
                                     <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
@@ -253,8 +255,8 @@ export const CommissionsSettings: React.FC = () => {
                                         className={`${classes.input} pl-12 text-lg`}
                                     />
                                 </div>
-                                <p className={`${colors.textMuted} text-xs mt-1 font-mono`}>
-                                    Próximo acerto: Dia {settlementDay} deste mês
+                                <p className={`${colors.textMuted} text-xs mt-1`}>
+                                    Próximo acerto: dia {settlementDay} deste mês
                                 </p>
                             </div>
 
@@ -262,9 +264,9 @@ export const CommissionsSettings: React.FC = () => {
                                 variant="primary"
                                 onClick={handleSaveSettlementDay}
                                 disabled={saving}
-                                className="mt-6"
+                                className="w-full sm:w-auto shrink-0"
                             >
-                                {saving ? 'Salvando...' : 'Salvar Dia'}
+                                {saving ? 'Salvando...' : 'Salvar dia'}
                             </Button>
                         </div>
                     </div>

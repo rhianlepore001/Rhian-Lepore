@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Varredura Impeccable + Playwright rodada 2 (5 Ago 2026) — em PR #20:**
+  - Branch `cursor/impeccable-e2e-sweep-4706` (7 commits atômicos).
+  - Rodada 1: chrome mobile (FAB/Button/tabs/header).
+  - Rodada 2: toast/ConfirmModal app-wide; Login/Register/Queue tokenizados; Finance ErrorState; Agenda 44px; alerts residuais.
+  - Validator: APROVAR entrega. Evaluator: 8,42 (quase limiar 8,5) — residual: accentColor legado em Agenda/Finance/onboarding + HC fora do escopo.
+  - Relatório: `docs/impeccable-sweep/` (+ RODADA-2.md).
+  - Gates: typecheck, lint, build, 400 testes.
 - **Clientes/CRM v2 — MERGED → produção (4 Ago 2026):**
   - Branch `cursor/discovery-clientes-crm-68c9` · PR #19 → `main` (`4d02e07`) · deploy Vercel automático.
   - Spec/design/tasks: `specs/active/clientes-crm-v2/`.

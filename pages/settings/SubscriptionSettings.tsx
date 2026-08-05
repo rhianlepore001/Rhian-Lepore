@@ -1,9 +1,10 @@
-import { Card, Button } from '../../components/ui';
+import { Card, Button, useToast } from '../../components/ui';
 import React, { useState } from 'react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useSubscription } from '../../hooks/useSubscription';
+import { mapError } from '../../utils/mapError';
 
 
 import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
@@ -16,6 +17,7 @@ export const SubscriptionSettings: React.FC = () => {
     // Auto-detect currency based on region
     const currency = region === 'PT' ? 'EUR' : 'BRL';
     const [loading, setLoading] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     // Pricing Configuration
     const pricing = {
@@ -83,11 +85,11 @@ export const SubscriptionSettings: React.FC = () => {
             if (data?.url) {
                 window.location.href = data.url;
             } else {
-                alert('Erro ao iniciar checkout: URL não retornada.');
+                showToast('Não foi possível iniciar o checkout. Tente novamente.', 'error');
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error:', error);
-            alert(`Erro ao iniciar pagamento: ${error.message || 'Erro desconhecido'}`);
+            showToast(mapError(error, 'Não foi possível iniciar o pagamento.').message, 'error');
         } finally {
             setLoading(null);
         }

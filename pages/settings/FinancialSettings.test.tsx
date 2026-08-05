@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FinancialSettings } from './FinancialSettings';
+import { ToastProvider } from '../../components/ui/Toast';
 
 const mockMutateAsync = vi.fn().mockResolvedValue({});
 
@@ -54,12 +55,26 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
     radius: { card: 'rounded-xl', button: 'rounded-xl', input: 'rounded-xl', badge: 'rounded-md', avatar: 'rounded-xl', modal: 'rounded-xl' },
     density: { cardPadding: 'p-4' },
     shadow: { card: 'shadow-sm' },
+    status: {
+      success: 'text-[var(--color-success)]',
+      successBorder: 'border-[var(--color-success-border)]',
+      danger: 'text-[var(--color-danger)]',
+      dangerBorder: 'border-[var(--color-danger-border)]',
+      warning: 'text-[var(--color-warning)]',
+      warningBorder: 'border-[var(--color-warning-border)]',
+      info: 'text-[var(--color-info)]',
+      infoBorder: 'border-[var(--color-info-border)]',
+    },
   })
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={qc}>
+      <ToastProvider>{children}</ToastProvider>
+    </QueryClientProvider>
+  );
 };
 
 describe('FinancialSettings', () => {

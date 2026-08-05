@@ -73,7 +73,7 @@ export const MembershipSettings: React.FC = () => {
             });
             showToast('Pix cadastrado com sucesso!', 'success');
         } catch (err) {
-            showToast('Erro ao salvar: ' + (err as Error).message, 'error');
+            showToast('Não foi possível salvar o Pix. Tente novamente.', 'error');
         }
     };
 

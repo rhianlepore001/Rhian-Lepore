@@ -2,7 +2,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
-import { Button, Modal, Table, Badge, ConfirmModal, useToast } from '@/components/ui';
+import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -88,6 +88,7 @@ export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [summary, setSummary] = useState({
     revenue: 0,
@@ -202,7 +203,12 @@ useEffect(() => {
   }, [searchParams, user]);
 
   const fetchFinanceData = async () => {
-    if (!user) return;
+    setLoading(true);
+    setFetchError(null);
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       // Calculate start and end dates for the selected month
@@ -301,6 +307,7 @@ useEffect(() => {
       }
     } catch (error) {
       logger.error('Error fetching finance data', error);
+      setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar o financeiro.')));
     } finally {
       setLoading(false);
     }
@@ -595,6 +602,31 @@ useEffect(() => {
 
       {activeTab === 'overview' && (
         <>
+          {loading ? (
+            <>
+              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <SkeletonCard className={density.kpiMinHeight} />
+                <SkeletonCard className={density.kpiMinHeight} />
+                <SkeletonCard className={density.kpiMinHeight} />
+              </section>
+              {!isStaff && (
+                <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </section>
+              )}
+              <SkeletonCard className="min-h-[320px]" />
+              <SkeletonCard className="min-h-[280px]" />
+            </>
+          ) : fetchError ? (
+            <ErrorState
+              title="Não foi possível carregar o financeiro"
+              message={fetchError}
+              onRetry={() => { void fetchFinanceData(); }}
+            />
+          ) : (
+          <>
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FinanceKpi
               icon={<TrendingUp className="h-5 w-5" />}
@@ -763,6 +795,8 @@ useEffect(() => {
               />
             </div>
           </Card>
+          </>
+          )}
         </>
       )
       }

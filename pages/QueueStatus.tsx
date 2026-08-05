@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 
 import { Loader2, User, Clock, CheckCircle, AlertOctagon, AlertTriangle } from 'lucide-react';
 import { useQueueStatusSnapshot } from '../hooks/useQueueStatus';
+import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { cancelQueueEntryPublic, readQueuePhoneProof } from '../services/queue';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import type { QueueRecord } from '@/types/queue';
@@ -16,10 +17,22 @@ export const QueueStatus: React.FC = () => {
     const business = snapshot?.business ?? null;
     const position = snapshot?.position ?? null;
 
+    const isBeauty = business?.user_type === 'beauty';
+    const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
+    const { colors, accent } = useBrutalTheme({ override: themeOverride });
+
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [leaveError, setLeaveError] = useState(false);
+
+    useEffect(() => {
+        if (!business) return;
+        document.documentElement.setAttribute('data-public-theme', isBeauty ? 'beauty' : 'barber');
+        return () => {
+            document.documentElement.removeAttribute('data-public-theme');
+        };
+    }, [business, isBeauty]);
 
     const handleLeaveQueue = async () => {
         if (!id) return;
@@ -101,8 +114,8 @@ export const QueueStatus: React.FC = () => {
         prevStatusRef.current = entry?.status ?? null;
     }, [entry?.status]);
 
-    if (loading) return <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)]"><Loader2 className="animate-spin" /></div>;
-    if (!entry) return <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)]">Não encontramos você na fila. O link pode ter expirado — entre na fila de novo pelo balcão ou QR code.</div>;
+    if (loading) return <div className={`min-h-screen ${colors.bg} flex items-center justify-center ${colors.text}`}><Loader2 className="animate-spin" /></div>;
+    if (!entry) return <div className={`min-h-screen ${colors.bg} flex items-center justify-center ${colors.text}`}>Não encontramos você na fila. O link pode ter expirado — entre na fila de novo pelo balcão ou QR code.</div>;
 
     const formatTime = (seconds: number) => {
         const isNegative = seconds < 0;
@@ -116,18 +129,16 @@ export const QueueStatus: React.FC = () => {
         return isNegative ? `-${timeStr}` : timeStr;
     };
 
-    const isBeauty = business?.user_type === 'beauty';
-
     const getStatusDisplay = (queueEntry: QueueRecord) => {
         switch (queueEntry.status) {
             case 'waiting':
                 return {
-                    color: isBeauty ? 'text-beauty-neon' : 'text-accent-gold',
-                    bg: isBeauty ? 'bg-beauty-neon/10' : 'bg-accent-gold/10',
-                    border: isBeauty ? 'border-beauty-neon/20' : 'border-accent-gold/20',
+                    color: accent.text,
+                    bg: accent.bgDim,
+                    border: accent.borderDim,
                     title: 'Na Fila de Espera',
                     desc: 'Aguarde, em breve será sua vez!',
-                    icon: <Clock className={`w-12 h-12 ${isBeauty ? 'text-beauty-neon' : 'text-accent-gold'} mb-4`} />
+                    icon: <Clock className={`w-12 h-12 ${accent.text} mb-4`} />
                 };
             case 'calling':
                 return {
@@ -171,50 +182,41 @@ export const QueueStatus: React.FC = () => {
     const statusUI = getStatusDisplay(entry);
 
     return (
-        <div className="min-h-screen bg-[var(--color-bg)] font-sans text-[var(--color-text)] p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            {isBeauty ? (
-                <>
-                    <div className={`absolute top-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-[var(--color-success-bg)]' : 'bg-beauty-acid/20'} blur-[100px] pointer-events-none`}></div>
-                    <div className={`absolute bottom-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-[var(--color-success-bg)]' : 'bg-blue-600/10'} blur-[100px] pointer-events-none`}></div>
-                </>
-            ) : (
-                <>
-                    <div className={`absolute top-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-[var(--color-success-bg)]' : 'bg-accent-gold/10'} blur-[100px] pointer-events-none`}></div>
-                    <div className={`absolute bottom-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-[var(--color-success-bg)]' : 'bg-[var(--color-info-bg)]'} blur-[100px] pointer-events-none`}></div>
-                </>
-            )}
+        <div className={`min-h-screen ${colors.bg} font-sans ${colors.text} p-6 flex flex-col items-center justify-center relative overflow-hidden`}>
+            <div className={`absolute top-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-[var(--color-success-bg)]' : accent.bgDim} blur-[100px] pointer-events-none`}></div>
+            <div className={`absolute bottom-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full ${entry.status === 'calling' ? 'bg-[var(--color-success-bg)]' : 'bg-[var(--color-info-bg)]'} blur-[100px] pointer-events-none`}></div>
 
             <div className="relative z-10 w-full max-w-sm text-center">
-                <h1 className="text-xl font-bold mb-8 text-[var(--color-text-muted)] uppercase tracking-widest">{business?.business_name}</h1>
+                <h1 className={`text-xl font-bold mb-8 ${colors.textMuted} uppercase tracking-widest`}>{business?.business_name}</h1>
 
                 <div className={`rounded-3xl p-8 ${statusUI.bg} border-2 ${statusUI.border} backdrop-blur-xl shadow-2xl relative overflow-hidden transition-all duration-500`}>
                     {entry.status === 'waiting' && position && (
                         <div className="absolute top-0 left-0 w-full h-2 bg-[var(--color-card)]">
-                            <div className={`h-full ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'} animate-pulse w-full`}></div>
+                            <div className={`h-full ${accent.bg} animate-pulse w-full`}></div>
                         </div>
                     )}
 
                     <div className="flex flex-col items-center">
                         {statusUI.icon}
                         <h2 className={`text-3xl font-bold ${statusUI.color} mb-2 uppercase tracking-tight`}>{statusUI.title}</h2>
-                        <p className="text-[var(--color-text-muted)] text-sm mb-6">{statusUI.desc}</p>
+                        <p className={`${colors.textMuted} text-sm mb-6`}>{statusUI.desc}</p>
 
                         {entry.status === 'waiting' && position ? (
                             <div className="grid grid-cols-2 gap-3 w-full mb-6">
-                                <div className="bg-[var(--color-card)]/50 rounded-2xl p-4 border border-[var(--color-border)]">
-                                    <span className="block text-[var(--color-text-muted)] text-xs uppercase font-bold tracking-widest mb-1">Sua Posição</span>
-                                    <div className="text-4xl font-black text-[var(--color-text)]">{position}º</div>
+                                <div className={`${colors.card}/50 rounded-2xl p-4 border ${colors.border}`}>
+                                    <span className={`block ${colors.textMuted} text-xs uppercase font-bold tracking-widest mb-1`}>Sua Posição</span>
+                                    <div className={`text-4xl font-black ${colors.text}`}>{position}º</div>
                                 </div>
-                                <div className="bg-[var(--color-card)]/50 rounded-2xl p-4 border border-[var(--color-border)]">
-                                    <span className="block text-[var(--color-text-muted)] text-xs uppercase font-bold tracking-widest mb-1">Tempo Est.</span>
-                                    <div className={`text-2xl font-black text-[var(--color-text)] mt-2 flex items-center justify-center gap-1 font-mono`}>
+                                <div className={`${colors.card}/50 rounded-2xl p-4 border ${colors.border}`}>
+                                    <span className={`block ${colors.textMuted} text-xs uppercase font-bold tracking-widest mb-1`}>Tempo Est.</span>
+                                    <div className={`text-2xl font-black ${colors.text} mt-2 flex items-center justify-center gap-1 font-mono`}>
                                         {timeLeft === null ? '--:--' : timeLeft <= 0 ? 'Agora' : formatTime(timeLeft)}
                                     </div>
                                 </div>
                             </div>
                         ) : null}
 
-                        <div className="flex items-center gap-2 text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-bg)]/20 px-3 py-1 rounded-full border border-[var(--color-border)]">
+                        <div className={`flex items-center gap-2 text-xs font-mono ${colors.textMuted} bg-[var(--color-bg)]/20 px-3 py-1 rounded-full border ${colors.border}`}>
                             ID: {entry.id.substring(0, 8)}
                         </div>
                     </div>

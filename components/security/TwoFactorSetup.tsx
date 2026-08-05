@@ -6,6 +6,8 @@ import { QrCode, Copy, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { use2FA } from '../../hooks/use2FA';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useToast } from '../ui/Toast';
+import { mapError } from '../../utils/mapError';
 
 interface TwoFactorSetupProps {
     onComplete: () => void;
@@ -15,6 +17,7 @@ interface TwoFactorSetupProps {
 export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCancel }) => {
     const { enroll, verifyAndEnable } = use2FA();
     const { accent } = useBrutalTheme();
+    const { showToast } = useToast();
 
     const [step, setStep] = useState<'intro' | 'scan' | 'verify'>('intro');
     const [factorId, setFactorId] = useState<string>('');
@@ -40,9 +43,9 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
             setQrCodeData(qr);
 
             setStep('scan');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setError(err.message || 'Erro ao iniciar configuração do 2FA');
+            setError(mapError(err, 'Não foi possível iniciar a configuração da verificação em duas etapas.').message);
         } finally {
             setLoading(false);
         }
@@ -57,7 +60,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
         try {
             await verifyAndEnable(factorId, verificationCode);
             onComplete();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
             setError('Código incorreto. Tente novamente.');
         } finally {
@@ -67,7 +70,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(secret);
-        alert('Código copiado para a área de transferência!');
+        showToast('Código copiado para a área de transferência!', 'success');
     };
 
     return (
@@ -79,7 +82,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                         <div>
                             <h3 className="text-[var(--color-text)] font-bold mb-1">Aumente sua segurança</h3>
                             <p className="text-[var(--color-text-muted)] text-sm">
-                                A autenticação em dois fatores (2FA) adiciona uma camada extra de proteção.
+                                A verificação em duas etapas adiciona uma camada extra de proteção.
                                 Mesmo que alguém descubra sua senha, não conseguirá acessar sua conta sem o código do seu celular.
                             </p>
                         </div>
@@ -90,7 +93,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                             Cancelar
                         </BrutalButton>
                         <BrutalButton variant="primary" onClick={handleStart} disabled={loading}>
-                            {loading ? <Loader2 className="animate-spin" /> : 'Configurar 2FA Agora'}
+                            {loading ? <Loader2 className="animate-spin" /> : 'Ativar verificação em duas etapas'}
                         </BrutalButton>
                     </div>
                 </div>
@@ -146,7 +149,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                             value={verificationCode}
                             onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ''))}
                             placeholder="000000"
-                            className="w-full bg-black/50 border border-[var(--color-border-strong)] rounded-xl p-4 text-center text-3xl tracking-[1em] text-[var(--color-text)] focus:outline-none focus:border-[var(--color-border)]0 font-mono"
+                            className="w-full bg-[var(--color-input-bg)] border border-[var(--color-border-strong)] rounded-xl p-4 text-center text-3xl tracking-[1em] text-[var(--color-text)] focus:outline-none focus:border-[var(--color-input-focus)] font-mono"
                         />
                     </div>
 
@@ -167,7 +170,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
                             disabled={loading || verificationCode.length !== 6}
                             className="flex-1"
                         >
-                            {loading ? <Loader2 className="animate-spin" /> : 'Ativar 2FA'}
+                            {loading ? <Loader2 className="animate-spin" /> : 'Ativar verificação'}
                         </BrutalButton>
                     </div>
                 </div>

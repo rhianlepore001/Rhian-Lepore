@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit2, Trash2, User, Star, Crown, Percent } from 'lucide-react';
+import { Edit2, Trash2, User, Crown } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface TeamMember {
@@ -84,23 +84,14 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     </p>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-1.5">
-                                <Percent className={`w-3 h-3 ${accent.text}`} />
-                                <span className={`text-lg font-bold font-mono ${accent.text}`}>
-                                    {member.commission_rate || 0}%
-                                </span>
-                            </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className={`text-lg font-bold font-mono tabular-nums ${accent.text}`}>
+                                {member.commission_rate || 0}%
+                            </span>
                             <span className={`text-xs uppercase tracking-widest ${colors.textMuted}`}>
                                 comissão
                             </span>
                         </div>
-                        {member.is_owner && (
-                            <div className={`flex items-center gap-1.5 ${colors.textMuted}`}>
-                                <Star className={`w-3 h-3 ${accent.text} fill-current`} />
-                                <span className="text-xs font-mono">Master</span>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

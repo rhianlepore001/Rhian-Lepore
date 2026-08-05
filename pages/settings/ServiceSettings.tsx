@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button } from '../../components/ui';
+import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,6 +12,7 @@ import {
 import { ServiceModal } from '../../components/ServiceModal';
 import { Modal } from '../../components/Modal';
 import { formatCurrency } from '../../utils/formatters';
+import { mapError } from '../../utils/mapError';
 import type { ServiceItem } from '@/types/serviceSettings';
 
 export const ServiceSettings: React.FC = () => {
@@ -26,6 +27,8 @@ export const ServiceSettings: React.FC = () => {
     const [editingService, setEditingService] = useState<ServiceItem | null>(null);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
+    const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     const handleAddCategory = async () => {
         if (!newCategoryName.trim() || !effectiveCompanyId) return;
@@ -37,17 +40,28 @@ export const ServiceSettings: React.FC = () => {
             });
             setNewCategoryName('');
             setIsCategoryModalOpen(false);
+            showToast('Categoria criada com sucesso!', 'success');
         } catch (error) {
             console.error('Error adding category:', error);
+            showToast(mapError(error, 'Não foi possível criar a categoria.').message, 'error');
         }
     };
 
-    const handleDeleteCategory = async (id: string) => {
-        if (!confirm('Tem certeza? Isso pode afetar serviços vinculados.') || !effectiveCompanyId) return;
+    const handleDeleteCategory = (id: string) => {
+        if (!effectiveCompanyId) return;
+        setPendingDeleteCategoryId(id);
+    };
+
+    const confirmDeleteCategory = async () => {
+        if (!pendingDeleteCategoryId || !effectiveCompanyId) return;
         try {
-            await deleteCategory.mutateAsync({ companyId: effectiveCompanyId, categoryId: id });
+            await deleteCategory.mutateAsync({ companyId: effectiveCompanyId, categoryId: pendingDeleteCategoryId });
+            showToast('Categoria excluída.', 'success');
         } catch (error) {
             console.error('Error deleting category:', error);
+            showToast(mapError(error, 'Não foi possível excluir a categoria.').message, 'error');
+        } finally {
+            setPendingDeleteCategoryId(null);
         }
     };
 
@@ -69,7 +83,7 @@ export const ServiceSettings: React.FC = () => {
                             id="btn-add-service"
                             onClick={() => {
                                 if (categories.length === 0) {
-                                    alert('Crie uma categoria primeiro!');
+                                    showToast('Crie uma categoria antes de adicionar serviços.', 'warning');
                                     setIsCategoryModalOpen(true);
                                     return;
                                 }
@@ -231,6 +245,17 @@ export const ServiceSettings: React.FC = () => {
                         onSave={() => { void refetch(); }}
                     />
                 )}
+
+                <ConfirmModal
+                    open={!!pendingDeleteCategoryId}
+                    title="Excluir categoria"
+                    message="Tem certeza? Isso pode afetar serviços vinculados."
+                    confirmLabel="Excluir"
+                    variant="danger"
+                    loading={deleteCategory.isPending}
+                    onCancel={() => setPendingDeleteCategoryId(null)}
+                    onConfirm={() => void confirmDeleteCategory()}
+                />
             </div>
         </SettingsLayout>
     );

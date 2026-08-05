@@ -9,7 +9,7 @@ import {
     useDeleteMembershipPlan,
 } from '../../hooks/useMemberships';
 import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships';
-import { Button, Modal } from '../../components/ui';
+import { Button, Modal, ConfirmModal } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -63,6 +63,7 @@ export const MembershipPlansSettings: React.FC = () => {
     }, [companyId]);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<PlanFormState>(emptyForm);
+    const [pendingDeletePlan, setPendingDeletePlan] = useState<MembershipPlan | null>(null);
 
     const handleNew = () => {
         setForm(emptyForm);
@@ -113,17 +114,23 @@ export const MembershipPlansSettings: React.FC = () => {
             setShowForm(false);
             setForm(emptyForm);
         } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            showToast('Não foi possível salvar o plano. Tente novamente.', 'error');
         }
     };
 
-    const handleDelete = async (plan: MembershipPlan) => {
-        if (!confirm(`Excluir o plano "${plan.name}"? Assinantes existentes serão preservados.`)) return;
+    const handleDelete = (plan: MembershipPlan) => {
+        setPendingDeletePlan(plan);
+    };
+
+    const confirmDelete = async () => {
+        if (!pendingDeletePlan) return;
         try {
-            await deleteMutation.mutateAsync(plan.id);
+            await deleteMutation.mutateAsync(pendingDeletePlan.id);
             showToast('Plano excluído.', 'success');
         } catch (err) {
-            showToast('Erro: ' + (err as Error).message, 'error');
+            showToast('Não foi possível excluir o plano. Tente novamente.', 'error');
+        } finally {
+            setPendingDeletePlan(null);
         }
     };
 
@@ -336,6 +343,21 @@ export const MembershipPlansSettings: React.FC = () => {
                             </label>
                     </div>
                 </Modal>
+
+                <ConfirmModal
+                    open={!!pendingDeletePlan}
+                    title="Excluir plano"
+                    message={
+                        pendingDeletePlan
+                            ? `Excluir o plano "${pendingDeletePlan.name}"? Assinantes existentes serão preservados.`
+                            : ''
+                    }
+                    confirmLabel="Excluir"
+                    variant="danger"
+                    loading={deleteMutation.isPending}
+                    onCancel={() => setPendingDeletePlan(null)}
+                    onConfirm={() => void confirmDelete()}
+                />
             </div>
         </SettingsLayout>
     );

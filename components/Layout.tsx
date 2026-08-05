@@ -46,7 +46,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* sem willChange:transform — cria containing block e já foi associado a
           conteúdo “preso” na navegação SPA (URL muda, main não troca). */}
-      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen pb-32 md:pb-8 relative z-10`}>
+      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen ${showBottomMobileNav ? 'pb-40' : 'pb-8'} md:pb-8 relative z-10`}>
         <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}>
           {children}
         </div>

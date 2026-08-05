@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button } from '../../components/ui';
+import { Card, Button, useToast } from '../../components/ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
@@ -12,6 +12,7 @@ export const FinancialSettings: React.FC = () => {
   const { isBeauty, accent, colors, classes } = useBrutalTheme();
   const { data: settings, isLoading } = useBusinessSettings();
   const updateSettingsMutation = useUpdateBusinessSettings();
+  const { showToast } = useToast();
 
   const [machineFeeEnabled, setMachineFeeEnabled] = useState(false);
   const [debitFee, setDebitFee] = useState<string>('');
@@ -32,10 +33,10 @@ export const FinancialSettings: React.FC = () => {
         debit_fee_percent: machineFeeEnabled ? parseFloat(debitFee) || 0 : 0,
         credit_fee_percent: machineFeeEnabled ? parseFloat(creditFee) || 0 : 0,
       });
-      alert('Configurações financeiras salvas!');
+      showToast('Configurações financeiras salvas!', 'success');
     } catch (err) {
       console.error('Erro ao salvar configurações financeiras', err);
-      alert('Erro ao salvar. Tente novamente.');
+      showToast('Erro ao salvar. Tente novamente.', 'error');
     }
   };
 

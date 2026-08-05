@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '../../components/ui';
+import { Button, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,6 +17,7 @@ export const PublicBookingSettings: React.FC = () => {
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
     const updateProfileMutation = useUpdateProfileFields();
+    const { showToast } = useToast();
 
     const [publicProductsEnabled, setPublicProductsEnabled] = useState(false);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
@@ -62,7 +63,7 @@ export const PublicBookingSettings: React.FC = () => {
             setTimeout(() => setSaveStatus('idle'), 2000);
         } catch (error) {
             console.error('Error saving settings:', error);
-            alert('Erro ao salvar configurações.');
+            showToast('Erro ao salvar configurações.', 'error');
             setSaveStatus('idle');
         }
     };

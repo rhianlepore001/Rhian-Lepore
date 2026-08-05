@@ -80,7 +80,7 @@ export const Login: React.FC = () => {
     // ─── GATEWAY ─────────────────────────────────────────────────────────────
     if (showGateway) {
         return (
-            <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-6 md:p-12">
+            <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6 md:p-12">
 
                 <div className="mb-10 md:mb-14 flex items-center gap-3">
                     <AgendiXLogo size={32} isBeauty={false} showText={true} />
@@ -103,7 +103,7 @@ export const Login: React.FC = () => {
                         data-testid="category-barber"
                         aria-label="Acessar painel para barbearias"
                         onClick={() => handleSelectSegment('barber')}
-                        className="group relative h-72 md:h-96 rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+                        className="group relative h-72 md:h-96 rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                     >
                         <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
                             <div
@@ -111,58 +111,67 @@ export const Login: React.FC = () => {
                                 style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80)' }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
-                            <div className="absolute inset-0 bg-accent-gold/0 group-hover:bg-accent-gold/[0.03] transition-colors duration-500" />
+                            <div className="absolute inset-0 bg-theme-accent/0 group-hover:bg-theme-accent/[0.03] transition-colors duration-500" />
                         </div>
 
                         {/* Corner accent — risco querendo fechar um quadrado */}
-                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-[var(--color-text)]/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
-                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-[var(--color-text)]/[0.06] group-hover:border-accent-gold/60 transition-all duration-500 z-10" />
+                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-[var(--color-text)]/[0.06] group-hover:border-[var(--color-accent-border)] transition-all duration-500 z-10" />
+                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-[var(--color-text)]/[0.06] group-hover:border-[var(--color-accent-border)] transition-all duration-500 z-10" />
 
                         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
-                            <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-accent-gold transition-colors duration-300">
+                            <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
                                 Barbearias
                             </h2>
                             {/* Traço horizontal com animação de crescer */}
-                            <div className="w-0 h-[1px] bg-accent-gold/60 group-hover:w-16 transition-all duration-500 mb-5" />
-                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-card-hover)] backdrop-blur-sm border border-[var(--color-border)] group-hover:border-accent-gold/40 group-hover:bg-accent-gold/10 transition-all duration-300">
+                            <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />
+                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-card-hover)] backdrop-blur-sm border border-[var(--color-border)] group-hover:border-[var(--color-accent-border)] group-hover:bg-[var(--color-accent-dim)] transition-all duration-300">
                                 <span className="font-mono text-xs text-[var(--color-text)]/90 uppercase tracking-widest">Entrar</span>
-                                <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text)]/70 group-hover:text-accent-gold group-hover:translate-x-0.5 transition-all duration-300" />
+                                <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text)]/70 group-hover:text-theme-accent group-hover:translate-x-0.5 transition-all duration-300" />
                             </div>
                         </div>
                     </button>
 
                     {/* STUDIOS */}
-                    <button
-                        data-testid="category-beauty"
-                        aria-label="Acessar painel para salões e spas"
-                        onClick={() => handleSelectSegment('beauty')}
-                        className="group relative h-72 md:h-96 rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-beauty-neon focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+                    <div
+                        style={{
+                            '--color-accent': '#A78BFA',
+                            '--color-accent-hover': '#C4B5FD',
+                            '--color-accent-dim': 'rgba(167, 139, 250, 0.2)',
+                            '--color-accent-border': 'rgba(167, 139, 250, 0.6)',
+                        } as React.CSSProperties}
                     >
-                        <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
-                            <div
-                                className="absolute -inset-[2px] bg-[var(--color-bg)] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
-                                style={{ backgroundImage: 'url("/mulher-studio.png")' }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
-                            <div className="absolute inset-0 bg-beauty-neon/0 group-hover:bg-beauty-neon/[0.03] transition-colors duration-500" />
-                        </div>
-
-                        {/* Corner accent — risco querendo fechar um quadrado */}
-                        <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-[var(--color-text)]/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
-                        <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-[var(--color-text)]/[0.06] group-hover:border-beauty-neon/60 transition-all duration-500 z-10" />
-
-                        <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
-                            <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-beauty-neon transition-colors duration-300">
-                                Studios
-                            </h2>
-                            {/* Traço horizontal com animação de crescer */}
-                            <div className="w-0 h-[1px] bg-beauty-neon/60 group-hover:w-16 transition-all duration-500 mb-5" />
-                            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-card-hover)] backdrop-blur-sm border border-[var(--color-border)] group-hover:border-beauty-neon/40 group-hover:bg-beauty-neon/10 transition-all duration-300">
-                                <span className="font-mono text-xs text-[var(--color-text)]/90 uppercase tracking-widest">Entrar</span>
-                                <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text)]/70 group-hover:text-beauty-neon group-hover:translate-x-0.5 transition-all duration-300" />
+                        <button
+                            data-testid="category-beauty"
+                            aria-label="Acessar painel para salões e spas"
+                            onClick={() => handleSelectSegment('beauty')}
+                            className="group relative h-72 md:h-96 w-full rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
+                        >
+                            <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
+                                <div
+                                    className="absolute -inset-[2px] bg-[var(--color-bg)] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                    style={{ backgroundImage: 'url("/mulher-studio.png")' }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
+                                <div className="absolute inset-0 bg-theme-accent/0 group-hover:bg-theme-accent/[0.03] transition-colors duration-500" />
                             </div>
-                        </div>
-                    </button>
+
+                            {/* Corner accent — risco querendo fechar um quadrado */}
+                            <div className="absolute top-5 left-5 w-10 h-10 border-l border-t border-[var(--color-text)]/[0.06] group-hover:border-[var(--color-accent-border)] transition-all duration-500 z-10" />
+                            <div className="absolute bottom-5 right-5 w-10 h-10 border-r border-b border-[var(--color-text)]/[0.06] group-hover:border-[var(--color-accent-border)] transition-all duration-500 z-10" />
+
+                            <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
+                                <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
+                                    Studios
+                                </h2>
+                                {/* Traço horizontal com animação de crescer */}
+                                <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />
+                                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--color-card-hover)] backdrop-blur-sm border border-[var(--color-border)] group-hover:border-[var(--color-accent-border)] group-hover:bg-[var(--color-accent-dim)] transition-all duration-300">
+                                    <span className="font-mono text-xs text-[var(--color-text)]/90 uppercase tracking-widest">Entrar</span>
+                                    <ArrowRight className="w-3.5 h-3.5 text-[var(--color-text)]/70 group-hover:text-theme-accent group-hover:translate-x-0.5 transition-all duration-300" />
+                                </div>
+                            </div>
+                        </button>
+                    </div>
 
                 </div>
 
@@ -173,7 +182,7 @@ export const Login: React.FC = () => {
                         </p>
                         <Link
                             to="/register"
-                            className="w-full flex items-center justify-center py-3.5 rounded-xl border border-[var(--color-text)]/15 hover:border-[var(--color-text)]/25 text-[var(--color-text)] text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-[var(--color-card-hover)] hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+                            className="w-full flex items-center justify-center py-3.5 rounded-xl border border-[var(--color-text)]/15 hover:border-[var(--color-text)]/25 text-[var(--color-text)] text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-[var(--color-card-hover)] hover:bg-[var(--color-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                         >
                             Criar conta — 10 dias grátis
                         </Link>
@@ -190,8 +199,8 @@ export const Login: React.FC = () => {
             bg-theme-bg
         `}>
             {isBeauty
-                ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/[0.05] rounded-full blur-[120px] pointer-events-none" />
-                : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-gold/[0.04] rounded-full blur-[120px] pointer-events-none" />
+                ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-theme-accent/[0.05] rounded-full blur-[120px] pointer-events-none" />
+                : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-theme-accent/[0.04] rounded-full blur-[120px] pointer-events-none" />
             }
 
             {/* Voltar */}
@@ -210,44 +219,32 @@ export const Login: React.FC = () => {
             `}>
 
                 {/* Painel esquerdo — decorativo (só desktop) */}
-                <div className={`hidden md:flex flex-col justify-between w-2/5 p-8 relative overflow-hidden flex-shrink-0
-                    ${isBeauty ? 'bg-[#1A162A]' : 'bg-[#111111]'}
-                `}>
+                <div className="hidden md:flex flex-col justify-between w-2/5 p-8 relative overflow-hidden flex-shrink-0 bg-[var(--color-card)]">
                     {/* Accent top line */}
-                    <div className={`absolute top-0 left-0 right-0 h-[2px] ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-theme-accent/40" />
 
                     <div>
                         <AgendiXLogo size={32} isBeauty={isBeauty} showText={true} />
                     </div>
 
                     <div>
-                        <p className={`font-mono text-xs uppercase tracking-[0.2em] mb-3
-                            ${isBeauty ? 'text-beauty-neon/50' : 'text-accent-gold/50'}
-                        `}>
+                        <p className={`font-mono text-xs uppercase tracking-[0.2em] mb-3 text-theme-accent/50`}>
                             {isBeauty ? 'Salões & Studios' : 'Barbearia'}
                         </p>
                         <h2 className="font-heading text-4xl text-[var(--color-text)] uppercase leading-none tracking-tight mb-4">
                             {isBeauty ? 'Seu salão,\nseu ritmo.' : 'Seu corte,\nsua regra.'}
                         </h2>
-                        <p className={`text-xs leading-relaxed
-                            ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-[var(--color-text-muted)] font-mono'}
-                        `}>
+                        <p className={`text-xs leading-relaxed text-[var(--color-text-muted)] ${isBeauty ? 'font-sans' : 'font-mono'}`}>
                             Tudo o que o seu negócio precisa, em um só lugar.
                         </p>
                     </div>
 
                     {/* Decoração geométrica */}
-                    <div className={`absolute bottom-0 right-0 w-32 h-32 opacity-5
-                        ${isBeauty ? 'bg-beauty-neon' : 'bg-accent-gold'}
-                    `} style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} />
+                    <div className="absolute bottom-0 right-0 w-32 h-32 opacity-5 bg-theme-accent" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} />
                 </div>
 
                 {/* Painel direito — formulário */}
-                <div className={`flex-1 relative
-                    ${isBeauty
-                        ? 'bg-beauty-card/90 backdrop-blur-xl'
-                        : 'bg-[#1C1C1C]'}
-                `}>
+                <div className={`flex-1 relative ${isBeauty ? 'bg-[var(--color-card)]/90 backdrop-blur-xl' : 'bg-[var(--color-card)]'}`}>
                     {/* Screws (Barber Only) */}
                     {!isBeauty && (
                         <>
@@ -266,9 +263,7 @@ export const Login: React.FC = () => {
                             <h2 className="font-heading text-3xl text-[var(--color-text)] uppercase tracking-tight mb-1">
                                 Entrar
                             </h2>
-                            <p className={`text-xs uppercase tracking-widest
-                                ${isBeauty ? 'text-beauty-silver/40 font-sans' : 'text-[var(--color-text-muted)] font-mono'}
-                            `}>
+                            <p className={`text-xs uppercase tracking-widest text-[var(--color-text-muted)] ${isBeauty ? 'font-sans' : 'font-mono'}`}>
                                 Que bom te ver de novo
                             </p>
                         </div>

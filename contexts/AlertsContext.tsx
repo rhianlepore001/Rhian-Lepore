@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 import { logger } from '../utils/Logger';
 
 export interface Alert {
@@ -20,6 +21,7 @@ const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, role, companyId } = useAuth();
+    const { formatMoney } = useTenantLocale();
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -93,22 +95,24 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     daysRemaining = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                 }
 
-                // Check if there are commissions due
+                // Check if there are commissions due (dono não entra na fila de repasse)
                 const { data: commissionsDue } = await supabase.rpc('get_commissions_due');
-                const totalDue = (commissionsDue || []).reduce((sum: number, r: any) => sum + (r.total_due || 0), 0);
+                const totalDue = (commissionsDue || [])
+                    .filter((r: { is_owner?: boolean }) => !r.is_owner)
+                    .reduce((sum: number, r: { total_due?: number }) => sum + (Number(r.total_due) || 0), 0);
 
                 if (totalDue > 0) {
                     if (daysRemaining <= 2 && daysRemaining > 0) {
                         generatedAlerts.push({
                             id: 'commission-settlement-warning',
-                            text: `⚠️ Acerto de comissões se aproxima! Dia ${settlementDay} será o dia do acerto de comissões.`,
+                            text: `Acerto de comissões se aproxima! Dia ${settlementDay} será o dia do acerto.`,
                             type: 'warning',
                             actionPath: '/financeiro?tab=commissions'
                         });
                     } else if (daysRemaining === 0) {
                         generatedAlerts.push({
                             id: 'commission-settlement-today',
-                            text: `💰 Hoje é dia de acerto de comissões! Total pendente: R$ ${totalDue.toFixed(2)}`,
+                            text: `Hoje é dia de acerto de comissões! Total pendente: ${formatMoney(totalDue)}`,
                             type: 'danger',
                             actionPath: '/financeiro?tab=commissions'
                         });

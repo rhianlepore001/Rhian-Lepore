@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { uuidSchema } from './shared';
 
+export const commissionPaymentFrequencySchema = z.enum(['weekly', 'biweekly', 'monthly']);
+
 export const teamMemberSchema = z.object({
   id: uuidSchema,
   user_id: uuidSchema,
@@ -14,6 +16,14 @@ export const teamMemberSchema = z.object({
   display_order: z.number().int().default(0),
   commission_rate: z.number().min(0).max(100).nullable().optional(),
   commission_percent: z.number().min(0).max(100).nullable().optional(),
+  commission_payment_frequency: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v): 'weekly' | 'biweekly' | 'monthly' | null =>
+      v === 'weekly' || v === 'biweekly' || v === 'monthly' ? v : null,
+    ),
+  commission_payment_day: z.number().int().min(0).max(31).nullable().optional(),
   cpf: z.string().nullable().optional(),
   staff_user_id: uuidSchema.nullable().optional(),
   created_at: z.string().nullable().optional(),
@@ -30,6 +40,8 @@ export const teamMemberInputSchema = z.object({
   active: z.boolean().default(true),
   commission_rate: z.number().min(0).max(100).nullable().optional(),
   commission_percent: z.number().min(0).max(100).nullable().optional(),
+  commission_payment_frequency: commissionPaymentFrequencySchema.nullable().optional(),
+  commission_payment_day: z.number().int().min(0).max(31).nullable().optional(),
 });
 
 export const teamMemberUpdateSchema = teamMemberInputSchema.partial();

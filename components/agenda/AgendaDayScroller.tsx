@@ -81,25 +81,32 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
     if (!root) return;
     const el = root.querySelector<HTMLElement>(`[data-day="${selectedKey}"]`);
     if (!el) return;
-    const rootRect = root.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const delta = elRect.left + elRect.width / 2 - (rootRect.left + rootRect.width / 2);
-    if (typeof root.scrollBy === 'function') {
-      root.scrollBy({ left: delta, behavior });
+    const target = el.offsetLeft - (root.clientWidth / 2) + (el.offsetWidth / 2);
+    if (typeof root.scrollTo === 'function') {
+      root.scrollTo({ left: Math.max(0, target), behavior });
     } else {
-      root.scrollLeft += delta;
+      root.scrollLeft = Math.max(0, target);
     }
   }, [selectedKey]);
 
   useEffect(() => {
-    // Primeiro paint: centra sem animação; depois, suaviza.
-    scrollSelectedIntoView('auto');
-    const t = window.setTimeout(() => scrollSelectedIntoView('smooth'), 40);
-    return () => window.clearTimeout(t);
+    // Dois frames: espera layout (larguras reais) antes de centralizar.
+    let cancelled = false;
+    const id = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        if (!cancelled) scrollSelectedIntoView('auto');
+      });
+    });
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(id);
+    };
   }, [scrollSelectedIntoView]);
 
   const monthLabel = useMemo(() => {
-    return selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    const raw = selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    // Evita "Agosto De 2026" do CSS capitalize — só a primeira letra.
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
   }, [selectedDate]);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -164,7 +171,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
 
   return (
     <div className="px-4 md:px-6" data-testid="agenda-day-scroller">
-      <p className={`mb-2 text-sm font-heading capitalize tracking-wide ${colors.textSecondary}`}>
+      <p className={`mb-2 text-sm font-heading tracking-wide ${colors.textSecondary}`}>
         {monthLabel}
       </p>
 
@@ -186,7 +193,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          className={`flex gap-2 overflow-x-auto overscroll-x-contain py-1 snap-x snap-mandatory scrollbar-hide touch-pan-x select-none ${
+          className={`flex gap-2 overflow-x-auto overscroll-x-contain py-1 snap-x snap-mandatory scrollbar-hide touch-pan-x select-none [scroll-padding-inline:calc(50%-28px)] px-[calc(50%-28px)] ${
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           }`}
           style={{

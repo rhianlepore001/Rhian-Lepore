@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { BusinessHoursEditor } from '../BusinessHoursEditor';
+import { useToast } from '../ui/Toast';
 import { logger } from '../../utils/Logger';
 
 interface StepBusinessHoursProps {
@@ -21,7 +22,8 @@ const defaultHours = {
 };
 
 export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, onBack }) => {
-    const { user, userType } = useAuth();
+    const { user } = useAuth();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [businessHours, setBusinessHours] = useState<any>({
         mon: defaultHours,
@@ -47,7 +49,7 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
 
             if (settingsError) {
                 logger.error('Error saving business hours', settingsError);
-                alert('Erro ao salvar horários. Por favor, tente novamente.');
+                showToast('Erro ao salvar horários. Por favor, tente novamente.', 'error');
                 setLoading(false);
                 return;
             }
@@ -66,7 +68,7 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
             onNext();
         } catch (error) {
             logger.error('Error saving hours', error);
-            alert('Erro ao salvar horários. Por favor, tente novamente.');
+            showToast('Erro ao salvar horários. Por favor, tente novamente.', 'error');
         } finally {
             setLoading(false);
         }

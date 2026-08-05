@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { ConfirmModal, useToast } from './ui';
 import { Upload, Trash2, Plus, Loader2, Image as ImageIcon, ExternalLink } from 'lucide-react';
 
 interface GalleryItem {
@@ -11,14 +12,18 @@ interface GalleryItem {
 }
 
 interface BusinessGalleryManagerProps {
-    accentColor: string;
+    /** @deprecated Tema vem de useBrutalTheme() / data-theme — prop ignorada */
+    accentColor?: string;
 }
 
-export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ accentColor }) => {
+export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = () => {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState<{ id: string; imageUrl: string } | null>(null);
+    const [deleting, setDeleting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -47,7 +52,7 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
         if (!file || !user) return;
 
         if (file.size > 5 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 5MB.');
+            showToast('A imagem deve ter no máximo 5MB.', 'warning');
             return;
         }
 
@@ -80,33 +85,40 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
             fetchGallery();
         } catch (error) {
             console.error('Error uploading to gallery:', error);
-            alert('Erro ao fazer upload da imagem.');
+            showToast('Erro ao fazer upload da imagem.', 'error');
         } finally {
             setUploading(false);
         }
     };
 
-    const handleDelete = async (id: string, imageUrl: string) => {
-        if (!window.confirm('Tem certeza que deseja remover esta foto?')) return;
+    const handleDelete = (id: string, imageUrl: string) => {
+        setPendingDelete({ id, imageUrl });
+    };
 
+    const confirmDelete = async () => {
+        if (!pendingDelete) return;
+        setDeleting(true);
         try {
-            // 1. Delete from DB
             const { error: dbError } = await supabase
                 .from('business_galleries')
                 .delete()
-                .eq('id', id);
+                .eq('id', pendingDelete.id);
 
             if (dbError) throw dbError;
 
-            // 2. Try to delete from storage (extract path from URL)
-            const path = imageUrl.split('galleries/')[1];
+            const path = pendingDelete.imageUrl.split('galleries/')[1];
             if (path) {
                 await supabase.storage.from('galleries').remove([path]);
             }
 
-            setGallery(gallery.filter(item => item.id !== id));
+            setGallery((prev) => prev.filter((item) => item.id !== pendingDelete.id));
+            showToast('Foto removida da galeria.', 'success');
         } catch (error) {
             console.error('Error deleting image:', error);
+            showToast('Erro ao remover a foto.', 'error');
+        } finally {
+            setDeleting(false);
+            setPendingDelete(null);
         }
     };
 
@@ -173,6 +185,17 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = ({ 
                     ))}
                 </div>
             )}
+
+            <ConfirmModal
+                open={!!pendingDelete}
+                title="Remover foto"
+                message="Tem certeza que deseja remover esta foto?"
+                confirmLabel="Remover"
+                variant="danger"
+                loading={deleting}
+                onCancel={() => setPendingDelete(null)}
+                onConfirm={() => void confirmDelete()}
+            />
         </div>
     );
 };

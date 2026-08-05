@@ -4,9 +4,9 @@
  * quando o cliente manda o comprovante no WhatsApp. A UI mostra status e o BR Code.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Zap, ExternalLink, Copy, Loader2 } from 'lucide-react';
-import { useToast } from '../../components/ui/Toast';
+import { ConfirmModal, useToast } from '../../components/ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePixPaymentByMembership, useSimulatePixPaid } from '../../hooks/useMemberships';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
@@ -22,10 +22,10 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
     const { colors, accent, font } = useBrutalTheme();
     const { data: pix, isLoading } = usePixPaymentByMembership(membershipId);
     const simulate = useSimulatePixPaid();
+    const [confirmSimulateOpen, setConfirmSimulateOpen] = useState(false);
 
     const handleSimulate = async () => {
         if (!user || !pix) return;
-        if (!window.confirm('Simular que o Pix foi recebido? O plano será ativado agora.')) return;
         try {
             await simulate.mutateAsync({
                 pixPaymentId: pix.id,
@@ -36,6 +36,8 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
             onActivated?.();
         } catch (err) {
             showToast('Erro: ' + (err as Error).message, 'error');
+        } finally {
+            setConfirmSimulateOpen(false);
         }
     };
 
@@ -83,7 +85,7 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
                 </button>
                 <button
                     type="button"
-                    onClick={handleSimulate}
+                    onClick={() => setConfirmSimulateOpen(true)}
                     disabled={simulate.isPending}
                     data-testid="simulate-pix-btn"
                     className={`px-3 py-1.5 rounded-lg ${accent.bg} text-[var(--color-bg)] text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:brightness-110 disabled:opacity-50 transition-all`}
@@ -96,6 +98,16 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
                 <ExternalLink className="w-3 h-3 inline mr-1" />
                 Em produção: webhook do PSP ativa automaticamente. Botão é só pra testes.
             </p>
+
+            <ConfirmModal
+                open={confirmSimulateOpen}
+                title="Simular Pix recebido"
+                message="Simular que o Pix foi recebido? O plano será ativado agora."
+                confirmLabel="Simular recebido"
+                loading={simulate.isPending}
+                onCancel={() => setConfirmSimulateOpen(false)}
+                onConfirm={() => void handleSimulate()}
+            />
         </div>
     );
 };

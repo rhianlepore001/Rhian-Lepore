@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useToast } from './ui/Toast';
-import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
 import { mapError } from '../utils/mapError';
 
@@ -13,7 +13,8 @@ interface TeamMemberFormProps {
     initialData?: any;
     onClose: () => void;
     onSave: () => void;
-    accentColor: string;
+    /** @deprecated Tema vem de useBrutalTheme() / data-theme — prop ignorada */
+    accentColor?: string;
     isOwnerForm?: boolean;
 }
 
@@ -23,13 +24,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     initialData,
     onClose,
     onSave,
-    accentColor,
     isOwnerForm = false
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
     const { showToast } = useToast();
-    const isBeauty = accentColor === 'beauty-neon';
-    const { colors, accent, font } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
+    const { colors, accent, font } = useBrutalTheme();
 
     const [step, setStep] = useState<FormStep>('form');
     const [createdMemberId, setCreatedMemberId] = useState<string | null>(

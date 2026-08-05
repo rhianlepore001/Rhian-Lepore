@@ -241,7 +241,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         const finalPriceValue = parseFloat(finalPriceInput);
 
         if (!user || !selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPriceValue)) {
-            alert('Por favor, preencha todos os campos obrigatórios e verifique o preço final.');
+            showToast('Por favor, preencha todos os campos obrigatórios e verifique o preço final.', 'warning');
             return;
         }
 

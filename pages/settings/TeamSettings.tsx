@@ -149,7 +149,6 @@ export const TeamSettings: React.FC = () => {
                 {isModalOpen && (
                     <TeamMemberForm
                         initialData={editingMember}
-                        accentColor={accentColor}
                         onClose={() => setIsModalOpen(false)}
                         onSave={() => {
                             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });

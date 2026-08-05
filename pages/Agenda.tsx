@@ -15,6 +15,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaEmptySlotCell } from '../components/agenda/AgendaEmptySlotCell';
+import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -978,16 +979,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         }
     };
 
-    const changeDate = (days: number) => {
-        const newDate = new Date(selectedDate);
-        newDate.setHours(0, 0, 0, 0);
-        newDate.setDate(newDate.getDate() + days);
-
-        // Atualiza a URL para refletir a nova data (formato local, sem UTC roll em fuso BR)
-        const newDateStr = formatLocalDateString(newDate);
-        navigate(`/agenda?date=${newDateStr}`);
-    };
-
     const changeHistoryMonth = (months: number) => {
         const newMonth = new Date(historyMonth);
         newMonth.setMonth(newMonth.getMonth() + months);
@@ -1223,52 +1214,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* --- FIM: Agendamentos Atrasados --- */}
 
 
-            {/* Date Navigator */}
-            <div className="px-4 md:px-6 flex items-center justify-between gap-2">
-                <button
-                    onClick={() => changeDate(-7)}
-                    aria-label="Semana anterior"
-                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
-                >
-                    <ChevronLeft className={`w-5 h-5 ${colors.text}`} />
-                </button>
-
-                {/* Faixa semanal (seg–dom da data selecionada). Clicar num dia só TROCA a seleção
-                    — a faixa não desliza. As setas avançam/voltam uma semana inteira.
-                    Único carrossel horizontal da tela é o dos avatares de profissionais. */}
-                <div className="flex-1 flex items-center gap-1.5 py-1">
-                    {Array.from({ length: 7 }).map((_, i) => {
-                        const d = new Date(selectedDate);
-                        const dow = (d.getDay() + 6) % 7; // segunda = 0
-                        d.setDate(d.getDate() - dow + i);
-                        const isSelected = d.toDateString() === selectedDate.toDateString();
-                        const isToday = d.toDateString() === new Date().toDateString();
-                        const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-                        const dayNum = d.getDate();
-                        return (
-                            <button
-                                key={i}
-                                onClick={() => {
-                                    const newDateStr = formatLocalDateString(d);
-                                    navigate(`/agenda?date=${newDateStr}`);
-                                }}
-                                className={`flex flex-1 min-w-0 flex-col items-center justify-center h-[64px] rounded-2xl transition-all border ${isSelected ? `${accent.bg} text-[var(--color-on-accent)] border-transparent shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.textMuted} hover:text-theme-text ${isToday ? `ring-1 ring-current ${accent.text}` : ''}`}`}
-                            >
-                                <span className="text-xs sm:text-xs font-medium capitalize mb-0.5">{dayName}</span>
-                                <span className={`text-lg sm:text-xl font-heading font-bold ${isSelected ? 'text-[var(--color-on-accent)]' : colors.text}`}>{dayNum}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                <button
-                    onClick={() => changeDate(7)}
-                    aria-label="Próxima semana"
-                    className={`p-3 rounded-2xl transition-colors hover:bg-theme-surface ${colors.card} ${colors.border} border shadow-lite-glass`}
-                >
-                    <ChevronRight className={`w-5 h-5 ${colors.text}`} />
-                </button>
-            </div>
+            {/* Date Navigator — scroll/arraste horizontal (sem setas) */}
+            <AgendaDayScroller
+                selectedDate={selectedDate}
+                onSelectDate={(d) => navigate(`/agenda?date=${formatLocalDateString(d)}`)}
+                colors={colors}
+                accent={accent}
+            />
 
             {/* Professional Filter - Avatars */}
             {teamMembers.length > 0 && (

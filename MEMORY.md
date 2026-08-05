@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda day scroller (arraste, sem setas) — PR #21 (5 Ago 2026):**
+  - Branch `cursor/agenda-day-drag-scroll-6eec` · merge para `main` / produção.
+  - `AgendaDayScroller`: remove ChevronLeft/Right da faixa de dias; scroll horizontal com snap, drag (mouse) e swipe (touch).
+  - Contas E2E: `.env` local (gitignored) + instruções em `.Agent/playwright-test-accounts.md`.
+  - Auditoria Playwright: `scripts/agenda-day-scroller-audit.mjs` — verdict PASS (mobile + desktop).
 - **Comissões 446 vs 33 + unificação Equipe/Comissões — MERGED → produção (5 Ago 2026):**
   - Branch `cursor/fix-commissions-unify-team-876f` · PR #22 → `main` · deploy Vercel automático.
   - Causa do 446: alerta do dashboard somava `is_owner` (413 do dono + 33 equipe). Fix em `AlertsContext` + moeda via `formatMoney`.

@@ -1186,7 +1186,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                     <div className="flex gap-2 flex-shrink-0">
                                                         <button
                                                             onClick={() => setShowingDetailsAppointment(apt)}
-                                                            className="px-3 py-2 bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg)] border border-[var(--color-info-border)] text-[var(--color-info)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                            className="px-3 py-2 min-h-[44px] items-center bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg)] border border-[var(--color-info-border)] text-[var(--color-info)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                             title="Informações"
                                                         >
                                                             <Info className="w-4 h-4" /> Info
@@ -1195,14 +1195,14 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             <>
                                                                 <button
                                                                     onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                                    className="px-3 py-2 bg-[var(--color-success-bg)] hover:bg-[var(--color-success-bg)] border border-[var(--color-success-border)] text-[var(--color-success)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    className="px-3 py-2 min-h-[44px] items-center bg-[var(--color-success-bg)] hover:bg-[var(--color-success-bg)] border border-[var(--color-success-border)] text-[var(--color-success)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                                     title="Concluir e Faturar"
                                                                 >
                                                                     <Check className="w-4 h-4" /> Faturar
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleCancelAppointment(apt.id, true)}
-                                                                    className="px-3 py-2 bg-[var(--color-danger-bg)] hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] text-[var(--color-danger)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    className="px-3 py-2 min-h-[44px] items-center bg-[var(--color-danger-bg)] hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] text-[var(--color-danger)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
                                                                     title="Cancelar"
                                                                 >
                                                                     <X className="w-4 h-4" /> Cancelar
@@ -1370,7 +1370,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => handleAcceptBooking(booking)}
-                                                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${classes.buttonSuccess}`}
+                                                className={`px-3 min-h-[44px] py-2 items-center rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${classes.buttonSuccess}`}
                                                 title="Aceitar"
                                             >
                                                 <Check className="w-3.5 h-3.5" /> Aceitar
@@ -1378,7 +1378,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                             {!isStaff && (
                                                 <button
                                                     onClick={() => handleRejectBooking(booking.id)}
-                                                    className="px-3 py-1.5 bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
+                                                    className="px-3 min-h-[44px] py-2 items-center bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
                                                     title="Recusar"
                                                 >
                                                     <X className="w-3.5 h-3.5" /> Recusar

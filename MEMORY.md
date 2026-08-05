@@ -49,8 +49,8 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda day scroller (arraste, sem setas) — PR #21 (5 Ago 2026):**
-  - Branch `cursor/agenda-day-drag-scroll-6eec` · merge para `main` / produção.
+- **Agenda day scroller (arraste, sem setas) — MERGED → produção (5 Ago 2026):**
+  - Branch `cursor/agenda-day-drag-scroll-6eec` · PR #21 → `main` (`be656d0`) · deploy Vercel automático.
   - `AgendaDayScroller`: remove ChevronLeft/Right da faixa de dias; scroll horizontal com snap, drag (mouse) e swipe (touch).
   - Contas E2E: `.env` local (gitignored) + instruções em `.Agent/playwright-test-accounts.md`.
   - Auditoria Playwright: `scripts/agenda-day-scroller-audit.mjs` — verdict PASS (mobile + desktop).

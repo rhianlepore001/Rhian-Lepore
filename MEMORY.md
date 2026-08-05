@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda day scroller (arraste, sem setas) — PR aberto (5 Ago 2026):**
+  - Branch `cursor/agenda-day-drag-scroll-6eec` · PR #21.
+  - `AgendaDayScroller`: remove ChevronLeft/Right da faixa de dias; scroll horizontal com snap, drag (mouse) e swipe (touch).
+  - Contas E2E: `.env` local (gitignored) + instruções em `.Agent/playwright-test-accounts.md`.
+  - Auditoria Playwright: `scripts/agenda-day-scroller-audit.mjs` — verdict PASS (mobile + desktop).
 - **Varredura Impeccable + Playwright — MERGED → produção (5 Ago 2026):**
   - Branch `cursor/impeccable-e2e-sweep-4706` · PR #20 → `main` (`47413db`) · deploy Vercel automático.
   - Chrome mobile (FAB/Button/tabs/header); toast/ConfirmModal; Login/Register/Queue tokenizados; Finance ErrorState; Agenda 44px.

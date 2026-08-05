@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button } from '../../components/ui';
+import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,15 +18,24 @@ export const TeamSettings: React.FC = () => {
     const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     const cardMembers = members.map(m => ({ ...m, photo_url: m.photo_url ?? null }));
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Tem certeza que deseja excluir este profissional?')) return;
+    const handleDelete = (id: string) => {
+        setPendingDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!pendingDeleteId) return;
         try {
-            await deleteMemberMutation.mutateAsync(id);
+            await deleteMemberMutation.mutateAsync(pendingDeleteId);
+            showToast('Profissional excluído.', 'success');
         } catch {
-            window.alert('Não foi possível excluir o profissional. Tente de novo.');
+            showToast('Não foi possível excluir o profissional. Tente de novo.', 'error');
+        } finally {
+            setPendingDeleteId(null);
         }
     };
 
@@ -125,6 +134,17 @@ export const TeamSettings: React.FC = () => {
                         )}
                     </div>
                 )}
+
+                <ConfirmModal
+                    open={!!pendingDeleteId}
+                    title="Excluir profissional"
+                    message="Tem certeza que deseja excluir este profissional?"
+                    confirmLabel="Excluir"
+                    variant="danger"
+                    loading={deleteMemberMutation.isPending}
+                    onCancel={() => setPendingDeleteId(null)}
+                    onConfirm={() => void confirmDelete()}
+                />
 
                 {isModalOpen && (
                     <TeamMemberForm

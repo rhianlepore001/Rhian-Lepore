@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
+import { useToast } from './ui/Toast';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
+import { mapError } from '../utils/mapError';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -25,6 +27,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     isOwnerForm = false
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
+    const { showToast } = useToast();
     const isBeauty = accentColor === 'beauty-neon';
     const { colors, accent, font } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
 
@@ -61,7 +64,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             const file = e.target.files[0];
 
             if (file.size > 10 * 1024 * 1024) {
-                alert('A imagem deve ter no máximo 10MB.');
+                showToast('A imagem deve ter no máximo 10MB.', 'error');
                 return;
             }
 
@@ -157,9 +160,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     onClose();
                 }
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error saving team member:', error);
-            alert(`Erro ao salvar membro da equipe: ${error.message || JSON.stringify(error)}`);
+            showToast(mapError(error, 'Não foi possível salvar o profissional. Tente de novo.').message, 'error');
         } finally {
             setLoading(false);
         }

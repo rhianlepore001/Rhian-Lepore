@@ -1,4 +1,4 @@
-import { Card, Button } from '../../components/ui';
+import { Card, Button, useToast } from '../../components/ui';
 import React, { useState } from 'react';
 
 
@@ -18,6 +18,7 @@ export const RecycleBin: React.FC = () => {
     const { data: items = [], isLoading: loading, refetch } = useDeletedItems(filter || undefined);
     const restoreMutation = useRestoreDeletedItem();
     const [restoring, setRestoring] = useState<string | null>(null);
+    const { showToast } = useToast();
 
     const handleRestore = async (item: DeletedItem) => {
         setRestoring(item.id);
@@ -26,10 +27,10 @@ export const RecycleBin: React.FC = () => {
                 resourceType: item.resource_type,
                 itemId: item.id,
             });
-            alert('Item restaurado com sucesso!');
+            showToast('Item restaurado com sucesso!', 'success');
         } catch (error) {
             console.error('Erro ao restaurar item:', error);
-            alert('Erro ao restaurar item. Tente novamente.');
+            showToast('Erro ao restaurar item. Tente novamente.', 'error');
         } finally {
             setRestoring(null);
         }

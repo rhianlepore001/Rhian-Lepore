@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Modal, useToast } from '@/components/ui';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { mapError } from '../utils/mapError';
 
 interface CommissionLine {
     id: string;
@@ -385,8 +386,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
             await fetchCommissionLines();
         } catch (error: unknown) {
             console.error('Error updating commission:', error);
-            const message = error instanceof Error ? error.message : 'Erro desconhecido';
-            showToast(`Erro ao atualizar comissão: ${message}`, 'error');
+            showToast(mapError(error, 'Erro ao atualizar comissão.').message, 'error');
         } finally {
             setSaving(false);
         }

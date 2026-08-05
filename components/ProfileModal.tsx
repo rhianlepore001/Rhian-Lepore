@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Modal } from './ui/Modal';
+import { useToast } from './ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Upload, User as UserIcon } from 'lucide-react';
@@ -23,6 +24,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { accent, colors, classes, font } = useBrutalTheme();
+    const { showToast } = useToast();
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -78,7 +80,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 .update(profilePayload)
                 .eq('id', user?.id);
 
-            if (profileError) console.error("Error updating public profile:", profileError);
+            if (profileError) {
+                console.error("Error updating public profile:", profileError);
+                showToast('Perfil salvo parcialmente. Alguns dados podem não ter sido atualizados.', 'warning');
+                onClose();
+                return;
+            }
 
             // Sync with team_members for the owner
             const { error: teamError } = await supabase
@@ -90,14 +97,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 .eq('user_id', user?.id)
                 .eq('is_owner', true);
 
-            if (teamError) console.error("Error syncing team member profile:", teamError);
+            if (teamError) {
+                console.error("Error syncing team member profile:", teamError);
+                showToast('Perfil salvo parcialmente. A sincronização com a equipe falhou.', 'warning');
+                onClose();
+                return;
+            }
 
-            alert('Perfil atualizado com sucesso! Recarregue a página para ver as alterações.');
+            showToast('Perfil atualizado com sucesso! Recarregue a página para ver as alterações.', 'success');
             onClose();
             window.location.reload();
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Erro ao atualizar perfil.');
+            showToast('Erro ao atualizar perfil.', 'error');
         } finally {
             setLoading(false);
         }

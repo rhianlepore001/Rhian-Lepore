@@ -5,6 +5,8 @@ import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'l
 import { useAuth } from '../contexts/AuthContext';
 import { PREDEFINED_SERVICES } from '../constants';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useToast } from './ui/Toast';
+import { mapError } from '../utils/mapError';
 import {
     useCreateServiceCategory,
     useSaveService,
@@ -33,6 +35,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     accentColor: _accentColorProp
 }) => {
     const { region } = useAuth();
+    const { showToast } = useToast();
     const { isBeauty, accent, colors, classes, font } = useBrutalTheme();
     const saveServiceMutation = useSaveService();
     const uploadImageMutation = useUploadServiceImage();
@@ -84,7 +87,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             const file = e.target.files[0];
 
             if (file.size > 10 * 1024 * 1024) {
-                alert('A imagem deve ter no máximo 10MB.');
+                showToast('A imagem deve ter no máximo 10MB.', 'error');
                 return;
             }
 
@@ -127,8 +130,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             onClose();
         } catch (error) {
             console.error('Error saving service:', error);
-            const message = error instanceof Error ? error.message : JSON.stringify(error);
-            alert(`Erro ao salvar serviço: ${message}`);
+            showToast(mapError(error, 'Não foi possível salvar o serviço. Tente de novo.').message, 'error');
         } finally {
             setLoading(false);
         }
@@ -156,7 +158,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
             setIsCreatingCategory(false);
         } catch (error) {
             console.error('Error creating category:', error);
-            alert('Erro ao criar categoria');
+            showToast(mapError(error, 'Não foi possível criar a categoria. Tente de novo.').message, 'error');
         }
     };
 

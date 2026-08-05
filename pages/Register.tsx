@@ -71,7 +71,7 @@ export const Register: React.FC = () => {
 
         if (rpcError) {
           console.error('get_team_member_for_invite', rpcError);
-          setInviteError(rpcError.message || 'Não foi possível validar o convite.');
+          setInviteError(mapError(rpcError, 'Não foi possível validar o convite.').message);
           setInviteLoading(false);
           return;
         }

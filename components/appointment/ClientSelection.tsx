@@ -7,6 +7,8 @@ import { SearchableSelect } from '../SearchableSelect';
 import { formatPhone, Region } from '../../utils/formatters';
 import { PhoneInput } from '../PhoneInput';
 import { logger } from '../../utils/Logger';
+import { useToast } from '../ui/Toast';
+import { mapError } from '../../utils/mapError';
 
 interface ClientSelectionProps {
     clients: any[];
@@ -35,6 +37,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
     const [newClientName, setNewClientName] = useState('');
     const [newClientPhone, setNewClientPhone] = useState('');
     const [loading, setLoading] = useState(false);
+    const { showToast } = useToast();
 
     const handleCreateClient = async () => {
         if (!newClientName || !newClientPhone || !tenantId) return;
@@ -58,10 +61,11 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                 setIsCreatingClient(false);
                 setNewClientName('');
                 setNewClientPhone('');
+                showToast('Cliente cadastrado com sucesso!', 'success');
             }
         } catch (error) {
             logger.error('Erro ao criar cliente:', error);
-            alert('Erro ao criar cliente');
+            showToast(mapError(error, 'Erro ao criar cliente.').message, 'error');
         } finally {
             setLoading(false);
         }

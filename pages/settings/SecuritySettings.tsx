@@ -1,5 +1,6 @@
-import { Card, Button } from '../../components/ui';
+import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import React, { useState } from 'react';
+import { mapError } from '../../utils/mapError';
 
 
 import { Shield, Lock, Smartphone, Trash2, CheckCircle2 } from 'lucide-react';
@@ -11,24 +12,30 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 export const SecuritySettings: React.FC = () => {
     const { isEnabled, loading, unenroll, factors, refreshUser } = use2FA();
     const [showSetup, setShowSetup] = useState(false);
+    const [pendingUnenrollId, setPendingUnenrollId] = useState<string | null>(null);
+    const [unenrolling, setUnenrolling] = useState(false);
+    const { showToast } = useToast();
 
     const { accent, colors } = useBrutalTheme();
 
     const handleSetupComplete = () => {
         setShowSetup(false);
         refreshUser();
-        alert('Autenticação em dois fatores ativada com sucesso!');
+        showToast('Verificação em duas etapas ativada com sucesso!', 'success');
     };
 
-    const handleUnenroll = async (factorId: string) => {
-        if (!confirm('Tem certeza que deseja desativar o 2FA? Sua conta ficará menos segura.')) return;
-
+    const confirmUnenroll = async () => {
+        if (!pendingUnenrollId) return;
+        setUnenrolling(true);
         try {
-            await unenroll(factorId);
-            alert('2FA desativado.');
+            await unenroll(pendingUnenrollId);
+            showToast('Verificação em duas etapas desativada. Sua conta ficou menos protegida.', 'warning');
         } catch (error) {
             console.error(error);
-            alert('Erro ao desativar 2FA.');
+            showToast(mapError(error, 'Não foi possível desativar a verificação em duas etapas.').message, 'error');
+        } finally {
+            setUnenrolling(false);
+            setPendingUnenrollId(null);
         }
     };
 
@@ -60,7 +67,7 @@ export const SecuritySettings: React.FC = () => {
                             </p>
 
                             {!isEnabled ? (
-                                <div className="flex items-center gap-2 text-[var(--color-warning)] mb-6 bg-orange-500/5 border border-orange-500/10 p-3 rounded-xl w-fit">
+                                <div className="flex items-center gap-2 text-[var(--color-warning)] mb-6 bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] p-3 rounded-xl w-fit">
                                     <Lock className="w-4 h-4" />
                                     <span className="text-xs font-bold uppercase tracking-wider">Proteção Desativada</span>
                                 </div>
@@ -82,7 +89,7 @@ export const SecuritySettings: React.FC = () => {
                                                 onClick={() => setShowSetup(true)}
                                                 className="w-full"
                                             >
-                                                Configurar 2FA
+                                                Ativar verificação em duas etapas
                                             </Button>
                                         </div>
                                     ) : (
@@ -96,12 +103,12 @@ export const SecuritySettings: React.FC = () => {
                                                         </div>
                                                         <div>
                                                             <p className={`${colors.text} text-sm font-bold`}>{factor.friendly_name || 'Autenticador'}</p>
-                                                            <p className={`${colors.textMuted} text-xs uppercase`}>Algoritmo TOTP</p>
+                                                            <p className={`${colors.textMuted} text-xs uppercase`}>App autenticador</p>
                                                         </div>
                                                     </div>
                                                     <button
-                                                        onClick={() => handleUnenroll(factor.id)}
-                                                        className={`p-2 hover:bg-[var(--color-danger-bg)] rounded-xl ${colors.textMuted} hover:text-[var(--color-danger)] transition-all active:animate-haptic-click`}
+                                                        onClick={() => setPendingUnenrollId(factor.id)}
+                                                        className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-[var(--color-danger-bg)] rounded-xl ${colors.textMuted} hover:text-[var(--color-danger)] transition-all active:animate-haptic-click`}
                                                         title="Remover"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -142,6 +149,17 @@ export const SecuritySettings: React.FC = () => {
                     </Button>
                 </Card>
             </div>
+
+            <ConfirmModal
+                open={!!pendingUnenrollId}
+                title="Desativar verificação em duas etapas"
+                message="Tem certeza que deseja desativar a verificação em duas etapas? Sua conta ficará menos segura."
+                confirmLabel="Desativar"
+                variant="danger"
+                loading={unenrolling}
+                onCancel={() => setPendingUnenrollId(null)}
+                onConfirm={() => void confirmUnenroll()}
+            />
         </SettingsLayout>
     );
 };

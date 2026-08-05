@@ -177,17 +177,13 @@ export const Register: React.FC = () => {
 
   const regionBtnClass = (active: boolean) =>
     `flex-1 py-3 text-xs font-semibold ${radius.input} transition-all border cursor-pointer ${active
-      ? isBeauty
-        ? 'bg-beauty-neon/10 border-beauty-neon/80 text-beauty-neon'
-        : 'bg-accent-gold/10 border-accent-gold/80 text-accent-gold'
+      ? `${accent.bgDim} ${accent.border} ${accent.text}`
       : `bg-[var(--color-card-hover)] border-[var(--color-text)]/8 text-[var(--color-text-muted)] hover:border-[var(--color-text)]/15 hover:text-[var(--color-text-muted)]`
     }`;
 
   const segmentBtnClass = (active: boolean) =>
     `flex items-center gap-3 px-5 py-4 ${radius.card} transition-all border cursor-pointer ${active
-      ? isBeauty
-        ? 'bg-beauty-neon/10 border-beauty-neon/80 text-beauty-neon'
-        : 'bg-accent-gold/10 border-accent-gold/80 text-accent-gold'
+      ? `${accent.bgDim} ${accent.border} ${accent.text}`
       : `bg-[var(--color-card-hover)] border-[var(--color-text)]/8 text-[var(--color-text-muted)] hover:border-[var(--color-text)]/15 hover:text-[var(--color-text-muted)]`
     }`;
 
@@ -195,12 +191,12 @@ export const Register: React.FC = () => {
   if (isInvitedStaff) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-theme-bg">
-        <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] ${isBeauty ? 'bg-beauty-neon/[0.04]' : 'bg-accent-gold/[0.04]'} rounded-full blur-[120px] pointer-events-none`} />
+        <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] bg-theme-accent/[0.04] rounded-full blur-[120px] pointer-events-none`} />
 
         <div className="w-full max-w-md relative z-10">
-          <div className="relative bg-[#1C1C1C] rounded-2xl border border-[var(--color-border)] shadow-[var(--elevation-3)] overflow-hidden">
+          <div className="relative bg-[var(--color-card)] rounded-2xl border border-[var(--color-border)] shadow-[var(--elevation-3)] overflow-hidden">
 
-            <div className={`h-[2px] w-full ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
+            <div className="h-[2px] w-full bg-theme-accent/40" />
 
             <div className="p-8 space-y-6">
               <div>
@@ -208,7 +204,7 @@ export const Register: React.FC = () => {
                 <h1 className="font-heading text-2xl uppercase text-[var(--color-text)] tracking-tight mt-5">
                   Bem-vindo à equipe
                 </h1>
-                <p className={`text-xs font-mono uppercase tracking-[0.1em] mt-1.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
+                <p className={`text-xs font-mono uppercase tracking-[0.1em] mt-1.5 ${accent.text}/60`}>
                   {ownerBusinessName
                     ? `Finalize seu acesso · ${ownerBusinessName}`
                     : 'Finalize seu acesso para entrar na equipe'}
@@ -322,7 +318,7 @@ export const Register: React.FC = () => {
 
                 <p className="text-center pt-5 border-t border-[var(--color-border)] font-mono text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
                   Já tem conta?{' '}
-                  <Link to="/login" className={`font-bold transition-colors ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon' : 'text-accent-gold/70 hover:text-accent-gold'}`}>
+                  <Link to="/login" className={`font-bold transition-colors ${accent.text}/70 hover:text-theme-accent`}>
                     Fazer login
                   </Link>
                 </p>
@@ -343,8 +339,8 @@ export const Register: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden bg-theme-bg">
       {isBeauty
-        ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-beauty-neon/[0.05] rounded-full blur-[120px] pointer-events-none" />
-        : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-gold/[0.04] rounded-full blur-[120px] pointer-events-none" />
+        ? <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-theme-accent/[0.05] rounded-full blur-[120px] pointer-events-none" />
+        : <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-theme-accent/[0.04] rounded-full blur-[120px] pointer-events-none" />
       }
 
       <div className="w-full max-w-2xl relative z-10">
@@ -352,19 +348,18 @@ export const Register: React.FC = () => {
             ? 'rounded-3xl border border-[var(--color-border)] shadow-[var(--elevation-3)]'
             : 'rounded-2xl border border-[var(--color-border)] shadow-[var(--elevation-3)]'
           }`}>
-          <div className={`h-[2px] w-full ${isBeauty ? 'bg-beauty-neon/40' : 'bg-accent-gold/40'}`} />
+          <div className={`h-[2px] w-full bg-theme-accent/40`} />
 
           {/* Header */}
-          <div className={`px-8 py-6 border-b ${isBeauty ? 'bg-beauty-card/90 backdrop-blur-xl border-[var(--color-border)]' : 'bg-[#161616] border-[var(--color-border)]'
-            }`}>
+          <div className={`px-8 py-6 border-b border-[var(--color-border)] ${isBeauty ? 'bg-[var(--color-card)]/90 backdrop-blur-xl' : 'bg-[var(--color-card)]'}`}>
             <h1 className="font-heading text-2xl text-[var(--color-text)] uppercase tracking-tight">Crie sua conta</h1>
-            <p className={`font-mono text-xs uppercase tracking-[0.1em] mt-1.5 ${isBeauty ? 'text-beauty-neon/60' : 'text-accent-gold/60'}`}>
+            <p className={`font-mono text-xs uppercase tracking-[0.1em] mt-1.5 ${accent.text}/60`}>
               {subtitle}
             </p>
           </div>
 
           {/* Corpo */}
-          <div className={`px-8 py-8 md:px-10 ${isBeauty ? 'bg-beauty-card/80 backdrop-blur-xl' : 'bg-[#1C1C1C]'}`}>
+          <div className={`px-8 py-8 md:px-10 ${isBeauty ? 'bg-[var(--color-card)]/80 backdrop-blur-xl' : 'bg-[var(--color-card)]'}`}>
 
             {error && (
               <div role="alert" className={`mb-6 p-3.5 text-xs rounded-xl border ${isBeauty ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)]/20 text-[var(--color-danger)]' : 'bg-[var(--color-danger)]/8 border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono'
@@ -499,7 +494,7 @@ export const Register: React.FC = () => {
 
                 <p className="text-center border-t border-[var(--color-border)] pt-5 font-mono text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
                   Já tem conta?{' '}
-                  <Link to="/login" className={`font-bold transition-colors ${isBeauty ? 'text-beauty-neon/70 hover:text-beauty-neon' : 'text-accent-gold/70 hover:text-accent-gold'}`}>
+                  <Link to="/login" className={`font-bold transition-colors ${accent.text}/70 hover:text-theme-accent`}>
                     Fazer login
                   </Link>
                 </p>

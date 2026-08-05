@@ -164,13 +164,18 @@ export const TeamSettings: React.FC = () => {
     return (
         <SettingsLayout>
             <div className="w-full space-y-8 pb-20">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-                    <p className={`text-sm ${colors.textMuted} max-w-xl`}>
-                        Cadastre a equipe, defina a comissão de cada colaborador e escolha a frequência de acerto — tudo no mesmo lugar.
-                    </p>
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div className="min-w-0">
+                        <h2 className={`text-xl md:text-2xl font-heading font-bold ${colors.text} tracking-tight`}>
+                            Equipe e comissões
+                        </h2>
+                        <p className={`text-sm mt-1 ${colors.textSecondary} max-w-lg`}>
+                            Cadastre colaboradores e configure comissão, frequência e dia de acerto.
+                        </p>
+                    </div>
                     <Button
                         id="btn-add-team-member"
-                        className="shrink-0 self-start sm:self-auto"
+                        className="shrink-0 self-start sm:self-auto min-h-[44px]"
                         icon={<Plus className="w-5 h-5" />}
                         onClick={() => {
                             setEditingMember(null);

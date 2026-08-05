@@ -137,17 +137,20 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     </p>
 
                     {!member.is_owner && !editingCommission && (
-                        <div className="space-y-0.5">
-                            <p className={`text-lg font-bold font-mono tabular-nums ${accent.text}`}>
-                                {commissionRate}% de comissão
+                        <div className="space-y-1">
+                            <p className={`text-xl font-bold font-mono tabular-nums ${colors.text}`}>
+                                <span className={accent.text}>{commissionRate}%</span>
+                                <span className={`ml-1.5 text-sm font-sans font-semibold ${colors.textSecondary}`}>
+                                    de comissão
+                                </span>
                             </p>
-                            <p className={`text-xs uppercase tracking-wide font-mono ${colors.textMuted}`}>
+                            <p className={`text-sm font-medium ${colors.textSecondary}`}>
                                 {schedule}
                             </p>
                         </div>
                     )}
                     {member.is_owner && (
-                        <p className={`text-xs ${colors.textMuted}`}>
+                        <p className={`text-sm ${colors.textSecondary}`}>
                             Dono não entra na fila de repasse de comissões.
                         </p>
                     )}
@@ -220,7 +223,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 </div>
             )}
 
-            <div className={`mt-4 pt-3 border-t ${colors.divider} flex flex-wrap justify-end items-center gap-2`}>
+            <div className={`mt-5 pt-4 border-t ${colors.divider} flex flex-wrap justify-end items-center gap-2`}>
                 {!member.is_owner && onSaveCommission && !editingCommission && (
                     <button
                         type="button"
@@ -229,13 +232,13 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                             openCommissionEditor();
                         }}
                         className={`
-                            flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px]
+                            flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 min-h-[44px]
                             ${accent.bgDim} ${accent.text} ${radius.button}
                             transition-all text-xs font-bold uppercase tracking-widest
                             border ${accent.borderDim}
                         `}
                     >
-                        <Percent className="w-3.5 h-3.5" />
+                        <Percent className="w-4 h-4" />
                         Comissão
                     </button>
                 )}
@@ -246,14 +249,14 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                         onEdit(member);
                     }}
                     className={`
-                        flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px]
+                        flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 min-h-[44px]
                         bg-[var(--color-card-hover)] ${colors.text} ${radius.button} hover:bg-[var(--color-divider)]
                         transition-all text-xs font-bold uppercase tracking-widest
                         border ${colors.border} hover:border-[var(--color-border-strong)]
                     `}
                 >
-                    <Edit2 className={`w-3.5 h-3.5 ${accent.text}`} />
-                    Editar
+                    <Edit2 className={`w-4 h-4 ${accent.text}`} />
+                    Perfil
                 </button>
                 <button
                     type="button"

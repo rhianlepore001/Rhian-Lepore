@@ -38,7 +38,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [role, setRole] = useState(initialData?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
     const [slug, setSlug] = useState(initialData?.slug || '');
     const [bio, setBio] = useState(initialData?.bio || '');
-    const [commissionRate, setCommissionRate] = useState<string | number>(initialData?.commission_rate?.toString() || (isOwnerForm ? '100' : '0'));
     const [isOwner, setIsOwner] = useState(initialData?.is_owner || (isOwnerForm ? true : false));
     const [active, setActive] = useState(initialData?.active ?? true);
     const [specialties, setSpecialties] = useState(
@@ -76,7 +75,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         setName(fullName || businessName || '');
         setRole('Dono / Profissional');
         setPhotoPreview(avatarUrl || null);
-        setCommissionRate('100');
         setIsOwner(true);
     };
 
@@ -110,7 +108,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 }
             }
 
-            const teamMemberData = {
+            const teamMemberData: Record<string, unknown> = {
                 user_id: user.id,
                 name: name.trim(),
                 role: role.trim(),
@@ -118,11 +116,17 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 bio: bio.trim(),
                 active,
                 photo_url: photoUrl,
-                commission_rate: (isOwner || commissionRate === '') ? 0 : Number(commissionRate),
                 is_owner: isOwner,
                 specialties: specialties.split(',').map(s => s.trim()).filter(Boolean),
                 cpf: cpf.trim() || null
             };
+
+            // Comissão só é configurada em Equipe → Comissão (não no formulário de perfil).
+            // Em criação, inicia em 0; em edição, preserva a taxa já salva.
+            if (!initialData?.id) {
+                teamMemberData.commission_rate = 0;
+                teamMemberData.commission_percent = 0;
+            }
 
             if (initialData?.id) {
                 const { error: updateError } = await supabase
@@ -337,34 +341,23 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     />
                 </div>
 
-                <div className={`grid ${isOwner ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                    <div>
-                        <label className={labelClass}>Cargo</label>
-                        <input
-                            type="text"
-                            required
-                            value={role}
-                            onChange={e => setRole(e.target.value)}
-                            className={inputClass}
-                            placeholder="Ex: Barbeiro"
-                        />
-                    </div>
-
-                    {!isOwner && (
-                        <div>
-                            <label className={labelClass}>Comissão (%)</label>
-                            <input
-                                type="number"
-                                required
-                                min="0"
-                                max="100"
-                                value={commissionRate}
-                                onChange={e => setCommissionRate(e.target.value)}
-                                className={inputClass}
-                            />
-                        </div>
-                    )}
+                <div>
+                    <label className={labelClass}>Cargo</label>
+                    <input
+                        type="text"
+                        required
+                        value={role}
+                        onChange={e => setRole(e.target.value)}
+                        className={inputClass}
+                        placeholder="Ex: Barbeiro"
+                    />
                 </div>
+
+                {!isOwner && (
+                    <p className={`text-xs ${colors.textMuted} -mt-1`}>
+                        A comissão e o dia de acerto ficam no card do colaborador, em Equipe e Comissões.
+                    </p>
+                )}
 
                 <div>
                     <label className={labelClass}>Link Personalizado (Slug)</label>

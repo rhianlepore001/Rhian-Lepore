@@ -24,9 +24,8 @@ export interface SettingsItem {
 export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Geral', path: '/configuracoes/geral', icon: Settings, group: 'Negócio' },
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
-  { label: 'Equipe', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
+  { label: 'Equipe e Comissões', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package, group: 'Negócio' },
-  { label: 'Comissões', path: '/configuracoes/comissoes', icon: DollarSign, group: 'Financeiro' },
   { label: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard, group: 'Financeiro' },
   { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell, group: 'Conta' },
   { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield, group: 'Conta' },

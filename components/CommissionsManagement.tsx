@@ -198,11 +198,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             const { data, error } = await supabase
                 .from('commission_payments')
                 .select(`
-                    id, collaborator_id, period_start, period_end,
+                    id, professional_id, start_date, end_date,
                     net_amount, commission_percent, paid_at,
-                    team_members!collaborator_id (name, photo_url)
+                    team_members!professional_id (name, photo_url)
                 `)
-                .eq('company_id', user.id)
+                .eq('user_id', user.id)
                 .eq('status', 'paid')
                 .order('paid_at', { ascending: false })
                 .limit(50);
@@ -213,7 +213,9 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                 ...item,
                 professional_name: item.team_members?.name || '—',
                 photo_url: item.team_members?.photo_url || null,
-                net_amount: Number(item.net_amount) || 0
+                net_amount: Number(item.net_amount) || 0,
+                period_start: item.start_date,
+                period_end: item.end_date,
             }));
             setPaidCommissions(formatted);
         } catch (error) {

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Search, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft, Scissors, Sparkles, Sun, Moon } from 'lucide-react';
+import { Bell, Search, LogOut, User as UserIcon, Settings, AlertTriangle, ArrowLeft, Scissors, Sparkles, Sun, Moon } from 'lucide-react';
 import { BugReportButton } from './BugReportButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
-import { useAppTour } from '../hooks/useAppTour';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
@@ -14,7 +13,6 @@ export const Header: React.FC = () => {
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { startTour } = useAppTour();
   const { mode, toggleMode } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,7 +70,7 @@ export const Header: React.FC = () => {
 
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 overflow-hidden">
             {isSettingsRoute ? (
-              <Link to="/" className="flex items-center gap-3 group hover:opacity-90 transition-all ml-1 md:ml-0 min-w-0" title="Voltar ao Dashboard">
+              <Link to="/dashboard" className="flex items-center gap-3 group hover:opacity-90 transition-all ml-1 md:ml-0 min-w-0" title="Voltar ao Dashboard">
                 <ArrowLeft className={`w-5 h-5 shrink-0 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                 <div className="relative shrink-0">
                   <div className={`absolute -inset-3 ${accent.bgDim} blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 rounded-full`} />
@@ -87,8 +85,8 @@ export const Header: React.FC = () => {
               </Link>
             ) : (
               <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                {pathname !== '/' && (
-                  <Link to="/" className="md:hidden flex items-center shrink-0 group hover:opacity-90 transition-all" title="Voltar ao Dashboard">
+                {pathname !== '/dashboard' && (
+                  <Link to="/dashboard" className="md:hidden flex items-center shrink-0 group hover:opacity-90 transition-all" title="Voltar ao Dashboard">
                     <ArrowLeft className={`w-5 h-5 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>
                 )}

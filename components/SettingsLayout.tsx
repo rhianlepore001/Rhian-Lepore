@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SETTINGS_ITEMS, SettingsItem } from '../constants';
-import { useAppTour } from '../hooks/useAppTour';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
 interface SettingsLayoutProps {
@@ -76,7 +75,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
 
       <div className={`px-5 py-4 border-t ${colors.divider} flex-shrink-0`}>
         <NavLink
-          to="/"
+          to="/dashboard"
           onClick={onNavigate}
           className={`flex items-center gap-2 min-h-[44px] ${colors.textSecondary} hover:text-theme-text transition-colors active:animate-haptic-click`}
         >
@@ -151,7 +150,6 @@ const MobileSettingsRail: React.FC<{
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
   const { role, isDev } = useAuth();
   const location = useLocation();
-  useAppTour();
   const { accent, colors } = useBrutalTheme();
 
   const menuItems = role === 'staff'
@@ -189,7 +187,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
               </h1>
             </div>
             <NavLink
-              to="/"
+              to="/dashboard"
               className={`shrink-0 inline-flex items-center justify-center min-h-10 min-w-10 rounded-lg ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] active:animate-haptic-click`}
               aria-label="Voltar ao Dashboard"
               title="Voltar ao Dashboard"

@@ -49,7 +49,7 @@ export function useDeleteTeamMember() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteTeamMember(id, companyId!),
+    mutationFn: (id: string) => deleteTeamMember(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
     },

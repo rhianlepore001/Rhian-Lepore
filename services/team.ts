@@ -14,6 +14,7 @@ export async function fetchTeamMembers(companyId: string): Promise<TeamMember[]>
     .from('team_members')
     .select('*')
     .eq('user_id', companyId)
+    .is('deleted_at', null)
     .order('is_owner', { ascending: false })
     .order('name', { ascending: true });
 
@@ -68,15 +69,10 @@ export async function updateTeamMember(
   return teamMemberSchema.parse(data);
 }
 
-export async function deleteTeamMember(
-  memberId: string,
-  companyId: string,
-): Promise<void> {
-  const { error } = await supabase
-    .from('team_members')
-    .delete()
-    .eq('id', memberId)
-    .eq('user_id', companyId);
+export async function deleteTeamMember(memberId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_team_member', {
+    p_id: memberId,
+  });
 
   if (error) throw error;
 }

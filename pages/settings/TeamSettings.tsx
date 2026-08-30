@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button } from '../../components/ui';
+import { Card, Button, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Plus, Users, ShieldCheck, UserCheck, Link as LinkIcon, Copy, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { TeamMember as TeamMemberType } from '../../types/team';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
+import { mapError } from '../../utils/mapError';
 
 export const TeamSettings: React.FC = () => {
     const { user, companyId } = useAuth();
@@ -18,6 +19,7 @@ export const TeamSettings: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const { data: members = [], isLoading: loading } = useTeamMembers();
     const deleteMemberMutation = useDeleteTeamMember();
+    const { showToast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
     const { copied: copiedLink, copy: handleCopyInviteLink } = useCopyInviteLink();
@@ -29,8 +31,9 @@ export const TeamSettings: React.FC = () => {
         try {
             await deleteMemberMutation.mutateAsync(id);
         } catch (error) {
-            console.error('Error deleting member:', error);
-            alert('Erro ao excluir.');
+            console.error('Erro ao excluir profissional:', error);
+            const ui = mapError(error, 'Não foi possível excluir o profissional. Tente novamente.');
+            showToast(ui.message, 'error');
         }
     };
 

@@ -27,7 +27,6 @@ import { deleteAppointmentWithFinance } from '../services/scheduling';
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
 import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
-import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../utils/appointmentStatus';
 import { useTenantLocale } from '../hooks/useTenantLocale';
@@ -106,7 +105,6 @@ export const Agenda: React.FC = () => {
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    useAppTour(); // Instancia para detectar continuação do tour
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);

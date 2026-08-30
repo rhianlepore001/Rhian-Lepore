@@ -120,6 +120,7 @@ export async function createFinanceRecord(input: {
   paymentMethod: string | null;
   professionalId: string | null;
   professionalName: string;
+  clientId?: string | null;
   clientName: string;
   serviceName: string;
   appointmentId: string | null;

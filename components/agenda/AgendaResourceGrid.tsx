@@ -166,12 +166,11 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
 
                   if (cellApts.length === 0) {
                     return (
-                      <div key={time} className={`h-12 md:h-14 w-full border-b ${colors.divider} last:border-b-0 flex`}>
+                      <div key={time} className={`relative h-12 md:h-14 w-full border-b ${colors.divider} last:border-b-0`}>
                         <AgendaEmptySlotCell
                           time={time}
                           professionalName={member.name}
                           onClick={() => onEmptySlotClick(member.id, time)}
-                          className="min-h-0"
                         />
                       </div>
                     );

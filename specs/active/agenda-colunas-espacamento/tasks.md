@@ -1,7 +1,7 @@
 # Agenda colunas — Tasks
 
 **Design**: `specs/active/agenda-colunas-espacamento/design.md`
-**Status**: In Progress
+**Status**: In Progress — T1–T3 implementados; T4 gates
 
 ---
 

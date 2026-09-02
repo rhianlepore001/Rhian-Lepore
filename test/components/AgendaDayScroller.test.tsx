@@ -49,4 +49,19 @@ describe('AgendaDayScroller', () => {
     expect(onSelectDate).toHaveBeenCalledTimes(1);
     expect(onSelectDate.mock.calls[0][0]).toBeInstanceOf(Date);
   });
+
+  it('chip selecionado usa tamanho compacto w-11 h-14', () => {
+    render(
+      <AgendaDayScroller
+        selectedDate={new Date('2026-08-05T12:00:00')}
+        onSelectDate={vi.fn()}
+        {...theme}
+      />,
+    );
+
+    const selected = screen.getByTestId('agenda-day-selected');
+    expect(selected.className).toContain('w-11');
+    expect(selected.className).toContain('h-14');
+    expect(selected.className).not.toContain('h-[68px]');
+  });
 });

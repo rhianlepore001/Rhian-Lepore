@@ -171,7 +171,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
 
   return (
     <div className="px-4 md:px-6" data-testid="agenda-day-scroller">
-      <p className={`mb-2 text-sm font-heading tracking-wide ${colors.textSecondary}`}>
+      <p className={`mb-1 text-sm font-heading tracking-wide ${colors.textSecondary}`}>
         {monthLabel}
       </p>
 
@@ -221,7 +221,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
                 onClick={() => handleDayClick(d)}
                 className={[
                   'snap-center shrink-0 flex flex-col items-center justify-center',
-                  'w-[52px] sm:w-[56px] h-[68px] rounded-2xl border transition-[transform,background-color,color,box-shadow,border-color] duration-200',
+                  'w-11 h-14 rounded-2xl border transition-[transform,background-color,color,box-shadow,border-color] duration-200',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
                   isSelected
                     ? `${accent.bg} text-[var(--color-on-accent)] border-transparent shadow-[var(--shadow-card-accent)] scale-[1.02]`
@@ -233,7 +233,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
                   {dayName}
                 </span>
                 <span
-                  className={`text-xl font-heading font-bold leading-none tabular-nums ${
+                  className={`text-lg font-heading font-bold leading-none tabular-nums ${
                     isSelected ? 'text-[var(--color-on-accent)]' : colors.text
                   }`}
                 >

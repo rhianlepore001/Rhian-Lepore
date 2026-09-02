@@ -23,7 +23,7 @@ export const AgendaEmptySlotCell: React.FC<AgendaEmptySlotCellProps> = ({
       type="button"
       onClick={onClick}
       aria-label={`Novo agendamento às ${time} com ${professionalName}`}
-      className={`group/slot relative flex-1 min-w-0 h-full border-r last:border-r-0 p-1 flex items-center justify-center
+      className={`group/slot relative w-full h-full min-w-0 p-0 flex items-center justify-center
         transition-colors duration-200 ease-out
         hover:bg-[var(--color-accent-dim)]
         focus-visible:outline-none focus-visible:bg-[var(--color-accent-dim)]

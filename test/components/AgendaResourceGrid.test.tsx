@@ -75,6 +75,7 @@ describe('AgendaResourceGrid', () => {
   it('clique em slot vazio dispara onEmptySlotClick com profissional + horário', async () => {
     const { onEmptySlotClick } = setup();
     const button = screen.getByRole('button', { name: /08:00.*Rhian/ });
+    expect(button.className).toMatch(/(^|\s)w-full(\s|$)/);
     await userEvent.click(button);
     expect(onEmptySlotClick).toHaveBeenCalledWith('m2', '08:00');
   });

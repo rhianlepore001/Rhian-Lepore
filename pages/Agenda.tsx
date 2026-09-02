@@ -1098,7 +1098,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     }
 
     return (
-        <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8`}>
+        <div className={`${colors.bg} min-h-screen pb-8 space-y-3 md:space-y-4`}>
             <div className={`${classes.section} pt-2`}>
                 <PageHeader
                     title="Agenda"
@@ -1225,15 +1225,16 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* Professional Filter - Avatars */}
             {teamMembers.length > 0 && (
                 <div className="px-4 md:px-6">
-                    <div className={`flex items-center gap-5 overflow-x-auto pb-3 pt-1 snap-x snap-mandatory scrollbar-hide`}>
+                    <div className={`flex items-center gap-3 overflow-x-auto pb-1 pt-0.5 snap-x snap-mandatory scrollbar-hide`}>
                         <button
                             onClick={() => setSelectedProfessionalIds([])}
-                            className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
+                            className="flex flex-col items-center gap-1.5 min-w-[56px] snap-start"
                             aria-pressed={selectedProfessionalIds.length === 0}
                             data-testid="agenda-filter-all"
+                            title="Todos os profissionais"
                         >
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
-                                <Users className="w-5 h-5" />
+                            <div className={`w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
+                                <Users className="w-4 h-4" />
                             </div>
                             <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
                         </button>
@@ -1243,29 +1244,28 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             // (AuthContext) — o badge "Você" vale para qualquer
                             // um que atenda, dono ou colaborador.
                             const isSelf = member.id === teamMemberId;
+                            const firstName = member.name.split(' ')[0];
                             return (
                                 <button
                                     key={member.id}
                                     onClick={() => toggleProfessional(member.id)}
                                     aria-pressed={isSelected}
-                                    className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
+                                    title={member.name}
+                                    className="flex flex-col items-center gap-1.5 min-w-[56px] snap-start"
                                 >
-                                    <div className="relative">
-                                        {member.photo_url ? (
-                                            <img
-                                                src={member.photo_url}
-                                                alt={member.name}
-                                                className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[var(--shadow-card-accent)]` : colors.border}`}
-                                            />
-                                        ) : (
-                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
-                                                {getInitials(member.name)}
-                                            </div>
-                                        )}
-                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[var(--color-success)] border-2 border-[var(--color-bg)] rounded-full" />
-                                    </div>
-                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
-                                        {isSelf ? 'Você' : member.name.split(' ')[0]}
+                                    {member.photo_url ? (
+                                        <img
+                                            src={member.photo_url}
+                                            alt={member.name}
+                                            className={`w-11 h-11 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[var(--shadow-card-accent)]` : colors.border}`}
+                                        />
+                                    ) : (
+                                        <div className={`w-11 h-11 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
+                                            {getInitials(member.name)}
+                                        </div>
+                                    )}
+                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[56px] ${isSelected ? accent.text : colors.textMuted}`}>
+                                        {isSelf ? 'Você' : firstName}
                                     </span>
                                 </button>
                             );

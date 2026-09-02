@@ -229,7 +229,7 @@ test.describe('Agenda staff — filtro Todos', () => {
       'true',
     );
     await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
-    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toHaveCount(0);
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
 
     await page.screenshot({
       path: path.join(ARTIFACTS, 'staff-agenda-filtro-proprio.png'),

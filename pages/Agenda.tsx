@@ -8,7 +8,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
-import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -167,16 +167,6 @@ export const Agenda: React.FC = () => {
     const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
-
-    // Helper for initials
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
 
     // Atualiza selectedDate se o parâmetro de URL mudar
     useEffect(() => {
@@ -1223,59 +1213,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 accent={accent}
             />
 
-            {/* Professional Filter - Avatars */}
-            {teamMembers.length > 0 && (
-                <div className="px-4 md:px-6">
-                    <div className={`flex items-center gap-3 overflow-x-auto pb-1 pt-0.5 snap-x snap-mandatory scrollbar-hide`}>
-                        <button
-                            onClick={() => setSelectedProfessionalIds([])}
-                            className="flex flex-col items-center gap-1.5 min-w-[64px] snap-start"
-                            aria-pressed={selectedProfessionalIds.length === 0}
-                            data-testid="agenda-filter-all"
-                            title="Todos os profissionais"
-                        >
-                            <div className={`w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
-                                <Users className="w-4 h-4" />
-                            </div>
-                            <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
-                        </button>
-                        {teamMembers.map(member => {
-                            const isSelected = selectedProfessionalIds.includes(member.id);
-                            // teamMemberId agora é resolvido também para o dono
-                            // (AuthContext) — o badge "Você" vale para qualquer
-                            // um que atenda, dono ou colaborador.
-                            const isSelf = member.id === teamMemberId;
-                            const firstName = member.name.split(' ')[0];
-                            return (
-                                <button
-                                    key={member.id}
-                                    onClick={() => toggleProfessional(member.id)}
-                                    aria-pressed={isSelected}
-                                    title={member.name}
-                                    data-testid={`agenda-filter-${member.id}`}
-                                    className="flex flex-col items-center gap-1.5 min-w-[64px] snap-start"
-                                >
-                                    {member.photo_url ? (
-                                        <img
-                                            src={member.photo_url}
-                                            alt={member.name}
-                                            className={`w-11 h-11 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[var(--shadow-card-accent)]` : colors.border}`}
-                                        />
-                                    ) : (
-                                        <div className={`w-11 h-11 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
-                                            {getInitials(member.name)}
-                                        </div>
-                                    )}
-                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[64px] ${isSelected ? accent.text : colors.textMuted}`}>
-                                        {isSelf ? 'Você' : firstName}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
                 <div className="px-4 md:px-6 space-y-4">
@@ -1389,7 +1326,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         />
                     </Card>
                 </div>
-            ) : displayedMembers.length === 0 ? (
+            ) : teamMembers.length === 0 ? (
                 <div className="px-4 md:px-6">
                     <Card variant="outlined">
                         <EmptyState
@@ -1401,11 +1338,15 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             ) : (
                 <div className="px-4 md:px-6 pb-6">
                     <AgendaResourceGrid
-                        members={displayedMembers}
+                        members={teamMembers}
                         appointments={appointments}
                         timeSlots={timeSlots}
                         showUnassigned={showUnassigned}
                         currencyRegion={currencyRegion}
+                        selectedProfessionalIds={selectedProfessionalIds}
+                        selfMemberId={teamMemberId}
+                        onSelectAll={() => setSelectedProfessionalIds([])}
+                        onToggleProfessional={toggleProfessional}
                         onSelectAppointment={(apt) => {
                             const full = appointments.find((a) => a.id === apt.id);
                             if (full) setShowingDetailsAppointment(full);

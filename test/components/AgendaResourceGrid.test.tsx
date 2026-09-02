@@ -43,18 +43,24 @@ const baseAppointments: AgendaGridAppointment[] = [
 function setup(overrides?: Partial<React.ComponentProps<typeof AgendaResourceGrid>>) {
   const onSelectAppointment = vi.fn();
   const onEmptySlotClick = vi.fn();
+  const onSelectAll = vi.fn();
+  const onToggleProfessional = vi.fn();
   const props: React.ComponentProps<typeof AgendaResourceGrid> = {
     members,
     appointments: baseAppointments,
     timeSlots,
     showUnassigned: true,
     currencyRegion: 'BR',
+    selectedProfessionalIds: [],
+    selfMemberId: 'm1',
+    onSelectAll,
+    onToggleProfessional,
     onSelectAppointment,
     onEmptySlotClick,
     ...overrides,
   };
   const utils = render(<AgendaResourceGrid {...props} />);
-  return { ...utils, onSelectAppointment, onEmptySlotClick };
+  return { ...utils, onSelectAppointment, onEmptySlotClick, onSelectAll, onToggleProfessional };
 }
 
 describe('AgendaResourceGrid', () => {
@@ -67,9 +73,19 @@ describe('AgendaResourceGrid', () => {
 
   it('mostra o primeiro nome de cada colaborador no cabeçalho', () => {
     setup();
-    expect(screen.getByText('Mario')).toBeInTheDocument();
+    expect(screen.getByTestId('agenda-filter-all')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('Horário')).toBeNull();
+    expect(screen.getByText('Você')).toBeInTheDocument();
     expect(screen.getByText('Rhian')).toBeInTheDocument();
     expect(screen.getByText('MS')).toBeInTheDocument();
+  });
+
+  it('clique em Todos e no colaborador dispara o filtro do cabeçalho', async () => {
+    const { onSelectAll, onToggleProfessional } = setup({ selectedProfessionalIds: ['m1'] });
+    await userEvent.click(screen.getByTestId('agenda-filter-all'));
+    expect(onSelectAll).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByTestId('agenda-filter-m2'));
+    expect(onToggleProfessional).toHaveBeenCalledWith('m2');
   });
 
   it('clique em slot vazio dispara onEmptySlotClick com profissional + horário', async () => {

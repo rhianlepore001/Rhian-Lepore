@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle } from 'lucide-react';
+import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users } from 'lucide-react';
 import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
 import { formatCurrency, type Region } from '../../utils/formatters';
@@ -38,6 +38,10 @@ export interface AgendaResourceGridProps {
   timeSlots: string[];
   showUnassigned: boolean;
   currencyRegion: Region;
+  selectedProfessionalIds: string[];
+  selfMemberId?: string | null;
+  onSelectAll: () => void;
+  onToggleProfessional: (id: string) => void;
   onSelectAppointment: (apt: AgendaGridAppointment) => void;
   onEmptySlotClick: (professionalId: string, time: string) => void;
 }
@@ -61,9 +65,9 @@ function appointmentTimeLabel(iso: string): string {
 }
 
 /**
- * Grade única horário × colaborador — mobile e desktop (sem ramificação
- * `hidden`/`md:hidden`). Gutter de horário sticky à esquerda, cabeçalho de
- * coluna sticky no topo, snap horizontal entre colunas.
+ * Grade única horário × colaborador. O filtro vive no cabeçalho:
+ * Todos no canto (onde era “Horário”) e um colaborador por coluna —
+ * sem faixa de avatares duplicada.
  */
 export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   members,
@@ -71,10 +75,14 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   timeSlots,
   showUnassigned,
   currencyRegion,
+  selectedProfessionalIds,
+  selfMemberId = null,
+  onSelectAll,
+  onToggleProfessional,
   onSelectAppointment,
   onEmptySlotClick,
 }) => {
-  const { colors, accent, font } = useBrutalTheme();
+  const { colors, accent } = useBrutalTheme();
 
   const appointmentsByProfessional = new Map<string, AgendaGridAppointment[]>();
   for (const apt of appointments) {
@@ -91,6 +99,8 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
     0,
   );
   const totalVisible = unassignedCount + assignedCount;
+  const isAllSelected = selectedProfessionalIds.length === 0;
+  const headerCell = `sticky top-0 z-10 h-[4.25rem] border-b ${colors.divider} ${colors.card}`;
 
   return (
     <div>
@@ -100,11 +110,33 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}
-          <div className={`sticky left-0 z-20 w-12 md:w-16 shrink-0 flex flex-col ${colors.card}`}>
-            <div
-              className={`sticky top-0 z-30 h-12 md:h-14 flex items-center justify-center border-b ${colors.divider} ${colors.card}`}
-            >
-              <span className={`text-xs font-bold ${colors.textMuted}`}>Horário</span>
+          <div className={`sticky left-0 z-20 w-16 shrink-0 flex flex-col ${colors.card}`}>
+            <div className={`${headerCell} z-30`}>
+              <button
+                type="button"
+                onClick={onSelectAll}
+                aria-pressed={isAllSelected}
+                data-testid="agenda-filter-all"
+                title="Todos os profissionais"
+                className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1"
+              >
+                <span
+                  className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                    isAllSelected
+                      ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
+                      : `${colors.border} ${colors.card} ${colors.textSecondary}`
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                </span>
+                <span
+                  className={`text-xs font-bold uppercase tracking-wider ${
+                    isAllSelected ? accent.text : colors.textMuted
+                  }`}
+                >
+                  Todos
+                </span>
+              </button>
             </div>
             {timeSlots.map((time) => {
               const isHour = time.endsWith(':00');
@@ -123,6 +155,8 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
           {members.map((member, idx) => {
             const includeUnassigned = showUnassigned && idx === 0;
             const memberAppointments = appointmentsByProfessional.get(member.id) ?? [];
+            const isMemberSelected = selectedProfessionalIds.includes(member.id);
+            const isSelf = member.id === selfMemberId;
 
             return (
               <div
@@ -130,28 +164,45 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 data-testid={`agenda-col-${member.id}`}
                 className={`snap-start shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col border-l ${colors.divider}`}
               >
-                {/* Cabeçalho sticky */}
-                <div
-                  className={`sticky top-0 z-10 h-12 md:h-14 flex items-center justify-center gap-1.5 px-2 border-b ${colors.divider} ${colors.card}`}
-                  title={member.name}
-                >
-                  {member.photo_url ? (
-                    <img
-                      src={member.photo_url}
-                      alt=""
-                      className="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
+                {/* Cabeçalho = filtro do colaborador (sem faixa duplicada) */}
+                <div className={headerCell} title={member.name}>
+                  <button
+                    type="button"
+                    onClick={() => onToggleProfessional(member.id)}
+                    aria-pressed={isMemberSelected}
+                    data-testid={`agenda-filter-${member.id}`}
+                    title={member.name}
+                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1.5"
+                  >
+                    {member.photo_url ? (
+                      <img
+                        src={member.photo_url}
+                        alt=""
+                        className={`w-9 h-9 rounded-full object-cover border-2 transition-all ${
+                          isMemberSelected
+                            ? `${accent.border} shadow-[var(--shadow-card-accent)]`
+                            : colors.border
+                        }`}
+                      />
+                    ) : (
+                      <span
+                        className={`w-9 h-9 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${
+                          isMemberSelected
+                            ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
+                            : `${colors.card} ${colors.border} ${colors.text}`
+                        }`}
+                      >
+                        {initials(member.name)}
+                      </span>
+                    )}
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${accent.bgDim} ${accent.text}`}
-                      aria-hidden
+                      className={`text-xs font-bold uppercase tracking-wider truncate max-w-full ${
+                        isMemberSelected ? accent.text : colors.textMuted
+                      }`}
                     >
-                      {initials(member.name)}
+                      {isSelf ? 'Você' : firstName(member.name)}
                     </span>
-                  )}
-                  <span className={`text-xs font-bold truncate ${colors.text} ${font.body}`}>
-                    {firstName(member.name)}
-                  </span>
+                  </button>
                 </div>
 
                 {/* Linhas */}

@@ -1102,7 +1102,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             <div className={`${classes.section} pt-2`}>
                 <PageHeader
                     title="Agenda"
-                    subtitle="Gerencie os agendamentos por profissional"
+                    subtitle={<span className="hidden md:inline">Gerencie os agendamentos por profissional</span>}
                     action={
                         <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
                             <Button
@@ -1123,18 +1123,19 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             >
                                 <span className="hidden md:inline">Todos Agendamentos</span>
                             </Button>
-                            <Button
-                                id="btn-new-appointment"
-                                variant="primary"
-                                icon={<Plus />}
-                                onClick={() => {
-                                    setWizardPrefill(null);
-                                    setShowNewAppointmentModal(true);
-                                }}
-                                className="hidden md:flex"
-                            >
-                                Novo Agendamento
-                            </Button>
+                            <div className="hidden md:contents">
+                                <Button
+                                    id="btn-new-appointment"
+                                    variant="primary"
+                                    icon={<Plus />}
+                                    onClick={() => {
+                                        setWizardPrefill(null);
+                                        setShowNewAppointmentModal(true);
+                                    }}
+                                >
+                                    Novo Agendamento
+                                </Button>
+                            </div>
                         </div>
                     }
                 />
@@ -1228,7 +1229,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     <div className={`flex items-center gap-3 overflow-x-auto pb-1 pt-0.5 snap-x snap-mandatory scrollbar-hide`}>
                         <button
                             onClick={() => setSelectedProfessionalIds([])}
-                            className="flex flex-col items-center gap-1.5 min-w-[56px] snap-start"
+                            className="flex flex-col items-center gap-1.5 min-w-[64px] snap-start"
                             aria-pressed={selectedProfessionalIds.length === 0}
                             data-testid="agenda-filter-all"
                             title="Todos os profissionais"
@@ -1251,7 +1252,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     onClick={() => toggleProfessional(member.id)}
                                     aria-pressed={isSelected}
                                     title={member.name}
-                                    className="flex flex-col items-center gap-1.5 min-w-[56px] snap-start"
+                                    data-testid={`agenda-filter-${member.id}`}
+                                    className="flex flex-col items-center gap-1.5 min-w-[64px] snap-start"
                                 >
                                     {member.photo_url ? (
                                         <img
@@ -1264,7 +1266,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                             {getInitials(member.name)}
                                         </div>
                                     )}
-                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[56px] ${isSelected ? accent.text : colors.textMuted}`}>
+                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[64px] ${isSelected ? accent.text : colors.textMuted}`}>
                                         {isSelf ? 'Você' : firstName}
                                     </span>
                                 </button>

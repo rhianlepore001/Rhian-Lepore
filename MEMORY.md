@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda coluna por colaborador (mobile + desktop) — 2 Set 2026, branch `cursor/agenda-colunas-espacamento-d080`:**
+  - Chrome compacto: chips de dia 44×56, avatares 44px, `space-y-3`, CTA primário só no desktop (FAB no mobile).
+  - `AgendaResourceGrid`: grade única horário × profissional (sticky + snap), visível em qualquer viewport — substitui lista/empty state do mobile.
+  - Dia vazio mostra slots clicáveis. Spec em `specs/active/agenda-colunas-espacamento/`.
+  - Gates: typecheck, lint, build, 356 testes unitários; e2e `staff-agenda-filter` cobre colunas + filtro.
+
 - **Agenda day scroller (arraste, sem setas) — MERGED → produção (5 Ago 2026):**
   - Branch `cursor/agenda-day-drag-scroll-6eec` · PR #21 → `main` (`be656d0`) · deploy Vercel automático.
   - `AgendaDayScroller`: remove ChevronLeft/Right da faixa de dias; scroll horizontal com snap, drag (mouse) e swipe (touch).

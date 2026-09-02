@@ -11,13 +11,16 @@
  * Usado por Auditoria, Lixeira, Preview UI, DevBugButton e switcher de tema
  * no Header.
  */
-type DevAppMetadata = { is_dev?: unknown } | null | undefined;
+function hasDevFlag(appMetadata: unknown): boolean {
+  if (!appMetadata || typeof appMetadata !== 'object') return false;
+  return (appMetadata as { is_dev?: unknown }).is_dev === true;
+}
 
 export function resolveIsDev(
   userEmail: string | undefined | null,
-  appMetadata?: DevAppMetadata,
+  appMetadata?: unknown,
 ): boolean {
-  if (appMetadata?.is_dev === true) return true;
+  if (hasDevFlag(appMetadata)) return true;
 
   const devEmail = String(import.meta.env.VITE_DEV_EMAIL || '').trim();
   if (!devEmail || !userEmail) return false;

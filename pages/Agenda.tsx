@@ -8,14 +8,14 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
-import { Calendar, Clock, Plus, User, Users, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
-import { AgendaEmptySlotCell } from '../components/agenda/AgendaEmptySlotCell';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
+import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -167,16 +167,6 @@ export const Agenda: React.FC = () => {
     const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
-
-    // Helper for initials
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
 
     // Atualiza selectedDate se o parâmetro de URL mudar
     useEffect(() => {
@@ -1098,11 +1088,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     }
 
     return (
-        <div className={`${colors.bg} min-h-screen pb-8 space-y-6 md:space-y-8`}>
+        <div className={`${colors.bg} min-h-screen pb-8 space-y-3 md:space-y-4`}>
             <div className={`${classes.section} pt-2`}>
                 <PageHeader
                     title="Agenda"
-                    subtitle="Gerencie os agendamentos por profissional"
+                    subtitle={<span className="hidden md:inline">Gerencie os agendamentos por profissional</span>}
                     action={
                         <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
                             <Button
@@ -1123,18 +1113,19 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             >
                                 <span className="hidden md:inline">Todos Agendamentos</span>
                             </Button>
-                            <Button
-                                id="btn-new-appointment"
-                                variant="primary"
-                                icon={<Plus />}
-                                onClick={() => {
-                                    setWizardPrefill(null);
-                                    setShowNewAppointmentModal(true);
-                                }}
-                                className="hidden md:flex"
-                            >
-                                Novo Agendamento
-                            </Button>
+                            <div className="hidden md:contents">
+                                <Button
+                                    id="btn-new-appointment"
+                                    variant="primary"
+                                    icon={<Plus />}
+                                    onClick={() => {
+                                        setWizardPrefill(null);
+                                        setShowNewAppointmentModal(true);
+                                    }}
+                                >
+                                    Novo Agendamento
+                                </Button>
+                            </div>
                         </div>
                     }
                 />
@@ -1221,58 +1212,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 colors={colors}
                 accent={accent}
             />
-
-            {/* Professional Filter - Avatars */}
-            {teamMembers.length > 0 && (
-                <div className="px-4 md:px-6">
-                    <div className={`flex items-center gap-5 overflow-x-auto pb-3 pt-1 snap-x snap-mandatory scrollbar-hide`}>
-                        <button
-                            onClick={() => setSelectedProfessionalIds([])}
-                            className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
-                            aria-pressed={selectedProfessionalIds.length === 0}
-                            data-testid="agenda-filter-all"
-                        >
-                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${selectedProfessionalIds.length === 0 ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.border} ${colors.card} ${colors.textSecondary}`}`}>
-                                <Users className="w-5 h-5" />
-                            </div>
-                            <span className={`text-xs font-bold uppercase tracking-wider ${selectedProfessionalIds.length === 0 ? accent.text : colors.textMuted}`}>Todos</span>
-                        </button>
-                        {teamMembers.map(member => {
-                            const isSelected = selectedProfessionalIds.includes(member.id);
-                            // teamMemberId agora é resolvido também para o dono
-                            // (AuthContext) — o badge "Você" vale para qualquer
-                            // um que atenda, dono ou colaborador.
-                            const isSelf = member.id === teamMemberId;
-                            return (
-                                <button
-                                    key={member.id}
-                                    onClick={() => toggleProfessional(member.id)}
-                                    aria-pressed={isSelected}
-                                    className="flex flex-col items-center gap-2 min-w-[72px] snap-start"
-                                >
-                                    <div className="relative">
-                                        {member.photo_url ? (
-                                            <img
-                                                src={member.photo_url}
-                                                alt={member.name}
-                                                className={`w-14 h-14 rounded-full object-cover border-2 transition-all ${isSelected ? `${accent.border} shadow-[var(--shadow-card-accent)]` : colors.border}`}
-                                            />
-                                        ) : (
-                                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all ${isSelected ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]` : `${colors.card} ${colors.border} ${colors.text}`}`}>
-                                                {getInitials(member.name)}
-                                            </div>
-                                        )}
-                                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[var(--color-success)] border-2 border-[var(--color-bg)] rounded-full" />
-                                    </div>
-                                    <span className={`text-xs font-bold uppercase tracking-wider truncate max-w-[72px] ${isSelected ? accent.text : colors.textMuted}`}>
-                                        {isSelf ? 'Você' : member.name.split(' ')[0]}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
 
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
@@ -1387,7 +1326,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         />
                     </Card>
                 </div>
-            ) : displayedMembers.length === 0 ? (
+            ) : teamMembers.length === 0 ? (
                 <div className="px-4 md:px-6">
                     <Card variant="outlined">
                         <EmptyState
@@ -1397,185 +1336,24 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <>
-                    {/* ===== MOBILE: lista corrida do dia (sem scroll lateral) ===== */}
-                    <div className="md:hidden px-4 pb-6">
-                        {(() => {
-                            const dayApts = [
-                                ...(showUnassigned ? appointments.filter(a => !a.professional_id) : []),
-                                ...displayedMembers.flatMap(m => getAppointmentsForProfessional(m.id)),
-                            ].sort((a, b) => new Date(a.appointment_time).getTime() - new Date(b.appointment_time).getTime());
-
-                            if (dayApts.length === 0) {
-                                return (
-                                    <Card variant="outlined">
-                                        <EmptyState
-                                            icon={Calendar}
-                                            message="Nenhum agendamento neste dia."
-                                            ctaLabel="Novo Agendamento"
-                                            onCta={() => {
-                                                setWizardPrefill(null);
-                                                setShowNewAppointmentModal(true);
-                                            }}
-                                        />
-                                    </Card>
-                                );
-                            }
-
-                            return (
-                                <div className="space-y-2.5">
-                                    {dayApts.map(apt => {
-                                        const d = new Date(apt.appointment_time);
-                                        const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                                        const isUnassigned = !apt.professional_id;
-                                        const professional = teamMembers.find(m => m.id === apt.professional_id);
-                                        const visual = getVisualStatus(apt);
-                                        const vc = VISUAL_STATUS_CLASSES[visual];
-                                        const StatusIcon = VISUAL_STATUS_ICON[visual];
-                                        return (
-                                            <button
-                                                key={apt.id}
-                                                onClick={() => setShowingDetailsAppointment(apt)}
-                                                className={`w-full text-left flex items-stretch gap-3 rounded-2xl border ${colors.card} ${colors.border} p-3 transition-transform active:scale-[0.99]`}
-                                            >
-                                                {/* Barra lateral de status */}
-                                                <span className={`w-1.5 rounded-full flex-shrink-0 ${isUnassigned ? 'bg-[var(--color-danger)]' : vc.dot}`} />
-                                                {/* Horário + ícone de status */}
-                                                <div className="flex flex-col items-center justify-center min-w-[48px]">
-                                                    <span className={`text-sm font-bold ${colors.text}`}>{timeStr}</span>
-                                                    <StatusIcon className={`w-4 h-4 mt-1 ${vc.text}`} aria-label={VISUAL_STATUS_LABEL[visual]} />
-                                                </div>
-                                                {/* Cliente / serviço / profissional */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className={`text-sm font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
-                                                        {apt.edited_at && <Edit2 className={`w-3 h-3 flex-shrink-0 ${colors.textMuted}`} aria-label="Editado" />}
-                                                        {apt.notes && <MessageCircle className="w-3 h-3 flex-shrink-0 text-[var(--color-success)]/80" aria-label="Com observação" />}
-                                                    </div>
-                                                    <div className={`flex items-center gap-1.5 mt-0.5 ${colors.textMuted}`}>
-                                                        <Scissors className="w-3 h-3 flex-shrink-0" />
-                                                        <span className="text-xs truncate">{apt.service}</span>
-                                                    </div>
-                                                    <div className={`flex items-center gap-1.5 mt-0.5 ${isUnassigned ? 'text-[var(--color-danger)]' : colors.textMuted}`}>
-                                                        <User className="w-3 h-3 flex-shrink-0" />
-                                                        <span className="text-xs truncate">{isUnassigned ? 'Não atribuído' : (professional?.name || '—')}</span>
-                                                    </div>
-                                                </div>
-                                                {/* Preço + rótulo de status */}
-                                                <div className="flex flex-col items-end justify-center flex-shrink-0">
-                                                    <span className={`text-sm font-mono font-bold ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
-                                                    <span className={`text-xs font-medium mt-0.5 ${vc.text}`}>{VISUAL_STATUS_LABEL[visual]}</span>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            );
-                        })()}
-                    </div>
-
-                    {/* ===== DESKTOP: grade por profissional (alturas uniformes) ===== */}
-                    <div className="hidden md:block px-6 overflow-x-auto scrollbar-hide pb-6">
-                        <div className="min-w-[640px]">
-                            {/* Cabeçalho */}
-                            <div className={`flex border-b ${colors.divider} pb-2 mb-1`}>
-                                <div className="w-16 flex-shrink-0 text-center">
-                                    <span className={`text-xs font-bold ${colors.textMuted}`}>Horário</span>
-                                </div>
-                                {displayedMembers.map(member => (
-                                    <div key={member.id} className="flex-1 min-w-0 text-center truncate px-2">
-                                        <span className={`text-sm font-bold ${colors.text}`}>{member.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Linhas — cada slot de 30min tem a MESMA altura (sem saltos, sem sobreposição) */}
-                            <div className={`relative ${colors.surface} ${colors.border} border rounded-2xl overflow-hidden`}>
-                                {timeSlots.map((time) => {
-                                    const isHour = time.endsWith(':00');
-                                    const matchesTime = (a: Appointment) => {
-                                        const d = new Date(a.appointment_time);
-                                        const aptTime = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                                        return aptTime === time;
-                                    };
-                                    return (
-                                        <div key={time} className={`flex h-[60px] border-b ${colors.divider} last:border-b-0`}>
-                                            {/* Rótulo de horário */}
-                                            <div className={`w-16 flex-shrink-0 flex items-start justify-center pt-1.5 border-r ${colors.divider}`}>
-                                                {isHour && (
-                                                    <span className={`text-xs font-bold ${colors.text}`}>{time}</span>
-                                                )}
-                                            </div>
-
-                                            {displayedMembers.map((member, idx) => {
-                                                const aptsAtTime = getAppointmentsForProfessional(member.id).filter(matchesTime);
-                                                const unassignedApts = (showUnassigned && idx === 0)
-                                                    ? appointments.filter(a => !a.professional_id).filter(matchesTime) : [];
-                                                const allCellApts = [...unassignedApts, ...aptsAtTime];
-
-                                                if (allCellApts.length === 0) {
-                                                    return (
-                                                        <AgendaEmptySlotCell
-                                                            key={`${member.id}-${time}`}
-                                                            time={time}
-                                                            professionalName={member.name}
-                                                            onClick={() => openNewAppointmentAt(member.id, time)}
-                                                            className={colors.divider}
-                                                        />
-                                                    );
-                                                }
-
-                                                return (
-                                                    <div
-                                                        key={`${member.id}-${time}`}
-                                                        className={`flex-1 min-w-0 border-r ${colors.divider} last:border-r-0 p-1 flex flex-col gap-1`}
-                                                    >
-                                                        {allCellApts.map(apt => {
-                                                            const isUnassigned = !apt.professional_id;
-                                                            const visual = getVisualStatus(apt);
-                                                            const vc = VISUAL_STATUS_CLASSES[visual];
-                                                            const StatusIcon = VISUAL_STATUS_ICON[visual];
-                                                            return (
-                                                                <div
-                                                                    key={apt.id}
-                                                                    onClick={() => setShowingDetailsAppointment(apt)}
-                                                                    className={`cursor-pointer rounded-md border ${isUnassigned ? 'border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]' : vc.card} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden hover:shadow-lite-glass shadow-sm`}
-                                                                >
-                                                                    <div className="flex items-center justify-between gap-1">
-                                                                        <h4 className={`text-xs font-bold ${colors.text} truncate`}>{apt.clientName}</h4>
-                                                                        <div className="flex items-center gap-1 flex-shrink-0">
-                                                                            {apt.edited_at && <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />}
-                                                                            {apt.notes && <MessageCircle className="w-2.5 h-2.5 text-[var(--color-success)]/80" aria-label="Com observação" />}
-                                                                            <StatusIcon className={`w-3 h-3 ${vc.text}`} aria-label={VISUAL_STATUS_LABEL[visual]} />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-center justify-between gap-1">
-                                                                        <span className={`text-xs truncate ${colors.textMuted}`}>{apt.service}</span>
-                                                                        <span className={`text-xs font-mono font-medium flex-shrink-0 ${colors.text}`}>{formatCurrency(apt.price, currencyRegion)}</span>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Empty state do dia (desktop) */}
-                            {(() => {
-                                const total = (showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
-                                    + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0);
-                                if (total > 0) return null;
-                                return (
-                                    <p className={`text-center text-xs ${colors.textMuted} mt-3`}>Nenhum agendamento neste dia.</p>
-                                );
-                            })()}
-                        </div>
-                    </div>
-                </>
+                <div className="px-4 md:px-6 pb-6">
+                    <AgendaResourceGrid
+                        members={teamMembers}
+                        appointments={appointments}
+                        timeSlots={timeSlots}
+                        showUnassigned={showUnassigned}
+                        currencyRegion={currencyRegion}
+                        selectedProfessionalIds={selectedProfessionalIds}
+                        selfMemberId={teamMemberId}
+                        onSelectAll={() => setSelectedProfessionalIds([])}
+                        onToggleProfessional={toggleProfessional}
+                        onSelectAppointment={(apt) => {
+                            const full = appointments.find((a) => a.id === apt.id);
+                            if (full) setShowingDetailsAppointment(full);
+                        }}
+                        onEmptySlotClick={openNewAppointmentAt}
+                    />
+                </div>
             )}
 
             {/* Legend (Bottom) — só faz sentido quando há algo pra explicar no dia */}

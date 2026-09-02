@@ -212,16 +212,24 @@ test.describe('Agenda staff — filtro Todos', () => {
     const selfLabel = page.getByText('Você', { exact: true }).or(page.getByText('Mário', { exact: true }));
     await expect(selfLabel.first()).toBeVisible();
 
+    await expect(page.getByTestId('agenda-resource-grid')).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Novo agendamento às/i }).first()).toBeVisible();
+
     await page.screenshot({
       path: path.join(ARTIFACTS, 'staff-agenda-todos-default.png'),
       fullPage: false,
     });
 
-    await selfLabel.first().click();
+    await page.getByTestId(`agenda-filter-${SELF_MEMBER_ID}`).click();
     await expect(todos).toHaveAttribute('aria-pressed', 'false');
-    await expect(
-      page.getByRole('button', { name: /Você|Mário/i }).first(),
-    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId(`agenda-filter-${SELF_MEMBER_ID}`)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
 
     await page.screenshot({
       path: path.join(ARTIFACTS, 'staff-agenda-filtro-proprio.png'),
@@ -230,5 +238,24 @@ test.describe('Agenda staff — filtro Todos', () => {
 
     await todos.click();
     await expect(todos).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('button', { name: /Novo agendamento às 09:00 com Antonio/i }).click();
+    await expect(page.getByText(/Quem será atendido|Novo Atendimento/i).first()).toBeVisible({
+      timeout: 8_000,
+    });
+    await page.screenshot({
+      path: path.join(ARTIFACTS, 'staff-agenda-slot-wizard.png'),
+      fullPage: false,
+    });
+    await page.keyboard.press('Escape');
+
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(page.getByTestId('agenda-resource-grid')).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
+    await page.screenshot({
+      path: path.join(ARTIFACTS, 'staff-agenda-desktop-grid.png'),
+      fullPage: false,
+    });
   });
 });

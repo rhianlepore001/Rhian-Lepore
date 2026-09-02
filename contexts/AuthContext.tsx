@@ -152,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user?.id) {
           // Boot frio: sem isso, isDev fica false até um evento de auth
           // posterior (e as telas devOnly somem após refresh).
-          setIsDev(resolveIsDev(session.user.email));
+          setIsDev(resolveIsDev(session.user.email, session.user.app_metadata));
           await fetchProfileData(session.user.id);
         } else {
           setIsDev(false);
@@ -177,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (session?.user?.id) {
-        setIsDev(resolveIsDev(session.user.email));
+        setIsDev(resolveIsDev(session.user.email, session.user.app_metadata));
         // Re-fetch profile data on sign in/change
         fetchProfileData(session.user.id).then(() => {
           setLoading(false);

@@ -4,7 +4,9 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+const root = path.resolve(__dirname, '..');
+dotenv.config({ path: path.join(root, '.env.test') });
+dotenv.config({ path: path.join(root, '.env'), override: false });
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,

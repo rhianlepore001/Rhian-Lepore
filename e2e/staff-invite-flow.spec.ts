@@ -1,7 +1,7 @@
 /**
  * E2E — Convite após criar profissional + cadastro staff sem escolher nome
  *
- *   E2E_OWNER_EMAIL=Bob.teste@gmail.com E2E_OWNER_PASS='BobTeste@123' \
+ *   E2E_OWNER_EMAIL=... E2E_OWNER_PASS=... \
  *     npx playwright test e2e/staff-invite-flow.spec.ts --project=chromium-legacy
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -9,8 +9,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
-const OWNER_EMAIL = process.env.E2E_OWNER_EMAIL || 'Bob.teste@gmail.com';
-const OWNER_PASS = process.env.E2E_OWNER_PASS || 'BobTeste@123';
+const OWNER_EMAIL = process.env.E2E_OWNER_EMAIL ?? '';
+const OWNER_PASS = process.env.E2E_OWNER_PASS ?? '';
+if (!OWNER_EMAIL || !OWNER_PASS) {
+  throw new Error('Defina E2E_OWNER_EMAIL e E2E_OWNER_PASS para rodar este spec.');
+}
 const ARTIFACTS = '/opt/cursor/artifacts';
 
 async function loginOwner(page: Page): Promise<void> {

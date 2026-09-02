@@ -4,12 +4,21 @@
  *   E2E_OWNER_EMAIL=... E2E_OWNER_PASS=... node scripts/crm-v2-visual-audit.mjs
  */
 import { chromium, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
 
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
-const EMAIL = process.env.E2E_OWNER_EMAIL || 'bob.teste@gmail.com';
-const PASS = process.env.E2E_OWNER_PASS || 'BobTeste@123';
+const EMAIL = process.env.E2E_OWNER_EMAIL ?? '';
+const PASS = process.env.E2E_OWNER_PASS ?? '';
+if (!EMAIL || !PASS) {
+  console.error('Defina E2E_OWNER_EMAIL e E2E_OWNER_PASS em .env.test (copie de .env.test.example).');
+  process.exit(1);
+}
 const OUT = process.env.CRM_AUDIT_OUT || '/opt/cursor/artifacts/crm-v2';
 
 fs.mkdirSync(OUT, { recursive: true });

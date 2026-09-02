@@ -32,6 +32,23 @@ Para detalhes técnicos do projeto (stack, arquitetura, comandos, estrutura), co
 - Use referências de arquivo no formato `caminho/do/arquivo:linha` quando relevante.
 - Nunca use emojis a menos que o usuário peça explicitamente.
 
+### Orquestração e roteamento de modelos (obrigatório)
+O agente principal atua como **CTO/orquestrador** (Grok 4.6). Ele **não** executa tudo sozinho: avalia a necessidade de cada tarefa e delega para modelos diferentes — mais capazes ou inferiores.
+
+| Necessidade | Modelo | Exemplos |
+|-------------|--------|----------|
+| Mecânica, poucos arquivos, baixo risco | Composer 2.5 (ou fast) | docs, gitignore, templates `.env`, tirar senha de spec, copiar padrão existente |
+| Feature clara, escopo local, testes | Grok 4.5 medium | um hook, um componente, wiring de flag, spec Playwright simples |
+| Feature maior, vários arquivos, UX | Grok 4.5 high | tela + contexto + testes, fluxo com 2–3 superfícies |
+| Arquitetura, auth, RLS, segurança, decisão de produto, revisão de subagentes | Orquestrador (Grok 4.6) ou modelo mais capaz | multi-tenant, `app_metadata`, migrations, PRs, integração entre tarefas |
+
+Regras:
+1. **Decidir antes de delegar** — uma frase: o que, por que este modelo, o que o subagente NÃO deve fazer (commit, secrets, SQL em prod).
+2. **Orquestrador não rebaixa a si mesmo** em segurança, RLS, auth e merge/PR. Delega execução; retém decisão e revisão.
+3. **Inferior não recebe senhas** em prompt se der para apontar arquivo gitignored.
+4. **Revisar o diff** do subagente antes de commit. Tipo, leak e `company_id` são revisão do CTO.
+5. Se o usuário pedir modelos específicos, honrar. Senão, aplicar esta tabela.
+
 ---
 
 ## Fluxo de trabalho

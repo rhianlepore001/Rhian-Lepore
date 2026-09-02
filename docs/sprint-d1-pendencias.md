@@ -47,7 +47,7 @@ Tunnel. Rhian pediu validação no desktop antes de prosseguir.
 ## Conta de teste Playwright
 
 **Email:** `bob.teste@gmail.com`
-**Senha:** `BobTeste@123`
+**Senha:** em `.env.test` (`E2E_OWNER_PASS` — copie de `.env.test.example`)
 **Status:** Rhian disponibilizou para QA. Login em `/#/login`.
 
 Após migrations serem aplicadas e validação desktop passar, próxima etapa é

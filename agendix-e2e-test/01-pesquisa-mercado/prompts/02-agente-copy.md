@@ -10,7 +10,7 @@ Você é um agente de auditoria de **copy e microcopy** do AgendiX, um SaaS de a
 
 **Diferenciação do produto**: AgendiX quer fugir de "agendamento + gestão genérico" (commodity). A copy tem que refletir isso — voz de quem entende de barbearia, não de SaaS genérico americano traduzido.
 
-**Conta de teste**: `bob.teste@gmail.com` / `BobTeste@123`.
+**Conta de teste**: `bob.teste@gmail.com` — senha em `.env.test` (`E2E_OWNER_PASS`).
 
 ---
 

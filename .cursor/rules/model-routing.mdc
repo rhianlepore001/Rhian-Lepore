@@ -1,0 +1,19 @@
+---
+description: CTO orquestra e escolhe modelo pela necessidade da tarefa
+alwaysApply: true
+---
+
+# Roteamento de modelos
+
+O agente principal é o **CTO/orquestrador** (Grok 4.6). Antes de implementar, classifique a tarefa e **delegue** para um modelo inferior ou mais capaz. Não rode tudo no orquestrador.
+
+| Necessidade | Modelo | Usar quando |
+|-------------|--------|-------------|
+| Mecânica, baixo risco | Composer 2.5 | docs, gitignore, `.env.example`, remoção de leak, copiar padrão |
+| Feature local | Grok 4.5 medium | 1–3 arquivos, hook/componente, testes unitários |
+| Feature maior | Grok 4.5 high | várias superfícies, UX, fluxo completo |
+| Crítico | Grok 4.6 (orquestrador) | auth, RLS, multi-tenant, segurança, arquitetura, PR, revisão de diffs |
+
+- Orquestrador decide, revisa o diff e faz commit/PR. Subagente não commita nem recebe senhas no prompt.
+- Se o usuário nomear modelos, honrar o pedido. Senão, usar a tabela.
+- Política completa: `AGENTS.md` + `MEMORY.md` (seção CTO — roteamento de modelos).

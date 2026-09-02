@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Contas E2E + modo ADM (2 Set 2026, branch `cursor/test-accounts-adm-themes-f93f`):**
+  - Credenciais de teste ficam só em `.env.test` (gitignored). Template: `.env.test.example`. Playwright e scripts E2E leem esse arquivo; senhas removidas do código/docs versionados.
+  - Owner de teste com `app_metadata.is_dev` no JWT → modo ADM no frontend (switcher barber/beauty no Header), com fallback `VITE_DEV_EMAIL`. Sem hardcode de email no repo.
+
+
 - **Agenda day scroller (arraste, sem setas) — MERGED → produção (5 Ago 2026):**
   - Branch `cursor/agenda-day-drag-scroll-6eec` · PR #21 → `main` (`be656d0`) · deploy Vercel automático.
   - `AgendaDayScroller`: remove ChevronLeft/Right da faixa de dias; scroll horizontal com snap, drag (mouse) e swipe (touch).

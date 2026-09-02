@@ -31,4 +31,23 @@ describe('resolveIsDev', () => {
     vi.stubEnv('VITE_DEV_EMAIL', '  admin@example.com  ');
     expect(resolveIsDev('admin@example.com')).toBe(true);
   });
+
+  it('retorna true quando app_metadata.is_dev e true mesmo com env vazia', () => {
+    vi.stubEnv('VITE_DEV_EMAIL', '');
+    expect(resolveIsDev('qualquer@example.com', { is_dev: true })).toBe(true);
+  });
+
+  it('nao libera ADM quando is_dev e false, ausente ou string "true"', () => {
+    vi.stubEnv('VITE_DEV_EMAIL', '');
+    expect(resolveIsDev('qualquer@example.com', { is_dev: false })).toBe(false);
+    expect(resolveIsDev('qualquer@example.com', {})).toBe(false);
+    expect(resolveIsDev('qualquer@example.com', { is_dev: 'true' })).toBe(false);
+    expect(resolveIsDev('qualquer@example.com', null)).toBe(false);
+    expect(resolveIsDev('qualquer@example.com', undefined)).toBe(false);
+  });
+
+  it('retorna true com is_dev true mesmo quando o email difere da env', () => {
+    vi.stubEnv('VITE_DEV_EMAIL', 'admin@example.com');
+    expect(resolveIsDev('outro@example.com', { is_dev: true })).toBe(true);
+  });
 });

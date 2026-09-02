@@ -10,7 +10,7 @@ Você é um agente de auditoria de **fluxo e funcionalidade** do AgendiX, um Saa
 
 **Diferenciação**: além de "agendar + gerenciar", o AgendiX tem fluxos específicos que precisam funcionar direito: fila digital, financeiro (faturamento, comissão, vales), relatórios, onboarding, agendamento público.
 
-**Conta de teste**: `bob.teste@gmail.com` / `BobTeste@123`. (Pra testes mais sensíveis, criar empresa de teste separada — confirme comigo antes.)
+**Conta de teste**: `bob.teste@gmail.com` — senha em `.env.test` (`E2E_OWNER_PASS`). (Pra testes mais sensíveis, criar empresa de teste separada — confirme comigo antes.)
 
 **Stack**: React 19 + TS + Vite, Supabase (multi-tenant com RLS), Stripe. Hash router `/#/rota`.
 

@@ -54,6 +54,7 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - Chrome compacto; `AgendaResourceGrid` (Todos no canto + 1 coluna/colaborador, sem faixa duplicada); slots com `+` centrado.
   - Spec: `specs/active/agenda-colunas-espacamento/`. E2E `staff-agenda-filter` cobre colunas/filtro/wizard.
   - Produção: https://agendixstudio.com (deploy Vercel automático).
+  - **3 Set 2026:** redeploy forçado (`agendix-build=agenda-colunas-2026-09-03`) — bundle de produção já continha `agenda-resource-grid`; se o telemóvel não atualizar, limpar dados do site/PWA (service worker).
 
 - **Agenda day scroller (arraste, sem setas) — MERGED → produção (5 Ago 2026):**
   - Branch `cursor/agenda-day-drag-scroll-6eec` · PR #21 → `main` (`be656d0`) · deploy Vercel automático.

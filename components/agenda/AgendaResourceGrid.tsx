@@ -14,7 +14,7 @@ const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?:
 };
 
 /** Largura do gutter sticky (w-16 = 4rem) — usada em scroll-padding-left. */
-const GUTTER_SCROLL_PAD = 'scroll-pl-16';
+const GUTTER_PAD = '4rem';
 
 export interface AgendaGridAppointment {
   id: string;
@@ -92,6 +92,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   const { colors, accent } = useBrutalTheme();
   const [addOpen, setAddOpen] = useState(false);
   const addWrapRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
   const appointmentsByProfessional = new Map<string, AgendaGridAppointment[]>();
   for (const apt of appointments) {
@@ -129,15 +130,69 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
     if (!showAddColumn) setAddOpen(false);
   }, [showAddColumn]);
 
+  // Alinha colunas ao gutter sticky após o gesto (CSS snap + padding às vezes falha no Chromium).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    let snapping = false;
+    let debounceTimer: number | undefined;
+
+    const snapToNearest = () => {
+      if (snapping) return;
+      const gutter = el.querySelector('[data-agenda-gutter="true"]') as HTMLElement | null;
+      const gutterW = gutter?.offsetWidth ?? 64;
+      const cols = [...el.querySelectorAll('[data-testid^="agenda-col-"]')] as HTMLElement[];
+      if (cols.length === 0) return;
+
+      const snapX = el.getBoundingClientRect().left + gutterW;
+      let best = cols[0];
+      let bestDist = Infinity;
+      for (const col of cols) {
+        const dist = Math.abs(col.getBoundingClientRect().left - snapX);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = col;
+        }
+      }
+      if (bestDist <= 2) return;
+
+      const desired = el.scrollLeft + (best.getBoundingClientRect().left - snapX);
+      snapping = true;
+      el.scrollTo({ left: Math.max(0, desired), behavior: 'auto' });
+      window.setTimeout(() => {
+        snapping = false;
+      }, 50);
+    };
+
+    const onScroll = () => {
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(snapToNearest, 90);
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener('scrollend', snapToNearest);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('scrollend', snapToNearest);
+      window.clearTimeout(debounceTimer);
+    };
+  }, [members.length, showAddColumn]);
+
   return (
     <div>
       <div
+        ref={scrollerRef}
         data-testid="agenda-resource-grid"
-        className={`border-y ${colors.border} ${colors.surface} overflow-auto snap-x snap-proximity ${GUTTER_SCROLL_PAD} touch-pan-x scrollbar-hide overscroll-contain max-h-[min(70dvh,calc(100dvh-12rem))]`}
+        style={{ scrollPaddingLeft: GUTTER_PAD }}
+        className={`border-y ${colors.border} ${colors.surface} overflow-auto touch-pan-x scrollbar-hide overscroll-contain max-h-[min(70dvh,calc(100dvh-12rem))]`}
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}
-          <div className={`sticky left-0 z-20 w-16 shrink-0 flex flex-col ${colors.card}`}>
+          <div
+            data-agenda-gutter="true"
+            className={`sticky left-0 z-20 w-16 shrink-0 flex flex-col ${colors.card}`}
+          >
             <div className={`${headerCell} z-30`}>
               <button
                 type="button"
@@ -189,7 +244,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               <div
                 key={member.id}
                 data-testid={`agenda-col-${member.id}`}
-                className={`snap-start shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col border-l ${colors.divider}`}
+                className={`shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col border-l ${colors.divider}`}
               >
                 <div className={headerCell} title={member.name}>
                   <button
@@ -315,7 +370,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
             <div
               ref={addWrapRef}
               data-testid="agenda-col-add"
-              className={`snap-start shrink-0 w-[4.5rem] flex flex-col border-l ${colors.divider} relative`}
+              className={`shrink-0 w-[4.5rem] flex flex-col border-l ${colors.divider} relative`}
             >
               <div className={headerCell}>
                 <button
@@ -346,7 +401,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 <ul
                   role="listbox"
                   data-testid="agenda-add-menu"
-                  className={`absolute left-0 top-[4.25rem] z-40 min-w-[11rem] max-h-64 overflow-auto rounded-xl border ${colors.border} ${colors.card} shadow-lg py-1`}
+                  className={`absolute left-0 top-[4.25rem] z-40 min-w-[11rem] max-h-64 overflow-auto rounded-xl border ${colors.border} ${colors.card} shadow-[var(--shadow-modal)] py-1`}
                 >
                   {addableMembers.map((m) => (
                     <li key={m.id} role="option">

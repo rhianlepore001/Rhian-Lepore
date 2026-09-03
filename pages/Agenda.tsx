@@ -154,7 +154,7 @@ export const Agenda: React.FC = () => {
     const [finalPriceInput, setFinalPriceInput] = useState('');
 
 
-    const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
+    const { accent, colors, isBeauty, classes, font, radius, shadow, status, density } = useBrutalTheme();
     const { showToast } = useToast();
     const [confirmDialog, setConfirmDialog] = useState<{
         title: string;
@@ -1340,7 +1340,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <div className="pb-6">
+                <div className={`${density.pageBleedX} pb-6`}>
                     <AgendaResourceGrid
                         members={displayedMembers}
                         allMembers={teamMembers}

@@ -61,7 +61,13 @@ async function installMocks(page: Page) {
   };
 
   await page.addInitScript(
-    ({ key, value }) => localStorage.setItem(key, JSON.stringify(value)),
+    ({ key, value }) => {
+      localStorage.setItem(key, JSON.stringify(value));
+      // Evita SW antigo servir bundle desatualizado no preview/PWA
+      navigator.serviceWorker?.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      });
+    },
     { key: `sb-${PROJECT_REF}-auth-token`, value: session },
   );
 
@@ -177,27 +183,32 @@ test.describe('Agenda UX audit', () => {
       };
     });
 
-    expect(metrics.parentPaddingLeft).toBe('0px');
-    expect(metrics.parentPaddingRight).toBe('0px');
-    expect(metrics.gridLeft).toBeLessThanOrEqual(1);
-    expect(metrics.snapType).toContain('proximity');
+    expect(parseFloat(metrics.parentPaddingLeft)).toBe(0);
+    expect(parseFloat(metrics.parentPaddingRight)).toBe(0);
+    // Full-bleed: grade encosta na borda do viewport (tolerância 2px)
+    expect(Math.abs(metrics.gridLeft)).toBeLessThanOrEqual(2);
+    expect(Math.abs(metrics.viewportWidth - (metrics.gridLeft + metrics.clientWidth))).toBeLessThanOrEqual(2);
     expect(parseFloat(metrics.scrollPaddingLeft)).toBeGreaterThanOrEqual(60);
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-fullbleed.png'), fullPage: false });
 
-    // Scroll lateral — após settle, coluna deve alinhar após o gutter (não “torta”)
-    await page.evaluate(() => {
-      const grid = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;
-      grid.scrollLeft = 140;
-    });
-    await page.waitForTimeout(500);
+    // Scroll lateral com gesto (mais fiel ao mobile do que scrollLeft programático)
+    const grid = page.getByTestId('agenda-resource-grid');
+    const box = await grid.boundingBox();
+    expect(box).toBeTruthy();
+    await page.mouse.move(box!.x + 320, box!.y + 120);
+    await page.mouse.down();
+    await page.mouse.move(box!.x + 120, box!.y + 120, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForTimeout(280);
+
     const afterScroll = await page.evaluate(() => {
-      const grid = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;
-      const gutter = grid.querySelector('.sticky.left-0') as HTMLElement;
+      const root = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;
+      const gutter = root.querySelector('[data-agenda-gutter="true"]') as HTMLElement;
       const cols = [...document.querySelectorAll('[data-testid^="agenda-col-"]')] as HTMLElement[];
       const gutterRight = gutter.getBoundingClientRect().right;
       return {
-        scrollLeft: grid.scrollLeft,
+        scrollLeft: root.scrollLeft,
         gutterRight,
         cols: cols.map((c) => {
           const r = c.getBoundingClientRect();
@@ -210,10 +221,12 @@ test.describe('Agenda UX audit', () => {
       };
     });
 
-    // Pelo menos uma coluna deve estar ~alinhada ao gutter (delta ~0) ou fora à direita
-    const aligned = afterScroll.cols.some((c) => Math.abs(c.deltaFromGutter) <= 8);
-    const reportAlign = { afterScroll, aligned };
-    expect(aligned || afterScroll.scrollLeft === 0 || afterScroll.scrollLeft > 0).toBeTruthy();
+    // Após o gesto, pelo menos uma coluna deve assentar junto ao gutter (±12px)
+    const aligned = afterScroll.cols.some((c) => Math.abs(c.deltaFromGutter) <= 12);
+    // Se o scroll não moveu (viewport largo), não falha — full-bleed + filtro cobrem o resto
+    const moved = afterScroll.scrollLeft > 8;
+    expect(moved ? aligned : true).toBe(true);
+    const reportAlign = { afterScroll, aligned, moved };
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-after-scroll.png'), fullPage: false });
 

@@ -30,12 +30,12 @@ export const BottomMobileNav: React.FC = () => {
         <>
             {/* Scrim sólido sob a nav — evita texto da página “vazar” atrás do chrome */}
             <div
-                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-28 pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-40% via-[var(--color-bg)]/95 to-transparent"
+                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-20 pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-55% via-[var(--color-bg)]/90 to-transparent"
                 aria-hidden="true"
             />
             <nav
                 aria-label="Navegação principal"
-                className={`md:hidden fixed bottom-4 left-3 right-3 z-40 flex items-end justify-between gap-0.5 px-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 h-[72px] transition-all duration-300 rounded-[24px] border ${colors.divider} shadow-promax-glass
+                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-end justify-between gap-0.5 px-1.5 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1.5 h-[64px] transition-all duration-300 rounded-none rounded-t-2xl border-x-0 border-b-0 border-t ${colors.divider}
                 bg-[var(--color-bg)]`}
             >
                 {/* Owner: Agenda, Clientes, FAB, Financeiro, Mais.
@@ -73,17 +73,17 @@ export const BottomMobileNav: React.FC = () => {
                 </button>
 
                 {/* 3. CENTER PLUS — shrink-0 (nunca w-full: esmagava vizinhos) */}
-                <div className="relative -top-5 flex justify-center shrink-0 basis-14 px-1">
+                <div className="relative -top-3 flex justify-center shrink-0 basis-14 px-1">
                     <button
                         type="button"
                         onClick={() => setShowQuickActions(true)}
-                        className={`w-14 h-14 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-promax-depth transform transition-all active:scale-95 group relative overflow-hidden
+                        className={`w-12 h-12 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-[var(--shadow-btn-primary)] transform transition-all active:scale-95 group relative overflow-hidden
                         ${accent.bg} text-[var(--color-on-accent)]`}
                         aria-label="Ações rápidas"
                         title="Ações rápidas"
                     >
                         <div className="absolute inset-0 bg-[var(--color-card-hover)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <Plus className="w-7 h-7 relative z-10" strokeWidth={2.75} aria-hidden="true" />
+                        <Plus className="w-6 h-6 relative z-10" strokeWidth={2.75} aria-hidden="true" />
                     </button>
                 </div>
 

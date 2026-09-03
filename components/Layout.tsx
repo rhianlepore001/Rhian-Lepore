@@ -25,7 +25,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const showBanner = !isBillingRoute && (isTrial || isExpired);
   const headerTop = showBanner ? '40px' : '0px';
   // Header mobile pode crescer (nome em 2 linhas) — folga extra evita overlap
-  const paddingTop = showBanner ? 'pt-[120px] md:pt-[120px]' : 'pt-20 md:pt-20';
+  const paddingTop = showBanner ? 'pt-[104px] md:pt-[120px]' : 'pt-14 md:pt-20';
   const hideMobileNavForNewFlow = Boolean(new URLSearchParams(search).get('new'));
   const showBottomMobileNav = !isSettingsRoute && !isBillingRoute && !hideMobileNavForNewFlow;
 
@@ -46,7 +46,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* sem willChange:transform — cria containing block e já foi associado a
           conteúdo “preso” na navegação SPA (URL muda, main não troca). */}
-      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen ${showBottomMobileNav ? 'pb-40' : 'pb-8'} md:pb-8 relative z-10`}>
+      <main className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} min-h-screen ${showBottomMobileNav ? 'pb-24' : 'pb-8'} md:pb-8 relative z-10`}>
         <div className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}>
           {children}
         </div>

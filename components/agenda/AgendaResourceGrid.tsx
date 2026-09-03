@@ -185,7 +185,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
         ref={scrollerRef}
         data-testid="agenda-resource-grid"
         style={{ scrollPaddingLeft: GUTTER_PAD }}
-        className={`border-y ${colors.border} ${colors.surface} overflow-auto touch-pan-x scrollbar-hide overscroll-contain max-h-[min(70dvh,calc(100dvh-12rem))]`}
+        className={`rounded-2xl border ${colors.border} ${colors.surface} overflow-auto touch-pan-x scrollbar-hide overscroll-contain max-h-[min(58dvh,calc(100dvh-16rem))] md:max-h-[min(68dvh,calc(100dvh-14rem))]`}
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}

@@ -68,7 +68,7 @@ export const Header: React.FC = () => {
       `}
         style={{ top: 'var(--header-top, 0)' }}
       >
-        <div className="min-h-16 md:min-h-20 py-2 md:py-0 flex items-center justify-between gap-2 px-4 md:px-8">
+        <div className="h-14 md:min-h-20 md:h-auto py-0 flex items-center justify-between gap-1.5 md:gap-2 px-4 md:px-8">
 
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 overflow-hidden">
             {isSettingsRoute ? (
@@ -90,28 +90,28 @@ export const Header: React.FC = () => {
                 {pathname !== '/' && (
                   <Link
                     to="/"
-                    className="md:hidden inline-flex items-center justify-center shrink-0 min-h-[44px] min-w-[44px] rounded-lg group hover:opacity-90 hover:bg-[var(--color-card-hover)] transition-all"
+                    className="md:hidden inline-flex items-center justify-center shrink-0 h-11 w-11 rounded-lg group hover:opacity-90 hover:bg-[var(--color-card-hover)] transition-all"
                     title="Voltar ao Dashboard"
                     aria-label="Voltar ao Dashboard"
                   >
-                    <ArrowLeft className={`w-5 h-5 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
+                    <ArrowLeft className={`w-4 h-4 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>
                 )}
                 <div className="flex flex-col min-w-0 flex-1">
                   <h1
-                    className={`font-heading text-base sm:text-lg md:text-2xl ${colors.text} tracking-wide md:tracking-widest leading-tight flex items-start gap-1.5 min-w-0`}
+                    className={`font-heading text-sm sm:text-lg md:text-2xl ${colors.text} tracking-wide md:tracking-widest leading-none flex items-center gap-1.5 min-w-0`}
                     title={businessName || 'GESTÃO'}
                   >
-                    <span className="min-w-0 break-words hyphens-none line-clamp-2">
+                    <span className="min-w-0 truncate">
                       {businessName || 'GESTÃO'}
                     </span>
                     <span
-                      className="w-1.5 h-1.5 mt-1.5 bg-[var(--color-success)] rounded-full animate-pulse shrink-0"
+                      className="w-1.5 h-1.5 bg-[var(--color-success)] rounded-full animate-pulse shrink-0"
                       aria-label="Online"
                       title="Negócio ativo"
                     />
                   </h1>
-                  <p className={`text-xs font-mono mt-0.5 opacity-50 uppercase tracking-wide md:tracking-widest ${colors.textSecondary}`}>
+                  <p className={`text-xs font-mono mt-0.5 opacity-50 uppercase tracking-wide md:tracking-widest ${colors.textSecondary} truncate`}>
                     {isBeauty ? 'Salão de Beleza' : 'Barbearia'}
                   </p>
                 </div>
@@ -120,7 +120,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Right: Profile & Actions */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-6 shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-2 md:gap-6 shrink-0">
             {/* Dev Theme Switcher */}
             {isDev && (
               <button
@@ -143,7 +143,7 @@ export const Header: React.FC = () => {
               onClick={toggleMode}
               aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
               title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              className={`p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
+              className={`p-1.5 h-11 w-11 inline-flex items-center justify-center rounded-lg border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
                 ${colors.card} hover:bg-theme-surface`}
               style={{ transition: 'background 0.2s' }}
             >
@@ -155,8 +155,8 @@ export const Header: React.FC = () => {
                 }}
               >
                 {mode === 'dark'
-                  ? <Moon className={`w-5 h-5 ${accent.text}`} />
-                  : <Sun className={`w-5 h-5 ${accent.text}`} />}
+                  ? <Moon className={`w-4 h-4 md:w-5 md:h-5 ${accent.text}`} />
+                  : <Sun className={`w-4 h-4 md:w-5 md:h-5 ${accent.text}`} />}
               </span>
             </button>
 
@@ -165,11 +165,11 @@ export const Header: React.FC = () => {
               <button
                 id="header-notifications-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center hover:bg-theme-surface rounded border border-transparent hover:border-[var(--color-divider)] transition-colors"
+                className="relative p-1.5 h-11 w-11 inline-flex items-center justify-center hover:bg-theme-surface rounded-lg border border-transparent hover:border-[var(--color-divider)] transition-colors"
                 aria-label="Abrir notificações"
                 title="Notificações"
               >
-                <Bell className={`w-5 h-5 md:w-6 md:h-6 ${colors.text}`} />
+                <Bell className={`w-4 h-4 md:w-6 md:h-6 ${colors.text}`} />
                 {alertCount > 0 && (
                   <span
                     className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 border-[var(--color-bg)] animate-pulse flex items-center justify-center text-xs font-mono font-bold text-[var(--color-on-accent)] leading-none`}
@@ -223,8 +223,9 @@ export const Header: React.FC = () => {
               )}
             </div>
 
-            {/* Bug Report / Help */}
-            <BugReportButton />
+            <div className="hidden sm:block">
+              <BugReportButton />
+            </div>
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileMenuRef}>
@@ -232,13 +233,13 @@ export const Header: React.FC = () => {
                 id="header-profile-btn"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 aria-label="Abrir menu do perfil"
-                className={`inline-flex items-center justify-center gap-3 min-h-[44px] min-w-[44px] pl-0 md:pl-6 md:border-l-2 ${colors.divider} hover:opacity-80 transition-opacity`}
+                className={`inline-flex items-center justify-center gap-3 h-11 w-11 md:h-auto md:w-auto md:min-h-[44px] pl-0 md:pl-6 md:border-l-2 ${colors.divider} hover:opacity-80 transition-opacity`}
               >
                 <div className="text-right hidden sm:block">
                   <p className={`text-sm font-bold ${colors.text} leading-tight`}>{fullName || 'Usuário'}</p>
                   <p className={`text-xs ${colors.textSecondary} font-mono leading-tight capitalize`}>{isBeauty ? 'Salão' : 'Barbearia'}</p>
                 </div>
-                <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
                   ) : (

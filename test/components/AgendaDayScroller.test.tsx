@@ -62,6 +62,20 @@ describe('AgendaDayScroller', () => {
     const selected = screen.getByTestId('agenda-day-selected');
     expect(selected.className).toContain('w-11');
     expect(selected.className).toContain('h-14');
+    expect(selected.className).toContain('snap-start');
     expect(selected.className).not.toContain('h-[68px]');
+  });
+
+  it('não usa padding de 50% que cria vazio no início/fim', () => {
+    render(
+      <AgendaDayScroller
+        selectedDate={new Date('2026-08-05T12:00:00')}
+        onSelectDate={vi.fn()}
+        {...theme}
+      />,
+    );
+    const listbox = screen.getByRole('listbox');
+    expect(listbox.className).not.toMatch(/50%-28px/);
+    expect(listbox.className).toMatch(/snap-x/);
   });
 });

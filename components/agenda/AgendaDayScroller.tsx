@@ -81,11 +81,13 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
     if (!root) return;
     const el = root.querySelector<HTMLElement>(`[data-day="${selectedKey}"]`);
     if (!el) return;
-    const target = el.offsetLeft - (root.clientWidth / 2) + (el.offsetWidth / 2);
+    const maxScroll = Math.max(0, root.scrollWidth - root.clientWidth);
+    const centered = el.offsetLeft - (root.clientWidth / 2) + (el.offsetWidth / 2);
+    const target = Math.min(maxScroll, Math.max(0, centered));
     if (typeof root.scrollTo === 'function') {
-      root.scrollTo({ left: Math.max(0, target), behavior });
+      root.scrollTo({ left: target, behavior });
     } else {
-      root.scrollLeft = Math.max(0, target);
+      root.scrollLeft = target;
     }
   }, [selectedKey]);
 
@@ -170,18 +172,12 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
   };
 
   return (
-    <div className="px-4 md:px-6" data-testid="agenda-day-scroller">
+    <div data-testid="agenda-day-scroller">
       <p className={`mb-1 text-sm font-heading tracking-wide ${colors.textSecondary}`}>
         {monthLabel}
       </p>
 
-      <div
-        className="relative"
-        style={{
-          maskImage: 'linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent)',
-        }}
-      >
+      <div className="relative">
         <div
           ref={scrollerRef}
           role="listbox"
@@ -193,7 +189,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          className={`flex gap-2 overflow-x-auto overscroll-x-contain py-1 snap-x snap-mandatory scrollbar-hide touch-pan-x select-none [scroll-padding-inline:calc(50%-28px)] px-[calc(50%-28px)] ${
+          className={`flex gap-2 overflow-x-auto overscroll-x-contain py-1 snap-x snap-mandatory scrollbar-hide touch-pan-x select-none ${
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           }`}
           style={{
@@ -220,7 +216,7 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
                 data-testid={isSelected ? 'agenda-day-selected' : undefined}
                 onClick={() => handleDayClick(d)}
                 className={[
-                  'snap-center shrink-0 flex flex-col items-center justify-center',
+                  'snap-start shrink-0 flex flex-col items-center justify-center',
                   'w-11 h-14 rounded-2xl border transition-[transform,background-color,color,box-shadow,border-color] duration-200',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
                   isSelected

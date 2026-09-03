@@ -1001,9 +1001,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
     const toggleProfessional = (id: string) => {
         setSelectedProfessionalIds(prev => {
+            // De "Todos" → isola só este colaborador.
+            if (prev.length === 0) return [id];
             const has = prev.includes(id);
-            // Multi-select; lista vazia volta a "Todos".
-            return has ? prev.filter(p => p !== id) : [...prev, id];
+            // Remover o último selecionado volta a "Todos".
+            if (has) return prev.filter(p => p !== id);
+            // "Adicionar" / multi-select.
+            return [...prev, id];
         });
     };
 
@@ -1336,9 +1340,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <div className="px-4 md:px-6 pb-6">
+                <div className="pb-6">
                     <AgendaResourceGrid
-                        members={teamMembers}
+                        members={displayedMembers}
+                        allMembers={teamMembers}
                         appointments={appointments}
                         timeSlots={timeSlots}
                         showUnassigned={showUnassigned}

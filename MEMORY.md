@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda chrome (inset / header / nav) — MERGED → produção (3 Set 2026):**
+  - Branch `cursor/agenda-chrome-inset-d080` · PR #29 → `main` (`85fbce7`) · deploy Vercel automático.
+  - Grade e dias no mesmo inset do Layout (sem full-bleed no bezel; desktop respira).
+  - Header mobile 56px, nome 1 linha; nav inferior flush no footer; Sair pinado na base da sidebar.
+  - Day scroller: sem padding 50%; snap-start para âncora no início/fim.
+
 - **Agenda UX (scroll / filtro real / full-bleed) — MERGED → produção (3 Set 2026):**
   - Branch `cursor/agenda-ux-scroll-filtro-d080` · PR #27 → `main` (`f0f6abd`) · deploy Vercel automático.
   - Snap lateral: `scroll-padding-left: 4rem` + alinhamento JS no `scroll`/`scrollend` (CSS mandatory lutava com gutter sticky).

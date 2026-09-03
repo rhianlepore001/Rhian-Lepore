@@ -49,9 +49,9 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda UX (scroll / filtro real / full-bleed) — em PR (3 Set 2026):**
-  - Branch `cursor/agenda-ux-scroll-filtro-d080` · PR #27.
-  - Snap lateral: CSS mandatory lutava com gutter sticky; agora `scroll-padding-left: 4rem` + alinhamento JS no `scroll`/`scrollend`.
+- **Agenda UX (scroll / filtro real / full-bleed) — MERGED → produção (3 Set 2026):**
+  - Branch `cursor/agenda-ux-scroll-filtro-d080` · PR #27 → `main` (`f0f6abd`) · deploy Vercel automático.
+  - Snap lateral: `scroll-padding-left: 4rem` + alinhamento JS no `scroll`/`scrollend` (CSS mandatory lutava com gutter sticky).
   - Filtro real: selecionar colaborador isola a coluna; botão **Mais** adiciona outros; `members={displayedMembers}`.
   - Full-bleed: `density.pageBleedX` cancela o `pagePadding` do Layout na grade.
   - E2E: `agenda-ux-audit` + `staff-agenda-filter` verdes.

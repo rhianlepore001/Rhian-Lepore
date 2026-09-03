@@ -47,6 +47,7 @@ function setup(overrides?: Partial<React.ComponentProps<typeof AgendaResourceGri
   const onToggleProfessional = vi.fn();
   const props: React.ComponentProps<typeof AgendaResourceGrid> = {
     members,
+    allMembers: members,
     appointments: baseAppointments,
     timeSlots,
     showUnassigned: true,
@@ -81,11 +82,35 @@ describe('AgendaResourceGrid', () => {
   });
 
   it('clique em Todos e no colaborador dispara o filtro do cabeçalho', async () => {
-    const { onSelectAll, onToggleProfessional } = setup({ selectedProfessionalIds: ['m1'] });
+    const { onSelectAll, onToggleProfessional } = setup({
+      members: [members[0]],
+      selectedProfessionalIds: ['m1'],
+    });
     await userEvent.click(screen.getByTestId('agenda-filter-all'));
     expect(onSelectAll).toHaveBeenCalledTimes(1);
-    await userEvent.click(screen.getByTestId('agenda-filter-m2'));
+    await userEvent.click(screen.getByTestId('agenda-filter-m1'));
+    expect(onToggleProfessional).toHaveBeenCalledWith('m1');
+  });
+
+  it('com filtro ativo mostra só a coluna selecionada e ação Adicionar', async () => {
+    const { onToggleProfessional } = setup({
+      members: [members[0]],
+      selectedProfessionalIds: ['m1'],
+      showUnassigned: false,
+    });
+    expect(screen.getByTestId('agenda-col-m1')).toBeInTheDocument();
+    expect(screen.queryByTestId('agenda-col-m2')).toBeNull();
+    expect(screen.getByTestId('agenda-col-add')).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId('agenda-filter-add'));
+    expect(screen.getByTestId('agenda-add-menu')).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId('agenda-add-m2'));
     expect(onToggleProfessional).toHaveBeenCalledWith('m2');
+  });
+
+  it('expõe scroll-padding alinhado ao gutter', () => {
+    setup();
+    const root = screen.getByTestId('agenda-resource-grid');
+    expect(root).toHaveStyle({ scrollPaddingLeft: '4rem' });
   });
 
   it('clique em slot vazio dispara onEmptySlotClick com profissional + horário', async () => {

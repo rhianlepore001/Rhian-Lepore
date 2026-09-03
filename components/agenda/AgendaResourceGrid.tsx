@@ -1,5 +1,5 @@
-import React from 'react';
-import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users, Plus } from 'lucide-react';
 import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
 import { formatCurrency, type Region } from '../../utils/formatters';
@@ -12,6 +12,9 @@ const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?:
   noshow: Ban,
   cancelled: X,
 };
+
+/** Largura do gutter sticky (w-16 = 4rem) — usada em scroll-padding-left. */
+const GUTTER_PAD = '4rem';
 
 export interface AgendaGridAppointment {
   id: string;
@@ -33,7 +36,10 @@ export interface AgendaGridMember {
 }
 
 export interface AgendaResourceGridProps {
+  /** Colunas visíveis (já filtradas pelo pai). */
   members: AgendaGridMember[];
+  /** Equipe completa — para o picker “Adicionar”. */
+  allMembers: AgendaGridMember[];
   appointments: AgendaGridAppointment[];
   timeSlots: string[];
   showUnassigned: boolean;
@@ -65,12 +71,13 @@ function appointmentTimeLabel(iso: string): string {
 }
 
 /**
- * Grade única horário × colaborador. O filtro vive no cabeçalho:
- * Todos no canto (onde era “Horário”) e um colaborador por coluna —
- * sem faixa de avatares duplicada.
+ * Grade única horário × colaborador. Full-bleed, snap com scroll-padding
+ * alinhado ao gutter sticky. Filtro real: só as colunas selecionadas;
+ * “Adicionar” ao lado para multi-select.
  */
 export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   members,
+  allMembers,
   appointments,
   timeSlots,
   showUnassigned,
@@ -83,6 +90,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   onEmptySlotClick,
 }) => {
   const { colors, accent } = useBrutalTheme();
+  const [addOpen, setAddOpen] = useState(false);
+  const addWrapRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
   const appointmentsByProfessional = new Map<string, AgendaGridAppointment[]>();
   for (const apt of appointments) {
@@ -100,17 +110,89 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   );
   const totalVisible = unassignedCount + assignedCount;
   const isAllSelected = selectedProfessionalIds.length === 0;
+  const isFiltered = selectedProfessionalIds.length > 0;
+  const addableMembers = allMembers.filter((m) => !selectedProfessionalIds.includes(m.id));
+  const showAddColumn = isFiltered && addableMembers.length > 0;
   const headerCell = `sticky top-0 z-10 h-[4.25rem] border-b ${colors.divider} ${colors.card}`;
+
+  useEffect(() => {
+    if (!addOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (addWrapRef.current && !addWrapRef.current.contains(e.target as Node)) {
+        setAddOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [addOpen]);
+
+  useEffect(() => {
+    if (!showAddColumn) setAddOpen(false);
+  }, [showAddColumn]);
+
+  // Alinha colunas ao gutter sticky após o gesto (CSS snap + padding às vezes falha no Chromium).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    let snapping = false;
+    let debounceTimer: number | undefined;
+
+    const snapToNearest = () => {
+      if (snapping) return;
+      const gutter = el.querySelector('[data-agenda-gutter="true"]') as HTMLElement | null;
+      const gutterW = gutter?.offsetWidth ?? 64;
+      const cols = [...el.querySelectorAll('[data-testid^="agenda-col-"]')] as HTMLElement[];
+      if (cols.length === 0) return;
+
+      const snapX = el.getBoundingClientRect().left + gutterW;
+      let best = cols[0];
+      let bestDist = Infinity;
+      for (const col of cols) {
+        const dist = Math.abs(col.getBoundingClientRect().left - snapX);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = col;
+        }
+      }
+      if (bestDist <= 2) return;
+
+      const desired = el.scrollLeft + (best.getBoundingClientRect().left - snapX);
+      snapping = true;
+      el.scrollTo({ left: Math.max(0, desired), behavior: 'auto' });
+      window.setTimeout(() => {
+        snapping = false;
+      }, 50);
+    };
+
+    const onScroll = () => {
+      window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(snapToNearest, 90);
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener('scrollend', snapToNearest);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('scrollend', snapToNearest);
+      window.clearTimeout(debounceTimer);
+    };
+  }, [members.length, showAddColumn]);
 
   return (
     <div>
       <div
+        ref={scrollerRef}
         data-testid="agenda-resource-grid"
-        className={`rounded-2xl border ${colors.border} ${colors.surface} overflow-auto snap-x snap-mandatory touch-pan-x scrollbar-hide overscroll-contain max-h-[min(70dvh,calc(100dvh-12rem))]`}
+        style={{ scrollPaddingLeft: GUTTER_PAD }}
+        className={`border-y ${colors.border} ${colors.surface} overflow-auto touch-pan-x scrollbar-hide overscroll-contain max-h-[min(70dvh,calc(100dvh-12rem))]`}
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}
-          <div className={`sticky left-0 z-20 w-16 shrink-0 flex flex-col ${colors.card}`}>
+          <div
+            data-agenda-gutter="true"
+            className={`sticky left-0 z-20 w-16 shrink-0 flex flex-col ${colors.card}`}
+          >
             <div className={`${headerCell} z-30`}>
               <button
                 type="button"
@@ -151,7 +233,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
             })}
           </div>
 
-          {/* Colunas por colaborador */}
+          {/* Colunas por colaborador (já filtradas) */}
           {members.map((member, idx) => {
             const includeUnassigned = showUnassigned && idx === 0;
             const memberAppointments = appointmentsByProfessional.get(member.id) ?? [];
@@ -162,9 +244,8 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               <div
                 key={member.id}
                 data-testid={`agenda-col-${member.id}`}
-                className={`snap-start shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col border-l ${colors.divider}`}
+                className={`shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col border-l ${colors.divider}`}
               >
-                {/* Cabeçalho = filtro do colaborador (sem faixa duplicada) */}
                 <div className={headerCell} title={member.name}>
                   <button
                     type="button"
@@ -205,7 +286,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                   </button>
                 </div>
 
-                {/* Linhas */}
                 {timeSlots.map((time) => {
                   const cellUnassigned = includeUnassigned
                     ? unassignedAppointments.filter((a) => appointmentTimeLabel(a.appointment_time) === time)
@@ -284,11 +364,69 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               </div>
             );
           })}
+
+          {/* Ação: adicionar mais colaboradores ao filtro */}
+          {showAddColumn && (
+            <div
+              ref={addWrapRef}
+              data-testid="agenda-col-add"
+              className={`shrink-0 w-[4.5rem] flex flex-col border-l ${colors.divider} relative`}
+            >
+              <div className={headerCell}>
+                <button
+                  type="button"
+                  data-testid="agenda-filter-add"
+                  aria-expanded={addOpen}
+                  aria-haspopup="listbox"
+                  title="Adicionar colaborador"
+                  onClick={() => setAddOpen((o) => !o)}
+                  className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1"
+                >
+                  <span
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border-2 border-dashed ${colors.border} ${colors.textSecondary}`}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </span>
+                  <span className={`text-xs font-bold uppercase tracking-wider ${colors.textMuted}`}>Mais</span>
+                </button>
+              </div>
+              {timeSlots.map((time) => (
+                <div
+                  key={time}
+                  className={`h-12 md:h-14 border-b ${colors.divider} last:border-b-0 ${colors.surface}`}
+                  aria-hidden
+                />
+              ))}
+              {addOpen && (
+                <ul
+                  role="listbox"
+                  data-testid="agenda-add-menu"
+                  className={`absolute left-0 top-[4.25rem] z-40 min-w-[11rem] max-h-64 overflow-auto rounded-xl border ${colors.border} ${colors.card} shadow-[var(--shadow-modal)] py-1`}
+                >
+                  {addableMembers.map((m) => (
+                    <li key={m.id} role="option">
+                      <button
+                        type="button"
+                        data-testid={`agenda-add-${m.id}`}
+                        className={`w-full text-left px-3 py-2.5 min-h-[44px] text-sm font-medium ${colors.text} hover:brightness-110`}
+                        onClick={() => {
+                          onToggleProfessional(m.id);
+                          setAddOpen(false);
+                        }}
+                      >
+                        {m.id === selfMemberId ? 'Você' : firstName(m.name)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {totalVisible === 0 && (
-        <p className={`text-center text-xs ${colors.textMuted} mt-3`}>
+        <p className={`text-center text-xs ${colors.textMuted} mt-3 px-4`}>
           Nenhum agendamento neste dia. Toque num horário para criar.
         </p>
       )}

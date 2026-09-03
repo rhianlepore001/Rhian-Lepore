@@ -229,15 +229,24 @@ test.describe('Agenda staff — filtro Todos', () => {
       'true',
     );
     await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
-    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toHaveCount(0);
+    await expect(page.getByTestId('agenda-filter-add')).toBeVisible();
 
     await page.screenshot({
       path: path.join(ARTIFACTS, 'staff-agenda-filtro-proprio.png'),
       fullPage: false,
     });
 
+    await page.getByTestId('agenda-filter-add').click();
+    await expect(page.getByTestId('agenda-add-menu')).toBeVisible();
+    await page.getByTestId(`agenda-add-${OTHER_MEMBER_ID}`).click();
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
+
     await todos.click();
     await expect(todos).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
+    await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
 
     await page.getByRole('button', { name: /Novo agendamento às 09:00 com Antonio/i }).click();
     await expect(page.getByText(/Quem será atendido|Novo Atendimento/i).first()).toBeVisible({

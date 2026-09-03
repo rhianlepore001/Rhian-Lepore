@@ -183,11 +183,10 @@ test.describe('Agenda UX audit', () => {
       };
     });
 
-    expect(parseFloat(metrics.parentPaddingLeft)).toBe(0);
-    expect(parseFloat(metrics.parentPaddingRight)).toBe(0);
-    // Full-bleed: grade encosta na borda do viewport (tolerância 2px)
-    expect(Math.abs(metrics.gridLeft)).toBeLessThanOrEqual(2);
-    expect(Math.abs(metrics.viewportWidth - (metrics.gridLeft + metrics.clientWidth))).toBeLessThanOrEqual(2);
+    // Inset alinhado ao pagePadding — não cola no bezel (gutter para scroll da página)
+    expect(metrics.gridLeft).toBeGreaterThanOrEqual(8);
+    expect(metrics.gridLeft).toBeLessThanOrEqual(40);
+    expect(metrics.viewportWidth - (metrics.gridLeft + metrics.clientWidth)).toBeGreaterThanOrEqual(8);
     expect(parseFloat(metrics.scrollPaddingLeft)).toBeGreaterThanOrEqual(60);
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-fullbleed.png'), fullPage: false });

@@ -154,7 +154,7 @@ export const Agenda: React.FC = () => {
     const [finalPriceInput, setFinalPriceInput] = useState('');
 
 
-    const { accent, colors, isBeauty, classes, font, radius, shadow, status, density } = useBrutalTheme();
+    const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
     const { showToast } = useToast();
     const [confirmDialog, setConfirmDialog] = useState<{
         title: string;
@@ -1096,6 +1096,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             <div className={`${classes.section} pt-2`}>
                 <PageHeader
                     title="Agenda"
+                    className="pb-2 md:pb-4"
                     subtitle={<span className="hidden md:inline">Gerencie os agendamentos por profissional</span>}
                     action={
                         <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
@@ -1340,7 +1341,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <div className={`${density.pageBleedX} pb-6`}>
+                <div className="pb-6">
                     <AgendaResourceGrid
                         members={displayedMembers}
                         allMembers={teamMembers}
@@ -1364,7 +1365,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             {/* Legend (Bottom) — só faz sentido quando há algo pra explicar no dia */}
             {((showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
                 + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0)) > 0 && (
-                <div className={`px-4 md:px-6 mt-4 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-8`}>
+                <div className={`mt-3 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-4`}>
                     {(['normal', 'overdue', 'completed', 'noshow', 'cancelled'] as VisualStatus[]).map(v => {
                         const LegendIcon = VISUAL_STATUS_ICON[v];
                         return (

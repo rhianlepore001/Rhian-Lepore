@@ -39,7 +39,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             font.heading,
             'text-2xl md:text-3xl font-bold tracking-tight',
             colors.text,
-            'break-words',
+            'whitespace-nowrap truncate',
           ].join(' ')}
         >
           {title}

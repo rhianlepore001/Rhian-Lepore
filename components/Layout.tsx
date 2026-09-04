@@ -20,7 +20,6 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { isTrial, isExpired } = useSubscription();
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBillingRoute = pathname === '/configuracoes/assinatura';
-  const isAgendaRoute = pathname === '/agenda' || pathname.startsWith('/agenda');
   const { colors, density } = useBrutalTheme();
 
   const showBanner = !isBillingRoute && (isTrial || isExpired);
@@ -32,7 +31,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div
-      className={`${isAgendaRoute ? 'h-[100dvh] overflow-hidden' : 'h-[100dvh] overflow-y-auto'} ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-on-accent)] font-medium relative transition-colors duration-300`}
+      className={`h-[100dvh] overflow-y-auto ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-on-accent)] font-medium relative transition-colors duration-300`}
       style={{ '--header-top': headerTop } as React.CSSProperties}
     >
       {/* Background layer — now handled by CSS variables in index.html */}
@@ -48,16 +47,12 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* sem willChange:transform — cria containing block e já foi associado a
           conteúdo “preso” na navegação SPA (URL muda, main não troca). */}
       <main
-        className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} relative z-10 flex flex-col ${
-          isAgendaRoute
-            ? `h-[100dvh] min-h-0 ${showBottomMobileNav ? 'pb-16' : 'pb-2'} md:pb-3`
-            : `min-h-screen ${showBottomMobileNav ? 'pb-24' : 'pb-8'} md:pb-8`
-        }`}
+        className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} relative z-10 flex flex-col min-h-screen ${
+          showBottomMobileNav ? 'pb-24' : 'pb-8'
+        } md:pb-8`}
       >
         <div
-          className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${
-            isAgendaRoute ? 'flex-1 flex flex-col min-h-0 !pb-0 w-full h-full' : density.sectionGap
-          }`}
+          className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}
         >
           {children}
         </div>

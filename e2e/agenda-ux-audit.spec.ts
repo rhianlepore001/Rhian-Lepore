@@ -161,26 +161,45 @@ test.describe('Agenda UX audit', () => {
     await installMocks(page);
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId('agenda-status-legend')).toHaveCount(0);
+    const legend = page.getByTestId('agenda-status-legend');
+    await expect(legend).toBeVisible();
+    await expect(legend.getByText('Confirmado')).toBeVisible();
+    await expect(legend.getByText('Editado')).toBeVisible();
 
     const metrics = await page.evaluate(() => {
       const grid = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;
       const col = document.querySelector('[data-testid^="agenda-col-"]') as HTMLElement;
+      const legend = document.querySelector('[data-testid="agenda-status-legend"]') as HTMLElement;
       const cs = getComputedStyle(grid);
       const parent = grid.parentElement as HTMLElement;
       const parentCs = getComputedStyle(parent);
       const gutter = grid.querySelector('.sticky.left-0') as HTMLElement | null;
+      const legendCs = legend ? getComputedStyle(legend) : null;
+      let pageScrollRoot: HTMLElement | null = grid.parentElement;
+      while (pageScrollRoot) {
+        const oy = getComputedStyle(pageScrollRoot).overflowY;
+        if (oy === 'auto' || oy === 'scroll') break;
+        pageScrollRoot = pageScrollRoot.parentElement;
+      }
+      const scrollEl = pageScrollRoot ?? (document.scrollingElement as HTMLElement);
       return {
         scrollWidth: grid.scrollWidth,
         clientWidth: grid.clientWidth,
+        clientHeight: grid.clientHeight,
+        scrollHeight: grid.scrollHeight,
+        overflowY: cs.overflowY,
         scrollPaddingLeft: cs.scrollPaddingLeft,
         snapType: cs.scrollSnapType,
         parentPaddingLeft: parentCs.paddingLeft,
         parentPaddingRight: parentCs.paddingRight,
         gridLeft: grid.getBoundingClientRect().left,
         viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
         gutterWidth: gutter?.getBoundingClientRect().width ?? null,
         firstColLeft: col?.getBoundingClientRect().left ?? null,
+        legendTop: legend?.getBoundingClientRect().top ?? null,
+        legendPosition: legendCs?.position ?? null,
+        pageScrollHeight: scrollEl.scrollHeight,
       };
     });
 
@@ -194,6 +213,14 @@ test.describe('Agenda UX audit', () => {
       ),
     );
     expect(hasMaxH).toBe(false);
+
+    // Grade cresce para baixo (todas as horas); scroll vertical é da página
+    expect(metrics.clientHeight).toBeGreaterThan(metrics.viewportHeight);
+    expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight + 2);
+    expect(metrics.overflowY === 'visible' || metrics.overflowY === 'auto' || metrics.overflowY === 'clip').toBe(true);
+    expect(metrics.pageScrollHeight).toBeGreaterThan(metrics.viewportHeight);
+    expect(metrics.legendPosition).toBe('static');
+    expect(metrics.legendTop).toBeGreaterThan(metrics.viewportHeight);
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-fullbleed.png'), fullPage: false });
 

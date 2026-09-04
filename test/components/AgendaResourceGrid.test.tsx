@@ -141,6 +141,17 @@ describe('AgendaResourceGrid', () => {
     expect(root.className).not.toMatch(/max-h-/);
   });
 
+  it('rola só na horizontal — a altura segue os horários', () => {
+    setup();
+    const root = screen.getByTestId('agenda-resource-grid');
+    expect(root.className).toMatch(/overflow-x-auto/);
+    expect(root.className).not.toMatch(/(^|\s)overflow-auto(\s|$)/);
+    expect(root.className).not.toMatch(/overflow-y-auto/);
+    expect(root.className).not.toMatch(/flex-1/);
+    expect(root.className).not.toMatch(/min-h-0/);
+    expect(root.className).not.toMatch(/overscroll-contain/);
+  });
+
   it('não usa classes hidden / md:hidden na raiz', () => {
     setup();
     const root = screen.getByTestId('agenda-resource-grid');

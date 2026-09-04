@@ -71,7 +71,8 @@ function appointmentTimeLabel(iso: string): string {
 }
 
 /**
- * Grade única horário × colaborador. Full-bleed, snap com scroll-padding
+ * Grade única horário × colaborador. Altura natural (todas as horas);
+ * scroll vertical é da página. Snap horizontal com scroll-padding
  * alinhado ao gutter sticky. Filtro real: só as colunas selecionadas;
  * “Adicionar” ao lado para multi-select.
  */
@@ -106,7 +107,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   const isFiltered = selectedProfessionalIds.length > 0;
   const addableMembers = allMembers.filter((m) => !selectedProfessionalIds.includes(m.id));
   const showAddColumn = isFiltered && addableMembers.length > 0;
-  const headerCell = `sticky top-0 z-10 h-[4.25rem] border-b ${colors.divider} ${colors.card}`;
+  const headerCell = `h-[4.25rem] border-b ${colors.divider} ${colors.card}`;
 
   useEffect(() => {
     if (!addOpen) return;
@@ -173,12 +174,12 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   }, [members.length, showAddColumn]);
 
   return (
-    <div className={`flex-1 min-h-0 flex flex-col rounded-2xl border overflow-hidden ${colors.border} ${colors.surface}`}>
+    <div className={`rounded-2xl border overflow-hidden ${colors.border} ${colors.surface}`}>
       <div
         ref={scrollerRef}
         data-testid="agenda-resource-grid"
         style={{ scrollPaddingLeft: GUTTER_PAD }}
-        className={`flex-1 min-h-0 overflow-auto overscroll-contain scrollbar-hide ${colors.surface}`}
+        className={`overflow-x-auto scrollbar-hide ${colors.surface}`}
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}

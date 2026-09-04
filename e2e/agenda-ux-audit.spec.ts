@@ -223,6 +223,7 @@ test.describe('Agenda UX audit', () => {
     expect(metrics.legendTop).toBeGreaterThan(metrics.viewportHeight);
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-fullbleed.png'), fullPage: false });
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-page-full.png'), fullPage: true });
 
     // Scroll lateral com gesto (mais fiel ao mobile do que scrollLeft programático)
     const grid = page.getByTestId('agenda-resource-grid');
@@ -276,7 +277,24 @@ test.describe('Agenda UX audit', () => {
     await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-two-selected.png'), fullPage: false });
 
-    const report = { metrics, afterScroll, aligned: reportAlign.aligned };
+    await legend.scrollIntoViewIfNeeded();
+    await expect(legend).toBeInViewport();
+    const afterPageScroll = await page.evaluate(() => {
+      const grid = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;
+      const legendEl = document.querySelector('[data-testid="agenda-status-legend"]') as HTMLElement;
+      return {
+        gridTop: grid.getBoundingClientRect().top,
+        legendTop: legendEl.getBoundingClientRect().top,
+        legendBottom: legendEl.getBoundingClientRect().bottom,
+        viewportHeight: window.innerHeight,
+      };
+    });
+    expect(afterPageScroll.legendTop).toBeGreaterThan(0);
+    expect(afterPageScroll.legendBottom).toBeLessThanOrEqual(afterPageScroll.viewportHeight + 8);
+    expect(afterPageScroll.gridTop).toBeLessThan(0);
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-legend-end.png'), fullPage: false });
+
+    const report = { metrics, afterScroll, aligned: reportAlign.aligned, afterPageScroll };
     fs.writeFileSync(path.join(ARTIFACTS, 'agenda-ux-audit.json'), JSON.stringify(report, null, 2));
     console.log('UX_AUDIT', JSON.stringify(report));
   });

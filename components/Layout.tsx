@@ -52,7 +52,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         } md:pb-8`}
       >
         <div
-          className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto` : ''} ${density.sectionGap}`}
+          className={`${!isSettingsRoute ? `${density.pagePadding} max-w-7xl mx-auto w-full min-w-0` : ''} ${density.sectionGap}`}
         >
           {children}
         </div>

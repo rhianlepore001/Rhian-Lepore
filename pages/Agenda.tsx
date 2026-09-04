@@ -1083,7 +1083,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     }
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 min-w-0 w-full">
             <div className="shrink-0 pt-1">
                 <PageHeader
                     title="Agenda"
@@ -1334,7 +1334,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <div>
+                <div className="min-w-0 w-full">
                     <AgendaResourceGrid
                         members={displayedMembers}
                         allMembers={teamMembers}

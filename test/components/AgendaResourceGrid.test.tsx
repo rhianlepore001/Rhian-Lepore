@@ -145,6 +145,7 @@ describe('AgendaResourceGrid', () => {
     setup();
     const root = screen.getByTestId('agenda-resource-grid');
     expect(root.className).toMatch(/overflow-x-auto/);
+    expect(root.className).toMatch(/max-w-full/);
     expect(root.className).not.toMatch(/(^|\s)overflow-auto(\s|$)/);
     expect(root.className).not.toMatch(/overflow-y-auto/);
     expect(root.className).not.toMatch(/flex-1/);

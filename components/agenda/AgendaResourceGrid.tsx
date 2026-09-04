@@ -174,12 +174,12 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   }, [members.length, showAddColumn]);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${colors.border} ${colors.surface}`}>
+    <div className={`rounded-2xl border overflow-hidden min-w-0 w-full ${colors.border} ${colors.surface}`}>
       <div
         ref={scrollerRef}
         data-testid="agenda-resource-grid"
         style={{ scrollPaddingLeft: GUTTER_PAD }}
-        className={`overflow-x-auto scrollbar-hide ${colors.surface}`}
+        className={`overflow-x-auto max-w-full scrollbar-hide ${colors.surface}`}
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}

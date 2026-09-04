@@ -49,6 +49,14 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Copy beauty/barber + i18n pt-BR — MERGED → produção (4 Set 2026):**
+  - Branch `cursor/copy-beauty-barber-i18n-2504` · PR #37 → `main` (`dc12e2b`) · CI + Vercel success.
+  - `businessCopy` / `useBusinessCopy` centralizam vocabulário por segmento; nav renomeada (Início, Clientes, Análises).
+  - Moeda via `useTenantLocale` em notificações, Pix, planos do clube, upsell, etc.
+  - `AIOSStrategyModal` removido; ErrorBoundary herda `data-theme`.
+  - Feriados de barbeiro filtrados para salões beauty no calendário de conteúdo.
+  - Produção: https://www.agendixstudio.com (deploy Vercel automático no push `main`).
+
 - **Agenda: scroll da página + grade alta + legenda no fim — MERGED → produção (4 Set 2026):**
   - Branch `cursor/agenda-page-scroll-d080` · PR #34 → `main` (`b513988`) · deploy Vercel automático.
   - O card da grade **cresce para baixo** (06:00→23:30 no documento). Scroll vertical é da **página**, não de uma caixa interna.

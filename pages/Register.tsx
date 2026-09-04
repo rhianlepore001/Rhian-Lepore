@@ -10,6 +10,7 @@ import { AgendiXLogo } from '../components/AgendiXLogo';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { mapError, formatUserFacingError } from '../utils/mapError';
+import { getBusinessCopy } from '../utils/businessCopy';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -39,6 +40,9 @@ export const Register: React.FC = () => {
   const memberIdFromUrl = searchParams.get('member');
   const isInvitedStaff = !!companyIdFromUrl;
   const { isBeauty, colors, accent, font, radius, classes } = useBrutalTheme({ override: userType as ThemeVariant });
+  const copy = getBusinessCopy(userType);
+  const barberCopy = getBusinessCopy('barber');
+  const beautyCopy = getBusinessCopy('beauty');
   const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
   const [memberRole, setMemberRole] = useState<string>('');
 
@@ -334,7 +338,7 @@ export const Register: React.FC = () => {
   }
 
   // ─── REGISTRO COMPLETO ────────────────────────────────────────────────────
-  const subtitle = isBeauty ? 'Seu salão configurado em menos de 2 minutos' : 'Sua barbearia pronta em menos de 2 minutos';
+  const subtitle = copy.registerSubtitle;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden bg-theme-bg">
@@ -383,8 +387,8 @@ export const Register: React.FC = () => {
                   >
                     <AgendiXLogo size={20} isBeauty={false} showText={false} />
                     <div className="text-left">
-                      <p className="font-heading text-sm uppercase tracking-tight leading-none">Barbearia</p>
-                      <p className="font-mono text-xs text-current opacity-50 mt-0.5">Barber shop</p>
+                      <p className="font-heading text-sm uppercase tracking-tight leading-none">{barberCopy.segmentLabel}</p>
+                      <p className="font-mono text-xs text-current opacity-50 mt-0.5 capitalize">{barberCopy.businessNoun}</p>
                     </div>
                   </button>
                   <button
@@ -396,8 +400,8 @@ export const Register: React.FC = () => {
                   >
                     <AgendiXLogo size={20} isBeauty={true} showText={false} />
                     <div className="text-left">
-                      <p className="font-heading text-sm uppercase tracking-tight leading-none">Studio</p>
-                      <p className="font-mono text-xs text-current opacity-50 mt-0.5">Beauty salon</p>
+                      <p className="font-heading text-sm uppercase tracking-tight leading-none">{beautyCopy.segmentLabelShort}</p>
+                      <p className="font-mono text-xs text-current opacity-50 mt-0.5 capitalize">{beautyCopy.businessNoun}</p>
                     </div>
                   </button>
                 </div>
@@ -437,7 +441,7 @@ export const Register: React.FC = () => {
                     required
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder={isBeauty ? 'Studio Bella' : 'Barbearia Silva'}
+                    placeholder={copy.businessNamePlaceholder}
                     forceTheme={userType}
                   />
 

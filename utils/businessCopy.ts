@@ -22,6 +22,7 @@ export interface BusinessCopy {
   clubPlansSubtitle: string;
   tourServicesDescription: string;
   serviceExamplesHint: string;
+  registerSubtitle: string;
 }
 
 const BARBER_COPY: BusinessCopy = {
@@ -49,6 +50,7 @@ const BARBER_COPY: BusinessCopy = {
   clubPlansSubtitle: 'Crie os planos que seus clientes podem assinar (corte ilimitado, combo, etc).',
   tourServicesDescription: 'Cadastre seus cortes, tratamentos e preços. É o cardápio do seu sucesso.',
   serviceExamplesHint: 'Cadastre pelo menos um serviço para continuar. Exemplos: Corte, Barba, Hidratação.',
+  registerSubtitle: 'Sua barbearia pronta em menos de 2 minutos',
 };
 
 const BEAUTY_COPY: BusinessCopy = {
@@ -76,6 +78,7 @@ const BEAUTY_COPY: BusinessCopy = {
   clubPlansSubtitle: 'Crie os planos que seus clientes podem assinar (manicure, combo, etc).',
   tourServicesDescription: 'Cadastre seus serviços, tratamentos e preços. É o cardápio do seu sucesso.',
   serviceExamplesHint: 'Cadastre pelo menos um serviço para continuar. Exemplos: Manicure, Escova, Hidratação.',
+  registerSubtitle: 'Seu salão configurado em menos de 2 minutos',
 };
 
 export function resolveBusinessTheme(userType: string | null | undefined): BusinessTheme {

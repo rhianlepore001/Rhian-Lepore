@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Zap, ExternalLink, Copy, Loader2 } from 'lucide-react';
 import { ConfirmModal, useToast } from '../../components/ui';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { usePixPaymentByMembership, useSimulatePixPaid } from '../../hooks/useMemberships';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
@@ -18,6 +19,7 @@ interface PixActionsProps {
 
 export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivated }) => {
     const { user } = useAuth();
+    const { formatMoney } = useTenantLocale();
     const { showToast } = useToast();
     const { colors, accent, font } = useBrutalTheme();
     const { data: pix, isLoading } = usePixPaymentByMembership(membershipId);
@@ -72,7 +74,7 @@ export const PixActions: React.FC<PixActionsProps> = ({ membershipId, onActivate
                     Pix pendente
                 </span>
                 <span className="text-[var(--color-warning)] font-bold">
-                    R$ {(pix.amount_cents / 100).toFixed(2).replace('.', ',')}
+                    {formatMoney(pix.amount_cents / 100)}
                 </span>
             </div>
             <div className="flex gap-2 flex-wrap">

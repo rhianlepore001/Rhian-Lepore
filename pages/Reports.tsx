@@ -425,7 +425,7 @@ export const Reports: React.FC = () => {
               />
               <RankingList
                 title="Produtos"
-                subtitle="Vendas no checkout ou avulso"
+                subtitle="Vendas na cobrança ou avulso"
                 icon={Package}
                 items={topProducts}
                 currencyRegion={currencyRegion}

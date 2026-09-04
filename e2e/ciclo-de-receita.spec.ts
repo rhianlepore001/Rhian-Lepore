@@ -230,7 +230,7 @@ test.describe('Ciclo de receita', () => {
         });
 
         await test.step('5. Receita registrada — Financeiro reflete o atendimento', async () => {
-            await navTo(owner, 'Dashboard');
+            await navTo(owner, 'Início');
             await navTo(owner, 'Financeiro');
             // O serviço concluído (R$ 45,00 no seed da conta de teste) deve constar no financeiro
             await expect(owner.getByText('R$ 45,00').first()).toBeVisible({ timeout: 20_000 });

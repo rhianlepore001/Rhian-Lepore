@@ -14,6 +14,7 @@ import { PixDisplay } from '../components/membership/PixDisplay';
 import { MembershipBadge } from '../components/membership/MembershipBadge';
 import { generatePixPayload } from '../lib/pix-generator';
 import { generatePixTxid } from '../lib/pix-txid';
+import { formatCurrency } from '../utils/formatters';
 import { MembershipPlan, PixKeyType } from '../services/memberships';
 
 const FIXTURE_PLANS: MembershipPlan[] = [
@@ -77,6 +78,7 @@ type Step = 'plan' | 'pay' | 'pix' | 'active' | 'checkout';
 export const ClubDemo: React.FC = () => {
     const navigate = useNavigate();
     const { colors, accent, font, status } = useBrutalTheme();
+    const formatDemoMoney = (value: number) => formatCurrency(value, 'BR');
 
     const [step, setStep] = useState<Step>('plan');
     const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
@@ -225,7 +227,7 @@ export const ClubDemo: React.FC = () => {
                                         {selectedPlan.name}
                                     </h2>
                                     <p className="text-[var(--color-text-muted)] text-sm">
-                                        R$ {(selectedPlan.price_cents / 100).toFixed(2).replace('.', ',')} / mês
+                                        {formatDemoMoney(selectedPlan.price_cents / 100)} / mês
                                     </p>
                                 </div>
                                 <MembershipBadge color={selectedPlan.badge_color} label={selectedPlan.badge_color} size="md" />
@@ -400,7 +402,7 @@ export const ClubDemo: React.FC = () => {
                                                     </span>
                                                 ) : (
                                                     <span className={`${font.mono} text-xs ${colors.textSecondary}`}>
-                                                        R$ {svc.price.toFixed(2).replace('.', ',')}
+                                                        {formatDemoMoney(svc.price)}
                                                     </span>
                                                 )}
                                             </div>
@@ -461,16 +463,16 @@ export const ClubDemo: React.FC = () => {
                                 <span className={colors.textSecondary}>{checkoutService.name}</span>
                                 <span className={colors.text}>
                                     {discount.covered ? (
-                                        <span className="line-through text-[var(--color-text-muted)]">R$ {checkoutService.price.toFixed(2).replace('.', ',')}</span>
+                                        <span className="line-through text-[var(--color-text-muted)]">{formatDemoMoney(checkoutService.price)}</span>
                                     ) : (
-                                        `R$ ${checkoutService.price.toFixed(2).replace('.', ',')}`
+                                        formatDemoMoney(checkoutService.price)
                                     )}
                                 </span>
                             </div>
                             {discount.covered && (
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-[var(--color-success)]">Desconto Clube</span>
-                                    <span className="text-[var(--color-success)] font-bold">− R$ {checkoutService.price.toFixed(2).replace('.', ',')}</span>
+                                    <span className="text-[var(--color-success)] font-bold">− {formatDemoMoney(checkoutService.price)}</span>
                                 </div>
                             )}
                             <div className={`h-px ${colors.divider}`} />
@@ -480,7 +482,7 @@ export const ClubDemo: React.FC = () => {
                                     data-testid="checkout-final-price"
                                     className={`${font.heading} text-2xl font-black tabular-nums ${discount.covered ? 'text-[var(--color-success)]' : 'text-[var(--color-text)]'}`}
                                 >
-                                    R$ {discount.finalPrice.toFixed(2).replace('.', ',')}
+                                    {formatDemoMoney(discount.finalPrice)}
                                 </span>
                             </div>
                         </div>

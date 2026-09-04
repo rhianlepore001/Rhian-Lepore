@@ -129,7 +129,7 @@ export const Sidebar: React.FC = () => {
             );
           })}
 
-          {isStaff && renderLink('/meus-insights', TrendingUp, 'Meus Insights')}
+          {isStaff && renderLink('/meus-insights', TrendingUp, 'Minhas análises')}
         </nav>
 
         <div className={`shrink-0 px-3 py-2 border-t ${colors.divider}`}>

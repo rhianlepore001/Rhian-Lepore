@@ -245,7 +245,7 @@ export const Reports: React.FC = () => {
   return (
     <div className="space-y-6 md:space-y-8 pb-24">
       <PageHeader
-        title="Insights"
+        title="Análises"
         subtitle={
           <>
             <span className="block">O que vende, quem performa e quem volta</span>

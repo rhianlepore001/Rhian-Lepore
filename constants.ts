@@ -3,13 +3,13 @@ import { Appointment, Client, FinanceRecord } from './types';
 import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
-  { name: 'Dashboard', icon: LayoutDashboard, path: '/', ownerOnly: false, group: 'Operação' },
+  { name: 'Início', icon: LayoutDashboard, path: '/', ownerOnly: false, group: 'Operação' },
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false, group: 'Operação' },
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
-  { name: 'Clientes CRM', icon: Users, path: '/clientes', ownerOnly: true, group: 'Operação' },
+  { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true, group: 'Operação' },
   { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: false, group: 'Operação' },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true, group: 'Crescimento' },
-  { name: 'Insights', icon: TrendingUp, path: '/insights', ownerOnly: true, group: 'Crescimento' },
+  { name: 'Análises', icon: TrendingUp, path: '/insights', ownerOnly: true, group: 'Crescimento' },
   { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true, group: 'Sistema' },
 ];
 

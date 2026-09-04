@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAIOSDiagnostic } from './useAIOSDiagnostic';
+import { formatCurrency } from '../utils/formatters';
 import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
 
 export interface SmartNotification {
@@ -51,8 +52,9 @@ function persistDismiss(id: string) {
 }
 
 export function useSmartNotifications() {
-    const { userType, businessName, role } = useAuth();
+    const { userType, businessName, role, region } = useAuth();
     const { diagnostic, loading, logCampaignActivity, refetch } = useAIOSDiagnostic();
+    const localeRegion = region === 'PT' ? 'PT' : 'BR';
     const [notifications, setNotifications] = useState<SmartNotification[]>([]);
     const [sendingId, setSendingId] = useState<string | null>(null);
 
@@ -78,7 +80,7 @@ export function useSmartNotifications() {
                 type: 'reactivation',
                 priority: days > 60 ? 'high' : 'medium',
                 title: `${client.name.split(' ')[0]} não aparece há ${days} dias`,
-                message: `Valor médio R$ ${(client.avg_ticket || 0).toFixed(0)} por visita. Envie uma mensagem personalizada pelo WhatsApp.`,
+                message: `Valor médio ${formatCurrency(client.avg_ticket || 0, localeRegion)} por visita. Envie uma mensagem personalizada pelo WhatsApp.`,
                 actionLabel: 'Enviar WhatsApp',
                 client: {
                     id: client.id,
@@ -102,7 +104,7 @@ export function useSmartNotifications() {
                 id: tipId,
                 type: 'tip',
                 priority: 'low',
-                title: `R$ ${recoverable.toLocaleString()} em oportunidades hoje`,
+                title: `${formatCurrency(recoverable, localeRegion)} em oportunidades hoje`,
                 message: 'Clientes que não voltaram recentemente podem ser recuperados com uma mensagem personalizada.',
                 actionLabel: 'Ver clientes',
                 actionUrl: '/clientes',
@@ -112,7 +114,7 @@ export function useSmartNotifications() {
         }
 
         setNotifications(notifs);
-    }, [diagnostic, loading, isStaff]);
+    }, [diagnostic, loading, isStaff, localeRegion]);
 
     const dismiss = useCallback((id: string) => {
         persistDismiss(id);

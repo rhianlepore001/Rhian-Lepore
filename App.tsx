@@ -12,6 +12,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { DynamicBranding } from './components/DynamicBranding';
 import { DevBugButton } from './components/DevBugButton';
 import { HashRouterSync } from './components/HashRouterSync';
+import { getBusinessCopy, resolveBusinessTheme } from './utils/businessCopy';
 
 
 // Lazy Load Pages
@@ -146,9 +147,7 @@ const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
   if (loading) return <LoadingFull />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (role === 'staff') {
-    const ownerToast = userType === 'beauty'
-      ? 'Acesso restrito ao dono do salão'
-      : 'Acesso restrito ao dono da barbearia';
+    const ownerToast = getBusinessCopy(resolveBusinessTheme(userType)).ownerAccessRestricted;
     sessionStorage.setItem('ownerRouteToast', ownerToast);
     return <Navigate to="/" replace />;
   }

@@ -72,7 +72,7 @@ export const Header: React.FC = () => {
 
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 overflow-hidden">
             {isSettingsRoute ? (
-              <Link to="/" className="flex items-center gap-3 group hover:opacity-90 transition-all ml-1 md:ml-0 min-w-0" title="Voltar ao Dashboard">
+              <Link to="/" className="flex items-center gap-3 group hover:opacity-90 transition-all ml-1 md:ml-0 min-w-0" title="Voltar ao início">
                 <ArrowLeft className={`w-5 h-5 shrink-0 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                 <div className="relative shrink-0">
                   <div className={`absolute -inset-3 ${accent.bgDim} blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 rounded-full`} />
@@ -91,8 +91,8 @@ export const Header: React.FC = () => {
                   <Link
                     to="/"
                     className="md:hidden inline-flex items-center justify-center shrink-0 h-11 w-11 rounded-lg group hover:opacity-90 hover:bg-[var(--color-card-hover)] transition-all"
-                    title="Voltar ao Dashboard"
-                    aria-label="Voltar ao Dashboard"
+                    title="Voltar ao início"
+                    aria-label="Voltar ao início"
                   >
                     <ArrowLeft className={`w-4 h-4 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>

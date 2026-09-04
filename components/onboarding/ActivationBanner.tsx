@@ -3,9 +3,12 @@ import { createPortal } from 'react-dom';
 import { Rocket, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
+import { useBusinessCopy } from '../../hooks/useBusinessCopy';
+
 export function ActivationBanner() {
   const [show, setShow] = useState(false);
   const { user } = useAuth();
+  const copy = useBusinessCopy();
 
   useEffect(() => {
     const handleSystemActivated = () => {
@@ -47,7 +50,7 @@ export function ActivationBanner() {
             <CheckCircle2 className="w-4 h-4 text-[var(--color-success)]" />
           </div>
           <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-            Sua barbearia está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!
+            {copy.activationBannerMessage}
           </p>
         </div>
       </div>

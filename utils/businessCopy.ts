@@ -12,6 +12,8 @@ export interface BusinessCopy {
   ownerAccessRestricted: string;
   setupCompleteMessage: string;
   staffLinkAccountMessage: string;
+  activationBannerMessage: string;
+  homeNavLabel: string;
 }
 
 const BARBER_COPY: BusinessCopy = {
@@ -28,6 +30,9 @@ const BARBER_COPY: BusinessCopy = {
     'Sua barbearia já está online e pronta para receber agendamentos. Continue gerenciando sua agenda e clientes pelo menu abaixo.',
   staffLinkAccountMessage:
     'Não foi possível identificar o seu perfil de profissional. Fale com o dono da barbearia para vincular a sua conta à equipe.',
+  activationBannerMessage:
+    'Sua barbearia está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!',
+  homeNavLabel: 'Início',
 };
 
 const BEAUTY_COPY: BusinessCopy = {
@@ -44,6 +49,9 @@ const BEAUTY_COPY: BusinessCopy = {
     'Seu salão já está online e pronto para receber agendamentos. Continue gerenciando sua agenda e clientes pelo menu abaixo.',
   staffLinkAccountMessage:
     'Não foi possível identificar o seu perfil de profissional. Fale com o responsável do salão para vincular a sua conta à equipe.',
+  activationBannerMessage:
+    'Seu salão está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!',
+  homeNavLabel: 'Início',
 };
 
 export function resolveBusinessTheme(userType: string | null | undefined): BusinessTheme {

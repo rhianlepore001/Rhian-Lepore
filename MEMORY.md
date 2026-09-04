@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda full-height + legend dock — em PR (4 Set 2026):**
+  - Branch `cursor/agenda-fullheight-footer-d080`.
+  - Grade preenche o viewport (sem `max-h`); scroll só dentro da grade.
+  - Legenda de cores/ações colada ao fundo da grade (sempre visível, uma linha).
+  - Layout da rota `/agenda` em flex fill; nav inferior não deixa ar morto.
+
 - **Agenda chrome (inset / header / nav) — MERGED → produção (3 Set 2026):**
   - Branch `cursor/agenda-chrome-inset-d080` · PR #29 → `main` (`85fbce7`) · deploy Vercel automático.
   - Grade e dias no mesmo inset do Layout (sem full-bleed no bezel; desktop respira).

@@ -8,7 +8,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, MessageCircle, Info, DollarSign, Phone, Ban } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, Info, DollarSign, Phone, Ban } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
+import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -30,18 +31,8 @@ import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '.
 import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
-import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../utils/appointmentStatus';
+import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
 import { useTenantLocale } from '../hooks/useTenantLocale';
-
-// Ícone por estado visual — indicador secundário (forma + cor) para daltônicos/baixa visão.
-const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?: string }>> = {
-    completed: Check,
-    overdue: AlertTriangle,
-    normal: Clock,
-    noshow: Ban,
-    cancelled: X,
-};
-
 
 interface Appointment {
     id: string;
@@ -1092,11 +1083,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     }
 
     return (
-        <div className={`${colors.bg} min-h-screen pb-8 space-y-3 md:space-y-4`}>
-            <div className={`${classes.section} pt-2`}>
+        <div className="flex-1 min-h-0 flex flex-col gap-3">
+            <div className="shrink-0 pt-1">
                 <PageHeader
                     title="Agenda"
-                    className="pb-2 md:pb-4"
+                    className="pb-1 md:pb-2"
                     subtitle={<span className="hidden md:inline">Gerencie os agendamentos por profissional</span>}
                     action={
                         <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
@@ -1138,7 +1129,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
             {/* --- Agendamentos Atrasados (Overdue) --- */}
             {isOverdueFilter && (
-                <div className="px-4 md:px-6">
+                <div className="shrink-0">
                     <Card variant="outlined" className="border-[var(--color-danger)]/35 bg-[var(--color-danger-bg)]">
                         <div className="flex items-start gap-4">
                             <AlertTriangle className="w-6 h-6 text-[var(--color-danger)] flex-shrink-0 mt-1" />
@@ -1211,16 +1202,18 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
 
             {/* Date Navigator — scroll/arraste horizontal (sem setas) */}
+            <div className="shrink-0">
             <AgendaDayScroller
                 selectedDate={selectedDate}
                 onSelectDate={(d) => navigate(`/agenda?date=${formatLocalDateString(d)}`)}
                 colors={colors}
                 accent={accent}
             />
+            </div>
 
             {/* Pending Public Bookings Alert */}
             {publicBookings.length > 0 && (
-                <div className="px-4 md:px-6 space-y-4">
+                <div className="shrink-0 space-y-4 max-h-[30vh] overflow-y-auto">
                     <Card variant="outlined" className={`border-[var(--color-accent-border)] ${accent.bgDim}`}>
                         <div className="flex items-center gap-3">
                             <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
@@ -1321,7 +1314,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
             {/* Grid Time View */}
             {teamMembers.length === 0 ? (
-                <div className="px-4 md:px-6">
+                <div>
                     <Card variant="outlined">
                         <EmptyState
                             icon={User}
@@ -1331,8 +1324,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         />
                     </Card>
                 </div>
-            ) : teamMembers.length === 0 ? (
-                <div className="px-4 md:px-6">
+            ) : isStaff && !teamMemberId ? (
+                <div>
                     <Card variant="outlined">
                         <EmptyState
                             icon={User}
@@ -1341,7 +1334,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <div className="pb-6">
+                <div className="flex-1 min-h-0 flex flex-col">
                     <AgendaResourceGrid
                         members={displayedMembers}
                         allMembers={teamMembers}
@@ -1358,31 +1351,15 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             if (full) setShowingDetailsAppointment(full);
                         }}
                         onEmptySlotClick={openNewAppointmentAt}
+                        footer={
+                            <AgendaStatusLegend
+                                emptyHint={
+                                    (showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
+                                    + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0) === 0
+                                }
+                            />
+                        }
                     />
-                </div>
-            )}
-
-            {/* Legend (Bottom) — só faz sentido quando há algo pra explicar no dia */}
-            {((showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
-                + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0)) > 0 && (
-                <div className={`mt-3 flex items-center justify-center gap-4 flex-wrap text-xs ${colors.textMuted} font-medium pb-4`}>
-                    {(['normal', 'overdue', 'completed', 'noshow', 'cancelled'] as VisualStatus[]).map(v => {
-                        const LegendIcon = VISUAL_STATUS_ICON[v];
-                        return (
-                            <div key={v} className="flex items-center gap-1.5">
-                                <LegendIcon className={`w-3.5 h-3.5 ${VISUAL_STATUS_CLASSES[v].text}`} />
-                                <span>{VISUAL_STATUS_LABEL[v]}</span>
-                            </div>
-                        );
-                    })}
-                    <div className="flex items-center gap-1.5 ml-4">
-                        <MessageCircle className="w-3.5 h-3.5 text-[var(--color-success)]/80" />
-                        <span>Com observação</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <Edit2 className={`w-3 h-3 ${colors.textMuted}`} />
-                        <span>Editado</span>
-                    </div>
                 </div>
             )}
 

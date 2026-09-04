@@ -213,6 +213,7 @@ test.describe('Agenda staff — filtro Todos', () => {
     await expect(selfLabel.first()).toBeVisible();
 
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible();
+    await expect(page.getByTestId('agenda-status-legend')).toBeVisible();
     await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
     await expect(page.getByTestId(`agenda-col-${OTHER_MEMBER_ID}`)).toBeVisible();
     await expect(page.getByRole('button', { name: /Novo agendamento às/i }).first()).toBeVisible();

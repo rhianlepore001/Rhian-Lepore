@@ -16,6 +16,7 @@ import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
+import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -1082,7 +1083,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     }
 
     return (
-        <div className="flex-1 min-h-0 flex flex-col gap-3">
+        <div className="flex flex-col gap-3 min-w-0 w-full">
             <div className="shrink-0 pt-1">
                 <PageHeader
                     title="Agenda"
@@ -1333,7 +1334,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     </Card>
                 </div>
             ) : (
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="min-w-0 w-full">
                     <AgendaResourceGrid
                         members={displayedMembers}
                         allMembers={teamMembers}
@@ -1350,6 +1351,12 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             if (full) setShowingDetailsAppointment(full);
                         }}
                         onEmptySlotClick={openNewAppointmentAt}
+                    />
+                    <AgendaStatusLegend
+                        emptyHint={
+                            (showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
+                            + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0) === 0
+                        }
                     />
                 </div>
             )}

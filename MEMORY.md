@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda: scroll da página + grade alta + legenda no fim (em PR, 4 Set 2026):**
+  - Branch `cursor/agenda-page-scroll-d080`.
+  - O card da grade **cresce para baixo** (06:00→23:30 no documento). Scroll vertical é da **página**, não de uma caixa interna.
+  - Legenda de status volta **só no final do scroll**, minimalista, sem sticky/fixed.
+
 - **Agenda full-height, sem legenda no canvas — MERGED → produção (4 Set 2026):**
   - Branch `cursor/agenda-fullheight-footer-d080` · PR #32 → `main` (`f7765d8`) · deploy Vercel automático.
   - Grade preenche o viewport (sem `max-h`); scroll só dentro da grade.

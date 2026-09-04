@@ -42,6 +42,16 @@ Para detalhes técnicos do projeto (stack, arquitetura, comandos, estrutura), co
 3. **Verificar dependências**: nunca assuma que uma biblioteca existe — confirme no `package.json` ou em imports existentes.
 4. **Verificar rotas e estrutura**: se criar páginas, siga o padrão de `React.lazy()` + `<Suspense>` descrito em `CLAUDE.md`.
 
+### Front-end (impeccable)
+
+Toda tarefa de interface (páginas, componentes, design system, temas) segue a skill **impeccable** (`.claude/skills/impeccable/`). Regra Cursor: `.cursor/rules/frontend-impeccable.mdc`.
+
+Fluxo mínimo:
+1. Ler `SKILL.md` da skill impeccable.
+2. Rodar `node .claude/skills/impeccable/scripts/context.mjs --target <arquivo>` na sessão.
+3. Carregar `reference/craft-floor.md` antes de editar UI.
+4. Validar com critérios de polish/craft-floor antes de concluir.
+
 ### Durante a implementação
 - Faça mudanças mínimas e focadas — evite refactors não solicitados no meio de uma tarefa.
 - Prefira editar arquivos existentes a criar novos, a menos que seja explicitamente necessário.

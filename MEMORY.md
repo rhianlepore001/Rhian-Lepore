@@ -49,10 +49,10 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda full-height + legend dock — em PR (4 Set 2026):**
-  - Branch `cursor/agenda-fullheight-footer-d080`.
+- **Agenda full-height, sem legenda no canvas — MERGED → produção (4 Set 2026):**
+  - Branch `cursor/agenda-fullheight-footer-d080` · PR #32 → `main` (`f7765d8`) · deploy Vercel automático.
   - Grade preenche o viewport (sem `max-h`); scroll só dentro da grade.
-  - Legenda de cores **removida** do canvas — competia com a agenda; status vive nos cards e no modal de detalhes.
+  - Legenda de cores removida do canvas; status vive nos cards e no modal de detalhes.
 
 - **Agenda chrome (inset / header / nav) — MERGED → produção (3 Set 2026):**
   - Branch `cursor/agenda-chrome-inset-d080` · PR #29 → `main` (`85fbce7`) · deploy Vercel automático.

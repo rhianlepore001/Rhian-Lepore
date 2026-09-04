@@ -33,6 +33,7 @@ import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 
 interface Appointment {
     id: string;
@@ -146,6 +147,7 @@ export const Agenda: React.FC = () => {
 
 
     const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
+    const copy = useBusinessCopy();
     const { showToast } = useToast();
     const [confirmDialog, setConfirmDialog] = useState<{
         title: string;
@@ -725,7 +727,7 @@ export const Agenda: React.FC = () => {
                 `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
                 `✂️  *Serviço*: ${serviceNames}\n` +
                 `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                `📍  Onde: *${establishment || 'Barbearia'}*.\n\n` +
+                `📍  Onde: *${establishment || copy.establishmentFallback}*.\n\n` +
                 `Prepare-se para o trato! Nos vemos em breve. 👋`;
 
             fetchData();
@@ -1329,7 +1331,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     <Card variant="outlined">
                         <EmptyState
                             icon={User}
-                            message="Não foi possível identificar o seu perfil de profissional. Fale com o dono da barbearia para vincular a sua conta à equipe."
+                            message={copy.staffLinkAccountMessage}
                         />
                     </Card>
                 </div>

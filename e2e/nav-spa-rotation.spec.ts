@@ -66,7 +66,7 @@ test.describe('Navegação SPA entre sessões', () => {
     await expect(page.getByRole('heading', { name: /^Agenda$/i })).toHaveCount(0);
 
     // 3) Dashboard
-    await clickSidebar(page, 'Dashboard');
+    await clickSidebar(page, 'Início');
     await expect(page).toHaveURL(/#\/?(\?|$)/, { timeout: 8_000 });
     await expect(page.getByText('Olá,').first()).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('heading', { name: /^Financeiro$/i })).toHaveCount(0);
@@ -88,7 +88,7 @@ test.describe('Navegação SPA entre sessões', () => {
     }
 
     // 6) Outras sessões
-    await clickSidebar(page, 'Clientes CRM');
+    await clickSidebar(page, 'Clientes');
     await expect(page).toHaveURL(/#\/clientes/, { timeout: 8_000 });
     await expect(page.getByRole('heading', { name: /^Agenda$/i })).toHaveCount(0);
 

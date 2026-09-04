@@ -15,7 +15,11 @@ interface State {
 }
 
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
-    const { colors, font, status } = useBrutalTheme({ override: 'barber' as ThemeVariant });
+    const themeAttr = typeof document !== 'undefined'
+        ? document.documentElement.getAttribute('data-theme')
+        : null;
+    const themeOverride: ThemeVariant = themeAttr === 'beauty' ? 'beauty' : 'barber';
+    const { colors, font, status } = useBrutalTheme({ override: themeOverride });
 
     return (
             <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>

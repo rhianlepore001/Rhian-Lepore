@@ -85,7 +85,7 @@ export const SubscriptionSettings: React.FC = () => {
             if (data?.url) {
                 window.location.href = data.url;
             } else {
-                showToast('Não foi possível iniciar o checkout. Tente novamente.', 'error');
+                showToast('Não foi possível iniciar o pagamento. Tente novamente.', 'error');
             }
         } catch (error) {
             console.error('Error:', error);

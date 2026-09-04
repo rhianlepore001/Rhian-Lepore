@@ -2,10 +2,13 @@
  * Datas comemorativas brasileiras relevantes para salões e barbearias.
  */
 
+export type HolidaySegment = 'barber' | 'beauty' | 'all';
+
 interface Holiday {
     date: string; // MM-DD
     name: string;
     relevance: 'alta' | 'media';
+    segments?: HolidaySegment[];
 }
 
 const FIXED_HOLIDAYS: Holiday[] = [
@@ -19,9 +22,9 @@ const FIXED_HOLIDAYS: Holiday[] = [
     { date: '06-15', name: 'Dia do Cabeleireiro', relevance: 'alta' },
     { date: '07-26', name: 'Dia dos Avós', relevance: 'media' },
     { date: '08-10', name: 'Dia dos Pais', relevance: 'alta' },
-    { date: '08-15', name: 'Dia do Barbeiro', relevance: 'alta' },
+    { date: '08-15', name: 'Dia do Barbeiro', relevance: 'alta', segments: ['barber'] },
     { date: '09-07', name: 'Independência do Brasil', relevance: 'media' },
-    { date: '09-20', name: 'Dia do Barbeiro (Alternativo)', relevance: 'alta' },
+    { date: '09-20', name: 'Dia do Barbeiro (Alternativo)', relevance: 'alta', segments: ['barber'] },
     { date: '10-12', name: 'Dia das Crianças', relevance: 'media' },
     { date: '10-31', name: 'Halloween', relevance: 'media' },
     { date: '11-20', name: 'Consciência Negra', relevance: 'media' },
@@ -30,10 +33,18 @@ const FIXED_HOLIDAYS: Holiday[] = [
     { date: '12-31', name: 'Réveillon', relevance: 'alta' },
 ];
 
-export function getHolidaysForMonth(month: number): { day: number; name: string; relevance: 'alta' | 'media' }[] {
+function isHolidayRelevantForSegment(holiday: Holiday, segment: 'barber' | 'beauty'): boolean {
+    if (!holiday.segments || holiday.segments.length === 0) return true;
+    return holiday.segments.includes(segment) || holiday.segments.includes('all');
+}
+
+export function getHolidaysForMonth(
+    month: number,
+    segment: 'barber' | 'beauty' = 'barber',
+): { day: number; name: string; relevance: 'alta' | 'media' }[] {
     const monthStr = String(month + 1).padStart(2, '0');
     return FIXED_HOLIDAYS
-        .filter(h => h.date.startsWith(monthStr))
+        .filter(h => h.date.startsWith(monthStr) && isHolidayRelevantForSegment(h, segment))
         .map(h => ({
             day: parseInt(h.date.split('-')[1]),
             name: h.name,

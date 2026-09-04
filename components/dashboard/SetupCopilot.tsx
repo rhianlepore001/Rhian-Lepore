@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getOnboardingProgress, saveOnboardingStep, getSetupStatus } from '@/services/onboarding';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 
 interface SetupStep {
     id: string;
@@ -21,6 +22,7 @@ export const SetupCopilot: React.FC = () => {
     const navigate = useNavigate();
     const { user, companyId } = useAuth();
     const { accent, colors, classes, radius } = useBrutalTheme();
+    const copy = useBusinessCopy();
     const getDismissedKey = () => `setup_copilot_dismissed_${user?.id ?? 'anon'}`;
     const [dismissed, setDismissed] = useState(() => {
         if (typeof window === 'undefined' || !user?.id) return false;
@@ -134,7 +136,7 @@ export const SetupCopilot: React.FC = () => {
         {
             id: 'clients',
             label: 'Adicionar clientes',
-            description: 'Cadastre seus clientes no CRM para ativar a IA do AgendiX.',
+            description: 'Cadastre seus clientes para ativar a IA do AgendiX.',
             icon: <UserPlus className="w-4 h-4" />,
             path: '/clientes',
             completed: checks.hasClients,
@@ -413,8 +415,7 @@ export const SetupCopilot: React.FC = () => {
                         {isActivated && (
                             <div className={`px-5 pb-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-500`}>
                                 <p className={`text-sm ${colors.textSecondary} leading-relaxed`}>
-                                    Sua barbearia já está online e pronta para receber agendamentos.
-                                    Continue gerenciando sua agenda e clientes pelo menu abaixo.
+                                    {copy.setupCompleteMessage}
                                 </p>
                             </div>
                         )}

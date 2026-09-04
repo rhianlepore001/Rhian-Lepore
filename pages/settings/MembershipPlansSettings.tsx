@@ -12,6 +12,8 @@ import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships
 import { Button, Modal, ConfirmModal } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBusinessCopy } from '../../hooks/useBusinessCopy';
+import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { supabase } from '../../lib/supabase';
 
 const BADGE_COLORS: { value: MembershipBadgeColor; label: string; icon: React.ReactNode; gradient: string }[] = [
@@ -45,6 +47,12 @@ export const MembershipPlansSettings: React.FC = () => {
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
     const { companyId } = useAuth();
+    const {
+        clubPlanNamePlaceholder,
+        clubPlanDescriptionPlaceholder,
+        clubPlansSubtitle,
+    } = useBusinessCopy();
+    const { currencySymbol } = useTenantLocale();
     const { data: plans, isLoading } = useMembershipPlans();
     const upsertMutation = useUpsertMembershipPlan();
     const deleteMutation = useDeleteMembershipPlan();
@@ -150,7 +158,7 @@ export const MembershipPlansSettings: React.FC = () => {
                             Planos do Clube
                         </h1>
                         <p className={`${colors.textSecondary} text-sm`}>
-                            Crie os planos que seus clientes podem assinar (corte ilimitado, combo, etc).
+                            {clubPlansSubtitle}
                         </p>
                     </div>
                     <Button variant="primary" onClick={handleNew} forceTheme={isBeauty ? 'beauty' : 'barber'}>
@@ -159,11 +167,9 @@ export const MembershipPlansSettings: React.FC = () => {
                     </Button>
                 </header>
 
-                {!isBeauty && (
-                    <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                        <a href="#/configuracoes/clube/pix" className={`${accent.text} underline`}>← Configurar Pix</a>
-                    </div>
-                )}
+                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                    <a href="#/configuracoes/clube/pix" className={`${accent.text} underline`}>← Configurar Pix</a>
+                </div>
 
                 {isLoading ? (
                     <div className={`${colors.textSecondary} p-8`}>Carregando planos...</div>
@@ -231,7 +237,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                     type="text"
                                     value={form.name}
                                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                    placeholder="Corte Ilimitado"
+                                    placeholder={clubPlanNamePlaceholder}
                                     className={classes.input}
                                     autoFocus
                                 />
@@ -242,7 +248,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                 <textarea
                                     value={form.description}
                                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                                    placeholder="Cortes de cabelo ilimitados durante o mês."
+                                    placeholder={clubPlanDescriptionPlaceholder}
                                     className={classes.input}
                                     rows={2}
                                 />
@@ -250,7 +256,7 @@ export const MembershipPlansSettings: React.FC = () => {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className={`${classes.label} block mb-1.5`}>Preço mensal (R$)</label>
+                                    <label className={`${classes.label} block mb-1.5`}>Preço mensal ({currencySymbol})</label>
                                     <input
                                         type="text"
                                         inputMode="decimal"

@@ -53,7 +53,7 @@ test.describe('Convite de colaborador — domínio do gestor', () => {
     await expect(page.getByRole('heading', { name: /Novo Profissional/i })).toBeVisible({ timeout: 10_000 });
 
     await page.getByPlaceholder('Ex: João Silva').fill(professionalName);
-    await page.getByPlaceholder('Ex: Barbeiro').fill('Barbeiro');
+    await page.getByLabel('Cargo').fill('Barbeiro');
     const commission = page.locator('input[type="number"]').first();
     if (await commission.count()) {
       await commission.fill('40');

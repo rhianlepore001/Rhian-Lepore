@@ -3,6 +3,7 @@ import { Plus, Package, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { ServiceModal } from '../ServiceModal';
 
 interface StepServicesProps {
@@ -13,6 +14,7 @@ interface StepServicesProps {
 
 export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, accentColor }) => {
     const { user, companyId, region } = useAuth();
+    const { serviceExamplesHint } = useBusinessCopy();
     const effectiveCompanyId = companyId ?? user?.id ?? null;
     const [services, setServices] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
@@ -103,7 +105,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                 <div className="flex items-start gap-2.5">
                     <Lightbulb className="w-4 h-4 text-muted-foreground/70 mt-0.5 flex-shrink-0" />
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                        Cadastre pelo menos um serviço para continuar. Exemplos: Corte, Barba, Hidratação.
+                        {serviceExamplesHint}
                     </p>
                 </div>
             )}

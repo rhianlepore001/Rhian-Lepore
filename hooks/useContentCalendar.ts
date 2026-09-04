@@ -37,7 +37,8 @@ export function useContentCalendar() {
         setLoading(true);
         try {
             const daysInMonth = getDaysInMonth(year, month);
-            const holidays = getHolidaysForMonth(month);
+            const segment = userType === 'beauty' ? 'beauty' : 'barber';
+            const holidays = getHolidaysForMonth(month, segment);
             const monthName = new Date(year, month).toLocaleString('pt-BR', { month: 'long' });
             const bizType = userType === 'beauty' ? 'salão de beleza' : 'barbearia';
 

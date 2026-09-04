@@ -81,7 +81,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
           className={`flex items-center gap-2 min-h-[44px] ${colors.textSecondary} hover:text-theme-text transition-colors active:animate-haptic-click`}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Voltar ao Dashboard</span>
+          <span className="text-sm font-medium">Voltar ao início</span>
         </NavLink>
       </div>
     </>
@@ -195,8 +195,8 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             <NavLink
               to="/"
               className={`shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] active:animate-haptic-click`}
-              aria-label="Voltar ao Dashboard"
-              title="Voltar ao Dashboard"
+              aria-label="Voltar ao início"
+              title="Voltar ao início"
             >
               <ArrowLeft className="w-5 h-5" />
             </NavLink>

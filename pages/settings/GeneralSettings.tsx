@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../../hooks/useBusinessCopy';
+import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
 import { useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
@@ -18,6 +20,8 @@ export const GeneralSettings: React.FC = () => {
     const { user, companyId, region } = useAuth();
     const { showToast } = useToast();
     const { accent, colors, classes, isBeauty } = useBrutalTheme();
+    const copy = useBusinessCopy();
+    const { currencySymbol } = useTenantLocale();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
@@ -238,7 +242,7 @@ export const GeneralSettings: React.FC = () => {
                                 type="text"
                                 value={businessName}
                                 onChange={e => setBusinessName(e.target.value)}
-                                placeholder="Barbearia Premium"
+                                placeholder={copy.businessNamePlaceholder}
                                 className={classes.input}
                             />
                         </div>
@@ -265,7 +269,7 @@ export const GeneralSettings: React.FC = () => {
                                     type="text"
                                     value={instagram}
                                     onChange={e => setInstagram(e.target.value)}
-                                    placeholder="suabarbearia"
+                                    placeholder={copy.slugPlaceholder}
                                     className={`${classes.input} pl-8`}
                                 />
                             </div>
@@ -303,7 +307,7 @@ export const GeneralSettings: React.FC = () => {
                         </label>
                         <div className="relative">
                             <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${colors.textMuted}`}>
-                                {region === 'PT' ? '€' : 'R$'}
+                                {currencySymbol}
                             </span>
                             <input
                                 type="number"

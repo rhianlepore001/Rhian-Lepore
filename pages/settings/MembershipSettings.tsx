@@ -13,7 +13,7 @@ const PIX_TYPES: { value: PixKeyType; label: string; placeholder: string; helper
     { value: 'cnpj', label: 'CNPJ', placeholder: '00.000.000/0000-00', helper: 'CNPJ da empresa' },
     { value: 'phone', label: 'Celular', placeholder: '(11) 98765-4321', helper: 'Seu celular com DDD' },
     { value: 'email', label: 'E-mail', placeholder: 'voce@email.com', helper: 'Seu e-mail pessoal ou comercial' },
-    { value: 'random', label: 'Chave aleatória', placeholder: '123e4567-e89b-12d3-a456-426614174000', helper: 'UUID gerado pelo seu banco' },
+    { value: 'random', label: 'Chave aleatória', placeholder: '123e4567-e89b-12d3-a456-426614174000', helper: 'Código gerado pelo seu banco' },
 ];
 
 export const MembershipSettings: React.FC = () => {

@@ -1,5 +1,8 @@
 ﻿import React from 'react';
 import { Check, TrendingUp, Users } from 'lucide-react';
+import { useTenantLocale } from '../hooks/useTenantLocale';
+import type { Region } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 
 interface Service {
     id: string;
@@ -16,15 +19,21 @@ interface UpsellSectionProps {
     selectedUpsells: string[];
     onToggleUpsell: (serviceId: string) => void;
     isBeauty?: boolean;
+    /** Região do tenant público; omitir para usar sessão autenticada. */
+    region?: Region;
 }
 
 export const UpsellSection: React.FC<UpsellSectionProps> = ({
-    mainService,
+    mainService: _mainService,
     availableUpsells,
     selectedUpsells,
     onToggleUpsell,
-    isBeauty = false
+    isBeauty = false,
+    region: regionProp,
 }) => {
+    const tenantLocale = useTenantLocale();
+    const region = regionProp ?? tenantLocale.region;
+    const formatMoney = (value: number) => formatCurrency(value, region);
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
     const cardBg = isBeauty ? 'bg-[var(--color-card-hover)] border border-[var(--color-border)] rounded-xl' : 'bg-[var(--color-bg)]/40 border-2 border-[var(--color-border)]';
 
@@ -88,14 +97,14 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                                             <span className="text-[var(--color-text)] font-bold">{upsell.name}</span>
                                             {savings > 0 && (
                                                 <span className={`text-xs px-2 py-0.5 rounded-full bg-theme-accent/20 text-theme-accent font-bold`}>
-                                                    Economize R$ {savings.toFixed(2)}
+                                                    Economize {formatMoney(savings)}
                                                 </span>
                                             )}
                                         </div>
 
                                         <div className="flex items-center gap-3 text-sm">
                                             <span className={`text-theme-accent font-bold`}>
-                                                +R$ {upsell.price.toFixed(2)}
+                                                +{formatMoney(upsell.price)}
                                             </span>
                                             <span className="text-[var(--color-text-muted)]">
                                                 +{upsell.duration_minutes} min
@@ -125,10 +134,11 @@ export const UpsellSection: React.FC<UpsellSectionProps> = ({
                             {selectedUpsells.length} adicional{selectedUpsells.length > 1 ? 'is' : ''} selecionado{selectedUpsells.length > 1 ? 's' : ''}
                         </span>
                         <span className={`text-theme-accent font-bold`}>
-                            +R$ {availableUpsells
+                            +{formatMoney(
+                                availableUpsells
                                 .filter(u => selectedUpsells.includes(u.id))
                                 .reduce((sum, u) => sum + u.price, 0)
-                                .toFixed(2)}
+                            )}
                         </span>
                     </div>
                 </div>

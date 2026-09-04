@@ -8,6 +8,7 @@ import { mapError, formatUserFacingError } from '../utils/mapError';
 import { Screw } from '../components/Screw';
 import { AgendiXLogo } from '../components/AgendiXLogo';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { getBusinessCopy } from '../utils/businessCopy';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 
@@ -24,6 +25,7 @@ export const Login: React.FC = () => {
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
     const [showGateway, setShowGateway] = useState(true);
     const isBeauty = loginTheme === 'beauty';
+    const copy = getBusinessCopy(loginTheme);
     const { colors, accent, font, radius } = useBrutalTheme({ override: loginTheme });
 
     useEffect(() => {
@@ -120,7 +122,7 @@ export const Login: React.FC = () => {
 
                         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                             <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                Barbearias
+                                {copy.segmentLabelPlural}
                             </h2>
                             {/* Traço horizontal com animação de crescer */}
                             <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />
@@ -161,7 +163,7 @@ export const Login: React.FC = () => {
 
                             <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                                 <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                    Studios
+                                    {copy.segmentLabelPlural}
                                 </h2>
                                 {/* Traço horizontal com animação de crescer */}
                                 <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />
@@ -229,7 +231,7 @@ export const Login: React.FC = () => {
 
                     <div>
                         <p className={`font-mono text-xs uppercase tracking-[0.2em] mb-3 text-theme-accent/50`}>
-                            {isBeauty ? 'Salões & Studios' : 'Barbearia'}
+                            {isBeauty ? copy.segmentLabelPlural : copy.segmentLabelShort}
                         </p>
                         <h2 className="font-heading text-4xl text-[var(--color-text)] uppercase leading-none tracking-tight mb-4">
                             {isBeauty ? 'Seu salão,\nseu ritmo.' : 'Seu corte,\nsua regra.'}

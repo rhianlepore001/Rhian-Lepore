@@ -1,6 +1,7 @@
 import { driver, DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 import { useAuth } from "../contexts/AuthContext";
+import { getBusinessCopy } from "../utils/businessCopy";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -28,6 +29,7 @@ export const useAppTour = () => {
 
     const startTour = (context: TourContext = 'dashboard') => {
         const isMobile = window.innerWidth < 768;
+        const copy = getBusinessCopy(isBeauty ? 'beauty' : 'barber');
 
         // Injetar estilos customizados se não existirem
         if (!document.getElementById('driver-custom-styles')) {
@@ -233,7 +235,7 @@ export const useAppTour = () => {
                     element: isMobile ? '#mobile-menu-btn' : 'a[href="/configuracoes/servicos"]', // Tentar link, senao menu
                     popover: {
                         title: '💲 Menu de Serviços',
-                        description: 'Cadastre seus cortes, tratamentos e preços. É o cardápio do seu sucesso.',
+                        description: copy.tourServicesDescription,
                         side: isMobile ? 'bottom' : 'right'
                     }
                 },

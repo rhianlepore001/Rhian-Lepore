@@ -14,6 +14,13 @@ export interface BusinessCopy {
   staffLinkAccountMessage: string;
   activationBannerMessage: string;
   homeNavLabel: string;
+  assistantName: string;
+  rolePlaceholder: string;
+  clubPlanNamePlaceholder: string;
+  clubPlanDescriptionPlaceholder: string;
+  clubPlansSubtitle: string;
+  tourServicesDescription: string;
+  serviceExamplesHint: string;
 }
 
 const BARBER_COPY: BusinessCopy = {
@@ -33,6 +40,13 @@ const BARBER_COPY: BusinessCopy = {
   activationBannerMessage:
     'Sua barbearia está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!',
   homeNavLabel: 'Início',
+  assistantName: 'Assistente AgendiX',
+  rolePlaceholder: 'Ex: Barbeiro',
+  clubPlanNamePlaceholder: 'Corte Ilimitado',
+  clubPlanDescriptionPlaceholder: 'Cortes de cabelo ilimitados durante o mês.',
+  clubPlansSubtitle: 'Crie os planos que seus clientes podem assinar (corte ilimitado, combo, etc).',
+  tourServicesDescription: 'Cadastre seus cortes, tratamentos e preços. É o cardápio do seu sucesso.',
+  serviceExamplesHint: 'Cadastre pelo menos um serviço para continuar. Exemplos: Corte, Barba, Hidratação.',
 };
 
 const BEAUTY_COPY: BusinessCopy = {
@@ -52,6 +66,13 @@ const BEAUTY_COPY: BusinessCopy = {
   activationBannerMessage:
     'Seu salão está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!',
   homeNavLabel: 'Início',
+  assistantName: 'Assistente AgendiX',
+  rolePlaceholder: 'Ex: Cabeleireira',
+  clubPlanNamePlaceholder: 'Beleza Ilimitada',
+  clubPlanDescriptionPlaceholder: 'Serviços selecionados ilimitados durante o mês.',
+  clubPlansSubtitle: 'Crie os planos que seus clientes podem assinar (manicure, combo, etc).',
+  tourServicesDescription: 'Cadastre seus serviços, tratamentos e preços. É o cardápio do seu sucesso.',
+  serviceExamplesHint: 'Cadastre pelo menos um serviço para continuar. Exemplos: Manicure, Escova, Hidratação.',
 };
 
 export function resolveBusinessTheme(userType: string | null | undefined): BusinessTheme {

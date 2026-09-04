@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { Button } from './ui/Button';
 import { Modal } from './ui/Modal';
 import { mapError, formatUserFacingError } from '../utils/mapError';
@@ -45,6 +46,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 }) => {
     const { user, region, businessName, companyId } = useAuth();
     const { isBeauty, accent, colors } = useBrutalTheme();
+    const { establishmentFallback } = useBusinessCopy();
     const createAppointment = useCreateAppointment();
     const { showToast } = useToast();
     const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -231,7 +233,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                         `Passando para confirmar seu horário no *${businessName || 'nossa Estética'}*. Tudo certo para **${formattedDate} às ${formattedTime}**?\n\n` +
                         `Te aguardamos com muito carinho! 💖`
                         : `Fala, ${client.name}! ✂️\n` +
-                        `Seu horário está garantido aqui na *${businessName || 'Barbearia'}*.\n` +
+                        `Seu horário está garantido aqui na *${businessName || establishmentFallback}*.\n` +
                         `Nos vemos dia **${formattedDate} às ${formattedTime}**.\n\n` +
                         `Te aguardamos para dar aquele talento! 🚀`;
 

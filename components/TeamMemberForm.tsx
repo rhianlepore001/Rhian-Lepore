@@ -6,6 +6,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useToast } from './ui/Toast';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
 import { mapError } from '../utils/mapError';
 
@@ -29,6 +30,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const { user, fullName, avatarUrl, businessName } = useAuth();
     const { showToast } = useToast();
     const { colors, accent, font } = useBrutalTheme();
+    const { rolePlaceholder } = useBusinessCopy();
 
     const [step, setStep] = useState<FormStep>('form');
     const [createdMemberId, setCreatedMemberId] = useState<string | null>(
@@ -349,7 +351,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         value={role}
                         onChange={e => setRole(e.target.value)}
                         className={inputClass}
-                        placeholder="Ex: Barbeiro"
+                        placeholder={rolePlaceholder}
                     />
                 </div>
 

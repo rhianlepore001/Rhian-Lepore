@@ -6,6 +6,7 @@ import { mapError } from '../utils/mapError';
 import { Link as LinkIcon, Copy, ExternalLink, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { supabase } from '../lib/supabase';
 
 interface PublicLinkCardProps {
@@ -24,6 +25,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
     const [saving, setSaving] = useState(false);
 
     const { colors, accent, font, status } = useBrutalTheme();
+    const copy = useBusinessCopy();
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -130,7 +132,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                                 type="text"
                                 value={slugInput}
                                 onChange={handleSlugChange}
-                                placeholder="minha-barbearia"
+                                placeholder={copy.slugPlaceholder}
                                 className={`flex-1 w-full sm:w-auto p-3 ${colors.inputBg} ${colors.inputBorder} border rounded-lg ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)] ${font.mono} text-sm`}
                                 disabled={saving}
                             />
@@ -177,7 +179,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                         </Button>
 
                         <p className={`text-xs ${colors.textMuted} text-center`}>
-                            Dica: Use o nome da sua barbearia/salão sem espaços
+                            Dica: {copy.slugTip}
                         </p>
                     </div>
                 </div>

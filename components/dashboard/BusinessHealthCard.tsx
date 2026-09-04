@@ -2,6 +2,7 @@ import React from 'react';
 import { TrendingUp, TrendingDown, Users, Star, Scissors, Clock } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { FinancialDoctorData } from '../../hooks/useDashboardData';
 
 interface BusinessHealthCardProps {
@@ -72,8 +73,10 @@ function buildHealthItems(data: FinancialDoctorData, currencySymbol: string): He
 export const BusinessHealthCard: React.FC<BusinessHealthCardProps> = ({
     data,
     isBeauty: _isBeauty,
-    currencySymbol = 'R$',
+    currencySymbol: currencySymbolProp,
 }) => {
+    const { currencySymbol: localeSymbol } = useTenantLocale();
+    const currencySymbol = currencySymbolProp ?? localeSymbol;
     const { accent, colors, status } = useBrutalTheme();
     const items = buildHealthItems(data, currencySymbol);
 

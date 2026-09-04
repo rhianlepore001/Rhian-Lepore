@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { X, Upload, Image as ImageIcon, Loader2, Plus, Check, Sparkles } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 import { PREDEFINED_SERVICES } from '../constants';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useToast } from './ui/Toast';
 import { mapError } from '../utils/mapError';
 import {
@@ -34,7 +34,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     onSave,
     accentColor: _accentColorProp
 }) => {
-    const { region } = useAuth();
+    const { currencySymbol } = useTenantLocale();
     const { showToast } = useToast();
     const { isBeauty, accent, colors, classes, font } = useBrutalTheme();
     const saveServiceMutation = useSaveService();
@@ -62,8 +62,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [localCategories, setLocalCategories] = useState<ServiceCategory[]>(categories);
-
-    const currencySymbol = region === 'BR' ? 'R$' : '€';
 
     useEffect(() => {
         if (upsellIds.length > 0) {

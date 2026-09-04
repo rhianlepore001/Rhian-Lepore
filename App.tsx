@@ -141,12 +141,15 @@ const DevRouteGuard = ({ children }: { children: React.ReactElement }) => {
 
 // Guard para rotas exclusivas do dono: redireciona staff para / com toast
 const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
-  const { isAuthenticated, loading, role } = useAuth();
+  const { isAuthenticated, loading, role, userType } = useAuth();
 
   if (loading) return <LoadingFull />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (role === 'staff') {
-    sessionStorage.setItem('ownerRouteToast', 'Acesso restrito ao dono da barbearia');
+    const ownerToast = userType === 'beauty'
+      ? 'Acesso restrito ao dono do salão'
+      : 'Acesso restrito ao dono da barbearia';
+    sessionStorage.setItem('ownerRouteToast', ownerToast);
     return <Navigate to="/" replace />;
   }
 

@@ -17,7 +17,7 @@ import {
   useSellProduct,
   useUpdateProduct,
 } from '@/hooks/useCatalog';
-import { formatCurrency } from '@/utils/formatters';
+import { useTenantLocale } from '@/hooks/useTenantLocale';
 import type { Product } from '@/types/catalog';
 import {
   Badge,
@@ -111,11 +111,10 @@ function productToForm(product: Product): ProductFormState {
 }
 
 export const Products: React.FC = () => {
-  const { companyId, role, region } = useAuth();
+  const { companyId, role } = useAuth();
   const { colors } = useBrutalTheme();
+  const { currencySymbol, formatMoney } = useTenantLocale();
   const isOwner = role === 'owner';
-  const currencyRegion = region === 'PT' ? 'PT' : 'BR';
-  const currencySymbol = region === 'PT' ? '€' : 'R$';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
@@ -260,7 +259,7 @@ export const Products: React.FC = () => {
     }
   };
 
-  const formatPrice = (value: number) => formatCurrency(value, currencyRegion);
+  const formatPrice = (value: number) => formatMoney(value);
 
   const renderStockBadge = (product: Product) => {
     if (!product.is_active) {
@@ -426,7 +425,7 @@ export const Products: React.FC = () => {
     );
 
     return cols;
-  }, [isOwner, colors, currencyRegion]);
+  }, [isOwner, colors, currencySymbol]);
 
   if (!companyId) {
     return (

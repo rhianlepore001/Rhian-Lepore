@@ -8,6 +8,7 @@ import { ProfileModal } from './ProfileModal';
 import { useAppTour } from '../hooks/useAppTour';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 
 export const Header: React.FC = () => {
   const { businessName, fullName, logout, avatarUrl, isDev, setDevUserType, role } = useAuth();
@@ -26,6 +27,7 @@ export const Header: React.FC = () => {
 
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const { accent, colors, status, isBeauty } = useBrutalTheme();
+  const { segmentLabel, segmentLabelShort } = useBusinessCopy();
 
   // Fechar menus ao clicar fora
   useEffect(() => {
@@ -112,7 +114,7 @@ export const Header: React.FC = () => {
                     />
                   </h1>
                   <p className={`text-xs font-mono mt-0.5 opacity-50 uppercase tracking-wide md:tracking-widest ${colors.textSecondary} truncate`}>
-                    {isBeauty ? 'Salão de Beleza' : 'Barbearia'}
+                    {segmentLabel}
                   </p>
                 </div>
               </div>
@@ -237,7 +239,7 @@ export const Header: React.FC = () => {
               >
                 <div className="text-right hidden sm:block">
                   <p className={`text-sm font-bold ${colors.text} leading-tight`}>{fullName || 'Usuário'}</p>
-                  <p className={`text-xs ${colors.textSecondary} font-mono leading-tight capitalize`}>{isBeauty ? 'Salão' : 'Barbearia'}</p>
+                  <p className={`text-xs ${colors.textSecondary} font-mono leading-tight capitalize`}>{segmentLabelShort}</p>
                 </div>
                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
                   {avatarUrl ? (

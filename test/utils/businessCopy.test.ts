@@ -15,5 +15,6 @@ describe('businessCopy', () => {
     expect(getBusinessCopy('barber').rolePlaceholder).toBe('Ex: Barbeiro');
     expect(getBusinessCopy('beauty').rolePlaceholder).toBe('Ex: Cabeleireira');
     expect(getBusinessCopy('barber').assistantName).toBe('Assistente AgendiX');
+    expect(getBusinessCopy('beauty').segmentLabelShort).toBe('Salão');
   });
 });

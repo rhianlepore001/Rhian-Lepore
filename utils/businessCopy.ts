@@ -2,6 +2,7 @@ export type BusinessTheme = 'barber' | 'beauty';
 
 export interface BusinessCopy {
   segmentLabel: string;
+  segmentLabelShort: string;
   segmentLabelPlural: string;
   businessNoun: string;
   ownerOfBusiness: string;
@@ -25,6 +26,7 @@ export interface BusinessCopy {
 
 const BARBER_COPY: BusinessCopy = {
   segmentLabel: 'Barbearia',
+  segmentLabelShort: 'Barbearia',
   segmentLabelPlural: 'Barbearias',
   businessNoun: 'barbearia',
   ownerOfBusiness: 'dono da barbearia',
@@ -51,6 +53,7 @@ const BARBER_COPY: BusinessCopy = {
 
 const BEAUTY_COPY: BusinessCopy = {
   segmentLabel: 'Salão de Beleza',
+  segmentLabelShort: 'Salão',
   segmentLabelPlural: 'Salões & Studios',
   businessNoun: 'salão',
   ownerOfBusiness: 'dono do salão',

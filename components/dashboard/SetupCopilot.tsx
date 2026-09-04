@@ -136,7 +136,7 @@ export const SetupCopilot: React.FC = () => {
         {
             id: 'clients',
             label: 'Adicionar clientes',
-            description: 'Cadastre seus clientes no CRM para ativar a IA do AgendiX.',
+            description: 'Cadastre seus clientes para ativar a IA do AgendiX.',
             icon: <UserPlus className="w-4 h-4" />,
             path: '/clientes',
             completed: checks.hasClients,

@@ -344,8 +344,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 </div>
 
                 <div>
-                    <label className={labelClass}>Cargo</label>
+                    <label htmlFor="team-member-role" className={labelClass}>Cargo</label>
                     <input
+                        id="team-member-role"
                         type="text"
                         required
                         value={role}

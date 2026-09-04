@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { useTheme } from '../contexts/ThemeContext';
+import { getBusinessCopy, resolveBusinessTheme } from '../utils/businessCopy';
 
 interface PublicBusinessHeaderProps {
     businessName: string;
@@ -50,7 +51,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
         : null;
 
     // Badge de segmento
-    const segmentLabel = isBeauty ? 'Salão de Beleza' : 'Barbearia';
+    const segmentLabel = getBusinessCopy(resolveBusinessTheme(userType)).segmentLabel;
     const SegmentIcon = isBeauty ? Sparkles : Scissors;
 
     const scrollGallery = (dir: 'left' | 'right') => {

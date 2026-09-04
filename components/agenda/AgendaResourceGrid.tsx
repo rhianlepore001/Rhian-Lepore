@@ -50,7 +50,6 @@ export interface AgendaResourceGridProps {
   onToggleProfessional: (id: string) => void;
   onSelectAppointment: (apt: AgendaGridAppointment) => void;
   onEmptySlotClick: (professionalId: string, time: string) => void;
-  footer?: React.ReactNode;
 }
 
 function firstName(fullName: string): string {
@@ -89,7 +88,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   onToggleProfessional,
   onSelectAppointment,
   onEmptySlotClick,
-  footer,
 }) => {
   const { colors, accent } = useBrutalTheme();
   const [addOpen, setAddOpen] = useState(false);
@@ -419,7 +417,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
           )}
         </div>
       </div>
-      {footer}
     </div>
   );
 };

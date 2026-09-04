@@ -161,7 +161,7 @@ test.describe('Agenda UX audit', () => {
     await installMocks(page);
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId('agenda-status-legend')).toBeVisible();
+    await expect(page.getByTestId('agenda-status-legend')).toHaveCount(0);
 
     const metrics = await page.evaluate(() => {
       const grid = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;

@@ -16,7 +16,6 @@ import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
-import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -1351,14 +1350,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             if (full) setShowingDetailsAppointment(full);
                         }}
                         onEmptySlotClick={openNewAppointmentAt}
-                        footer={
-                            <AgendaStatusLegend
-                                emptyHint={
-                                    (showUnassigned ? appointments.filter(a => !a.professional_id).length : 0)
-                                    + displayedMembers.reduce((s, m) => s + getAppointmentsForProfessional(m.id).length, 0) === 0
-                                }
-                            />
-                        }
                     />
                 </div>
             )}

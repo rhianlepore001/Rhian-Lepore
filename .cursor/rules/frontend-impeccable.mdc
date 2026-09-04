@@ -6,7 +6,21 @@ alwaysApply: false
 
 # Front-end — impeccable
 
-Toda tarefa que altera interface (páginas, componentes, tokens, temas, hooks/contexts de UI) **deve** seguir a skill **impeccable** instalada em `.claude/skills/impeccable/`.
+Toda tarefa que altera interface (páginas, componentes, tokens, temas, hooks/contexts de UI) **deve** seguir a skill **impeccable** em `.claude/skills/impeccable/`.
+
+## Hierarquia de autoridade visual
+
+Quando houver conflito, prevalece nesta ordem:
+
+1. **`design-system/tokens.css`** (v1.1) — fonte única de tokens CSS; editar aqui primeiro.
+2. **`design-system/MASTER.md`** — guia operacional (hooks, componentes, regras do-não-fazer).
+3. **`components/ui/*` + `useBrutalTheme()`** — implementação canônica em código.
+4. **`DESIGN.md` + `.impeccable/design.json`** — documentação para agentes (regenerar após mudanças em tokens).
+5. **`PRODUCT.md`** — contexto de produto e anti-referências binding.
+
+**Não usar como autoridade:**
+- `design-system/tokens/*.json` — documentação histórica.
+- `.impeccable/critique/_archive/*` — snapshots antigos, só referência histórica.
 
 ## Antes de editar UI
 
@@ -15,32 +29,30 @@ Toda tarefa que altera interface (páginas, componentes, tokens, temas, hooks/co
    ```bash
    node .claude/skills/impeccable/scripts/context.mjs --target <arquivo-ou-rota>
    ```
-   Carrega `PRODUCT.md`, `DESIGN.md`, brief da superfície e diretivas do projeto.
-3. **Carregar** `.claude/skills/impeccable/reference/craft-floor.md` imediatamente antes de editar código de UI — piso de qualidade, bans absolutos e reflexos obrigatórios.
+3. **Carregar** `.claude/skills/impeccable/reference/craft-floor.md` imediatamente antes de editar código de UI.
 
 ## Contexto do AgendiX
 
-- **Modo:** Operate — o usuário completa tarefas (agenda, financeiro, CRM, configurações). Scanabilidade, consistência e mobile-first superam expressão visual.
-- **Autoridade visual:** `DESIGN.md` + `design-system/tokens.css` + tokens em `design-system/tokens/`. Sidecar em `.impeccable/design.json`.
-- **Temas:** `barber` (dark/brutal) e `beauty` (claro/elegante) via `UIContext`. Não inventar paletas fora do sistema.
-- **Refinamento preserva; redesign substitui.** Mudanças pontuais mantêm identidade e comportamento; redesign exige substituir `DESIGN.md` e seguir `reference/new-work.md`.
+- **Modo:** Operate — scanabilidade, consistência e mobile-first superam expressão visual.
+- **Temas:** `barber` e `beauty`, cada um com `dark` e `light` via `data-theme` + `data-mode`.
+- **API de tema:** `useBrutalTheme()` — nunca `isBeauty ? ... : ...` em componentes.
+- **Refinamento preserva; redesign substitui.** Redesign exige atualizar `tokens.css`, `DESIGN.md` e sidecar.
 
 ## Durante a implementação
 
-- Respeitar tokens e componentes existentes; drift vira token reutilizável ou componente compartilhado, não one-off.
+- Tokens via CSS variables (`var(--color-*)`) ou `classes.*` do hook — nunca hex hardcoded.
 - Estados obrigatórios: hover, disabled, loading, error, empty.
-- Mobile first — barbeiro usa celular; testar layout em viewport estreita.
-- Copy em pt-BR, linguagem do produto; erros nomeiam problema e recuperação.
-- Não reparar drift de contexto (`CONTEXT_STALE`) como efeito colateral — só se o usuário pedir.
+- Mobile first — CTA principal visível em 390px.
+- Copy em pt-BR; erros inline próximos ao campo.
+- Ao alterar tokens, regenerar `DESIGN.md` e `.impeccable/design.json`.
 
 ## Antes de considerar concluído
 
 Passar pelos critérios de **craft-floor** (contraste, depth, spacing, type, motion, states, browser surfaces, copy, coverage).
 
-Quando a tarefa envolver entrega de superfície nova ou polimento final, aplicar o fluxo de **polish** (`.claude/skills/impeccable/reference/polish.md`):
-- Verificar desktop e mobile juntos em uma rodada batched.
-- Corrigir tudo que a inspeção mostrar em um batch; no máximo uma rodada de confirmação.
-- Critiques anteriores em `.impeccable/critique/` são input, não bloqueio.
+Para entrega de superfície nova ou polimento final, aplicar **polish** (`.claude/skills/impeccable/reference/polish.md`):
+- Verificar desktop e mobile em uma rodada batched.
+- Corrigir tudo em um batch; no máximo uma rodada de confirmação.
 
 ## Comandos impeccable (quando aplicável)
 
@@ -52,5 +64,6 @@ Quando a tarefa envolver entrega de superfície nova ou polimento final, aplicar
 | Polimento final | `polish` | `reference/polish.md` |
 | Edge cases / i18n | `harden` | `reference/harden.md` |
 | Responsivo | `adapt` | `reference/adapt.md` |
+| Regenerar docs | `document` | `reference/document.md` |
 
 Não aplicar impeccable em tarefas exclusivamente de backend, migrations, RPCs ou edge functions sem impacto de UI.

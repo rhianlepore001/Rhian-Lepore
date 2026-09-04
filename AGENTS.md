@@ -44,13 +44,16 @@ Para detalhes técnicos do projeto (stack, arquitetura, comandos, estrutura), co
 
 ### Front-end (impeccable)
 
-Toda tarefa de interface (páginas, componentes, design system, temas) segue a skill **impeccable** (`.claude/skills/impeccable/`). Regra Cursor: `.cursor/rules/frontend-impeccable.mdc`.
+Toda tarefa de interface segue a skill **impeccable** (`.claude/skills/impeccable/`). Regra Cursor: `.cursor/rules/frontend-impeccable.mdc`.
+
+**Hierarquia visual:** `design-system/tokens.css` > `MASTER.md` > `components/ui/` > `DESIGN.md` > critiques arquivadas.
 
 Fluxo mínimo:
 1. Ler `SKILL.md` da skill impeccable.
 2. Rodar `node .claude/skills/impeccable/scripts/context.mjs --target <arquivo>` na sessão.
 3. Carregar `reference/craft-floor.md` antes de editar UI.
 4. Validar com critérios de polish/craft-floor antes de concluir.
+5. Ao mudar tokens, regenerar `DESIGN.md` e `.impeccable/design.json`.
 
 ### Durante a implementação
 - Faça mudanças mínimas e focadas — evite refactors não solicitados no meio de uma tarefa.

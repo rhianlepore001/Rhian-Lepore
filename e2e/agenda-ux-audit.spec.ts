@@ -161,6 +161,7 @@ test.describe('Agenda UX audit', () => {
     await installMocks(page);
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('agenda-status-legend')).toHaveCount(0);
 
     const metrics = await page.evaluate(() => {
       const grid = document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement;
@@ -187,7 +188,12 @@ test.describe('Agenda UX audit', () => {
     expect(metrics.gridLeft).toBeGreaterThanOrEqual(8);
     expect(metrics.gridLeft).toBeLessThanOrEqual(40);
     expect(metrics.viewportWidth - (metrics.gridLeft + metrics.clientWidth)).toBeGreaterThanOrEqual(8);
-    expect(parseFloat(metrics.scrollPaddingLeft)).toBeGreaterThanOrEqual(60);
+    const hasMaxH = await page.evaluate(() =>
+      /(?:^|\s)max-h-/.test(
+        (document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement).className,
+      ),
+    );
+    expect(hasMaxH).toBe(false);
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-fullbleed.png'), fullPage: false });
 

@@ -102,13 +102,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
     appointmentsByProfessional.set(apt.professional_id, list);
   }
   const unassignedAppointments = appointments.filter((a) => !a.professional_id);
-
-  const unassignedCount = showUnassigned ? unassignedAppointments.length : 0;
-  const assignedCount = members.reduce(
-    (sum, m) => sum + (appointmentsByProfessional.get(m.id)?.length ?? 0),
-    0,
-  );
-  const totalVisible = unassignedCount + assignedCount;
   const isAllSelected = selectedProfessionalIds.length === 0;
   const isFiltered = selectedProfessionalIds.length > 0;
   const addableMembers = allMembers.filter((m) => !selectedProfessionalIds.includes(m.id));
@@ -180,12 +173,12 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   }, [members.length, showAddColumn]);
 
   return (
-    <div>
+    <div className={`flex-1 min-h-0 flex flex-col rounded-2xl border overflow-hidden ${colors.border} ${colors.surface}`}>
       <div
         ref={scrollerRef}
         data-testid="agenda-resource-grid"
         style={{ scrollPaddingLeft: GUTTER_PAD }}
-        className={`rounded-2xl border ${colors.border} ${colors.surface} overflow-auto touch-pan-x scrollbar-hide overscroll-contain max-h-[min(58dvh,calc(100dvh-16rem))] md:max-h-[min(68dvh,calc(100dvh-14rem))]`}
+        className={`flex-1 min-h-0 overflow-auto overscroll-contain scrollbar-hide ${colors.surface}`}
       >
         <div className="inline-flex min-w-full">
           {/* Gutter de horário */}
@@ -424,12 +417,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
           )}
         </div>
       </div>
-
-      {totalVisible === 0 && (
-        <p className={`text-center text-xs ${colors.textMuted} mt-3 px-4`}>
-          Nenhum agendamento neste dia. Toque num horário para criar.
-        </p>
-      )}
     </div>
   );
 };

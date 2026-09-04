@@ -30,7 +30,7 @@ export const BottomMobileNav: React.FC = () => {
         <>
             {/* Scrim sólido sob a nav — evita texto da página “vazar” atrás do chrome */}
             <div
-                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-20 pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-55% via-[var(--color-bg)]/90 to-transparent"
+                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-70% via-[var(--color-bg)]/80 to-transparent"
                 aria-hidden="true"
             />
             <nav

@@ -135,9 +135,10 @@ describe('AgendaResourceGrid', () => {
     expect(screen.getAllByText('Não atribuído').length).toBeGreaterThan(0);
   });
 
-  it('mostra hint de dia vazio quando não há agendamentos', () => {
-    setup({ appointments: [], showUnassigned: false });
-    expect(screen.getByText(/Nenhum agendamento neste dia/)).toBeInTheDocument();
+  it('não limita a altura da grade com max-h', () => {
+    setup();
+    const root = screen.getByTestId('agenda-resource-grid');
+    expect(root.className).not.toMatch(/max-h-/);
   });
 
   it('não usa classes hidden / md:hidden na raiz', () => {

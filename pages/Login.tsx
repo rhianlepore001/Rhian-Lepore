@@ -11,6 +11,7 @@ import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { getBusinessCopy } from '../utils/businessCopy';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -27,6 +28,10 @@ export const Login: React.FC = () => {
     const isBeauty = loginTheme === 'beauty';
     const copy = getBusinessCopy(loginTheme);
     const { colors, accent, font, radius } = useBrutalTheme({ override: loginTheme });
+
+    useEffect(() => {
+        if (showGateway) applyPublicAuthTheme();
+    }, [showGateway]);
 
     useEffect(() => {
         if (!error) return;

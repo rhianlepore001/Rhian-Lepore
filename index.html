@@ -830,9 +830,16 @@
     }
   </style>
 
-  <!-- Anti-FOUC: aplica data-mode ANTES do React montar para evitar flash de cor errada -->
+  <!-- Anti-FOUC: aplica data-mode ANTES do React montar para evitar flash de cor errada.
+       Telas públicas de auth (gateway) NÃO herdam o modo claro/escuro da sessão. -->
   <script>
     (function () {
+      var hash = window.location.hash || '';
+      if (/^#\/(login|register|forgot-password)\/?(\?|$)/.test(hash)) {
+        document.documentElement.setAttribute('data-theme', 'barber');
+        document.documentElement.setAttribute('data-mode', 'dark');
+        return;
+      }
       var mode = localStorage.getItem('agendix_color_mode') || 'dark';
       document.documentElement.setAttribute('data-mode', mode);
     })();

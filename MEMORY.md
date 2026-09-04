@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Login gateway: tema da sessão vazava no index após logout (4 Set 2026):**
+  - Após Sair em modo claro (white) ou nos outros 3 combos (barber/beauty × dark/light — “park”), o `#/login` herdava `data-mode`/`data-theme` e os cards BARBEARIAS/STUDIOS ficavam com texto escuro no overlay.
+  - Reset barber+dark no logout, no mount do gateway e no anti-FOUC de `/login|/register|/forgot-password`. Preferência `agendix_color_mode` no localStorage é preservada.
+  - E2E: `e2e/login-gateway-theme.spec.ts`. Branch `cursor/login-gateway-theme-logout-2343` · PR #38.
+
 - **Copy beauty/barber + i18n pt-BR — MERGED → produção (4 Set 2026):**
   - Branch `cursor/copy-beauty-barber-i18n-2504` · PR #37 → `main` (`dc12e2b`) · CI + Vercel success.
   - `businessCopy` / `useBusinessCopy` centralizam vocabulário por segmento; nav renomeada (Início, Clientes, Análises).

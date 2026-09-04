@@ -49,8 +49,8 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda: scroll da página + grade alta + legenda no fim (em PR, 4 Set 2026):**
-  - Branch `cursor/agenda-page-scroll-d080`.
+- **Agenda: scroll da página + grade alta + legenda no fim — MERGED → produção (4 Set 2026):**
+  - Branch `cursor/agenda-page-scroll-d080` · PR #34 → `main` (`b513988`) · deploy Vercel automático.
   - O card da grade **cresce para baixo** (06:00→23:30 no documento). Scroll vertical é da **página**, não de uma caixa interna.
   - Legenda de status volta **só no final do scroll**, minimalista, sem sticky/fixed.
 

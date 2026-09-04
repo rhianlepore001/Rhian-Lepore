@@ -9,6 +9,7 @@ const loginMock = vi.fn();
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     login: loginMock,
+    userType: 'barber',
   }),
 }));
 
@@ -29,6 +30,24 @@ describe('Login page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     Element.prototype.scrollIntoView = vi.fn();
+    document.documentElement.setAttribute('data-theme', 'beauty');
+    document.documentElement.setAttribute('data-mode', 'light');
+    localStorage.setItem('agendix_color_mode', 'light');
+  });
+
+  it('resets leftover session theme when the gateway mounts', async () => {
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(document.documentElement.getAttribute('data-theme')).toBe('barber');
+      expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
+    });
+    expect(localStorage.getItem('agendix_color_mode')).toBe('light');
+    expect(screen.getByTestId('category-barber')).toBeInTheDocument();
   });
 
   it('shows, focuses and scrolls to the error message when login fails', async () => {

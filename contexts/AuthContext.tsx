@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
 import { resolveIsDev } from '../utils/devAccess';
+import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -226,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await supabase.auth.signOut();
+    applyPublicAuthTheme();
     setSession(null);
     setUserType('barber');
     setRegion('BR');

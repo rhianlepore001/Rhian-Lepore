@@ -556,6 +556,10 @@ describe('AuthContext', () => {
     });
 
     it('should handle logout and reset state', async () => {
+        document.documentElement.setAttribute('data-theme', 'beauty');
+        document.documentElement.setAttribute('data-mode', 'light');
+        localStorage.setItem('agendix_color_mode', 'light');
+
         // 1. Simular estado logado como beauty
         const mockUser = { id: 'user-123' };
         const mockSession = { user: mockUser };
@@ -583,5 +587,8 @@ describe('AuthContext', () => {
         expect(result.current.isAuthenticated).toBe(false);
         expect(result.current.userType).toBe('barber'); // Reset
         expect(result.current.region).toBe('BR'); // Reset
+        expect(document.documentElement.getAttribute('data-theme')).toBe('barber');
+        expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
+        expect(localStorage.getItem('agendix_color_mode')).toBe('light');
     });
 });

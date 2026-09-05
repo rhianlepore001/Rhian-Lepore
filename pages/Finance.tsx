@@ -6,7 +6,7 @@ import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, Skelet
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -37,6 +37,10 @@ interface Transaction {
   payment_method: string | null;
   commission_paid: boolean;
   status: 'paid' | 'pending';
+}
+
+function transactionAmount(t: Transaction): number {
+  return t.type === 'expense' ? (t.expense || 0) : (t.amount || 0);
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -124,6 +128,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [savingTransaction, setSavingTransaction] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
   const [pendingMarkPaid, setPendingMarkPaid] = useState<{ id: string; name: string } | null>(null);
+  const [detailTransaction, setDetailTransaction] = useState<Transaction | null>(null);
 
   // Month/Year selection
   const currentDate = new Date();
@@ -715,6 +720,8 @@ useEffect(() => {
                 rowKey={(t) => t.id}
                 stickyHeader
                 compact
+                onRowClick={(t) => setDetailTransaction(t)}
+                selectedRowKey={detailTransaction?.id ?? null}
                 getRowClassName={(t) => (t.status === 'pending' ? `${status.warningBg}` : '')}
                 emptyState={{
                   icon: History,
@@ -727,56 +734,37 @@ useEffect(() => {
                   ),
                 }}
                 mobileRender={(t) => (
-                  <div
+                  <button
+                    type="button"
                     data-testid="finance-tx-card"
-                    className={`flex overflow-hidden rounded-lg border ${colors.border} ${colors.card}`}
+                    aria-label={`${t.type === 'expense' ? 'Saída' : 'Entrada'} ${t.serviceName}`}
+                    onClick={() => setDetailTransaction(t)}
+                    className={`flex w-full overflow-hidden rounded-lg border text-left min-h-[44px] ${colors.border} ${colors.card}`}
                   >
                     <span
                       className={`w-0.5 shrink-0 ${t.type === 'expense' ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]'}`}
                       aria-hidden
                     />
-                    <div className="min-w-0 flex-1 flex items-center gap-2 px-2.5 py-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <p className={`text-sm font-semibold truncate ${colors.text}`}>{t.serviceName}</p>
-                          <span className={`font-mono text-sm font-bold tabular-nums shrink-0 ${t.type === 'expense' ? status.danger : status.success}`}>
-                            {t.type === 'expense' ? '−' : '+'}
-                            {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
-                          </span>
-                        </div>
-                        <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
-                          <span className={t.type === 'expense' ? status.danger : status.success}>
-                            {t.type === 'expense' ? 'Saída' : 'Entrada'}
-                          </span>
-                          {t.status === 'pending' ? ' · Pendente' : ''}
-                          {' · '}
-                          {t.date} · {t.time}
-                          {t.professionalName ? ` · ${t.professionalName}` : ''}
-                          {t.clientName ? ` · ${t.clientName}` : ''}
-                        </p>
+                    <div className="min-w-0 flex-1 px-2.5 py-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className={`text-sm font-semibold truncate ${colors.text}`}>{t.serviceName}</p>
+                        <span className={`font-mono text-sm font-bold tabular-nums shrink-0 ${t.type === 'expense' ? status.danger : status.success}`}>
+                          {t.type === 'expense' ? '−' : '+'}
+                          {formatCurrency(transactionAmount(t), currencyRegion, false)}
+                        </span>
                       </div>
-                      <div className="flex shrink-0 items-center">
-                        {t.type === 'expense' && t.status === 'pending' && (
-                          <button
-                            type="button"
-                            aria-label="Dar baixa"
-                            className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${accent.text}`}
-                            onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          aria-label="Excluir transação"
-                          className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${colors.textMuted}`}
-                          onClick={() => handleDeleteTransaction(t)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
+                        <span className={t.type === 'expense' ? status.danger : status.success}>
+                          {t.type === 'expense' ? 'Saída' : 'Entrada'}
+                        </span>
+                        {t.status === 'pending' ? ' · Pendente' : ''}
+                        {' · '}
+                        {t.date} · {t.time}
+                        {t.professionalName ? ` · ${t.professionalName}` : ''}
+                        {t.clientName ? ` · ${t.clientName}` : ''}
+                      </p>
                     </div>
-                  </div>
+                  </button>
                 )}
               />
             </div>
@@ -1045,6 +1033,113 @@ useEffect(() => {
           </Modal>
         )
       }
+
+      <Modal
+        open={!!detailTransaction}
+        onClose={() => setDetailTransaction(null)}
+        title={detailTransaction?.type === 'expense' ? 'Detalhes da saída' : 'Detalhes da entrada'}
+        size="md"
+        footer={
+          detailTransaction ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {detailTransaction.type === 'expense' && detailTransaction.status === 'pending' && (
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  icon={<Check className="h-4 w-4" />}
+                  onClick={() => {
+                    setPendingMarkPaid({ id: detailTransaction.id, name: detailTransaction.serviceName || 'Despesa' });
+                    setDetailTransaction(null);
+                  }}
+                >
+                  Dar baixa
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                className="flex-1"
+                icon={<Trash2 className="h-4 w-4" />}
+                onClick={() => {
+                  handleDeleteTransaction(detailTransaction);
+                  setDetailTransaction(null);
+                }}
+              >
+                Excluir
+              </Button>
+            </div>
+          ) : null
+        }
+      >
+        {detailTransaction && (
+          <div className="space-y-5">
+            <div>
+              <Badge variant={detailTransaction.type === 'expense' ? 'danger' : 'success'}>
+                {detailTransaction.type === 'expense' ? 'Saída' : 'Entrada'}
+              </Badge>
+              {detailTransaction.status === 'pending' && (
+                <span className="ml-2">
+                  <Badge variant="warning">Pendente</Badge>
+                </span>
+              )}
+              <p className={`mt-3 font-mono text-2xl font-black tabular-nums tracking-tight ${detailTransaction.type === 'expense' ? status.danger : status.success}`}>
+                {detailTransaction.type === 'expense' ? '−' : '+'}
+                {formatCurrency(transactionAmount(detailTransaction), currencyRegion)}
+              </p>
+            </div>
+
+            <div className={`w-full h-px border-t ${colors.divider}`} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="min-w-0">
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <Scissors className="w-4 h-4 shrink-0" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Descrição</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm break-words`}>{detailTransaction.serviceName}</p>
+              </div>
+              <div>
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <User className="w-4 h-4" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Profissional</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm`}>
+                  {detailTransaction.professionalName || '—'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <Users className="w-4 h-4" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Cliente</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm`}>
+                  {detailTransaction.clientName || '—'}
+                </p>
+              </div>
+              <div>
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <Clock className="w-4 h-4" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Data e hora</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm`}>{detailTransaction.date}</p>
+                <p className={`font-mono font-bold mt-0.5 ${accent.text}`}>{detailTransaction.time}</p>
+              </div>
+            </div>
+
+            <div>
+              <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                <CreditCard className="w-4 h-4" />
+                <span className="text-xs font-mono uppercase tracking-widest font-bold">Pagamento</span>
+              </div>
+              <p className={`${colors.text} font-medium text-sm`}>
+                {PAYMENT_METHOD_LABELS[detailTransaction.payment_method || ''] || detailTransaction.payment_method || '—'}
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <ConfirmModal
         open={!!pendingDelete}

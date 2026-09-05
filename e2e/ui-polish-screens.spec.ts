@@ -332,5 +332,12 @@ test.describe('UI polish — Agenda e Financeiro', () => {
     expect(Math.max(...txHeights)).toBeLessThan(88);
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'financeiro-transacoes-compactas.png'), fullPage: false });
+
+    await page.getByTestId('finance-tx-card').first().click();
+    const detail = page.getByRole('dialog', { name: /Detalhes da entrada/i });
+    await expect(detail).toBeVisible();
+    await expect(detail.getByText('Corte Feminino').first()).toBeVisible();
+    await expect(detail.getByText('Mario')).toBeVisible();
+    await page.screenshot({ path: path.join(ARTIFACTS, 'financeiro-transacao-detalhe.png'), fullPage: false });
   });
 });

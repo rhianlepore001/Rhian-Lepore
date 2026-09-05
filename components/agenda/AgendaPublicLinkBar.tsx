@@ -3,6 +3,7 @@ import { Check, Copy, Link as LinkIcon, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { copyTextToClipboard } from '../../utils/clipboard';
 import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
 
@@ -14,32 +15,6 @@ export interface AgendaPublicLinkBarProps {
 
 export function buildPublicBookingLink(slug: string, origin: string = window.location.origin): string {
   return `${origin}/#/book/${slug}`;
-}
-
-export async function copyTextToClipboard(text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-    throw new Error('Clipboard API unavailable');
-  } catch {
-    try {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      textArea.style.top = '0';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      return successful;
-    } catch {
-      return false;
-    }
-  }
 }
 
 export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({

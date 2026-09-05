@@ -3,11 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {
-  AgendaPublicLinkBar,
-  buildPublicBookingLink,
-  copyTextToClipboard,
-} from '../../components/agenda/AgendaPublicLinkBar';
+import { AgendaPublicLinkBar, buildPublicBookingLink } from '../../components/agenda/AgendaPublicLinkBar';
 import { ToastProvider } from '../../components/ui/Toast';
 
 vi.mock('../../contexts/AuthContext', () => ({
@@ -35,37 +31,6 @@ describe('buildPublicBookingLink', () => {
     expect(buildPublicBookingLink('barbearia-silva', 'https://agendixstudio.com')).toBe(
       'https://agendixstudio.com/#/book/barbearia-silva',
     );
-  });
-});
-
-describe('copyTextToClipboard', () => {
-  const originalClipboard = navigator.clipboard;
-  const originalSecure = window.isSecureContext;
-  const originalExec = document.execCommand;
-
-  afterEach(() => {
-    Object.defineProperty(navigator, 'clipboard', { value: originalClipboard, configurable: true });
-    Object.defineProperty(window, 'isSecureContext', { value: originalSecure, configurable: true });
-    document.execCommand = originalExec;
-  });
-
-  it('usa navigator.clipboard em contexto seguro', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    Object.defineProperty(window, 'isSecureContext', { value: true, configurable: true });
-
-    await expect(copyTextToClipboard('https://app.test/#/book/x')).resolves.toBe(true);
-    expect(writeText).toHaveBeenCalledWith('https://app.test/#/book/x');
-  });
-
-  it('cai no fallback de textarea quando clipboard indisponível', async () => {
-    Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
-    Object.defineProperty(window, 'isSecureContext', { value: false, configurable: true });
-    const execSpy = vi.fn(() => true);
-    document.execCommand = execSpy;
-
-    await expect(copyTextToClipboard('https://app.test/#/book/x')).resolves.toBe(true);
-    expect(execSpy).toHaveBeenCalledWith('copy');
   });
 });
 

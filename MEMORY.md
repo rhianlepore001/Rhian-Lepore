@@ -49,10 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda: copiar link público — em andamento (5 Set 2026):**
+- **Agenda: copiar link público — PR #54 (5 Set 2026):**
   - Branch `cursor/agenda-copy-public-link-ee84`.
   - Barra compacta na Agenda (após o seletor de datas, antes das solicitações online) para copiar `/#/book/:slug`.
-  - Dono sem slug vê Configurar; agendamento desativado vê Ativar. Staff só vê o botão quando o link já existe.
+  - Dono sem slug vê Configurar; agendamento desativado vê Ativar. Staff só vê o atalho quando o link já existe.
+  - Gates locais: typecheck, lint, build, 502 testes; e2e `ui-polish-screens` copiou o link no mobile.
 
 - **Agenda grade + Financeiro compacto — MERGED → produção (5 Set 2026):**
   - Branch `cursor/agenda-finance-ui-polish-c772` · PR #51 → `main`.

@@ -44,7 +44,7 @@ export function validityHeadline(
   now: Date = new Date()
 ): string {
   const days = daysRemaining(periodEnd, now);
-  if (status === 'pending') return 'Aguardando confirmação do estabelecimento';
+  if (status === 'pending') return 'Pagamento pendente — o plano só vale depois da confirmação';
   if (status === 'cancelled') return 'Plano cancelado';
   if (status === 'overdue') {
     return periodEnd ? `Venceu em ${formatDatePt(periodEnd)}` : 'Assinatura atrasada';

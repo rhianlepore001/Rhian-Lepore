@@ -5,6 +5,7 @@ import {
   confirmMembershipPayment,
   fetchClientActiveMembership,
   fetchPublicClientMembership,
+  fetchPublicPixConfig,
 } from '@/services/memberships';
 import { supabase } from '@/lib/supabase';
 
@@ -228,13 +229,50 @@ describe('memberships service — fetchPublicClientMembership', () => {
 });
 
 describe('memberships service — cancelPublicClientMembership', () => {
-  it('chama a RPC de cancelamento público', async () => {
+  it('chama a RPC de cancelamento público', () => {
     rpcMock.mockResolvedValueOnce({ data: 'ms-pub', error: null });
-    const id = await cancelPublicClientMembership('biz-1', '11999999999');
-    expect(id).toBe('ms-pub');
-    expect(rpcMock).toHaveBeenCalledWith('cancel_public_client_membership', {
-      p_business_id: 'biz-1',
-      p_phone: '11999999999',
+    return cancelPublicClientMembership('biz-1', '11999999999').then((id) => {
+      expect(id).toBe('ms-pub');
+      expect(rpcMock).toHaveBeenCalledWith('cancel_public_client_membership', {
+        p_business_id: 'biz-1',
+        p_phone: '11999999999',
+      });
     });
+  });
+});
+
+describe('memberships service — fetchPublicPixConfig', () => {
+  it('lê a primeira linha quando o RPC devolve array', async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [{
+        pix_key_type: 'cpf',
+        pix_key_value: '52998224725',
+        pix_holder_name: 'Loja',
+        pix_merchant_city: 'SAO PAULO',
+        mbway_phone: null,
+        mbway_holder_name: null,
+      }],
+      error: null,
+    });
+    const result = await fetchPublicPixConfig('biz-1');
+    expect(result.pix_key_value).toBe('52998224725');
+    expect(result.mbway_phone).toBeNull();
+  });
+
+  it('lê objeto único quando o RPC não envolve array', async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: {
+        pix_key_type: 'email',
+        pix_key_value: 'a@b.com',
+        pix_holder_name: 'Loja',
+        pix_merchant_city: 'LISBOA',
+        mbway_phone: '+351912345678',
+        mbway_holder_name: 'Loja PT',
+      },
+      error: null,
+    });
+    const result = await fetchPublicPixConfig('biz-1');
+    expect(result.pix_key_type).toBe('email');
+    expect(result.mbway_phone).toBe('+351912345678');
   });
 });

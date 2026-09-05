@@ -2,9 +2,12 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { CLUB_OWNER_NAV } from '../../constants';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const ClubOwnerNav: React.FC = () => {
   const { accent, colors } = useBrutalTheme();
+  const { region } = useAuth();
+  const paymentLabel = region === 'PT' ? 'MB WAY' : 'Pix';
 
   return (
     <nav
@@ -27,7 +30,7 @@ export const ClubOwnerNav: React.FC = () => {
             ].join(' ')
           }
         >
-          {item.label}
+          {item.id === 'pix' ? paymentLabel : item.label}
         </NavLink>
       ))}
     </nav>

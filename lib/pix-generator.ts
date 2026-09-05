@@ -68,6 +68,18 @@ export function validatePixKey(value: string, type: PixKeyType): string | null {
     }
 }
 
+/** Infere o tipo da chave quando o tipo salvo não bate com o valor. */
+export function detectPixKeyType(value: string): PixKeyType | null {
+    if (!value || typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const types: PixKeyType[] = ['email', 'random', 'cpf', 'cnpj', 'phone'];
+    for (const type of types) {
+        if (validatePixKey(trimmed, type)) return type;
+    }
+    return null;
+}
+
 function isValidCpf(digits: string): boolean {
     if (/^(\d)\1{10}$/.test(digits)) return false;
     let sum = 0;

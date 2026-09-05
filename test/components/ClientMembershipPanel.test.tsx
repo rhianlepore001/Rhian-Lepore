@@ -9,6 +9,10 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ userType: 'barber' }),
 }));
 
+vi.mock('../../hooks/useMemberships', () => ({
+  usePublicPixConfig: () => ({ data: null, isLoading: false }),
+}));
+
 const base: PublicClientMembership = {
   membership_id: 'ms-1',
   stored_status: 'active',
@@ -71,5 +75,12 @@ describe('ClientMembershipPanel', () => {
     renderPanel({ ...base, effective_status: 'overdue', stored_status: 'active' });
     expect(screen.getByRole('link', { name: /Falar para renovar/i })).toBeInTheDocument();
     expect(screen.getByText(/Atrasado/i)).toBeInTheDocument();
+  });
+
+  it('explica pending como pagamento, sem usos do plano', () => {
+    renderPanel({ ...base, effective_status: 'pending', stored_status: 'pending', last_paid_at: null });
+    expect(screen.getByTestId('club-validity').textContent).toMatch(/Pagamento pendente/i);
+    expect(screen.queryByTestId('club-usage')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Agendar com o plano/i })).not.toBeInTheDocument();
   });
 });

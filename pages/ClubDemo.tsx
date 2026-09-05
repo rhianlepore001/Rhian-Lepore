@@ -320,7 +320,7 @@ export const ClubDemo: React.FC = () => {
                             merchantName={FIXTURE_PIX.holder}
                             merchantCity={FIXTURE_PIX.city}
                             amountCents={selectedPlan.price_cents}
-                            description="Escaneie o QR ou copie o código. A confirmação chega em segundos."
+                            description="O plano só é ativado depois da confirmação do estabelecimento."
                         />
                         {pixTxid && (
                             <p className={`text-xs ${colors.textMuted} text-center font-mono`}>

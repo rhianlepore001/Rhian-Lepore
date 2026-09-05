@@ -618,6 +618,7 @@ export const ClientArea: React.FC = () => {
                                         slug={slug ?? ''}
                                         isBeauty={isBeauty}
                                         region={region}
+                                        businessId={business.id}
                                         businessPhone={business.phone}
                                         businessName={business.business_name}
                                         clientName={sessionClient.name}

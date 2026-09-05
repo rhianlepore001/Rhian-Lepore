@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePixKey, generatePixPayload } from './pix-generator';
+import { detectPixKeyType, generatePixPayload, validatePixKey } from './pix-generator';
 
 describe('validatePixKey', () => {
     it('valida CPF correto', () => {
@@ -60,6 +60,18 @@ describe('validatePixKey', () => {
     it('rejeita valor vazio', () => {
         expect(validatePixKey('', 'cpf')).toBeNull();
         expect(validatePixKey('   ', 'email')).toBeNull();
+    });
+});
+
+describe('detectPixKeyType', () => {
+    it('detecta e-mail, CPF e telefone', () => {
+        expect(detectPixKeyType('joao@email.com')).toBe('email');
+        expect(detectPixKeyType('529.982.247-25')).toBe('cpf');
+        expect(detectPixKeyType('(11) 98765-4321')).toBe('phone');
+    });
+
+    it('retorna null para valor vazio', () => {
+        expect(detectPixKeyType('')).toBeNull();
     });
 });
 

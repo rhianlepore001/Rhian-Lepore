@@ -41,7 +41,7 @@ export const MembersList: React.FC = () => {
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
     const [search, setSearch] = useState('');
     const [confirming, setConfirming] = useState<MembershipWithPlan | null>(null);
-    const [confirmMethod, setConfirmMethod] = useState<'pix' | 'cash' | 'card'>('pix');
+    const [confirmMethod, setConfirmMethod] = useState<'pix' | 'cash' | 'card' | 'mbway'>('pix');
     const [cancelling, setCancelling] = useState<MembershipWithPlan | null>(null);
     const statusFilter = tab === 'all' ? undefined : tab;
     const { data: memberships, isLoading } = useClientMemberships(statusFilter);
@@ -61,7 +61,11 @@ export const MembersList: React.FC = () => {
     }, [memberships, search]);
 
     const openConfirm = (m: MembershipWithPlan) => {
-        setConfirmMethod(m.payment_method === 'pix' ? 'pix' : 'cash');
+        setConfirmMethod(
+            m.payment_method === 'mbway' || m.payment_method === 'pix'
+                ? m.payment_method
+                : 'cash',
+        );
         setConfirming(m);
     };
 
@@ -274,11 +278,18 @@ export const MembersList: React.FC = () => {
                         <div>
                             <p className={`${classes.label} mb-2`}>Como o pagamento foi recebido?</p>
                             <div className="grid grid-cols-3 gap-2">
-                                {([
-                                    { value: 'pix', label: 'Pix' },
-                                    { value: 'cash', label: 'Dinheiro' },
-                                    { value: 'card', label: 'Cartão' },
-                                ] as const).map(({ value, label }) => (
+                                {(region === 'PT'
+                                    ? ([
+                                        { value: 'mbway', label: 'MB WAY' },
+                                        { value: 'cash', label: 'Dinheiro' },
+                                        { value: 'card', label: 'Cartão' },
+                                    ] as const)
+                                    : ([
+                                        { value: 'pix', label: 'Pix' },
+                                        { value: 'cash', label: 'Dinheiro' },
+                                        { value: 'card', label: 'Cartão' },
+                                    ] as const)
+                                ).map(({ value, label }) => (
                                     <button
                                         key={value}
                                         type="button"

@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { Calendar, Crown, MessageCircle, X } from 'lucide-react';
 import { PublicClientMembership } from '../../services/memberships';
 import { MembershipBadge } from './MembershipBadge';
+import { PixDisplay } from './PixDisplay';
+import { MbwayDisplay } from './MbwayDisplay';
+import { usePublicPixConfig } from '../../hooks/useMemberships';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
 import { ConfirmModal } from '../ui';
 import { buildWhatsAppLink, formatCurrency, Region } from '../../utils/formatters';
@@ -16,6 +19,7 @@ interface ClientMembershipPanelProps {
   slug: string;
   isBeauty: boolean;
   region: Region;
+  businessId?: string;
   businessPhone: string | null;
   businessName: string;
   clientName: string;
@@ -26,7 +30,7 @@ interface ClientMembershipPanelProps {
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Ativo',
-  pending: 'Aguardando',
+  pending: 'A pagar',
   overdue: 'Atrasado',
   cancelled: 'Cancelado',
 };
@@ -36,6 +40,7 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
   slug,
   isBeauty,
   region,
+  businessId,
   businessPhone,
   businessName,
   clientName,
@@ -46,6 +51,7 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
   const theme: ThemeVariant = isBeauty ? 'beauty' : 'barber';
   const { colors, accent, font, radius, status } = useBrutalTheme({ override: theme });
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const { data: payConfig } = usePublicPixConfig(businessId ?? null);
 
   if (loading) {
     return (
@@ -124,6 +130,25 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
           {headline}
         </p>
 
+        {statusKey === 'pending' && region === 'BR' && payConfig?.pix_key_value && payConfig.pix_key_type && (
+          <PixDisplay
+            pixKey={payConfig.pix_key_value}
+            pixKeyType={payConfig.pix_key_type}
+            merchantName={payConfig.pix_holder_name || businessName}
+            merchantCity={payConfig.pix_merchant_city || 'SAO PAULO'}
+            amountCents={membership.price_cents}
+            description="O plano só é ativado depois da confirmação do estabelecimento."
+          />
+        )}
+        {statusKey === 'pending' && region === 'PT' && payConfig?.mbway_phone && (
+          <MbwayDisplay
+            phone={payConfig.mbway_phone}
+            holderName={payConfig.mbway_holder_name || businessName}
+            amountCents={membership.price_cents}
+            description="Envie o MB WAY para ativar o plano. O estabelecimento confirma o recebimento."
+          />
+        )}
+
         {statusKey === 'active' && progress !== null && (
           <div>
             <div className="h-1.5 rounded-full bg-[var(--color-surface)] overflow-hidden">
@@ -159,11 +184,13 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
           )}
         </div>
 
+        {statusKey !== 'pending' && (
         <p className={`text-sm ${colors.textSecondary}`} data-testid="club-usage">
           {membership.usage_limit_per_month
             ? `${membership.usage_this_period} de ${membership.usage_limit_per_month} usos neste período`
             : 'Usos ilimitados neste período'}
         </p>
+        )}
 
         <div className="flex flex-col gap-2 pt-1">
           {statusKey === 'active' && (

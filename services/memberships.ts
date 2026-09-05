@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { createFinanceRecord } from '@/services/finance';
 
 export type MembershipStatus = 'pending' | 'active' | 'overdue' | 'cancelled';
 export type MembershipPaymentMethod = 'pix' | 'cash' | 'card' | 'in_person';
@@ -315,6 +316,30 @@ export async function fetchClientActiveMembership(companyId: string, clientId: s
     return (data ?? null) as MembershipWithPlan | null;
 }
 
+export async function countMembershipUsesThisPeriod(
+    companyId: string,
+    membership: Pick<ClientMembership, 'client_id' | 'current_period_start' | 'current_period_end'>,
+): Promise<number> {
+    let query = supabase
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', companyId)
+        .eq('client_id', membership.client_id)
+        .eq('status', 'Completed')
+        .ilike('payment_method', 'membership');
+
+    if (membership.current_period_start) {
+        query = query.gte('appointment_time', membership.current_period_start);
+    }
+    if (membership.current_period_end) {
+        query = query.lt('appointment_time', membership.current_period_end);
+    }
+
+    const { count, error } = await query;
+    if (error) throw error;
+    return count ?? 0;
+}
+
 export interface CreateMembershipInput {
     client_id: string;
     plan_id: string;
@@ -338,6 +363,29 @@ export async function createMembershipRequest(companyId: string, input: CreateMe
     return data as ClientMembership;
 }
 
+async function recordClubRevenue(
+    companyId: string,
+    input: { amountCents: number; paymentMethod: string; clientName: string; planName: string },
+): Promise<void> {
+    if (input.amountCents <= 0) return;
+    await createFinanceRecord({
+        companyId,
+        type: 'revenue',
+        amount: input.amountCents / 100,
+        expense: 0,
+        description: `Mensalidade Clube ${input.planName}`,
+        paymentMethod: input.paymentMethod,
+        professionalId: null,
+        professionalName: 'Clube',
+        clientName: input.clientName,
+        serviceName: `Clube ${input.planName}`,
+        appointmentId: null,
+        dueDate: null,
+        commissionPaid: true,
+        status: 'paid',
+    });
+}
+
 export async function confirmMembershipPayment(
     companyId: string,
     membershipId: string,
@@ -350,13 +398,14 @@ export async function confirmMembershipPayment(
     // 1. Buscar membership + plan para saber o valor
     const { data: ms, error: msErr } = await supabase
         .from('client_memberships')
-        .select('plan_id, plan:membership_plans(price_cents)')
+        .select('plan_id, client_id, client:clients(name), plan:membership_plans(price_cents, name)')
         .eq('user_id', companyId)
         .eq('id', membershipId)
         .single();
     if (msErr) throw msErr;
 
-    const plan = ms?.plan as unknown as { price_cents: number } | null;
+    const plan = ms?.plan as unknown as { price_cents: number; name?: string } | null;
+    const client = ms?.client as unknown as { name?: string } | null;
     const amountCents = plan?.price_cents ?? 0;
 
     // 2. Criar payment confirmado
@@ -387,6 +436,13 @@ export async function confirmMembershipPayment(
         .eq('user_id', companyId)
         .eq('id', membershipId);
     if (updErr) throw updErr;
+
+    await recordClubRevenue(companyId, {
+        amountCents,
+        paymentMethod: method,
+        clientName: client?.name ?? '',
+        planName: plan?.name ?? 'Clube',
+    });
 }
 
 export async function cancelMembership(companyId: string, membershipId: string): Promise<void> {
@@ -532,13 +588,14 @@ export async function simulatePixPaid(
     // 1. Buscar dados da membership + plano (para saber valor e cliente)
     const { data: ms, error: msErr } = await supabase
         .from('client_memberships')
-        .select('plan_id, plan:membership_plans(price_cents)')
+        .select('plan_id, client_id, client:clients(name), plan:membership_plans(price_cents, name)')
         .eq('user_id', companyId)
         .eq('id', input.membershipId)
         .single();
     if (msErr) throw msErr;
 
-    const plan = ms?.plan as unknown as { price_cents: number } | null;
+    const plan = ms?.plan as unknown as { price_cents: number; name?: string } | null;
+    const client = ms?.client as unknown as { name?: string } | null;
     const amountCents = plan?.price_cents ?? 0;
 
     // 2. Marcar pix_payments como paid
@@ -582,6 +639,13 @@ export async function simulatePixPaid(
         .eq('user_id', companyId)
         .eq('id', input.membershipId);
     if (updErr) throw updErr;
+
+    await recordClubRevenue(companyId, {
+        amountCents,
+        paymentMethod: 'pix',
+        clientName: client?.name ?? '',
+        planName: plan?.name ?? 'Clube',
+    });
 }
 
 /**

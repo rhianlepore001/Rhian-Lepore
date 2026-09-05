@@ -107,10 +107,12 @@ describe('AgendaResourceGrid', () => {
     expect(onToggleProfessional).toHaveBeenCalledWith('m2');
   });
 
-  it('expõe scroll-padding alinhado ao gutter', () => {
+  it('não usa snap CSS no scroller da grade', () => {
     setup();
     const root = screen.getByTestId('agenda-resource-grid');
-    expect(root).toHaveStyle({ scrollPaddingLeft: '4rem' });
+    expect(root).not.toHaveStyle({ scrollPaddingLeft: '4rem' });
+    expect(root.className).not.toMatch(/snap-x/);
+    expect(root.className).not.toMatch(/snap-mandatory/);
   });
 
   it('clique em slot vazio dispara onEmptySlotClick com profissional + horário', async () => {
@@ -151,6 +153,8 @@ describe('AgendaResourceGrid', () => {
     expect(root.className).not.toMatch(/flex-1/);
     expect(root.className).not.toMatch(/min-h-0/);
     expect(root.className).not.toMatch(/overscroll-contain/);
+    expect(root.className).not.toMatch(/snap-x/);
+    expect(root.className).not.toMatch(/snap-mandatory/);
   });
 
   it('não usa classes hidden / md:hidden na raiz', () => {

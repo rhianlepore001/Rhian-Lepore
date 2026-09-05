@@ -198,6 +198,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/queue-status/:id" element={<QueueStatus />} />
         <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />
         <Route path="/minha-area/:slug" element={<ClientArea />} />
+        <Route path="/clube/:slug" element={<JoinClub />} />
         <Route path="/clube" element={<JoinClub />} />
         <Route path="/onboarding-wizard" element={
           <RequireAuth>

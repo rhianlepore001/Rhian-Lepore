@@ -49,7 +49,15 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda — tema claro + solicitações públicas (5 Set 2026, branch `cursor/agenda-light-public-ux-cbdd`):**
+- **Clube UI/UX + área do cliente — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/clube-ui-ux-client-area-cbdd` · PR #49 → `main`.
+  - RPC `get_public_membership_plans` aplicada em produção — a aba pública não listava os planos já criados.
+  - Cards do dono compactos, sem gradient; editar/excluir visíveis no toque.
+  - Área do cliente remasterizada (sem overflow, botões em grade, clube com planos na própria aba).
+  - Cliente logado no link `/book/:slug` abre `/minha-area/:slug`; `?agendar=1` segue para o agendamento.
+
+- **Agenda — tema claro + solicitações públicas — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-light-public-ux-cbdd` · PR #48 → `main`.
   - Botões Aceitar/Faturar/Recusar no modo light usam verde/vermelho sólidos (sem tint + brightness que virava verde apagado).
   - Cards da grade: sem `shadow-lite-glass` no tema white; nome/serviço quebram em vez de cortar.
   - Lista do agendamento online compacta, sem `max-h-[30vh]`, com observação visível.

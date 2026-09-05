@@ -17,6 +17,7 @@ import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
+import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
 import FocusTrap from 'focus-trap-react';
 
@@ -146,7 +147,7 @@ export const PublicBooking: React.FC = () => {
     const [bookingMode, setBookingMode] = useState<'chat' | 'quick'>('quick');
     const [quickStep, setQuickStep] = useState<'services' | 'professional' | 'datetime' | 'contact' | 'success'>('services');
 
-    const { client, register, login, establishSession } = usePublicClient();
+    const { client, register, login, establishSession, hydrateFromStorage } = usePublicClient();
 
     const isBeauty = business?.user_type === 'beauty';
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
@@ -165,6 +166,18 @@ export const PublicBooking: React.FC = () => {
             setCustomerPhone(client.phone);
         }
     }, [client]);
+
+    useEffect(() => {
+        if (!businessId) return;
+        hydrateFromStorage(businessId);
+    }, [businessId, hydrateFromStorage]);
+
+    useEffect(() => {
+        if (!slug || !businessId || !client) return;
+        if (client.business_id !== businessId) return;
+        if (!shouldLandOnClientArea({ isLoggedInForBusiness: true, searchParams })) return;
+        navigate(`/minha-area/${slug}`, { replace: true });
+    }, [slug, businessId, client, searchParams, navigate]);
 
     // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
     useEffect(() => {

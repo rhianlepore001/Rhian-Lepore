@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Users, Crown, Sparkles, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Users, Check, ChevronLeft } from 'lucide-react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useToast } from '../../components/ui/Toast';
@@ -9,18 +9,18 @@ import {
     useDeleteMembershipPlan,
 } from '../../hooks/useMemberships';
 import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships';
-import { Button, Modal, ConfirmModal } from '../../components/ui';
+import { Button, ConfirmModal, EmptyState, ErrorState, PageHeader } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
 import { ClubOwnerNav } from '../../components/membership/ClubOwnerNav';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { useTenantLocale } from '../../hooks/useTenantLocale';
-import { supabase } from '../../lib/supabase';
+import { useServices } from '../../hooks/useServiceSettings';
 
-const BADGE_COLORS: { value: MembershipBadgeColor; label: string; icon: React.ReactNode; gradient: string }[] = [
-    { value: 'gold', label: 'Ouro', icon: <Crown className="w-4 h-4" />, gradient: 'from-yellow-500/30 to-amber-600/10' },
-    { value: 'silver', label: 'Prata', icon: <Sparkles className="w-4 h-4" />, gradient: 'from-slate-400/30 to-slate-600/10' },
-    { value: 'bronze', label: 'Bronze', icon: <Sparkles className="w-4 h-4" />, gradient: 'from-orange-700/30 to-orange-900/10' },
+const BADGE_COLORS: { value: MembershipBadgeColor; label: string }[] = [
+    { value: 'gold', label: 'Ouro' },
+    { value: 'silver', label: 'Prata' },
+    { value: 'bronze', label: 'Bronze' },
 ];
 
 interface PlanFormState {
@@ -45,7 +45,7 @@ const emptyForm: PlanFormState = {
 };
 
 export const MembershipPlansSettings: React.FC = () => {
-    const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
+    const { accent, colors, classes, isBeauty } = useBrutalTheme();
     const { showToast } = useToast();
     const { companyId } = useAuth();
     const {
@@ -54,29 +54,19 @@ export const MembershipPlansSettings: React.FC = () => {
         clubPlansSubtitle,
     } = useBusinessCopy();
     const { currencySymbol } = useTenantLocale();
-    const { data: plans, isLoading } = useMembershipPlans();
+    const { data: plans, isLoading, isError, refetch } = useMembershipPlans();
+    const { data: catalogServices = [] } = useServices(companyId);
     const upsertMutation = useUpsertMembershipPlan();
     const deleteMutation = useDeleteMembershipPlan();
-    const [services, setServices] = useState<Array<{ id: string; name: string; price: number; duration_minutes: number }>>([]);
+    const theme = isBeauty ? 'beauty' : 'barber';
 
-    React.useEffect(() => {
-        if (!companyId) return;
-        (async () => {
-            const { data } = await supabase
-                .from('services')
-                .select('id, name, price, duration_minutes')
-                .eq('user_id', companyId)
-                .order('name');
-            setServices((data ?? []) as Array<{ id: string; name: string; price: number; duration_minutes: number }>);
-        })();
-    }, [companyId]);
-    const [showForm, setShowForm] = useState(false);
+    const [view, setView] = useState<'list' | 'form'>('list');
     const [form, setForm] = useState<PlanFormState>(emptyForm);
     const [pendingDeletePlan, setPendingDeletePlan] = useState<MembershipPlan | null>(null);
 
     const handleNew = () => {
         setForm(emptyForm);
-        setShowForm(true);
+        setView('form');
     };
 
     const handleEdit = (plan: MembershipPlan) => {
@@ -85,12 +75,18 @@ export const MembershipPlansSettings: React.FC = () => {
             name: plan.name,
             description: plan.description ?? '',
             priceReais: (plan.price_cents / 100).toFixed(2).replace('.', ','),
-            serviceIds: plan.service_ids,
+            serviceIds: Array.isArray(plan.service_ids) ? plan.service_ids : [],
             usageLimit: plan.usage_limit_per_month?.toString() ?? '',
             badgeColor: plan.badge_color,
             active: plan.active,
         });
-        setShowForm(true);
+        setView('form');
+    };
+
+    const handleBack = () => {
+        if (upsertMutation.isPending) return;
+        setView('list');
+        setForm(emptyForm);
     };
 
     const handleSave = async () => {
@@ -120,9 +116,9 @@ export const MembershipPlansSettings: React.FC = () => {
                 active: form.active,
             });
             showToast(form.id ? 'Plano atualizado!' : 'Plano criado!', 'success');
-            setShowForm(false);
+            setView('list');
             setForm(emptyForm);
-        } catch (err) {
+        } catch {
             showToast('Não foi possível salvar o plano. Tente novamente.', 'error');
         }
     };
@@ -136,7 +132,7 @@ export const MembershipPlansSettings: React.FC = () => {
         try {
             await deleteMutation.mutateAsync(pendingDeletePlan.id);
             showToast('Plano excluído.', 'success');
-        } catch (err) {
+        } catch {
             showToast('Não foi possível excluir o plano. Tente novamente.', 'error');
         } finally {
             setPendingDeletePlan(null);
@@ -152,73 +148,80 @@ export const MembershipPlansSettings: React.FC = () => {
 
     return (
         <SettingsLayout>
-            <div className="w-full pb-20 md:pb-0 space-y-6">
-                <header className="flex items-start justify-between gap-4">
-                    <div>
-                        <h1 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase mb-2`}>
-                            Planos do Clube
-                        </h1>
-                        <p className={`${colors.textSecondary} text-sm`}>
-                            {clubPlansSubtitle}
-                        </p>
-                    </div>
-                    <Button variant="primary" onClick={handleNew} forceTheme={isBeauty ? 'beauty' : 'barber'}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Novo Plano
-                    </Button>
-                </header>
+            <div className="w-full pb-20 md:pb-0 space-y-6 min-w-0">
+                {view === 'list' ? (
+                    <>
+                        <PageHeader
+                            title="Planos do Clube"
+                            subtitle={clubPlansSubtitle}
+                            forceTheme={theme}
+                            action={
+                                <Button variant="primary" onClick={handleNew} forceTheme={theme} icon={<Plus />}>
+                                    Novo plano
+                                </Button>
+                            }
+                        />
 
-                <ClubOwnerNav />
+                        <ClubOwnerNav />
 
-                {isLoading ? (
-                    <div className={`${colors.textSecondary} p-8`}>Carregando planos...</div>
-                ) : plans && plans.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2">
-                        {plans.map(plan => (
-                            <PlanCard
-                                key={plan.id}
-                                plan={plan}
-                                compact
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
+                        {isLoading ? (
+                            <div className={`${colors.textSecondary} p-8`}>Carregando planos...</div>
+                        ) : isError ? (
+                            <ErrorState
+                                title="Não foi possível carregar os planos"
+                                message="Verifique a conexão e tente de novo. Os planos já criados não foram apagados."
+                                onRetry={() => { void refetch(); }}
+                                forceTheme={theme}
                             />
-                        ))}
-                    </div>
+                        ) : plans && plans.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-2" data-testid="club-plans-list">
+                                {plans.map(plan => (
+                                    <PlanCard
+                                        key={plan.id}
+                                        plan={plan}
+                                        compact
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <EmptyState
+                                icon={Users}
+                                title="Nenhum plano ainda"
+                                description="Crie seu primeiro plano para começar a receber assinaturas."
+                                bordered
+                                forceTheme={theme}
+                                action={
+                                    <Button variant="primary" onClick={handleNew} forceTheme={theme} icon={<Plus />}>
+                                        Criar primeiro plano
+                                    </Button>
+                                }
+                            />
+                        )}
+                    </>
                 ) : (
-                    <div className={`${colors.card} ${colors.border} border rounded-2xl p-12 text-center space-y-3`}>
-                        <Users className="w-12 h-12 mx-auto text-[var(--color-text-muted)]" />
-                        <p className={`${colors.text} text-lg font-bold uppercase`}>Nenhum plano ainda</p>
-                        <p className={`${colors.textSecondary} text-sm`}>
-                            Crie seu primeiro plano para começar a receber assinaturas.
-                        </p>
-                        <Button variant="primary" onClick={handleNew} forceTheme={isBeauty ? 'beauty' : 'barber'}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Criar Primeiro Plano
-                        </Button>
-                    </div>
-                )}
-
-                <Modal
-                    open={showForm}
-                    onClose={() => setShowForm(false)}
-                    title={form.id ? 'Editar plano' : 'Novo plano'}
-                    size="lg"
-                    preventClose={upsertMutation.isPending}
-                    footer={
-                        <div className="flex gap-3 w-full">
-                            <Button variant="ghost" onClick={() => setShowForm(false)} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
-                                Cancelar
+                    <div className="space-y-6 min-w-0" data-testid="club-plan-form">
+                        <div className="space-y-3">
+                            <Button
+                                variant="ghost"
+                                onClick={handleBack}
+                                disabled={upsertMutation.isPending}
+                                forceTheme={theme}
+                                icon={<ChevronLeft />}
+                            >
+                                Voltar
                             </Button>
-                            <Button variant="primary" onClick={handleSave} loading={upsertMutation.isPending} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
-                                Salvar
-                            </Button>
+                            <h1 className={`text-2xl font-bold tracking-tight ${colors.text} leading-tight`}>
+                                {form.id ? 'Editar plano' : 'Novo plano'}
+                            </h1>
                         </div>
-                    }
-                >
-                    <div className="space-y-4">
+
+                        <div className="space-y-4">
                             <div>
-                                <label className={`${classes.label} block mb-1.5`}>Nome do plano</label>
+                                <label className={`${classes.label} block mb-1.5`} htmlFor="club-plan-name">Nome do plano</label>
                                 <input
+                                    id="club-plan-name"
                                     type="text"
                                     value={form.name}
                                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -229,8 +232,9 @@ export const MembershipPlansSettings: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className={`${classes.label} block mb-1.5`}>Descrição (opcional)</label>
+                                <label className={`${classes.label} block mb-1.5`} htmlFor="club-plan-description">Descrição (opcional)</label>
                                 <textarea
+                                    id="club-plan-description"
                                     value={form.description}
                                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                                     placeholder={clubPlanDescriptionPlaceholder}
@@ -239,10 +243,11 @@ export const MembershipPlansSettings: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className={`${classes.label} block mb-1.5`}>Preço mensal ({currencySymbol})</label>
+                                    <label className={`${classes.label} block mb-1.5`} htmlFor="club-plan-price">Preço mensal ({currencySymbol})</label>
                                     <input
+                                        id="club-plan-price"
                                         type="text"
                                         inputMode="decimal"
                                         value={form.priceReais}
@@ -252,20 +257,21 @@ export const MembershipPlansSettings: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className={`${classes.label} block mb-1.5`}>Limite / mês (vazio = ilimitado)</label>
+                                    <label className={`${classes.label} block mb-1.5`} htmlFor="club-plan-limit">Limite / mês (vazio = ilimitado)</label>
                                     <input
+                                        id="club-plan-limit"
                                         type="number"
                                         min="1"
                                         value={form.usageLimit}
                                         onChange={e => setForm(f => ({ ...f, usageLimit: e.target.value }))}
-                                        placeholder="∞"
+                                        placeholder="Ilimitado"
                                         className={classes.input}
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className={`${classes.label} block mb-1.5`}>Cor do badge</label>
+                                <p className={`${classes.label} block mb-1.5`}>Destaque</p>
                                 <div className="grid grid-cols-3 gap-2">
                                     {BADGE_COLORS.map(b => (
                                         <button
@@ -273,13 +279,12 @@ export const MembershipPlansSettings: React.FC = () => {
                                             type="button"
                                             onClick={() => setForm(f => ({ ...f, badgeColor: b.value }))}
                                             className={[
-                                                'py-3 px-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 border',
+                                                'py-3 px-2 min-h-[44px] rounded-xl text-xs font-semibold transition-colors border',
                                                 form.badgeColor === b.value
-                                                    ? `${accent.bg} text-[var(--color-bg)] border-transparent ${accent.shadow}`
-                                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-textSecondary`,
+                                                    ? `${accent.bg} text-[var(--color-on-accent)] border-transparent`
+                                                    : `${colors.inputBg} ${colors.border} ${colors.textMuted}`,
                                             ].join(' ')}
                                         >
-                                            {b.icon}
                                             {b.label}
                                         </button>
                                     ))}
@@ -287,16 +292,16 @@ export const MembershipPlansSettings: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className={`${classes.label} block mb-1.5`}>
+                                <p className={`${classes.label} block mb-1.5`}>
                                     Serviços inclusos ({form.serviceIds.length} selecionado{form.serviceIds.length !== 1 ? 's' : ''})
-                                </label>
-                                {services.length === 0 ? (
+                                </p>
+                                {catalogServices.length === 0 ? (
                                     <p className={`${colors.textMuted} text-xs`}>
-                                        Cadastre serviços em <a href="#/configuracoes/servicos" className={`${accent.text} underline`}>Configurações &gt; Serviços</a> primeiro.
+                                        Cadastre serviços em <a href="#/configuracoes/servicos" className={`${accent.text} underline`}>Ajustes &gt; Serviços</a> primeiro.
                                     </p>
                                 ) : (
-                                    <div className={`max-h-40 overflow-y-auto ${colors.inputBg} ${colors.border} border rounded-xl p-2 space-y-1`}>
-                                        {services.map(s => {
+                                    <div className={`max-h-52 overflow-y-auto ${colors.inputBg} ${colors.border} border rounded-xl p-2 space-y-1`}>
+                                        {catalogServices.map(s => {
                                             const selected = form.serviceIds.includes(s.id);
                                             return (
                                                 <button
@@ -304,18 +309,18 @@ export const MembershipPlansSettings: React.FC = () => {
                                                     type="button"
                                                     onClick={() => toggleService(s.id)}
                                                     className={[
-                                                        'w-full text-left p-2 rounded-lg text-sm flex items-center gap-2 transition-colors',
-                                                        selected ? `${accent.bgDim} ${colors.text}` : `${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
+                                                        'w-full text-left p-2 min-h-[44px] rounded-lg text-sm flex items-center gap-2',
+                                                        selected ? `${accent.bgDim} ${colors.text}` : `${colors.textSecondary}`,
                                                     ].join(' ')}
                                                 >
                                                     <span className={[
                                                         'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0',
                                                         selected ? `${accent.bg} border-transparent` : `${colors.border} border`,
                                                     ].join(' ')}>
-                                                        {selected && <Check className="w-3 h-3 text-[var(--color-bg)]" />}
+                                                        {selected && <Check className="w-3 h-3 text-[var(--color-on-accent)]" />}
                                                     </span>
-                                                    <span className="flex-1">{s.name}</span>
-                                                    <span className={`${colors.textMuted} text-xs`}>{s.duration_minutes}min</span>
+                                                    <span className="flex-1 min-w-0 break-words">{s.name}</span>
+                                                    <span className={`${colors.textMuted} text-xs shrink-0`}>{s.duration_minutes}min</span>
                                                 </button>
                                             );
                                         })}
@@ -323,7 +328,7 @@ export const MembershipPlansSettings: React.FC = () => {
                                 )}
                             </div>
 
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                                 <input
                                     type="checkbox"
                                     checked={form.active}
@@ -332,8 +337,18 @@ export const MembershipPlansSettings: React.FC = () => {
                                 />
                                 <span className={`${colors.text} text-sm`}>Plano disponível para novos clientes</span>
                             </label>
+                        </div>
+
+                        <div className="flex flex-col-reverse sm:flex-row gap-3">
+                            <Button variant="ghost" onClick={handleBack} fullWidth forceTheme={theme} disabled={upsertMutation.isPending}>
+                                Cancelar
+                            </Button>
+                            <Button variant="primary" onClick={handleSave} loading={upsertMutation.isPending} fullWidth forceTheme={theme}>
+                                Salvar
+                            </Button>
+                        </div>
                     </div>
-                </Modal>
+                )}
 
                 <ConfirmModal
                     open={!!pendingDeletePlan}

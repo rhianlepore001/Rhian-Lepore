@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clube: criar/editar plano em página (não modal) — em andamento (5 Set 2026):**
+  - Branch `cursor/clube-client-area-ui-5f3b`.
+  - Ajustes → Clube: “Novo plano” / Editar abrem o formulário na própria página, com Voltar.
+  - Falha ao listar planos mostra erro + retry (não empty state falso).
+  - Área do cliente: abas em grade de 4 colunas, sem scroll horizontal.
+
 - **Clube UI/UX + área do cliente — MERGED → produção (5 Set 2026):**
   - Branch `cursor/clube-ui-ux-client-area-cbdd` · PR #49 → `main`.
   - RPC `get_public_membership_plans` aplicada em produção — a aba pública não listava os planos já criados.

@@ -132,6 +132,42 @@ describe('AgendaResourceGrid', () => {
     expect(onEmptySlotClick).toHaveBeenCalledWith('m2', '08:00');
   });
 
+  it('mantém altura fixa nas células com e sem agendamento', () => {
+    setup();
+    const slots = document.querySelectorAll('[data-agenda-slot]');
+    expect(slots.length).toBeGreaterThan(0);
+    slots.forEach((slot) => {
+      expect(slot.className).toMatch(/(^|\s)h-12(\s|$)/);
+      expect(slot.className).not.toMatch(/min-h-12/);
+      expect(slot.className).not.toMatch(/min-h-14/);
+    });
+  });
+
+  it('posiciona o card do agendamento em overlay sem esticar a célula', () => {
+    setup();
+    const card = screen.getByRole('button', { name: /Cliente Assinado/ });
+    expect(card.className).toMatch(/\babsolute\b/);
+    expect(card.style.height).toContain('--agenda-slot-h');
+    expect(card).toHaveAttribute('data-agenda-span', '1');
+  });
+
+  it('agendamento de 60 min cobre dois slots e esconde o + no horário coberto', () => {
+    setup({
+      appointments: [
+        {
+          ...baseAppointments[0],
+          duration_minutes: 60,
+        },
+      ],
+      showUnassigned: false,
+    });
+    const card = screen.getByRole('button', { name: /Cliente Assinado/ });
+    expect(card).toHaveAttribute('data-agenda-span', '2');
+    expect(card.style.height).toContain('* 2');
+    expect(screen.queryByRole('button', { name: /08:30.*Mario/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /08:30.*Rhian/ })).toBeInTheDocument();
+  });
+
   it('clique no card de agendamento dispara onSelectAppointment', async () => {
     const { onSelectAppointment } = setup();
     const card = screen.getByRole('button', { name: /Cliente Assinado/ });

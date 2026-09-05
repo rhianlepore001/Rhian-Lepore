@@ -1,6 +1,6 @@
 # SPEC: Pix (BR) e MB WAY (PT) no Clube
 
-**Status:** in_progress
+**Status:** done
 **Criado:** 2026-09-05
 **Prioridade:** alta
 

@@ -177,7 +177,18 @@ const AppRoutes: React.FC = () => {
         <Route path="/privacidade" element={<Legal />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
-        <Route path="/playwright-bug-reporter-demo" element={<DevRouteGuard><PlaywrightBugReporterDemo /></DevRouteGuard>} />
+        <Route
+          path="/playwright-bug-reporter-demo"
+          element={
+            import.meta.env.DEV ? (
+              <PlaywrightBugReporterDemo />
+            ) : (
+              <DevRouteGuard>
+                <PlaywrightBugReporterDemo />
+              </DevRouteGuard>
+            )
+          }
+        />
         <Route path="/design-review-demo" element={<DevRouteGuard><DesignReviewDemo /></DevRouteGuard>} />
         <Route path="/club-demo" element={<ClubDemo />} />
         <Route path="/dashboard-cockpit-demo" element={<DashboardCockpitDemo />} />

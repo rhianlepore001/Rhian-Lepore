@@ -53,11 +53,13 @@ export const BugReportMenu: React.FC<BugReportMenuProps> = ({
   const content = (
     <>
       <div
+        data-bug-report-chrome
         className="fixed inset-0 z-40"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
+        data-bug-report-chrome
         role="menu"
         aria-label="Ajuda e reportar problema"
         className={[

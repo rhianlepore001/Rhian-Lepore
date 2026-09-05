@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Bug } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { BugAnnotateModal } from './BugAnnotateModal';
-import { captureScreenshot, captureContext, type BugContext } from '../lib/bugReport';
+import { capturePageForBugReport, type BugContext } from '../lib/bugReport';
 
 /**
  * Botão flutuante de reporte avançado — visível SÓ para o admin/dev.
@@ -19,19 +19,18 @@ export const DevBugButton: React.FC = () => {
 
   const startCapture = useCallback(() => {
     if (capturing || showAnnotate) return;
-    // Esconde o botão (capturing → não renderiza) e espera 2 frames pra
-    // garantir que ele saiu da tela antes de fotografar.
+    // Esconde o botão (capturing → não renderiza), espera o paint e fotografa.
     setCapturing(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(async () => {
-        const ctx = captureContext();
-        const shot = await captureScreenshot();
+    void (async () => {
+      try {
+        const { screenshot: shot, context: ctx } = await capturePageForBugReport();
         setCapturedContext(ctx);
         setScreenshot(shot);
-        setCapturing(false);
         setShowAnnotate(true);
-      });
-    });
+      } finally {
+        setCapturing(false);
+      }
+    })();
   }, [capturing, showAnnotate]);
 
   useEffect(() => {
@@ -60,6 +59,7 @@ export const DevBugButton: React.FC = () => {
         <button
           type="button"
           onClick={startCapture}
+          data-bug-report-chrome
           aria-label="Reporte do admin (marcar e comentar) — Ctrl+Shift+B"
           title="Reporte do admin (Ctrl+Shift+B)"
           className={[

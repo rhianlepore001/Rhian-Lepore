@@ -49,6 +49,14 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Reportar problema: print da tela — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/bug-report-screenshot-5f3b` · PR #39 → `main`.
+  - Causa: `html2canvas` 1.4.1 não parseia `oklch()` do Tailwind 4 → captura virava `null` e o modal mostrava "Não foi possível capturar a tela."
+  - Motor: `html2canvas-pro`. Pipeline único `capturePageForBugReport()`: esconde chrome do reporter → espera o paint → fotografia o **viewport** → abre o sheet.
+  - Se a captura falhar, o usuário pode **Anexar print**. Envio sem imagem continua válido.
+  - Gates: typecheck, lint, build, 442 testes; CI GitHub + Vercel Preview verdes. Produção: deploy Vercel automático no push `main`.
+  - Spec: `specs/active/bug-report-screenshot/spec.md`.
+
 - **SetupCopilot: passo do link público travado em 5/6 — MERGED → produção (5 Set 2026):**
   - Branch `cursor/setup-copilot-booking-link-c3d3` · PR #40 → `main`.
   - O card "Configure seu espaço" ficava em 83% mesmo depois de usar o agendamento público: o passo só fechava com `profiles.business_slug` ou clique no checklist (localStorage).

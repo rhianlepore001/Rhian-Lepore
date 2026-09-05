@@ -324,4 +324,33 @@ describe('getSetupStatus', () => {
     expect(isSetupChecklistComplete(status)).toBe(false);
     expect(shouldHideSetupCopilot(status)).toBe(false);
   });
+
+  it('ainda lê o slug se a query de activation_completed falhar', async () => {
+    (supabase.from as any).mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: vi.fn((cols: string) => {
+            const payload = String(cols).includes('activation_completed')
+              ? { data: null, error: { message: 'column does not exist' } }
+              : { data: { business_slug: 'barbearia-bob' }, error: null };
+            return {
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue(payload),
+                single: vi.fn().mockResolvedValue(payload),
+              }),
+            };
+          }),
+        };
+      }
+      if (table === 'business_settings') {
+        return rowQuery({ business_hours: { mon: {} } });
+      }
+      return countQuery(table === 'public_bookings' ? 0 : 1);
+    });
+
+    const status = await getSetupStatus('user-001');
+    expect(status.hasBookingSlug).toBe(true);
+    expect(status.isActivated).toBe(false);
+    expect(isSetupChecklistComplete(status)).toBe(true);
+  });
 });

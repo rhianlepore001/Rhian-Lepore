@@ -148,7 +148,8 @@ export async function getSetupStatus(userId: string): Promise<SetupStatus> {
     teamRes,
     clientsRes,
     settingsRes,
-    profileRes,
+    profileSlugRes,
+    profileActivationRes,
     appointmentsRes,
     publicBookingsRes,
   ] = await Promise.all([
@@ -156,7 +157,8 @@ export async function getSetupStatus(userId: string): Promise<SetupStatus> {
     supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('clients').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('business_settings').select('business_hours').eq('user_id', userId).maybeSingle(),
-    supabase.from('profiles').select('business_slug, activation_completed').eq('id', userId).maybeSingle(),
+    supabase.from('profiles').select('business_slug').eq('id', userId).maybeSingle(),
+    supabase.from('profiles').select('activation_completed').eq('id', userId).maybeSingle(),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('public_bookings').select('id', { count: 'exact', head: true }).eq('business_id', userId),
   ]);
@@ -164,7 +166,7 @@ export async function getSetupStatus(userId: string): Promise<SetupStatus> {
   const businessHours = settingsRes.data?.business_hours;
   const hasBusinessHours = !!businessHours && Object.keys(businessHours).length > 0;
   const hasBookingSlug = isBookingLinkReady({
-    businessSlug: profileRes.data?.business_slug,
+    businessSlug: profileSlugRes.data?.business_slug,
     publicBookingsCount: publicBookingsRes.count ?? 0,
   });
 
@@ -175,6 +177,6 @@ export async function getSetupStatus(userId: string): Promise<SetupStatus> {
     hasBusinessHours,
     hasBookingSlug,
     hasAppointments: (appointmentsRes.count ?? 0) > 0,
-    isActivated: profileRes.data?.activation_completed === true,
+    isActivated: profileActivationRes.data?.activation_completed === true,
   };
 }

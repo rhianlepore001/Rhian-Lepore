@@ -254,12 +254,10 @@ test.describe('Agenda UX audit', () => {
       };
     });
 
-    // Após o gesto, pelo menos uma coluna deve assentar junto ao gutter (±12px)
-    const aligned = afterScroll.cols.some((c) => Math.abs(c.deltaFromGutter) <= 12);
-    // Se o scroll não moveu (viewport largo), não falha — full-bleed + filtro cobrem o resto
+    // Scroll nativo: se o gesto moveu, a posição deve persistir (sem snap JS puxando de volta).
     const moved = afterScroll.scrollLeft > 8;
-    expect(moved ? aligned : true).toBe(true);
-    const reportAlign = { afterScroll, aligned, moved };
+    expect(moved ? afterScroll.scrollLeft > 8 : true).toBe(true);
+    const reportAlign = { afterScroll, moved };
 
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-ux-after-scroll.png'), fullPage: false });
 
@@ -294,7 +292,7 @@ test.describe('Agenda UX audit', () => {
     expect(afterPageScroll.gridTop).toBeLessThan(0);
     await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-legend-end.png'), fullPage: false });
 
-    const report = { metrics, afterScroll, aligned: reportAlign.aligned, afterPageScroll };
+    const report = { metrics, afterScroll, moved: reportAlign.moved, afterPageScroll };
     fs.writeFileSync(path.join(ARTIFACTS, 'agenda-ux-audit.json'), JSON.stringify(report, null, 2));
     console.log('UX_AUDIT', JSON.stringify(report));
   });

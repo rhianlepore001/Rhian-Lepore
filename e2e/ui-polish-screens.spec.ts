@@ -185,6 +185,8 @@ async function installMocks(page: Page, mode: 'light' | 'dark') {
           company_id: OWNER_ID,
           full_name: 'Rhian',
           business_name: 'Barbearia Silva',
+          business_slug: 'barbearia-silva',
+          public_booking_enabled: true,
           user_type: 'beauty',
           region: 'PT',
           subscription_status: 'active',
@@ -257,6 +259,8 @@ test.describe('UI polish — Agenda e Financeiro', () => {
     await installMocks(page, 'dark');
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('agenda-public-link')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Copiar link de agendamento público/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Britocesar/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Maria raimunda/ })).toBeVisible();
 

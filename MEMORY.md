@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda grade + Financeiro compacto — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-finance-ui-polish-c772` · PR #51 → `main`.
+  - Grade da Agenda: slots de altura fixa; cards em overlay (não distorcem as linhas das colunas).
+  - Financeiro: margem alinhada à Agenda/Dashboard; KPIs compactos; transações em linhas (sem card verde cheio).
+  - Toque no lançamento abre modal de detalhes (igual ao info da Agenda). Excluir/dar baixa no rodapé.
+  - Gates: typecheck, lint, build, 496 testes. Produção: deploy Vercel no push `main`.
+
 - **Clube Pix BR + MB WAY PT — MERGED → produção (5 Set 2026):**
   - Branch `cursor/clube-pix-mbway-cbdd` · PR #52 → `main`.
   - QR Pix quebrava (cores CSS var na lib qrcode) e o fluxo criava membership pending antes de gerar o Pix — o cliente via “já assinou” sem pagar.

@@ -3,7 +3,7 @@ import { Check, ChevronRight, Scissors, Users, Clock, Link2, Calendar, Rocket, X
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getOnboardingProgress, saveOnboardingStep, getSetupStatus } from '@/services/onboarding';
+import { getOnboardingProgress, saveOnboardingStep, getSetupStatus, shouldHideSetupCopilot } from '@/services/onboarding';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 
@@ -64,42 +64,34 @@ export const SetupCopilot: React.FC = () => {
             if (!user) return;
             try {
                 const status = await getSetupStatus(user.id);
-                // Step "booking" concluído por clique — persiste em localStorage
-                if (!status.hasBookingSlug && localStorage.getItem(`booking_visited_${user.id}`) === 'true') {
+                const progress = companyId ? await getOnboardingProgress(companyId) : null;
+                const stepData = progress?.step_data ?? {};
+
+                // Clique/cópia do link — localStorage (este dispositivo) ou step_data (conta)
+                if (
+                    !status.hasBookingSlug &&
+                    (localStorage.getItem(`booking_visited_${user.id}`) === 'true' ||
+                        stepData.public_booking_step_done === true)
+                ) {
                     status.hasBookingSlug = true;
                 }
                 setChecks(status);
 
-                // Se o sistema já foi ativado e o usuário já viu/dispensou a mensagem,
-                // não mostrar mais o copilot
-                const activationSeen = localStorage.getItem(getActivationSeenKey());
-                const allDoneNow =
-                    status.hasServices &&
-                    status.hasTeam &&
-                    status.hasClients &&
-                    status.hasBusinessHours &&
-                    status.hasBookingSlug &&
-                    status.hasAppointments;
-                const isActivatedNow = status.isActivated || allDoneNow;
-                if (isActivatedNow && activationSeen === 'true') {
+                if (shouldHideSetupCopilot(status)) {
                     setDismissed(true);
+                    localStorage.setItem(getDismissedKey(), 'true');
+                    localStorage.setItem(getActivationSeenKey(), 'true');
                 }
 
-                // Detecta o último step visitado para oferecer retomada
-                if (companyId) {
-                    const progress = await getOnboardingProgress(companyId);
-                    const stepData = progress?.step_data ?? {};
-                    const lastStep = stepData.last_visited_step as string | undefined;
-
-                    if (
-                        lastStep &&
-                        !stepData.guided_dismissed_at &&
-                        !isStepComplete(lastStep, status)
-                    ) {
-                        setResumeStepId(lastStep);
-                    } else {
-                        setResumeStepId(null);
-                    }
+                const lastStep = stepData.last_visited_step as string | undefined;
+                if (
+                    lastStep &&
+                    !stepData.guided_dismissed_at &&
+                    !isStepComplete(lastStep, status)
+                ) {
+                    setResumeStepId(lastStep);
+                } else {
+                    setResumeStepId(null);
                 }
             } catch {
                 // Sem bloquear o dashboard em caso de erro de permissão
@@ -197,7 +189,7 @@ export const SetupCopilot: React.FC = () => {
     const handleStepClick = async (step: SetupStep) => {
         if (step.completed) return;
 
-        // Step "booking" conclui imediatamente ao clicar
+        // Step "booking" conclui ao abrir/compartilhar o link — persiste neste dispositivo e na conta
         if (step.id === 'booking' && user) {
             localStorage.setItem(`booking_visited_${user.id}`, 'true');
             setChecks(prev => ({ ...prev, hasBookingSlug: true }));
@@ -211,7 +203,11 @@ export const SetupCopilot: React.FC = () => {
                     companyId,
                     progress?.current_step ?? 1,
                     (progress?.completed_steps ?? []) as number[],
-                    { ...(progress?.step_data ?? {}), last_visited_step: step.id }
+                    {
+                        ...(progress?.step_data ?? {}),
+                        last_visited_step: step.id,
+                        ...(step.id === 'booking' ? { public_booking_step_done: true } : {}),
+                    }
                 );
             } catch {
                 // Graceful — navegação não é bloqueada por erro de persistência

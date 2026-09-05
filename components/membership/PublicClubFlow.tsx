@@ -328,7 +328,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
               merchantName={merchantName}
               merchantCity={merchantCity}
               amountCents={selectedPlan.price_cents}
-              description="Escaneie o QR Code ou copie o código. A confirmação chega em segundos."
+              description="O plano só é ativado depois da confirmação do estabelecimento."
             />
           ) : paymentMethod === 'pix' && !pixReady && !pixLoading ? (
             <div className="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] rounded-xl p-3 text-[var(--color-warning)] text-sm leading-snug">
@@ -392,7 +392,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
               merchantName={merchantName}
               merchantCity={merchantCity}
               amountCents={selectedPlan.price_cents}
-              description="Pague o valor com seu app. A confirmação chega em segundos."
+              description="O plano só é ativado depois da confirmação do estabelecimento."
             />
           )}
           {paymentMethod === 'mbway' && pixConfig?.mbway_phone && (

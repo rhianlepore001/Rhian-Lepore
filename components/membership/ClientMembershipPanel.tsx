@@ -137,7 +137,7 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
             merchantName={payConfig.pix_holder_name || businessName}
             merchantCity={payConfig.pix_merchant_city || 'SAO PAULO'}
             amountCents={membership.price_cents}
-            description="Pague o Pix para ativar o plano. O estabelecimento confirma o recebimento."
+            description="O plano só é ativado depois da confirmação do estabelecimento."
           />
         )}
         {statusKey === 'pending' && region === 'PT' && payConfig?.mbway_phone && (

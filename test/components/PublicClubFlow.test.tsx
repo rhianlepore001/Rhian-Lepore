@@ -66,6 +66,8 @@ describe('PublicClubFlow — método por região', () => {
     expect(screen.getByText('Pix agora')).toBeInTheDocument();
     expect(screen.getByText('No balcão')).toBeInTheDocument();
     expect(screen.queryByText('MB WAY')).not.toBeInTheDocument();
+    expect(await screen.findByTestId('pix-copy-button')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Código Pix copia e cola/i)).toBeInTheDocument();
   });
 
   it('oferece MB WAY em Portugal, sem Pix', async () => {

@@ -2,7 +2,7 @@
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Minus, Plus } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Minus, Plus, Crown } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
@@ -12,6 +12,7 @@ import { usePublicClient } from '../contexts/PublicClientContext';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
+import { usePublicMembershipPlans } from '../hooks/useMemberships';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
@@ -93,6 +94,7 @@ export const PublicBooking: React.FC = () => {
     const { data: professionalsData = [] } = usePublicProfessionals(businessId);
     const { data: galleryData = [] } = usePublicGallery(businessId);
     const { data: publicProducts = [] } = usePublicProducts(businessId);
+    const { data: clubPlans = [] } = usePublicMembershipPlans(businessId);
 
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
@@ -725,6 +727,22 @@ export const PublicBooking: React.FC = () => {
                 clientSession={client}
                 businessSlug={slug}
             />
+
+            {slug && clubPlans.length > 0 && (
+                <div className="container mx-auto px-3 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4">
+                    <Link
+                        to={`/clube/${slug}`}
+                        data-testid="public-booking-club-cta"
+                        className={`flex items-center justify-between gap-3 min-h-[44px] px-4 py-3 rounded-2xl border ${colors.border} ${colors.card} hover:border-[var(--color-accent)] transition-colors`}
+                    >
+                        <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                            <Crown className={`w-4 h-4 ${accent.text}`} aria-hidden="true" />
+                            Clube de assinatura — veja os planos
+                        </span>
+                        <ArrowRight className={`w-4 h-4 ${accent.text}`} aria-hidden="true" />
+                    </Link>
+                </div>
+            )}
 
             {/* QUICK DIRECT FLOW */}
             {bookingMode === 'quick' && quickStep !== 'success' && (

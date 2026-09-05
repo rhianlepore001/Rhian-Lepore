@@ -98,7 +98,8 @@ describe('memberships service — confirmMembershipPayment', () => {
     fromMock
       .mockReturnValueOnce({ select })
       .mockReturnValueOnce({ insert })
-      .mockReturnValueOnce({ update });
+      .mockReturnValueOnce({ update })
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ error: null }) });
 
     await confirmMembershipPayment('company-001', 'ms-1', 'pix', 'user-owner');
 

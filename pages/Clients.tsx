@@ -18,6 +18,9 @@ import {
 } from '../components/ui';
 import { useToast } from '../components/ui/Toast';
 import { formatPhone } from '../utils/formatters';
+import { useClientMemberships } from '../hooks/useMemberships';
+import { MembershipBadge } from '../components/membership/MembershipBadge';
+import type { MembershipWithPlan } from '../services/memberships';
 import {
   createClient,
   enrichClients,
@@ -30,7 +33,13 @@ import type { ClientFilter, ClientRecord, EnrichedClient } from '../types/crm';
 
 const FILTERS: ClientFilter[] = ['Todos', 'VIP', 'Novos', 'Inativo'];
 
-function ClientStatusChips({ client }: { client: EnrichedClient }) {
+function ClientStatusChips({
+  client,
+  club,
+}: {
+  client: EnrichedClient;
+  club?: MembershipWithPlan | null;
+}) {
   const { accent, status, colors, radius } = useBrutalTheme();
   const chips: { key: string; label: string; className: string }[] = [];
 
@@ -55,10 +64,13 @@ function ClientStatusChips({ client }: { client: EnrichedClient }) {
     });
   }
 
-  if (chips.length === 0) return null;
+  if (chips.length === 0 && !club?.plan) return null;
 
   return (
     <div className="flex flex-wrap gap-1 justify-end">
+      {club?.plan && (
+        <MembershipBadge color={club.plan.badge_color} label={club.plan.name} />
+      )}
       {chips.map((chip) => (
         <span
           key={chip.key}
@@ -76,6 +88,15 @@ export const Clients: React.FC = () => {
   const { showToast } = useToast();
   const { colors, accent, radius } = useBrutalTheme();
   const effectiveUserId = companyId ?? user?.id;
+  const { data: clubMemberships = [] } = useClientMemberships();
+  const clubByClientId = useMemo(() => {
+    const map = new Map<string, MembershipWithPlan>();
+    for (const membership of clubMemberships) {
+      if (membership.status === 'cancelled') continue;
+      if (!map.has(membership.client_id)) map.set(membership.client_id, membership);
+    }
+    return map;
+  }, [clubMemberships]);
   const [searchParams] = useSearchParams();
   const [clients, setClients] = useState<EnrichedClient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -328,7 +349,7 @@ export const Clients: React.FC = () => {
                         <h3 className={`text-base font-heading ${colors.text} truncate group-hover:text-theme-accent transition-colors`}>
                           {client.name}
                         </h3>
-                        <ClientStatusChips client={client} />
+                        <ClientStatusChips client={client} club={clubByClientId.get(client.id)} />
                       </div>
 
                       <p className={`text-sm ${colors.textSecondary} font-mono flex items-center gap-2 mb-2`}>

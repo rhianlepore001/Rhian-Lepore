@@ -4,6 +4,7 @@ import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSubscriptionDiscount } from '@/hooks/useSubscriptionDiscount';
 import { useClientActiveMembership } from '@/hooks/useMemberships';
+import { countMembershipUsesThisPeriod } from '@/services/memberships';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ companyId: 'company-001' }),
@@ -12,6 +13,14 @@ vi.mock('@/contexts/AuthContext', () => ({
 vi.mock('@/hooks/useMemberships', () => ({
   useClientActiveMembership: vi.fn(),
 }));
+
+vi.mock('@/services/memberships', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/memberships')>();
+  return {
+    ...actual,
+    countMembershipUsesThisPeriod: vi.fn().mockResolvedValue(0),
+  };
+});
 
 vi.mock('@/services/serviceSettings', () => ({
   fetchServices: vi.fn().mockResolvedValue([]),
@@ -24,18 +33,21 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return React.createElement(QueryClientProvider, { client }, children);
 }
 
-function activeMembership(serviceIds: string[], planName = 'Corte Ilimitado') {
+function activeMembership(serviceIds: string[], planName = 'Corte Ilimitado', usageLimit: number | null = null) {
   return {
     data: {
       id: 'ms-1',
       status: 'active',
-      plan: { id: 'plan-1', name: planName, service_ids: serviceIds },
+      current_period_start: '2026-09-01T00:00:00Z',
+      current_period_end: '2026-10-01T00:00:00Z',
+      plan: { id: 'plan-1', name: planName, service_ids: serviceIds, usage_limit_per_month: usageLimit },
     },
   };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(countMembershipUsesThisPeriod).mockResolvedValue(0);
 });
 
 describe('useSubscriptionDiscount', () => {
@@ -129,5 +141,24 @@ describe('useSubscriptionDiscount', () => {
     expect(result.current.coveredCents).toBe(0);
     expect(result.current.finalCents).toBe(5000);
     expect(result.current.message).toContain('não cobre');
+  });
+
+  it('teto de usos atingido: cobra o atendimento', async () => {
+    vi.mocked(countMembershipUsesThisPeriod).mockResolvedValue(4);
+    mockedMembership.mockReturnValue(activeMembership(['s1'], 'Silver', 4));
+
+    const { result } = renderHook(
+      () => useSubscriptionDiscount({
+        clientId: 'client-1',
+        services: [{ id: 's1', price: 50 }],
+      }),
+      { wrapper },
+    );
+
+    await vi.waitFor(() => {
+      expect(result.current.fullyCovered).toBe(false);
+      expect(result.current.finalCents).toBe(5000);
+      expect(result.current.message).toContain('Limite');
+    });
   });
 });

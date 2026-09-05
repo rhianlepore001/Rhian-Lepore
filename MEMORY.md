@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clube — checkout, CRM e financeiro (5 Set 2026, branch `cursor/clube-checkout-crm-financeiro-cbdd`):**
+  - Checkout respeita teto de usos do plano (1 atendimento = 1 uso).
+  - Confirmar Pix/mensalidade lança receita no Financeiro.
+  - Badge do plano na lista de clientes e na ficha CRM.
+  - CTA do clube no agendamento público quando há planos.
+
 - **Clube — menu do dono + área do cliente — MERGED → produção (5 Set 2026):**
   - PRs #46 (menu/planos/Pix) e #44 (área do cliente + RPCs). Deploy Vercel automático no push `main`.
   - Dono: item **Clube** em Ajustes e no menu; **Plano AgendiX** separado; abas Planos / Pix / Assinantes.

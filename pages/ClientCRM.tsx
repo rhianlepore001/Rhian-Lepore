@@ -20,6 +20,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
+import { useClientActiveMembership } from '../hooks/useMemberships';
+import { MembershipBadge } from '../components/membership/MembershipBadge';
 import { formatPhone, formatCurrency } from '../utils/formatters';
 import { getWhatsAppUrl } from '../utils/aiosCopywriter';
 import {
@@ -65,6 +67,7 @@ export const ClientCRM: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isVip, setIsVip] = useState(false);
+  const { data: clubMembership } = useClientActiveMembership(id ?? null);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -292,6 +295,14 @@ export const ClientCRM: React.FC = () => {
             <h1 className={`text-xl sm:text-2xl font-heading font-bold ${colors.text} leading-tight truncate`}>
               {client.name}
             </h1>
+            {clubMembership?.plan && (
+              <div className="mt-2" data-testid="crm-club-badge">
+                <MembershipBadge
+                  color={clubMembership.plan.badge_color}
+                  label={clubMembership.status === 'active' ? clubMembership.plan.name : `${clubMembership.plan.name} · ${clubMembership.status === 'pending' ? 'pendente' : 'atrasado'}`}
+                />
+              </div>
+            )}
 
             <div className={`mt-2 space-y-1 font-mono text-xs sm:text-sm ${colors.textSecondary}`}>
               <p className="flex items-center gap-2 min-w-0">

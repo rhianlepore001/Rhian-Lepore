@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Assinaturas no agendamento público — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/booking-assinaturas-fd13` · PR #53 → `main`.
+  - Passo 1 de `/book/:slug` lista os planos do clube abaixo dos serviços por categoria.
+  - CTA **Quero assinar** abre `/clube/:slug`. Some sem planos ativos e na aba Produtos.
+  - Padding extra para o Continuar não cobrir o CTA; tema do estabelecimento restaurado ao voltar do clube.
+  - Gates: typecheck, lint, build, 504 testes. Produção: deploy Vercel no push `main`.
+
 - **Agenda: copiar link público — MERGED → produção (5 Set 2026):**
   - Branch `cursor/agenda-copy-public-link-ee84` · PR #54 → `main`.
   - Botão de ação no header da Agenda, entre Histórico e Todos Agendamentos (ícone no mobile, “Copiar link” no desktop).

@@ -51,7 +51,7 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 - **Agenda: copiar link público — PR #54 (5 Set 2026):**
   - Branch `cursor/agenda-copy-public-link-ee84`.
-  - Barra compacta na Agenda (após o seletor de datas, antes das solicitações online) para copiar `/#/book/:slug`.
+  - Botão de ação no header da Agenda, entre Histórico e Todos Agendamentos (ícone no mobile, “Copiar link” no desktop).
   - Dono sem slug vê Configurar; agendamento desativado vê Ativar. Staff só vê o atalho quando o link já existe.
   - Gates locais: typecheck, lint, build, 502 testes; e2e `ui-polish-screens` copiou o link no mobile.
 

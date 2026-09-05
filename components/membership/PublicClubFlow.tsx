@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, MessageCircle, Store } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Smartphone, Store } from 'lucide-react';
 import { usePublicMembershipPlans, usePublicPixConfig, useCreatePublicMembershipRequest, useCreatePublicPixPayment } from '../../hooks/useMemberships';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
 import { useToast } from '../ui/Toast';
 import { PlanCard } from './PlanCard';
 import { PixDisplay } from './PixDisplay';
+import { MbwayDisplay } from './MbwayDisplay';
 import { MembershipPlan } from '../../services/memberships';
-import { generatePixPayload } from '../../lib/pix-generator';
+import { detectPixKeyType, generatePixPayload, validatePixKey } from '../../lib/pix-generator';
 import { generatePixTxid } from '../../lib/pix-txid';
+import { clubDigitalMethod, ClubCheckoutMethod, minClientPhoneDigits } from '../../lib/club-payment';
 import { formatCurrency, Region } from '../../utils/formatters';
 
 export interface PublicClubFlowProps {
@@ -41,9 +43,10 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
   const createMembership = useCreatePublicMembershipRequest(businessId);
   const createPix = useCreatePublicPixPayment(businessId);
 
+  const digitalMethod = clubDigitalMethod(region);
   const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
   const [step, setStep] = useState<'choose' | 'pay' | 'confirmation'>('choose');
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'in_person'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<ClubCheckoutMethod>(digitalMethod);
   const [clientName, setClientName] = useState(prefillName);
   const [clientPhone, setClientPhone] = useState(prefillPhone);
   const [submitting, setSubmitting] = useState(false);
@@ -54,9 +57,15 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
     setClientPhone(prefillPhone);
   }, [prefillName, prefillPhone]);
 
+  useEffect(() => {
+    setPaymentMethod(digitalMethod);
+  }, [digitalMethod]);
+
   const merchantName = pixConfig?.pix_holder_name || '';
   const merchantCity = pixConfig?.pix_merchant_city || 'SAO PAULO';
   const pixReady = !!(pixConfig?.pix_key_value && pixConfig?.pix_key_type);
+  const mbwayReady = !!pixConfig?.mbway_phone;
+  const digitalReady = digitalMethod === 'pix' ? pixReady : mbwayReady;
 
   const handleSelectPlan = (plan: MembershipPlan) => {
     setSelectedPlan(plan);
@@ -72,7 +81,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
       showToast('Preencha nome e WhatsApp.', 'error');
       return;
     }
-    if (clientPhone.replace(/\D/g, '').length < 10) {
+    if (clientPhone.replace(/\D/g, '').length < minClientPhoneDigits(region)) {
       showToast('WhatsApp inválido.', 'error');
       return;
     }
@@ -80,6 +89,34 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
       showToast('O Pix ainda não está disponível aqui. Escolha pagar no balcão.', 'error');
       return;
     }
+    if (paymentMethod === 'mbway' && !mbwayReady) {
+      showToast('O MB WAY ainda não está disponível aqui. Escolha pagar no balcão.', 'error');
+      return;
+    }
+
+    let brCode: string | null = null;
+    let txid: string | null = null;
+    if (paymentMethod === 'pix' && pixReady && pixConfig) {
+      try {
+        const resolvedType =
+          (validatePixKey(pixConfig.pix_key_value!, pixConfig.pix_key_type!)
+            ? pixConfig.pix_key_type!
+            : detectPixKeyType(pixConfig.pix_key_value!)) ?? pixConfig.pix_key_type!;
+        txid = generatePixTxid('AGX');
+        brCode = generatePixPayload({
+          pixKey: pixConfig.pix_key_value!,
+          pixKeyType: resolvedType,
+          merchantName,
+          merchantCity,
+          amountCents: selectedPlan.price_cents,
+          txid,
+        });
+      } catch {
+        showToast('Não foi possível gerar o Pix. Fale com o estabelecimento.', 'error');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const membershipId = await createMembership.mutateAsync({
@@ -89,37 +126,34 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
         paymentMethod,
       });
 
-      if (paymentMethod === 'pix' && pixReady) {
-        const txid = generatePixTxid('AGX');
-        const brCode = generatePixPayload({
-          pixKey: pixConfig!.pix_key_value!,
-          pixKeyType: pixConfig!.pix_key_type!,
-          merchantName,
-          merchantCity,
-          amountCents: selectedPlan.price_cents,
-          txid,
-        });
+      if (paymentMethod === 'pix' && brCode && txid) {
         const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-        await createPix.mutateAsync({
-          membershipId,
-          brCode,
-          txid,
-          expiresAt,
-        });
+        try {
+          await createPix.mutateAsync({
+            membershipId,
+            brCode,
+            txid,
+            expiresAt,
+          });
+        } catch {
+          // O QR já está gerado; o dono confirma na lista de assinantes.
+        }
         setPixBrCode(brCode);
       }
 
       setStep('confirmation');
       showToast(
-        paymentMethod === 'pix'
-          ? 'Solicitação criada! Pague o Pix para ativar.'
-          : 'Solicitação criada! Pague no balcão na próxima visita.',
+        paymentMethod === 'in_person'
+          ? 'Solicitação criada! Pague no balcão na próxima visita.'
+          : paymentMethod === 'mbway'
+            ? 'Solicitação criada! Envie o MB WAY para ativar.'
+            : 'Solicitação criada! Pague o Pix para ativar.',
         'success',
       );
     } catch (err) {
       const message = (err as Error).message || '';
       if (message.includes('membership_already_exists')) {
-        showToast('Este WhatsApp já tem uma assinatura ativa ou pendente aqui. Fale com o estabelecimento.', 'error');
+        showToast('Este WhatsApp já tem uma assinatura ativa aqui. Fale com o estabelecimento.', 'error');
       } else if (message.includes('plan_not_found')) {
         showToast('Este plano não está mais disponível. Escolha outro.', 'error');
       } else if (message.includes('invalid_phone')) {
@@ -131,6 +165,13 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
       setSubmitting(false);
     }
   };
+
+  const confirmationCopy =
+    paymentMethod === 'pix' && pixBrCode
+      ? 'Pague o Pix abaixo. O plano só é ativado após a confirmação do estabelecimento.'
+      : paymentMethod === 'mbway'
+        ? 'Envie o MB WAY abaixo. O plano só é ativado após a confirmação do estabelecimento.'
+        : 'Na próxima visita, pague no balcão. O plano só é ativado após a confirmação.';
 
   return (
     <div className={embedded ? 'space-y-4 min-w-0' : 'space-y-5 min-w-0'}>
@@ -219,7 +260,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
                   type="text"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  placeholder="João Silva"
+                  placeholder={region === 'PT' ? 'Ana Silva' : 'João Silva'}
                   className={classes.input}
                 />
               </div>
@@ -229,7 +270,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
                   type="tel"
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="(11) 98765-4321"
+                  placeholder={region === 'PT' ? '912 345 678' : '(11) 98765-4321'}
                   className={classes.input}
                 />
               </div>
@@ -240,18 +281,26 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod('pix')}
+                  onClick={() => setPaymentMethod(digitalMethod)}
                   className={[
                     'p-3 rounded-xl border min-h-[44px] text-left',
-                    paymentMethod === 'pix' ? `${accent.bgDim} ${accent.border}` : `${colors.inputBg} ${colors.border}`,
+                    paymentMethod === digitalMethod ? `${accent.bgDim} ${accent.border}` : `${colors.inputBg} ${colors.border}`,
                   ].join(' ')}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <MessageCircle className="w-4 h-4 shrink-0 text-[var(--color-accent)]" />
-                    <span className={`text-xs font-semibold ${colors.text}`}>Pix agora</span>
+                    <Smartphone className="w-4 h-4 shrink-0 text-[var(--color-accent)]" />
+                    <span className={`text-xs font-semibold ${colors.text}`}>
+                      {digitalMethod === 'mbway' ? 'MB WAY' : 'Pix agora'}
+                    </span>
                   </div>
                   <p className={`text-xs ${colors.textSecondary} leading-snug`}>
-                    {pixReady ? 'Paga e confirma em segundos.' : 'Pix ainda não configurado.'}
+                    {digitalReady
+                      ? digitalMethod === 'mbway'
+                        ? 'Envie o valor pelo MB WAY.'
+                        : 'Paga e confirma em segundos.'
+                      : digitalMethod === 'mbway'
+                        ? 'MB WAY ainda não configurado.'
+                        : 'Pix ainda não configurado.'}
                   </p>
                 </button>
                 <button
@@ -287,6 +336,19 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
             </div>
           ) : null}
 
+          {paymentMethod === 'mbway' && mbwayReady && pixConfig?.mbway_phone ? (
+            <MbwayDisplay
+              phone={pixConfig.mbway_phone}
+              holderName={pixConfig.mbway_holder_name || merchantName}
+              amountCents={selectedPlan.price_cents}
+              description="Envie o valor pelo MB WAY. O plano só vale depois da confirmação."
+            />
+          ) : paymentMethod === 'mbway' && !mbwayReady && !pixLoading ? (
+            <div className="bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] rounded-xl p-3 text-[var(--color-warning)] text-sm leading-snug">
+              O estabelecimento ainda não configurou o MB WAY. Escolha pagar no balcão ou aguarde.
+            </div>
+          ) : null}
+
           <button
             type="button"
             onClick={() => void handleSubmit()}
@@ -307,15 +369,13 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
       {step === 'confirmation' && selectedPlan && (
         <div className="space-y-4">
           <div className={`${colors.card} ${colors.border} border rounded-xl p-5 text-center space-y-3`}>
-            <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-success-bg)] flex items-center justify-center">
-              <Check className="w-6 h-6 text-[var(--color-success)]" />
+            <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-warning-bg)] flex items-center justify-center">
+              <Check className="w-6 h-6 text-[var(--color-warning)]" />
             </div>
-            <h2 className={`text-lg font-semibold ${colors.text}`}>Solicitação enviada</h2>
-            <p className={`${colors.textSecondary} text-sm leading-snug`}>
-              {paymentMethod === 'pix' && pixBrCode
-                ? 'Pague o Pix abaixo. O plano é ativado após a confirmação do estabelecimento.'
-                : 'Na próxima visita, pague no balcão. O plano é ativado após a confirmação.'}
-            </p>
+            <h2 className={`text-lg font-semibold ${colors.text}`}>
+              {paymentMethod === 'in_person' ? 'Solicitação enviada' : 'Agora pague para ativar'}
+            </h2>
+            <p className={`${colors.textSecondary} text-sm leading-snug`}>{confirmationCopy}</p>
             {slug && !embedded && (
               <Link
                 to={`/minha-area/${slug}`}
@@ -333,6 +393,14 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
               merchantCity={merchantCity}
               amountCents={selectedPlan.price_cents}
               description="Pague o valor com seu app. A confirmação chega em segundos."
+            />
+          )}
+          {paymentMethod === 'mbway' && pixConfig?.mbway_phone && (
+            <MbwayDisplay
+              phone={pixConfig.mbway_phone}
+              holderName={pixConfig.mbway_holder_name || merchantName}
+              amountCents={selectedPlan.price_cents}
+              description="Envie o valor pelo MB WAY. O plano só vale depois da confirmação."
             />
           )}
         </div>

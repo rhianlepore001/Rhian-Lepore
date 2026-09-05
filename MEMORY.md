@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clube Pix BR + MB WAY PT (em andamento, 5 Set 2026):**
+  - Branch `cursor/clube-pix-mbway-cbdd`.
+  - QR Pix quebrava (cores CSS var na lib qrcode) e o fluxo criava membership pending antes de gerar o Pix — o cliente via “já assinou” sem pagar.
+  - Pix só em contas Brasil; MB WAY só em contas Portugal/euro. Dono cadastra o método da região em Ajustes > Clube.
+  - Pending na área do cliente deixa claro que o pagamento ainda não valeu.
+
 - **Clube UI/UX + área do cliente — MERGED → produção (5 Set 2026):**
   - Branch `cursor/clube-ui-ux-client-area-cbdd` · PR #49 → `main`.
   - RPC `get_public_membership_plans` aplicada em produção — a aba pública não listava os planos já criados.

@@ -126,7 +126,7 @@ export function useConfirmMembershipPayment() {
     const { companyId, user } = useAuth();
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ membershipId, method }: { membershipId: string; method: 'pix' | 'cash' | 'card' }) =>
+        mutationFn: ({ membershipId, method }: { membershipId: string; method: 'pix' | 'cash' | 'card' | 'mbway' }) =>
             confirmMembershipPayment(companyId!, membershipId, method, user!.id),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: KEYS.memberships(companyId!) });

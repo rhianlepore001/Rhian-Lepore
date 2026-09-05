@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Calendar, Clock, User, DollarSign, MessageSquare,
+    Calendar, Clock, User, MessageSquare,
     Edit3, X, RefreshCw, CheckCircle, AlertCircle, Loader2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -124,11 +124,8 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
     return (
         <div className={`
-            relative overflow-hidden rounded-2xl transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[var(--shadow-card)]
-            ${isBeauty
-                ? 'bg-theme-card border border-theme-border shadow-[var(--elevation-2)]'
-                : 'bg-theme-card border border-theme-border hover:border-[var(--color-border-strong)]'
-            }
+            relative overflow-hidden min-w-0 w-full rounded-2xl
+            bg-theme-card border border-theme-border
         `}>
             {/* Status bar — lateral esquerda */}
             <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${
@@ -138,7 +135,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 'bg-[var(--color-danger)]'
             }`} aria-hidden="true" />
 
-            <div className="p-5 pl-6 space-y-4">
+            <div className="p-4 pl-5 space-y-3 min-w-0">
                 {/* Header: date + status */}
                 <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -188,71 +185,57 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 </div>
 
                 {/* Professional + Price */}
-                <div className={`flex items-center justify-between pt-3 border-t ${isBeauty ? 'border-theme-border' : 'border-theme-border'}`}>
-                    <div className="flex items-center gap-2">
-                        <User className={`w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                        <span className={`text-sm ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
+                <div className="flex items-start justify-between gap-2 pt-3 border-t border-theme-border min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <User className="w-4 h-4 shrink-0 text-[var(--color-text-muted)]" />
+                        <span className="text-sm text-theme-textSecondary break-words">
                             {booking.professional_name ?? 'Qualquer profissional'}
                         </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <DollarSign className={`w-4 h-4 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`} />
-                        <span className={`font-bold text-sm ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                            {formatCurrency(booking.total_price, region)}
-                        </span>
-                    </div>
+                    <span className="font-bold text-sm text-theme-text shrink-0">
+                        {formatCurrency(booking.total_price, region)}
+                    </span>
                 </div>
 
                 {/* Actions */}
                 {isUpcoming && (
-                    <div className="flex items-center gap-2 pt-1">
+                    <div className="grid grid-cols-2 gap-2 pt-1">
                         {businessPhone && (
                             <button
+                                type="button"
                                 onClick={handleWhatsApp}
-                                className={`
-                                    flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
-                                    bg-[var(--color-success-bg)] text-[var(--color-success)] hover:brightness-110 border border-[var(--color-success-border)]
-                                `}
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]"
                             >
-                                <MessageSquare className="w-3.5 h-3.5" />
+                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 WhatsApp
                             </button>
                         )}
                         {booking.status === 'pending' && businessPhone && (
                             <button
+                                type="button"
                                 onClick={handleConfirmWhatsApp}
-                                className={`
-                                    flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
-                                    bg-[var(--color-success)] text-[var(--color-bg)] hover:brightness-110 border border-[var(--color-success-border)]
-                                `}
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-success)] text-[#FFFFFF] col-span-2"
                             >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                Cobrar Confirmação
+                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                                Pedir confirmação
                             </button>
                         )}
                         {allowEdit && (
                             <button
+                                type="button"
                                 onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}`)}
-                                className={`
-                                    flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
-                                    ${isBeauty
-                                        ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]'
-                                        : 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)] border border-theme-border'
-                                    }
-                                `}
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border"
                             >
-                                <Edit3 className="w-3.5 h-3.5" />
+                                <Edit3 className="w-3.5 h-3.5 shrink-0" />
                                 Editar
                             </button>
                         )}
                         <button
+                            type="button"
                             onClick={() => setShowConfirm(true)}
-                            className={`
-                                flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ml-auto
-                                bg-[var(--color-danger-bg)] text-[var(--color-danger)] hover:brightness-110 border border-[var(--color-danger-border)]
-                            `}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${allowEdit ? '' : 'col-span-2'}`}
                         >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-3.5 h-3.5 shrink-0" />
                             Cancelar
                         </button>
                     </div>

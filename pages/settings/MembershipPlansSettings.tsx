@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Users, X, Crown, Sparkles, Check } from 'lucide-react';
+import { Plus, Users, Crown, Sparkles, Check } from 'lucide-react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useToast } from '../../components/ui/Toast';
@@ -173,29 +173,15 @@ export const MembershipPlansSettings: React.FC = () => {
                 {isLoading ? (
                     <div className={`${colors.textSecondary} p-8`}>Carregando planos...</div>
                 ) : plans && plans.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-2">
                         {plans.map(plan => (
-                            <div key={plan.id} className="relative group">
-                                <PlanCard plan={plan} compact />
-                                <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleEdit(plan)}
-                                        className="p-2 rounded-lg bg-[var(--color-bg)]/60 hover:bg-[var(--color-bg)]/80 text-[var(--color-text)] backdrop-blur-sm transition-colors"
-                                        aria-label="Editar plano"
-                                    >
-                                        <Edit2 className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(plan)}
-                                        className="p-2 rounded-lg bg-[var(--color-danger)]/60 hover:bg-[var(--color-danger-bg)] text-[var(--color-text)] backdrop-blur-sm transition-colors"
-                                        aria-label="Excluir plano"
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                            </div>
+                            <PlanCard
+                                key={plan.id}
+                                plan={plan}
+                                compact
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
                         ))}
                     </div>
                 ) : (

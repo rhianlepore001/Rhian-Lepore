@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
-import { ClientWhatsAppFAB } from '../components/ClientWhatsAppFAB';
 import { PhoneInput } from '../components/PhoneInput';
 import {
     Calendar, History, User, LogOut, ArrowRight,
@@ -12,6 +11,7 @@ import {
     Edit2, Check, X, ChevronLeft, Clock, Crown
 } from 'lucide-react';
 import { ClientMembershipPanel } from '../components/membership/ClientMembershipPanel';
+import { PublicClubFlow } from '../components/membership/PublicClubFlow';
 import { useCancelPublicClientMembership, usePublicClientMembership } from '../hooks/useMemberships';
 import { useToast } from '../components/ui/Toast';
 import { validityHeadline } from '../utils/membershipValidity';
@@ -437,15 +437,11 @@ export const ClientArea: React.FC = () => {
 
     return (
         <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
-            <header className={`sticky top-0 z-30 px-4 md:px-8 py-4 border-b ${isBeauty ? 'border-theme-border bg-theme-bg backdrop-blur-sm' : 'border-theme-border bg-theme-bg backdrop-blur-sm'}`}>
-                <div className="max-w-2xl mx-auto flex items-center justify-between">
-                    <Link
-                        to={`/book/${slug}`}
-                        className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${isBeauty ? 'text-theme-textSecondary hover:text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)] hover:text-theme-textSecondary'}`}
-                    >
-                        <ChevronLeft className="w-4 h-4" />
+            <header className="sticky top-0 z-30 px-4 md:px-8 py-3 border-b border-theme-border bg-theme-bg">
+                <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-theme-text truncate min-w-0">
                         {business.business_name}
-                    </Link>
+                    </span>
                     <div className="flex items-center gap-3">
                         <span className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                             {sessionClient.name.split(' ')[0]}
@@ -461,18 +457,17 @@ export const ClientArea: React.FC = () => {
                 </div>
             </header>
 
-            <main className="flex-1 max-w-2xl mx-auto w-full px-4 md:px-8 py-6 space-y-6">
-                <div className={`relative overflow-hidden rounded-2xl p-6 ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-surface border border-theme-border'}`}>
-                    <div className={`absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-10 ${isBeauty ? 'bg-theme-card' : 'bg-theme-card'}`} />
-                    <div className="relative z-10 flex items-center justify-between gap-4">
-                        <div>
-                            <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isBeauty ? 'text-theme-text' : 'text-[var(--color-text-muted)]'}`}>
+            <main className="flex-1 max-w-2xl mx-auto w-full min-w-0 px-4 md:px-8 py-5 space-y-4 overflow-x-hidden">
+                <div className="relative overflow-hidden min-w-0 rounded-2xl p-4 bg-theme-surface border border-theme-border">
+                    <div className="flex flex-col gap-3 min-w-0">
+                        <div className="min-w-0">
+                            <p className="text-xs font-semibold text-theme-textSecondary truncate">
                                 {business.business_name}
                             </p>
-                            <h1 className="text-2xl font-bold text-theme-text">
+                            <h1 className="text-xl font-bold text-theme-text leading-tight break-words">
                                 Olá, {sessionClient.name.split(' ')[0]}!
                             </h1>
-                            <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-text' : 'text-theme-textSecondary'}`}>
+                            <p className="text-xs mt-1 text-theme-textSecondary leading-snug">
                                 {upcomingBookings.length > 0
                                     ? `Você tem ${upcomingBookings.length} agendamento${upcomingBookings.length > 1 ? 's' : ''} próximo${upcomingBookings.length > 1 ? 's' : ''}`
                                     : 'Nenhum agendamento futuro'}
@@ -481,7 +476,7 @@ export const ClientArea: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('club')}
-                                    className={`mt-3 text-left text-xs leading-relaxed ${isBeauty ? 'text-theme-text' : 'text-theme-textSecondary'}`}
+                                    className="mt-2 text-left text-xs leading-snug text-theme-textSecondary"
                                     data-testid="club-hero-chip"
                                 >
                                     <span className="font-semibold">Clube · {membership.plan_name}</span>
@@ -495,16 +490,16 @@ export const ClientArea: React.FC = () => {
                             )}
                         </div>
                         <Link
-                            to={`/book/${slug}`}
-                                className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-105 active:scale-95 ${isBeauty ? 'bg-theme-card text-theme-text shadow-md' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}
+                            to={`/book/${slug}?agendar=1`}
+                            className={`w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold ${isBeauty ? 'bg-theme-card text-theme-text border border-theme-border' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}
                         >
                             <Calendar className="w-3.5 h-3.5" />
-                            Novo Agendamento
+                            Novo agendamento
                         </Link>
                     </div>
                 </div>
 
-                <div className={`flex gap-1 p-1 rounded-xl ${isBeauty ? 'bg-theme-surface/60' : 'bg-theme-surface border border-theme-border'}`}>
+                <div className="flex gap-1 p-1 rounded-xl overflow-x-auto bg-theme-surface border border-theme-border">
                     {([
                         { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
                         { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
@@ -515,14 +510,10 @@ export const ClientArea: React.FC = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`
-                                flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all
+                                shrink-0 flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-lg text-xs font-semibold
                                 ${activeTab === tab.id
-                                    ? isBeauty
-                                        ? 'bg-theme-card text-theme-text shadow-sm'
-                                        : 'bg-theme-surface text-theme-text'
-                                    : isBeauty
-                                        ? 'text-[var(--color-text-muted)] hover:text-theme-text'
-                                        : 'text-[var(--color-text-muted)] hover:text-theme-text'
+                                    ? 'bg-theme-card text-theme-text shadow-sm'
+                                    : 'text-[var(--color-text-muted)]'
                                 }
                             `}
                         >
@@ -549,14 +540,11 @@ export const ClientArea: React.FC = () => {
                         {activeTab === 'upcoming' && (
                             <div className="space-y-4 animate-in fade-in duration-200">
                                 {upcomingBookings.some(b => b.status === 'pending') && (
-                                    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]`}>
+                                    <div className="flex items-start gap-2 px-3 py-2 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]">
                                         <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs font-bold">Aguardando confirmação do estabelecimento</p>
-                                            <p className={`text-xs mt-0.5 ${isBeauty ? 'text-[var(--color-warning)]' : 'text-[var(--color-warning)]/70'}`}>
-                                                Seu agendamento está em análise. Use o botão de WhatsApp para agilizar a confirmação.
-                                            </p>
-                                        </div>
+                                        <p className="text-xs leading-snug break-words">
+                                            Aguardando confirmação. Use o WhatsApp no card para agilizar.
+                                        </p>
                                     </div>
                                 )}
                                 {upcomingBookings.length === 0 ? (
@@ -564,7 +552,7 @@ export const ClientArea: React.FC = () => {
                                         icon={<Calendar className="w-10 h-10" />}
                                         title="Sem agendamentos futuros"
                                         description="Que tal marcar um horário agora?"
-                                        cta={{ label: 'Agendar', to: `/book/${slug}` }}
+                                        cta={{ label: 'Agendar', to: `/book/${slug}?agendar=1` }}
                                         isBeauty={isBeauty}
                                     />
                                 ) : (
@@ -592,7 +580,7 @@ export const ClientArea: React.FC = () => {
                                         icon={<History className="w-10 h-10" />}
                                         title="Histórico vazio"
                                         description="Seus serviços realizados aparecerão aqui."
-                                        cta={{ label: 'Fazer primeiro agendamento', to: `/book/${slug}` }}
+                                        cta={{ label: 'Fazer primeiro agendamento', to: `/book/${slug}?agendar=1` }}
                                         isBeauty={isBeauty}
                                     />
                                 ) : (
@@ -623,19 +611,31 @@ export const ClientArea: React.FC = () => {
                         )}
 
                         {activeTab === 'club' && (
-                            <div className="animate-in fade-in duration-200">
-                                <ClientMembershipPanel
-                                    membership={membership ?? null}
-                                    slug={slug ?? ''}
-                                    isBeauty={isBeauty}
-                                    region={region}
-                                    businessPhone={business.phone}
-                                    businessName={business.business_name}
-                                    clientName={sessionClient.name}
-                                    loading={membershipLoading}
-                                    cancelling={cancelMembership.isPending}
-                                    onCancel={handleCancelMembership}
-                                />
+                            <div className="animate-in fade-in duration-200 min-w-0">
+                                {membership && membership.effective_status !== 'cancelled' ? (
+                                    <ClientMembershipPanel
+                                        membership={membership}
+                                        slug={slug ?? ''}
+                                        isBeauty={isBeauty}
+                                        region={region}
+                                        businessPhone={business.phone}
+                                        businessName={business.business_name}
+                                        clientName={sessionClient.name}
+                                        loading={membershipLoading}
+                                        cancelling={cancelMembership.isPending}
+                                        onCancel={handleCancelMembership}
+                                    />
+                                ) : (
+                                    <PublicClubFlow
+                                        slug={slug ?? ''}
+                                        businessId={business.id}
+                                        region={region}
+                                        themeOverride={isBeauty ? 'beauty' : 'barber'}
+                                        embedded
+                                        prefillName={sessionClient.name}
+                                        prefillPhone={sessionClient.phone}
+                                    />
+                                )}
                             </div>
                         )}
 
@@ -718,15 +718,6 @@ export const ClientArea: React.FC = () => {
                     </>
                 )}
             </main>
-
-            {business.phone && (
-                <ClientWhatsAppFAB
-                    phone={business.phone}
-                    businessName={business.business_name}
-                    clientName={sessionClient.name}
-                    isBeauty={isBeauty}
-                />
-            )}
         </div>
     );
 };

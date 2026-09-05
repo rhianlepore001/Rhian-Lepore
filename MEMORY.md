@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clube UI/UX + área do cliente (5 Set 2026, branch `cursor/clube-ui-ux-client-area-cbdd`):**
+  - RPC `get_public_membership_plans` aplicada em produção — a aba pública não listava os planos já criados.
+  - Cards do dono compactos, sem gradient; editar/excluir visíveis no toque.
+  - Área do cliente remasterizada (sem overflow, botões em grade, clube com planos na própria aba).
+  - Cliente logado no link `/book/:slug` abre `/minha-area/:slug`; `?agendar=1` segue para o agendamento.
+
 - **Clube — menu do dono + área do cliente — MERGED → produção (5 Set 2026):**
   - PRs #46 (menu/planos/Pix) e #44 (área do cliente + RPCs). Deploy Vercel automático no push `main`.
   - Dono: item **Clube** em Ajustes e no menu; **Plano AgendiX** separado; abas Planos / Pix / Assinantes.

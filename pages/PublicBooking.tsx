@@ -19,6 +19,7 @@ import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
+import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
 
 interface Message {
@@ -939,6 +940,16 @@ export const PublicBooking: React.FC = () => {
                                         </a>
                                     )}
                                 </div>
+                            )}
+
+                            {activeCategory !== '__products__' && (
+                                <PublicBookingMemberships
+                                    businessId={businessId}
+                                    slug={slug ?? ''}
+                                    region={currencyRegion}
+                                    themeOverride={themeOverride}
+                                    services={services}
+                                />
                             )}
                         </div>
                     )}

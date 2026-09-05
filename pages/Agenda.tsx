@@ -1154,16 +1154,16 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                         {overdueAppointments.map(apt => {
                                             const professional = teamMembers.find(m => m.id === apt.professional_id);
                                             return (
-                                                <div key={apt.id} className={`${colors.card} ${colors.border} p-4 rounded-xl flex items-center justify-between`}>
-                                                    <div>
-                                                        <p className={`${colors.text} font-bold text-sm`}>{apt.clientName}</p>
-                                                        <p className={`${colors.textSecondary} text-xs`}>{apt.service}</p>
+                                                <div key={apt.id} className={`${colors.card} ${colors.border} p-4 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}>
+                                                    <div className="min-w-0">
+                                                        <p className={`${colors.text} font-bold text-sm truncate`}>{apt.clientName}</p>
+                                                        <p className={`${colors.textSecondary} text-xs truncate`}>{apt.service}</p>
                                                         <p className={`${colors.textMuted} text-xs`}>
                                                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                             {professional && ` | Profissional: ${professional.name}`}
                                                         </p>
                                                     </div>
-                                                    <div className="flex gap-2 flex-shrink-0">
+                                                    <div className="flex flex-wrap gap-2 shrink-0">
                                                         <button
                                                             onClick={() => setShowingDetailsAppointment(apt)}
                                                             className="px-3 py-2 min-h-[44px] items-center bg-[var(--color-info-bg)] hover:bg-[var(--color-info-bg)] border border-[var(--color-info-border)] text-[var(--color-info)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
@@ -1518,11 +1518,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     >
                                         <DollarSign className="w-4 h-4" /> Confirmar e cobrar
                                     </Button>
-                                    <div className="flex gap-3">
+                                    <div className="flex flex-wrap gap-2">
                                         {/* Faltou — dono E colaborador */}
                                         <Button
                                             variant="secondary"
-                                            className="flex-1 flex justify-center items-center gap-2"
+                                            className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
                                             onClick={() => handleNoShowAppointment(detailsApt.id)}
                                         >
                                             <Ban className="w-4 h-4" /> Faltou
@@ -1531,7 +1531,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                         {!isStaff && detailsApt.status === 'Confirmed' && (
                                             <Button
                                                 variant="secondary"
-                                                className="flex-1 flex justify-center items-center gap-2"
+                                                className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
                                                 onClick={() => {
                                                     setEditingAppointment(detailsApt);
                                                     setShowingDetailsAppointment(null);
@@ -1542,7 +1542,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                         )}
                                         <Button
                                             variant="ghost"
-                                            className="flex-1 flex justify-center items-center gap-2"
+                                            className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
                                             onClick={() => setShowingDetailsAppointment(null)}
                                         >
                                             Fechar

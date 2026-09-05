@@ -180,7 +180,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
       </aside>
 
       <main className="flex-1 min-w-0 min-h-screen flex flex-col w-full max-w-[100vw]">
-        <div className={`md:hidden sticky top-16 z-30 bg-[var(--color-bg)]/95 backdrop-blur-md border-b ${colors.divider}`}>
+        <div className={`md:hidden sticky top-[calc(var(--header-top,0px)+3.5rem)] z-30 bg-[var(--color-bg)]/95 backdrop-blur-md border-b ${colors.divider}`}>
           <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
             <div className="min-w-0">
               {currentGroup && (

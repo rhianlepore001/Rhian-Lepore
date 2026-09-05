@@ -72,20 +72,8 @@ export const BottomMobileNav: React.FC = () => {
                     <span className="text-xs font-bold tracking-tight truncate max-w-full">{isStaff ? 'Fila' : 'Clientes'}</span>
                 </button>
 
-                {/* 3. CENTER PLUS — shrink-0 (nunca w-full: esmagava vizinhos) */}
-                <div className="relative -top-3 flex justify-center shrink-0 basis-14 px-1">
-                    <button
-                        type="button"
-                        onClick={() => setShowQuickActions(true)}
-                        className={`w-12 h-12 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-[var(--shadow-btn-primary)] transform transition-all active:scale-95 group relative overflow-hidden
-                        ${accent.bg} text-[var(--color-on-accent)]`}
-                        aria-label="Ações rápidas"
-                        title="Ações rápidas"
-                    >
-                        <div className="absolute inset-0 bg-[var(--color-card-hover)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <Plus className="w-6 h-6 relative z-10" strokeWidth={2.75} aria-hidden="true" />
-                    </button>
-                </div>
+                {/* 3. Espaço do FAB — o botão fica absolute para não cobrir os labels */}
+                <div className="shrink-0 basis-14 px-1" aria-hidden="true" />
 
                 {/* 4. Financeiro / Insights */}
                 {!isStaff ? (
@@ -129,6 +117,20 @@ export const BottomMobileNav: React.FC = () => {
                     </div>
                     <span className="text-xs font-bold tracking-tight truncate max-w-full">Mais</span>
                 </button>
+
+                <div className="absolute left-1/2 -translate-x-1/2 -top-5 z-50">
+                    <button
+                        type="button"
+                        onClick={() => setShowQuickActions(true)}
+                        className={`w-12 h-12 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-[var(--shadow-btn-primary)] transform transition-all active:scale-95 group relative overflow-hidden
+                        ${accent.bg} text-[var(--color-on-accent)]`}
+                        aria-label="Ações rápidas"
+                        title="Ações rápidas"
+                    >
+                        <div className="absolute inset-0 bg-[var(--color-card-hover)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <Plus className="w-6 h-6 relative z-10" strokeWidth={2.75} aria-hidden="true" />
+                    </button>
+                </div>
             </nav>
 
             {showQuickActions && (

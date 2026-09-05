@@ -259,7 +259,7 @@ export const AddAuditEntryModal: React.FC<AddAuditEntryModalProps> = ({ onClose,
             {/* Gravidade */}
             <div>
               <span className={`block mb-2 ${classes.label}`}>Gravidade</span>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                 {LEVELS.map((lv) => {
                   const active = level === lv.value;
                   return (
@@ -269,14 +269,15 @@ export const AddAuditEntryModal: React.FC<AddAuditEntryModalProps> = ({ onClose,
                       onClick={() => setLevel(lv.value)}
                       disabled={submitting}
                       title={lv.hint}
+                      aria-label={`Gravidade ${lv.value}: ${lv.hint}`}
                       aria-pressed={active}
                       className={[
-                        'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg border text-center transition-colors',
+                        'flex flex-col items-center justify-center gap-0.5 min-h-[44px] py-2 px-0.5 rounded-lg border text-center transition-colors',
                         active ? `${accent.bg} ${accent.border} text-[var(--color-bg)]` : `${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)]`,
                       ].join(' ')}
                     >
                       <span className="text-sm font-bold">{lv.label}</span>
-                      <span className="text-xs leading-tight px-0.5">{lv.hint}</span>
+                      <span className="hidden sm:block text-xs leading-tight px-0.5">{lv.hint}</span>
                     </button>
                   );
                 })}

@@ -359,19 +359,19 @@ export const ClientCRM: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
-          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input} min-w-0`}>
             <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Última visita</p>
-            <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>
+            <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5 leading-tight break-words`}>
               {formatVisitAgo(client.lastVisitAt)}
             </p>
           </div>
-          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input} min-w-0`}>
             <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Visitas</p>
             <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>{client.totalVisits}</p>
           </div>
-          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input}`}>
+          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input} min-w-0`}>
             <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Total gasto</p>
-            <p className={`text-sm sm:text-base font-bold ${accent.text} mt-0.5`}>
+            <p className={`text-sm sm:text-base font-bold ${accent.text} mt-0.5 tabular-nums leading-tight break-words`}>
               {formatCurrency(client.ltv || 0, region)}
             </p>
           </div>

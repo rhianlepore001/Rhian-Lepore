@@ -208,7 +208,7 @@ export const MembersList: React.FC = () => {
                                         <p className={`text-xs font-bold uppercase tracking-wider ${status.color}`}>{status.label}</p>
                                     </div>
 
-                                    <div className="flex gap-2 flex-shrink-0">
+                                    <div className="flex flex-wrap gap-2 w-full md:w-auto">
                                         {m.client?.phone && (
                                             <button
                                                 type="button"

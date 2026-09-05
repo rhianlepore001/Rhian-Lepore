@@ -693,8 +693,8 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                 </div>
                                 <div className={`h-10 w-px ${colors.divider} hidden md:block`}></div>
                                 <div className="text-center md:text-right w-full md:w-auto">
-                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Total Comissões do Período</p>
-                                    <p className={`${font.mono} font-bold text-2xl md:text-4xl ${accent.text} leading-none`}>
+                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 tracking-wide leading-none`}>Total do período</p>
+                                    <p className={`${font.mono} font-bold text-2xl md:text-4xl ${accent.text} leading-none whitespace-nowrap tabular-nums`}>
                                         {currencySymbol} {totalCommission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                     </p>
                                 </div>
@@ -714,9 +714,9 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                 <Button
                                     variant="primary"
                                     onClick={onClose}
-                                    className="flex-[2] md:flex-none md:px-12 whitespace-nowrap"
+                                    className="flex-[2] md:flex-none md:px-12"
                                 >
-                                    Fechar Painel
+                                    Fechar
                                 </Button>
                             </div>
                         </div>

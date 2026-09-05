@@ -959,7 +959,7 @@ export const PublicBooking: React.FC = () => {
                                     <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                         <Users className="w-8 h-8" />
                                     </div>
-                                    <span className={`text-xs font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
+                                    <span className={`text-xs font-bold uppercase tracking-wide text-center leading-tight ${colors.text}`}>Qualquer profissional</span>
                                 </button>
 
                                 {filteredProfessionals.map((pro, pIdx) => (
@@ -973,7 +973,7 @@ export const PublicBooking: React.FC = () => {
                                                 <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
                                             )}
                                         </div>
-                                        <span className={`text-xs font-bold uppercase tracking-widest text-center ${selectedProfessional === pro.id ? accentTextOnAccent : colors.text}`}>
+                                        <span className={`text-xs font-bold uppercase tracking-wide text-center leading-tight ${selectedProfessional === pro.id ? accentTextOnAccent : colors.text}`}>
                                             {pro.name.split(' ')[0]}
                                         </span>
                                     </button>
@@ -1368,7 +1368,7 @@ export const PublicBooking: React.FC = () => {
                                                             <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
                                                                 <Users className="w-8 h-8" />
                                                             </div>
-                                                            <span className={`text-xs font-bold uppercase tracking-widest text-center ${colors.text}`}>Qualquer Profissional</span>
+                                                            <span className={`text-xs font-bold uppercase tracking-wide text-center leading-tight ${colors.text}`}>Qualquer profissional</span>
                                                         </button>
 
                                                         {filteredProfessionals.map((pro, pIdx) => (
@@ -1382,7 +1382,7 @@ export const PublicBooking: React.FC = () => {
                                                                         <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
                                                                     )}
                                                                 </div>
-                                                                <span className={`text-xs font-bold uppercase tracking-widest text-center ${colors.text}`}>
+                                                                <span className={`text-xs font-bold uppercase tracking-wide text-center leading-tight ${colors.text}`}>
                                                                     {pro.name.split(' ')[0]}
                                                                 </span>
                                                             </button>

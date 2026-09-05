@@ -49,13 +49,14 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **UI/UX mobile + moeda do tenant — em merge para produção (5 Set 2026):**
-  - Branch `cursor/ui-ux-layout-audit-b5e9`. Print do Financeiro → Comissões (botões esmagados, saldo desalinhado, título do header quebrando).
-  - Card de comissão empilha ações no mobile; CTA vira "Pagar comissão"; valores via `formatMoney` (locale do tenant, sem `R$` + `toFixed`).
-  - Moeda vem de `profiles.region` (BR→R$, PT→€). Ajustes → Geral tem seletor Brasil/Portugal; staff herda a região do dono. Conta demo Barbearia Bob alinhada para PT/€.
+- **UI/UX mobile + moeda do tenant — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/ui-ux-layout-audit-b5e9` · PR #43 → `main`.
+  - Print do Financeiro → Comissões: botões esmagados, saldo desalinhado, título do header quebrando; FAB cobrindo a nav.
+  - Card de comissão empilha ações no mobile; CTA **Pagar comissão**; valores via `formatMoney` (locale do tenant, sem `R$` + `toFixed`).
+  - Moeda vem de `profiles.region` (BR→R$, PT→€). Ajustes → Geral tem seletor Brasil/Portugal; staff herda a região do dono.
   - Header: nome do negócio em 1 linha com truncate real; toggle de tema sem fundo de card.
   - FAB da nav inferior sai do fluxo (absolute) para não cobrir Clientes/Financeiro.
-  - Mesmo padrão de overflow em Agenda, Fila, CRM, Dashboard, Checkout, booking público e settings.
+  - Gates: typecheck, lint, build, 444 testes + coverage; merge de `main` (#39/#40/#41) resolvido. Produção: deploy Vercel automático no push `main`.
 
 - **Agenda: scroll horizontal lento puxava de volta — MERGED → produção (5 Set 2026):**
   - Branch `cursor/agenda-horizontal-scroll-6516` · PR #41 → `main`. CI (lint/typecheck/testes/coverage) + Vercel preview verdes.

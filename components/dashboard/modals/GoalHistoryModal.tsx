@@ -54,17 +54,17 @@ export const GoalHistoryModal: React.FC<GoalHistoryModalProps> = ({
                 {/* Resumo de desempenho */}
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <div className={`p-3 sm:p-4 rounded-xl ${colors.card} ${colors.border} text-center min-w-0`}>
-                        <p className={`text-[10px] sm:text-xs font-mono ${colors.textSecondary} uppercase tracking-wide mb-1 leading-tight`}>Taxa de sucesso</p>
+                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wide mb-1 leading-tight`}>Taxa de sucesso</p>
                         <p className={`text-xl sm:text-2xl font-bold font-heading ${accent.text}`}>{successRate}%</p>
                         <p className={`text-xs ${colors.textSecondary} font-mono`}>{successCount}/{history.length} meses</p>
                     </div>
                     <div className={`p-3 sm:p-4 rounded-xl ${colors.card} ${colors.border} text-center min-w-0`}>
-                        <p className={`text-[10px] sm:text-xs font-mono ${colors.textSecondary} uppercase tracking-wide mb-1 leading-tight`}>Média mensal</p>
+                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wide mb-1 leading-tight`}>Média mensal</p>
                         <p className={`text-xl sm:text-2xl font-bold font-heading ${avgPerformance >= 100 ? accent.text : colors.textMuted}`}>{avgPerformance}%</p>
                         <p className={`text-xs ${colors.textSecondary} font-mono`}>da meta</p>
                     </div>
                     <div className={`p-3 sm:p-4 rounded-xl ${colors.card} ${colors.border} text-center min-w-0`}>
-                        <p className={`text-[10px] sm:text-xs font-mono ${colors.textSecondary} uppercase tracking-wide mb-1 leading-tight`}>Metas batidas</p>
+                        <p className={`text-xs font-mono ${colors.textSecondary} uppercase tracking-wide mb-1 leading-tight`}>Metas batidas</p>
                         <p className={`text-xl sm:text-2xl font-bold font-heading ${classes.badgeSuccess.split(' ').find(c => c.startsWith('text-'))}`}>{successCount}</p>
                         <p className={`text-xs ${colors.textSecondary} font-mono`}>em {history.length} meses</p>
                     </div>

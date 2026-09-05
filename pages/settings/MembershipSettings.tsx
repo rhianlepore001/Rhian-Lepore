@@ -109,7 +109,7 @@ export const MembershipSettings: React.FC = () => {
                                     type="button"
                                     onClick={() => setPixKeyType(t.value)}
                                     className={[
-                        'py-2.5 px-2 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wide leading-tight transition-all',
+                        'py-2.5 px-2 rounded-xl text-xs font-bold uppercase tracking-wide leading-tight transition-all',
                                         pixKeyType === t.value
                                             ? `${accent.bg} text-[var(--color-bg)] ${accent.shadow}`
                                             : `${colors.inputBg} ${colors.border} ${colors.textMuted} border`,

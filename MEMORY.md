@@ -55,6 +55,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - Se a captura falhar, o usuário pode **Anexar print**. Envio sem imagem continua válido.
   - Spec: `specs/active/bug-report-screenshot/spec.md`.
 
+- **SetupCopilot: passo do link público travado em 5/6 — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/setup-copilot-booking-link-c3d3` · PR #40 → `main`.
+  - O card "Configure seu espaço" ficava em 83% mesmo depois de usar o agendamento público: o passo só fechava com `profiles.business_slug` ou clique no checklist (localStorage).
+  - Agora o passo completa com slug **ou** reservas em `public_bookings`; copiar/compartilhar o link também marca feito (localStorage + `onboarding_progress.step_data`). Query do slug isolada de `activation_completed`.
+  - Com todos os passos concluídos (ou `activation_completed`), o card some sozinho — não exige fechar no X.
+  - Gates: typecheck, lint, build, 434 testes; CI GitHub verde. Produção: deploy Vercel automático no push `main`.
 
 - **Login gateway: tema da sessão vazava no index após logout — MERGED → produção (4 Set 2026):**
   - Branch `cursor/login-gateway-theme-logout-2343` · PR #38 → `main` · CI + Vercel success.

@@ -48,7 +48,7 @@ describe('periodProgressPercent', () => {
 
 describe('validityHeadline', () => {
   it('explica pending sem inventar validade', () => {
-    expect(validityHeadline('pending', '2026-10-01T00:00:00.000Z', NOW)).toMatch(/Aguardando/);
+    expect(validityHeadline('pending', '2026-10-01T00:00:00.000Z', NOW)).toMatch(/Pagamento pendente/);
   });
 
   it('mostra validade e dias restantes quando ativo', () => {

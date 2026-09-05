@@ -6,7 +6,7 @@ import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, Skelet
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -39,6 +39,10 @@ interface Transaction {
   status: 'paid' | 'pending';
 }
 
+function transactionAmount(t: Transaction): number {
+  return t.type === 'expense' ? (t.expense || 0) : (t.amount || 0);
+}
+
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   pix: 'Pix',
   cash: 'Dinheiro',
@@ -63,21 +67,20 @@ interface FinanceKpiProps {
   subtitle: string;
   icon: React.ReactNode;
   iconClass: string;
-  minHeightClass: string;
 }
 
 const FinanceKpi: React.FC<FinanceKpiProps> = ({
-  title, value, subtitle, icon, iconClass, minHeightClass,
+  title, value, subtitle, icon, iconClass,
 }) => {
   const { colors } = useBrutalTheme();
   return (
-    <Card variant="outlined" className={minHeightClass}>
-      <div className="flex items-start gap-3">
+    <Card variant="outlined" noPadding>
+      <div className="flex items-center gap-3 px-3 py-3 md:px-4">
         <div className={iconClass}>{icon}</div>
-        <div className="min-w-0">
-          <p className={`text-sm font-semibold ${colors.textSecondary}`}>{title}</p>
-          <p className={`mt-3 font-mono text-2xl font-black tracking-tight tabular-nums ${colors.text}`}>{value}</p>
-          <p className={`mt-1 text-sm ${colors.textSecondary}`}>{subtitle}</p>
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs font-semibold uppercase tracking-wide ${colors.textMuted}`}>{title}</p>
+          <p className={`mt-0.5 font-mono text-xl font-black tracking-tight tabular-nums ${colors.text}`}>{value}</p>
+          <p className={`mt-0.5 text-xs ${colors.textSecondary} truncate`}>{subtitle}</p>
         </div>
       </div>
     </Card>
@@ -125,13 +128,14 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [savingTransaction, setSavingTransaction] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
   const [pendingMarkPaid, setPendingMarkPaid] = useState<{ id: string; name: string } | null>(null);
+  const [detailTransaction, setDetailTransaction] = useState<Transaction | null>(null);
 
   // Month/Year selection
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const { accent, colors, isBeauty, classes, font, density, status } = useBrutalTheme();
+  const { accent, colors, isBeauty, classes, status } = useBrutalTheme();
   const { showToast } = useToast();
   const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
@@ -448,7 +452,7 @@ useEffect(() => {
   };
 
   const periodLabel = `${months[selectedMonth]} ${selectedYear}`;
-  const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
+  const iconClass = `flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${accent.bgDim} ${accent.text}`;
   const revenueCount = transactions.filter((t) => t.type === 'revenue').length;
   const avgTicket = revenueCount > 0 ? (summary.revenue || 0) / revenueCount : 0;
 
@@ -554,7 +558,7 @@ useEffect(() => {
   ], [accent.text, colors, currencyRegion, status.danger, status.success]);
 
   return (
-    <div className={`space-y-6 md:space-y-8 pb-20 ${density.pagePadding} md:px-0`}>
+    <div className="space-y-4 md:space-y-6">
       <PageHeader
         title="Financeiro"
         subtitle={periodLabel}
@@ -604,20 +608,20 @@ useEffect(() => {
         <>
           {loading ? (
             <>
-              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <SkeletonCard className={density.kpiMinHeight} />
-                <SkeletonCard className={density.kpiMinHeight} />
-                <SkeletonCard className={density.kpiMinHeight} />
+              <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <SkeletonCard className="min-h-[72px]" />
+                <SkeletonCard className="min-h-[72px]" />
+                <SkeletonCard className="min-h-[72px]" />
               </section>
               {!isStaff && (
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <section className="grid grid-cols-3 gap-2">
                   <SkeletonCard />
                   <SkeletonCard />
                   <SkeletonCard />
                 </section>
               )}
-              <SkeletonCard className="min-h-[320px]" />
-              <SkeletonCard className="min-h-[280px]" />
+              <SkeletonCard className="min-h-[240px]" />
+              <SkeletonCard className="min-h-[160px]" />
             </>
           ) : fetchError ? (
             <ErrorState
@@ -627,9 +631,9 @@ useEffect(() => {
             />
           ) : (
           <>
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <FinanceKpi
-              icon={<TrendingUp className="h-5 w-5" />}
+              icon={<TrendingUp className="h-4 w-4" />}
               title={isStaff ? 'Meu giro' : 'Receita'}
               value={formatCurrency(summary.revenue || 0, currencyRegion)}
               subtitle={
@@ -638,20 +642,18 @@ useEffect(() => {
                   : `${summary.growth > 0 ? '+' : ''}${summary.growth.toFixed(1)}% vs mês anterior`
               }
               iconClass={iconClass}
-              minHeightClass={density.kpiMinHeight}
             />
             {!isStaff && (
               <>
                 <FinanceKpi
-                  icon={<TrendingDown className="h-5 w-5" />}
+                  icon={<TrendingDown className="h-4 w-4" />}
                   title="Despesas"
                   value={formatCurrency(summary.expenses || 0, currencyRegion)}
                   subtitle="Comissões e custos liquidados"
                   iconClass={iconClass}
-                  minHeightClass={density.kpiMinHeight}
                 />
                 <FinanceKpi
-                  icon={<Wallet className="h-5 w-5" />}
+                  icon={<Wallet className="h-4 w-4" />}
                   title="Lucro"
                   value={formatCurrency(summary.profit || 0, currencyRegion)}
                   subtitle={
@@ -660,69 +662,66 @@ useEffect(() => {
                       : 'Sem receita no período'
                   }
                   iconClass={iconClass}
-                  minHeightClass={density.kpiMinHeight}
                 />
               </>
             )}
             {isStaff && (
               <FinanceKpi
-                icon={<Calendar className="h-5 w-5" />}
+                icon={<Calendar className="h-4 w-4" />}
                 title="Atendimentos"
                 value={String(revenueCount)}
                 subtitle={`Ticket médio ${formatCurrency(avgTicket, currencyRegion)}`}
                 iconClass={iconClass}
-                minHeightClass={density.kpiMinHeight}
               />
             )}
           </section>
 
           {!isStaff && (
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <section className="grid grid-cols-3 gap-2">
               {[
                 {
-                  icon: <Smartphone className="h-4 w-4" />,
-                  label: region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix',
+                  icon: <Smartphone className="h-3.5 w-3.5" />,
+                  label: region === 'PT' ? 'MBWay' : 'Pix',
                   value: region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0),
                 },
-                { icon: <Banknote className="h-4 w-4" />, label: 'Receita via dinheiro', value: summary.revenueByMethod.dinheiro || 0 },
-                { icon: <CreditCard className="h-4 w-4" />, label: 'Receita via cartão', value: summary.revenueByMethod.cartao || 0 },
+                { icon: <Banknote className="h-3.5 w-3.5" />, label: 'Dinheiro', value: summary.revenueByMethod.dinheiro || 0 },
+                { icon: <CreditCard className="h-3.5 w-3.5" />, label: 'Cartão', value: summary.revenueByMethod.cartao || 0 },
               ].map((m) => (
-                <Card key={m.label} variant="outlined">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${accent.bgDim} ${accent.text} shrink-0`}>
-                      {m.icon}
+                <Card key={m.label} variant="outlined" noPadding>
+                  <div className="px-2.5 py-2.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={`${accent.text} shrink-0`}>{m.icon}</span>
+                      <p className={`text-xs font-semibold ${colors.textMuted} truncate`}>{m.label}</p>
                     </div>
-                    <div className="min-w-0">
-                      <p className={`text-sm font-semibold ${colors.textSecondary} truncate`}>{m.label}</p>
-                      <p className={`mt-0.5 font-mono text-xl font-bold tabular-nums ${colors.text}`}>
-                        {formatCurrency(m.value, currencyRegion)}
-                      </p>
-                    </div>
+                    <p className={`mt-1 font-mono text-sm font-bold tabular-nums ${colors.text}`}>
+                      {formatCurrency(m.value, currencyRegion)}
+                    </p>
                   </div>
                 </Card>
               ))}
             </section>
           )}
 
-          <div className="grid grid-cols-1 gap-6">
-            <Card title={`Entradas e saídas — ${periodLabel}`}>
-              <div className="mt-2 w-full">
-                <FinanceCashflowChart
-                  data={chartData}
-                  currencyRegion={currencyRegion}
-                  height={320}
-                />
-              </div>
-            </Card>
-          </div>
+          <Card title={`Entradas e saídas — ${periodLabel}`}>
+            <div className="w-full">
+              <FinanceCashflowChart
+                data={chartData}
+                currencyRegion={currencyRegion}
+                height={240}
+              />
+            </div>
+          </Card>
 
           <Card title="Transações recentes" noPadding>
-            <div className={density.cardPadding}>
+            <div className="p-3 md:p-4">
               <Table<Transaction>
                 columns={transactionColumns}
                 data={transactions}
                 rowKey={(t) => t.id}
                 stickyHeader
+                compact
+                onRowClick={(t) => setDetailTransaction(t)}
+                selectedRowKey={detailTransaction?.id ?? null}
                 getRowClassName={(t) => (t.status === 'pending' ? `${status.warningBg}` : '')}
                 emptyState={{
                   icon: History,
@@ -735,62 +734,37 @@ useEffect(() => {
                   ),
                 }}
                 mobileRender={(t) => (
-                  <div
-                    className={`rounded-xl border p-4 ${t.type === 'expense' ? `${status.dangerBg} ${status.dangerBorder}` : `${status.successBg} ${status.successBorder}`}`}
+                  <button
+                    type="button"
+                    data-testid="finance-tx-card"
+                    aria-label={`${t.type === 'expense' ? 'Saída' : 'Entrada'} ${t.serviceName}`}
+                    onClick={() => setDetailTransaction(t)}
+                    className={`flex w-full overflow-hidden rounded-lg border text-left min-h-[44px] ${colors.border} ${colors.card}`}
                   >
-                    <div className="mb-3 flex items-start justify-between">
-                      <div className="flex flex-col">
-                        <span className={`text-base font-semibold ${colors.text}`}>{t.serviceName}</span>
-                        <div className={`mt-1 flex items-center gap-2 text-xs ${colors.textMuted}`}>
-                          <span>{t.date}</span>
-                          <span>•</span>
-                          <span>{t.time}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`font-mono text-lg font-bold tabular-nums ${t.type === 'expense' ? status.danger : status.success}`}>
-                          {t.type === 'expense' ? '-' : '+'}
-                          {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
+                    <span
+                      className={`w-0.5 shrink-0 ${t.type === 'expense' ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]'}`}
+                      aria-hidden
+                    />
+                    <div className="min-w-0 flex-1 px-2.5 py-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className={`text-sm font-semibold truncate ${colors.text}`}>{t.serviceName}</p>
+                        <span className={`font-mono text-sm font-bold tabular-nums shrink-0 ${t.type === 'expense' ? status.danger : status.success}`}>
+                          {t.type === 'expense' ? '−' : '+'}
+                          {formatCurrency(transactionAmount(t), currencyRegion, false)}
                         </span>
-                        <div className="mt-1 flex flex-col items-end gap-1">
-                          <Badge variant={t.type === 'expense' ? 'danger' : 'success'}>
-                            {t.type === 'expense' ? 'Despesa' : 'Receita'}
-                          </Badge>
-                          {t.status === 'pending' && <Badge variant="warning">Pendente</Badge>}
-                        </div>
                       </div>
+                      <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
+                        <span className={t.type === 'expense' ? status.danger : status.success}>
+                          {t.type === 'expense' ? 'Saída' : 'Entrada'}
+                        </span>
+                        {t.status === 'pending' ? ' · Pendente' : ''}
+                        {' · '}
+                        {t.date} · {t.time}
+                        {t.professionalName ? ` · ${t.professionalName}` : ''}
+                        {t.clientName ? ` · ${t.clientName}` : ''}
+                      </p>
                     </div>
-                    <div className={`my-3 grid grid-cols-2 gap-2 border-y py-3 ${colors.divider}`}>
-                      <div>
-                        <p className={`text-xs ${colors.textMuted}`}>Profissional</p>
-                        <p className={`text-sm font-medium ${accent.text}`}>{t.professionalName}</p>
-                      </div>
-                      <div>
-                        <p className={`text-xs ${colors.textMuted}`}>Cliente</p>
-                        <p className={`truncate text-sm ${colors.textSecondary}`}>{t.clientName || '—'}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      {t.type === 'expense' && t.status === 'pending' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Check className="h-3.5 w-3.5" />}
-                          onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
-                        >
-                          Dar baixa
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        icon={<Trash2 className="h-3.5 w-3.5" />}
-                        onClick={() => handleDeleteTransaction(t)}
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </div>
+                  </button>
                 )}
               />
             </div>
@@ -1059,6 +1033,113 @@ useEffect(() => {
           </Modal>
         )
       }
+
+      <Modal
+        open={!!detailTransaction}
+        onClose={() => setDetailTransaction(null)}
+        title={detailTransaction?.type === 'expense' ? 'Detalhes da saída' : 'Detalhes da entrada'}
+        size="md"
+        footer={
+          detailTransaction ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {detailTransaction.type === 'expense' && detailTransaction.status === 'pending' && (
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  icon={<Check className="h-4 w-4" />}
+                  onClick={() => {
+                    setPendingMarkPaid({ id: detailTransaction.id, name: detailTransaction.serviceName || 'Despesa' });
+                    setDetailTransaction(null);
+                  }}
+                >
+                  Dar baixa
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                className="flex-1"
+                icon={<Trash2 className="h-4 w-4" />}
+                onClick={() => {
+                  handleDeleteTransaction(detailTransaction);
+                  setDetailTransaction(null);
+                }}
+              >
+                Excluir
+              </Button>
+            </div>
+          ) : null
+        }
+      >
+        {detailTransaction && (
+          <div className="space-y-5">
+            <div>
+              <Badge variant={detailTransaction.type === 'expense' ? 'danger' : 'success'}>
+                {detailTransaction.type === 'expense' ? 'Saída' : 'Entrada'}
+              </Badge>
+              {detailTransaction.status === 'pending' && (
+                <span className="ml-2">
+                  <Badge variant="warning">Pendente</Badge>
+                </span>
+              )}
+              <p className={`mt-3 font-mono text-2xl font-black tabular-nums tracking-tight ${detailTransaction.type === 'expense' ? status.danger : status.success}`}>
+                {detailTransaction.type === 'expense' ? '−' : '+'}
+                {formatCurrency(transactionAmount(detailTransaction), currencyRegion)}
+              </p>
+            </div>
+
+            <div className={`w-full h-px border-t ${colors.divider}`} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="min-w-0">
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <Scissors className="w-4 h-4 shrink-0" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Descrição</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm break-words`}>{detailTransaction.serviceName}</p>
+              </div>
+              <div>
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <User className="w-4 h-4" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Profissional</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm`}>
+                  {detailTransaction.professionalName || '—'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <Users className="w-4 h-4" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Cliente</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm`}>
+                  {detailTransaction.clientName || '—'}
+                </p>
+              </div>
+              <div>
+                <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                  <Clock className="w-4 h-4" />
+                  <span className="text-xs font-mono uppercase tracking-widest font-bold">Data e hora</span>
+                </div>
+                <p className={`${colors.text} font-medium text-sm`}>{detailTransaction.date}</p>
+                <p className={`font-mono font-bold mt-0.5 ${accent.text}`}>{detailTransaction.time}</p>
+              </div>
+            </div>
+
+            <div>
+              <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
+                <CreditCard className="w-4 h-4" />
+                <span className="text-xs font-mono uppercase tracking-widest font-bold">Pagamento</span>
+              </div>
+              <p className={`${colors.text} font-medium text-sm`}>
+                {PAYMENT_METHOD_LABELS[detailTransaction.payment_method || ''] || detailTransaction.payment_method || '—'}
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <ConfirmModal
         open={!!pendingDelete}

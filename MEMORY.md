@@ -49,6 +49,27 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda: copiar link público — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-copy-public-link-ee84` · PR #54 → `main`.
+  - Botão de ação no header da Agenda, entre Histórico e Todos Agendamentos (ícone no mobile, “Copiar link” no desktop).
+  - Dono sem slug vê Configurar; agendamento desativado vê Ativar. Staff só vê o atalho quando o link já existe.
+  - Gates: typecheck, lint, build, testes e preview Vercel verdes. Produção: deploy Vercel no push `main`.
+
+- **Agenda grade + Financeiro compacto — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-finance-ui-polish-c772` · PR #51 → `main`.
+  - Grade da Agenda: slots de altura fixa; cards em overlay (não distorcem as linhas das colunas).
+  - Financeiro: margem alinhada à Agenda/Dashboard; KPIs compactos; transações em linhas (sem card verde cheio).
+  - Toque no lançamento abre modal de detalhes (igual ao info da Agenda). Excluir/dar baixa no rodapé.
+  - Gates: typecheck, lint, build, 496 testes. Produção: deploy Vercel no push `main`.
+
+- **Clube Pix BR + MB WAY PT — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/clube-pix-mbway-cbdd` · PR #52 → `main`.
+  - QR Pix quebrava (cores CSS var na lib qrcode) e o fluxo criava membership pending antes de gerar o Pix — o cliente via “já assinou” sem pagar.
+  - Copia e cola é a ação principal no celular; QR fica opcional (não dá para escanear a própria tela).
+  - Pix só em contas Brasil; MB WAY só em contas Portugal/euro. Dono cadastra o método da região em Ajustes > Clube.
+  - Pending na área do cliente deixa claro que o pagamento ainda não valeu.
+  - Migration de MB WAY + retry de pending aplicada no banco de produção. Deploy Vercel automático no push `main`.
+
 - **Clube UI/UX + área do cliente — MERGED → produção (5 Set 2026):**
   - Branch `cursor/clube-ui-ux-client-area-cbdd` · PR #49 → `main`.
   - RPC `get_public_membership_plans` aplicada em produção — a aba pública não listava os planos já criados.

@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import { firstRpcRow } from '@/lib/club-payment';
 
 export type MembershipStatus = 'pending' | 'active' | 'overdue' | 'cancelled';
-export type MembershipPaymentMethod = 'pix' | 'cash' | 'card' | 'in_person';
+export type MembershipPaymentMethod = 'pix' | 'cash' | 'card' | 'in_person' | 'mbway';
 export type MembershipPaymentStatus = 'pending' | 'confirmed' | 'failed';
 export type MembershipBadgeColor = 'gold' | 'silver' | 'bronze';
 export type PixKeyType = 'cpf' | 'cnpj' | 'phone' | 'email' | 'random';
@@ -60,7 +61,7 @@ export interface MembershipPayment {
     user_id: string;
     membership_id: string;
     amount_cents: number;
-    method: 'pix' | 'cash' | 'card';
+    method: 'pix' | 'cash' | 'card' | 'mbway';
     status: MembershipPaymentStatus;
     paid_at: string | null;
     confirmed_at: string | null;
@@ -107,30 +108,40 @@ export async function fetchPublicMembershipPlans(businessId: string): Promise<Me
     return (data ?? []) as MembershipPlan[];
 }
 
-export async function fetchPublicPixConfig(businessId: string): Promise<{
+export interface PublicClubPaymentConfig {
     pix_key_type: PixKeyType | null;
     pix_key_value: string | null;
     pix_holder_name: string | null;
     pix_merchant_city: string | null;
-}> {
+    mbway_phone: string | null;
+    mbway_holder_name: string | null;
+}
+
+function mapPublicClubPaymentConfig(row: Record<string, unknown> | undefined): PublicClubPaymentConfig {
+    return {
+        pix_key_type: (row?.pix_key_type as PixKeyType | null) ?? null,
+        pix_key_value: (row?.pix_key_value as string | null) ?? null,
+        pix_holder_name: (row?.pix_holder_name as string | null) ?? null,
+        pix_merchant_city: (row?.pix_merchant_city as string | null) ?? null,
+        mbway_phone: (row?.mbway_phone as string | null) ?? null,
+        mbway_holder_name: (row?.mbway_holder_name as string | null) ?? null,
+    };
+}
+
+export async function fetchPublicPixConfig(businessId: string): Promise<PublicClubPaymentConfig> {
     const { data, error } = await supabase.rpc('get_public_pix_config', {
         p_business_id: businessId,
     });
     if (error) throw error;
-    const row = data?.[0];
-    return {
-        pix_key_type: (row?.pix_key_type as PixKeyType | null) ?? null,
-        pix_key_value: row?.pix_key_value ?? null,
-        pix_holder_name: row?.pix_holder_name ?? null,
-        pix_merchant_city: row?.pix_merchant_city ?? null,
-    };
+    const row = firstRpcRow(data as Record<string, unknown> | Record<string, unknown>[] | null);
+    return mapPublicClubPaymentConfig(row);
 }
 
 export interface CreatePublicMembershipInput {
     clientName: string;
     clientPhone: string;
     planId: string;
-    paymentMethod: 'pix' | 'in_person';
+    paymentMethod: 'pix' | 'mbway' | 'in_person';
 }
 
 export async function createPublicMembershipRequest(
@@ -341,7 +352,7 @@ export async function createMembershipRequest(companyId: string, input: CreateMe
 export async function confirmMembershipPayment(
     companyId: string,
     membershipId: string,
-    method: 'pix' | 'cash' | 'card',
+    method: 'pix' | 'cash' | 'card' | 'mbway',
     confirmedByUserId: string
 ): Promise<void> {
     const now = new Date().toISOString();
@@ -412,31 +423,23 @@ export async function fetchMembershipPayments(companyId: string, membershipId: s
     return (data ?? []) as MembershipPayment[];
 }
 
-export async function fetchBusinessPixConfig(companyId: string): Promise<{
-    pix_key_type: PixKeyType | null;
-    pix_key_value: string | null;
-    pix_holder_name: string | null;
-    pix_merchant_city: string | null;
-}> {
+export async function fetchBusinessPixConfig(companyId: string): Promise<PublicClubPaymentConfig> {
     const { data, error } = await supabase
         .from('business_settings')
-        .select('pix_key_type, pix_key_value, pix_holder_name, pix_merchant_city')
+        .select('pix_key_type, pix_key_value, pix_holder_name, pix_merchant_city, mbway_phone, mbway_holder_name')
         .eq('user_id', companyId)
         .maybeSingle();
     if (error) throw error;
-    return {
-        pix_key_type: (data?.pix_key_type as PixKeyType | null) ?? null,
-        pix_key_value: data?.pix_key_value ?? null,
-        pix_holder_name: data?.pix_holder_name ?? null,
-        pix_merchant_city: data?.pix_merchant_city ?? null,
-    };
+    return mapPublicClubPaymentConfig((data as Record<string, unknown> | null) ?? undefined);
 }
 
 export interface UpdateBusinessPixInput {
-    pix_key_type: PixKeyType;
-    pix_key_value: string;
-    pix_holder_name: string;
-    pix_merchant_city: string;
+    pix_key_type?: PixKeyType;
+    pix_key_value?: string;
+    pix_holder_name?: string;
+    pix_merchant_city?: string;
+    mbway_phone?: string;
+    mbway_holder_name?: string;
 }
 
 export async function updateBusinessPixConfig(companyId: string, input: UpdateBusinessPixInput): Promise<void> {
@@ -444,10 +447,7 @@ export async function updateBusinessPixConfig(companyId: string, input: UpdateBu
         .from('business_settings')
         .upsert({
             user_id: companyId,
-            pix_key_type: input.pix_key_type,
-            pix_key_value: input.pix_key_value,
-            pix_holder_name: input.pix_holder_name,
-            pix_merchant_city: input.pix_merchant_city,
+            ...input,
         }, { onConflict: 'user_id' });
     if (error) throw error;
 }

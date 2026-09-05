@@ -53,7 +53,7 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - Cliente vê plano, validade, incluso e usos em `/#/minha-area/:slug` (aba Clube + destaque no hero).
   - Pode cancelar a assinatura (RPC pública por telefone + estabelecimento).
   - Rota `/#/clube/:slug` passa a resolver o estabelecimento (CTA de assinar).
-  - Migration `20260905000001_public_client_membership.sql` **não aplicada no remoto** (branch de pivot).
+  - Migration `20260905000001_public_client_membership.sql` **aplicada com sucesso no Supabase de produção** (`lcqwrngscsziysyfhpfj`) via MCP: RPCs `get_public_client_membership` e `cancel_public_client_membership` com `SECURITY DEFINER`.
   - Fora desta branch: menu do dono, Pix/txid, checkout, financeiro.
 
 - **Login gateway: tema da sessão vazava no index após logout — MERGED → produção (4 Set 2026):**

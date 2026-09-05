@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Discovery Clube de Assinatura (5 Set 2026):**
+  - Artefato: `specs/active/SPEC-clube-assinatura-discovery-2026-09-05.md` (Lion Claw).
+  - Veredito: módulo meio-construído — fora do menu, link público `/#/clube/[slug]` não casa com a rota (`/clube?slug=`), QR/txid inconsistentes, `overdue` morto, CRM/booking sem clube, teto mensal não aplicado, mensalidade não vira receita.
+  - Direção: **não reescrever**. Um motor para barbearia e salão; salão usa teto de usos (não "Beleza Ilimitada").
+  - Próximo: fechar gray areas §9 com o Rhian → spec/tasks em `clube-assinatura-v2/`. Sem código nesta rodada.
+
 - **Login gateway: tema da sessão vazava no index após logout — MERGED → produção (4 Set 2026):**
   - Branch `cursor/login-gateway-theme-logout-2343` · PR #38 → `main` · CI + Vercel success.
   - Após Sair em modo claro (white) ou nos outros 3 combos (barber/beauty × dark/light — “park”), o `#/login` herdava `data-mode`/`data-theme` e os cards BARBEARIAS/STUDIOS ficavam com texto escuro no overlay.
@@ -305,6 +311,7 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 📋 Pendências / próximos passos
 
+- [ ] **Clube de Assinatura — fechar discovery:** gray areas em `specs/active/SPEC-clube-assinatura-discovery-2026-09-05.md` §9 (menu, teto no salão, preço no booking, renovação mensal, badge na Agenda, nome Clube vs Plano). Depois promover para sprint `clube-assinatura-v2`.
 - [ ] **Smoke test manual em produção:** agendar → checkout → fila → confirmar isolamento entre barbearias.
 - [ ] **Validar ao vivo a Agenda v2 (clique real):** abrir o modal de detalhes e testar o fluxo staff **"Confirmar e cobrar"**. ⚠️ O staff fechar atendimento depende de permissão de banco — se der erro ao concluir/registrar financeiro como staff, ajustar a policy. (Não foi possível validar via automação: a sessão do navegador caiu durante o teste.)
 - [ ] **Hardening pós-deploy** (não bloqueante; detalhes nas notas privadas): checkout transacional único (atendimento + produtos), RLS role-based para staff, rate-limit/captcha em endpoints públicos.

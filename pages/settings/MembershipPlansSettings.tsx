@@ -11,6 +11,7 @@ import {
 import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships';
 import { Button, Modal, ConfirmModal } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
+import { ClubOwnerNav } from '../../components/membership/ClubOwnerNav';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { useTenantLocale } from '../../hooks/useTenantLocale';
@@ -167,9 +168,7 @@ export const MembershipPlansSettings: React.FC = () => {
                     </Button>
                 </header>
 
-                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                    <a href="#/configuracoes/clube/pix" className={`${accent.text} underline`}>← Configurar Pix</a>
-                </div>
+                <ClubOwnerNav />
 
                 {isLoading ? (
                     <div className={`${colors.textSecondary} p-8`}>Carregando planos...</div>

@@ -7,6 +7,7 @@ import { useBusinessPixConfig, useUpdateBusinessPixConfig } from '../../hooks/us
 import { useAuth } from '../../contexts/AuthContext';
 import { validatePixKey, PixKeyType } from '../../lib/pix-generator';
 import { Button } from '../../components/ui';
+import { ClubOwnerNav } from '../../components/membership/ClubOwnerNav';
 
 const PIX_TYPES: { value: PixKeyType; label: string; placeholder: string; helper: string }[] = [
     { value: 'cpf', label: 'CPF', placeholder: '000.000.000-00', helper: 'Seu CPF (apenas números)' },
@@ -80,7 +81,10 @@ export const MembershipSettings: React.FC = () => {
     if (isLoading) {
         return (
             <SettingsLayout>
-                <div className={`${colors.textSecondary} p-8`}>Carregando...</div>
+                <div className="w-full max-w-3xl space-y-6">
+                    <ClubOwnerNav />
+                    <div className={`${colors.textSecondary} p-8`}>Carregando...</div>
+                </div>
             </SettingsLayout>
         );
     }
@@ -90,12 +94,14 @@ export const MembershipSettings: React.FC = () => {
             <div className="w-full max-w-3xl pb-20 md:pb-0 space-y-6">
                 <header>
                     <h1 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase mb-2`}>
-                        Clube de Assinatura
+                        Pix do Clube
                     </h1>
                     <p className={`${colors.textSecondary} text-sm`}>
                         Configure seu Pix para receber as mensalidades dos assinantes.
                     </p>
                 </header>
+
+                <ClubOwnerNav />
 
                 <section className={`${colors.card} ${colors.border} border rounded-2xl p-6 space-y-5`}>
                     <h2 className={`${font.heading} ${colors.text} text-lg uppercase`}>Seu Pix</h2>

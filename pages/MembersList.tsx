@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Users, Check, X, MessageCircle, Search, Crown, Calendar, ChevronRight, Zap } from 'lucide-react';
 import { Card, Modal, Button, ConfirmModal, PageHeader } from '../components/ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -14,6 +13,7 @@ import {
     useSimulatePixPaid,
 } from '../hooks/useMemberships';
 import { MembershipBadge } from '../components/membership/MembershipBadge';
+import { ClubOwnerNav } from '../components/membership/ClubOwnerNav';
 import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
 import { buildWhatsAppLink, formatCurrency } from '../utils/formatters';
@@ -37,7 +37,6 @@ export const MembersList: React.FC = () => {
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
     const { user, region, businessName } = useAuth();
-    const navigate = useNavigate();
 
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
     const [search, setSearch] = useState('');
@@ -100,12 +99,8 @@ export const MembersList: React.FC = () => {
             <PageHeader
                 title="Assinantes"
                 subtitle="Gerencie os membros do clube de assinatura."
-                action={
-                    <Button variant="secondary" icon={<Users className="w-4 h-4" />} onClick={() => navigate('/configuracoes/clube')}>
-                        Gerenciar planos
-                    </Button>
-                }
             />
+            <ClubOwnerNav />
 
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

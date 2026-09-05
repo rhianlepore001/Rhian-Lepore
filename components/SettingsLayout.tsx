@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { SETTINGS_ITEMS, SettingsItem } from '../constants';
+import { SETTINGS_ITEMS, SettingsItem, findActiveSettingsItem, isPathActive } from '../constants';
 import { useAppTour } from '../hooks/useAppTour';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
@@ -20,6 +20,7 @@ interface SidebarContentProps {
 }
 
 const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, accent, colors }) => {
+  const location = useLocation();
   const grouped = useMemo(() => {
     return GROUP_ORDER
       .map((group) => ({ group, items: menuItems.filter((item) => item.group === group) }))
@@ -49,16 +50,21 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
                   key={item.path}
                   to={item.path}
                   onClick={onNavigate}
-                  className={({ isActive }) => `
+                  className={() => {
+                    const isActive = isPathActive(location.pathname, item.path);
+                    return `
                     relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl transition-all group shrink-0
                     active:animate-haptic-click
                     ${isActive
                       ? `${accent.bgDim} ${accent.text} font-bold`
                       : `${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] border border-transparent`
                     }
-                  `}
+                  `;
+                  }}
                 >
-                  {({ isActive }) => (
+                  {() => {
+                    const isActive = isPathActive(location.pathname, item.path);
+                    return (
                     <>
                       <span
                         className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 rounded-full transition-all duration-200 ${accent.bg} ${isActive ? 'h-5 opacity-100' : 'h-0 opacity-0'}`}
@@ -66,7 +72,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
                       <item.icon className="w-5 h-5 flex-shrink-0" />
                       <span className="text-sm font-medium">{item.label}</span>
                     </>
-                  )}
+                    );
+                  }}
                 </NavLink>
               ))}
             </div>
@@ -116,7 +123,7 @@ const MobileSettingsRail: React.FC<{
         aria-label="Seções de configurações — deslize para ver mais"
       >
         {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = isPathActive(location.pathname, item.path);
           return (
             <NavLink
               key={item.path}
@@ -162,7 +169,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
     ? SETTINGS_ITEMS.filter((item) => item.path === '/configuracoes/servicos')
     : SETTINGS_ITEMS.filter((item) => isDev || !item.devOnly);
 
-  const currentPage = menuItems.find((item) => item.path === location.pathname);
+  const currentPage = findActiveSettingsItem(menuItems, location.pathname);
   const currentPageTitle = currentPage?.label || 'Configurações';
   const currentGroup = currentPage?.group;
 

@@ -101,10 +101,10 @@ export const SubscriptionSettings: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 md:mb-12">
                     <div>
                         <h1 className={`text-2xl md:text-3xl font-heading ${colors.text} uppercase mb-2`}>
-                            Assinatura e Planos
+                            Plano AgendiX
                         </h1>
                         <p className={`text-sm md:text-base ${colors.textSecondary}`}>
-                            Gerencie seu plano e garanta o crescimento do seu negócio
+                            Este é o plano do sistema AgendiX — não o clube de assinatura dos seus clientes.
                         </p>
                     </div>
 

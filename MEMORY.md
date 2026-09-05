@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clube — menu do dono (5 Set 2026, branch `cursor/clube-dono-menu-cbdd`):**
+  - Item **Clube** em Ajustes (Negócio) → planos; **Plano AgendiX** no lugar de “Assinatura”.
+  - Item **Clube** no sidebar e no “Mais” (mobile), dono only → `/#/clube/assinantes`.
+  - Abas Planos / Pix / Assinantes nas três telas.
+  - Fora desta fatia: teto de usos no checkout, financeiro da mensalidade, badge CRM.
+
 - **UI/UX mobile + moeda do tenant — MERGED → produção (5 Set 2026):**
   - Branch `cursor/ui-ux-layout-audit-b5e9` · PR #43 → `main`.
   - Print do Financeiro → Comissões: botões esmagados, saldo desalinhado, título do header quebrando; FAB cobrindo a nav.

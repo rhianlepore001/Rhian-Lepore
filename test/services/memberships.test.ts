@@ -1,18 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cancelMembership,
+  cancelPublicClientMembership,
   confirmMembershipPayment,
   fetchClientActiveMembership,
+  fetchPublicClientMembership,
 } from '@/services/memberships';
 import { supabase } from '@/lib/supabase';
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
+    rpc: vi.fn(),
   },
 }));
 
 const fromMock = supabase.from as unknown as ReturnType<typeof vi.fn>;
+const rpcMock = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -177,5 +181,60 @@ describe('memberships service — cancelMembership', () => {
     fromMock.mockReturnValueOnce({ update });
 
     await expect(cancelMembership('company-001', 'ms-1')).rejects.toBeTruthy();
+  });
+});
+
+describe('memberships service — fetchPublicClientMembership', () => {
+  it('mapeia a row da RPC pública', async () => {
+    rpcMock.mockResolvedValueOnce({
+      data: [{
+        membership_id: 'ms-pub',
+        stored_status: 'active',
+        effective_status: 'active',
+        plan_id: 'plan-1',
+        plan_name: 'Corte Ilimitado',
+        plan_description: 'Cortes no mês',
+        price_cents: 9000,
+        badge_color: 'gold',
+        service_ids: ['s1'],
+        service_names: ['Corte'],
+        usage_limit_per_month: null,
+        usage_this_period: 2,
+        starts_at: '2026-09-01T00:00:00.000Z',
+        current_period_start: '2026-09-01T00:00:00.000Z',
+        current_period_end: '2026-10-01T00:00:00.000Z',
+        next_billing_at: '2026-10-01T00:00:00.000Z',
+        last_paid_at: '2026-09-01T00:00:00.000Z',
+        payment_method: 'pix',
+      }],
+      error: null,
+    });
+
+    const result = await fetchPublicClientMembership('biz-1', '11999999999');
+
+    expect(rpcMock).toHaveBeenCalledWith('get_public_client_membership', {
+      p_business_id: 'biz-1',
+      p_phone: '11999999999',
+    });
+    expect(result?.plan_name).toBe('Corte Ilimitado');
+    expect(result?.usage_this_period).toBe(2);
+    expect(result?.effective_status).toBe('active');
+  });
+
+  it('retorna null quando a RPC não acha membership', async () => {
+    rpcMock.mockResolvedValueOnce({ data: [], error: null });
+    await expect(fetchPublicClientMembership('biz-1', '11999999999')).resolves.toBeNull();
+  });
+});
+
+describe('memberships service — cancelPublicClientMembership', () => {
+  it('chama a RPC de cancelamento público', async () => {
+    rpcMock.mockResolvedValueOnce({ data: 'ms-pub', error: null });
+    const id = await cancelPublicClientMembership('biz-1', '11999999999');
+    expect(id).toBe('ms-pub');
+    expect(rpcMock).toHaveBeenCalledWith('cancel_public_client_membership', {
+      p_business_id: 'biz-1',
+      p_phone: '11999999999',
+    });
   });
 });

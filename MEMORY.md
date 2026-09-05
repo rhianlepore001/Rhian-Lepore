@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Clube Core — área do cliente (5 Set 2026, branch `cursor/clube-core-area-cliente-cbdd`):**
+  - Cliente vê plano, validade, incluso e usos em `/#/minha-area/:slug` (aba Clube + destaque no hero).
+  - Pode cancelar a assinatura (RPC pública por telefone + estabelecimento).
+  - Rota `/#/clube/:slug` passa a resolver o estabelecimento (CTA de assinar).
+  - Migration `20260905000001_public_client_membership.sql` **não aplicada no remoto** (branch de pivot).
+  - Fora desta branch: menu do dono, Pix/txid, checkout, financeiro.
+
 - **Login gateway: tema da sessão vazava no index após logout — MERGED → produção (4 Set 2026):**
   - Branch `cursor/login-gateway-theme-logout-2343` · PR #38 → `main` · CI + Vercel success.
   - Após Sair em modo claro (white) ou nos outros 3 combos (barber/beauty × dark/light — “park”), o `#/login` herdava `data-mode`/`data-theme` e os cards BARBEARIAS/STUDIOS ficavam com texto escuro no overlay.

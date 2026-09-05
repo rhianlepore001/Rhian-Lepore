@@ -24,6 +24,8 @@ import {
     simulatePixPaid,
     cancelPixPayment,
     createPixPayment,
+    fetchPublicClientMembership,
+    cancelPublicClientMembership,
     UpsertMembershipPlanInput,
     CreateMembershipInput,
     UpdateBusinessPixInput,
@@ -217,6 +219,24 @@ export function useCreatePublicPixPayment(businessId: string | null) {
     return useMutation({
         mutationFn: (input: CreatePublicPixPaymentInput) =>
             createPublicPixPayment(businessId!, input),
+    });
+}
+
+export function usePublicClientMembership(businessId: string | null, phone: string | null) {
+    return useQuery({
+        queryKey: ['public-client-membership', businessId, phone],
+        queryFn: () => fetchPublicClientMembership(businessId!, phone!),
+        enabled: !!businessId && !!phone,
+    });
+}
+
+export function useCancelPublicClientMembership(businessId: string | null, phone: string | null) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: () => cancelPublicClientMembership(businessId!, phone!),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['public-client-membership', businessId, phone] });
+        },
     });
 }
 

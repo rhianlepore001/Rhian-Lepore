@@ -9,8 +9,12 @@ import { PhoneInput } from '../components/PhoneInput';
 import {
     Calendar, History, User, LogOut, ArrowRight,
     Loader2, CalendarX, Sparkles, Mail, Phone,
-    Edit2, Check, X, ChevronLeft, Clock
+    Edit2, Check, X, ChevronLeft, Clock, Crown
 } from 'lucide-react';
+import { ClientMembershipPanel } from '../components/membership/ClientMembershipPanel';
+import { useCancelPublicClientMembership, usePublicClientMembership } from '../hooks/useMemberships';
+import { useToast } from '../components/ui/Toast';
+import { validityHeadline } from '../utils/membershipValidity';
 
 interface BusinessProfile {
     id: string;
@@ -23,7 +27,7 @@ interface BusinessProfile {
     allow_client_rescheduling?: boolean;
 }
 
-type Tab = 'upcoming' | 'history' | 'profile';
+type Tab = 'upcoming' | 'history' | 'club' | 'profile';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -92,6 +96,25 @@ export const ClientArea: React.FC = () => {
     const [editName, setEditName] = useState('');
     const [editEmail, setEditEmail] = useState('');
     const [profileSaving, setProfileSaving] = useState(false);
+
+    const { showToast } = useToast();
+    const { data: membership, isLoading: membershipLoading } = usePublicClientMembership(
+        sessionClient?.business_id ?? business?.id ?? null,
+        sessionClient?.phone ?? null
+    );
+    const cancelMembership = useCancelPublicClientMembership(
+        sessionClient?.business_id ?? business?.id ?? null,
+        sessionClient?.phone ?? null
+    );
+
+    const handleCancelMembership = async () => {
+        try {
+            await cancelMembership.mutateAsync();
+            showToast('Plano cancelado.', 'success');
+        } catch {
+            showToast('Não foi possível cancelar o plano. Tente novamente.', 'error');
+        }
+    };
 
     const isBeauty = business?.user_type === 'beauty';
     const region = (business?.region as 'BR' | 'PT') ?? 'BR';
@@ -454,6 +477,22 @@ export const ClientArea: React.FC = () => {
                                     ? `Você tem ${upcomingBookings.length} agendamento${upcomingBookings.length > 1 ? 's' : ''} próximo${upcomingBookings.length > 1 ? 's' : ''}`
                                     : 'Nenhum agendamento futuro'}
                             </p>
+                            {membership && membership.effective_status !== 'cancelled' && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('club')}
+                                    className={`mt-3 text-left text-xs leading-relaxed ${isBeauty ? 'text-theme-text' : 'text-theme-textSecondary'}`}
+                                    data-testid="club-hero-chip"
+                                >
+                                    <span className="font-semibold">Clube · {membership.plan_name}</span>
+                                    <span className="block mt-0.5">
+                                        {validityHeadline(
+                                            membership.effective_status,
+                                            membership.current_period_end || membership.next_billing_at
+                                        )}
+                                    </span>
+                                </button>
+                            )}
                         </div>
                         <Link
                             to={`/book/${slug}`}
@@ -469,6 +508,7 @@ export const ClientArea: React.FC = () => {
                     {([
                         { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
                         { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
+                        { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
                         { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
                     ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
                         <button
@@ -487,11 +527,14 @@ export const ClientArea: React.FC = () => {
                             `}
                         >
                             {tab.icon}
-                            {tab.label}
+                            <span className="truncate">{tab.label}</span>
                             {tab.id === 'upcoming' && upcomingBookings.length > 0 && (
                                 <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}>
                                     {upcomingBookings.length}
                                 </span>
+                            )}
+                            {tab.id === 'club' && membership && (membership.effective_status === 'pending' || membership.effective_status === 'overdue') && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" aria-hidden="true" />
                             )}
                         </button>
                     ))}
@@ -576,6 +619,23 @@ export const ClientArea: React.FC = () => {
                                         )}
                                     </>
                                 )}
+                            </div>
+                        )}
+
+                        {activeTab === 'club' && (
+                            <div className="animate-in fade-in duration-200">
+                                <ClientMembershipPanel
+                                    membership={membership ?? null}
+                                    slug={slug ?? ''}
+                                    isBeauty={isBeauty}
+                                    region={region}
+                                    businessPhone={business.phone}
+                                    businessName={business.business_name}
+                                    clientName={sessionClient.name}
+                                    loading={membershipLoading}
+                                    cancelling={cancelMembership.isPending}
+                                    onCancel={handleCancelMembership}
+                                />
                             </div>
                         )}
 

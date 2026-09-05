@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Check, MessageCircle, Store, ArrowRight, Crown, Zap } from 'lucide-react';
 import { usePublicMembershipPlans, usePublicPixConfig, useCreatePublicMembershipRequest, useCreatePublicPixPayment } from '../hooks/useMemberships';
 import { useBusinessProfileBySlug } from '../hooks/usePublicBooking';
@@ -13,8 +13,9 @@ import { generatePixTxid } from '../lib/pix-txid';
 import { formatCurrency, Region } from '../utils/formatters';
 
 export const JoinClub: React.FC = () => {
+    const { slug: slugParam } = useParams<{ slug: string }>();
     const [searchParams] = useSearchParams();
-    const slug = searchParams.get('slug') || '';
+    const slug = slugParam || searchParams.get('slug') || '';
     const { showToast } = useToast();
 
     const { data: businessProfile, isLoading: profileLoading } = useBusinessProfileBySlug(slug);
@@ -294,11 +295,19 @@ export const JoinClub: React.FC = () => {
                             </h2>
                             <p className={`${colors.textSecondary} text-base max-w-md mx-auto`}>
                                 {paymentMethod === 'pix' && pixBrCode ? (
-                                    <>Escaneie o QR Code abaixo. Seu plano será ativado em segundos após o pagamento.</>
+                                    <>Escaneie o QR Code abaixo. Seu plano será ativado após a confirmação do estabelecimento.</>
                                 ) : (
                                     <>Na próxima visita, pague no balcão. Seu plano será ativado após a confirmação.</>
                                 )}
                             </p>
+                            {slug && (
+                                <Link
+                                    to={`/minha-area/${slug}`}
+                                    className={`inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl text-sm font-bold ${accent.bg} text-[var(--color-bg)]`}
+                                >
+                                    Ir para Minha Área
+                                </Link>
+                            )}
                         </div>
                         {paymentMethod === 'pix' && pixBrCode && pixConfig?.pix_key_value && (
                             <PixDisplay

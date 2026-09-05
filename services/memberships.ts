@@ -170,6 +170,76 @@ export async function createPublicPixPayment(
     return data as string;
 }
 
+export interface PublicClientMembership {
+    membership_id: string;
+    stored_status: MembershipStatus;
+    effective_status: MembershipStatus;
+    plan_id: string;
+    plan_name: string;
+    plan_description: string | null;
+    price_cents: number;
+    badge_color: MembershipBadgeColor;
+    service_ids: string[];
+    service_names: string[];
+    usage_limit_per_month: number | null;
+    usage_this_period: number;
+    starts_at: string;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    next_billing_at: string | null;
+    last_paid_at: string | null;
+    payment_method: MembershipPaymentMethod | null;
+}
+
+function mapPublicClientMembership(row: Record<string, unknown>): PublicClientMembership {
+    return {
+        membership_id: String(row.membership_id),
+        stored_status: row.stored_status as MembershipStatus,
+        effective_status: row.effective_status as MembershipStatus,
+        plan_id: String(row.plan_id),
+        plan_name: String(row.plan_name ?? ''),
+        plan_description: (row.plan_description as string | null) ?? null,
+        price_cents: Number(row.price_cents ?? 0),
+        badge_color: (row.badge_color as MembershipBadgeColor) || 'gold',
+        service_ids: (row.service_ids as string[]) ?? [],
+        service_names: (row.service_names as string[]) ?? [],
+        usage_limit_per_month: (row.usage_limit_per_month as number | null) ?? null,
+        usage_this_period: Number(row.usage_this_period ?? 0),
+        starts_at: String(row.starts_at),
+        current_period_start: (row.current_period_start as string | null) ?? null,
+        current_period_end: (row.current_period_end as string | null) ?? null,
+        next_billing_at: (row.next_billing_at as string | null) ?? null,
+        last_paid_at: (row.last_paid_at as string | null) ?? null,
+        payment_method: (row.payment_method as MembershipPaymentMethod | null) ?? null,
+    };
+}
+
+export async function fetchPublicClientMembership(
+    businessId: string,
+    phone: string
+): Promise<PublicClientMembership | null> {
+    const { data, error } = await supabase.rpc('get_public_client_membership', {
+        p_business_id: businessId,
+        p_phone: phone,
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return null;
+    return mapPublicClientMembership(row as Record<string, unknown>);
+}
+
+export async function cancelPublicClientMembership(
+    businessId: string,
+    phone: string
+): Promise<string> {
+    const { data, error } = await supabase.rpc('cancel_public_client_membership', {
+        p_business_id: businessId,
+        p_phone: phone,
+    });
+    if (error) throw error;
+    return data as string;
+}
+
 export interface UpsertMembershipPlanInput {
     id?: string;
     name: string;

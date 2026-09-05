@@ -5,6 +5,11 @@ import {
   saveOnboardingStep,
   upsertOnboardingStep,
   completeOnboardingProgress,
+  getSetupStatus,
+  isBookingLinkReady,
+  isSetupChecklistComplete,
+  shouldHideSetupCopilot,
+  type SetupStatus,
 } from '@/services/onboarding';
 import { supabase } from '@/lib/supabase';
 
@@ -180,5 +185,143 @@ describe('onboarding service', () => {
       p_completed_steps: [1, 2],
       p_step_data: { guided_started: true },
     });
+  });
+});
+
+function countQuery(count: number) {
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ count, data: null, error: null }),
+    }),
+  };
+}
+
+function rowQuery(data: unknown) {
+  const payload = { data, error: null };
+  return {
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue(payload),
+        single: vi.fn().mockResolvedValue(payload),
+      }),
+    }),
+  };
+}
+
+function mockSetupTables(opts: {
+  services?: number;
+  team?: number;
+  clients?: number;
+  hours?: Record<string, unknown> | null;
+  slug?: string | null;
+  activated?: boolean;
+  appointments?: number;
+  publicBookings?: number;
+}) {
+  (supabase.from as any).mockImplementation((table: string) => {
+    switch (table) {
+      case 'services':
+        return countQuery(opts.services ?? 0);
+      case 'team_members':
+        return countQuery(opts.team ?? 0);
+      case 'clients':
+        return countQuery(opts.clients ?? 0);
+      case 'appointments':
+        return countQuery(opts.appointments ?? 0);
+      case 'public_bookings':
+        return countQuery(opts.publicBookings ?? 0);
+      case 'business_settings':
+        return rowQuery(opts.hours === undefined ? { business_hours: { mon: {} } } : { business_hours: opts.hours });
+      case 'profiles':
+        return rowQuery({
+          business_slug: opts.slug ?? null,
+          activation_completed: opts.activated ?? false,
+        });
+      default:
+        return countQuery(0);
+    }
+  });
+}
+
+const completeChecklist = {
+  hasServices: true,
+  hasTeam: true,
+  hasClients: true,
+  hasBusinessHours: true,
+  hasBookingSlug: true,
+  hasAppointments: true,
+  isActivated: false,
+} satisfies SetupStatus;
+
+describe('isBookingLinkReady', () => {
+  it('é verdadeiro quando o slug existe', () => {
+    expect(isBookingLinkReady({ businessSlug: 'barbearia-bob', publicBookingsCount: 0 })).toBe(true);
+  });
+
+  it('é verdadeiro quando já houve agendamento público, mesmo sem slug', () => {
+    expect(isBookingLinkReady({ businessSlug: null, publicBookingsCount: 2 })).toBe(true);
+  });
+
+  it('é falso quando não há slug nem reservas públicas', () => {
+    expect(isBookingLinkReady({ businessSlug: '  ', publicBookingsCount: 0 })).toBe(false);
+    expect(isBookingLinkReady({})).toBe(false);
+  });
+});
+
+describe('shouldHideSetupCopilot', () => {
+  it('esconde o card quando todos os passos estão concluídos', () => {
+    expect(shouldHideSetupCopilot(completeChecklist)).toBe(true);
+    expect(isSetupChecklistComplete(completeChecklist)).toBe(true);
+  });
+
+  it('esconde o card quando o perfil já está ativado', () => {
+    expect(shouldHideSetupCopilot({ ...completeChecklist, hasBookingSlug: false, isActivated: true })).toBe(true);
+  });
+
+  it('mantém o card se o link público ainda não foi configurado nem usado', () => {
+    expect(shouldHideSetupCopilot({ ...completeChecklist, hasBookingSlug: false })).toBe(false);
+  });
+});
+
+describe('getSetupStatus', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('marca o passo de booking quando o slug existe', async () => {
+    mockSetupTables({ slug: 'barbearia-bob', publicBookings: 0 });
+    const status = await getSetupStatus('user-001');
+    expect(status.hasBookingSlug).toBe(true);
+  });
+
+  it('marca o passo de booking quando o link público já foi usado', async () => {
+    mockSetupTables({
+      slug: null,
+      publicBookings: 3,
+      services: 1,
+      team: 1,
+      clients: 1,
+      appointments: 1,
+    });
+    const status = await getSetupStatus('user-001');
+    expect(status.hasBookingSlug).toBe(true);
+    expect(status.hasAppointments).toBe(true);
+    expect(isSetupChecklistComplete(status)).toBe(true);
+    expect(shouldHideSetupCopilot(status)).toBe(true);
+  });
+
+  it('não marca booking só com o restante do checklist', async () => {
+    mockSetupTables({
+      slug: null,
+      publicBookings: 0,
+      services: 1,
+      team: 1,
+      clients: 1,
+      appointments: 1,
+    });
+    const status = await getSetupStatus('user-001');
+    expect(status.hasBookingSlug).toBe(false);
+    expect(isSetupChecklistComplete(status)).toBe(false);
+    expect(shouldHideSetupCopilot(status)).toBe(false);
   });
 });

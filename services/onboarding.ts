@@ -96,7 +96,53 @@ export async function completeOnboardingProgress(companyId: string): Promise<voi
 
 export const completeOnboarding = completeOnboardingProgress;
 
-export async function getSetupStatus(userId: string) {
+export interface SetupStatus {
+  hasServices: boolean;
+  hasTeam: boolean;
+  hasClients: boolean;
+  hasBusinessHours: boolean;
+  hasBookingSlug: boolean;
+  hasAppointments: boolean;
+  isActivated: boolean;
+}
+
+/** Link público existe (slug) ou já foi usado (há reservas na tabela pública). */
+export function isBookingLinkReady(input: {
+  businessSlug?: string | null;
+  publicBookingsCount?: number;
+}): boolean {
+  const slug = (input.businessSlug ?? '').trim();
+  if (slug.length > 0) return true;
+  return (input.publicBookingsCount ?? 0) > 0;
+}
+
+export function isSetupChecklistComplete(
+  status: Pick<
+    SetupStatus,
+    | 'hasServices'
+    | 'hasTeam'
+    | 'hasClients'
+    | 'hasBusinessHours'
+    | 'hasBookingSlug'
+    | 'hasAppointments'
+  >,
+): boolean {
+  return (
+    status.hasServices &&
+    status.hasTeam &&
+    status.hasClients &&
+    status.hasBusinessHours &&
+    status.hasBookingSlug &&
+    status.hasAppointments
+  );
+}
+
+/** O card some quando o checklist fechou ou o perfil já está ativado. */
+export function shouldHideSetupCopilot(status: SetupStatus): boolean {
+  return status.isActivated || isSetupChecklistComplete(status);
+}
+
+export async function getSetupStatus(userId: string): Promise<SetupStatus> {
   const [
     servicesRes,
     teamRes,
@@ -104,18 +150,23 @@ export async function getSetupStatus(userId: string) {
     settingsRes,
     profileRes,
     appointmentsRes,
+    publicBookingsRes,
   ] = await Promise.all([
     supabase.from('services').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('clients').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    supabase.from('business_settings').select('business_hours, public_booking_enabled').eq('user_id', userId).maybeSingle(),
-    supabase.from('profiles').select('business_slug, activation_completed').eq('id', userId).single(),
+    supabase.from('business_settings').select('business_hours').eq('user_id', userId).maybeSingle(),
+    supabase.from('profiles').select('business_slug, activation_completed').eq('id', userId).maybeSingle(),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase.from('public_bookings').select('id', { count: 'exact', head: true }).eq('business_id', userId),
   ]);
 
   const businessHours = settingsRes.data?.business_hours;
   const hasBusinessHours = !!businessHours && Object.keys(businessHours).length > 0;
-  const hasBookingSlug = !!profileRes.data?.business_slug;
+  const hasBookingSlug = isBookingLinkReady({
+    businessSlug: profileRes.data?.business_slug,
+    publicBookingsCount: publicBookingsRes.count ?? 0,
+  });
 
   return {
     hasServices: (servicesRes.count ?? 0) > 0,

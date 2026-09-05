@@ -331,11 +331,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       size="lg"
       preventClose={loading}
       footer={
-        <div className="flex items-center justify-between w-full">
-          <Button variant="ghost" onClick={onClose} disabled={loading}>
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleConfirm} loading={loading}>
+          <Button variant="primary" className="w-full sm:w-auto" onClick={handleConfirm} loading={loading}>
             {discount.fullyCovered ? 'Concluir atendimento' : 'Confirmar Pagamento'}
           </Button>
         </div>
@@ -395,12 +395,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <p className={`text-xs ${font.mono} uppercase ${colors.textSecondary} flex items-center gap-2`}>
               <Package size={14} /> Produtos (opcional)
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <select
                 aria-label="Adicionar produto"
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
-                className={`flex-1 ${colors.inputBg} ${colors.inputBorder} border rounded-xl px-3 py-2.5 ${colors.text} text-sm focus:outline-none focus:border-[var(--color-input-focus)]`}
+                className={`flex-1 min-w-0 ${colors.inputBg} ${colors.inputBorder} border rounded-xl px-3 py-2.5 ${colors.text} text-sm focus:outline-none focus:border-[var(--color-input-focus)]`}
               >
                 <option value="">Selecionar produto...</option>
                 {availableProducts.map(product => (
@@ -409,7 +409,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </option>
                 ))}
               </select>
-              <Button variant="secondary" onClick={addProductToCart} disabled={!selectedProductId}>
+              <Button variant="secondary" className="w-full sm:w-auto shrink-0" onClick={addProductToCart} disabled={!selectedProductId}>
                 Adicionar
               </Button>
             </div>

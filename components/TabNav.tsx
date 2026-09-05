@@ -25,7 +25,7 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => onChange(tab.id)}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 font-mono text-xs uppercase tracking-wide transition-all duration-200 whitespace-nowrap ${
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 min-h-[44px] font-mono text-xs uppercase tracking-wide transition-all duration-200 whitespace-nowrap ${
                 activeTab === tab.id
                   ? `${accentBg} text-[var(--color-bg)] font-semibold`
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-card-hover)]'

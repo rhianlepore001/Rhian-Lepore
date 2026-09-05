@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { CommissionShareModal } from './CommissionShareModal';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface ServiceRecord {
     id: string;
@@ -47,6 +48,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
     onClose
 }) => {
     const { user } = useAuth();
+    const { formatMoney } = useTenantLocale();
     const isBeauty = accentColor.includes('beauty');
     const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
     const [records, setRecords] = useState<ServiceRecord[]>([]);
@@ -116,7 +118,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
     const totalBase = records.reduce((s, r) => s + r.commission_base, 0);
     const totalCommission = records.reduce((s, r) => s + r.commission_value, 0);
 
-    const fmt = (n: number) => `${currencySymbol} ${n.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const fmt = (n: number) => formatMoney(n);
     const fmtDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
     return (

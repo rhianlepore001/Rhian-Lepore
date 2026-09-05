@@ -132,7 +132,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     <h3 className={`font-heading text-base md:text-xl font-bold truncate leading-tight ${member.active ? colors.text : colors.textMuted}`}>
                         {member.name}
                     </h3>
-                    <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${accent.text} opacity-80`}>
+                    <p className={`text-xs font-mono uppercase tracking-wide ${accent.text} opacity-80`}>
                         {member.role}
                     </p>
 
@@ -234,7 +234,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                         className={`
                             flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 min-h-[44px]
                             ${accent.bgDim} ${accent.text} ${radius.button}
-                            transition-all text-xs font-bold uppercase tracking-widest
+                            transition-all text-xs font-bold uppercase tracking-wide
                             border ${accent.borderDim}
                         `}
                     >
@@ -251,7 +251,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     className={`
                         flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 min-h-[44px]
                         bg-[var(--color-card-hover)] ${colors.text} ${radius.button} hover:bg-[var(--color-divider)]
-                        transition-all text-xs font-bold uppercase tracking-widest
+                        transition-all text-xs font-bold uppercase tracking-wide
                         border ${colors.border} hover:border-[var(--color-border-strong)]
                     `}
                 >

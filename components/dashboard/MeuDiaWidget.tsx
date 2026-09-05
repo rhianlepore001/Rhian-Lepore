@@ -60,12 +60,12 @@ const QuickActionItem: React.FC<{
 
     return (
         <li className={`p-3 md:p-4 ${colors.surfaceHover} ${colors.card} transition-all flex items-center justify-between group ${nextHighlight} ${status === 'completing' ? 'opacity-50 scale-95' : ''}`}>
-            <div className="flex items-center gap-3 md:gap-4 flex-1">
-                <div className={`font-mono text-base font-bold ${colors.text} ${colors.surface} px-3 py-2 border ${colors.border} rounded-lg flex flex-col items-center shadow-inner min-w-[56px] text-center relative`}>
+            <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                <div className={`font-mono text-base font-bold ${colors.text} ${colors.surface} px-3 py-2 border ${colors.border} rounded-lg flex flex-col items-center shadow-inner min-w-[56px] shrink-0 text-center relative`}>
                     <span>{apt.time}</span>
                     <span className={`absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full ${statusDotColor}`} aria-hidden="true" />
                 </div>
-                <div className="flex-1 truncate">
+                <div className="flex-1 min-w-0">
                     {isNext && (
                         <p className={`text-xs font-mono uppercase tracking-widest mb-0.5 ${accent.text}`}>
                             Próximo
@@ -127,9 +127,9 @@ export const MeuDiaWidget: React.FC = () => {
                         <span className={`text-xs md:text-xs uppercase font-mono ${colors.textSecondary}`}>Pendentes</span>
                         <span className={`text-xl md:text-3xl font-bold font-heading ${colors.text}`}>{summary.pending}</span>
                     </div>
-                    <div className="flex flex-col items-center text-center">
-                        <span className={`text-xs md:text-xs uppercase font-mono ${colors.textSecondary}`}>Faturamento</span>
-                        <span className={`text-xl md:text-3xl font-bold font-heading text-[var(--color-success)]`}>
+                    <div className="flex flex-col items-center text-center min-w-0 px-1">
+                        <span className={`text-xs uppercase font-mono ${colors.textSecondary}`}>Faturamento</span>
+                        <span className={`text-sm sm:text-xl md:text-3xl font-bold font-heading text-[var(--color-success)] tabular-nums leading-tight break-words`}>
                             {formatCurrency(summary.dailyEarnings, currencyRegion)}
                         </span>
                     </div>

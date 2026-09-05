@@ -83,17 +83,17 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
                 <div className={`p-6 rounded-xl border space-y-4 ${cardBg}`}>
                     <h3 className="text-theme-text font-heading text-lg border-b border-[var(--color-divider)] pb-2">Resumo</h3>
 
-                    <div className="flex justify-between">
-                        <span className="text-theme-textSecondary">Cliente</span>
-                        <span className="text-theme-text font-bold">{clients.find(c => c.id === selectedClientId)?.name}</span>
+                    <div className="flex justify-between gap-3 min-w-0">
+                        <span className="text-theme-textSecondary shrink-0">Cliente</span>
+                        <span className="text-theme-text font-bold text-right min-w-0 truncate">{clients.find(c => c.id === selectedClientId)?.name}</span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-theme-textSecondary">Profissional</span>
-                        <span className="text-theme-text font-bold">{teamMembers.find(t => t.id === selectedProId)?.name}</span>
+                    <div className="flex justify-between gap-3 min-w-0">
+                        <span className="text-theme-textSecondary shrink-0">Profissional</span>
+                        <span className="text-theme-text font-bold text-right min-w-0 truncate">{teamMembers.find(t => t.id === selectedProId)?.name}</span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-theme-textSecondary">Data e Hora</span>
-                        <span className="text-theme-text font-bold text-right">
+                    <div className="flex justify-between gap-3 min-w-0">
+                        <span className="text-theme-textSecondary shrink-0">Data e Hora</span>
+                        <span className="text-theme-text font-bold text-right min-w-0">
                             {selectedDate.toLocaleDateString('pt-BR')} às {selectedTime}
                         </span>
                     </div>
@@ -155,9 +155,9 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center py-2 border-t border-[var(--color-divider)]">
-                        <span className="text-theme-textSecondary">Total a Receber</span>
-                        <span className={`text-2xl font-bold font-mono text-theme-accent`}>
+                    <div className="flex justify-between items-center gap-3 py-2 border-t border-[var(--color-divider)] min-w-0">
+                        <span className="text-theme-textSecondary shrink-0">Total a Receber</span>
+                        <span className={`text-xl sm:text-2xl font-bold font-mono text-theme-accent tabular-nums whitespace-nowrap`}>
                             {formatCurrency(finalPrice, currencyRegion)}
                         </span>
                     </div>

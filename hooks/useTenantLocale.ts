@@ -4,6 +4,7 @@ import {
     formatCurrency,
     formatPhone,
     getCurrencySymbol,
+    normalizeRegion,
     Region,
 } from '../utils/formatters';
 
@@ -33,7 +34,7 @@ function buildLocale(region: Region): TenantLocale {
  */
 export function useTenantLocale(): TenantLocale {
     const { region } = useAuth();
-    return buildLocale(region === 'PT' ? 'PT' : 'BR');
+    return buildLocale(normalizeRegion(region));
 }
 
 /**
@@ -41,5 +42,5 @@ export function useTenantLocale(): TenantLocale {
  * perfil público do estabelecimento resolvido pelo slug.
  */
 export function usePublicTenantLocale(region: string | null | undefined): TenantLocale {
-    return buildLocale(region === 'PT' ? 'PT' : 'BR');
+    return buildLocale(normalizeRegion(region));
 }

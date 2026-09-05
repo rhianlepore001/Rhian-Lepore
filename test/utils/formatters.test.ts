@@ -11,9 +11,26 @@ import {
     formatTime,
     formatDateTime,
     formatRelativeDate,
+    normalizeRegion,
 } from '@/utils/formatters';
 
-describe('Formatters Utils', () => {
+describe('normalizeRegion', () => {
+        it('reconhece Portugal e euro', () => {
+            expect(normalizeRegion('PT')).toBe('PT');
+            expect(normalizeRegion('pt')).toBe('PT');
+            expect(normalizeRegion('Portugal')).toBe('PT');
+            expect(normalizeRegion('EUR')).toBe('PT');
+            expect(normalizeRegion('EURO')).toBe('PT');
+            expect(normalizeRegion('EU')).toBe('PT');
+        });
+
+        it('qualquer outro valor cai em BR', () => {
+            expect(normalizeRegion('BR')).toBe('BR');
+            expect(normalizeRegion(null)).toBe('BR');
+            expect(normalizeRegion('')).toBe('BR');
+            expect(normalizeRegion('US')).toBe('BR');
+        });
+    });
     describe('formatCurrency', () => {
         it('should format BRL currency correctly', () => {
             expect(formatCurrency(1234.56, 'BR')).toBe('R$ 1.234,56');
@@ -141,4 +158,3 @@ describe('Formatters Utils', () => {
             expect(formatRelativeDate(otherDay, 'BR')).toBe('01/01/2023');
         });
     });
-});

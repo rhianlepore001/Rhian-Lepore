@@ -312,12 +312,12 @@ const confirmFinish = async () => {
                         />
                     ) : (
                         actionableList.map(entry => (
-                            <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
-                                <div>
-                                    <h3 className={`font-bold ${colors.text} text-lg flex items-center gap-2`}>
-                                        <span className="font-heading">{entry.client_name}</span>
+                            <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center gap-3 transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
+                                <div className="min-w-0 flex-1">
+                                    <h3 className={`font-bold ${colors.text} text-lg flex items-center gap-2 min-w-0`}>
+                                        <span className="font-heading truncate">{entry.client_name}</span>
                                         {entry.status === 'calling' && (
-                                            <span className="text-xs bg-[var(--color-success)] text-[var(--color-bg)] px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
+                                            <span className="shrink-0 text-xs bg-[var(--color-success)] text-[var(--color-bg)] px-2 py-0.5 rounded font-bold uppercase animate-pulse">Chamando</span>
                                         )}
                                     </h3>
                                     <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>
@@ -326,7 +326,7 @@ const confirmFinish = async () => {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 shrink-0">
                                     {entry.status === 'waiting' && (
                                         <button
                                             onClick={() => updateStatus(entry.id, 'calling')}
@@ -376,21 +376,21 @@ const confirmFinish = async () => {
                         />
                     ) : (
                         servingList.map(entry => (
-                            <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
-                                <div>
-                                    <h3 className={`font-bold ${colors.text} text-lg font-heading`}>{entry.client_name}</h3>
+                            <div key={entry.id} className={`${colors.card} backdrop-blur-lg border ${colors.border} p-4 sm:p-5 rounded-2xl flex justify-between items-center gap-3 transition-all hover:scale-[1.01] ${getStatusColor(entry.status)} shadow-lite-glass`}>
+                                <div className="min-w-0 flex-1">
+                                    <h3 className={`font-bold ${colors.text} text-lg font-heading truncate`}>{entry.client_name}</h3>
                                     <div className={`text-sm ${colors.textSecondary} flex flex-col gap-1 mt-1 font-mono`}>
                                         <span className="text-xs opacity-60">Iniciou às {new Date(entry.joined_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span> {/* In real app use updated_at or dedicated 'started_at' */}
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 shrink-0">
                                     <button
                                         onClick={() => openFinishModal(entry)}
-className={`px-5 py-3 ${accent.bgDim} ${accent.text} font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2 ${accent.shadowStrong} min-h-[48px]`}
+className={`px-4 py-3 ${accent.bgDim} ${accent.text} font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2 ${accent.shadowStrong} min-h-[44px]`}
                                         title="Finalizar"
                                     >
-                                        <Check className="w-5 h-5" />
+                                        <Check className="w-5 h-5 shrink-0" />
                                         Finalizar
                                     </button>
                                 </div>

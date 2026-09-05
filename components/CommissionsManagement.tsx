@@ -12,6 +12,7 @@ import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
 import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface CommissionDue {
     professional_id: string;
@@ -77,8 +78,24 @@ function calcCommissionPeriod(settlementDay: number): { start: string; end: stri
     };
 }
 
+function MoneyInline({
+    formatted,
+    className = '',
+}: {
+    formatted: string;
+    className?: string;
+}) {
+    return (
+        <span className={`inline-flex items-baseline whitespace-nowrap tabular-nums ${className}`}>
+            {formatted}
+        </span>
+    );
+}
+
 export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ accentColor, currencySymbol, onPaymentSuccess }) => {
     const { user } = useAuth();
+    const { formatMoney, currencySymbol: tenantSymbol } = useTenantLocale();
+    const moneySymbol = tenantSymbol || currencySymbol;
     const navigate = useNavigate();
     const isBeauty = accentColor.includes('beauty');
     const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
@@ -353,8 +370,8 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         <div className="space-y-6 md:space-y-8 pb-10">
             {/* Header */}
             <div className="px-1 md:px-0">
-                <div className="flex items-center gap-1">
-                    <h2 className={`text-2xl md:text-3xl ${font.heading} ${colors.text} uppercase tracking-tighter`}>Gestão de Comissões</h2>
+                <div className="flex items-center gap-1 min-w-0">
+                    <h2 className={`text-xl sm:text-2xl md:text-3xl min-w-0 ${font.heading} ${colors.text} uppercase tracking-tight`}>Gestão de Comissões</h2>
                     <InfoButton text="Controle total dos repasses da sua equipe. O sistema calcula automaticamente o que cada profissional deve receber com base nas taxas configuradas." />
                 </div>
                 <p className={`${colors.textSecondary} text-sm md:text-base max-w-2xl leading-relaxed`}>
@@ -385,39 +402,39 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     {/* Metrics */}
                     {!loading && commissionsDue.length > 0 && (
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-                            <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
+                            <Card variant="outlined" className="p-4 md:p-6 relative" noPadding>
                                 <div className={`p-4 md:p-6`}>
                                     <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accent.bg}`}></div>
-                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pendente</p>
+                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Pendente</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold ${totalDueOverall > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
-                                        {currencySymbol} {(totalDueOverall || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        <MoneyInline formatted={formatMoney(totalDueOverall || 0)} />
                                     </h4>
                                 </div>
                             </Card>
-                            <Card variant="outlined" className="p-4 md:p-6 relative overflow-hidden" noPadding>
+                            <Card variant="outlined" className="p-4 md:p-6 relative" noPadding>
                                 <div className="p-4 md:p-6">
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-[var(--color-success)]"></div>
-                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Pago (Mês)</p>
+                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Pago (mês)</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-[var(--color-success)]`}>
-                                        {currencySymbol} {(totalPaidMonth || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        <MoneyInline formatted={formatMoney(totalPaidMonth || 0)} />
                                     </h4>
                                 </div>
                             </Card>
-                            <Card variant="outlined" className="col-span-2 lg:col-span-1 p-4 md:p-6 relative overflow-hidden" noPadding>
+                            <Card variant="outlined" className="col-span-2 lg:col-span-1 p-4 md:p-6 relative" noPadding>
                                 <div className="p-4 md:p-6">
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-[var(--color-info)]"></div>
-                                    <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-widest`}>Destaque</p>
+                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Destaque</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-[var(--color-info)] truncate`}>
                                         {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
                                     </h4>
-                                    <p className={`text-xs ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-widest`}>Melhor Desempenho</p>
+                                    <p className={`text-xs ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-wide`}>Melhor desempenho</p>
                                 </div>
                             </Card>
                         </div>
                     )}
 
                     {/* List */}
-                    <div className={`${colors.surface} border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 overflow-y-auto`}>
+                    <div className={`${colors.surface} border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 overflow-visible`}>
                         {loading ? (
                             <div className={`text-center py-24 ${colors.textMuted}`}>
                                 <Loader2 className={`w-12 h-12 mx-auto animate-spin mb-4 ${accentTextClass}`} />
@@ -448,11 +465,10 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                         className="hover:border-[var(--color-border-strong)] transition-all duration-300"
                                         noPadding
                                     >
-                                        <div className="p-4 md:p-6">
+                                        <div className="p-4 md:p-6 overflow-visible">
                                             <div className="flex flex-col gap-5">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3 md:gap-4">
-                                                        <div className="relative">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="relative shrink-0">
                                                             {professional.photo_url ? (
                                                                 <img src={professional.photo_url} alt={professional.professional_name} className="w-12 h-12 md:w-16 md:h-16 rounded-xl object-cover border border-[var(--color-border)]" />
                                                             ) : (
@@ -468,53 +484,56 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                                     setOpenPayAfterRateSave(false);
                                                                     setShowRatePrompt(true);
                                                                 }}
-                                                                className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-xs font-bold border ${colors.card} ${colors.border} ${accentTextClass} hover:scale-105 transition-transform`}
+                                                                className={`absolute -bottom-1 -right-1 min-w-[28px] px-1.5 py-0.5 rounded-full text-xs font-bold border ${colors.card} ${colors.border} ${accentTextClass} hover:scale-105 transition-transform leading-none`}
                                                                 title="Alterar taxa de comissão"
                                                             >
                                                                 {(professional.commission_rate || 0)}%
                                                             </button>
                                                         </div>
-                                                        <div>
-                                                            <h3 className={`text-base md:text-xl font-bold ${colors.text} leading-tight`}>{professional.professional_name}</h3>
-                                                            <p className={`${colors.textMuted} text-xs ${font.mono} mt-1 uppercase tracking-tight flex items-center gap-1`}>
-                                                                {(professional.commission_rate || 0) > 0 ? 'Comissão por serviço' : 'Taxa não configurada'}
-                                                                <TrendingUp className="w-2.5 h-2.5" />
+                                                    <div className="min-w-0 flex-1">
+                                                            <h3 className={`text-base md:text-xl font-bold ${colors.text} leading-tight truncate`}>{professional.professional_name}</h3>
+                                                            <p className={`${colors.textMuted} text-xs ${font.mono} mt-1 uppercase tracking-wide flex items-center gap-1 min-w-0`}>
+                                                                <span className="truncate">{(professional.commission_rate || 0) > 0 ? 'Comissão por serviço' : 'Taxa não configurada'}</span>
+                                                                <TrendingUp className="w-2.5 h-2.5 shrink-0" />
                                                             </p>
                                                         </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase mb-0.5`}>Saldo Atual</p>
-                                                        <p className={`text-lg md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
-                                                            {currencySymbol} {(professional.total_due || 0).toFixed(2)}
+                                                    <div className="shrink-0 text-right pl-1">
+                                                        <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-wide mb-1`}>Saldo atual</p>
+                                                        <p className={`text-base md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
+                                                            <MoneyInline formatted={formatMoney(professional.total_due || 0)} />
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Este Mês</p>
-                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>{currencySymbol} {professional.total_earnings_month.toFixed(2)}</p>
-                                                    </div>
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter`}>Liquidado</p>
-                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>{currencySymbol} {professional.total_paid.toFixed(2)}</p>
-                                                    </div>
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter flex items-center gap-1`}>
-                                                            <Scissors className="w-3 h-3" /> Serviços
+                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide`}>Este mês</p>
+                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
+                                                            <MoneyInline formatted={formatMoney(professional.total_earnings_month)} />
                                                         </p>
-                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>
+                                                    </div>
+                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide`}>Liquidado</p>
+                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>
+                                                            <MoneyInline formatted={formatMoney(professional.total_paid)} />
+                                                        </p>
+                                                    </div>
+                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide flex items-center gap-1`}>
+                                                            <Scissors className="w-3 h-3 shrink-0" /> <span className="truncate">Serviços</span>
+                                                        </p>
+                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
                                                             {professional.services_month || 0}
                                                             <span className={`${colors.textMuted} text-xs font-normal ml-1`}>
                                                                 ({professional.services_pending || 0} pend.)
                                                             </span>
                                                         </p>
                                                     </div>
-                                                    <div className={`p-2 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-0.5 ${font.mono} tracking-tighter flex items-center gap-1`}>
-                                                            <Package className="w-3 h-3" /> Produtos
+                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
+                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide flex items-center gap-1`}>
+                                                            <Package className="w-3 h-3 shrink-0" /> <span className="truncate">Produtos</span>
                                                         </p>
-                                                        <p className={`text-xs md:text-lg ${font.mono} font-bold ${colors.text}`}>
+                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
                                                             {professional.products_sold_month || 0}
                                                             <span className={`${colors.textMuted} text-xs font-normal ml-1`}>
                                                                 ({professional.products_pending || 0} pend.)
@@ -523,39 +542,44 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex gap-2 flex-1">
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2">
                                                         <button
+                                                            type="button"
                                                             onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
-                                                            className={`flex-1 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
+                                                            className={`flex-1 min-w-0 min-h-[44px] rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 px-3 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
                                                         >
-                                                            <Scissors className="w-3.5 h-3.5" />
-                                                            <span>Serviços e produtos</span>
+                                                            <Scissors className="w-3.5 h-3.5 shrink-0" />
+                                                            <span className="truncate">Serviços e produtos</span>
                                                         </button>
                                                         <button
+                                                            type="button"
                                                             onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
-                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            className={`shrink-0 min-w-[44px] min-h-[44px] rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
                                                             title="Relatório detalhado"
+                                                            aria-label="Relatório detalhado"
                                                         >
-                                                            <FileText className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
+                                                            <FileText className={`w-4 h-4 ${colors.textMuted}`} />
                                                         </button>
                                                         <button
+                                                            type="button"
                                                             onClick={() => { setDetailsProfessional(professional); setShowHistoryModal(true); }}
-                                                            className={`w-10 md:w-14 h-10 md:h-12 rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
+                                                            className={`shrink-0 min-w-[44px] min-h-[44px] rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
                                                             title="Histórico de pagamentos"
+                                                            aria-label="Histórico de pagamentos"
                                                         >
-                                                            <Clock className={`w-3.5 h-3.5 md:w-4 md:h-4 ${colors.textMuted}`} />
+                                                            <Clock className={`w-4 h-4 ${colors.textMuted}`} />
                                                         </button>
                                                     </div>
                                                     <Button
                                                         variant="primary"
-                                                        className="flex-[1.5] md:flex-none md:w-48"
+                                                        className="w-full"
                                                         icon={payingProfessionalId === professional.professional_id ? undefined : <DollarSign className="w-4 h-4" />}
                                                         onClick={() => handleOpenPayModal(professional)}
                                                         disabled={!!payingProfessionalId || professional.total_due <= 0}
                                                         loading={payingProfessionalId === professional.professional_id}
                                                     >
-                                                        {payingProfessionalId === professional.professional_id ? 'Processando' : 'Realizar Pagamento'}
+                                                        {payingProfessionalId === professional.professional_id ? 'Processando' : 'Pagar comissão'}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -582,24 +606,26 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     ) : (
                         <div className={`divide-y ${colors.divider}`}>
                             {paidCommissions.map(item => (
-                                <div key={item.id} className="flex items-center justify-between py-4 px-2 md:px-0">
-                                    <div className="flex items-center gap-3">
+                                <div key={item.id} className="flex items-center justify-between gap-3 py-4 px-2 md:px-0">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
                                         {item.photo_url ? (
-                                            <img src={item.photo_url} alt={item.professional_name} className={`w-10 h-10 rounded-lg object-cover ${colors.border} border`} />
+                                            <img src={item.photo_url} alt={item.professional_name} className={`w-10 h-10 rounded-lg object-cover ${colors.border} border shrink-0`} />
                                         ) : (
-                                            <div className={`w-10 h-10 rounded-lg ${colors.surface} flex items-center justify-center`}>
+                                            <div className={`w-10 h-10 rounded-lg ${colors.surface} flex items-center justify-center shrink-0`}>
                                                 <User className={`w-5 h-5 ${colors.textMuted}`} />
                                             </div>
                                         )}
-                                        <div>
-                                            <p className={`${colors.text} font-bold text-sm`}>{item.professional_name}</p>
+                                        <div className="min-w-0">
+                                            <p className={`${colors.text} font-bold text-sm truncate`}>{item.professional_name}</p>
                                             <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                                 {new Date(item.period_start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {new Date(item.period_end).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className={`text-[var(--color-success)] ${font.mono} font-bold`}>{currencySymbol} {item.net_amount.toFixed(2)}</p>
+                                    <div className="text-right shrink-0">
+                                        <p className={`text-[var(--color-success)] ${font.mono} font-bold whitespace-nowrap tabular-nums`}>
+                                            <MoneyInline formatted={formatMoney(item.net_amount)} />
+                                        </p>
                                         <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                             Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
                                         </p>
@@ -699,7 +725,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div>
                             <p className={`mb-1 text-lg font-bold leading-none ${colors.text}`}>{selectedProfessional.professional_name}</p>
                             <p className={`text-xs ${font.mono} ${colors.textMuted}`}>
-                                Saldo: <span className="text-[var(--color-warning)]">{currencySymbol} {selectedProfessional.total_due.toFixed(2)}</span>
+                                Saldo: <span className="text-[var(--color-warning)]">{formatMoney(selectedProfessional.total_due)}</span>
                             </p>
                         </div>
                     </div>
@@ -707,7 +733,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     <div className="space-y-6">
                         <div>
                             <label className={`mb-2 block text-xs ${font.mono} uppercase tracking-widest ${colors.textMuted}`}>
-                                Valor a ser liquidado ({currencySymbol})
+                                Valor a ser liquidado ({moneySymbol})
                             </label>
                             <input
                                 type="number"
@@ -800,7 +826,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         fetchCommissionsDue();
                     }}
                     accentColor={accentColor}
-                    currencySymbol={currencySymbol}
+                    currencySymbol={moneySymbol}
                 />
             )}
 
@@ -811,7 +837,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     professionalName={detailsProfessional.professional_name}
                     onClose={() => { setShowHistoryModal(false); setDetailsProfessional(null); }}
                     accentColor={accentColor}
-                    currencySymbol={currencySymbol}
+                    currencySymbol={moneySymbol}
                 />
             )}
 
@@ -825,7 +851,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     periodStart={calcCommissionPeriod(settlementDay).start}
                     periodEnd={calcCommissionPeriod(settlementDay).end}
                     periodLabel={periodLabel}
-                    currencySymbol={currencySymbol}
+                    currencySymbol={moneySymbol}
                     accentColor={accentColor}
                     onClose={() => { setShowReportModal(false); setDetailsProfessional(null); }}
                 />

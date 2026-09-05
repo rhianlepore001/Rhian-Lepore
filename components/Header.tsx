@@ -99,21 +99,21 @@ export const Header: React.FC = () => {
                     <ArrowLeft className={`w-4 h-4 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>
                 )}
-                <div className="flex flex-col min-w-0 flex-1">
-                  <h1
-                    className={`font-heading text-sm sm:text-lg md:text-2xl ${colors.text} tracking-wide md:tracking-widest leading-none flex items-center gap-1.5 min-w-0`}
-                    title={businessName || 'GESTÃO'}
-                  >
-                    <span className="min-w-0 truncate">
+                <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                  <div className="flex items-center gap-1.5 min-w-0 w-full max-w-full">
+                    <h1
+                      className={`min-w-0 flex-1 font-heading text-sm sm:text-lg md:text-2xl ${colors.text} tracking-normal md:tracking-wide leading-none truncate whitespace-nowrap`}
+                      title={businessName || 'GESTÃO'}
+                    >
                       {businessName || 'GESTÃO'}
-                    </span>
+                    </h1>
                     <span
                       className="w-1.5 h-1.5 bg-[var(--color-success)] rounded-full animate-pulse shrink-0"
                       aria-label="Online"
                       title="Negócio ativo"
                     />
-                  </h1>
-                  <p className={`text-xs font-mono mt-0.5 opacity-50 uppercase tracking-wide md:tracking-widest ${colors.textSecondary} truncate`}>
+                  </div>
+                  <p className={`text-xs font-mono mt-0.5 opacity-50 uppercase tracking-wide ${colors.textSecondary} truncate`}>
                     {segmentLabel}
                   </p>
                 </div>
@@ -145,8 +145,7 @@ export const Header: React.FC = () => {
               onClick={toggleMode}
               aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
               title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              className={`p-1.5 h-11 w-11 inline-flex items-center justify-center rounded-lg border border-transparent hover:border-[var(--color-divider)] transition-colors relative overflow-hidden
-                ${colors.card} hover:bg-theme-surface`}
+              className="p-1.5 h-11 w-11 inline-flex items-center justify-center rounded-lg border border-transparent hover:border-[var(--color-divider)] hover:bg-theme-surface transition-colors relative overflow-hidden"
               style={{ transition: 'background 0.2s' }}
             >
               <span

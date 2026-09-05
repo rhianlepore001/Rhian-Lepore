@@ -24,8 +24,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const showBanner = !isBillingRoute && (isTrial || isExpired);
   const headerTop = showBanner ? '40px' : '0px';
-  // Header mobile pode crescer (nome em 2 linhas) — folga extra evita overlap
-  const paddingTop = showBanner ? 'pt-[104px] md:pt-[120px]' : 'pt-14 md:pt-20';
+  // Header mobile é h-14 (56px), 1 linha; banner trial é h-10 (40px)
+  const paddingTop = showBanner ? 'pt-[96px] md:pt-[120px]' : 'pt-14 md:pt-20';
   const hideMobileNavForNewFlow = Boolean(new URLSearchParams(search).get('new'));
   const showBottomMobileNav = !isSettingsRoute && !isBillingRoute && !hideMobileNavForNewFlow;
 

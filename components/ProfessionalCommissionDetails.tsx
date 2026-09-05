@@ -6,6 +6,7 @@ import { Modal, useToast } from '@/components/ui';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { mapError } from '../utils/mapError';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface CommissionLine {
     id: string;
@@ -70,6 +71,8 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
     currencySymbol
 }) => {
     const { user } = useAuth();
+    const { formatMoney, currencySymbol: tenantSymbol } = useTenantLocale();
+    const moneySymbol = tenantSymbol || currencySymbol;
     const { showToast } = useToast();
     const isBeauty = accentColor.includes('beauty');
     const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
@@ -278,9 +281,9 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
             s.client_name,
             s.title,
             String(s.quantity),
-            `${currencySymbol} ${s.price.toFixed(2)}`,
+            formatMoney(s.price),
             String(s.commission_rate),
-            `${currencySymbol} ${s.commission_amount.toFixed(2)}`,
+            formatMoney(s.commission_amount),
             s.paid ? 'Pago' : 'Pendente',
         ]);
 
@@ -503,11 +506,11 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                             </div>
                             <div className={`${colors.surface} ${colors.border} border md:rounded-2xl rounded-xl p-2.5 md:p-4`}>
                                 <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-0.5 md:mb-1`}>Faturamento</p>
-                                <p className={`${colors.text} text-sm md:text-lg ${font.mono} font-bold leading-none`}>{currencySymbol} {totalRevenue.toFixed(2)}</p>
+                                <p className={`${colors.text} text-sm md:text-lg ${font.mono} font-bold leading-none`}>{formatMoney(totalRevenue)}</p>
                             </div>
                             <div className={`${colors.surface} ${colors.border} border md:rounded-2xl rounded-xl p-2.5 md:p-4`}>
                                 <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-0.5 md:mb-1`}>Comissões</p>
-                                <p className={`text-sm md:text-lg ${font.mono} font-bold leading-none ${accent.text}`}>{currencySymbol} {totalCommission.toFixed(2)}</p>
+                                <p className={`text-sm md:text-lg ${font.mono} font-bold leading-none ${accent.text}`}>{formatMoney(totalCommission)}</p>
                             </div>
                         </div>
 
@@ -640,7 +643,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                             <div className={`flex items-center justify-between md:justify-end gap-4 md:gap-8 pt-3 md:pt-0 border-t md:border-t-0 ${colors.divider}`}>
                                                 <div className="text-left md:text-right">
                                                     <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Valor</p>
-                                                    <p className={`${colors.text} text-xs md:text-sm ${font.mono} font-bold`}>{currencySymbol} {line.price.toFixed(2)}</p>
+                                                    <p className={`${colors.text} text-xs md:text-sm ${font.mono} font-bold`}>{formatMoney(line.price)}</p>
                                                 </div>
                                                 <div className={`h-6 md:h-8 w-px ${colors.divider}`}></div>
                                                 <div className={`text-right ${colors.card} md:px-4 px-3 py-2 rounded-xl ${colors.border} border relative md:min-w-[120px] min-w-[100px]`}>
@@ -648,7 +651,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                                         Comissão ({line.commission_rate}%)
                                                     </p>
                                                     <p className={`${font.mono} font-bold text-sm md:text-lg ${accent.text} leading-none`}>
-                                                        {currencySymbol} {line.commission_amount.toFixed(2)}
+                                                        {formatMoney(line.commission_amount)}
                                                     </p>
                                                     {line.kind === 'service' && (
                                                         <button
@@ -693,9 +696,9 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                 </div>
                                 <div className={`h-10 w-px ${colors.divider} hidden md:block`}></div>
                                 <div className="text-center md:text-right w-full md:w-auto">
-                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Total Comissões do Período</p>
-                                    <p className={`${font.mono} font-bold text-2xl md:text-4xl ${accent.text} leading-none`}>
-                                        {currencySymbol} {totalCommission.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 tracking-wide leading-none`}>Total do período</p>
+                                    <p className={`${font.mono} font-bold text-2xl md:text-4xl ${accent.text} leading-none whitespace-nowrap tabular-nums`}>
+                                        {formatMoney(totalCommission)}
                                     </p>
                                 </div>
                             </div>
@@ -714,9 +717,9 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                                 <Button
                                     variant="primary"
                                     onClick={onClose}
-                                    className="flex-[2] md:flex-none md:px-12 whitespace-nowrap"
+                                    className="flex-[2] md:flex-none md:px-12"
                                 >
-                                    Fechar Painel
+                                    Fechar
                                 </Button>
                             </div>
                         </div>
@@ -734,7 +737,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                     <div className="space-y-4">
                         <div className={`text-sm ${colors.textSecondary}`}>
                             <p>Serviço: <span className={`${colors.text} font-medium`}>{editingService.title}</span></p>
-                            <p>Valor do Serviço: <span className={`${colors.text} font-medium`}>{currencySymbol} {editingService.price.toFixed(2)}</span></p>
+                            <p>Valor do Serviço: <span className={`${colors.text} font-medium`}>{formatMoney(editingService.price)}</span></p>
                         </div>
 
                         <div>
@@ -765,7 +768,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
 
                         <div>
                             <label className={`${colors.textSecondary} text-xs uppercase ${font.mono} mb-1 block`}>
-                                Valor da comissão ({currencySymbol})
+                                Valor da comissão ({moneySymbol})
                             </label>
                             <input
                                 type="number"

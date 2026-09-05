@@ -113,7 +113,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => 
                                             {config.label}
                                         </span>
                                     </div>
-                                    <p className={`text-xs ${colors.textSecondary}`}>
+                                    <p className={`text-xs ${colors.textSecondary} truncate`}>
                                         Vem {getCadenceLabel(suggestion.avgCadenceDays)} • Última visita há {suggestion.daysSinceLastVisit} dias • ~{formatCurrency(suggestion.avgTicket, currencyRegion as any)}/visita
                                     </p>
                                 </div>

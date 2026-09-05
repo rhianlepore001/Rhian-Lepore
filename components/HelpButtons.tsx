@@ -76,13 +76,15 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
                 onMouseEnter={() => !('ontouchstart' in window) && setShowTooltip(true)}
                 onMouseLeave={() => !('ontouchstart' in window) && setShowTooltip(false)}
                 onKeyDown={(e) => e.key === 'Enter' && handleToggle(e)}
-                className={`group cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300 ${showTooltip
+                aria-label="Ajuda"
+                title="Ajuda"
+                className={`group cursor-pointer inline-flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] sm:min-w-0 sm:px-2 sm:py-1 rounded-full transition-all duration-300 ${showTooltip
                     ? 'bg-[var(--color-card-hover)] text-[var(--color-text)] ring-2 ring-[var(--color-border)]'
                     : 'bg-[var(--color-card-hover)] text-text-secondary hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]'
                     }`}
             >
                 <Info className={`w-3.5 h-3.5 transition-transform duration-300 ${showTooltip ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="text-xs font-mono uppercase tracking-widest font-bold opacity-70 group-hover:opacity-100">Ajuda</span>
+                <span className="hidden sm:inline text-xs font-mono uppercase tracking-wide font-bold opacity-70 group-hover:opacity-100">Ajuda</span>
             </div>
 
             {showTooltip && createPortal(

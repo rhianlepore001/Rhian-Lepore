@@ -10,6 +10,15 @@
 
 export type Region = 'BR' | 'PT';
 
+/** Aceita PT/EUR/Portugal e qualquer outro valor cai em BR. */
+export function normalizeRegion(value: unknown): Region {
+    const raw = String(value ?? '').trim().toUpperCase();
+    if (raw === 'PT' || raw === 'PORTUGAL' || raw === 'EUR' || raw === 'EURO' || raw === 'EU') {
+        return 'PT';
+    }
+    return 'BR';
+}
+
 // ===========================================
 // FORMATAÇÃO DE MOEDA
 // ===========================================

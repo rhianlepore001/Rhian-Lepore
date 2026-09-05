@@ -4,6 +4,7 @@ import { X, Calendar, Loader2, Check, Clock, TrendingUp } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface PaymentRecord {
     payment_date: string;
@@ -26,8 +27,9 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     professionalName,
     onClose,
     accentColor,
-    currencySymbol
+    currencySymbol: _currencySymbol,
 }) => {
+    const { formatMoney } = useTenantLocale();
     const isBeauty = accentColor.includes('beauty');
     const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
     const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -219,7 +221,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             <div className="text-right">
                                                 <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Total Pago</p>
                                                 <p className={`${font.mono} font-bold text-lg md:text-2xl ${accent.text} leading-none`}>
-                                                    {currencySymbol} {payment.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                    {formatMoney(payment.amount)}
                                                 </p>
                                             </div>
                                         </div>
@@ -261,7 +263,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                             <div>
                                 <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Total Geral Pago</p>
                                 <p className={`${font.mono} font-bold text-xl md:text-3xl ${accent.text} leading-none`}>
-                                    {currencySymbol} {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                    {formatMoney(totalPaid)}
                                 </p>
                             </div>
                             <div className={`h-10 w-px ${colors.divider}`}></div>

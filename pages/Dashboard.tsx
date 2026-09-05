@@ -340,8 +340,8 @@ export const Dashboard: React.FC = () => {
                   </h3>
                   <span className={`text-xs ${colors.textMuted}`}>ver →</span>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-3">
-                  <div>
+                <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="min-w-0">
                     <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase`}>
                       Ativos
                     </p>
@@ -351,7 +351,7 @@ export const Dashboard: React.FC = () => {
                       {clubStats.totalActive}
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase`}>
                       Pendentes
                     </p>
@@ -361,12 +361,12 @@ export const Dashboard: React.FC = () => {
                       {clubStats.totalPending}
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase`}>
                       MRR
                     </p>
                     <p
-                      className={`mt-0.5 font-mono text-xl font-black tabular-nums ${accent.text}`}
+                      className={`mt-0.5 font-mono text-sm sm:text-xl font-black tabular-nums leading-tight ${accent.text}`}
                     >
                       {formatCurrency(
                         clubStats.monthlyRecurringRevenueCents / 100,

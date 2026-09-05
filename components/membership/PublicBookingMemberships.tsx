@@ -31,7 +31,7 @@ export const PublicBookingMemberships: React.FC<PublicBookingMembershipsProps> =
   if (!slug || isLoading || !plans?.length) return null;
 
   return (
-    <section data-testid="booking-memberships" className="space-y-4">
+    <section id="booking-memberships" data-testid="booking-memberships" className="space-y-4 pb-8">
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Crown className={`w-5 h-5 ${accent.text}`} aria-hidden />

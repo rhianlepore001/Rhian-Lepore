@@ -154,6 +154,13 @@ export const PublicBooking: React.FC = () => {
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
     const { colors, accent, classes, shadow, radius, font, isDark } = useBrutalTheme({ override: themeOverride });
 
+    useEffect(() => {
+        if (!business) return;
+        const html = document.documentElement;
+        html.setAttribute('data-theme', themeOverride);
+        html.setAttribute('data-mode', themeOverride === 'beauty' ? 'light' : 'dark');
+    }, [business, themeOverride]);
+
     const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]';
     // Classes literais estáticas (variante interpolada não gera CSS no build estático do Tailwind)
     const selectionClasses = isBeauty
@@ -742,7 +749,7 @@ export const PublicBooking: React.FC = () => {
 
             {/* QUICK DIRECT FLOW */}
             {bookingMode === 'quick' && quickStep !== 'success' && (
-                <div className="container mx-auto px-3 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4 md:pt-8 pb-32">
+                <div className="container mx-auto px-3 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4 md:pt-8 pb-40">
                     {/* Quick Stepper */}
                     <div className={`sticky top-0 z-[60] w-full border-b ${colors.divider} ${colors.bg}/95 backdrop-blur-md mb-6 md:mb-8`}>
                         <div className="py-3 flex items-center gap-0">

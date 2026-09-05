@@ -93,6 +93,7 @@ describe('PublicBookingMemberships', () => {
     renderSection();
 
     expect(screen.getByTestId('booking-memberships')).toBeInTheDocument();
+    expect(screen.getByTestId('booking-memberships').className).toMatch(/pb-8/);
     expect(screen.getByRole('heading', { name: 'Assinaturas' })).toBeInTheDocument();
     expect(screen.getByText('Corte Ilimitado')).toBeInTheDocument();
     expect(screen.getByText('Barba Mensal')).toBeInTheDocument();

@@ -729,59 +729,51 @@ useEffect(() => {
                 mobileRender={(t) => (
                   <div
                     data-testid="finance-tx-card"
-                    className={`flex overflow-hidden rounded-xl border ${colors.border} ${colors.card}`}
+                    className={`flex overflow-hidden rounded-lg border ${colors.border} ${colors.card}`}
                   >
                     <span
-                      className={`w-1 shrink-0 ${t.type === 'expense' ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]'}`}
+                      className={`w-0.5 shrink-0 ${t.type === 'expense' ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]'}`}
                       aria-hidden
                     />
-                    <div className="min-w-0 flex-1 px-3 py-2.5">
-                      <div className="flex items-start gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-baseline justify-between gap-2">
-                            <p className={`text-sm font-semibold truncate ${colors.text}`}>{t.serviceName}</p>
-                            <span className={`font-mono text-sm font-bold tabular-nums shrink-0 ${t.type === 'expense' ? status.danger : status.success}`}>
-                              {t.type === 'expense' ? '−' : '+'}
-                              {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
-                            </span>
-                          </div>
-                          <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
-                            {t.date} · {t.time}
-                            {t.professionalName ? ` · ${t.professionalName}` : ''}
-                            {t.clientName ? ` · ${t.clientName}` : ''}
-                          </p>
-                          <div className="mt-1 flex items-center gap-1.5">
-                            <span className={`text-xs font-medium ${t.type === 'expense' ? status.danger : status.success}`}>
-                              {t.type === 'expense' ? 'Saída' : 'Entrada'}
-                            </span>
-                            {t.status === 'pending' && <Badge variant="warning">Pendente</Badge>}
-                            {t.payment_method && (
-                              <span className={`text-xs ${colors.textMuted}`}>
-                                {PAYMENT_METHOD_LABELS[t.payment_method] || t.payment_method}
-                              </span>
-                            )}
-                          </div>
+                    <div className="min-w-0 flex-1 flex items-center gap-2 px-2.5 py-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className={`text-sm font-semibold truncate ${colors.text}`}>{t.serviceName}</p>
+                          <span className={`font-mono text-sm font-bold tabular-nums shrink-0 ${t.type === 'expense' ? status.danger : status.success}`}>
+                            {t.type === 'expense' ? '−' : '+'}
+                            {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
+                          </span>
                         </div>
-                        <div className="flex shrink-0 items-center gap-0.5">
-                          {t.type === 'expense' && t.status === 'pending' && (
-                            <button
-                              type="button"
-                              aria-label="Dar baixa"
-                              className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${accent.text}`}
-                              onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
-                            >
-                              <Check className="h-4 w-4" />
-                            </button>
-                          )}
+                        <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
+                          <span className={t.type === 'expense' ? status.danger : status.success}>
+                            {t.type === 'expense' ? 'Saída' : 'Entrada'}
+                          </span>
+                          {t.status === 'pending' ? ' · Pendente' : ''}
+                          {' · '}
+                          {t.date} · {t.time}
+                          {t.professionalName ? ` · ${t.professionalName}` : ''}
+                          {t.clientName ? ` · ${t.clientName}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center">
+                        {t.type === 'expense' && t.status === 'pending' && (
                           <button
                             type="button"
-                            aria-label="Excluir transação"
-                            className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${colors.textMuted}`}
-                            onClick={() => handleDeleteTransaction(t)}
+                            aria-label="Dar baixa"
+                            className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${accent.text}`}
+                            onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Check className="h-4 w-4" />
                           </button>
-                        </div>
+                        )}
+                        <button
+                          type="button"
+                          aria-label="Excluir transação"
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${colors.textMuted}`}
+                          onClick={() => handleDeleteTransaction(t)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   </div>

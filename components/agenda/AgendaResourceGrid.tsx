@@ -210,7 +210,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               <div
                 key={member.id}
                 data-testid={`agenda-col-${member.id}`}
-                className={`shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col border-l ${colors.divider}`}
+                className={`shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col overflow-hidden border-l ${colors.divider}`}
               >
                 <div className={headerCell} title={member.name}>
                   <button

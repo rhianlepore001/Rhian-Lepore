@@ -185,6 +185,8 @@ async function installMocks(page: Page, mode: 'light' | 'dark') {
           company_id: OWNER_ID,
           full_name: 'Rhian',
           business_name: 'Barbearia Silva',
+          business_slug: 'barbearia-silva',
+          public_booking_enabled: true,
           user_type: 'beauty',
           region: 'PT',
           subscription_status: 'active',
@@ -253,10 +255,25 @@ test.describe('UI polish — Agenda e Financeiro', () => {
   test('grade alinhada e financeiro compacto no mobile', async ({ page }) => {
     fs.mkdirSync(ARTIFACTS, { recursive: true });
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
     await installMocks(page, 'dark');
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
+    const copyLink = page.getByTestId('agenda-public-link');
+    await expect(copyLink).toBeVisible();
+    await expect(copyLink).toHaveAttribute('aria-label', /Copiar link de agendamento público/i);
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-copiar-link-mobile.png'), fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(copyLink).toBeVisible();
+    await expect(page.getByRole('button', { name: /Histórico/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Todos os agendamentos/i })).toBeVisible();
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-copiar-link-desktop.png'), fullPage: false });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await copyLink.click();
+    await expect(page.getByText(/Link copiado\. Cole no WhatsApp/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /Britocesar/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Maria raimunda/ })).toBeVisible();
 

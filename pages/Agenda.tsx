@@ -18,6 +18,7 @@ import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
 import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AgendaPublicBookings } from '../components/agenda/AgendaPublicBookings';
+import { AgendaPublicLinkBar } from '../components/agenda/AgendaPublicLinkBar';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -122,6 +123,8 @@ export const Agenda: React.FC = () => {
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
     const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
+    const [businessSlug, setBusinessSlug] = useState<string | null>(null);
+    const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
 
     // State for editing
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
@@ -502,10 +505,14 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         const { data } = await supabase
             .from('profiles')
-            .select('business_name')
+            .select('business_name, business_slug, public_booking_enabled')
             .eq('id', effectiveUserId)
             .single();
-        if (data) setBusinessName(data.business_name || 'Seu Estabelecimento');
+        if (data) {
+            setBusinessName(data.business_name || 'Seu Estabelecimento');
+            setBusinessSlug(data.business_slug || null);
+            setPublicBookingEnabled(data.public_booking_enabled ?? true);
+        }
     };
 
     const fetchHistoryAppointments = async () => {
@@ -1103,6 +1110,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             >
                                 <span className="hidden md:inline">Histórico</span>
                             </Button>
+                            <AgendaPublicLinkBar
+                                businessSlug={businessSlug}
+                                publicBookingEnabled={publicBookingEnabled}
+                                isStaff={isStaff}
+                            />
                             <Button
                                 variant="secondary"
                                 icon={<Calendar />}

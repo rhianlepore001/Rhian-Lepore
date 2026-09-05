@@ -100,6 +100,8 @@ async function installStaffAgendaMocks(page: Page) {
             company_id: OWNER_ID,
             full_name: 'Rhian Owner',
             business_name: 'Barbearia Silva',
+            business_slug: 'barbearia-silva',
+            public_booking_enabled: true,
             user_type: 'beauty',
             region: 'BR',
             subscription_status: 'active',

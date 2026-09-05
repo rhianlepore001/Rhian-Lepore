@@ -195,3 +195,39 @@
     border-color: rgba(255, 255, 255, 0.1);
   }
 }
+
+/* Agenda no tema claro: sombra pesada (shadow-lite-glass) + brightness
+   sobre tints semânticos vira verde/amarelo apagado. */
+@layer components {
+  .agenda-event-chip {
+    box-shadow: none;
+  }
+
+  html[data-mode="dark"] .agenda-event-chip {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+
+  html[data-mode="light"] .agenda-event-chip {
+    box-shadow: 0 1px 2px rgba(16, 16, 16, 0.06);
+  }
+
+  html[data-mode="light"] .agenda-event-chip:hover {
+    filter: none;
+    box-shadow: 0 2px 6px rgba(16, 16, 16, 0.1);
+  }
+
+  html[data-mode="light"] .agenda-status-completed {
+    background: color-mix(in srgb, var(--color-success) 18%, var(--color-card));
+    border-color: color-mix(in srgb, var(--color-success) 42%, transparent);
+  }
+
+  html[data-mode="light"] .agenda-status-overdue {
+    background: color-mix(in srgb, var(--color-warning) 18%, var(--color-card));
+    border-color: color-mix(in srgb, var(--color-warning) 42%, transparent);
+  }
+
+  html[data-mode="light"] .agenda-status-cancelled {
+    background: color-mix(in srgb, var(--color-danger) 14%, var(--color-card));
+    border-color: color-mix(in srgb, var(--color-danger) 38%, transparent);
+  }
+}

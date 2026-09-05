@@ -306,8 +306,12 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       buttonPrimary: `bg-theme-accent text-[var(--color-on-accent)] font-bold ${radius.button} shadow-[var(--shadow-btn-primary)] hover:brightness-110 active:scale-[0.97] transition-all duration-150 ease-out`,
       buttonSecondary: `bg-[var(--color-card-hover)] text-theme-text border-[var(--color-border)] border font-bold ${radius.button} hover:bg-[var(--color-divider)] transition-all duration-150 ease-out`,
       buttonGhost: `bg-transparent border-transparent text-theme-accent hover:bg-[var(--color-card-hover)] transition-all duration-150 ease-out`,
-      buttonDanger: `bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
-      buttonSuccess: `bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
+      buttonDanger: isLight
+        ? `bg-[var(--color-danger)] text-[var(--color-on-danger)] border border-[var(--color-danger)] ${radius.button} hover:opacity-90 transition-all duration-150 ease-out`
+        : `bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
+      buttonSuccess: isLight
+        ? `bg-[var(--color-success)] text-[var(--color-on-success)] ${radius.button} hover:opacity-90 transition-all duration-150 ease-out`
+        : `bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
       buttonOutline: `bg-transparent border border-[var(--color-accent-border)] text-theme-accent hover:bg-[var(--color-accent-dim)] ${radius.button} transition-all duration-150 ease-out`,
 
       input: `w-full px-4 py-3 ${radius.input} text-sm text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:bg-[var(--color-card-hover)] transition-all`,

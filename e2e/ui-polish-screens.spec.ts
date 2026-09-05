@@ -255,12 +255,20 @@ test.describe('UI polish — Agenda e Financeiro', () => {
   test('grade alinhada e financeiro compacto no mobile', async ({ page }) => {
     fs.mkdirSync(ARTIFACTS, { recursive: true });
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
     await installMocks(page, 'dark');
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId('agenda-public-link')).toBeVisible();
     await expect(page.getByRole('button', { name: /Copiar link de agendamento público/i })).toBeVisible();
+    await page.getByRole('button', { name: /Copiar link de agendamento público/i }).click();
+    await expect(page.getByText(/Link copiado\. Cole no WhatsApp/i)).toBeVisible();
+    await page.getByTestId('agenda-public-link').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-copiar-link-publico.png'), fullPage: false });
+    await page.getByTestId('agenda-public-link').screenshot({
+        path: path.join(ARTIFACTS, 'agenda-copiar-link-barra.png'),
+    });
     await expect(page.getByRole('button', { name: /Britocesar/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Maria raimunda/ })).toBeVisible();
 

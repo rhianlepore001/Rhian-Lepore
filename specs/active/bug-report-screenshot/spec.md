@@ -1,6 +1,6 @@
 # SPEC: Print do reportar problema
 
-**Status:** in_progress
+**Status:** ready
 **Criado:** 2026-09-05
 **Prioridade:** alta
 
@@ -54,7 +54,7 @@
 
 ## Done when
 
-- [ ] Abrir "Reportar problema" mostra o print da tela que o usuário via
-- [ ] Modal/menu/`?` não aparecem no print
-- [ ] Falha de captura oferece anexar imagem; envio ainda funciona
-- [ ] typecheck, lint, build e testes verdes
+- [x] Abrir "Reportar problema" mostra o print da tela que o usuário via
+- [x] Modal/menu/`?` não aparecem no print
+- [x] Falha de captura oferece anexar imagem; envio ainda funciona
+- [x] typecheck, lint, build e testes verdes

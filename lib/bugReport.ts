@@ -174,12 +174,84 @@ async function renderToPng(
     allowTaint: true,
     logging: false,
     imageTimeout: 4000,
+    skipValidation: true,
     backgroundColor: pageBackground(),
     scale: captureScale(box.width, box.height),
     ignoreElements: (el: Element) => isBugReportChrome(el),
+    onclone: copyThemeOntoClone,
     ...extra,
   });
-  return canvasToPng(canvas);
+  return canvasToPng(cropCanvasToViewport(canvas));
+}
+
+function copyThemeOntoClone(clonedDoc: Document): void {
+  const source = document.documentElement;
+  const dest = clonedDoc.documentElement;
+  for (const attr of ['data-theme', 'data-mode', 'class']) {
+    const value = source.getAttribute(attr);
+    if (value) dest.setAttribute(attr, value);
+    else dest.removeAttribute(attr);
+  }
+  try {
+    const styles = getComputedStyle(source);
+    for (let i = 0; i < styles.length; i++) {
+      const prop = styles.item(i);
+      if (prop.startsWith('--')) {
+        dest.style.setProperty(prop, styles.getPropertyValue(prop));
+      }
+    }
+  } catch {
+    // iframe do html2canvas sem computed styles — segue com o stylesheet clonado
+  }
+}
+
+function cropCanvasToViewport(canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const box = viewportBox();
+  if (!canvas.width || !canvas.height || box.width <= 0 || box.height <= 0) return canvas;
+  const pageWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth, box.width);
+  const pageHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, box.height);
+  if (pageWidth <= 0 || pageHeight <= 0) return canvas;
+
+  const scaleX = canvas.width / pageWidth;
+  const scaleY = canvas.height / pageHeight;
+  const sx = Math.max(0, box.scrollX * scaleX);
+  const sy = Math.max(0, box.scrollY * scaleY);
+  const sw = Math.min(canvas.width - sx, box.width * scaleX);
+  const sh = Math.min(canvas.height - sy, box.height * scaleY);
+  if (!Number.isFinite(sw) || !Number.isFinite(sh) || sw <= 1 || sh <= 1) return canvas;
+  if (sx <= 1 && sy <= 1 && Math.abs(sw - canvas.width) < 2 && Math.abs(sh - canvas.height) < 2) {
+    return canvas;
+  }
+
+  try {
+    const cropped = document.createElement('canvas');
+    cropped.width = Math.max(1, Math.round(sw));
+    cropped.height = Math.max(1, Math.round(sh));
+    const ctx = cropped.getContext('2d');
+    if (!ctx) return canvas;
+    ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, cropped.width, cropped.height);
+    return cropped;
+  } catch {
+    return canvas;
+  }
+}
+
+const CAPTURE_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timeout ${ms}ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
 }
 
 /**
@@ -187,6 +259,15 @@ async function renderToPng(
  * Modal de produto aberto já aparece porque está na tela — não recortamos.
  */
 export async function captureScreenshot(options?: CaptureScreenshotOptions): Promise<string | null> {
+  try {
+    return await withTimeout(captureScreenshotInner(options), CAPTURE_TIMEOUT_MS);
+  } catch (err) {
+    logCaptureFailure('[bugReport] captura da tela falhou ou excedeu o tempo', err);
+    return null;
+  }
+}
+
+async function captureScreenshotInner(options?: CaptureScreenshotOptions): Promise<string | null> {
   if (typeof document === 'undefined' || !document.body) return null;
 
   let render: ScreenshotRenderer;
@@ -207,34 +288,22 @@ export async function captureScreenshot(options?: CaptureScreenshotOptions): Pro
     }
   }
 
-  const box = viewportBox();
-  if (box.width <= 0 || box.height <= 0) return null;
-
-  const viewportOpts: Record<string, unknown> = {
-    width: box.width,
-    height: box.height,
-    windowWidth: box.width,
-    windowHeight: box.height,
-    scrollX: -box.scrollX,
-    scrollY: -box.scrollY,
-  };
-
   try {
-    const shot = await renderToPng(render, document.body, viewportOpts);
+    const shot = await renderToPng(render, document.body, {});
     if (shot) return shot;
   } catch (err) {
-    logCaptureFailure('[bugReport] captura do viewport (body) falhou, tentando documentElement', err);
+    logCaptureFailure('[bugReport] captura do body falhou, tentando foreignObject', err);
   }
 
   try {
-    const shot = await renderToPng(render, document.documentElement, viewportOpts);
+    const shot = await renderToPng(render, document.body, { foreignObjectRendering: true });
     if (shot) return shot;
   } catch (err) {
-    logCaptureFailure('[bugReport] captura do viewport (documentElement) falhou, tentando body simples', err);
+    logCaptureFailure('[bugReport] captura foreignObject falhou, tentando documentElement', err);
   }
 
   try {
-    return await renderToPng(render, document.body, {});
+    return await renderToPng(render, document.documentElement, {});
   } catch (err) {
     logCaptureFailure('[bugReport] captura da tela falhou', err);
     return null;

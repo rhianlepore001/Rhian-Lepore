@@ -47,13 +47,10 @@ describe('bugReport — captura de tela', () => {
     expect(order[order.length - 1]).toBe('after');
   });
 
-  it('captureScreenshot fotografa o body no tamanho do viewport e ignora o chrome do reporter', async () => {
+  it('captureScreenshot fotografa o body e ignora o chrome do reporter', async () => {
     const render = vi.fn(async (el: HTMLElement, opts?: Record<string, unknown>) => {
       expect(el).toBe(document.body);
-      expect(opts?.width).toBe(window.innerWidth);
-      expect(opts?.height).toBe(window.innerHeight);
-      expect(opts?.scrollX).toBe(-(window.scrollX || 0));
-      expect(opts?.scrollY).toBe(-(window.scrollY || 0));
+      expect(opts?.foreignObjectRendering).toBeUndefined();
       const ignore = opts?.ignoreElements as (node: Element) => boolean;
       const chrome = document.createElement('div');
       chrome.setAttribute('data-bug-report-dialog', '');
@@ -84,13 +81,13 @@ describe('bugReport — captura de tela', () => {
     expect(render).toHaveBeenCalledTimes(1);
   });
 
-  it('captureScreenshot cai no fallback quando o viewport falha', async () => {
+  it('captureScreenshot cai no fallback quando o body falha', async () => {
     const render = vi.fn(async (el: HTMLElement, opts?: Record<string, unknown>) => {
-      if (el === document.body && opts && 'width' in opts) {
-        throw new Error('viewport fail');
+      if (el === document.body && !opts?.foreignObjectRendering) {
+        throw new Error('body fail');
       }
-      if (el === document.documentElement) {
-        throw new Error('documentElement fail');
+      if (el === document.body && opts?.foreignObjectRendering) {
+        throw new Error('foreignObject fail');
       }
       return pngCanvas();
     });

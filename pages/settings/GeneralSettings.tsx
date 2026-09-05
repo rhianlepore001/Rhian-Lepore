@@ -5,7 +5,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
-import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
 import { useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
@@ -15,13 +14,13 @@ import { SaveFooter } from '../../components/SaveFooter';
 import { PhoneInput } from '../../components/PhoneInput';
 import { SettingsSection } from '../../components/SettingsSection';
 import { InfoButton } from '../../components/HelpButtons';
+import { getCurrencySymbol, normalizeRegion, type Region } from '../../utils/formatters';
 
 export const GeneralSettings: React.FC = () => {
-    const { user, companyId, region } = useAuth();
+    const { user, companyId, region, updateRegion } = useAuth();
     const { showToast } = useToast();
     const { accent, colors, classes, isBeauty } = useBrutalTheme();
     const copy = useBusinessCopy();
-    const { currencySymbol } = useTenantLocale();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
@@ -52,6 +51,7 @@ export const GeneralSettings: React.FC = () => {
     const [address, setAddress] = useState('');
     const [instagram, setInstagram] = useState('');
     const [dailyGoal, setDailyGoal] = useState('');
+    const [selectedRegion, setSelectedRegion] = useState<Region>(normalizeRegion(region));
 
     const policyTemplates: Record<string, string> = {
         flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
@@ -69,6 +69,7 @@ export const GeneralSettings: React.FC = () => {
         dailyGoal: string;
         cancellationPolicy: string;
         businessHours: typeof businessHours;
+        selectedRegion: Region;
     } | null>(null);
 
     React.useEffect(() => {
@@ -80,6 +81,7 @@ export const GeneralSettings: React.FC = () => {
             setLogoPreview(profile.logo_url ?? null);
             setCoverPreview(profile.cover_photo_url ?? null);
             setDailyGoal(profile.daily_goal != null ? String(profile.daily_goal) : '');
+            setSelectedRegion(normalizeRegion(profile.region ?? region));
         }
     }, [profile]);
 
@@ -101,6 +103,7 @@ export const GeneralSettings: React.FC = () => {
                 dailyGoal,
                 cancellationPolicy,
                 businessHours,
+                selectedRegion,
             };
             return;
         }
@@ -113,10 +116,11 @@ export const GeneralSettings: React.FC = () => {
             dailyGoal !== initial.dailyGoal ||
             cancellationPolicy !== initial.cancellationPolicy ||
             JSON.stringify(businessHours) !== JSON.stringify(initial.businessHours) ||
+            selectedRegion !== initial.selectedRegion ||
             logoFile !== null ||
             coverFile !== null;
         setHasChanges(dirty);
-    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, businessHours, loading]);
+    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, businessHours, selectedRegion, loading]);
 
     const handleLogoChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
@@ -164,7 +168,16 @@ export const GeneralSettings: React.FC = () => {
                 logo_url: logoUrl,
                 cover_photo_url: coverUrl,
                 daily_goal: dailyGoal.trim() === '' ? null : Number(dailyGoal),
+                region: selectedRegion,
             } as any);
+
+            if (companyId) {
+                await supabase
+                    .from('profiles')
+                    .update({ region: selectedRegion })
+                    .eq('company_id', companyId);
+            }
+            updateRegion(selectedRegion);
 
             await updateSettingsMutation.mutateAsync({
                 cancellation_policy: cancellationPolicy,
@@ -182,6 +195,16 @@ export const GeneralSettings: React.FC = () => {
 
             setSaveStatus('saved');
             setHasChanges(false);
+            initialValuesRef.current = {
+                businessName,
+                phone,
+                address,
+                instagram,
+                dailyGoal,
+                cancellationPolicy,
+                businessHours,
+                selectedRegion,
+            };
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'hours' } }));
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'profile' } }));
@@ -247,6 +270,33 @@ export const GeneralSettings: React.FC = () => {
                             />
                         </div>
 
+                        <div className="col-span-1 md:col-span-2">
+                            <label className={classes.label}>Região e moeda</label>
+                            <div className="flex gap-2">
+                                {([
+                                    { id: 'BR' as const, label: 'Brasil · R$' },
+                                    { id: 'PT' as const, label: 'Portugal · €' },
+                                ]).map((opt) => (
+                                    <button
+                                        key={opt.id}
+                                        type="button"
+                                        aria-pressed={selectedRegion === opt.id}
+                                        onClick={() => setSelectedRegion(opt.id)}
+                                        className={`flex-1 py-3 min-h-[44px] text-xs font-semibold rounded-xl transition-all border ${
+                                            selectedRegion === opt.id
+                                                ? `${accent.bgDim} ${accent.border} ${accent.text}`
+                                                : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className={`${colors.textMuted} text-xs mt-1`}>
+                                Define o símbolo de moeda em financeiro, comissões e agenda.
+                            </p>
+                        </div>
+
                         <div>
                             <label className={classes.label}>
                                 Telefone/WhatsApp
@@ -254,7 +304,7 @@ export const GeneralSettings: React.FC = () => {
                             <PhoneInput
                                 value={phone}
                                 onChange={setPhone}
-                                defaultRegion={region}
+                                defaultRegion={selectedRegion}
                                 placeholder="Telefone"
                             />
                         </div>
@@ -307,7 +357,7 @@ export const GeneralSettings: React.FC = () => {
                         </label>
                         <div className="relative">
                             <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${colors.textMuted}`}>
-                                {currencySymbol}
+                                {getCurrencySymbol(selectedRegion)}
                             </span>
                             <input
                                 type="number"

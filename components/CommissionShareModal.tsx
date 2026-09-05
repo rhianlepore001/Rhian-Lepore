@@ -3,6 +3,7 @@ import { MessageCircle, Download, Loader2, Copy, Check as CheckIcon } from 'luci
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface CommissionShareModalProps {
     professionalName: string;
@@ -19,15 +20,16 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
     cpf,
     periodLabel,
     netAmount,
-    currencySymbol,
+    currencySymbol: _currencySymbol,
     onClose,
 }) => {
     const [downloading, setDownloading] = useState(false);
     const [copied, setCopied] = useState(false);
     const summaryRef = useRef<HTMLDivElement>(null);
     const { colors, accent, font } = useBrutalTheme();
+    const { formatMoney } = useTenantLocale();
 
-    const fmtAmount = netAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const moneyLabel = formatMoney(netAmount);
 
     const whatsappText = [
         `*Resumo de Comissões*`,
@@ -36,7 +38,7 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
         cpf ? `CPF: ${cpf}` : null,
         `Período: ${periodLabel}`,
         ``,
-        `*Valor a receber: ${currencySymbol} ${fmtAmount}*`,
+        `*Valor a receber: ${moneyLabel}*`,
         ``,
         `_Gerado pelo AgendiX_`
     ].filter(Boolean).join('\n');
@@ -132,7 +134,7 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
                         </div>
                         <div className={`border-t ${colors.divider} pt-3`}>
                             <p className={`${colors.textMuted} text-xs ${font.mono} uppercase`}>Valor a receber</p>
-                            <p className={`text-2xl ${font.mono} font-bold ${accent.text}`}>{currencySymbol} {fmtAmount}</p>
+                            <p className={`text-2xl ${font.mono} font-bold ${accent.text}`}>{moneyLabel}</p>
                         </div>
                         <p className={`${colors.textMuted} opacity-60 text-xs ${font.mono}`}>Gerado pelo AgendiX</p>
                     </div>

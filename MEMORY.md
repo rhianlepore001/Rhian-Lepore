@@ -49,9 +49,10 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **UI/UX mobile: cards e chrome distorcidos — em andamento (5 Set 2026):**
+- **UI/UX mobile + moeda do tenant — em andamento (5 Set 2026):**
   - Branch `cursor/ui-ux-layout-audit-b5e9`. Print do Financeiro → Comissões (botões esmagados, saldo desalinhado, título do header quebrando).
-  - Card de comissão empilha ações no mobile; CTA vira "Pagar comissão"; valores `R$` alinhados com `tabular-nums`.
+  - Card de comissão empilha ações no mobile; CTA vira "Pagar comissão"; valores via `formatMoney` (locale do tenant, sem `R$` + `toFixed`).
+  - Moeda vem de `profiles.region` (BR→R$, PT→€). Ajustes → Geral tem seletor Brasil/Portugal; staff herda a região do dono. Conta demo Barbearia Bob alinhada para PT/€.
   - Header: nome do negócio em 1 linha com truncate real; toggle de tema sem fundo de card.
   - FAB da nav inferior sai do fluxo (absolute) para não cobrir Clientes/Financeiro.
   - Mesmo padrão de overflow em Agenda, Fila, CRM, Dashboard, Checkout, booking público e settings.

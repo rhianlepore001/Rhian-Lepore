@@ -48,6 +48,7 @@ export const profileFieldsSchema = z.object({
   public_booking_enabled: z.boolean().default(true),
   booking_lead_time_hours: z.number().int().min(0).default(2),
   max_bookings_per_day: z.number().int().positive().nullable().optional(),
+  region: z.string().nullable().optional(),
 });
 
 export type BusinessSettings = z.infer<typeof businessSettingsSchema>;

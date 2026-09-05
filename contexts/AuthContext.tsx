@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
 import { resolveIsDev } from '../utils/devAccess';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
+import { normalizeRegion } from '../utils/formatters';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -26,6 +27,7 @@ interface AuthContextType {
   isDev: boolean;
   aiosEnabled: boolean;
   setDevUserType: (type: UserType) => void;
+  updateRegion: (region: Region) => void;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
@@ -83,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!isStaffAccount) {
           setUserType(profile.user_type as UserType || 'barber');
         }
-        setRegion(profile.region as Region || 'BR');
+        setRegion(normalizeRegion(profile.region));
         setBusinessName(profile.business_name || '');
         setFullName(profile.full_name || '');
         setAvatarUrl(profile.photo_url || null);
@@ -97,16 +99,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           const { data: ownerProfile } = await supabase
             .from('profiles')
-            .select('subscription_status, trial_ends_at, user_type, business_name')
+            .select('subscription_status, trial_ends_at, user_type, business_name, region')
             .eq('id', profile.company_id)
             .single();
 
           if (ownerProfile) {
             setSubscriptionStatus((ownerProfile.subscription_status as any) || 'trial');
             setTrialEndsAt(ownerProfile.trial_ends_at || null);
-            // Herda o userType e businessName do dono — chamada única, sem flicker
+            // Herda o userType, businessName e região/moeda do dono — chamada única, sem flicker
             setUserType(ownerProfile.user_type as UserType || 'barber');
             setBusinessName(ownerProfile.business_name || '');
+            setRegion(normalizeRegion(ownerProfile.region));
           } else {
             // Dono não encontrado (conta desativada/excluída): bloquear acesso do staff órfão
             setUserType(profile.user_type as UserType || 'barber');
@@ -340,7 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCompanyId(resolvedCompanyId);
         setRole(data.companyId ? 'staff' : 'owner');
         setUserType(data.userType);
-        setRegion(data.region);
+        setRegion(normalizeRegion(data.region));
         setBusinessName(data.businessName);
         setFullName(data.fullName);
         setTutorialCompleted(false);
@@ -451,6 +454,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('rhian_lepore_dev_type', type);
   };
 
+  const updateRegion = useCallback((next: Region) => {
+    setRegion(normalizeRegion(next));
+  }, []);
+
   const activeUserType = (isDev && devUserType) ? devUserType : userType;
 
   const value = React.useMemo(() => ({
@@ -478,6 +485,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isDev,
     aiosEnabled,
     setDevUserType,
+    updateRegion,
     loading,
     login,
     logout,
@@ -499,7 +507,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isDev,
     aiosEnabled,
     devUserType,
-    loading
+    loading,
+    updateRegion,
   ]);
 
   return (

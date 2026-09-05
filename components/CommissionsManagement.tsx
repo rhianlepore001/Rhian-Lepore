@@ -12,6 +12,7 @@ import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
 import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
+import { useTenantLocale } from '../hooks/useTenantLocale';
 
 interface CommissionDue {
     professional_id: string;
@@ -78,26 +79,23 @@ function calcCommissionPeriod(settlementDay: number): { start: string; end: stri
 }
 
 function MoneyInline({
-    symbol,
-    amount,
+    formatted,
     className = '',
 }: {
-    symbol: string;
-    amount: number;
+    formatted: string;
     className?: string;
 }) {
     return (
-        <span className={`inline-flex items-baseline gap-0.5 whitespace-nowrap tabular-nums ${className}`}>
-            <span className="text-[0.65em] font-semibold leading-none opacity-80">{symbol}</span>
-            <span className="leading-none">
-                {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+        <span className={`inline-flex items-baseline whitespace-nowrap tabular-nums ${className}`}>
+            {formatted}
         </span>
     );
 }
 
 export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ accentColor, currencySymbol, onPaymentSuccess }) => {
     const { user } = useAuth();
+    const { formatMoney, currencySymbol: tenantSymbol } = useTenantLocale();
+    const moneySymbol = tenantSymbol || currencySymbol;
     const navigate = useNavigate();
     const isBeauty = accentColor.includes('beauty');
     const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
@@ -409,7 +407,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accent.bg}`}></div>
                                     <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Pendente</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold ${totalDueOverall > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
-                                        <MoneyInline symbol={currencySymbol} amount={totalDueOverall || 0} />
+                                        <MoneyInline formatted={formatMoney(totalDueOverall || 0)} />
                                     </h4>
                                 </div>
                             </Card>
@@ -418,7 +416,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-[var(--color-success)]"></div>
                                     <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Pago (mês)</p>
                                     <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-[var(--color-success)]`}>
-                                        <MoneyInline symbol={currencySymbol} amount={totalPaidMonth || 0} />
+                                        <MoneyInline formatted={formatMoney(totalPaidMonth || 0)} />
                                     </h4>
                                 </div>
                             </Card>
@@ -502,7 +500,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                     <div className="shrink-0 text-right pl-1">
                                                         <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-wide mb-1`}>Saldo atual</p>
                                                         <p className={`text-base md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
-                                                            <MoneyInline symbol={currencySymbol} amount={professional.total_due || 0} />
+                                                            <MoneyInline formatted={formatMoney(professional.total_due || 0)} />
                                                         </p>
                                                     </div>
                                                 </div>
@@ -511,13 +509,13 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                                     <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
                                                         <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide`}>Este mês</p>
                                                         <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
-                                                            <MoneyInline symbol={currencySymbol} amount={professional.total_earnings_month} />
+                                                            <MoneyInline formatted={formatMoney(professional.total_earnings_month)} />
                                                         </p>
                                                     </div>
                                                     <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
                                                         <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide`}>Liquidado</p>
                                                         <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>
-                                                            <MoneyInline symbol={currencySymbol} amount={professional.total_paid} />
+                                                            <MoneyInline formatted={formatMoney(professional.total_paid)} />
                                                         </p>
                                                     </div>
                                                     <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
@@ -626,7 +624,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     </div>
                                     <div className="text-right shrink-0">
                                         <p className={`text-[var(--color-success)] ${font.mono} font-bold whitespace-nowrap tabular-nums`}>
-                                            <MoneyInline symbol={currencySymbol} amount={item.net_amount} />
+                                            <MoneyInline formatted={formatMoney(item.net_amount)} />
                                         </p>
                                         <p className={`${colors.textMuted} text-xs ${font.mono}`}>
                                             Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
@@ -727,7 +725,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div>
                             <p className={`mb-1 text-lg font-bold leading-none ${colors.text}`}>{selectedProfessional.professional_name}</p>
                             <p className={`text-xs ${font.mono} ${colors.textMuted}`}>
-                                Saldo: <span className="text-[var(--color-warning)]">{currencySymbol} {selectedProfessional.total_due.toFixed(2)}</span>
+                                Saldo: <span className="text-[var(--color-warning)]">{formatMoney(selectedProfessional.total_due)}</span>
                             </p>
                         </div>
                     </div>
@@ -735,7 +733,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     <div className="space-y-6">
                         <div>
                             <label className={`mb-2 block text-xs ${font.mono} uppercase tracking-widest ${colors.textMuted}`}>
-                                Valor a ser liquidado ({currencySymbol})
+                                Valor a ser liquidado ({moneySymbol})
                             </label>
                             <input
                                 type="number"
@@ -828,7 +826,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         fetchCommissionsDue();
                     }}
                     accentColor={accentColor}
-                    currencySymbol={currencySymbol}
+                    currencySymbol={moneySymbol}
                 />
             )}
 
@@ -839,7 +837,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     professionalName={detailsProfessional.professional_name}
                     onClose={() => { setShowHistoryModal(false); setDetailsProfessional(null); }}
                     accentColor={accentColor}
-                    currencySymbol={currencySymbol}
+                    currencySymbol={moneySymbol}
                 />
             )}
 
@@ -853,7 +851,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     periodStart={calcCommissionPeriod(settlementDay).start}
                     periodEnd={calcCommissionPeriod(settlementDay).end}
                     periodLabel={periodLabel}
-                    currencySymbol={currencySymbol}
+                    currencySymbol={moneySymbol}
                     accentColor={accentColor}
                     onClose={() => { setShowReportModal(false); setDetailsProfessional(null); }}
                 />

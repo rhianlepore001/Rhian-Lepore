@@ -56,6 +56,16 @@ describe('AuthContext', () => {
         expect(result.current.region).toBe('PT');
         expect(result.current.businessName).toBe('Studio X');
         expect(result.current.tutorialCompleted).toBe(false);
+
+        await act(async () => {
+            result.current.updateRegion('BR');
+        });
+        expect(result.current.region).toBe('BR');
+
+        await act(async () => {
+            result.current.updateRegion('PT');
+        });
+        expect(result.current.region).toBe('PT');
     });
 
     it('uses onboarding_progress as source of truth for owner onboarding', async () => {
@@ -136,6 +146,7 @@ describe('AuthContext', () => {
                                 trial_ends_at: '2026-06-01T00:00:00.000Z',
                                 user_type: 'beauty',
                                 business_name: 'Studio Owner',
+                                region: 'PT',
                             },
                             error: null,
                         });
@@ -169,6 +180,7 @@ describe('AuthContext', () => {
         expect(result.current.subscriptionStatus).toBe('active');
         expect(result.current.userType).toBe('beauty');
         expect(result.current.businessName).toBe('Studio Owner');
+        expect(result.current.region).toBe('PT');
         expect(result.current.teamMemberId).toBe('team-123');
     });
 

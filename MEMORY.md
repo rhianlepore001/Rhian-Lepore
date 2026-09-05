@@ -49,7 +49,8 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Agenda: scroll horizontal lento puxava de volta — 5 Set 2026 (branch `cursor/agenda-horizontal-scroll-6516`):**
+- **Agenda: scroll horizontal lento puxava de volta — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-horizontal-scroll-6516` · PR #41 → `main`. CI (lint/typecheck/testes/coverage) + Vercel preview verdes.
   - Causa: snap JS (debounce 90ms em `scroll` + `scrollend`) alinhava a coluna no meio do gesto lento; `scrollLeft` voltava à origem.
   - Correção: scroll horizontal nativo na grade (`AgendaResourceGrid`); sem snap no meio do gesto.
   - E2E: `e2e/agenda-horizontal-scroll.spec.ts` (viewport mobile, gesto lento sem snap-back).

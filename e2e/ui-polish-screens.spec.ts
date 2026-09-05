@@ -260,15 +260,20 @@ test.describe('UI polish — Agenda e Financeiro', () => {
     await installMocks(page, 'dark');
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('agenda-resource-grid')).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId('agenda-public-link')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Copiar link de agendamento público/i })).toBeVisible();
-    await page.getByRole('button', { name: /Copiar link de agendamento público/i }).click();
+    const copyLink = page.getByTestId('agenda-public-link');
+    await expect(copyLink).toBeVisible();
+    await expect(copyLink).toHaveAttribute('aria-label', /Copiar link de agendamento público/i);
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-copiar-link-mobile.png'), fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(copyLink).toBeVisible();
+    await expect(page.getByRole('button', { name: /Histórico/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Todos os agendamentos/i })).toBeVisible();
+    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-copiar-link-desktop.png'), fullPage: false });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await copyLink.click();
     await expect(page.getByText(/Link copiado\. Cole no WhatsApp/i)).toBeVisible();
-    await page.getByTestId('agenda-public-link').scrollIntoViewIfNeeded();
-    await page.screenshot({ path: path.join(ARTIFACTS, 'agenda-copiar-link-publico.png'), fullPage: false });
-    await page.getByTestId('agenda-public-link').screenshot({
-        path: path.join(ARTIFACTS, 'agenda-copiar-link-barra.png'),
-    });
     await expect(page.getByRole('button', { name: /Britocesar/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Maria raimunda/ })).toBeVisible();
 

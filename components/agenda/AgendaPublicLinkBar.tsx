@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Copy, Link as LinkIcon, Settings } from 'lucide-react';
+import { Check, Copy, Link as LinkIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { copyTextToClipboard } from '../../utils/clipboard';
 import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
@@ -23,7 +22,6 @@ export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({
   isStaff,
 }) => {
   const { user } = useAuth();
-  const { colors, accent } = useBrutalTheme();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -62,80 +60,45 @@ export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({
   if (!businessSlug) {
     if (isStaff) return null;
     return (
-      <section data-testid="agenda-public-link" className="shrink-0">
-        <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${colors.card} ${colors.border}`}>
-          <LinkIcon className={`w-4 h-4 shrink-0 ${accent.text}`} aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className={`${colors.text} font-bold text-sm leading-snug`}>Link de agendamento</p>
-            <p className={`${colors.textSecondary} text-xs leading-snug`}>
-              Crie o link para o cliente marcar sozinho.
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={goToBookingSettings}
-            icon={<Settings />}
-            className="shrink-0"
-            aria-label="Configurar link de agendamento"
-          >
-            Configurar
-          </Button>
-        </div>
-      </section>
+      <Button
+        variant="secondary"
+        icon={<LinkIcon />}
+        onClick={goToBookingSettings}
+        className="flex-1 md:flex-none"
+        data-testid="agenda-public-link"
+        aria-label="Configurar link de agendamento"
+      >
+        <span className="hidden md:inline">Configurar link</span>
+      </Button>
     );
   }
 
   if (!publicBookingEnabled) {
     if (isStaff) return null;
     return (
-      <section data-testid="agenda-public-link" className="shrink-0">
-        <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${colors.card} ${colors.border}`}>
-          <LinkIcon className={`w-4 h-4 shrink-0 ${accent.text}`} aria-hidden />
-          <div className="min-w-0 flex-1">
-            <p className={`${colors.text} font-bold text-sm leading-snug`}>Agendamento online desativado</p>
-            <p className={`${colors.textSecondary} text-xs leading-snug`}>
-              Ative em Ajustes para receber reservas pelo link.
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={goToBookingSettings}
-            icon={<Settings />}
-            className="shrink-0"
-            aria-label="Ativar agendamento online"
-          >
-            Ativar
-          </Button>
-        </div>
-      </section>
+      <Button
+        variant="secondary"
+        icon={<LinkIcon />}
+        onClick={goToBookingSettings}
+        className="flex-1 md:flex-none"
+        data-testid="agenda-public-link"
+        aria-label="Ativar agendamento online"
+      >
+        <span className="hidden md:inline">Ativar link</span>
+      </Button>
     );
   }
 
-  const publicLink = buildPublicBookingLink(businessSlug);
-
   return (
-    <section data-testid="agenda-public-link" className="shrink-0">
-      <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${colors.card} ${colors.border}`}>
-        <LinkIcon className={`w-4 h-4 shrink-0 ${accent.text}`} aria-hidden />
-        <div className="min-w-0 flex-1">
-          <p className={`${colors.text} font-bold text-sm leading-snug`}>Link de agendamento</p>
-          <p className={`${colors.textMuted} text-xs font-mono truncate`} title={publicLink}>
-            /#/book/{businessSlug}
-          </p>
-        </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => { void handleCopy(); }}
-          icon={copied ? <Check /> : <Copy />}
-          className="shrink-0"
-          aria-label={copied ? 'Link copiado' : 'Copiar link de agendamento público'}
-        >
-          {copied ? 'Copiado!' : 'Copiar'}
-        </Button>
-      </div>
-    </section>
+    <Button
+      variant="secondary"
+      icon={copied ? <Check /> : <Copy />}
+      onClick={() => { void handleCopy(); }}
+      className="flex-1 md:flex-none"
+      data-testid="agenda-public-link"
+      aria-label={copied ? 'Link copiado' : 'Copiar link de agendamento público'}
+    >
+      <span className="hidden md:inline">{copied ? 'Copiado!' : 'Copiar link'}</span>
+    </Button>
   );
 };

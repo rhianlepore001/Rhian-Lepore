@@ -1110,6 +1110,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             >
                                 <span className="hidden md:inline">Histórico</span>
                             </Button>
+                            <AgendaPublicLinkBar
+                                businessSlug={businessSlug}
+                                publicBookingEnabled={publicBookingEnabled}
+                                isStaff={isStaff}
+                            />
                             <Button
                                 variant="secondary"
                                 icon={<Calendar />}
@@ -1220,12 +1225,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 accent={accent}
             />
             </div>
-
-            <AgendaPublicLinkBar
-                businessSlug={businessSlug}
-                publicBookingEnabled={publicBookingEnabled}
-                isStaff={isStaff}
-            />
 
             <AgendaPublicBookings
                 bookings={publicBookings}

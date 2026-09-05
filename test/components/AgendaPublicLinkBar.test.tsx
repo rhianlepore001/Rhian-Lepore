@@ -56,7 +56,7 @@ describe('AgendaPublicLinkBar', () => {
     localStorage.clear();
   });
 
-  it('mostra o atalho e copia o link público', async () => {
+  it('mostra o botão e copia o link público', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     Object.defineProperty(window, 'isSecureContext', { value: true, configurable: true });
@@ -64,7 +64,7 @@ describe('AgendaPublicLinkBar', () => {
     renderBar({ businessSlug: 'barbearia-silva', publicBookingEnabled: true, isStaff: false });
 
     expect(screen.getByTestId('agenda-public-link')).toBeInTheDocument();
-    expect(screen.getByText('/#/book/barbearia-silva')).toBeInTheDocument();
+    expect(screen.queryByText('/#/book/barbearia-silva')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /Copiar link de agendamento público/i }));
 
@@ -74,25 +74,24 @@ describe('AgendaPublicLinkBar', () => {
     expect(localStorage.getItem('booking_visited_owner-1')).toBe('true');
   });
 
-  it('dono sem slug vê CTA para configurar o link', async () => {
+  it('dono sem slug vê botão para configurar o link', async () => {
     renderBar({ businessSlug: null, isStaff: false });
     await userEvent.click(screen.getByRole('button', { name: /Configurar link de agendamento/i }));
     expect(screen.getByText('pagina-agendamento')).toBeInTheDocument();
   });
 
-  it('staff sem slug não vê a barra', () => {
+  it('staff sem slug não vê o botão', () => {
     renderBar({ businessSlug: null, isStaff: true });
     expect(screen.queryByTestId('agenda-public-link')).not.toBeInTheDocument();
   });
 
-  it('dono com reservas desativadas vê CTA para ativar', async () => {
+  it('dono com reservas desativadas vê botão para ativar', async () => {
     renderBar({ businessSlug: 'barbearia-silva', publicBookingEnabled: false, isStaff: false });
-    expect(screen.getByText(/Agendamento online desativado/i)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Ativar agendamento online/i }));
     expect(screen.getByText('pagina-agendamento')).toBeInTheDocument();
   });
 
-  it('staff não vê a barra quando o agendamento público está desativado', () => {
+  it('staff não vê o botão quando o agendamento público está desativado', () => {
     renderBar({ businessSlug: 'barbearia-silva', publicBookingEnabled: false, isStaff: true });
     expect(screen.queryByTestId('agenda-public-link')).not.toBeInTheDocument();
   });

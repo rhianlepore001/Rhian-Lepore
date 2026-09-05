@@ -13,9 +13,6 @@ const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?:
   cancelled: X,
 };
 
-/** Largura do gutter sticky (w-16 = 4rem) — usada em scroll-padding-left. */
-const GUTTER_PAD = '4rem';
-
 export interface AgendaGridAppointment {
   id: string;
   clientName: string;
@@ -72,9 +69,9 @@ function appointmentTimeLabel(iso: string): string {
 
 /**
  * Grade única horário × colaborador. Altura natural (todas as horas);
- * scroll vertical é da página. Snap horizontal com scroll-padding
- * alinhado ao gutter sticky. Filtro real: só as colunas selecionadas;
- * “Adicionar” ao lado para multi-select.
+ * scroll vertical é da página. Scroll horizontal nativo (sem snap JS —
+ * o alinhamento no `scroll`/`scrollend` puxava de volta no gesto lento).
+ * Filtro real: só as colunas selecionadas; “Adicionar” ao lado para multi-select.
  */
 export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   members,
@@ -93,7 +90,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   const { colors, accent } = useBrutalTheme();
   const [addOpen, setAddOpen] = useState(false);
   const addWrapRef = useRef<HTMLDivElement>(null);
-  const scrollerRef = useRef<HTMLDivElement>(null);
 
   const appointmentsByProfessional = new Map<string, AgendaGridAppointment[]>();
   for (const apt of appointments) {
@@ -124,61 +120,10 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
     if (!showAddColumn) setAddOpen(false);
   }, [showAddColumn]);
 
-  // Alinha colunas ao gutter sticky após o gesto (CSS snap + padding às vezes falha no Chromium).
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    let snapping = false;
-    let debounceTimer: number | undefined;
-
-    const snapToNearest = () => {
-      if (snapping) return;
-      const gutter = el.querySelector('[data-agenda-gutter="true"]') as HTMLElement | null;
-      const gutterW = gutter?.offsetWidth ?? 64;
-      const cols = [...el.querySelectorAll('[data-testid^="agenda-col-"]')] as HTMLElement[];
-      if (cols.length === 0) return;
-
-      const snapX = el.getBoundingClientRect().left + gutterW;
-      let best = cols[0];
-      let bestDist = Infinity;
-      for (const col of cols) {
-        const dist = Math.abs(col.getBoundingClientRect().left - snapX);
-        if (dist < bestDist) {
-          bestDist = dist;
-          best = col;
-        }
-      }
-      if (bestDist <= 2) return;
-
-      const desired = el.scrollLeft + (best.getBoundingClientRect().left - snapX);
-      snapping = true;
-      el.scrollTo({ left: Math.max(0, desired), behavior: 'auto' });
-      window.setTimeout(() => {
-        snapping = false;
-      }, 50);
-    };
-
-    const onScroll = () => {
-      window.clearTimeout(debounceTimer);
-      debounceTimer = window.setTimeout(snapToNearest, 90);
-    };
-
-    el.addEventListener('scroll', onScroll, { passive: true });
-    el.addEventListener('scrollend', snapToNearest);
-    return () => {
-      el.removeEventListener('scroll', onScroll);
-      el.removeEventListener('scrollend', snapToNearest);
-      window.clearTimeout(debounceTimer);
-    };
-  }, [members.length, showAddColumn]);
-
   return (
     <div className={`rounded-2xl border overflow-hidden min-w-0 w-full ${colors.border} ${colors.surface}`}>
       <div
-        ref={scrollerRef}
         data-testid="agenda-resource-grid"
-        style={{ scrollPaddingLeft: GUTTER_PAD }}
         className={`overflow-x-auto max-w-full scrollbar-hide ${colors.surface}`}
       >
         <div className="inline-flex min-w-full">

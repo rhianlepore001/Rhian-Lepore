@@ -15,6 +15,25 @@ test('demo: abre modal de reportar problema e mostra ferramenta de demarcacao', 
     return img?.naturalWidth > 0;
   }, { timeout: 15000 });
 
+  const printHasPageContent = await page.evaluate(() => {
+    const img = document.querySelector('[data-bug-report-dialog] img') as HTMLImageElement | null;
+    if (!img || img.naturalWidth === 0) return false;
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return false;
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let bright = 0;
+    for (let i = 0; i < data.length; i += 16) {
+      if (data[i] + data[i + 1] + data[i + 2] > 350) bright += 1;
+      if (bright > 40) return true;
+    }
+    return false;
+  });
+  expect(printHasPageContent).toBe(true);
+
   await expect(dialog.locator('text=Print da tela')).toBeVisible();
   await expect(dialog.getByText(/Descrição/i)).toBeVisible();
   await expect(dialog.getByText(/Lápis/i)).toBeVisible();

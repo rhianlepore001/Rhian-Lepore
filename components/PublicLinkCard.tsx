@@ -80,6 +80,13 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
         }
     };
 
+    const markBookingStepDone = () => {
+        if (user?.id) {
+            localStorage.setItem(`booking_visited_${user.id}`, 'true');
+        }
+        window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
+    };
+
     const handleSaveSlug = async () => {
         if (!user || !slugAvailable || !slugInput) return;
 
@@ -92,6 +99,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
 
             if (error) throw error;
 
+            markBookingStepDone();
             if (onSlugCreated) onSlugCreated();
             showToast('Link de agendamento criado com sucesso!', 'success');
             window.location.reload();
@@ -197,6 +205,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                     text: 'Agende seu horário online:',
                     url: publicLink
                 });
+                markBookingStepDone();
                 return;
             } catch (error) {
                 // Erro ao compartilhar
@@ -208,6 +217,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                 await navigator.clipboard.writeText(publicLink);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
+                markBookingStepDone();
             } else {
                 throw new Error('Clipboard API unavailable');
             }
@@ -226,6 +236,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
                 if (successful) {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
+                    markBookingStepDone();
                 }
             } catch (fallbackErr) {
                 console.error('Fallback copy failed', fallbackErr);

@@ -49,13 +49,35 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **UI/UX mobile + moeda do tenant — em andamento (5 Set 2026):**
+- **UI/UX mobile + moeda do tenant — em merge para produção (5 Set 2026):**
   - Branch `cursor/ui-ux-layout-audit-b5e9`. Print do Financeiro → Comissões (botões esmagados, saldo desalinhado, título do header quebrando).
   - Card de comissão empilha ações no mobile; CTA vira "Pagar comissão"; valores via `formatMoney` (locale do tenant, sem `R$` + `toFixed`).
   - Moeda vem de `profiles.region` (BR→R$, PT→€). Ajustes → Geral tem seletor Brasil/Portugal; staff herda a região do dono. Conta demo Barbearia Bob alinhada para PT/€.
   - Header: nome do negócio em 1 linha com truncate real; toggle de tema sem fundo de card.
   - FAB da nav inferior sai do fluxo (absolute) para não cobrir Clientes/Financeiro.
   - Mesmo padrão de overflow em Agenda, Fila, CRM, Dashboard, Checkout, booking público e settings.
+
+- **Agenda: scroll horizontal lento puxava de volta — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-horizontal-scroll-6516` · PR #41 → `main`. CI (lint/typecheck/testes/coverage) + Vercel preview verdes.
+  - Causa: snap JS (debounce 90ms em `scroll` + `scrollend`) alinhava a coluna no meio do gesto lento; `scrollLeft` voltava à origem.
+  - Correção: scroll horizontal nativo na grade (`AgendaResourceGrid`); sem snap no meio do gesto.
+  - E2E: `e2e/agenda-horizontal-scroll.spec.ts` (viewport mobile, gesto lento sem snap-back).
+  - Produção: deploy Vercel automático no push `main`.
+
+- **Reportar problema: print da tela — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/bug-report-screenshot-5f3b` · PR #39 → `main`.
+  - Causa: `html2canvas` 1.4.1 não parseia `oklch()` do Tailwind 4 → captura virava `null` e o modal mostrava "Não foi possível capturar a tela."
+  - Motor: `html2canvas-pro`. Pipeline único `capturePageForBugReport()`: esconde chrome do reporter → espera o paint → fotografia o **viewport** → abre o sheet.
+  - Se a captura falhar, o usuário pode **Anexar print**. Envio sem imagem continua válido.
+  - Gates: typecheck, lint, build, 442 testes; CI GitHub + Vercel Preview verdes. Produção: deploy Vercel automático no push `main`.
+  - Spec: `specs/active/bug-report-screenshot/spec.md`.
+
+- **SetupCopilot: passo do link público travado em 5/6 — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/setup-copilot-booking-link-c3d3` · PR #40 → `main`.
+  - O card "Configure seu espaço" ficava em 83% mesmo depois de usar o agendamento público: o passo só fechava com `profiles.business_slug` ou clique no checklist (localStorage).
+  - Agora o passo completa com slug **ou** reservas em `public_bookings`; copiar/compartilhar o link também marca feito (localStorage + `onboarding_progress.step_data`). Query do slug isolada de `activation_completed`.
+  - Com todos os passos concluídos (ou `activation_completed`), o card some sozinho — não exige fechar no X.
+  - Gates: typecheck, lint, build, 434 testes; CI GitHub verde. Produção: deploy Vercel automático no push `main`.
 
 - **Login gateway: tema da sessão vazava no index após logout — MERGED → produção (4 Set 2026):**
   - Branch `cursor/login-gateway-theme-logout-2343` · PR #38 → `main` · CI + Vercel success.

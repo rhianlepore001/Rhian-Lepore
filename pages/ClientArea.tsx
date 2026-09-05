@@ -8,7 +8,7 @@ import { PhoneInput } from '../components/PhoneInput';
 import {
     Calendar, History, User, LogOut, ArrowRight,
     Loader2, CalendarX, Sparkles, Mail, Phone,
-    Edit2, Check, X, ChevronLeft, Clock, Crown
+    Edit2, Check, X, ChevronLeft, Clock, CreditCard
 } from 'lucide-react';
 import { ClientMembershipPanel } from '../components/membership/ClientMembershipPanel';
 import { PublicClubFlow } from '../components/membership/PublicClubFlow';
@@ -307,7 +307,7 @@ export const ClientArea: React.FC = () => {
             <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
                 <header className={`px-6 py-5 border-b ${isBeauty ? 'border-theme-border bg-theme-card backdrop-blur-sm' : 'border-theme-border bg-theme-card backdrop-blur-sm'}`}>
                     <Link
-                        to={`/book/${slug}`}
+                        to={`/book/${slug}?agendar=1`}
                         className={`inline-flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-theme-textSecondary hover:text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)] hover:text-theme-textSecondary'}`}
                     >
                         <ChevronLeft className="w-4 h-4" />
@@ -425,7 +425,7 @@ export const ClientArea: React.FC = () => {
 
                         <p className={`text-center text-xs ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
                             Quer agendar?{' '}
-                            <Link to={`/book/${slug}`} className={`font-semibold underline ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
+                            <Link to={`/book/${slug}?agendar=1`} className={`font-semibold underline ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
                                 Ir para o agendamento
                             </Link>
                         </p>
@@ -499,26 +499,26 @@ export const ClientArea: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-1 p-1 rounded-xl overflow-x-auto bg-theme-surface border border-theme-border">
+                <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-theme-surface border border-theme-border">
                     {([
                         { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
                         { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-                        { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
+                        { id: 'club', label: 'Clube', icon: <CreditCard className="w-3.5 h-3.5" /> },
                         { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
                     ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`
-                                shrink-0 flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-lg text-xs font-semibold
+                                min-w-0 flex flex-col items-center justify-center gap-0.5 py-2 px-1 min-h-[44px] rounded-lg text-xs font-semibold
                                 ${activeTab === tab.id
-                                    ? 'bg-theme-card text-theme-text shadow-sm'
+                                    ? 'bg-theme-card text-theme-text'
                                     : 'text-[var(--color-text-muted)]'
                                 }
                             `}
                         >
                             {tab.icon}
-                            <span className="truncate">{tab.label}</span>
+                            <span className="truncate w-full text-center">{tab.label}</span>
                             {tab.id === 'upcoming' && upcomingBookings.length > 0 && (
                                 <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}>
                                     {upcomingBookings.length}
@@ -641,7 +641,7 @@ export const ClientArea: React.FC = () => {
 
                         {activeTab === 'profile' && (
                             <div className="animate-in fade-in duration-200">
-                                <div className={`rounded-2xl p-6 space-y-5 ${isBeauty ? 'bg-theme-card border border-theme-border shadow-sm' : 'bg-theme-surface border border-theme-border'}`}>
+                                <div className="rounded-2xl p-6 space-y-5 bg-theme-card border border-theme-border">
                                     <div className="flex items-center justify-between">
                                         <h2 className={`font-bold text-base ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                                             Meus Dados

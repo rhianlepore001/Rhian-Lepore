@@ -35,4 +35,9 @@ describe('PlanCard', () => {
     expect(onDelete).toHaveBeenCalledWith(plan);
     expect(screen.getByTestId('plan-card-plan-1').className).not.toMatch(/bg-gradient/);
   });
+
+  it('marca plano inativo como Pausado', () => {
+    render(<PlanCard plan={{ ...plan, active: false }} compact />);
+    expect(screen.getByText('Pausado')).toBeInTheDocument();
+  });
 });

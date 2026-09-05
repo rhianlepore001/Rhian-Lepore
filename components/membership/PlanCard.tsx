@@ -77,15 +77,17 @@ export const PlanCard: React.FC<PlanCardProps> = ({
                     )}
                 </div>
 
-                <div className="flex items-baseline justify-between gap-2">
+                <div className="flex items-baseline justify-between gap-2 min-w-0">
                     <p className={`text-base font-bold leading-none ${colors.text}`}>
                         {formatCurrency(plan.price_cents / 100, region)}
                         <span className={`${colors.textMuted} text-xs font-medium ml-1`}>/mês</span>
                     </p>
                     <p className={`${colors.textMuted} text-xs shrink-0`}>
-                        {plan.usage_limit_per_month
-                            ? `${plan.usage_limit_per_month} uso${plan.usage_limit_per_month > 1 ? 's' : ''}/mês`
-                            : 'Ilimitado'}
+                        {!plan.active
+                            ? 'Pausado'
+                            : plan.usage_limit_per_month
+                                ? `${plan.usage_limit_per_month} uso${plan.usage_limit_per_month > 1 ? 's' : ''}/mês`
+                                : 'Ilimitado'}
                     </p>
                 </div>
 

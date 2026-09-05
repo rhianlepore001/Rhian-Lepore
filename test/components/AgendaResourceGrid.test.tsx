@@ -138,6 +138,9 @@ describe('AgendaResourceGrid', () => {
     await userEvent.click(card);
     expect(onSelectAppointment).toHaveBeenCalledTimes(1);
     expect(onSelectAppointment.mock.calls[0][0]).toMatchObject({ id: 'a1' });
+    expect(card.className).toMatch(/agenda-event-chip/);
+    expect(card.className).not.toMatch(/shadow-lite-glass/);
+    expect(card.className).not.toMatch(/hover:brightness-110/);
   });
 
   it('mostra agendamento não atribuído na primeira coluna quando showUnassigned', () => {

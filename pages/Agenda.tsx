@@ -17,6 +17,7 @@ import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
 import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
+import { AgendaPublicBookings } from '../components/agenda/AgendaPublicBookings';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -1175,14 +1176,14 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             <>
                                                                 <button
                                                                     onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                                    className="px-3 py-2 min-h-[44px] items-center bg-[var(--color-success-bg)] hover:bg-[var(--color-success-bg)] border border-[var(--color-success-border)] text-[var(--color-success)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonSuccess}`}
                                                                     title="Concluir e Faturar"
                                                                 >
                                                                     <Check className="w-4 h-4" /> Faturar
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleCancelAppointment(apt.id, true)}
-                                                                    className="px-3 py-2 min-h-[44px] items-center bg-[var(--color-danger-bg)] hover:bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] text-[var(--color-danger)] font-bold rounded-lg transition-all flex items-center gap-2 text-xs"
+                                                                    className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonDanger}`}
                                                                     title="Cancelar"
                                                                 >
                                                                     <X className="w-4 h-4" /> Cancelar
@@ -1213,106 +1214,15 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             />
             </div>
 
-            {/* Pending Public Bookings Alert */}
-            {publicBookings.length > 0 && (
-                <div className="shrink-0 space-y-4 max-h-[30vh] overflow-y-auto">
-                    <Card variant="outlined" className={`border-[var(--color-accent-border)] ${accent.bgDim}`}>
-                        <div className="flex items-center gap-3">
-                            <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
-                            <div>
-                                <h3 className={`${colors.text} font-bold text-lg mb-1`}>
-                                    {publicBookings.length} Solicitação(ões) Pendente(s)
-                                </h3>
-                                <p className={`${colors.textSecondary} text-sm`}>
-                                    {(() => {
-                                        const edits = publicBookings.filter((b: any) => b.is_edit).length;
-                                        const newOnes = publicBookings.length - edits;
-                                        if (edits > 0 && newOnes > 0) return `${newOnes} novo(s) e ${edits} alteração(ões) aguardando aprovação.`;
-                                        if (edits > 0) return `${edits} cliente(s) alteraram seu agendamento e aguardam aprovação.`;
-                                        return 'Os agendamentos abaixo foram feitos online e aguardam sua aprovação:';
-                                    })()}
-                                </p>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {publicBookings.map(booking => {
-                            const professional = teamMembers.find(m => m.id === booking.professional_id);
-                            const bookingDate = new Date(booking.appointment_time);
-                            const isToday = bookingDate.toDateString() === new Date().toDateString();
-
-                            return (
-                                <div key={booking.id} className={`${colors.card} ${colors.border} rounded-2xl p-5 transition-all duration-300`}>
-                                    {/* Badge de tipo */}
-                                    {(booking as any).is_edit && (
-                                        <div className="mb-3">
-                                            <span className={`text-xs font-mono font-bold text-[var(--color-info)] bg-[var(--color-info-bg)] border border-[var(--color-info-border)] px-2 py-1 rounded`}>
-                                                ALTERAÇÃO DE AGENDAMENTO
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div>
-                                            <span className={`text-xs font-mono font-bold px-2 py-1 rounded border transition-colors ${isToday ? `${accent.bg} text-[var(--color-on-accent)] ${accent.border}` : `${colors.surface} ${colors.textMuted} ${colors.border}`}`}>
-                                                {isToday ? 'HOJE' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • {bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleAcceptBooking(booking)}
-                                                className={`px-3 min-h-[44px] py-2 items-center rounded-lg transition-all text-xs font-bold flex items-center gap-1.5 ${classes.buttonSuccess}`}
-                                                title="Aceitar"
-                                            >
-                                                <Check className="w-3.5 h-3.5" /> Aceitar
-                                            </button>
-                                            {!isStaff && (
-                                                <button
-                                                    onClick={() => handleRejectBooking(booking.id)}
-                                                    className="px-3 min-h-[44px] py-2 items-center bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-all text-xs font-bold flex items-center gap-1.5"
-                                                    title="Recusar"
-                                                >
-                                                    <X className="w-3.5 h-3.5" /> Recusar
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <p className={`${colors.text} font-bold text-xl leading-tight`}>{booking.customer_name}</p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse"></span>
-                                            <p className={`${colors.textSecondary} text-sm font-mono tracking-wider`}>
-                                                {formatPhone(booking.customer_phone, currencyRegion)}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className={`mt-4 pt-4 ${colors.divider} border-t space-y-3`}>
-<div className={`flex items-center gap-3 text-xs ${colors.textSecondary}`}>
-                                            <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
-                                                <Scissors className={`w-3.5 h-3.5 ${accent.text}`} />
-                                            </div>
-                                            <span className="font-medium">
-                                                {booking.service_ids?.length || 0} serviço(s) • <span className={`${colors.text} font-bold`}>{formatCurrency(booking.total_price, currencyRegion)}</span>
-                                            </span>
-                                        </div>
-                                        <div className={`flex items-center gap-3 text-xs ${colors.textSecondary}`}>
-                                            <div className={`p-1.5 rounded-lg ${accent.bgDim}`}>
-                                                <User className={`w-3.5 h-3.5 ${accent.text}`} />
-                                            </div>
-                                            <span>
-                                                Profissional: <span className={`font-bold ${colors.text} uppercase tracking-tighter`}>{professional?.name || 'Qualquer um'}</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className={`${colors.divider} border-b-2 my-8`}></div>
-                </div>
-            )}
+            <AgendaPublicBookings
+                bookings={publicBookings}
+                teamMembers={teamMembers}
+                services={services}
+                currencyRegion={currencyRegion}
+                isStaff={isStaff}
+                onAccept={handleAcceptBooking}
+                onReject={handleRejectBooking}
+            />
 
             {/* Grid Time View */}
             {teamMembers.length === 0 ? (
@@ -1431,13 +1341,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             <div className={`w-full h-px ${colors.divider}`}></div>
 
                             {/* Service & Professional */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="min-w-0">
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
-                                        <Scissors className="w-4 h-4" />
+                                        <Scissors className="w-4 h-4 shrink-0" />
                                         <span className={`text-xs font-mono uppercase tracking-widest font-bold`}>Serviço</span>
                                     </div>
-                                    <p className={`${colors.text} font-medium text-sm`}>{detailsApt.service}</p>
+                                    <p className={`${colors.text} font-medium text-sm break-words`}>{detailsApt.service}</p>
                                 </div>
                                 <div>
                                     <div className={`flex items-center gap-2 mb-2 ${colors.textMuted}`}>
@@ -1491,13 +1401,13 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
                             {/* Notes Section - Prominent */}
                             {detailsApt.notes && (
-                                <div className={`p-4 rounded-xl border ${accent.bgDim} ${accent.borderDim}`}>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Info className={`w-4 h-4 ${accent.text}`} />
-                                        <span className={`text-xs font-mono font-bold uppercase tracking-widest ${accent.text}`}>Observações</span>
+                                <div className={`px-3 py-2 rounded-lg border ${accent.bgDim} ${accent.borderDim}`}>
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Info className={`w-3.5 h-3.5 shrink-0 ${accent.text}`} />
+                                        <span className={`text-xs font-bold ${accent.text}`}>Observações</span>
                                     </div>
-                                    <p className={`${colors.textSecondary} text-sm leading-relaxed italic`}>
-                                        &quot;{detailsApt.notes}&quot;
+                                    <p className={`${colors.text} text-sm leading-snug break-words whitespace-pre-wrap`}>
+                                        {detailsApt.notes}
                                     </p>
                                 </div>
                             )}

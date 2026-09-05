@@ -45,6 +45,11 @@ describe('useBrutalTheme', () => {
         expect(result.current.mode).toBe('light');
         expect(result.current.isLight).toBe(true);
         expect(result.current.isDark).toBe(false);
+        expect(result.current.classes.buttonSuccess).toContain('bg-[var(--color-success)]');
+        expect(result.current.classes.buttonSuccess).toContain('text-[var(--color-on-success)]');
+        expect(result.current.classes.buttonSuccess).not.toContain('hover:brightness-110');
+        expect(result.current.classes.buttonDanger).toContain('bg-[var(--color-danger)]');
+        expect(result.current.classes.buttonDanger).not.toContain('hover:brightness-110');
     });
 
     it('returns correct accent colors for barber dark', () => {

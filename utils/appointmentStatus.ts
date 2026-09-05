@@ -77,12 +77,12 @@ export interface VisualStatusClasses {
  */
 export const VISUAL_STATUS_CLASSES: Record<VisualStatus, VisualStatusClasses> = {
   completed: {
-    card: 'bg-[var(--color-success-bg)] border-[var(--color-success-border)]',
+    card: 'agenda-status-completed bg-[var(--color-success-bg)] border-[var(--color-success-border)]',
     dot: 'bg-[var(--color-success)]',
     text: 'text-[var(--color-success)]',
   },
   overdue: {
-    card: 'bg-[var(--color-warning-bg)] border-[var(--color-warning-border)]',
+    card: 'agenda-status-overdue bg-[var(--color-warning-bg)] border-[var(--color-warning-border)]',
     dot: 'bg-[var(--color-warning)]',
     text: 'text-[var(--color-warning)]',
   },
@@ -99,7 +99,7 @@ export const VISUAL_STATUS_CLASSES: Record<VisualStatus, VisualStatusClasses> = 
     text: 'text-stone-500',
   },
   cancelled: {
-    card: 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)]',
+    card: 'agenda-status-cancelled bg-[var(--color-danger-bg)] border-[var(--color-danger-border)]',
     dot: 'bg-[var(--color-danger)]',
     text: 'text-[var(--color-danger)]',
   },

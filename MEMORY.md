@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Agenda — tema claro + solicitações públicas (5 Set 2026, branch `cursor/agenda-light-public-ux-cbdd`):**
+  - Botões Aceitar/Faturar/Recusar no modo light usam verde/vermelho sólidos (sem tint + brightness que virava verde apagado).
+  - Cards da grade: sem `shadow-lite-glass` no tema white; nome/serviço quebram em vez de cortar.
+  - Lista do agendamento online compacta, sem `max-h-[30vh]`, com observação visível.
+
 - **Clube — menu do dono + área do cliente — MERGED → produção (5 Set 2026):**
   - PRs #46 (menu/planos/Pix) e #44 (área do cliente + RPCs). Deploy Vercel automático no push `main`.
   - Dono: item **Clube** em Ajustes e no menu; **Plano AgendiX** separado; abas Planos / Pix / Assinantes.

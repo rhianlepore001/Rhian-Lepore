@@ -73,7 +73,7 @@ export function Table<T>({
   return (
     <>
       {mobileRender && (
-        <div className={`md:hidden space-y-3 ${className}`}>
+        <div className={`md:hidden ${compact ? 'space-y-2' : 'space-y-3'} ${className}`}>
           {data.map((row, i) => (
             <div key={rowKey(row, i)}>{mobileRender(row, i)}</div>
           ))}

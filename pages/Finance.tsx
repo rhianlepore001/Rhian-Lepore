@@ -63,21 +63,20 @@ interface FinanceKpiProps {
   subtitle: string;
   icon: React.ReactNode;
   iconClass: string;
-  minHeightClass: string;
 }
 
 const FinanceKpi: React.FC<FinanceKpiProps> = ({
-  title, value, subtitle, icon, iconClass, minHeightClass,
+  title, value, subtitle, icon, iconClass,
 }) => {
   const { colors } = useBrutalTheme();
   return (
-    <Card variant="outlined" className={minHeightClass}>
-      <div className="flex items-start gap-3">
+    <Card variant="outlined" noPadding>
+      <div className="flex items-center gap-3 px-3 py-3 md:px-4">
         <div className={iconClass}>{icon}</div>
-        <div className="min-w-0">
-          <p className={`text-sm font-semibold ${colors.textSecondary}`}>{title}</p>
-          <p className={`mt-3 font-mono text-2xl font-black tracking-tight tabular-nums ${colors.text}`}>{value}</p>
-          <p className={`mt-1 text-sm ${colors.textSecondary}`}>{subtitle}</p>
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs font-semibold uppercase tracking-wide ${colors.textMuted}`}>{title}</p>
+          <p className={`mt-0.5 font-mono text-xl font-black tracking-tight tabular-nums ${colors.text}`}>{value}</p>
+          <p className={`mt-0.5 text-xs ${colors.textSecondary} truncate`}>{subtitle}</p>
         </div>
       </div>
     </Card>
@@ -131,7 +130,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const { accent, colors, isBeauty, classes, font, density, status } = useBrutalTheme();
+  const { accent, colors, isBeauty, classes, status } = useBrutalTheme();
   const { showToast } = useToast();
   const { region: currencyRegion, currencySymbol } = useTenantLocale();
 
@@ -448,7 +447,7 @@ useEffect(() => {
   };
 
   const periodLabel = `${months[selectedMonth]} ${selectedYear}`;
-  const iconClass = `flex h-11 w-11 items-center justify-center rounded-2xl ${accent.bgDim} ${accent.text}`;
+  const iconClass = `flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${accent.bgDim} ${accent.text}`;
   const revenueCount = transactions.filter((t) => t.type === 'revenue').length;
   const avgTicket = revenueCount > 0 ? (summary.revenue || 0) / revenueCount : 0;
 
@@ -554,7 +553,7 @@ useEffect(() => {
   ], [accent.text, colors, currencyRegion, status.danger, status.success]);
 
   return (
-    <div className={`space-y-6 md:space-y-8 pb-20 ${density.pagePadding} md:px-0`}>
+    <div className="space-y-4 md:space-y-6">
       <PageHeader
         title="Financeiro"
         subtitle={periodLabel}
@@ -604,20 +603,20 @@ useEffect(() => {
         <>
           {loading ? (
             <>
-              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <SkeletonCard className={density.kpiMinHeight} />
-                <SkeletonCard className={density.kpiMinHeight} />
-                <SkeletonCard className={density.kpiMinHeight} />
+              <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <SkeletonCard className="min-h-[72px]" />
+                <SkeletonCard className="min-h-[72px]" />
+                <SkeletonCard className="min-h-[72px]" />
               </section>
               {!isStaff && (
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <section className="grid grid-cols-3 gap-2">
                   <SkeletonCard />
                   <SkeletonCard />
                   <SkeletonCard />
                 </section>
               )}
-              <SkeletonCard className="min-h-[320px]" />
-              <SkeletonCard className="min-h-[280px]" />
+              <SkeletonCard className="min-h-[240px]" />
+              <SkeletonCard className="min-h-[160px]" />
             </>
           ) : fetchError ? (
             <ErrorState
@@ -627,9 +626,9 @@ useEffect(() => {
             />
           ) : (
           <>
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <FinanceKpi
-              icon={<TrendingUp className="h-5 w-5" />}
+              icon={<TrendingUp className="h-4 w-4" />}
               title={isStaff ? 'Meu giro' : 'Receita'}
               value={formatCurrency(summary.revenue || 0, currencyRegion)}
               subtitle={
@@ -638,20 +637,18 @@ useEffect(() => {
                   : `${summary.growth > 0 ? '+' : ''}${summary.growth.toFixed(1)}% vs mês anterior`
               }
               iconClass={iconClass}
-              minHeightClass={density.kpiMinHeight}
             />
             {!isStaff && (
               <>
                 <FinanceKpi
-                  icon={<TrendingDown className="h-5 w-5" />}
+                  icon={<TrendingDown className="h-4 w-4" />}
                   title="Despesas"
                   value={formatCurrency(summary.expenses || 0, currencyRegion)}
                   subtitle="Comissões e custos liquidados"
                   iconClass={iconClass}
-                  minHeightClass={density.kpiMinHeight}
                 />
                 <FinanceKpi
-                  icon={<Wallet className="h-5 w-5" />}
+                  icon={<Wallet className="h-4 w-4" />}
                   title="Lucro"
                   value={formatCurrency(summary.profit || 0, currencyRegion)}
                   subtitle={
@@ -660,69 +657,64 @@ useEffect(() => {
                       : 'Sem receita no período'
                   }
                   iconClass={iconClass}
-                  minHeightClass={density.kpiMinHeight}
                 />
               </>
             )}
             {isStaff && (
               <FinanceKpi
-                icon={<Calendar className="h-5 w-5" />}
+                icon={<Calendar className="h-4 w-4" />}
                 title="Atendimentos"
                 value={String(revenueCount)}
                 subtitle={`Ticket médio ${formatCurrency(avgTicket, currencyRegion)}`}
                 iconClass={iconClass}
-                minHeightClass={density.kpiMinHeight}
               />
             )}
           </section>
 
           {!isStaff && (
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <section className="grid grid-cols-3 gap-2">
               {[
                 {
-                  icon: <Smartphone className="h-4 w-4" />,
-                  label: region === 'PT' ? 'Receita via MBWay' : 'Receita via Pix',
+                  icon: <Smartphone className="h-3.5 w-3.5" />,
+                  label: region === 'PT' ? 'MBWay' : 'Pix',
                   value: region === 'PT' ? (summary.revenueByMethod.mbway || 0) : (summary.revenueByMethod.pix || 0),
                 },
-                { icon: <Banknote className="h-4 w-4" />, label: 'Receita via dinheiro', value: summary.revenueByMethod.dinheiro || 0 },
-                { icon: <CreditCard className="h-4 w-4" />, label: 'Receita via cartão', value: summary.revenueByMethod.cartao || 0 },
+                { icon: <Banknote className="h-3.5 w-3.5" />, label: 'Dinheiro', value: summary.revenueByMethod.dinheiro || 0 },
+                { icon: <CreditCard className="h-3.5 w-3.5" />, label: 'Cartão', value: summary.revenueByMethod.cartao || 0 },
               ].map((m) => (
-                <Card key={m.label} variant="outlined">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${accent.bgDim} ${accent.text} shrink-0`}>
-                      {m.icon}
+                <Card key={m.label} variant="outlined" noPadding>
+                  <div className="px-2.5 py-2.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={`${accent.text} shrink-0`}>{m.icon}</span>
+                      <p className={`text-xs font-semibold ${colors.textMuted} truncate`}>{m.label}</p>
                     </div>
-                    <div className="min-w-0">
-                      <p className={`text-sm font-semibold ${colors.textSecondary} truncate`}>{m.label}</p>
-                      <p className={`mt-0.5 font-mono text-xl font-bold tabular-nums ${colors.text}`}>
-                        {formatCurrency(m.value, currencyRegion)}
-                      </p>
-                    </div>
+                    <p className={`mt-1 font-mono text-sm font-bold tabular-nums ${colors.text}`}>
+                      {formatCurrency(m.value, currencyRegion)}
+                    </p>
                   </div>
                 </Card>
               ))}
             </section>
           )}
 
-          <div className="grid grid-cols-1 gap-6">
-            <Card title={`Entradas e saídas — ${periodLabel}`}>
-              <div className="mt-2 w-full">
-                <FinanceCashflowChart
-                  data={chartData}
-                  currencyRegion={currencyRegion}
-                  height={320}
-                />
-              </div>
-            </Card>
-          </div>
+          <Card title={`Entradas e saídas — ${periodLabel}`}>
+            <div className="w-full">
+              <FinanceCashflowChart
+                data={chartData}
+                currencyRegion={currencyRegion}
+                height={240}
+              />
+            </div>
+          </Card>
 
           <Card title="Transações recentes" noPadding>
-            <div className={density.cardPadding}>
+            <div className="p-3 md:p-4">
               <Table<Transaction>
                 columns={transactionColumns}
                 data={transactions}
                 rowKey={(t) => t.id}
                 stickyHeader
+                compact
                 getRowClassName={(t) => (t.status === 'pending' ? `${status.warningBg}` : '')}
                 emptyState={{
                   icon: History,
@@ -736,59 +728,61 @@ useEffect(() => {
                 }}
                 mobileRender={(t) => (
                   <div
-                    className={`rounded-xl border p-4 ${t.type === 'expense' ? `${status.dangerBg} ${status.dangerBorder}` : `${status.successBg} ${status.successBorder}`}`}
+                    data-testid="finance-tx-card"
+                    className={`flex overflow-hidden rounded-xl border ${colors.border} ${colors.card}`}
                   >
-                    <div className="mb-3 flex items-start justify-between">
-                      <div className="flex flex-col">
-                        <span className={`text-base font-semibold ${colors.text}`}>{t.serviceName}</span>
-                        <div className={`mt-1 flex items-center gap-2 text-xs ${colors.textMuted}`}>
-                          <span>{t.date}</span>
-                          <span>•</span>
-                          <span>{t.time}</span>
+                    <span
+                      className={`w-1 shrink-0 ${t.type === 'expense' ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]'}`}
+                      aria-hidden
+                    />
+                    <div className="min-w-0 flex-1 px-3 py-2.5">
+                      <div className="flex items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className={`text-sm font-semibold truncate ${colors.text}`}>{t.serviceName}</p>
+                            <span className={`font-mono text-sm font-bold tabular-nums shrink-0 ${t.type === 'expense' ? status.danger : status.success}`}>
+                              {t.type === 'expense' ? '−' : '+'}
+                              {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
+                            </span>
+                          </div>
+                          <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
+                            {t.date} · {t.time}
+                            {t.professionalName ? ` · ${t.professionalName}` : ''}
+                            {t.clientName ? ` · ${t.clientName}` : ''}
+                          </p>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className={`text-xs font-medium ${t.type === 'expense' ? status.danger : status.success}`}>
+                              {t.type === 'expense' ? 'Saída' : 'Entrada'}
+                            </span>
+                            {t.status === 'pending' && <Badge variant="warning">Pendente</Badge>}
+                            {t.payment_method && (
+                              <span className={`text-xs ${colors.textMuted}`}>
+                                {PAYMENT_METHOD_LABELS[t.payment_method] || t.payment_method}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          {t.type === 'expense' && t.status === 'pending' && (
+                            <button
+                              type="button"
+                              aria-label="Dar baixa"
+                              className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${accent.text}`}
+                              onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            aria-label="Excluir transação"
+                            className={`inline-flex h-11 w-11 items-center justify-center rounded-lg ${colors.textMuted}`}
+                            onClick={() => handleDeleteTransaction(t)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`font-mono text-lg font-bold tabular-nums ${t.type === 'expense' ? status.danger : status.success}`}>
-                          {t.type === 'expense' ? '-' : '+'}
-                          {formatCurrency(t.type === 'expense' ? (t.expense || 0) : (t.amount || 0), currencyRegion, false)}
-                        </span>
-                        <div className="mt-1 flex flex-col items-end gap-1">
-                          <Badge variant={t.type === 'expense' ? 'danger' : 'success'}>
-                            {t.type === 'expense' ? 'Despesa' : 'Receita'}
-                          </Badge>
-                          {t.status === 'pending' && <Badge variant="warning">Pendente</Badge>}
-                        </div>
-                      </div>
-                    </div>
-                    <div className={`my-3 grid grid-cols-2 gap-2 border-y py-3 ${colors.divider}`}>
-                      <div>
-                        <p className={`text-xs ${colors.textMuted}`}>Profissional</p>
-                        <p className={`text-sm font-medium ${accent.text}`}>{t.professionalName}</p>
-                      </div>
-                      <div>
-                        <p className={`text-xs ${colors.textMuted}`}>Cliente</p>
-                        <p className={`truncate text-sm ${colors.textSecondary}`}>{t.clientName || '—'}</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      {t.type === 'expense' && t.status === 'pending' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Check className="h-3.5 w-3.5" />}
-                          onClick={() => setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' })}
-                        >
-                          Dar baixa
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        icon={<Trash2 className="h-3.5 w-3.5" />}
-                        onClick={() => handleDeleteTransaction(t)}
-                      >
-                        Excluir
-                      </Button>
                     </div>
                   </div>
                 )}

@@ -17,7 +17,15 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        injectRegister: false,
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
+          navigateFallback: 'index.html',
+          navigateFallbackDenylist: [/^\/assets\//, /\/[^/?]+\.[^/]+$/],
+        },
         manifest: {
           name: 'Beauty OS',
           short_name: 'BeautyOS',

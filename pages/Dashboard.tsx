@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import { Calendar, Sparkles, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -21,13 +21,14 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { lazyWithChunkReload } from '../utils/lazyWithChunkReload';
 import {
   countActiveToday,
   countRemainingFreeHours,
 } from '../utils/dashboardCockpit';
 import type { ActionItem } from '../types/dashboard';
 
-const GoalSettingsModal = lazy(() =>
+const GoalSettingsModal = lazyWithChunkReload(() =>
   import('../components/dashboard/modals/GoalSettingsModal').then((m) => ({
     default: m.GoalSettingsModal,
   })),

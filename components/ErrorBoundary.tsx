@@ -2,8 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '../utils/Logger';
 import { captureRenderError } from '../lib/autoBugCapture';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
-import { Button } from './ui/Button';
-import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { clearPwaCaches } from '../utils/lazyWithChunkReload';
 
 interface Props {
     children: ReactNode;
@@ -15,45 +14,38 @@ interface State {
 }
 
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
-    const themeAttr = typeof document !== 'undefined'
-        ? document.documentElement.getAttribute('data-theme')
-        : null;
-    const themeOverride: ThemeVariant = themeAttr === 'beauty' ? 'beauty' : 'barber';
-    const { colors, font, status } = useBrutalTheme({ override: themeOverride });
-
     return (
-            <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
-            <div className={`${colors.card} ${colors.border} border-4 ${status.dangerBorder} p-8 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(220,38,38,0.5)]`}>
-                <div className={`w-20 h-20 ${status.dangerBg} rounded-full flex items-center justify-center mx-auto mb-6 border-2 ${status.dangerBorder}`}>
-                    <AlertTriangle className={`w-10 h-10 ${status.danger}`} />
+            <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
+            <div className="bg-[var(--color-card)] border-4 border-[var(--color-danger-border)] p-8 max-w-md w-full text-center shadow-[8px_8px_0px_0px_rgba(220,38,38,0.5)]">
+                <div className="w-20 h-20 bg-[var(--color-danger-bg)] rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-[var(--color-danger-border)]">
+                    <AlertTriangle className="w-10 h-10 text-[var(--color-danger)]" />
                 </div>
 
-                <h2 className={`text-2xl font-bold ${colors.text} mb-4 uppercase tracking-wider`}>
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-4 uppercase tracking-wider">
                     Sistema Interrompido
                 </h2>
 
-                <p className={`${colors.textSecondary} mb-8 ${font.mono} text-sm leading-relaxed`}>
+                <p className="text-[var(--color-text-muted)] mb-8 font-mono text-sm leading-relaxed">
                     Ocorreu um erro inesperado. Nossa equipe técnica foi notificada automaticamente.
                 </p>
 
                 {error && process.env.NODE_ENV === 'development' && (
                     <div className="bg-[var(--color-bg)]/50 p-4 rounded mb-6 text-left overflow-auto max-h-40">
-                        <code className={`${status.danger} text-xs font-mono`}>
+                        <code className="text-[var(--color-danger)] text-xs font-mono">
                             {error.toString()}
                         </code>
                     </div>
                 )}
 
                 <div className="flex justify-center">
-                    <Button
-                        variant="danger"
-                        size="lg"
+                    <button
+                        type="button"
                         onClick={onReset}
-                        icon={<RefreshCcw className="w-4 h-4" />}
-                        className="uppercase tracking-wider"
+                        className="inline-flex items-center gap-2 uppercase tracking-wider px-6 py-3 min-h-[52px] bg-[var(--color-danger)] text-[var(--color-on-danger)] font-bold rounded-lg"
                     >
+                        <RefreshCcw className="w-4 h-4" />
                         Recarregar Página
-                    </Button>
+                    </button>
                 </div>
             </div>
         </div>
@@ -80,7 +72,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
     private handleReset = () => {
         this.setState({ hasError: false, error: null });
-        window.location.reload();
+        void (async () => {
+            await clearPwaCaches();
+            window.location.reload();
+        })();
     };
 
     public render() {

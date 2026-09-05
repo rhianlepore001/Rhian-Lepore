@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Loading infinito pós-deploy (PWA + chunks) — em PR (5 Set 2026):**
+  - Playwright na produção: visitante novo chega no gateway de login; o spinner dourado só aparece quando um chunk lazy **não resolve** (SW/deploy).
+  - `bug_reports` confirma `Failed to fetch dynamically imported module` após vários deploys no mesmo dia.
+  - Correção: SW recarrega a página no update; chunk com timeout limpa cache e recarrega; `/assets/*` inexistente passa a 404 (não HTML); ErrorBoundary não depende mais do AuthProvider.
+
 - **Agenda: copiar link público — MERGED → produção (5 Set 2026):**
   - Branch `cursor/agenda-copy-public-link-ee84` · PR #54 → `main`.
   - Botão de ação no header da Agenda, entre Histórico e Todos Agendamentos (ícone no mobile, “Copiar link” no desktop).

@@ -2,10 +2,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { registerSW } from 'virtual:pwa-register';
 import './design-system/tokens.css';
 import './styles/tailwind.css';
 import App from './App';
 import { initAutoBugCapture } from './lib/autoBugCapture';
+
+registerSW({
+  immediate: true,
+  onRegistered(registration) {
+    if (!registration) return;
+    window.setInterval(() => {
+      void registration.update();
+    }, 60 * 60 * 1000);
+  },
+});
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -8,12 +8,13 @@ import { useWizard, WizardStep } from '@/components/onboarding/WizardContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrutalTheme } from '@/hooks/useBrutalTheme';
 import { saveOnboardingStep, completeOnboarding } from '@/services/onboarding';
+import { lazyWithChunkReload } from '@/utils/lazyWithChunkReload';
 
 // Fluxo simplificado: apenas boas-vindas + cadastro de serviço
-const StepWelcome = React.lazy(
+const StepWelcome = lazyWithChunkReload(
   () => import('@/components/onboarding/StepBusinessInfo').then((m) => ({ default: m.StepWelcome }))
 );
-const StepServices = React.lazy(
+const StepServices = lazyWithChunkReload(
   () => import('@/components/onboarding/StepServices').then((m) => ({ default: m.StepServices }))
 );
 

@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Reportar problema: print da tela (5 Set 2026, branch `cursor/bug-report-screenshot-5f3b`):**
+  - Causa: `html2canvas` 1.4.1 não parseia `oklch()` do Tailwind 4 → captura virava `null` e o modal mostrava "Não foi possível capturar a tela."
+  - Motor: `html2canvas-pro`. Pipeline único `capturePageForBugReport()`: esconde chrome do reporter → espera o paint → fotografia o **viewport** (sem recorte de modal) → abre o sheet.
+  - Se a captura falhar, o usuário pode **Anexar print**. Envio sem imagem continua válido.
+  - Spec: `specs/active/bug-report-screenshot/spec.md`.
+
+
 - **Login gateway: tema da sessão vazava no index após logout — MERGED → produção (4 Set 2026):**
   - Branch `cursor/login-gateway-theme-logout-2343` · PR #38 → `main` · CI + Vercel success.
   - Após Sair em modo claro (white) ou nos outros 3 combos (barber/beauty × dark/light — “park”), o `#/login` herdava `data-mode`/`data-theme` e os cards BARBEARIAS/STUDIOS ficavam com texto escuro no overlay.

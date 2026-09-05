@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 import { createPortal } from 'react-dom';
-import { Loader2, X, Camera } from 'lucide-react';
+import { Loader2, X, Camera, ImagePlus } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
@@ -15,6 +15,7 @@ import {
   inferType,
   createBugReport,
   uploadBugScreenshot,
+  readImageAsDataUrl,
   type BugContext,
 } from '../lib/bugReport';
 
@@ -59,6 +60,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const annotatorRef = useRef<ScreenshotAnnotatorRef>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setModalOpen(true);
@@ -86,6 +88,21 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose, submitting]);
+
+  const handleAttachImage = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+      const dataUrl = await readImageAsDataUrl(file);
+      if (!dataUrl) {
+        showToast('Não foi possível ler a imagem. Tente outro arquivo.', 'error');
+        return;
+      }
+      setScreenshot(dataUrl);
+    },
+    [showToast]
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!user || !companyId) {
@@ -207,12 +224,30 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
                     className="w-full"
                   />
                 ) : (
-                  <span className={`inline-flex flex-col items-center gap-2 text-xs ${colors.textMuted}`}>
+                  <span className={`inline-flex flex-col items-center gap-2 px-4 py-3 text-xs ${colors.textMuted}`}>
                     <Camera className="w-6 h-6" aria-hidden="true" />
-                    Não foi possível capturar a tela.
+                    Não foi possível capturar a tela automaticamente.
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={submitting}
+                      className={`inline-flex items-center gap-1.5 min-h-[44px] px-3 font-medium ${accent.text} underline-offset-2 hover:underline`}
+                    >
+                      <ImagePlus className="w-4 h-4" aria-hidden="true" />
+                      Anexar print
+                    </button>
                   </span>
                 )}
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                tabIndex={-1}
+                aria-label="Anexar print da tela"
+                onChange={handleAttachImage}
+              />
             </div>
 
             <div>

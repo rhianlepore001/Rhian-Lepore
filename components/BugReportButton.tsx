@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { HelpCircle, Loader2 } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useUI } from '../contexts/UIContext';
 import { BugReportMenu } from './BugReportMenu';
 import { BugReportModal } from './BugReportModal';
-import { captureScreenshot, captureContext, type BugContext } from '../lib/bugReport';
+import { capturePageForBugReport, type BugContext } from '../lib/bugReport';
 
 type ReportType = 'bug' | 'idea' | 'question';
 
@@ -28,23 +28,22 @@ export const BugReportButton: React.FC = () => {
 
   const openModal = useCallback(
     (type: ReportType) => {
-      // Fecha o menu e fotografa a tela LIMPA antes de abrir o modal.
-      // Dois requestAnimationFrame garantem que o menu já saiu do DOM e a tela
-      // foi repintada — senão o print sairia com o menu/modal na frente.
+      // Fecha o menu, espera o paint da tela limpa, fotografa o viewport
+      // e só então abre o modal — senão o print sai com o menu na frente.
       setShowMenu(false);
       setReportType(type);
       setCapturing(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(async () => {
-          const ctx = captureContext();
-          const shot = await captureScreenshot();
+      void (async () => {
+        try {
+          const { screenshot: shot, context: ctx } = await capturePageForBugReport();
           setCapturedContext(ctx);
           setScreenshot(shot);
-          setCapturing(false);
           setModalOpen(true);
           setShowModal(true);
-        });
-      });
+        } finally {
+          setCapturing(false);
+        }
+      })();
     },
     [setModalOpen]
   );
@@ -78,6 +77,7 @@ export const BugReportButton: React.FC = () => {
     <>
       <button
         type="button"
+        data-bug-report-chrome
         onClick={handleToggleMenu}
         disabled={capturing}
         aria-label="Ajuda e reportar problema"
@@ -89,13 +89,10 @@ export const BugReportButton: React.FC = () => {
           'border border-transparent transition-colors duration-150',
           classes.buttonGhost,
           radius.button,
+          capturing ? 'invisible pointer-events-none' : '',
         ].join(' ')}
       >
-        {capturing ? (
-          <Loader2 className={`w-5 h-5 md:w-6 md:h-6 ${accent.text} animate-spin`} aria-hidden="true" />
-        ) : (
-          <HelpCircle className={`w-5 h-5 md:w-6 md:h-6 ${accent.text}`} aria-hidden="true" />
-        )}
+        <HelpCircle className={`w-5 h-5 md:w-6 md:h-6 ${accent.text}`} aria-hidden="true" />
       </button>
 
       {showMenu && (

@@ -75,91 +75,196 @@ export function captureContext(): BugContext {
   };
 }
 
-function getTopModalElement(): HTMLElement | null {
-  if (typeof document === 'undefined') return null;
-  const candidates = Array.from(document.querySelectorAll<HTMLElement>(
-    '[role="dialog"], [role="alertdialog"], [data-modal="true"], [data-sheet="true"], .modal-container, .sheet-container'
-  ));
-  if (candidates.length === 0) return null;
+/** Chrome do próprio reporter — nunca entra no print. */
+export const BUG_REPORT_CHROME_SELECTOR =
+  '[data-bug-report-dialog], [data-bug-report-chrome]';
 
-  let best: HTMLElement | null = null;
-  let bestZ = -Infinity;
-  for (const el of candidates) {
-    if (el.getAttribute('aria-hidden') === 'true') continue;
-    if (el.hasAttribute('data-bug-report-dialog')) continue;
-    const rect = el.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) continue;
-    const style = window.getComputedStyle(el);
-    const z = parseInt(style.zIndex || '0', 10) || 0;
-    if (z > bestZ) {
-      bestZ = z;
-      best = el;
-    }
+export function isBugReportChrome(el: Element): boolean {
+  return el.closest(BUG_REPORT_CHROME_SELECTOR) !== null;
+}
+
+/**
+ * Espera o React commitar + o browser pintar (2 frames).
+ * Usar DEPOIS de esconder o menu/`?` e ANTES de fotografar.
+ */
+export function waitForNextPaint(): Promise<void> {
+  if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') {
+    return Promise.resolve();
   }
-  return best;
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
 }
 
 export interface CaptureScreenshotOptions {
-  /** Alvo específico; se omitido, usa o viewport atual (com fallback para o body). */
+  /** Alvo específico; se omitido, fotografia o viewport visível. */
   target?: HTMLElement | null;
-  /** Padding em pixels ao redor do alvo quando se captura um modal/card. */
-  padding?: number;
 }
 
-export async function captureScreenshot(options?: CaptureScreenshotOptions): Promise<string | null> {
-  if (typeof document === 'undefined' || !document.body) return null;
+type ScreenshotRenderer = (
+  el: HTMLElement,
+  opts?: Record<string, unknown>
+) => PromiseLike<HTMLCanvasElement>;
+
+let screenshotRendererOverride: ScreenshotRenderer | null = null;
+
+/** Só testes — injeta o motor de captura sem carregar html2canvas-pro. */
+export function __setScreenshotRendererForTests(fn: ScreenshotRenderer | null): void {
+  screenshotRendererOverride = fn;
+}
+
+async function loadScreenshotRenderer(): Promise<ScreenshotRenderer> {
+  if (screenshotRendererOverride) return screenshotRendererOverride;
+  const mod = await import('html2canvas-pro');
+  return mod.default;
+}
+
+function logCaptureFailure(message: string, err: unknown): void {
+  if (import.meta.env.MODE === 'test') return;
+  if (import.meta.env.DEV) {
+    console.warn(message, err);
+  }
+}
+
+function canvasToPng(canvas: HTMLCanvasElement): string | null {
   try {
-    const mod = await import('html2canvas');
-    const render = (mod as unknown as {
-      default: (
-        el: HTMLElement,
-        opts?: Record<string, unknown>
-      ) => PromiseLike<HTMLCanvasElement>;
-    }).default;
-
-    const modal = options?.target ?? getTopModalElement();
-    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-
-    if (modal) {
-      const rect = modal.getBoundingClientRect();
-      const padding = options?.padding ?? 16;
-      const x = Math.max(0, rect.left - padding);
-      const y = Math.max(0, rect.top - padding);
-      const width = Math.min(window.innerWidth - x, rect.width + padding * 2);
-      const height = Math.min(window.innerHeight - y, rect.height + padding * 2);
-
-      const canvas = await render(document.documentElement, {
-        x,
-        y,
-        width,
-        height,
-        useCORS: true,
-        logging: false,
-        scale: dpr,
-        ignoreElements: (el: Element) => el.closest('[data-bug-report-dialog]') !== null,
-      });
-      return canvas.toDataURL('image/png');
-    }
-
-    const x = typeof window !== 'undefined' ? window.scrollX : 0;
-    const y = typeof window !== 'undefined' ? window.scrollY : 0;
-    const width = typeof window !== 'undefined' ? window.innerWidth : document.documentElement.clientWidth;
-    const height = typeof window !== 'undefined' ? window.innerHeight : document.documentElement.clientHeight;
-
-    const canvas = await render(document.documentElement, {
-      x,
-      y,
-      width,
-      height,
-      useCORS: true,
-      logging: false,
-      scale: dpr,
-      ignoreElements: (el: Element) => el.closest('[data-bug-report-dialog]') !== null,
-    });
-    return canvas.toDataURL('image/png');
+    const url = canvas.toDataURL('image/png');
+    if (!url || url === 'data:,') return null;
+    return url;
   } catch {
     return null;
   }
+}
+
+function viewportBox(): { width: number; height: number; scrollX: number; scrollY: number } {
+  return {
+    width: window.innerWidth || document.documentElement.clientWidth || 0,
+    height: window.innerHeight || document.documentElement.clientHeight || 0,
+    scrollX: window.scrollX || 0,
+    scrollY: window.scrollY || 0,
+  };
+}
+
+function captureScale(width: number, height: number): number {
+  const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+  const maxEdge = 1920;
+  const longest = Math.max(width, height, 1);
+  return Math.min(dpr, 2, maxEdge / longest);
+}
+
+function pageBackground(): string {
+  if (typeof window === 'undefined') return '#111111';
+  const fromDoc = getComputedStyle(document.documentElement).backgroundColor;
+  if (fromDoc && fromDoc !== 'rgba(0, 0, 0, 0)' && fromDoc !== 'transparent') return fromDoc;
+  const fromBody = getComputedStyle(document.body).backgroundColor;
+  if (fromBody && fromBody !== 'rgba(0, 0, 0, 0)' && fromBody !== 'transparent') return fromBody;
+  return '#111111';
+}
+
+async function renderToPng(
+  render: ScreenshotRenderer,
+  target: HTMLElement,
+  extra: Record<string, unknown>
+): Promise<string | null> {
+  const box = viewportBox();
+  const canvas = await render(target, {
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    imageTimeout: 4000,
+    backgroundColor: pageBackground(),
+    scale: captureScale(box.width, box.height),
+    ignoreElements: (el: Element) => isBugReportChrome(el),
+    ...extra,
+  });
+  return canvasToPng(canvas);
+}
+
+/**
+ * Fotografa o que o usuário está vendo (viewport), sem o chrome do reporter.
+ * Modal de produto aberto já aparece porque está na tela — não recortamos.
+ */
+export async function captureScreenshot(options?: CaptureScreenshotOptions): Promise<string | null> {
+  if (typeof document === 'undefined' || !document.body) return null;
+
+  let render: ScreenshotRenderer;
+  try {
+    render = await loadScreenshotRenderer();
+  } catch (err) {
+    logCaptureFailure('[bugReport] não foi possível carregar o motor de captura', err);
+    return null;
+  }
+
+  const explicit = options?.target ?? null;
+  if (explicit) {
+    try {
+      const shot = await renderToPng(render, explicit, {});
+      if (shot) return shot;
+    } catch (err) {
+      logCaptureFailure('[bugReport] captura do alvo explícito falhou, tentando viewport', err);
+    }
+  }
+
+  const box = viewportBox();
+  if (box.width <= 0 || box.height <= 0) return null;
+
+  const viewportOpts: Record<string, unknown> = {
+    width: box.width,
+    height: box.height,
+    windowWidth: box.width,
+    windowHeight: box.height,
+    scrollX: -box.scrollX,
+    scrollY: -box.scrollY,
+  };
+
+  try {
+    const shot = await renderToPng(render, document.body, viewportOpts);
+    if (shot) return shot;
+  } catch (err) {
+    logCaptureFailure('[bugReport] captura do viewport (body) falhou, tentando documentElement', err);
+  }
+
+  try {
+    const shot = await renderToPng(render, document.documentElement, viewportOpts);
+    if (shot) return shot;
+  } catch (err) {
+    logCaptureFailure('[bugReport] captura do viewport (documentElement) falhou, tentando body simples', err);
+  }
+
+  try {
+    return await renderToPng(render, document.body, {});
+  } catch (err) {
+    logCaptureFailure('[bugReport] captura da tela falhou', err);
+    return null;
+  }
+}
+
+export interface CapturePageForBugReportResult {
+  screenshot: string | null;
+  context: BugContext;
+}
+
+/**
+ * Pipeline único do report: espera o paint da tela limpa, tira o print e
+ * carimba o contexto técnico no mesmo instante.
+ */
+export async function capturePageForBugReport(): Promise<CapturePageForBugReportResult> {
+  await waitForNextPaint();
+  const context = captureContext();
+  const screenshot = await captureScreenshot();
+  return { screenshot, context };
+}
+
+export function readImageAsDataUrl(file: File): Promise<string | null> {
+  if (!file.type.startsWith('image/')) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
 }
 
 export type BugCategory =

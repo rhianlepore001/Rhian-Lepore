@@ -207,6 +207,8 @@ test.describe('Agenda UX audit', () => {
     expect(metrics.gridLeft).toBeGreaterThanOrEqual(8);
     expect(metrics.gridLeft).toBeLessThanOrEqual(40);
     expect(metrics.viewportWidth - (metrics.gridLeft + metrics.clientWidth)).toBeGreaterThanOrEqual(8);
+    expect(metrics.gutterWidth).toBeGreaterThanOrEqual(40);
+    expect(metrics.gutterWidth).toBeLessThanOrEqual(52);
     const hasMaxH = await page.evaluate(() =>
       /(?:^|\s)max-h-/.test(
         (document.querySelector('[data-testid="agenda-resource-grid"]') as HTMLElement).className,

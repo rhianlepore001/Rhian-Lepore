@@ -130,7 +130,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
           {/* Gutter de horário */}
           <div
             data-agenda-gutter="true"
-            className={`sticky left-0 z-20 w-16 shrink-0 flex flex-col ${colors.card}`}
+            className={`sticky left-0 z-20 w-12 shrink-0 flex flex-col ${colors.card}`}
           >
             <div className={`${headerCell} z-30`}>
               <button
@@ -139,19 +139,19 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 aria-pressed={isAllSelected}
                 data-testid="agenda-filter-all"
                 title="Todos os profissionais"
-                className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1"
+                className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-0.5"
               >
                 <span
-                  className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
                     isAllSelected
                       ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
                       : `${colors.border} ${colors.card} ${colors.textSecondary}`
                   }`}
                 >
-                  <Users className="w-4 h-4" />
+                  <Users className="w-3.5 h-3.5" />
                 </span>
                 <span
-                  className={`text-xs font-bold uppercase tracking-wider ${
+                  className={`text-xs font-bold uppercase leading-none ${
                     isAllSelected ? accent.text : colors.textMuted
                   }`}
                 >
@@ -166,7 +166,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                   key={time}
                   className={`h-12 md:h-14 flex items-start justify-center pt-1.5 border-b ${colors.divider} last:border-b-0`}
                 >
-                  {isHour && <span className={`text-xs font-bold ${colors.text}`}>{time}</span>}
+                  {isHour && (
+                    <span className={`text-xs font-bold tabular-nums leading-none ${colors.text}`}>{time}</span>
+                  )}
                 </div>
               );
             })}
@@ -192,7 +194,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     aria-pressed={isMemberSelected}
                     data-testid={`agenda-filter-${member.id}`}
                     title={member.name}
-                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1.5"
+                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-2.5"
                   >
                     {member.photo_url ? (
                       <img
@@ -216,7 +218,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                       </span>
                     )}
                     <span
-                      className={`text-xs font-bold uppercase tracking-wider truncate max-w-full ${
+                      className={`text-xs font-bold uppercase tracking-wider truncate max-w-full px-0.5 ${
                         isMemberSelected ? accent.text : colors.textMuted
                       }`}
                     >
@@ -249,7 +251,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                   return (
                     <div
                       key={time}
-                      className={`h-12 md:h-14 border-b ${colors.divider} last:border-b-0 p-1 flex flex-col gap-1 overflow-hidden`}
+                      className={`h-12 md:h-14 border-b ${colors.divider} last:border-b-0 px-1.5 py-1 flex flex-col gap-1 overflow-hidden`}
                     >
                       {cellApts.map((apt) => {
                         const isUnassigned = !apt.professional_id;
@@ -266,7 +268,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                             type="button"
                             onClick={() => onSelectAppointment(apt)}
                             aria-label={`${apt.clientName} — ${apt.service} às ${time}`}
-                            className={`w-full text-left rounded-lg border ${cardTokens} px-2 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden transition-shadow shadow-lite-glass hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
+                            className={`w-full text-left rounded-lg border ${cardTokens} px-2.5 py-1 flex-1 min-h-0 flex flex-col justify-center gap-0.5 overflow-hidden transition-shadow shadow-lite-glass hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
                           >
                             <div className="flex items-center justify-between gap-1">
                               <h4 className={`text-xs font-bold truncate ${colors.text}`}>{apt.clientName}</h4>

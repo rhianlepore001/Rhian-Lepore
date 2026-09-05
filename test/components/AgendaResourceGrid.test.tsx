@@ -107,6 +107,15 @@ describe('AgendaResourceGrid', () => {
     expect(onToggleProfessional).toHaveBeenCalledWith('m2');
   });
 
+  it('estreita o gutter de Todos/horários e dá respiro nas colunas', () => {
+    setup();
+    const gutter = document.querySelector('[data-agenda-gutter="true"]') as HTMLElement;
+    expect(gutter.className).toMatch(/(^|\s)w-12(\s|$)/);
+    expect(gutter.className).not.toMatch(/(^|\s)w-16(\s|$)/);
+    expect(screen.getByTestId('agenda-filter-all').className).toMatch(/px-0\.5/);
+    expect(screen.getByTestId('agenda-filter-m1').className).toMatch(/px-2\.5/);
+  });
+
   it('não usa snap CSS no scroller da grade', () => {
     setup();
     const root = screen.getByTestId('agenda-resource-grid');

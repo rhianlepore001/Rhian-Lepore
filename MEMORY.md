@@ -58,9 +58,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - FAB da nav inferior sai do fluxo (absolute) para não cobrir Clientes/Financeiro.
   - Gates: typecheck, lint, build, 444 testes + coverage; merge de `main` (#39/#40/#41) resolvido. Produção: deploy Vercel automático no push `main`.
 
-- **Agenda: gutter Todos/horários mais estreito — 5 Set 2026 (branch `cursor/agenda-gutter-narrow-6516`):**
+- **Agenda: gutter Todos/horários mais estreito — MERGED → produção (5 Set 2026):**
+  - Branch `cursor/agenda-gutter-narrow-6516` · PR #45 → `main`. CI (lint/typecheck/testes/coverage) + Vercel preview verdes.
   - Coluna sticky `w-16` (64px) → `w-12` (48px); avatar Todos compacto (`w-7`).
-  - Colunas de profissional com `px-2.5` no cabeçalho e `px-2.5` no card — nome/horário não colam na borda.
+  - Colunas de profissional com `px-2.5` no cabeçalho e no card — nome/horário não colam na borda.
+  - Produção: deploy Vercel automático no push `main`.
 
 - **Agenda: scroll horizontal lento puxava de volta — MERGED → produção (5 Set 2026):**
   - Branch `cursor/agenda-horizontal-scroll-6516` · PR #41 → `main`. CI (lint/typecheck/testes/coverage) + Vercel preview verdes.

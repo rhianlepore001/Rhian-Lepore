@@ -1,7 +1,7 @@
 # Fila Digital v2 — Tasks
 
 **Spec:** `spec.md` · **Design:** `design.md` · **Context:** `context.md`  
-**Status:** In Progress — T1–T14 feitos (T15 e2e pendente)  
+**Status:** In Progress — T1–T15 no código; DevOps aplica migration antes do deploy  
 **Gates do repo:** `npm run typecheck` · `npm run lint` · `npm run build` · `npm test`  
 **Testes:** Vitest (unit) nas camadas types/services/hooks; E2E Playwright na fatia de UI (T15). Sem `TESTING.md` no repo — matriz abaixo.
 
@@ -348,9 +348,11 @@ T6 depende de T4 + T14 (não de T5). T7 depende de T6; redirect de `/queue-statu
 
 **Done when:**
 
-- [ ] e2e: QR → serviço → join mock → aba fila; staff card ações
-- [ ] `typecheck` `lint` `build` `test` verdes
-- [ ] Sem “recepção”; sem qrserver; sem `isBeauty` ternário de cor
+- [x] e2e: QR → serviço → join mock → aba fila; staff card ações
+- [x] `typecheck` `lint` `build` `test` verdes
+- [x] Sem “recepção”; sem qrserver; sem `isBeauty` ternário de cor
+
+**DevOps:** aplicar `20260906000001_queue_v2.sql` no remoto **antes** do deploy do front. O banco de produção ainda é a fila v1 (`Public can join queue` INSERT true; sem `queue_payments`; sem RPCs v2). Tenant é TEXT (`profiles.id`, `queue_entries.business_id`). Sem a migration, o front novo quebra o join.
 
 **Tests:** e2e  
 **Gate:** full  

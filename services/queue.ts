@@ -169,18 +169,8 @@ export async function updateQueueStatus(input: UpdateQueueStatusInput): Promise<
   if (error) throw error;
 }
 
-export async function resetExpiredCallingEntries(businessId: string): Promise<void> {
-  const timeoutDate = new Date(Date.now() - CALLING_TIMEOUT_MINUTES * 60 * 1000).toISOString();
-
-  const { error } = await supabase
-    .from('queue_entries')
-    .update({ status: 'waiting' })
-    .eq('business_id', businessId)
-    .eq('status', 'calling')
-    .not('called_at', 'is', null)
-    .lte('called_at', timeoutDate);
-
-  if (error) throw error;
+export async function resetExpiredCallingEntries(_businessId: string): Promise<void> {
+  return Promise.resolve();
 }
 
 export async function finishQueueEntry(input: FinishQueueEntryInput): Promise<void> {
@@ -302,8 +292,6 @@ export async function setQueueMode(mode: 'shared' | 'per_professional') {
 }
 
 export async function fetchQueueEntries(businessId: string) {
-  await resetExpiredCallingEntries(businessId);
-
   const { data, error } = await supabase
     .from('queue_entries')
     .select('*')

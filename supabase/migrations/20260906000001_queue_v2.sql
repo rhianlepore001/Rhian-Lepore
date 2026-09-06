@@ -52,8 +52,8 @@ CREATE INDEX IF NOT EXISTS idx_queue_entries_active_lane
   WHERE status IN ('waiting', 'calling', 'serving');
 
 CREATE TABLE IF NOT EXISTS public.queue_payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  business_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   queue_entry_id UUID NOT NULL REFERENCES public.queue_entries(id) ON DELETE CASCADE,
   method TEXT NOT NULL CHECK (method IN ('pix', 'mbway')),
   amount_cents INTEGER NOT NULL,
@@ -79,13 +79,26 @@ DROP POLICY IF EXISTS "Public can join queue" ON public.queue_entries;
 DROP POLICY IF EXISTS "Queue: company isolation" ON public.queue_entries;
 DROP POLICY IF EXISTS "Staff can update company queue" ON public.queue_entries;
 
+DROP POLICY IF EXISTS "Staff can view company queue" ON public.queue_entries;
+CREATE POLICY "Staff can view company queue"
+  ON public.queue_entries
+  FOR SELECT
+  TO authenticated
+  USING (
+    business_id::TEXT IN (
+      SELECT tm.user_id::TEXT FROM public.team_members tm
+      WHERE tm.staff_user_id = auth.uid()
+        AND tm.active = true
+    )
+  );
+
 DROP POLICY IF EXISTS "Owners manage queue_payments" ON public.queue_payments;
 CREATE POLICY "Owners manage queue_payments"
   ON public.queue_payments
   FOR ALL
   TO authenticated
-  USING (auth.uid() = business_id)
-  WITH CHECK (auth.uid() = business_id);
+  USING (auth.uid()::TEXT = business_id)
+  WITH CHECK (auth.uid()::TEXT = business_id);
 
 DROP POLICY IF EXISTS "Staff view queue_payments" ON public.queue_payments;
 CREATE POLICY "Staff view queue_payments"
@@ -99,7 +112,7 @@ CREATE POLICY "Staff view queue_payments"
     )
   );
 
-CREATE OR REPLACE FUNCTION public.queue_lock_settings(p_business_id UUID)
+CREATE OR REPLACE FUNCTION public.queue_lock_settings(p_business_id TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -130,7 +143,7 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.queue_join_core(
-  p_business_id UUID,
+  p_business_id TEXT,
   p_client_name TEXT,
   p_client_phone TEXT,
   p_service_id UUID,
@@ -286,7 +299,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_business_id UUID;
+  v_business_id TEXT;
 BEGIN
   SELECT id INTO v_business_id
   FROM public.profiles
@@ -334,7 +347,7 @@ BEGIN
   END IF;
 
   RETURN public.queue_join_core(
-    v_tenant::UUID,
+    v_tenant,
     p_client_name,
     p_client_phone,
     p_service_id,
@@ -597,7 +610,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_tenant UUID := auth.uid();
+  v_tenant TEXT := auth.uid()::TEXT;
   v_active INTEGER;
 BEGIN
   IF v_tenant IS NULL THEN
@@ -638,7 +651,7 @@ BEGIN
   UPDATE public.business_settings
   SET queue_allow_leave = p_allow_leave,
       queue_late_minutes = p_late_minutes
-  WHERE user_id = auth.uid();
+  WHERE user_id = auth.uid()::TEXT;
 END;
 $$;
 
@@ -819,8 +832,8 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.queue_join_core(UUID, TEXT, TEXT, UUID, UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.queue_lock_settings(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.queue_join_core(TEXT, TEXT, TEXT, UUID, UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.queue_lock_settings(TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.queue_tenant_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.join_queue_entry(TEXT, TEXT, TEXT, UUID, UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.add_manual_queue_entry(TEXT, TEXT, UUID, UUID, TEXT) FROM PUBLIC;

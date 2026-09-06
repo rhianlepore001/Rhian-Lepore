@@ -265,12 +265,10 @@ describe('queue service', () => {
     expect(updateMock).not.toHaveBeenCalled();
   });
 
-  it('reseta calling expirado para waiting sem no_show automatico', async () => {
+  it('nao marca no_show nem reescreve calling por timeout', async () => {
     await resetExpiredCallingEntries('business-001');
 
-    expect(updateMock).toHaveBeenCalledWith({ status: 'waiting' });
-    expect(updateMock).not.toHaveBeenCalledWith({ status: 'no_show' });
-    expect(notMock).toHaveBeenCalledWith('called_at', 'is', null);
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it('finaliza fila somente pela RPC atomica', async () => {

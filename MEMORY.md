@@ -51,10 +51,9 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 - **Fila Digital v2 — em PR (6 Set 2026):**
   - Branch `cursor/fila-digital-v2-2dde` · PR #57 (draft) → `main`.
-  - T1–T14 no código: tipos/ETA/migration/RPCs, wizard QR, aba Fila na Minha Área, operação staff (card, comanda, add manual, QR local, ajustes).
-  - Validator Grok medium: FAIL inicial (ConfirmModal, slug no join, ETA null) — bloqueios corrigidos.
-  - Gates locais: typecheck, lint, build, 529 testes. T15 e2e ainda pendente.
-  - Migration `20260906000001_queue_v2.sql` versionada; **não** aplicada no remoto nesta etapa.
+  - T1–T15 no código: wizard QR, aba Fila, operação staff, e2e smoke, gates.
+  - Banco prod (BARBER/Beauty OS) ainda é fila v1: sem `queue_payments`, sem RPCs v2, policy `"Public can join queue"` INSERT true. **13** entries históricas intactas.
+  - Migration ajustada para tenant TEXT (`profiles.id`). **Aplicar no remoto antes do deploy do front.**
 
 - **Assinaturas no agendamento público — MERGED → produção (5 Set 2026):**
   - Branch `cursor/booking-assinaturas-fd13` · PR #53 → `main`.

@@ -34,17 +34,19 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
   pixConfig,
   pixTxid,
 }) => {
-  const { colors, accent } = useBrutalTheme({ override: themeOverride });
+  const { colors, accent, shadow, font } = useBrutalTheme({ override: themeOverride });
   const options = queuePayOptions({ canUseMembership, region });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h2 className={`text-xl font-bold ${colors.text}`}>Como você prefere pagar?</h2>
-        <p className={`text-sm ${colors.textMuted}`}>Sua posição na fila já fica reservada em seguida.</p>
+        <h2 className={`text-xl md:text-2xl font-bold tracking-tight ${font.heading} ${colors.text}`}>
+          Como você prefere pagar?
+        </h2>
+        <p className={`text-sm mt-1 ${colors.textMuted}`}>Sua posição na fila já fica reservada em seguida.</p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {options.map((option) => {
           const active = selected === option.id;
           return (
@@ -52,8 +54,10 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
               key={option.id}
               type="button"
               onClick={() => onSelect(option.id)}
-              className={`w-full min-h-[44px] text-left p-4 rounded-2xl border ${
-                active ? `${accent.border} ${colors.card}` : `${colors.border} ${colors.card}`
+              className={`w-full min-h-[44px] text-left p-4 rounded-2xl transition-all ${
+                active
+                  ? `${shadow.glow} ring-2 ${accent.ring} ${colors.card}`
+                  : `${colors.card} ${colors.border} border ${shadow.card}`
               }`}
             >
               <p className={`font-bold ${colors.text}`}>{option.label}</p>

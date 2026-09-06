@@ -140,6 +140,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                     value={displayValue}
                     onChange={handleChange}
                     className={`flex-1 min-w-0 h-full bg-transparent pl-2 pr-4 text-base sm:text-sm font-mono ${colors.text} placeholder:text-[var(--color-text-muted)] focus:outline-none`}
+                    autoComplete="tel"
                     placeholder={region === 'BR' ? '(99) 99999-9999' : '999 999 999'}
                 />
             </div>

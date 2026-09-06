@@ -30,7 +30,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   if (!phone) {
     return (
-      <div className="rounded-2xl border border-theme-border bg-theme-surface p-4">
+      <div className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-[var(--shadow-card)]">
         <h2 className="font-bold text-theme-text">Fila disponível na casa</h2>
         <p className="text-sm text-theme-textSecondary mt-1">
           Escaneie o QR no balcão ou na bancada para entrar.
@@ -45,7 +45,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   if (!entry) {
     return (
-      <div className="rounded-2xl border border-theme-border bg-theme-surface p-4">
+      <div className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-[var(--shadow-card)]">
         <h2 className="font-bold text-theme-text">Fila disponível na casa</h2>
         <p className="text-sm text-theme-textSecondary mt-1">
           {cameFromQr
@@ -63,8 +63,8 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-theme-border bg-theme-surface p-4 space-y-2">
-        <p className="text-xs font-semibold text-theme-textSecondary">
+      <div className="rounded-2xl border border-theme-border bg-theme-card p-5 space-y-2 shadow-[var(--shadow-card)]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">
           {entry.status === 'calling' ? 'É a sua vez' : entry.status === 'serving' ? 'Em atendimento' : 'Na fila'}
         </p>
         <h2 className="text-2xl font-bold text-theme-text">

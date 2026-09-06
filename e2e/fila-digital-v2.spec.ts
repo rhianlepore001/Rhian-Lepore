@@ -141,5 +141,13 @@ test.describe('Fila digital v2 — smoke mobile', () => {
     await expect(page.getByRole('button', { name: 'Fila', exact: true })).toBeVisible();
     await expect(page.getByText('Você é o 1º da fila')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sair da fila' })).toBeVisible();
+
+    const artifactsDir = process.env.E2E_ARTIFACTS_DIR;
+    if (artifactsDir) {
+      await page.screenshot({
+        path: `${artifactsDir}/screenshots/fila_v2_minha_area_tab_fila.png`,
+        fullPage: true,
+      });
+    }
   });
 });

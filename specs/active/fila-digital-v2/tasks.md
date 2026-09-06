@@ -1,7 +1,7 @@
 # Fila Digital v2 — Tasks
 
 **Spec:** `spec.md` · **Design:** `design.md` · **Context:** `context.md`  
-**Status:** In Progress — T1 T2 T3 T4 T5 T14 feitos  
+**Status:** In Progress — T1–T14 feitos (T15 e2e pendente)  
 **Gates do repo:** `npm run typecheck` · `npm run lint` · `npm run build` · `npm test`  
 **Testes:** Vitest (unit) nas camadas types/services/hooks; E2E Playwright na fatia de UI (T15). Sem `TESTING.md` no repo — matriz abaixo.
 

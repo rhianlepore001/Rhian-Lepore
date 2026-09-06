@@ -14,6 +14,7 @@ interface PixDisplayProps {
     amountCents: number;
     description?: string;
     className?: string;
+    txid?: string;
 }
 
 export const PixDisplay: React.FC<PixDisplayProps> = ({
@@ -24,6 +25,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
     amountCents,
     description,
     className = '',
+    txid,
 }) => {
     const { colors, font } = useBrutalTheme();
     const { showToast } = useToast();
@@ -53,7 +55,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
                     merchantName: merchantName || 'RECEBEDOR',
                     merchantCity: merchantCity || 'SAO PAULO',
                     amountCents,
-                    txid: 'AGENDIX',
+                    txid: txid || 'AGENDIX',
                 });
                 if (!active) return;
                 setPayload(code);
@@ -76,7 +78,7 @@ export const PixDisplay: React.FC<PixDisplayProps> = ({
         };
         void generate();
         return () => { active = false; };
-    }, [pixKey, pixKeyType, merchantName, merchantCity, amountCents]);
+    }, [pixKey, pixKeyType, merchantName, merchantCity, amountCents, txid]);
 
     const copyText = payload || fallbackKey || '';
 

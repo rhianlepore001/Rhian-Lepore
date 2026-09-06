@@ -86,6 +86,7 @@ describe('useQueue', () => {
           businessId: 'business-001',
           clientName: 'João',
           clientPhone: '11999999999',
+          serviceId: 'service-001',
         });
       });
 
@@ -94,6 +95,7 @@ describe('useQueue', () => {
         businessId: 'business-001',
         clientName: 'João',
         clientPhone: '11999999999',
+        serviceId: 'service-001',
       });
     });
   });

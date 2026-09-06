@@ -1,13 +1,18 @@
 import { supabase } from '@/lib/supabase';
+import { calcQueueEtaMinutes, type QueueEtaPerson } from '@/services/queueEta';
 import {
   finishQueueEntryInputSchema,
   joinQueueInputSchema,
   manualQueueInputSchema,
   queueEntrySchema,
+  queuePublicBoardSchema,
+  queueSettingsSchema,
   updateQueueStatusInputSchema,
   type FinishQueueEntryInput,
   type JoinQueueInput,
   type ManualQueueInput,
+  type QueueMode,
+  type QueuePublicBoard,
   type QueueRecord,
   type QueueStatus,
   type UpdateQueueStatusInput,
@@ -31,6 +36,17 @@ export function sanitizeQueuePhone(phone: string): string {
 }
 
 export const QUEUE_PHONE_PROOF_KEY = (entryId: string) => `queue_proof_phone_${entryId}`;
+export const QUEUE_LAST_SLUG_KEY = 'queue_last_business_slug';
+
+export function storeQueueBusinessSlug(slug: string): void {
+  if (typeof sessionStorage === 'undefined') return;
+  sessionStorage.setItem(QUEUE_LAST_SLUG_KEY, slug);
+}
+
+export function readQueueBusinessSlug(): string | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  return sessionStorage.getItem(QUEUE_LAST_SLUG_KEY);
+}
 
 export function storeQueuePhoneProof(entryId: string, phone: string): void {
   if (typeof sessionStorage === 'undefined') return;
@@ -76,12 +92,17 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     p_slug: slug,
     p_client_name: parsed.clientName,
     p_client_phone: parsed.clientPhone,
-    p_service_id: parsed.serviceId ?? null,
+    p_service_id: parsed.serviceId,
     p_professional_id: parsed.professionalId ?? null,
     p_payment_method: parsed.paymentMethod ?? 'cash',
+    p_br_code: parsed.brCode ?? null,
+    p_txid: parsed.txid ?? null,
+    p_mbway_phone: parsed.mbwayPhone ?? null,
   });
 
   if (error) throw error;
+
+  storeQueueBusinessSlug(slug);
 
   const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
   if (!created) {
@@ -175,13 +196,58 @@ export async function finishQueueEntry(input: FinishQueueEntryInput): Promise<vo
   if (error) throw error;
 }
 
-export async function fetchQueuePublicBoard(entryId: string, phone: string) {
+function asEtaPeople(value: unknown): QueueEtaPerson[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== 'object') return [];
+    const person = row as Record<string, unknown>;
+    const status = person.status;
+    if (status !== 'waiting' && status !== 'calling' && status !== 'serving') return [];
+    const id = String(person.id ?? '');
+    const joinedAt = String(person.joinedAt ?? '');
+    const durationMinutes = Number(person.durationMinutes ?? 0);
+    if (!id || !joinedAt || !Number.isFinite(durationMinutes) || durationMinutes <= 0) return [];
+    return [{
+      id,
+      joinedAt,
+      durationMinutes,
+      status,
+      professionalId: person.professionalId ? String(person.professionalId) : null,
+      servingAt: person.servingAt ? String(person.servingAt) : null,
+    }];
+  });
+}
+
+export function hydrateQueuePublicBoard(raw: unknown): QueuePublicBoard {
+  const record = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
+  const etaPeople = asEtaPeople(record.etaPeople);
+  const chairs = Number(record.chairs ?? 0);
+  const mode = (record.queueMode === 'per_professional' ? 'per_professional' : 'shared') as QueueMode;
+  const entryId = String(record.entryId ?? '');
+  const etaMinutes = etaPeople.length > 0 && entryId
+    ? calcQueueEtaMinutes({
+      mode,
+      chairs: Number.isFinite(chairs) ? chairs : 0,
+      nowMs: Date.now(),
+      targetId: entryId,
+      people: etaPeople,
+      professionalId: record.professionalId ? String(record.professionalId) : null,
+    })
+    : null;
+
+  return queuePublicBoardSchema.parse({
+    ...record,
+    etaMinutes,
+  });
+}
+
+export async function fetchQueuePublicBoard(entryId: string, phone: string): Promise<QueuePublicBoard> {
   const { data, error } = await supabase.rpc('get_queue_public_board', {
     p_entry_id: entryId,
     p_phone: phone,
   });
   if (error) throw error;
-  return data;
+  return hydrateQueuePublicBoard(data);
 }
 
 export async function confirmQueuePayment(entryId: string) {
@@ -219,7 +285,7 @@ export async function settleQueueTicket(input: {
 export async function fetchQueueSettings() {
   const { data, error } = await supabase.rpc('fetch_queue_settings');
   if (error) throw error;
-  return data;
+  return queueSettingsSchema.parse(data);
 }
 
 export async function updateQueueSettings(allowLeave: boolean, lateMinutes: number) {

@@ -5,8 +5,10 @@ import {
   confirmQueuePayment,
   findActiveQueueEntryByPhone,
   finishQueueEntry,
+  hydrateQueuePublicBoard,
   isCallingExpired,
   joinQueue,
+  QUEUE_LAST_SLUG_KEY,
   resetExpiredCallingEntries,
   sanitizeQueuePhone,
   updateQueueStatus,
@@ -44,6 +46,7 @@ vi.mock('@/lib/supabase', () => ({
 describe('queue service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     activeQueueData = [];
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
     singleMock.mockResolvedValue({
@@ -157,9 +160,65 @@ describe('queue service', () => {
       p_slug: 'loja',
       p_client_name: 'Joao',
       p_service_id: 'service-001',
+      p_br_code: null,
+      p_txid: null,
+      p_mbway_phone: null,
     }));
     expect(insertMock).not.toHaveBeenCalled();
     expect(result.id).toBe('queue-001');
+    expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
+  });
+
+  it('grava slug mesmo quando o re-fetch da entrada falha', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: { id: 'queue-009' }, error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    const result = await joinQueue({
+      businessId: 'business-001',
+      slug: 'loja',
+      clientName: 'Joao',
+      clientPhone: '11999999999',
+      serviceId: 'service-001',
+    });
+
+    expect(result.id).toBe('queue-009');
+    expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
+  });
+
+  it('calcula ETA do board com cadeiras e descarta campos internos', () => {
+    const board = hydrateQueuePublicBoard({
+      entryId: 'b',
+      status: 'waiting',
+      paymentStatus: 'unpaid',
+      serviceName: 'Corte',
+      position: 2,
+      etaMinutes: null,
+      people: [{ position: 1, firstName: 'Ana', isYou: false }],
+      settings: { allowLeave: true, lateMinutes: 10 },
+      calledAt: null,
+      queueMode: 'shared',
+      chairs: 1,
+      etaPeople: [
+        {
+          id: 'a',
+          joinedAt: '2026-09-06T11:00:00.000Z',
+          durationMinutes: 30,
+          status: 'waiting',
+          professionalId: null,
+        },
+        {
+          id: 'b',
+          joinedAt: '2026-09-06T11:01:00.000Z',
+          durationMinutes: 30,
+          status: 'waiting',
+          professionalId: null,
+        },
+      ],
+    });
+    expect(board.etaMinutes).toBe(30);
+    expect(board).not.toHaveProperty('etaPeople');
   });
 
   it('cria entrada manual via RPC do tenant autenticado', async () => {

@@ -45,6 +45,8 @@ export interface SubscriptionDiscountResult {
     hasActiveSubscription: boolean;
     /** Mensagem amigável pra UI. */
     message: string | null;
+    /** Plano cobre o serviço e o teto ainda cabe. */
+    canUseMembership: boolean;
 }
 
 const EMPTY_RESULT: SubscriptionDiscountResult = {
@@ -57,6 +59,7 @@ const EMPTY_RESULT: SubscriptionDiscountResult = {
     uncoveredServices: [],
     fullyCovered: false,
     hasActiveSubscription: false,
+    canUseMembership: false,
     message: null,
 };
 
@@ -109,6 +112,7 @@ export function useSubscriptionDiscount({ clientId, services }: UseSubscriptionD
         uncoveredServices: computed.uncoveredServices,
         fullyCovered: computed.fullyCovered,
         hasActiveSubscription: true,
+        canUseMembership: computed.canUseMembership,
         message: computed.message,
     };
 }

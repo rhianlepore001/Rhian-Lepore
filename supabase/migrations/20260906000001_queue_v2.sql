@@ -106,6 +106,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
+  INSERT INTO public.business_settings (user_id)
+  VALUES (p_business_id)
+  ON CONFLICT (user_id) DO NOTHING;
+
   PERFORM 1
   FROM public.business_settings
   WHERE user_id = p_business_id
@@ -122,6 +126,146 @@ SET search_path = public
 AS $$
 BEGIN
   RETURN COALESCE(get_auth_company_id(), auth.uid()::TEXT);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.queue_join_core(
+  p_business_id UUID,
+  p_client_name TEXT,
+  p_client_phone TEXT,
+  p_service_id UUID,
+  p_professional_id UUID DEFAULT NULL,
+  p_payment_method TEXT DEFAULT 'cash',
+  p_br_code TEXT DEFAULT NULL,
+  p_txid TEXT DEFAULT NULL,
+  p_mbway_phone TEXT DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_mode TEXT;
+  v_service RECORD;
+  v_staff_count INTEGER;
+  v_client_id UUID;
+  v_payment_status TEXT := 'unpaid';
+  v_entry_id UUID;
+  v_mem RECORD;
+BEGIN
+  IF p_service_id IS NULL THEN
+    RAISE EXCEPTION 'Servico obrigatorio.';
+  END IF;
+
+  PERFORM public.queue_lock_settings(p_business_id);
+
+  SELECT COALESCE(queue_mode, 'shared') INTO v_mode
+  FROM public.business_settings
+  WHERE user_id = p_business_id;
+
+  v_mode := COALESCE(v_mode, 'shared');
+
+  IF v_mode = 'per_professional' AND p_professional_id IS NULL THEN
+    RAISE EXCEPTION 'QR de colaborador obrigatorio.';
+  END IF;
+
+  IF v_mode = 'shared' THEN
+    SELECT COUNT(*) INTO v_staff_count
+    FROM public.team_members
+    WHERE user_id::TEXT = p_business_id::TEXT AND active = true;
+    IF COALESCE(v_staff_count, 0) = 0 THEN
+      RAISE EXCEPTION 'Fila indisponivel no momento.';
+    END IF;
+  END IF;
+
+  SELECT id, name, duration_minutes, price
+  INTO v_service
+  FROM public.services
+  WHERE id = p_service_id
+    AND user_id::TEXT = p_business_id::TEXT;
+
+  IF v_service.id IS NULL THEN
+    RAISE EXCEPTION 'Servico invalido.';
+  END IF;
+
+  IF p_professional_id IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.team_members
+      WHERE id = p_professional_id
+        AND user_id::TEXT = p_business_id::TEXT
+        AND active = true
+    ) THEN
+      RAISE EXCEPTION 'Este QR nao esta ativo. Peca o QR da casa.';
+    END IF;
+  END IF;
+
+  SELECT id INTO v_client_id
+  FROM public.clients
+  WHERE user_id::TEXT = p_business_id::TEXT
+    AND public.normalize_phone_digits(phone) = public.normalize_phone_digits(p_client_phone)
+  ORDER BY created_at ASC NULLS LAST
+  LIMIT 1;
+
+  IF p_payment_method = 'membership' THEN
+    SELECT * INTO v_mem
+    FROM public.get_public_client_membership(p_business_id::TEXT, p_client_phone)
+    LIMIT 1;
+
+    IF v_mem.effective_status IS DISTINCT FROM 'active' THEN
+      RAISE EXCEPTION 'Assinatura nao disponivel.';
+    END IF;
+    IF v_mem.service_ids IS NULL OR NOT (p_service_id = ANY (v_mem.service_ids)) THEN
+      RAISE EXCEPTION 'Assinatura nao cobre este servico.';
+    END IF;
+    IF v_mem.usage_limit_per_month IS NOT NULL
+       AND COALESCE(v_mem.usage_this_period, 0) >= v_mem.usage_limit_per_month THEN
+      RAISE EXCEPTION 'Limite de usos do plano atingido.';
+    END IF;
+    v_payment_status := 'membership';
+  ELSIF p_payment_method IN ('pix', 'mbway') THEN
+    v_payment_status := 'awaiting_confirmation';
+  ELSE
+    v_payment_status := 'unpaid';
+  END IF;
+
+  INSERT INTO public.queue_entries (
+    business_id, client_id, client_name, client_phone, service_id, professional_id,
+    status, duration_minutes, service_price_cents, payment_method, payment_status
+  ) VALUES (
+    p_business_id,
+    v_client_id,
+    p_client_name,
+    p_client_phone,
+    p_service_id,
+    CASE WHEN v_mode = 'per_professional' THEN p_professional_id ELSE NULL END,
+    'waiting',
+    COALESCE(v_service.duration_minutes, 30),
+    ROUND(COALESCE(v_service.price, 0) * 100),
+    p_payment_method,
+    v_payment_status
+  )
+  RETURNING id INTO v_entry_id;
+
+  IF p_payment_method IN ('pix', 'mbway') THEN
+    INSERT INTO public.queue_payments (
+      business_id, queue_entry_id, method, amount_cents, br_code, txid, mbway_phone, expires_at
+    ) VALUES (
+      p_business_id,
+      v_entry_id,
+      p_payment_method,
+      ROUND(COALESCE(v_service.price, 0) * 100),
+      p_br_code,
+      p_txid,
+      p_mbway_phone,
+      NOW() + INTERVAL '2 hours'
+    );
+  END IF;
+
+  RETURN jsonb_build_object('id', v_entry_id, 'business_id', p_business_id);
+EXCEPTION
+  WHEN unique_violation THEN
+    RAISE EXCEPTION 'Este telefone ja esta na fila.';
 END;
 $$;
 
@@ -143,12 +287,6 @@ SET search_path = public
 AS $$
 DECLARE
   v_business_id UUID;
-  v_mode TEXT;
-  v_service RECORD;
-  v_staff_count INTEGER;
-  v_client_id UUID;
-  v_payment_status TEXT := 'unpaid';
-  v_entry_id UUID;
 BEGIN
   SELECT id INTO v_business_id
   FROM public.profiles
@@ -158,100 +296,17 @@ BEGIN
     RAISE EXCEPTION 'Estabelecimento nao encontrado.';
   END IF;
 
-  PERFORM public.queue_lock_settings(v_business_id);
-
-  SELECT COALESCE(queue_mode, 'shared') INTO v_mode
-  FROM public.business_settings
-  WHERE user_id = v_business_id;
-
-  v_mode := COALESCE(v_mode, 'shared');
-
-  IF v_mode = 'per_professional' AND p_professional_id IS NULL THEN
-    RAISE EXCEPTION 'QR de colaborador obrigatorio.';
-  END IF;
-
-  IF v_mode = 'shared' THEN
-    SELECT COUNT(*) INTO v_staff_count
-    FROM public.team_members
-    WHERE user_id::TEXT = v_business_id::TEXT AND active = true;
-    IF COALESCE(v_staff_count, 0) = 0 THEN
-      RAISE EXCEPTION 'Fila indisponivel no momento.';
-    END IF;
-  END IF;
-
-  SELECT id, name, duration_minutes, price
-  INTO v_service
-  FROM public.services
-  WHERE id = p_service_id
-    AND user_id::TEXT = v_business_id::TEXT;
-
-  IF v_service.id IS NULL THEN
-    RAISE EXCEPTION 'Servico invalido.';
-  END IF;
-
-  IF p_professional_id IS NOT NULL THEN
-    IF NOT EXISTS (
-      SELECT 1 FROM public.team_members
-      WHERE id = p_professional_id
-        AND user_id::TEXT = v_business_id::TEXT
-        AND active = true
-    ) THEN
-      RAISE EXCEPTION 'Este QR nao esta ativo. Peca o QR da casa.';
-    END IF;
-  END IF;
-
-  IF p_payment_method = 'membership' THEN
-    v_payment_status := 'membership';
-  ELSIF p_payment_method IN ('pix', 'mbway') THEN
-    v_payment_status := 'awaiting_confirmation';
-  ELSE
-    v_payment_status := 'unpaid';
-  END IF;
-
-  SELECT id INTO v_client_id
-  FROM public.clients
-  WHERE user_id::TEXT = v_business_id::TEXT
-    AND public.normalize_phone_digits(phone) = public.normalize_phone_digits(p_client_phone)
-  ORDER BY created_at ASC NULLS LAST
-  LIMIT 1;
-
-  INSERT INTO public.queue_entries (
-    business_id, client_id, client_name, client_phone, service_id, professional_id,
-    status, duration_minutes, service_price_cents, payment_method, payment_status
-  ) VALUES (
+  RETURN public.queue_join_core(
     v_business_id,
-    v_client_id,
     p_client_name,
     p_client_phone,
     p_service_id,
-    CASE WHEN v_mode = 'per_professional' THEN p_professional_id ELSE NULL END,
-    'waiting',
-    COALESCE(v_service.duration_minutes, 30),
-    ROUND(COALESCE(v_service.price, 0) * 100),
+    p_professional_id,
     p_payment_method,
-    v_payment_status
-  )
-  RETURNING id INTO v_entry_id;
-
-  IF p_payment_method IN ('pix', 'mbway') THEN
-    INSERT INTO public.queue_payments (
-      business_id, queue_entry_id, method, amount_cents, br_code, txid, mbway_phone, expires_at
-    ) VALUES (
-      v_business_id,
-      v_entry_id,
-      p_payment_method,
-      ROUND(COALESCE(v_service.price, 0) * 100),
-      p_br_code,
-      p_txid,
-      p_mbway_phone,
-      NOW() + INTERVAL '2 hours'
-    );
-  END IF;
-
-  RETURN jsonb_build_object('id', v_entry_id, 'business_id', v_business_id);
-EXCEPTION
-  WHEN unique_violation THEN
-    RAISE EXCEPTION 'Este telefone ja esta na fila.';
+    p_br_code,
+    p_txid,
+    p_mbway_phone
+  );
 END;
 $$;
 
@@ -274,8 +329,12 @@ BEGIN
     RAISE EXCEPTION 'Usuario autenticado obrigatorio.';
   END IF;
 
-  RETURN public.join_queue_entry(
-    (SELECT business_slug FROM public.profiles WHERE id::TEXT = v_tenant),
+  IF v_tenant IS NULL THEN
+    RAISE EXCEPTION 'Tenant nao encontrado.';
+  END IF;
+
+  RETURN public.queue_join_core(
+    v_tenant::UUID,
     p_client_name,
     p_client_phone,
     p_service_id,
@@ -300,6 +359,8 @@ DECLARE
   v_service_name TEXT;
   v_people JSONB;
   v_position INTEGER;
+  v_chairs INTEGER;
+  v_eta_people JSONB;
 BEGIN
   SELECT * INTO v_entry
   FROM public.queue_entries
@@ -354,6 +415,34 @@ BEGIN
   ) ranked
   WHERE id = v_entry.id;
 
+  SELECT COUNT(*)::INTEGER INTO v_chairs
+  FROM public.team_members
+  WHERE user_id = v_entry.business_id
+    AND active = true;
+
+  IF COALESCE(v_settings.queue_mode, 'shared') = 'per_professional' THEN
+    v_chairs := 1;
+  END IF;
+
+  SELECT COALESCE(jsonb_agg(
+    jsonb_build_object(
+      'id', id,
+      'joinedAt', joined_at,
+      'durationMinutes', COALESCE(duration_minutes, 30),
+      'status', status,
+      'professionalId', professional_id,
+      'servingAt', serving_at
+    )
+  ), '[]'::jsonb)
+  INTO v_eta_people
+  FROM public.queue_entries
+  WHERE business_id = v_entry.business_id
+    AND status IN ('waiting', 'calling', 'serving')
+    AND (
+      COALESCE(v_settings.queue_mode, 'shared') = 'shared'
+      OR professional_id IS NOT DISTINCT FROM v_entry.professional_id
+    );
+
   RETURN jsonb_build_object(
     'entryId', v_entry.id,
     'status', v_entry.status,
@@ -366,7 +455,11 @@ BEGIN
       'allowLeave', COALESCE(v_settings.allow_leave, true),
       'lateMinutes', COALESCE(v_settings.late_minutes, 10)
     ),
-    'calledAt', v_entry.called_at
+    'calledAt', v_entry.called_at,
+    'queueMode', COALESCE(v_settings.queue_mode, 'shared'),
+    'chairs', COALESCE(v_chairs, 0),
+    'professionalId', v_entry.professional_id,
+    'etaPeople', v_eta_people
   );
 END;
 $$;
@@ -443,12 +536,22 @@ SET search_path = public
 AS $$
 DECLARE
   v_tenant TEXT := public.queue_tenant_id();
+  v_pay public.queue_payments%ROWTYPE;
 BEGIN
-  UPDATE public.queue_payments
-  SET status = 'paid', confirmed_by = auth.uid(), confirmed_at = NOW()
+  SELECT * INTO v_pay
+  FROM public.queue_payments
   WHERE queue_entry_id = p_entry_id
     AND business_id::TEXT = v_tenant
-    AND status = 'pending';
+    AND status = 'pending'
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Pagamento pendente nao encontrado.';
+  END IF;
+
+  UPDATE public.queue_payments
+  SET status = 'paid', confirmed_by = auth.uid(), confirmed_at = NOW()
+  WHERE id = v_pay.id;
 
   UPDATE public.queue_entries
   SET payment_status = 'paid'
@@ -464,12 +567,22 @@ SET search_path = public
 AS $$
 DECLARE
   v_tenant TEXT := public.queue_tenant_id();
+  v_pay public.queue_payments%ROWTYPE;
 BEGIN
-  UPDATE public.queue_payments
-  SET status = 'cancelled'
+  SELECT * INTO v_pay
+  FROM public.queue_payments
   WHERE queue_entry_id = p_entry_id
     AND business_id::TEXT = v_tenant
-    AND status = 'pending';
+    AND status = 'pending'
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Pagamento pendente nao encontrado.';
+  END IF;
+
+  UPDATE public.queue_payments
+  SET status = 'cancelled'
+  WHERE id = v_pay.id;
 
   UPDATE public.queue_entries
   SET payment_status = 'unpaid', payment_method = 'cash'
@@ -706,6 +819,7 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.queue_join_core(UUID, TEXT, TEXT, UUID, UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.queue_lock_settings(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.queue_tenant_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.join_queue_entry(TEXT, TEXT, TEXT, UUID, UUID, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;

@@ -20,7 +20,7 @@ export const OnboardingWizard: React.FC = () => {
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
     useEffect(() => {
-        if (completed) navigate('/', { replace: true });
+        if (completed) navigate('/dashboard', { replace: true });
     }, [completed, navigate]);
 
     if (loading) {
@@ -48,7 +48,7 @@ export const OnboardingWizard: React.FC = () => {
                     onNext={() => goToStep(2 as OnboardingStep)}
                     onSkip={async () => {
                         await skipOnboarding();
-                        navigate('/', { replace: true });
+                        navigate('/dashboard', { replace: true });
                     }}
                     accentColor={accentColor}
                 />

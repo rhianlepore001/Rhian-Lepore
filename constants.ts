@@ -2,8 +2,11 @@
 import { Appointment, Client, FinanceRecord } from './types';
 import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp } from 'lucide-react';
 
+export const TRIAL_DAYS = 20;
+export const SOCIAL_PROOF_ENABLED = false;
+
 export const NAVIGATION_ITEMS = [
-  { name: 'Dashboard', icon: LayoutDashboard, path: '/', ownerOnly: false, group: 'Operação' },
+  { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', ownerOnly: false, group: 'Operação' },
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false, group: 'Operação' },
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
   { name: 'Clientes CRM', icon: Users, path: '/clientes', ownerOnly: false, group: 'Operação' },

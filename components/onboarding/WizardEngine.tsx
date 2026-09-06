@@ -68,7 +68,7 @@ export function WizardEngine() {
       await completeOnboarding(tenantId);
       await markTutorialCompleted();
       dispatch({ type: 'COMPLETE_WIZARD' });
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } else {
       await saveOnboardingStep(tenantId, nextStep, newCompleted);
     }
@@ -81,7 +81,7 @@ export function WizardEngine() {
     await completeOnboarding(tenantId);
     await markTutorialCompleted();
     dispatch({ type: 'COMPLETE_WIZARD' });
-    navigate('/', { replace: true });
+    navigate('/dashboard', { replace: true });
   }, [tenantId, markTutorialCompleted, dispatch, navigate]);
 
   function renderCurrentStepContent() {

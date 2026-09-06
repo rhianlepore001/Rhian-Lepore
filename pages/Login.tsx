@@ -62,10 +62,10 @@ export const Login: React.FC = () => {
                 if (!progress?.is_completed) {
                     navigate('/onboarding-wizard');
                 } else {
-                    navigate('/');
+                    navigate('/dashboard');
                 }
             } else {
-                navigate('/');
+                navigate('/dashboard');
             }
         }
     };
@@ -175,7 +175,7 @@ export const Login: React.FC = () => {
                             to="/register"
                             className="w-full flex items-center justify-center py-3.5 rounded-xl border border-[var(--color-text)]/15 hover:border-[var(--color-text)]/25 text-[var(--color-text)] text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-[var(--color-card-hover)] hover:bg-white/[0.07] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
                         >
-                            Criar conta — 10 dias grátis
+                            Criar conta — 20 dias grátis
                         </Link>
                     </div>
                 </div>

@@ -107,7 +107,7 @@ export function StandaloneWizardPointer() {
       {toastData && (
         <OnboardingToast data={toastData} onClose={() => setToastData(null)} onGoDashboard={() => {
             setToastData(null);
-            navigate('/');
+            navigate('/dashboard');
         }} />
       )}
     </>,

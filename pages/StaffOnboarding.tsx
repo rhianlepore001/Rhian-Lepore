@@ -36,7 +36,7 @@ export const StaffOnboarding: React.FC = () => {
       showToast('Não foi possível concluir. Verifique sua conexão e tente novamente.', 'error');
       return;
     }
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const firstName = fullName?.split(' ')[0];

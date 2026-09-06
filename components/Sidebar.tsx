@@ -95,10 +95,10 @@ export const Sidebar: React.FC = () => {
         {/* Desktop: Header do menu com Logo */}
         <div className={`hidden md:flex h-20 items-center justify-center border-b ${colors.divider}`}>
           <Link
-            to="/"
+            to="/dashboard"
             onClick={(e) => {
               e.preventDefault();
-              goTo('/');
+              goTo('/dashboard');
             }}
             className="relative flex items-center hover:opacity-80 transition-opacity group"
           >

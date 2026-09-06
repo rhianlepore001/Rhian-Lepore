@@ -114,7 +114,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
   };
 
   const menuItems: MenuItem[] = [
-    { name: 'Início', icon: LayoutDashboard, path: '/' },
+    { name: 'Início', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Agenda', icon: Clock, path: '/agenda' },
     { name: 'Clientes', icon: Users, path: '/clientes' },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
@@ -127,7 +127,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
   const visibleItems = menuItems.filter((item) => !item.ownerOnly || !isStaff);
 
   const isActive = (path: string) =>
-    location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+    location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path));
 
   if (!isRendered) return null;
 

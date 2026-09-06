@@ -23,7 +23,8 @@ export const Register: React.FC = () => {
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
   const typeFromUrl = searchParams.get('type');
-  const validType: UserType = typeFromUrl === 'beauty' ? 'beauty' : 'barber';
+  const nicheFromUrl = searchParams.get('nicho');
+  const validType: UserType = typeFromUrl === 'beauty' || nicheFromUrl === 'salao' ? 'beauty' : 'barber';
   const [userType, setUserType] = useState<UserType>(validType);
   const [region, setRegion] = useState<Region>('BR');
   const [loading, setLoading] = useState(false);
@@ -37,9 +38,12 @@ export const Register: React.FC = () => {
   const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
 
   useEffect(() => {
-    const typeFromUrl = searchParams.get('type') as UserType;
-    if (typeFromUrl && (typeFromUrl === 'barber' || typeFromUrl === 'beauty')) {
+    const typeFromUrl = searchParams.get('type');
+    const nicheFromUrl = searchParams.get('nicho');
+    if (typeFromUrl === 'barber' || typeFromUrl === 'beauty') {
       setUserType(typeFromUrl);
+    } else if (nicheFromUrl === 'barbearia' || nicheFromUrl === 'salao') {
+      setUserType(nicheFromUrl === 'salao' ? 'beauty' : 'barber');
     }
   }, [searchParams]);
 

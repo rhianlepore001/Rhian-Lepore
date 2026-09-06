@@ -16,6 +16,7 @@ import { HashRouterSync } from './components/HashRouterSync';
 
 // Lazy Load Pages
 const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
+const Landing = React.lazy(() => import('./pages/Landing').then(module => ({ default: module.Landing })));
 const ClientCRM = React.lazy(() => import('./pages/ClientCRM').then(module => ({ default: module.ClientCRM })));
 const Finance = React.lazy(() => import('./pages/Finance').then(module => ({ default: module.Finance })));
 const Register = React.lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
@@ -138,7 +139,7 @@ const DevRouteGuard = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
-// Guard para rotas exclusivas do dono: redireciona staff para / com toast
+// Guard para rotas exclusivas do dono: redireciona staff para o dashboard com toast
 const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, loading, role } = useAuth();
 
@@ -146,7 +147,7 @@ const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (role === 'staff') {
     sessionStorage.setItem('ownerRouteToast', 'Acesso restrito ao dono da barbearia');
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -168,6 +169,7 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
+        <Route path="/" element={<Landing />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/termos" element={<Legal />} />
@@ -199,7 +201,7 @@ const AppRoutes: React.FC = () => {
 
         {/* Authenticated Routes */}
         <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/fila" element={<QueueManagement />} />
           <Route path="/clientes" element={<Clients />} />

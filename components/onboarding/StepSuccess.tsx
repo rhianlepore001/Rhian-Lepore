@@ -45,7 +45,7 @@ export const StepSuccess: React.FC<StepSuccessProps> = ({ accentColor, onComplet
             icon: <LayoutDashboard className="w-5 h-5" />,
             label: 'Dashboard',
             description: 'Ver painel principal',
-            path: '/',
+            path: '/dashboard',
         },
     ];
 

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
 import { resolveIsDev } from '../utils/devAccess';
+import { TRIAL_DAYS } from '../constants';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -317,7 +318,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               phone: data.phone,
               tutorial_completed: false,
               subscription_status: 'trial',
-              trial_ends_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 dias de teste (posicionamento v1)
+              trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
               role: data.companyId ? 'staff' : 'owner',
               company_id: data.companyId || authData.user.id,
               aios_enabled: true

@@ -1,6 +1,6 @@
 # Fila Digital v2 — Specification
 
-**Status:** draft (aguardando decisões de produto)
+**Status:** draft (4 confirmações em `context.md`)
 **Criado:** 2026-09-06
 **Prioridade:** alta
 **Branch:** `cursor/fila-digital-v2-2dde`
@@ -9,144 +9,174 @@
 
 ## Problem Statement
 
-A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:id` + `/#/fila`) desconectado da área do cliente e do clube. Casas que não trabalham por horário — e salões com recepcionista — precisam de walk-in profissional: QR na bancada, entrada manual para quem não usa celular, posição visível, e fechamento de comanda que vira financeiro (com produtos, serviços e assinatura).
-
-O cliente já cadastrado no agendamento público precisa ser o mesmo na fila. Se tiver assinatura ativa, o uso do clube entra no fechamento.
+A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:id` + `/#/fila`) desconectado da área do cliente e do clube. Casas walk-in precisam de QR na bancada ou no balcão, entrada manual, tempo de espera honesto, pagamento escolhido na entrada (clube / balcão / Pix ou MB WAY) e fechamento de comanda que não perde cliente, profissional nem serviço.
 
 ## Goals
 
-- [ ] Casa walk-in opera o dia só com fila (QR + entrada manual), sem depender de agenda
-- [ ] Gestor escolhe fila compartilhada (QR geral) ou fila por colaborador (QR na bancada)
-- [ ] Cliente entra, escolhe serviço e vê posição/quem está na fila — só depois de check-in no QR da casa
-- [ ] Identidade do cliente é a da área pública (telefone); assinatura ativa aplica no fechamento
-- [ ] Fechar comanda libera a cadeira; confirmar/editar pagamento registra no financeiro com UX clara
+- [ ] Scan do QR: escolher serviço (igual booking) → cadastro/login se preciso → fila
+- [ ] Gestor escolhe QR geral ou QR por colaborador; troca só com fila vazia
+- [ ] Cliente vê a própria posição e o primeiro nome das outras pessoas; vê a regra de sair/atraso
+- [ ] Staff opera a fila inteira e adiciona à mão; não mexe nos extras do dono
+- [ ] ETA usa duração dos serviços; no QR geral divide pelas cadeiras
+- [ ] Pagamento na entrada; Pix/MB WAY com confirmação do recebedor; card já mostra pago/clube
+- [ ] Fechar comanda persiste tudo; pode finalizar agora ou ir para lista Comandas
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| GPS / geofence | Presença é o scan do QR, não localização |
-| WhatsApp / SMS de “sua vez” | Pode ser P3 depois; não bloqueia o walk-in |
-| Fila híbrida com horário marcado (encaixe na agenda) | Primeiro nicho é quem não agenda |
-| Novo papel “recepcionista” | Staff/dono adicionam manualmente; papel novo é outra feature |
-| Débito automático / Pix na fila | Fechamento segue o financeiro atual (confirmar pagamento) |
-| TV / painel de senha na parede | Fora deste redesign |
+| GPS / geofence | Presença é o scan do QR |
+| WhatsApp / SMS de “sua vez” | P3 |
+| Fila + horário marcado | Primeiro nicho é quem não agenda |
+| Papel “recepcionista” | Staff/dono operam; papel novo é outra feature |
+| TV / painel de senha | Fora deste redesign |
 
 ---
 
 ## User Stories
 
-### P1: Check-in pelo QR (geral ou da bancada) ⭐ MVP
+### P1: Entrar pelo QR (serviço → identidade → pagamento) ⭐ MVP
 
-**User Story**: Como cliente na casa, quero escanear o QR da bancada (ou do balcão) e entrar na fila escolhendo o serviço, para não ficar em pé sem saber a vez.
+**User Story**: Como cliente na casa, quero escanear o QR, escolher o serviço e entrar na fila — se eu já for cliente, sem cadastrar de novo.
 
-**Why P1**: Sem isso a fila não existe para o nicho walk-in.
+**Why P1**: É o walk-in.
 
 **Acceptance Criteria**:
 
-1. WHEN o gestor configura **QR geral** THEN o sistema SHALL gerar um QR único do estabelecimento cuja entrada vai para a fila compartilhada (qualquer colaborador atende o próximo)
-2. WHEN o gestor configura **QR por colaborador** THEN o sistema SHALL gerar um QR por profissional ativo; a entrada fica na fila daquele profissional
-3. WHEN o cliente escaneia um QR válido THEN o sistema SHALL abrir a área do cliente (`/#/minha-area/:slug`) na sessão Fila, com check-in de presença ativo
-4. WHEN a sessão Fila está bloqueada (sem check-in) THEN o sistema SHALL mostrar que a fila só libera no QR da casa — e SHALL recusar entrar na fila
-5. WHEN o cliente faz check-in THEN o sistema SHALL oferecer seleção de serviço no mesmo padrão do agendamento público (categorias + serviços)
-6. WHEN o cliente já tem cadastro pelo telefone (agendamento público / área) THEN o sistema SHALL reutilizar esse cliente — sem pedir nome de novo se a sessão já existir
-7. WHEN o QR é de um colaborador THEN o sistema SHALL pré-associar o profissional; o cliente não escolhe outro barbeiro nesse fluxo
+1. WHEN o cliente escaneia o QR THEN o sistema SHALL abrir a seleção de serviço no padrão do agendamento público (categorias + serviços)
+2. WHEN o serviço é escolhido e **não** há sessão pública da casa THEN o sistema SHALL pedir cadastro/login igual ao booking (telefone; nome se for novo)
+3. WHEN já existe sessão pública da casa THEN o sistema SHALL pular o cadastro e seguir
+4. WHEN o telefone já é cliente da casa THEN o sistema SHALL reutilizar esse cadastro (CRM + clube)
+5. WHEN o cliente tem assinatura ativa THEN o sistema SHALL oferecer **Usar assinatura**, **Pagar ao balcão** e **Pagar agora** (Pix no BR, MB WAY em PT)
+6. WHEN não tem assinatura ativa (ou o plano não cabe) THEN o sistema SHALL oferecer balcão e Pix/MB WAY — sem fingir clube
+7. WHEN escolhe Pix/MB WAY THEN o sistema SHALL gerar o pagamento da região e SHALL exigir confirmação do recebedor (staff ou dono) antes de marcar como pago
+8. WHEN o QR é por colaborador THEN a entrada SHALL ficar na fila daquele profissional; o cliente não escolhe outro
+9. WHEN o QR é geral THEN a entrada SHALL ir para a fila compartilhada
+10. WHEN abre Minha Área **sem** ter vindo do QR THEN a sessão Fila SHALL aparecer bloqueada, com texto para ir até o QR na casa
 
-**Independent Test**: QR do João → login na área → Fila destrava → escolhe Corte → entra na fila do João.
+**Independent Test**: QR do João → Corte → telefone conhecido assinante → “Usar assinatura” → entra na fila do João.
 
 ---
 
-### P1: Ver posição e quem está na fila ⭐ MVP
+### P1: Posição, nomes e regra de espera ⭐ MVP
 
-**User Story**: Como cliente na fila, quero ver minha posição e quem está na frente, para decidir se espero.
+**User Story**: Como cliente na fila, quero ver minha posição, o primeiro nome de quem está na frente e as regras da casa (ficar ou poder sair).
 
-**Why P1**: É o contrato visível da feature.
+**Why P1**: Contrato visível.
 
 **Acceptance Criteria**:
 
-1. WHEN o cliente está `waiting` THEN o sistema SHALL mostrar posição (ex.: 3º) atualizada em tempo real
-2. WHEN o cliente está na fila THEN o sistema SHALL listar as pessoas à frente (privacidade: ver decisão em Aberto)
-3. WHEN o status vira chamado / em atendimento THEN o sistema SHALL deixar isso óbvio na sessão Fila
-4. WHEN o cliente cancela a própria senha THEN o sistema SHALL tirá-lo da fila e voltar a sessão ao estado “pode entrar de novo” enquanto o check-in valer
+1. WHEN está `waiting`/`calling` THEN o sistema SHALL mostrar a posição (ex.: 3º) em tempo real
+2. WHEN lista as outras pessoas THEN o sistema SHALL mostrar só **primeiro nome** + posição — sem telefone, sem serviço
+3. WHEN o gestor ativou **pode sair** THEN o cliente SHALL ver o prazo de atraso (N minutos) de forma profissional
+4. WHEN o gestor ativou **não pode sair** THEN o cliente SHALL ver que precisa permanecer na casa — sem relógio de atraso
+5. WHEN o status muda (chamando / em atendimento) THEN a tela do cliente SHALL refletir na hora
+6. WHEN o cliente cancela a própria senha THEN sai da fila e pode entrar de novo só com novo scan (ou enquanto a política de check-in permitir)
 
-**Independent Test**: Dois clientes no QR geral; o segundo vê “você é o 2º” e o primeiro nome na frente.
+**Independent Test**: Dois clientes no QR geral; o segundo vê “você é o 2º” e o primeiro nome à frente; vê o texto da política.
 
 ---
 
-### P1: Entrada manual (idade / recepção) ⭐ MVP
+### P1: Tempo estimado ⭐ MVP
 
-**User Story**: Como colaborador ou recepção, quero colocar alguém na fila à mão, para atender quem não usa celular.
+**User Story**: Como cliente, quero uma espera baseada no tempo real dos serviços da frente.
 
-**Why P1**: Sem isso o QR exclui o cliente idoso e o salão com balcão.
+**Why P1**: Sem isso a posição sozinha não decide se ele espera.
 
 **Acceptance Criteria**:
 
-1. WHEN dono ou staff abre `/#/fila` THEN o sistema SHALL permitir adicionar cliente (nome + telefone + serviço; profissional conforme o modo da casa)
-2. WHEN o telefone já existe no CRM da casa THEN o sistema SHALL vincular o cadastro existente (e a assinatura, se houver)
-3. WHEN o telefone é novo THEN o sistema SHALL criar o cliente da casa como no fluxo público
-4. WHEN a entrada é manual THEN o cliente SHALL aparecer na mesma fila (geral ou do profissional) que uma entrada por QR
+1. WHEN calcula ETA THEN o sistema SHALL usar `duration_minutes` do serviço de cada pessoa à frente (e o restante de quem está `serving`, se houver)
+2. WHEN o modo é **por colaborador** THEN o ETA SHALL somar só aquela bancada
+3. WHEN o modo é **QR geral** THEN o ETA SHALL distribuir a carga entre os colaboradores ativos (cadeiras em paralelo)
+4. WHEN o catálogo muda o tempo do serviço THEN novas entradas SHALL usar o valor novo; entradas já na fila mantêm o tempo capturado na entrada
 
-**Independent Test**: Staff adiciona “Dona Maria” no telefone conhecido → ela entra na fila do profissional da vez; se o telefone bate com assinante, o fechamento vê o clube.
+**Independent Test**: Dois waiting de 30 min, um staff livre no modo geral → ~30 min para o segundo, não 60.
 
 ---
 
-### P1: Operação do colaborador — chamar e fechar comanda ⭐ MVP
+### P1: Entrada manual ⭐ MVP
 
-**User Story**: Como colaborador, quero atender o próximo da minha fila (ou da fila geral) e, ao terminar, fechar a comanda para liberar a cadeira.
+**User Story**: Como staff ou dono, quero colocar alguém na fila à mão a qualquer momento.
 
-**Why P1**: É o ritmo do dia walk-in.
+**Why P1**: Idoso e recepção.
 
 **Acceptance Criteria**:
 
-1. WHEN o modo é QR geral THEN qualquer colaborador (e o dono) SHALL ver a fila única e atender o próximo sem preferência de “quem corta quem”
-2. WHEN o modo é QR por colaborador THEN o staff SHALL ver de forma destacada a própria fila (o dono vê todas)
-3. WHEN o colaborador fecha a comanda THEN o sistema SHALL tirar a pessoa de “em atendimento”, liberar a cadeira e permitir chamar o próximo — sem obrigar o pagamento no mesmo toque
-4. WHEN a comanda é fechada THEN o sistema SHALL oferecer de imediato **Confirmar pagamento** ou **Editar comanda** (ação clara, mobile-first)
-5. WHEN o colaborador confirma pagamento sem editar THEN o sistema SHALL lançar no financeiro o serviço escolhido na entrada (preço de catálogo, clube aplicado se couber)
-6. WHEN o colaborador edita THEN o sistema SHALL permitir acrescentar serviços e produtos do catálogo da casa, ajustar valores, e só então confirmar o lançamento
-7. WHEN o cliente tem assinatura ativa e o serviço está no plano THEN o sistema SHALL oferecer usar o clube no fechamento (consumo / valor coberto), visível para o colaborador
+1. WHEN staff ou dono abre `/#/fila` THEN o sistema SHALL permitir adicionar (nome + telefone + serviço; profissional se o modo for por colaborador)
+2. WHEN o telefone já existe THEN vincula o cliente e a assinatura, se houver
+3. WHEN o telefone é novo THEN cria o cliente da casa
+4. WHEN a entrada é manual THEN cai na mesma fila que um QR (geral ou do profissional escolhido)
 
-**Independent Test**: João atende, toca Fechar comanda → próximo já pode ser chamado; depois edita + pomada e confirma → financeiro mostra serviço + produto.
+**Independent Test**: Staff adiciona Dona Maria no telefone conhecido → aparece na fila; se for assinante, o card pode oferecer clube.
 
 ---
 
-### P1: Modo de QR no gestor ⭐ MVP
+### P1: Operar a fila (chamar opcional → atender → comanda) ⭐ MVP
 
-**User Story**: Como gestor, quero escolher QR geral ou um QR por colaborador, para o modelo da casa (todos atendem o próximo vs. cada um na sua bancada).
+**User Story**: Como colaborador, quero atender quem está à vista sem cerimônia, chamar só quem não vejo, e fechar a comanda sem perder dados.
 
-**Why P1**: Os dois nichos dependem dessa escolha.
+**Why P1**: Ritmo da cadeira.
 
 **Acceptance Criteria**:
 
-1. WHEN o gestor troca o modo THEN QRs e filas SHALL seguir o modo novo (entradas já `waiting` — ver Aberto)
-2. WHEN o modo é por colaborador THEN a tela de QR SHALL listar cada profissional com download/impressão do próprio QR
-3. WHEN o modo é geral THEN a tela SHALL mostrar um QR da casa, sem `?pro=`
+1. WHEN o modo é geral THEN staff e dono SHALL ver a fila única e qualquer um atende o próximo
+2. WHEN o modo é por colaborador THEN staff SHALL operar a própria fila com destaque; dono vê todas
+3. WHEN o profissional toca **Em atendimento** a partir de `waiting` THEN o sistema SHALL aceitar (não exige `calling`)
+4. WHEN toca **Chamar** THEN o status vira `calling` (cliente não está à vista)
+5. WHEN o cliente já pagou Pix/MB WAY (confirmado) ou usou assinatura THEN o card SHALL mostrar pago / clube **antes** do atendimento
+6. WHEN o pagamento é balcão THEN o card SHALL mostrar não pago
+7. WHEN fecha a comanda THEN o sistema SHALL persistir cliente, profissional logado (staff ou dono), serviço(s), produtos, valores e status de pagamento
+8. WHEN fecha THEN o colaborador SHALL poder: (a) finalizar já (só serviço ou editando itens) e seguir o próximo, ou (b) só fechar e mandar para **Comandas**
+9. WHEN a comanda está em Comandas THEN dono e staff SHALL conseguir editar (serviços/produtos) e concluir o lançamento depois, sem perder o vínculo
+10. WHEN Pix/assinatura já resolveu o valor THEN finalizar SHALL **não** exigir nova cobrança
 
-**Independent Test**: Alternar modo em Ajustes/Fila → baixar QRs → scan cai na fila certa.
+**Independent Test**: Cliente Pix confirmado → card com pago → Em atendimento → Fechar e só finalizar → financeiro lançado, próximo livre.
 
 ---
 
-### P2: Sessão Fila bloqueada na área do cliente
+### P1: Ajustes só do dono ⭐ MVP
 
-**User Story**: Como cliente, quero ver na Minha Área que existe fila digital, mas só usar quando estiver na casa.
+**User Story**: Como gestor, quero o modo de QR e a política de saída; o staff não mexe nisso.
 
-**Why P2**: Copy e bloqueio já são P1; o polimento da aba (empty, histórico do dia) pode seguir o núcleo.
+**Why P1**: Os dois nichos e a regra da casa.
 
 **Acceptance Criteria**:
 
-1. WHEN abre Minha Área sem check-in THEN a sessão Fila SHALL existir e estar bloqueada, com texto claro (ir até o QR na bancada / balcão)
-2. WHEN o check-in expira THEN a sessão SHALL voltar a bloquear; senha ainda `waiting` — ver Aberto
+1. WHEN a fila tem alguém `waiting`, `calling` ou `serving` THEN o sistema SHALL bloquear a troca QR geral ↔ por colaborador
+2. WHEN a fila está vazia THEN o dono SHALL poder trocar o modo
+3. WHEN o modo é por colaborador THEN a UI de QR SHALL oferecer um QR por profissional ativo (download/impressão)
+4. WHEN o modo é geral THEN um QR da casa, sem `?pro=`
+5. WHEN o dono configura política THEN escolhe **pode sair** (com N minutos de atraso) **ou** **não pode sair**
+6. WHEN o usuário é staff THEN a UI SHALL esconder/bloquear esses extras
+
+**Independent Test**: Um waiting → toggle de modo desabilitado; fila vazia → troca; staff não vê o toggle.
+
+---
+
+### P2: Recuperar a senha se o celular deslogar
+
+**User Story**: Como cliente, se o celular perder a sessão, quero recuperar minha posição com o mesmo telefone.
+
+**Why P2**: Não pode perder a vez por storage do browser. Proposta em `context.md` — confirmar.
+
+**Acceptance Criteria**:
+
+1. WHEN a sessão pública some e o cliente informa o mesmo telefone THEN o sistema SHALL reabrir a senha ativa (`waiting`/`calling`/`serving`)
+2. WHEN não há senha ativa THEN o sistema SHALL **não** deixar entrar de novo sem scan do QR
+3. WHEN a senha está ativa THEN estar logado o tempo todo SHALL **não** ser obrigatório
+
+**Independent Test**: Entrar na fila → limpar site data → telefone de novo → mesma posição.
 
 ---
 
 ## Edge Cases
 
-- WHEN o cliente tenta entrar de novo com o mesmo telefone enquanto já está `waiting`/`calling`/`serving` THEN o sistema SHALL recusar duplicata (já existe UNIQUE parcial)
-- WHEN o colaborador está atendendo e fecha a comanda THEN outro atendimento não começa sozinho — chama o próximo é ação explícita (salvo decisão contrária em Aberto)
-- WHEN o pagamento fica para depois THEN a comanda SHALL ficar pendente de lançamento, não sumir
-- WHEN o plano tem teto de usos e o teto estourou THEN o sistema SHALL cobrar o serviço (não fingir clube)
-- WHEN o QR de um staff inativo é escaneado THEN o sistema SHALL recusar ou redirecionar ao QR geral (ver Aberto)
-- WHEN a casa não tem slug THEN o gestor SHALL ser levado a criar o slug (mesmo padrão do link de agendamento)
+- WHEN o mesmo telefone tenta segunda senha ativa THEN recusa (UNIQUE parcial já existe)
+- WHEN o teto do clube estourou THEN não oferece “Usar assinatura” (ou oferece e cobra o serviço)
+- WHEN QR de profissional inativo THEN recusa com caminho para o QR da casa / balcão
+- WHEN a casa não tem slug THEN dono cria o slug (padrão do link de agendamento)
+- WHEN Pix está pendente e o cliente já está `serving` THEN o card continua “aguardando confirmação” até o recebedor confirmar ou o staff tratar no fechamento
+- WHEN ninguém está `serving` e o próximo é atendido THEN o ETA dos demais recalcula
 
 ---
 
@@ -154,26 +184,29 @@ O cliente já cadastrado no agendamento público precisa ser o mesmo na fila. Se
 
 | ID | Story | Phase | Status |
 |----|--------|-------|--------|
-| FILA-01 | P1: Check-in QR + serviço | Specify | Draft |
-| FILA-02 | P1: Posição e lista | Specify | Draft |
-| FILA-03 | P1: Entrada manual | Specify | Draft |
-| FILA-04 | P1: Fechar comanda + financeiro | Specify | Draft |
-| FILA-05 | P1: Modo QR geral vs por colaborador | Specify | Draft |
-| FILA-06 | P1: Identidade única + clube no fechamento | Specify | Draft |
-| FILA-07 | P2: Aba bloqueada na área do cliente | Specify | Draft |
+| FILA-01 | P1: QR → serviço → identidade → pagamento | Specify | Draft |
+| FILA-02 | P1: Posição + primeiro nome + política | Specify | Draft |
+| FILA-03 | P1: ETA por duração / cadeiras | Specify | Draft |
+| FILA-04 | P1: Entrada manual | Specify | Draft |
+| FILA-05 | P1: Chamar opcional, atender, comanda | Specify | Draft |
+| FILA-06 | P1: Ajustes do dono + lock com fila | Specify | Draft |
+| FILA-07 | P1: Pix/MB WAY + confirmação recebedor | Specify | Draft |
+| FILA-08 | P1: Assinatura no card | Specify | Draft |
+| FILA-09 | P2: Recuperar senha por telefone | Specify | Draft |
 
-**Coverage:** 7 total, 0 mapped to tasks
+**Coverage:** 9 total, 0 mapped to tasks
 
 ---
 
 ## Success Criteria
 
-- [ ] Casa no modo geral: cliente no QR do balcão entra; qualquer barbeiro fecha comanda e segue o próximo
-- [ ] Casa no modo bancada: QR do João só alimenta a fila do João
-- [ ] Cliente sem QR na Minha Área não entra na fila
-- [ ] Assinante conhecido no telefone usa o clube no fechamento
-- [ ] Fechar comanda ≠ confirmar pagamento; editar inclui produto + serviço
-- [ ] Fluxo cabe no polegar (colaborador no celular da bancada)
+- [ ] Scan → serviço → (login se precisar) → pagamento → posição com primeiros nomes
+- [ ] QR geral vs bancada; toggle só com fila vazia; staff não vê extras
+- [ ] ETA honesto (duração + paralelo no geral)
+- [ ] Card mostra pago/clube antes do atendimento quando já resolveu
+- [ ] Comanda nunca perde cliente, profissional logado, serviço
+- [ ] Política de sair/atraso visível para o cliente
+- [ ] Mobile-first na cadeira e no bolso do cliente
 
 ---
 
@@ -181,14 +214,15 @@ O cliente já cadastrado no agendamento público precisa ser o mesmo na fila. Se
 
 - Rotas: `/#/queue/:slug`, `/#/queue-status/:id`, `/#/fila`
 - Estados: `waiting` → `calling` → `serving` → `completed` / `cancelled` / `no_show`
-- QR já aceita `?pro=` mas o modo não é uma escolha de produto persistida
-- Entrada manual hoje: dono only; telefone opcional (`0000000000`); sem serviço obrigatório
-- Fechar: um modal único (serviço + preço + profissional) via RPC `finish_queue_entry`
-- Área do cliente: `/#/minha-area/:slug` (telefone), abas Próximos / Histórico / Clube / Perfil — **sem Fila**
-- Clube: membership por telefone + `business_id`; desconto no checkout de agenda (`useSubscriptionDiscount`), não na fila
+- QR já aceita `?pro=`; modo não é setting persistido
+- Entrada manual: dono only; telefone opcional; sem serviço obrigatório
+- Fechar: um modal via `finish_queue_entry` (sem comandas, sem Pix, sem clube)
+- Área do cliente: `/#/minha-area/:slug` — sem Fila
+- Booking público: serviço → telefone/nome — **reusar este ritmo**
+- Clube: Pix BR + MB WAY PT com confirmação; `useSubscriptionDiscount` só no checkout de agenda
 
 ---
 
-## Aberto — precisa de decisão
+## Decisões de produto
 
-Ver `context.md` (preenchido após as respostas). Perguntas na conversa de 2026-09-06.
+Ver `context.md`. Quatro confirmações ainda abertas no final desse arquivo.

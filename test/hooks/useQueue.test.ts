@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+  useConfirmQueuePayment,
   useFinishQueueEntry,
   useJoinQueue,
   useQueueEntries,
@@ -15,6 +16,13 @@ vi.mock('@/services/queue', () => ({
   finishQueueEntry: vi.fn(),
   joinQueue: vi.fn(),
   updateQueueStatus: vi.fn(),
+  confirmQueuePayment: vi.fn(),
+  cancelQueuePayment: vi.fn(),
+  closeQueueTicket: vi.fn(),
+  settleQueueTicket: vi.fn(),
+  fetchQueueSettings: vi.fn(),
+  setQueueMode: vi.fn(),
+  updateQueueSettings: vi.fn(),
 }));
 
 const mockEntry = {
@@ -145,6 +153,28 @@ describe('useQueue', () => {
         finalPrice: 50,
       });
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['queue', 'entries'] });
+    });
+  });
+
+  describe('useConfirmQueuePayment', () => {
+    it('chama RPC e invalida cache da fila', async () => {
+      (queueService.confirmQueuePayment as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+      const { Wrapper } = createWrapper(queryClient);
+
+      const { result } = renderHook(() => useConfirmQueuePayment(), { wrapper: Wrapper });
+      await act(async () => {
+        await result.current.mutateAsync('queue-001');
+      });
+
+      expect(queueService.confirmQueuePayment).toHaveBeenCalledWith(
+        'queue-001',
+        expect.anything(),
+      );
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['queue'] });
     });
   });
 });

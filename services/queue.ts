@@ -67,22 +67,39 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     throw new Error('Este telefone já está na fila.');
   }
 
-  const { error } = await supabase
-    .from('queue_entries')
-    .insert({
+  const slug = parsed.slug ?? await fetchBusinessSlug(parsed.businessId);
+  if (!slug) {
+    throw new Error('Estabelecimento sem link público.');
+  }
+
+  const { data, error } = await supabase.rpc('join_queue_entry', {
+    p_slug: slug,
+    p_client_name: parsed.clientName,
+    p_client_phone: parsed.clientPhone,
+    p_service_id: parsed.serviceId ?? null,
+    p_professional_id: parsed.professionalId ?? null,
+    p_payment_method: parsed.paymentMethod ?? 'cash',
+  });
+
+  if (error) throw error;
+
+  const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
+  if (!created) {
+    const joinedId = (data as { id?: string } | null)?.id;
+    if (!joinedId) {
+      throw new Error('Queue entry created but could not be retrieved');
+    }
+    storeQueuePhoneProof(joinedId, parsed.clientPhone);
+    return queueEntrySchema.parse({
+      id: joinedId,
       business_id: parsed.businessId,
       client_name: parsed.clientName,
       client_phone: parsed.clientPhone,
       service_id: parsed.serviceId ?? null,
       professional_id: parsed.professionalId ?? null,
       status: 'waiting',
+      joined_at: new Date().toISOString(),
     });
-
-  if (error) throw error;
-
-  const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-  if (!created) {
-    throw new Error('Queue entry created but could not be retrieved');
   }
 
   storeQueuePhoneProof(created.id, parsed.clientPhone);
@@ -97,39 +114,36 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
     throw new Error('Este telefone já está na fila.');
   }
 
-  const { data, error } = await supabase
-    .from('queue_entries')
-    .insert({
-      business_id: parsed.businessId,
-      client_name: parsed.clientName,
-      client_phone: parsed.clientPhone,
-      status: 'waiting',
-      joined_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc('add_manual_queue_entry', {
+    p_client_name: parsed.clientName,
+    p_client_phone: parsed.clientPhone,
+    p_service_id: parsed.serviceId ?? null,
+    p_professional_id: parsed.professionalId ?? null,
+    p_payment_method: parsed.paymentMethod ?? 'cash',
+  });
 
   if (error) throw error;
-  return queueEntrySchema.parse(data);
+  const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
+  if (created) return created;
+
+  return queueEntrySchema.parse({
+    id: (data as { id?: string })?.id ?? 'pending',
+    business_id: parsed.businessId,
+    client_name: parsed.clientName,
+    client_phone: parsed.clientPhone,
+    service_id: parsed.serviceId ?? null,
+    professional_id: parsed.professionalId ?? null,
+    status: 'waiting',
+    joined_at: new Date().toISOString(),
+  });
 }
 
 export async function updateQueueStatus(input: UpdateQueueStatusInput): Promise<void> {
   const parsed = updateQueueStatusInputSchema.parse(input);
-  const changes: { status: QueueStatus; called_at?: string | null } = {
-    status: parsed.status,
-  };
-
-  if (parsed.status === 'calling') {
-    changes.called_at = new Date().toISOString();
-  } else {
-    changes.called_at = null;
-  }
-
-  const { error } = await supabase
-    .from('queue_entries')
-    .update(changes)
-    .eq('id', parsed.entryId)
-    .eq('business_id', parsed.businessId);
+  const { error } = await supabase.rpc('update_queue_status', {
+    p_entry_id: parsed.entryId,
+    p_status: parsed.status,
+  });
 
   if (error) throw error;
 }
@@ -158,6 +172,66 @@ export async function finishQueueEntry(input: FinishQueueEntryInput): Promise<vo
     p_professional_id: parsed.professionalId ?? null,
   });
 
+  if (error) throw error;
+}
+
+export async function fetchQueuePublicBoard(entryId: string, phone: string) {
+  const { data, error } = await supabase.rpc('get_queue_public_board', {
+    p_entry_id: entryId,
+    p_phone: phone,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function confirmQueuePayment(entryId: string) {
+  const { error } = await supabase.rpc('confirm_queue_payment', { p_entry_id: entryId });
+  if (error) throw error;
+}
+
+export async function cancelQueuePayment(entryId: string) {
+  const { error } = await supabase.rpc('cancel_queue_payment', { p_entry_id: entryId });
+  if (error) throw error;
+}
+
+export async function closeQueueTicket(entryId: string) {
+  const { error } = await supabase.rpc('close_queue_ticket', { p_entry_id: entryId });
+  if (error) throw error;
+}
+
+export async function settleQueueTicket(input: {
+  entryId: string;
+  serviceName?: string | null;
+  finalPrice?: number | null;
+  professionalId?: string | null;
+  paymentMethod?: string | null;
+}) {
+  const { error } = await supabase.rpc('settle_queue_ticket', {
+    p_entry_id: input.entryId,
+    p_service_name: input.serviceName ?? null,
+    p_final_price: input.finalPrice ?? null,
+    p_professional_id: input.professionalId ?? null,
+    p_payment_method: input.paymentMethod ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function fetchQueueSettings() {
+  const { data, error } = await supabase.rpc('fetch_queue_settings');
+  if (error) throw error;
+  return data;
+}
+
+export async function updateQueueSettings(allowLeave: boolean, lateMinutes: number) {
+  const { error } = await supabase.rpc('update_queue_settings', {
+    p_allow_leave: allowLeave,
+    p_late_minutes: lateMinutes,
+  });
+  if (error) throw error;
+}
+
+export async function setQueueMode(mode: 'shared' | 'per_professional') {
+  const { error } = await supabase.rpc('set_queue_mode', { p_mode: mode });
   if (error) throw error;
 }
 

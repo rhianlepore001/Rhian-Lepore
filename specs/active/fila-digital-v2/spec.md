@@ -1,6 +1,6 @@
 # Fila Digital v2 — Specification
 
-**Status:** ready (context aprovado — próximo: design)
+**Status:** ready (design em revisão — `design.md`)
 **Criado:** 2026-09-06
 **Prioridade:** alta
 **Branch:** `cursor/fila-digital-v2-2dde`
@@ -179,7 +179,8 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 - WHEN o teto do clube estourou THEN não oferece “Usar assinatura” (ou oferece e cobra o serviço)
 - WHEN QR de profissional inativo THEN recusa com caminho para o QR da casa / balcão
 - WHEN a casa não tem slug THEN dono cria o slug (padrão do link de agendamento)
-- WHEN Pix está pendente e o cliente já está `serving` THEN o card continua “aguardando confirmação” até o recebedor confirmar ou o staff tratar no fechamento
+- WHEN Pix está pendente e o corte termina THEN o profissional só confere o pagamento; o card continua “Aguardando confirmação e pagamento” até o recebedor confirmar
+- WHEN o atraso de **Chamar cliente** estoura THEN o staff trata (não-show / devolver à fila); sem no-show automático no MVP
 - WHEN ninguém está `serving` e o próximo é atendido THEN o ETA dos demais recalcula
 
 ---

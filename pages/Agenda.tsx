@@ -26,7 +26,7 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
 import { copyBookingProductsToAppointment } from '../services/catalog';
-import { deleteAppointmentWithFinance } from '../services/scheduling';
+import { deleteAppointmentWithFinance, markAppointmentComplete } from '../services/scheduling';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
@@ -122,6 +122,7 @@ export const Agenda: React.FC = () => {
     const [selectedProfessionalIds, setSelectedProfessionalIds] = useState<string[]>([]);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
+    const [completingAppointmentId, setCompletingAppointmentId] = useState<string | null>(null);
     const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
     const [businessSlug, setBusinessSlug] = useState<string | null>(null);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
@@ -778,19 +779,22 @@ export const Agenda: React.FC = () => {
             showToast('Apenas o dono pode concluir agendamentos.', 'warning');
             return;
         }
+        if (completingAppointmentId) return;
+        setCompletingAppointmentId(appointmentId);
         try {
-            const { error } = await supabase.rpc('complete_appointment', { p_appointment_id: appointmentId });
-
-            if (error) throw error;
+            await markAppointmentComplete({ appointmentId });
 
             if (isOverdue) {
                 fetchOverdueAppointments();
             } else {
                 fetchData();
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             logger.error('Error completing appointment', error);
-            showToast('Erro ao concluir agendamento. Tente novamente.', 'error');
+            const mapped = mapError(error, 'Erro ao concluir agendamento. Tente novamente.');
+            showToast(mapped.message, 'error');
+        } finally {
+            setCompletingAppointmentId(null);
         }
     };
     const handleCancelAppointment = (appointmentId: string, isOverdue: boolean = false) => {
@@ -1188,10 +1192,14 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             <>
                                                                 <button
                                                                     onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                                    className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonSuccess}`}
+                                                                    disabled={completingAppointmentId === apt.id}
+                                                                    className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonSuccess} disabled:opacity-60`}
                                                                     title="Concluir e Faturar"
                                                                 >
-                                                                    <Check className="w-4 h-4" /> Faturar
+                                                                    {completingAppointmentId === apt.id
+                                                                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                                        : <Check className="w-4 h-4" />}
+                                                                    Faturar
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleCancelAppointment(apt.id, true)}

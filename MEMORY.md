@@ -49,6 +49,14 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Comissões: atrasados + quinzenal + lembretes (6 Set 2026):**
+  - Branch `cursor/fix-commissions-overdue-reminders-87be`.
+  - Faturar atrasados falhava por overload `complete_appointment(uuid)` vs 7 args (PGRST203). Sobrou uma assinatura só.
+  - Quinzenal era rejeitado no CHECK (`weekly`/`monthly`). Agora aceita `biweekly`.
+  - Aviso ao mudar data de comissão era real: RPC lia `finance_records.deleted_at` (coluna inexistente). Recálculo só roda se a % mudou.
+  - Lembrete universal opcional; desligado, cada colaborador (semanal/quinzenal/mensal) tem o próprio alerta. Ligado, trava frequência/dia no card.
+  - Migrations aplicadas no banco de produção. RLS permanece ligado; RPCs só `authenticated`.
+
 - **Assinaturas no agendamento público — MERGED → produção (5 Set 2026):**
   - Branch `cursor/booking-assinaturas-fd13` · PR #53 → `main`.
   - Passo 1 de `/book/:slug` lista os planos do clube abaixo dos serviços por categoria.

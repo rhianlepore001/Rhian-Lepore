@@ -136,10 +136,16 @@ describe('scheduling service', () => {
     });
   });
 
-  it('markAppointmentComplete chama complete_appointment sem checkout', async () => {
+  it('markAppointmentComplete chama complete_appointment com a assinatura unica', async () => {
     await markAppointmentComplete({ appointmentId: 'apt-002' });
     expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment', {
       p_appointment_id: 'apt-002',
+      p_payment_method: null,
+      p_received_by: null,
+      p_completed_by: null,
+      p_final_price: null,
+      p_machine_fee_percent: 0,
+      p_machine_fee_amount: 0,
     });
   });
 });

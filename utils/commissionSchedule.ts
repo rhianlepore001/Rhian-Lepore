@@ -68,3 +68,78 @@ export function paymentDayOptions(
     return { value: day, label: `Dia ${day}` };
   });
 }
+
+function startOfLocalDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function clampDayOfMonth(year: number, monthIndex: number, day: number): number {
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+  return Math.min(Math.max(day, 1), lastDay);
+}
+
+function daysBetweenLocal(from: Date, to: Date): number {
+  const a = startOfLocalDay(from).getTime();
+  const b = startOfLocalDay(to).getTime();
+  return Math.round((b - a) / 86_400_000);
+}
+
+/**
+ * Dias até o próximo acerto (0 = hoje). Semanal usa weekday JS (0=Dom).
+ * Quinzenal usa `day` e `day+15`, limitados ao último dia do mês.
+ */
+export function daysUntilSettlement(
+  frequency: CommissionPaymentFrequency | string | null | undefined,
+  day: number | null | undefined,
+  today: Date = new Date(),
+): number {
+  const freq = normalizePaymentFrequency(frequency);
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  if (freq === 'weekly') {
+    const targetDow = Math.min(Math.max(typeof day === 'number' ? day : 1, 0), 6);
+    return (targetDow - today.getDay() + 7) % 7;
+  }
+
+  if (freq === 'biweekly') {
+    const first = Math.min(Math.max(typeof day === 'number' ? day : 1, 1), 15);
+    const currentDay = today.getDate();
+    const thisMonthDays = [first, first + 15]
+      .map((candidate) => clampDayOfMonth(year, month, candidate))
+      .filter((candidate, index, all) => all.indexOf(candidate) === index && candidate >= currentDay);
+    if (thisMonthDays.length > 0) {
+      return Math.min(...thisMonthDays) - currentDay;
+    }
+    const nextMonth = month + 1;
+    const nextYear = nextMonth > 11 ? year + 1 : year;
+    const nextMonthIndex = nextMonth % 12;
+    const nextDate = new Date(nextYear, nextMonthIndex, clampDayOfMonth(nextYear, nextMonthIndex, first));
+    return daysBetweenLocal(today, nextDate);
+  }
+
+  const settlement = Math.min(Math.max(typeof day === 'number' ? day : 5, 1), 31);
+  const thisMonthDay = clampDayOfMonth(year, month, settlement);
+  if (today.getDate() <= thisMonthDay) {
+    return thisMonthDay - today.getDate();
+  }
+  const nextMonth = month + 1;
+  const nextYear = nextMonth > 11 ? year + 1 : year;
+  const nextMonthIndex = nextMonth % 12;
+  const nextDate = new Date(
+    nextYear,
+    nextMonthIndex,
+    clampDayOfMonth(nextYear, nextMonthIndex, settlement),
+  );
+  return daysBetweenLocal(today, nextDate);
+}
+
+export function isSettlementWithinWindow(
+  frequency: CommissionPaymentFrequency | string | null | undefined,
+  day: number | null | undefined,
+  today: Date = new Date(),
+  windowDays = 2,
+): boolean {
+  const remaining = daysUntilSettlement(frequency, day, today);
+  return remaining >= 0 && remaining <= windowDays;
+}

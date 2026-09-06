@@ -8,10 +8,10 @@ describe('mapError', () => {
     expect(out.code).toMatch(/^#/);
   });
 
-  it('traduz códigos de Postgres conhecidos (23505 unique violation)', () => {
-    const out = mapError({ code: '23505', message: 'duplicate key' }, 'fallback');
-    expect(out.message).toContain('já existe');
-    expect(out.code).toBe('#23505');
+  it('traduz PGRST203 de funcao sobrecarregada', () => {
+    const out = mapError({ code: 'PGRST203', message: 'Could not choose the best candidate function' }, 'fallback');
+    expect(out.message).toContain('Não foi possível concluir');
+    expect(out.code).toBe('#PGRST203');
   });
 
   it('traduz auth expirada por status HTTP 401', () => {

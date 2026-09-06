@@ -319,6 +319,12 @@ export async function markAppointmentComplete(input: MarkAppointmentCompleteInpu
   const parsed = markAppointmentCompleteInputSchema.parse(input);
   const { error } = await supabase.rpc('complete_appointment', {
     p_appointment_id: parsed.appointmentId,
+    p_payment_method: null,
+    p_received_by: null,
+    p_completed_by: null,
+    p_final_price: null,
+    p_machine_fee_percent: 0,
+    p_machine_fee_amount: 0,
   });
   if (error) throw error;
 }

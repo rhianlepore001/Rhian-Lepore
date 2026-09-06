@@ -21,6 +21,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { isAnyCommissionSettlementTomorrow } from '../utils/commissionReminders';
 import {
   countActiveToday,
   countRemainingFreeHours,
@@ -58,22 +59,33 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!user || commissionBannerDismissed || isStaff) return;
     const fetchCommissionBanner = async () => {
-      const { data } = await supabase
-        .from('business_settings')
-        .select('commission_settlement_day_of_month')
-        .eq('user_id', companyId ?? user.id)
-        .maybeSingle();
-      if (!data?.commission_settlement_day_of_month) return;
-      const today = new Date();
-      const settlementDay = data.commission_settlement_day_of_month;
-      if (
-        today.getDate() === settlementDay - 1 ||
-        (settlementDay === 1 &&
-          today.getDate() ===
-            new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate())
-      ) {
-        setCommissionBanner(true);
-      }
+      const tenantId = companyId ?? user.id;
+      const [{ data: settings }, { data: members }, { data: commissionsDue }] = await Promise.all([
+        supabase
+          .from('business_settings')
+          .select('commission_settlement_day_of_month, commission_universal_reminder_enabled')
+          .eq('user_id', tenantId)
+          .maybeSingle(),
+        supabase
+          .from('team_members')
+          .select('id, name, is_owner, commission_payment_frequency, commission_payment_day')
+          .eq('user_id', tenantId)
+          .eq('active', true),
+        supabase.rpc('get_commissions_due'),
+      ]);
+
+      const dueByProfessional: Record<string, number> = {};
+      (commissionsDue || []).forEach((row: { professional_id?: string; total_due?: number; is_owner?: boolean }) => {
+        if (!row.professional_id || row.is_owner) return;
+        dueByProfessional[row.professional_id] = Number(row.total_due) || 0;
+      });
+
+      setCommissionBanner(isAnyCommissionSettlementTomorrow({
+        universalEnabled: settings?.commission_universal_reminder_enabled === true,
+        settlementDay: settings?.commission_settlement_day_of_month,
+        members: members ?? [],
+        dueByProfessional,
+      }));
     };
     fetchCommissionBanner();
   }, [user, isStaff, commissionBannerDismissed, companyId]);

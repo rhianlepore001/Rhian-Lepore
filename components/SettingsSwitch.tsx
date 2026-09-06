@@ -7,6 +7,7 @@ interface SettingsSwitchProps {
   id?: string;
   ariaLabel?: string;
   size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
 }
 
 export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
@@ -14,7 +15,8 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
   onChange,
   id,
   ariaLabel,
-  size = 'md'
+  size = 'md',
+  disabled = false,
 }) => {
   const { accent } = useBrutalTheme();
 
@@ -27,13 +29,14 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
   return (
     <label
       htmlFor={id}
-      className="relative inline-flex items-center cursor-pointer flex-shrink-0"
+      className={`relative inline-flex items-center flex-shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <input
         id={id}
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
+        disabled={disabled}
         className="sr-only peer"
         aria-label={ariaLabel}
       />

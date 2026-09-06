@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  daysUntilSettlement,
   defaultPaymentDay,
   frequencyLabel,
+  isSettlementWithinWindow,
   normalizePaymentFrequency,
   paymentDayLabel,
   paymentDayOptions,
@@ -34,5 +36,21 @@ describe('commissionSchedule', () => {
     expect(paymentDayOptions('weekly')).toHaveLength(7);
     expect(paymentDayOptions('biweekly')).toHaveLength(15);
     expect(paymentDayOptions('monthly')).toHaveLength(31);
+  });
+
+  it('calcula dias ate o acerto semanal, quinzenal e mensal', () => {
+    const sunday = new Date(2026, 8, 6);
+    expect(daysUntilSettlement('weekly', 0, sunday)).toBe(0);
+    expect(daysUntilSettlement('weekly', 5, sunday)).toBe(5);
+    expect(daysUntilSettlement('biweekly', 7, sunday)).toBe(1);
+    expect(daysUntilSettlement('monthly', 6, sunday)).toBe(0);
+    expect(daysUntilSettlement('monthly', 5, sunday)).toBeGreaterThan(0);
+    expect(isSettlementWithinWindow('biweekly', 7, sunday, 2)).toBe(true);
+    expect(isSettlementWithinWindow('weekly', 5, sunday, 2)).toBe(false);
+  });
+
+  it('quinzenal em fevereiro usa o ultimo dia do mes quando 30 nao existe', () => {
+    const feb20 = new Date(2026, 1, 20);
+    expect(daysUntilSettlement('biweekly', 15, feb20)).toBe(8);
   });
 });

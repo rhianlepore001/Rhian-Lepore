@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { logger } from '../utils/Logger';
+import { buildCommissionReminderAlerts } from '../utils/commissionReminders';
 
 export interface Alert {
     id: string;
@@ -66,59 +67,39 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             // --- ALERTA: Acerto de Comissões ---
-            const [{ data: settings }, { data: onboardingProgress }] = await Promise.all([
+            const [{ data: settings }, { data: onboardingProgress }, { data: teamForReminders }, { data: commissionsDue }] = await Promise.all([
                 supabase
                     .from('business_settings')
-                    .select('commission_settlement_day_of_month')
+                    .select('commission_settlement_day_of_month, commission_universal_reminder_enabled')
                     .eq('user_id', tenantId)
-                    .single(),
+                    .maybeSingle(),
                 supabase
                     .from('onboarding_progress')
                     .select('is_completed')
                     .eq('company_id', tenantId)
-                    .maybeSingle()
+                    .maybeSingle(),
+                supabase
+                    .from('team_members')
+                    .select('id, name, is_owner, commission_payment_frequency, commission_payment_day')
+                    .eq('user_id', tenantId)
+                    .eq('active', true),
+                supabase.rpc('get_commissions_due'),
             ]);
 
             const onboardingCompleted = onboardingProgress?.is_completed ?? false;
+            const dueByProfessional: Record<string, number> = {};
+            (commissionsDue || []).forEach((row: { professional_id?: string; total_due?: number; is_owner?: boolean }) => {
+                if (!row.professional_id || row.is_owner) return;
+                dueByProfessional[row.professional_id] = Number(row.total_due) || 0;
+            });
 
-            if (settings?.commission_settlement_day_of_month) {
-                const settlementDay = settings.commission_settlement_day_of_month;
-                const today = new Date();
-                const currentDay = today.getDate();
-
-                // Calculate days remaining until the settlement day
-                let daysRemaining = settlementDay - currentDay;
-
-                // If the settlement day has passed this month, calculate for next month
-                if (daysRemaining < 0) {
-                    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, settlementDay);
-                    daysRemaining = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                }
-
-                // Check if there are commissions due (dono não entra na fila de repasse)
-                const { data: commissionsDue } = await supabase.rpc('get_commissions_due');
-                const totalDue = (commissionsDue || [])
-                    .filter((r: { is_owner?: boolean }) => !r.is_owner)
-                    .reduce((sum: number, r: { total_due?: number }) => sum + (Number(r.total_due) || 0), 0);
-
-                if (totalDue > 0) {
-                    if (daysRemaining <= 2 && daysRemaining > 0) {
-                        generatedAlerts.push({
-                            id: 'commission-settlement-warning',
-                            text: `Acerto de comissões se aproxima! Dia ${settlementDay} será o dia do acerto.`,
-                            type: 'warning',
-                            actionPath: '/financeiro?tab=commissions'
-                        });
-                    } else if (daysRemaining === 0) {
-                        generatedAlerts.push({
-                            id: 'commission-settlement-today',
-                            text: `Hoje é dia de acerto de comissões! Total pendente: ${formatMoney(totalDue)}`,
-                            type: 'danger',
-                            actionPath: '/financeiro?tab=commissions'
-                        });
-                    }
-                }
-            }
+            generatedAlerts.push(...buildCommissionReminderAlerts({
+                universalEnabled: settings?.commission_universal_reminder_enabled === true,
+                settlementDay: settings?.commission_settlement_day_of_month,
+                members: teamForReminders ?? [],
+                dueByProfessional,
+                formatMoney,
+            }));
 
             // --- ALERTA DE SETUP (Lógica de conta nova) ---
             const isNewAccount = createdAt &&

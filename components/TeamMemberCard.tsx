@@ -33,6 +33,9 @@ interface TeamMemberCardProps {
     onEdit: (member: TeamMember) => void;
     onDelete: (id: string) => void;
     onSaveCommission?: (memberId: string, draft: CommissionDraft) => Promise<void>;
+    /** Trava frequência/dia quando o lembrete universal está ativo. */
+    scheduleLocked?: boolean;
+    universalSettlementDay?: number;
     /** @deprecated tema vem do useBrutalTheme; mantido por compat de API */
     accentColor?: string;
 }
@@ -42,6 +45,8 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     onEdit,
     onDelete,
     onSaveCommission,
+    scheduleLocked = false,
+    universalSettlementDay,
 }) => {
     const { colors, accent, radius, shadow, status } = useBrutalTheme();
     const [editingCommission, setEditingCommission] = useState(false);
@@ -81,7 +86,9 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     };
 
     const commissionRate = member.commission_rate ?? 0;
-    const schedule = scheduleSummary(member.commission_payment_frequency, member.commission_payment_day);
+    const schedule = scheduleLocked
+        ? `Unificado · Dia ${universalSettlementDay ?? 5}`
+        : scheduleSummary(member.commission_payment_frequency, member.commission_payment_day);
     const dayOptions = paymentDayOptions(frequency);
 
     return (
@@ -159,8 +166,8 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
 
             {!member.is_owner && editingCommission && (
                 <div className={`mt-4 space-y-3 p-3 rounded-xl border ${accent.border} ${colors.surface}`}>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        <div className="relative col-span-2 sm:col-span-1">
+                    <div className={`grid gap-2 ${scheduleLocked ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                        <div className={`relative ${scheduleLocked ? '' : 'col-span-2 sm:col-span-1'}`}>
                             <label className={`text-xs mb-1 block ${colors.textMuted}`}>Comissão</label>
                             <input
                                 type="number"
@@ -174,31 +181,41 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                             />
                             <span className={`absolute right-3 bottom-2.5 ${colors.textMuted} font-mono pointer-events-none`}>%</span>
                         </div>
-                        <div>
-                            <label className={`text-xs mb-1 block ${colors.textMuted}`}>Frequência</label>
-                            <select
-                                value={frequency}
-                                onChange={(e) => handleFrequencyChange(e.target.value as CommissionPaymentFrequency)}
-                                className={`w-full min-h-[44px] px-2 py-2 rounded-lg ${colors.inputBg} ${colors.text} text-xs border ${colors.border} outline-none uppercase font-mono`}
-                            >
-                                <option value="weekly">Semanal</option>
-                                <option value="biweekly">Quinzenal</option>
-                                <option value="monthly">Mensal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className={`text-xs mb-1 block ${colors.textMuted}`}>Dia do acerto</label>
-                            <select
-                                value={day}
-                                onChange={(e) => setDay(parseInt(e.target.value, 10))}
-                                className={`w-full min-h-[44px] px-2 py-2 rounded-lg ${colors.inputBg} ${colors.text} text-xs border ${colors.border} outline-none uppercase font-mono`}
-                            >
-                                {dayOptions.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        </div>
+                        {!scheduleLocked && (
+                            <>
+                                <div>
+                                    <label className={`text-xs mb-1 block ${colors.textMuted}`}>Frequência</label>
+                                    <select
+                                        value={frequency}
+                                        onChange={(e) => handleFrequencyChange(e.target.value as CommissionPaymentFrequency)}
+                                        className={`w-full min-h-[44px] px-2 py-2 rounded-lg ${colors.inputBg} ${colors.text} text-xs border ${colors.border} outline-none uppercase font-mono`}
+                                    >
+                                        <option value="weekly">Semanal</option>
+                                        <option value="biweekly">Quinzenal</option>
+                                        <option value="monthly">Mensal</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={`text-xs mb-1 block ${colors.textMuted}`}>Dia do acerto</label>
+                                    <select
+                                        value={day}
+                                        onChange={(e) => setDay(parseInt(e.target.value, 10))}
+                                        className={`w-full min-h-[44px] px-2 py-2 rounded-lg ${colors.inputBg} ${colors.text} text-xs border ${colors.border} outline-none uppercase font-mono`}
+                                    >
+                                        {dayOptions.map((opt) => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </>
+                        )}
                     </div>
+                    {scheduleLocked && (
+                        <p className={`text-xs ${colors.textMuted}`}>
+                            Lembrete universal ativo: o acerto de todos cai no dia {universalSettlementDay ?? 5}.
+                            Desative o lembrete universal para definir a frequência deste colaborador.
+                        </p>
+                    )}
                     <div className="flex gap-2">
                         <Button
                             variant="primary"

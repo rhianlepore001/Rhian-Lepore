@@ -27,7 +27,9 @@ export const TeamSettings: React.FC = () => {
     const { showToast } = useToast();
 
     const [settlementDay, setSettlementDay] = useState<number | string>(5);
+    const [universalReminder, setUniversalReminder] = useState(false);
     const [savingSettlement, setSavingSettlement] = useState(false);
+    const [savingUniversalToggle, setSavingUniversalToggle] = useState(false);
     const [machineFeeEnabled, setMachineFeeEnabled] = useState(false);
     const [debitFeePercent, setDebitFeePercent] = useState('0');
     const [creditFeePercent, setCreditFeePercent] = useState('0');
@@ -36,6 +38,7 @@ export const TeamSettings: React.FC = () => {
     useEffect(() => {
         if (!settingsData) return;
         setSettlementDay(settingsData.commission_settlement_day_of_month ?? 5);
+        setUniversalReminder(settingsData.commission_universal_reminder_enabled ?? false);
         setMachineFeeEnabled(settingsData.machine_fee_enabled ?? false);
         setDebitFeePercent(String(settingsData.debit_fee_percent ?? 0));
         setCreditFeePercent(String(settingsData.credit_fee_percent ?? 0));
@@ -65,27 +68,37 @@ export const TeamSettings: React.FC = () => {
 
     const handleSaveCommission = async (memberId: string, draft: CommissionDraft) => {
         if (!companyId) return;
+        const current = members.find((m) => m.id === memberId);
+        const payload: Record<string, unknown> = {
+            commission_rate: draft.rate,
+            commission_percent: draft.rate,
+            updated_at: new Date().toISOString(),
+        };
+        if (!universalReminder) {
+            payload.commission_payment_frequency = draft.frequency;
+            payload.commission_payment_day = draft.day;
+        }
         try {
             const { error } = await supabase
                 .from('team_members')
-                .update({
-                    commission_rate: draft.rate,
-                    commission_percent: draft.rate,
-                    commission_payment_frequency: draft.frequency,
-                    commission_payment_day: draft.day,
-                    updated_at: new Date().toISOString(),
-                })
+                .update(payload)
                 .eq('id', memberId)
                 .eq('user_id', companyId);
             if (error) throw error;
 
-            const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
-                p_professional_id: memberId,
-                p_new_rate: draft.rate,
-            });
-            if (recalculateError) {
-                console.error('Error recalculating commissions:', recalculateError);
-                showToast('Taxa salva, mas houve erro ao recalcular comissões pendentes.', 'warning');
+            const previousRate = Number(current?.commission_rate ?? current?.commission_percent ?? 0);
+            const rateChanged = previousRate !== draft.rate;
+            if (rateChanged) {
+                const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
+                    p_professional_id: memberId,
+                    p_new_rate: draft.rate,
+                });
+                if (recalculateError) {
+                    console.error('Error recalculating commissions:', recalculateError);
+                    showToast('Taxa salva, mas houve erro ao recalcular comissões pendentes.', 'warning');
+                } else {
+                    showToast('Comissão atualizada!', 'success');
+                }
             } else {
                 showToast('Comissão atualizada!', 'success');
             }
@@ -94,6 +107,43 @@ export const TeamSettings: React.FC = () => {
             console.error('Error saving commission:', error);
             showToast('Não foi possível salvar a comissão. Tente de novo.', 'error');
             throw error;
+        }
+    };
+
+    const persistUniversalReminder = async (enabled: boolean) => {
+        if (!companyId) return;
+        let day = typeof settlementDay === 'string' ? parseInt(settlementDay, 10) : settlementDay;
+        if (Number.isNaN(day) || day < 1 || day > 31) day = 5;
+        const { error } = await supabase
+            .from('business_settings')
+            .upsert({
+                user_id: companyId,
+                commission_universal_reminder_enabled: enabled,
+                commission_settlement_day_of_month: day,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' });
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
+    };
+
+    const handleToggleUniversalReminder = async (enabled: boolean) => {
+        const previous = universalReminder;
+        setUniversalReminder(enabled);
+        setSavingUniversalToggle(true);
+        try {
+            await persistUniversalReminder(enabled);
+            showToast(
+                enabled
+                    ? 'Lembrete universal ativado. A frequência de cada colaborador ficou travada.'
+                    : 'Lembrete universal desativado. Cada colaborador volta a ter o próprio acerto.',
+                'success',
+            );
+        } catch (error) {
+            console.error('Error toggling universal reminder:', error);
+            setUniversalReminder(previous);
+            showToast('Não foi possível atualizar o lembrete universal. Tente de novo.', 'error');
+        } finally {
+            setSavingUniversalToggle(false);
         }
     };
 
@@ -111,6 +161,7 @@ export const TeamSettings: React.FC = () => {
                 .upsert({
                     user_id: companyId,
                     commission_settlement_day_of_month: day,
+                    commission_universal_reminder_enabled: universalReminder,
                     updated_at: new Date().toISOString(),
                 }, { onConflict: 'user_id' });
             if (error) throw error;
@@ -250,6 +301,12 @@ export const TeamSettings: React.FC = () => {
                                             }}
                                             onDelete={handleDelete}
                                             onSaveCommission={handleSaveCommission}
+                                            scheduleLocked={universalReminder}
+                                            universalSettlementDay={
+                                                typeof settlementDay === 'string'
+                                                    ? parseInt(settlementDay, 10) || 5
+                                                    : settlementDay
+                                            }
                                         />
                                     ))}
                                 </div>
@@ -267,9 +324,33 @@ export const TeamSettings: React.FC = () => {
                     <Card title="Lembrete de acerto">
                         <div className="space-y-4">
                             <p className={`${colors.textMuted} text-sm`}>
-                                Dia em que o dashboard avisa sobre o acerto. A frequência de cada colaborador (semanal, quinzenal ou mensal) fica no card da equipe.
+                                {universalReminder
+                                    ? 'Um único dia do mês para toda a equipe. A frequência de cada colaborador fica travada.'
+                                    : 'Cada colaborador recebe o lembrete no próprio dia (semanal, quinzenal ou mensal). O lembrete único do salão é opcional.'}
                             </p>
-                            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                            <div className={`
+                                flex items-center gap-4 p-4 rounded-xl border
+                                ${universalReminder
+                                    ? `${accent.bgDim} ${accent.borderDim}`
+                                    : `${colors.inputBg} ${colors.border}`
+                                }
+                            `}>
+                                <SettingsSwitch
+                                    checked={universalReminder}
+                                    onChange={(checked) => void handleToggleUniversalReminder(checked)}
+                                    disabled={savingUniversalToggle}
+                                    ariaLabel="Usar um único dia de acerto para toda a equipe"
+                                />
+                                <div>
+                                    <span className={`${colors.text} font-bold block`}>Lembrete universal</span>
+                                    <span className={`${colors.textMuted} text-xs`}>
+                                        {universalReminder
+                                            ? 'Ativado — todos seguem o mesmo dia'
+                                            : 'Desativado — cada colaborador tem o próprio acerto'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className={`flex flex-col sm:flex-row sm:items-end gap-3 ${universalReminder ? '' : 'opacity-40 pointer-events-none'}`}>
                                 <div className="flex-1 w-full sm:max-w-xs min-w-0">
                                     <label className={classes.label}>Dia do mês (1–31)</label>
                                     <div className="relative">
@@ -280,6 +361,7 @@ export const TeamSettings: React.FC = () => {
                                             max="31"
                                             value={settlementDay}
                                             onChange={(e) => setSettlementDay(e.target.value)}
+                                            disabled={!universalReminder}
                                             className={`${classes.input} pl-12 text-lg min-h-[44px]`}
                                         />
                                     </div>
@@ -290,7 +372,7 @@ export const TeamSettings: React.FC = () => {
                                 <Button
                                     variant="primary"
                                     onClick={() => void handleSaveSettlementDay()}
-                                    disabled={savingSettlement}
+                                    disabled={savingSettlement || !universalReminder}
                                     className="w-full sm:w-auto shrink-0 min-h-[44px]"
                                 >
                                     {savingSettlement ? 'Salvando...' : 'Salvar lembrete'}
@@ -375,7 +457,7 @@ export const TeamSettings: React.FC = () => {
                         <AlertCircle className="w-5 h-5 text-[var(--color-info)] flex-shrink-0 mt-0.5" />
                         <div className={`text-sm ${colors.textMuted} space-y-1`}>
                             <p className={`font-bold ${colors.text}`}>Como funciona</p>
-                            <p>Defina a % e a frequência no card do colaborador. Ao concluir um atendimento, a comissão entra automaticamente. O pagamento fica em Financeiro → Comissões.</p>
+                            <p>Defina a % no card do colaborador. Com o lembrete universal desligado, cada um tem frequência e dia próprios. Ao concluir um atendimento, a comissão entra automaticamente.</p>
                         </div>
                     </div>
                 </section>

@@ -32,11 +32,13 @@ const CODE_MAP: Record<string, string> = {
 
   // Postgres
   '23505': 'Esse registro já existe.',
+  '23514': 'Algum valor não é permitido. Revise e tente de novo.',
   '23503': 'Não foi possível concluir: existe um vínculo com outro registro.',
   '22P02': 'Algum campo está em formato inválido. Revise e tente de novo.',
   '42501': 'Você não tem permissão para essa ação.',
 
   // PostgREST
+  PGRST203: 'Não foi possível concluir. Atualize a página e tente de novo.',
   PGRST116: 'Não encontramos esse registro.',
   PGRST301: 'A sessão expirou. Faça login novamente.',
 };

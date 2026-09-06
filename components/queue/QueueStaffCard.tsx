@@ -48,7 +48,7 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
 
   return (
     <article
-      className={`rounded-2xl border p-4 space-y-3 ${
+      className={`rounded-2xl border p-4 space-y-3 shadow-[var(--shadow-card)] ${
         highlighted
           ? 'border-[var(--color-accent)] bg-[var(--color-accent-dim)]'
           : 'border-theme-border bg-theme-card'

@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Select, useToast } from '@/components/ui';
+import { Button, Checkbox, Input, Modal, Select, useToast } from '@/components/ui';
 import { setQueueMode, updateQueueSettings } from '@/services/queue';
 import { isQueueModeLocked } from '@/utils/queueQr';
+import {
+  QUEUE_LATE_MINUTES_MAX,
+  QUEUE_LATE_MINUTES_MIN,
+  clampQueueLateMinutes,
+  lateMinutesDraftFromSettings,
+  parseQueueLateMinutesInput,
+} from '@/utils/queueLateMinutes';
 import type { QueueMode, QueueSettings } from '@/types/queue';
 
 interface QueueSettingsSheetProps {
@@ -22,7 +29,8 @@ export const QueueSettingsSheet: React.FC<QueueSettingsSheetProps> = ({
   const { showToast } = useToast();
   const [mode, setMode] = useState<QueueMode>('shared');
   const [allowLeave, setAllowLeave] = useState(true);
-  const [lateMinutes, setLateMinutes] = useState(10);
+  const [lateDraft, setLateDraft] = useState('10');
+  const [lateError, setLateError] = useState('');
   const [saving, setSaving] = useState(false);
   const locked = isQueueModeLocked(activeCount);
 
@@ -30,10 +38,28 @@ export const QueueSettingsSheet: React.FC<QueueSettingsSheetProps> = ({
     if (!settings) return;
     setMode(settings.queueMode);
     setAllowLeave(settings.allowLeave);
-    setLateMinutes(settings.lateMinutes);
-  }, [settings]);
+    setLateDraft(lateMinutesDraftFromSettings(settings.lateMinutes));
+    setLateError('');
+  }, [settings, open]);
+
+  const handleLateChange = (raw: string) => {
+    if (raw === '') {
+      setLateDraft('');
+      setLateError('');
+      return;
+    }
+    if (!/^\d{0,3}$/.test(raw)) return;
+    setLateDraft(raw);
+    setLateError('');
+  };
 
   const handleSave = async () => {
+    const parsed = parseQueueLateMinutesInput(lateDraft);
+    if (parsed == null || parsed < QUEUE_LATE_MINUTES_MIN || parsed > QUEUE_LATE_MINUTES_MAX) {
+      setLateError(`Informe entre ${QUEUE_LATE_MINUTES_MIN} e ${QUEUE_LATE_MINUTES_MAX} minutos.`);
+      return;
+    }
+    const lateMinutes = clampQueueLateMinutes(parsed);
     setSaving(true);
     try {
       if (settings && mode !== settings.queueMode) {
@@ -51,7 +77,7 @@ export const QueueSettingsSheet: React.FC<QueueSettingsSheetProps> = ({
 
   return (
     <Modal open={open} onClose={onClose} title="Ajustes da fila" size="sm">
-      <div className="space-y-4">
+      <div className="space-y-5">
         <Select
           label="Modo da fila"
           value={mode}
@@ -63,25 +89,22 @@ export const QueueSettingsSheet: React.FC<QueueSettingsSheetProps> = ({
           ]}
           onChange={(event) => setMode(event.target.value as QueueMode)}
         />
-        <label className="flex items-center gap-3 min-h-[44px] text-sm text-theme-text">
-          <input
-            type="checkbox"
-            checked={allowLeave}
-            onChange={(event) => setAllowLeave(event.target.checked)}
-          />
-          Cliente pode sair e voltar no prazo
-        </label>
-        <label className="block text-sm text-theme-text">
-          Minutos de atraso
-          <input
-            type="number"
-            min={1}
-            max={120}
-            value={lateMinutes}
-            onChange={(event) => setLateMinutes(Number(event.target.value))}
-            className="mt-1 w-full min-h-[44px] px-4 rounded-xl border border-theme-border bg-theme-surface"
-          />
-        </label>
+        <Checkbox
+          checked={allowLeave}
+          onChange={(event) => setAllowLeave(event.target.checked)}
+          label="Cliente pode sair e voltar no prazo"
+          className="min-h-[44px] flex items-center"
+        />
+        <Input
+          label="Minutos de atraso"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          value={lateDraft}
+          onChange={(event) => handleLateChange(event.target.value)}
+          error={lateError}
+          hint="Depois de chamar, o cliente tem esse prazo para chegar à cadeira."
+        />
         <Button variant="primary" fullWidth loading={saving} onClick={() => void handleSave()}>
           Salvar ajustes
         </Button>

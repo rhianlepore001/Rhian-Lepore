@@ -178,39 +178,43 @@ export const QueueManagement: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-28">
       <PageHeader
         title="Fila Digital"
-        subtitle="Uma coluna. Cliente à vista: iniciar. Se não estiver: chamar."
-        action={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="primary" size="sm" icon={<User className="w-4 h-4" />} onClick={() => setShowAdd(true)}>
-              Adicionar
+        subtitle="Cliente à vista: iniciar. Fora da cadeira: chamar."
+        meta={!isStaff ? (
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" icon={<QrCode className="w-4 h-4" />} onClick={() => setShowQr(true)}>
+              QR da fila
             </Button>
-            {!isStaff && (
-              <>
-                <Button variant="secondary" size="sm" icon={<QrCode className="w-4 h-4" />} onClick={() => setShowQr(true)}>
-                  QR da fila
-                </Button>
-                <Button variant="ghost" size="sm" icon={<Settings className="w-4 h-4" />} onClick={() => setShowSettings(true)}>
-                  Ajustes
-                </Button>
-              </>
-            )}
+            <Button variant="ghost" size="sm" icon={<Settings className="w-4 h-4" />} onClick={() => setShowSettings(true)}>
+              Ajustes
+            </Button>
           </div>
+        ) : undefined}
+        action={
+          <Button variant="primary" size="sm" icon={<User className="w-4 h-4" />} onClick={() => setShowAdd(true)}>
+            Adicionar
+          </Button>
         }
       />
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4 border border-[var(--color-warning-border)]">
-          <p className="text-xs uppercase text-theme-textMuted font-bold">Na fila</p>
-          <p className="text-3xl font-heading text-[var(--color-warning)]">{waiting.length}</p>
+      <section className="grid grid-cols-2 gap-3">
+        <Card variant="outlined" className="p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Na fila</p>
+          <p className="mt-1 font-mono text-xl font-black tabular-nums text-theme-text md:text-2xl">{waiting.length}</p>
+          <p className="mt-0.5 text-xs text-theme-textSecondary">
+            {waiting.length === 0 ? 'Fila vazia' : 'Aguardando'}
+          </p>
         </Card>
-        <Card className="p-4 border border-[var(--color-info-border)]">
-          <p className="text-xs uppercase text-theme-textMuted font-bold">Atendendo</p>
-          <p className="text-3xl font-heading text-[var(--color-info)]">{serving.length}</p>
+        <Card variant="outlined" className="p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Atendendo</p>
+          <p className="mt-1 font-mono text-xl font-black tabular-nums text-theme-text md:text-2xl">{serving.length}</p>
+          <p className="mt-0.5 text-xs text-theme-textSecondary">
+            {serving.length === 0 ? 'Nenhuma cadeira' : 'Em andamento'}
+          </p>
         </Card>
-      </div>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
@@ -219,15 +223,9 @@ export const QueueManagement: React.FC = () => {
         </h2>
         {waiting.length === 0 ? (
           <EmptyState
-            bordered
             icon={Clock}
             title="A fila está vazia"
             description="Adicione um cliente ou peça o scan do QR na casa."
-            action={(
-              <Button variant="secondary" size="sm" onClick={() => setShowAdd(true)}>
-                Adicionar cliente
-              </Button>
-            )}
           />
         ) : mode === 'per_professional' && isStaff ? (
           <div className="space-y-4">
@@ -257,12 +255,7 @@ export const QueueManagement: React.FC = () => {
           Em atendimento
         </h2>
         {serving.length === 0 ? (
-          <EmptyState
-            bordered
-            icon={Play}
-            title="Nenhum atendimento em andamento"
-            description="Inicie o atendimento quando o cliente estiver à vista."
-          />
+          <p className="text-sm text-theme-textSecondary">Nenhuma cadeira em atendimento.</p>
         ) : (
           <div className="space-y-3">
             {serving.map((entry) => renderCard(entry))}

@@ -53,6 +53,7 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
   - PR #57 → `main`. Migration `queue_v2` aplicada no BARBER/Beauty OS **antes** do merge.
   - Validação remota: `queue_payments` criada, RPC `join_queue_entry` ativa, policy `Public can join queue` removida, **13** entries históricas intactas (`payment_status=unpaid`, `ticket_status=none`).
   - Deploy Vercel no push `main`.
+  - Follow-up UI/bugs (6 Set): minutos de atraso apagáveis; Continuar da identidade com erro visível + loading; cards da fila alinhados ao booking/dashboard.
 
 - **Assinaturas no agendamento público — MERGED → produção (5 Set 2026):**
   - Branch `cursor/booking-assinaturas-fd13` · PR #53 → `main`.

@@ -138,6 +138,8 @@ test.describe('Fila digital v2 — smoke mobile', () => {
     await page.getByRole('button', { name: 'Entrar na fila' }).click();
 
     await expect(page).toHaveURL(/minha-area\/barbearia-qa.*tab=fila/);
-    await expect(page.getByRole('button', { name: 'Fila' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Fila', exact: true })).toBeVisible();
+    await expect(page.getByText('Você é o 1º da fila')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sair da fila' })).toBeVisible();
   });
 });

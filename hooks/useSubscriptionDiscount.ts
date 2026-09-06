@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useClientActiveMembership } from './useMemberships';
 import { fetchServices } from '../services/serviceSettings';
 import { MembershipPlan } from '../services/memberships';
+import { computeSubscriptionDiscount } from '../utils/subscriptionDiscount';
 
 export interface CheckoutService {
     id: string;
@@ -75,57 +76,39 @@ export function useSubscriptionDiscount({ clientId, services }: UseSubscriptionD
         enabled: !!companyId,
     });
 
-    if (!membership || membership.status !== 'active' || !membership.plan) {
-        const subtotalCents = services.reduce((sum, s) => sum + Math.round(s.price * 100), 0);
-        return {
-            ...EMPTY_RESULT,
-            subtotalCents,
-            finalCents: subtotalCents,
-            uncoveredServices: services,
-        };
-    }
-
-    const plan = membership.plan;
-    const planServiceIds = new Set(plan.service_ids);
-
-    const covered: CheckoutService[] = [];
-    const uncovered: CheckoutService[] = [];
-
-    for (const s of services) {
-        if (planServiceIds.has(s.id)) {
-            covered.push(s);
-        } else {
-            uncovered.push(s);
-        }
-    }
-
-    const subtotalCents = services.reduce((sum, s) => sum + Math.round(s.price * 100), 0);
-    const coveredCents = covered.reduce((sum, s) => sum + Math.round(s.price * 100), 0);
-    const finalCents = uncovered.reduce((sum, s) => sum + Math.round(s.price * 100), 0);
-    const fullyCovered = uncovered.length === 0 && covered.length > 0;
-
-    let message: string | null = null;
-    if (fullyCovered) {
-        message = `Plano ${plan.name} ativo. Atendimento incluso.`;
-    } else if (covered.length > 0) {
-        message = `Plano ${plan.name} cobre ${covered.length} de ${services.length} serviços.`;
-    } else {
-        message = `Plano ${plan.name} ativo, mas não cobre os serviços agendados.`;
-    }
+    const computed = computeSubscriptionDiscount({
+        isActive: Boolean(membership && membership.status === 'active' && membership.plan),
+        planName: membership?.plan?.name ?? null,
+        planServiceIds: membership?.plan?.service_ids ?? [],
+        services,
+        usageLimit: membership?.plan?.usage_limit_per_month,
+        usageThisPeriod: membership && 'usage_this_period' in membership
+            ? Number((membership as { usage_this_period?: number }).usage_this_period ?? 0)
+            : undefined,
+    });
 
     // Se a função useQuery não está sendo usada (allServices só pra coerência futura)
     void allServices;
 
+    if (!computed.hasActiveSubscription || !membership?.plan) {
+        return {
+            ...EMPTY_RESULT,
+            subtotalCents: computed.subtotalCents,
+            finalCents: computed.finalCents,
+            uncoveredServices: computed.uncoveredServices,
+        };
+    }
+
     return {
         membership,
-        plan,
-        subtotalCents,
-        coveredCents,
-        finalCents,
-        coveredServices: covered,
-        uncoveredServices: uncovered,
-        fullyCovered,
+        plan: membership.plan,
+        subtotalCents: computed.subtotalCents,
+        coveredCents: computed.coveredCents,
+        finalCents: computed.finalCents,
+        coveredServices: computed.coveredServices,
+        uncoveredServices: computed.uncoveredServices,
+        fullyCovered: computed.fullyCovered,
         hasActiveSubscription: true,
-        message,
+        message: computed.message,
     };
 }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { ClientQueuePanel } from '../components/queue/ClientQueuePanel';
+import { readQueueBusinessSlug } from '../services/queue';
 import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
@@ -27,12 +29,13 @@ interface BusinessProfile {
     allow_client_rescheduling?: boolean;
 }
 
-type Tab = 'upcoming' | 'history' | 'club' | 'profile';
+type Tab = 'upcoming' | 'history' | 'club' | 'queue' | 'profile';
 
 const ITEMS_PER_PAGE = 8;
 
 export const ClientArea: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const [searchParams] = useSearchParams();
     const {
         client,
         login,
@@ -88,7 +91,13 @@ export const ClientArea: React.FC = () => {
     const [bookingsLoading, setBookingsLoading] = useState(false);
 
     // UI
-    const [activeTab, setActiveTab] = useState<Tab>('upcoming');
+    const [activeTab, setActiveTab] = useState<Tab>(searchParams.get('tab') === 'fila' ? 'queue' : 'upcoming');
+
+    useEffect(() => {
+        if (searchParams.get('tab') === 'fila') {
+            setActiveTab('queue');
+        }
+    }, [searchParams]);
     const [historyPage, setHistoryPage] = useState(1);
 
     // Profile edit
@@ -504,6 +513,7 @@ export const ClientArea: React.FC = () => {
                         { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
                         { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
                         { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
+                        { id: 'queue', label: 'Fila', icon: <Clock className="w-3.5 h-3.5" /> },
                         { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
                     ] as { id: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
                         <button
@@ -610,6 +620,13 @@ export const ClientArea: React.FC = () => {
                             </div>
                         )}
 
+                        {activeTab === 'queue' && (
+                            <ClientQueuePanel
+                                businessId={business.id}
+                                phone={sessionClient.phone}
+                                cameFromQr={readQueueBusinessSlug() === slug}
+                            />
+                        )}
                         {activeTab === 'club' && (
                             <div className="animate-in fade-in duration-200 min-w-0">
                                 {membership && membership.effective_status !== 'cancelled' ? (

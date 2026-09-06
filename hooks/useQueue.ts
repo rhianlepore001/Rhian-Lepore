@@ -1,5 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addManualQueueEntry, finishQueueEntry, fetchQueueEntries, fetchBusinessSlug, fetchQueueTeamMembers, fetchServiceById, joinQueue, updateQueueStatus } from '@/services/queue';
+import {
+  addManualQueueEntry,
+  cancelQueuePayment,
+  closeQueueTicket,
+  confirmQueuePayment,
+  fetchBusinessSlug,
+  fetchQueueEntries,
+  fetchQueueSettings,
+  fetchQueueTeamMembers,
+  fetchServiceById,
+  finishQueueEntry,
+  joinQueue,
+  setQueueMode,
+  settleQueueTicket,
+  updateQueueSettings,
+  updateQueueStatus,
+} from '@/services/queue';
 
 export function useJoinQueue() {
   return useMutation({
@@ -61,6 +77,72 @@ export function useQueueTeamMembers(businessId: string) {
     queryFn: () => fetchQueueTeamMembers(businessId),
     enabled: !!businessId,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+function invalidateQueue(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ['queue'] });
+}
+
+export function useConfirmQueuePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['queue', 'confirm-pay'],
+    mutationFn: confirmQueuePayment,
+    onSuccess: () => invalidateQueue(queryClient),
+  });
+}
+
+export function useCancelQueuePayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['queue', 'cancel-pay'],
+    mutationFn: cancelQueuePayment,
+    onSuccess: () => invalidateQueue(queryClient),
+  });
+}
+
+export function useCloseQueueTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['queue', 'close'],
+    mutationFn: closeQueueTicket,
+    onSuccess: () => invalidateQueue(queryClient),
+  });
+}
+
+export function useSettleQueueTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['queue', 'settle'],
+    mutationFn: settleQueueTicket,
+    onSuccess: () => invalidateQueue(queryClient),
+  });
+}
+
+export function useQueueSettings() {
+  return useQuery({
+    queryKey: ['queue', 'settings'],
+    queryFn: fetchQueueSettings,
+  });
+}
+
+export function useSetQueueMode() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['queue', 'set-mode'],
+    mutationFn: setQueueMode,
+    onSuccess: () => invalidateQueue(queryClient),
+  });
+}
+
+export function useUpdateQueueSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['queue', 'update-settings'],
+    mutationFn: ({ allowLeave, lateMinutes }: { allowLeave: boolean; lateMinutes: number }) =>
+      updateQueueSettings(allowLeave, lateMinutes),
+    onSuccess: () => invalidateQueue(queryClient),
   });
 }
 

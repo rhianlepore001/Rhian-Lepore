@@ -1,328 +1,296 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { Button } from '../components/ui';
-import { User, Scissors, Loader2, Users, Search } from 'lucide-react';
-import { formatCurrency } from '../utils/formatters';
-import { joinQueue } from '../services/queue';
+import { QueuePayStep } from '../components/queue/QueuePayStep';
+import { QueueServiceStep } from '../components/queue/QueueServiceStep';
+import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { usePublicClientMembership, usePublicPixConfig } from '../hooks/useMemberships';
+import { detectPixKeyType, generatePixPayload, validatePixKey } from '../lib/pix-generator';
+import { generatePixTxid } from '../lib/pix-txid';
+import { minClientPhoneDigits } from '../lib/club-payment';
+import { joinQueue } from '../services/queue';
 import {
   fetchBusinessProfileBySlug,
   fetchPublicCategories,
   fetchPublicProfessionals,
   fetchPublicServices,
 } from '../services/publicBooking';
+import { computeSubscriptionDiscount } from '../utils/subscriptionDiscount';
+import type { QueuePayOptionId } from '../utils/queuePayOptions';
+import { useToast } from '@/components/ui';
+import type { CheckoutPaymentMethod } from '@/types/scheduling';
+import type { Region } from '../utils/formatters';
 
-interface Service {
+type Step = 'service' | 'identity' | 'pay';
+
+export const QueueJoin: React.FC = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const preSelectedPro = searchParams.get('pro');
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { client, login, register } = usePublicClient();
+
+  const [business, setBusiness] = useState<{
+    id: string;
+    business_name: string;
+    user_type: string;
+    region?: Region;
+  } | null>(null);
+  const [services, setServices] = useState<Array<{
     id: string;
     name: string;
     duration_minutes: number;
     price: number;
     category_id?: string;
-    description?: string;
-}
+  }>>([]);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [proActive, setProActive] = useState<boolean | null>(preSelectedPro ? null : true);
+  const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState<Step>('service');
+  const [selectedServiceId, setSelectedServiceId] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [payMethod, setPayMethod] = useState<QueuePayOptionId | ''>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [joinError, setJoinError] = useState('');
+  const [lockedProName, setLockedProName] = useState<string | null>(null);
+  const [pixTxid, setPixTxid] = useState<string>();
+  const [pixBrCode, setPixBrCode] = useState<string>();
 
-interface Professional {
-    id: string;
-    name: string;
-    photo_url: string | null;
-}
+  const isBeauty = business?.user_type === 'beauty';
+  const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
+  const { colors } = useBrutalTheme({ override: themeOverride });
+  const region: Region = business?.region === 'PT' ? 'PT' : 'BR';
 
-interface Category {
-    id: string;
-    name: string;
-}
+  const sessionClient = client && business && client.business_id === business.id ? client : null;
+  const { data: membership } = usePublicClientMembership(business?.id ?? null, sessionClient?.phone ?? phone);
+  const { data: pixConfig } = usePublicPixConfig(business?.id ?? null);
 
-interface BusinessProfile {
-    id: string;
-    business_name: string;
-    logo_url: string | null;
-    cover_photo_url: string | null;
-    user_type: string;
-    region?: 'BR' | 'PT'; // Add Region
-}
+  const selectedService = services.find((service) => service.id === selectedServiceId);
+  const discount = computeSubscriptionDiscount({
+    isActive: membership?.effective_status === 'active',
+    planName: membership?.plan_name,
+    planServiceIds: membership?.service_ids ?? [],
+    services: selectedService ? [{ id: selectedService.id, price: selectedService.price }] : [],
+    usageLimit: membership?.usage_limit_per_month,
+    usageThisPeriod: membership?.usage_this_period,
+  });
 
-export const QueueJoin: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
-    const [searchParams] = useSearchParams();
-    const preSelectedPro = searchParams.get('pro');
+  useEffect(() => {
+    if (!business) return;
+    document.documentElement.setAttribute('data-theme', isBeauty ? 'beauty' : 'barber');
+    document.documentElement.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
+  }, [business, isBeauty]);
 
-    const navigate = useNavigate();
-    const [business, setBusiness] = useState<BusinessProfile | null>(null);
-    const [services, setServices] = useState<Service[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]); // New Categories state
-    const [professionals, setProfessionals] = useState<Professional[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [joinError, setJoinError] = useState(false);
-
-    // Filter Stats
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-    // Form Stats
-    const [name, setName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [selectedService, setSelectedService] = useState<string>('');
-    const [selectedProfessional, setSelectedProfessional] = useState<string | null>(preSelectedPro || null);
-
-    const isBeauty = business?.user_type === 'beauty';
-    const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
-    const { colors, accent } = useBrutalTheme({ override: themeOverride });
-
-    useEffect(() => {
-        if (!business) return;
-        document.documentElement.setAttribute('data-public-theme', isBeauty ? 'beauty' : 'barber');
-        return () => {
-            document.documentElement.removeAttribute('data-public-theme');
-        };
-    }, [business, isBeauty]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!slug) return;
-            try {
-                const profile = await fetchBusinessProfileBySlug(slug);
-                setBusiness(profile);
-
-                const [servicesData, catData, proData] = await Promise.all([
-                    fetchPublicServices(profile.id),
-                    fetchPublicCategories(profile.id),
-                    fetchPublicProfessionals(profile.id),
-                ]);
-
-                setServices(servicesData || []);
-                setCategories(catData || []);
-                setProfessionals(
-                    (proData || []).map((pro: Professional) => ({
-                        id: pro.id,
-                        name: pro.name,
-                        photo_url: pro.photo_url,
-                    })),
-                );
-            } catch (err) {
-                console.error('Error fetching data:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [slug]);
-
-    const handleJoin = async () => {
-        if (!name || !phone || !selectedService || !business) return;
-        setSubmitting(true);
-        setJoinError(false);
-        try {
-            const data = await joinQueue({
-                businessId: business.id,
-                clientName: name,
-                clientPhone: phone,
-                serviceId: selectedService,
-                professionalId: selectedProfessional,
-            });
-            navigate(`/queue-status/${data.id}`);
-
-        } catch (err) {
-            console.error('Error joining queue:', err);
-            setJoinError(true);
-        } finally {
-            setSubmitting(false);
+  useEffect(() => {
+    const load = async () => {
+      if (!slug) return;
+      try {
+        const profile = await fetchBusinessProfileBySlug(slug);
+        setBusiness({
+          id: profile.id,
+          business_name: profile.business_name,
+          user_type: profile.user_type,
+          region: profile.region as Region | undefined,
+        });
+        const [serviceRows, categoryRows, proRows] = await Promise.all([
+          fetchPublicServices(profile.id),
+          fetchPublicCategories(profile.id),
+          fetchPublicProfessionals(profile.id),
+        ]);
+        setServices(serviceRows || []);
+        setCategories(categoryRows || []);
+        if (preSelectedPro) {
+          const found = (proRows || []).find((pro: { id: string; name?: string }) => pro.id === preSelectedPro);
+          setProActive(Boolean(found));
+          setLockedProName(found?.name?.split(' ')[0] ?? 'profissional');
         }
+      } catch {
+        setBusiness(null);
+      } finally {
+        setLoading(false);
+      }
     };
+    load();
+  }, [preSelectedPro, slug]);
 
-    if (loading) return <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center`}><Loader2 className="animate-spin" /></div>;
-    if (!business) return <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center`}>Estabelecimento não encontrado</div>;
+  useEffect(() => {
+    if (payMethod !== 'pix' || !pixConfig?.pix_key_value || !pixConfig.pix_key_type || !selectedService || !business) {
+      return;
+    }
+    try {
+      const resolvedType =
+        (validatePixKey(pixConfig.pix_key_value, pixConfig.pix_key_type)
+          ? pixConfig.pix_key_type
+          : detectPixKeyType(pixConfig.pix_key_value)) ?? pixConfig.pix_key_type;
+      const txid = generatePixTxid('FIL');
+      const brCode = generatePixPayload({
+        pixKey: pixConfig.pix_key_value,
+        pixKeyType: resolvedType,
+        merchantName: pixConfig.pix_holder_name || business.business_name,
+        merchantCity: pixConfig.pix_merchant_city || 'SAO PAULO',
+        amountCents: Math.round(selectedService.price * 100),
+        txid,
+      });
+      setPixTxid(txid);
+      setPixBrCode(brCode);
+    } catch {
+      setPixTxid(undefined);
+      setPixBrCode(undefined);
+    }
+  }, [business, payMethod, pixConfig, selectedService]);
 
-    const bgCard = `${colors.card} backdrop-blur-xl ${colors.border}`;
-    const pillActive = `${accent.bgDim} ${accent.text} ${accent.border}`;
-    const pillInactive = `bg-[var(--color-card-hover)] ${colors.border} ${colors.textMuted}`;
-    const cardSelected = `bg-[var(--color-card-hover)] ${accent.border} border-opacity-100 ${accent.shadow}`;
-    const cardUnselected = `${colors.inputBg} ${colors.border} hover:border-[var(--color-accent-border)]`;
-
-    // Filtering Logic
-    const filteredServices = services.filter(s => {
-        const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = selectedCategory === 'all' || s.category_id === selectedCategory;
-        return matchesSearch && matchesCategory;
+  const handleIdentityContinue = async () => {
+    if (!business) return;
+    if (sessionClient) {
+      setStep('pay');
+      return;
+    }
+    if (phone.replace(/\D/g, '').length < minClientPhoneDigits(region)) {
+      showToast('Informe um WhatsApp válido.', 'error');
+      return;
+    }
+    const existing = await login(phone, business.id);
+    if (existing) {
+      setStep('pay');
+      return;
+    }
+    if (!name.trim()) {
+      showToast('Informe seu nome.', 'error');
+      return;
+    }
+    await register({
+      name: name.trim(),
+      phone,
+      business_id: business.id,
     });
+    setStep('pay');
+  };
 
+  const handleJoin = async () => {
+    if (!business || !slug || !selectedService || !payMethod) return;
+    const payer = sessionClient;
+    const clientName = payer?.name || name.trim();
+    const clientPhone = payer?.phone || phone;
+    if (!clientName || !clientPhone) {
+      setStep('identity');
+      return;
+    }
+
+    if (payMethod === 'pix' && (!pixBrCode || !pixTxid)) {
+      showToast('Não foi possível gerar o Pix. Tente pagar no balcão.', 'error');
+      return;
+    }
+
+    setSubmitting(true);
+    setJoinError('');
+    try {
+      await joinQueue({
+        businessId: business.id,
+        slug,
+        clientName,
+        clientPhone,
+        serviceId: selectedService.id,
+        professionalId: preSelectedPro,
+        paymentMethod: payMethod as CheckoutPaymentMethod,
+        brCode: payMethod === 'pix' ? pixBrCode : undefined,
+        txid: payMethod === 'pix' ? pixTxid : undefined,
+        mbwayPhone: payMethod === 'mbway' ? pixConfig?.mbway_phone ?? undefined : undefined,
+      });
+      navigate(`/minha-area/${slug}?tab=fila`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível entrar na fila.';
+      setJoinError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className={`min-h-screen ${colors.bg} font-sans ${colors.textSecondary} pb-12 relative overflow-hidden`}>
-            {isBeauty && (
-                <>
-                    <div className={`absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full ${accent.bgDim} blur-[100px] pointer-events-none`}></div>
-                    <div className="absolute top-[20%] left-[-10%] w-[400px] h-[400px] rounded-full bg-[var(--color-info-bg)] blur-[100px] pointer-events-none"></div>
-                </>
-            )}
-
-            {/* Header / Hero */}
-            <div className="relative h-48 w-full overflow-hidden z-10">
-                <div className="absolute inset-0 bg-[var(--color-card)]">
-                    {business.cover_photo_url && <img src={business.cover_photo_url} className="w-full h-full object-cover opacity-50" />}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)] to-transparent"></div>
-
-                <div className="absolute bottom-0 left-0 w-full p-6 flex items-end gap-4">
-                    <div className={`w-16 h-16 rounded-full border-2 ${accent.borderDim} overflow-hidden ${colors.card} shadow-xl`}>
-                        {business.logo_url ? <img src={business.logo_url} className="w-full h-full object-cover" /> : <Scissors className={`m-auto mt-4 ${colors.textMuted}`} />}
-                    </div>
-                    <div>
-                        <h1 className={`text-2xl font-bold ${colors.text} leading-none mb-1`}>{business.business_name}</h1>
-                        <p className={`text-sm font-bold uppercase tracking-wider ${accent.text}`}>Fila Digital</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-md mx-auto px-4 sm:px-6 -mt-4 relative z-20 space-y-5">
-
-                {/* Intro Card */}
-                <div className={`${bgCard} border rounded-2xl p-5 shadow-xl`}>
-                    <h2 className={`text-lg font-bold ${colors.text} mb-2`}>Entre na fila sem esperar em pé!</h2>
-                    <p className={`text-sm ${colors.textMuted}`}>Preencha seus dados, escolha o serviço e acompanhe sua vez pelo celular.</p>
-                </div>
-
-                {/* Form */}
-                <div className={`${bgCard} border rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl`}>
-                    <div>
-                        <label className={`block text-xs font-bold uppercase ${colors.textMuted} mb-1.5 ml-1`}>Seu Nome</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={e => setName(e.target.value)}
-                                className={`w-full ${colors.inputBg} border ${accent.borderDim} rounded-xl p-4 pl-12 ${colors.text} placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-theme-accent focus:ring-1 focus:ring-[var(--color-input-focus)] transition-all font-medium`}
-                                placeholder="Como quer ser chamado?"
-                            />
-                            <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className={`block text-xs font-bold uppercase ${colors.textMuted} mb-1.5 ml-1`}>WhatsApp</label>
-                        <PhoneInput
-                            value={phone}
-                            onChange={setPhone}
-                            placeholder="(00) 00000-0000"
-                            className={`${colors.inputBg} ${accent.borderDim} rounded-xl`}
-                            forceTheme={themeOverride}
-                            defaultRegion={business.region || 'BR'}
-                        />
-                    </div>
-
-                    <div>
-                        <label className={`block text-xs font-bold uppercase ${colors.textMuted} mb-1.5 ml-1`}>Serviço</label>
-
-                        {/* Search & Filter UI */}
-                        <div className="space-y-3 mb-3">
-                            {/* Category Filter */}
-                            {categories.length > 0 && (
-                                <div className="flex gap-2 overflow-x-auto pb-1 noscroll">
-                                    <button
-                                        onClick={() => setSelectedCategory('all')}
-                                        className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === 'all' ? pillActive : pillInactive}`}
-                                    >
-                                        Todos
-                                    </button>
-                                    {categories.map(cat => (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => setSelectedCategory(cat.id)}
-                                            className={`px-4 py-2.5 min-w-[60px] rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? pillActive : pillInactive}`}
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Search Input */}
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    placeholder="Buscar serviço..."
-                                    className={`w-full ${colors.inputBg} border ${accent.borderDim} rounded-xl p-3.5 pl-10 text-base ${colors.text} placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-theme-accent transition-all`}
-                                />
-                                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
-                            </div>
-                        </div>
-
-                        <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                            {filteredServices.length === 0 ? (
-                                <div className={`text-center ${colors.textMuted} text-sm py-4`}>Nenhum serviço encontrado.</div>
-                            ) : (
-                                filteredServices.map(service => (
-                                    <button
-                                        key={service.id}
-                                        onClick={() => setSelectedService(service.id)}
-                                        className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all text-left min-h-[60px] ${selectedService === service.id ? cardSelected : cardUnselected}`}
-                                    >
-                                        <span className={`font-medium ${colors.text} text-base`}>{service.name}</span>
-                                        <div className="text-right">
-                                            <span className={`block text-sm ${colors.textSecondary} font-bold`}>{formatCurrency(service.price, business.region || 'BR')}</span>
-                                            <span className={`text-xs ${colors.textMuted}`}>{service.duration_minutes} min</span>
-                                        </div>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className={`block text-xs font-bold uppercase ${colors.textMuted} mb-1.5 ml-1`}>Profissional (Opcional)</label>
-                        <div className="flex gap-2 overflow-x-auto pb-2 noscroll">
-                            <button
-                                onClick={() => setSelectedProfessional(null)}
-                                className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === null ? cardSelected : cardUnselected}`}
-                            >
-                                <div className={`w-10 h-10 rounded-full bg-[var(--color-card-hover)] flex items-center justify-center border ${colors.border}`}>
-                                    <Users className={`w-5 h-5 ${colors.textMuted}`} />
-                                </div>
-                                <span className="text-xs font-bold text-center">Qualquer</span>
-                            </button>
-                            {professionals.map(pro => (
-                                <button
-                                    key={pro.id}
-                                    onClick={() => setSelectedProfessional(pro.id)}
-                                    className={`flex-shrink-0 w-20 p-2 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedProfessional === pro.id ? cardSelected : cardUnselected}`}
-                                >
-                                    {pro.photo_url ? (
-                                        <img src={pro.photo_url} className={`w-10 h-10 rounded-full object-cover border ${colors.border}`} />
-                                    ) : (
-                                        <div className={`w-10 h-10 rounded-full bg-[var(--color-card-hover)] flex items-center justify-center border ${colors.border}`}>
-                                            <span className="text-xs font-bold">{pro.name.substring(0, 2)}</span>
-                                        </div>
-                                    )}
-                                    <span className="text-xs font-bold text-center truncate w-full">{pro.name.split(' ')[0]}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="pt-4">
-                        <Button
-                            loading={submitting}
-                            disabled={!name || !phone || !selectedService}
-                            onClick={handleJoin}
-                            className={`w-full ${isBeauty ? accent.shadow : ''}`}
-                        >
-                            Entrar na Fila
-                        </Button>
-                        {joinError && (
-                            <p className="text-center text-xs text-[var(--color-danger)] mt-3 p-3 rounded-xl bg-[var(--color-danger)]/8 border border-[var(--color-danger-border)]/30">
-                                Não foi possível entrar na fila. Tente novamente ou avise no balcão.
-                            </p>
-                        )}
-                        <p className={`text-center text-xs ${colors.textMuted} mt-3`}>
-                            Você receberá atualizações em tempo real nesta página.
-                        </p>
-                    </div>
-
-                </div>
-            </div>
-        </div>
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center`}>
+        <Loader2 className="animate-spin" />
+      </div>
     );
-}
+  }
+
+  if (!business) {
+    return (
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center p-6 text-center`}>
+        Estabelecimento não encontrado.
+      </div>
+    );
+  }
+
+  if (preSelectedPro && proActive === false) {
+    return (
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center p-6 text-center`}>
+        Este QR não está ativo. Peça o QR da casa.
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen ${colors.bg} ${colors.text} px-4 py-6`}>
+      <div className="max-w-md mx-auto space-y-5">
+        <div>
+          <p className={`text-xs font-semibold ${colors.textMuted}`}>{business.business_name}</p>
+          <h1 className="text-2xl font-bold">Fila digital</h1>
+          <p className={`text-sm ${colors.textMuted}`}>
+            Escolha o serviço e acompanhe sua vez pelo celular.
+            {preSelectedPro && lockedProName ? ` Fila de ${lockedProName}.` : ''}
+          </p>
+        </div>
+
+        {step === 'service' && (
+          <QueueServiceStep
+            services={services}
+            categories={categories}
+            region={region}
+            themeOverride={themeOverride}
+            selectedServiceId={selectedServiceId}
+            onSelect={setSelectedServiceId}
+            onContinue={() => setStep(sessionClient ? 'pay' : 'identity')}
+          />
+        )}
+
+        {step === 'identity' && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Seus dados</h2>
+            <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} />
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Nome completo"
+              className={`w-full min-h-[44px] px-4 rounded-xl border ${colors.border} ${colors.inputBg} ${colors.text}`}
+            />
+            <Button variant="primary" className="w-full min-h-[44px]" onClick={handleIdentityContinue}>
+              Continuar
+            </Button>
+          </div>
+        )}
+
+        {step === 'pay' && selectedService && (
+          <QueuePayStep
+            region={region}
+            themeOverride={themeOverride}
+            canUseMembership={discount.canUseMembership}
+            selected={payMethod}
+            onSelect={setPayMethod}
+            onConfirm={handleJoin}
+            submitting={submitting}
+            amountCents={Math.round(selectedService.price * 100)}
+            pixConfig={pixConfig}
+            pixTxid={pixTxid}
+          />
+        )}
+
+        {joinError && <p className="text-sm text-[var(--color-danger)]">{joinError}</p>}
+      </div>
+    </div>
+  );
+};

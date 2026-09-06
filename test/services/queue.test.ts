@@ -2,10 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addManualQueueEntry,
   calcEstimatedWaitMinutes,
+  confirmQueuePayment,
   findActiveQueueEntryByPhone,
   finishQueueEntry,
+  hydrateQueuePublicBoard,
   isCallingExpired,
   joinQueue,
+  QUEUE_LAST_SLUG_KEY,
   resetExpiredCallingEntries,
   sanitizeQueuePhone,
   updateQueueStatus,
@@ -43,6 +46,7 @@ vi.mock('@/lib/supabase', () => ({
 describe('queue service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     activeQueueData = [];
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
     singleMock.mockResolvedValue({
@@ -115,6 +119,7 @@ describe('queue service', () => {
 
     await expect(joinQueue({
       businessId: 'business-001',
+      slug: 'loja',
       clientName: 'Joao',
       clientPhone: '11999999999',
       serviceId: 'service-001',
@@ -124,9 +129,10 @@ describe('queue service', () => {
     expect(insertMock).not.toHaveBeenCalled();
   });
 
-  it('cria entrada publica com status waiting quando nao ha duplicata', async () => {
+  it('cria entrada publica via RPC quando nao ha duplicata', async () => {
     (supabase.rpc as any)
       .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: { id: 'queue-001', business_id: 'business-001' }, error: null })
       .mockResolvedValueOnce({
         data: [{
           id: 'queue-001',
@@ -143,68 +149,126 @@ describe('queue service', () => {
 
     const result = await joinQueue({
       businessId: 'business-001',
+      slug: 'loja',
       clientName: 'Joao',
       clientPhone: '11999999999',
       serviceId: 'service-001',
       professionalId: 'pro-001',
     });
 
-    expect(insertMock).toHaveBeenCalledWith({
-      business_id: 'business-001',
-      client_name: 'Joao',
-      client_phone: '11999999999',
-      service_id: 'service-001',
-      professional_id: 'pro-001',
-      status: 'waiting',
-    });
+    expect(supabase.rpc).toHaveBeenCalledWith('join_queue_entry', expect.objectContaining({
+      p_slug: 'loja',
+      p_client_name: 'Joao',
+      p_service_id: 'service-001',
+      p_br_code: null,
+      p_txid: null,
+      p_mbway_phone: null,
+    }));
+    expect(insertMock).not.toHaveBeenCalled();
     expect(result.id).toBe('queue-001');
+    expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
   });
 
-  it('cria entrada manual usando o tenant do owner', async () => {
+  it('grava slug mesmo quando o re-fetch da entrada falha', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: { id: 'queue-009' }, error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    const result = await joinQueue({
+      businessId: 'business-001',
+      slug: 'loja',
+      clientName: 'Joao',
+      clientPhone: '11999999999',
+      serviceId: 'service-001',
+    });
+
+    expect(result.id).toBe('queue-009');
+    expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
+  });
+
+  it('calcula ETA do board com cadeiras e descarta campos internos', () => {
+    const board = hydrateQueuePublicBoard({
+      entryId: 'b',
+      status: 'waiting',
+      paymentStatus: 'unpaid',
+      serviceName: 'Corte',
+      position: 2,
+      etaMinutes: null,
+      people: [{ position: 1, firstName: 'Ana', isYou: false }],
+      settings: { allowLeave: true, lateMinutes: 10 },
+      calledAt: null,
+      queueMode: 'shared',
+      chairs: 1,
+      etaPeople: [
+        {
+          id: 'a',
+          joinedAt: '2026-09-06T11:00:00.000Z',
+          durationMinutes: 30,
+          status: 'waiting',
+          professionalId: null,
+        },
+        {
+          id: 'b',
+          joinedAt: '2026-09-06T11:01:00.000Z',
+          durationMinutes: 30,
+          status: 'waiting',
+          professionalId: null,
+        },
+      ],
+    });
+    expect(board.etaMinutes).toBe(30);
+    expect(board).not.toHaveProperty('etaPeople');
+  });
+
+  it('cria entrada manual via RPC do tenant autenticado', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: { id: 'queue-002' }, error: null })
+      .mockResolvedValueOnce({
+        data: [{
+          id: 'queue-002',
+          business_id: 'business-001',
+          client_name: 'Maria',
+          client_phone: '11988888888',
+          status: 'waiting',
+          joined_at: '2026-05-30T10:00:00.000Z',
+        }],
+        error: null,
+      });
+
     await addManualQueueEntry({
       businessId: 'business-001',
       clientName: 'Maria',
       clientPhone: '11988888888',
+      serviceId: 'service-001',
     });
 
-    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
-      business_id: 'business-001',
-      client_name: 'Maria',
-      client_phone: '11988888888',
-      status: 'waiting',
+    expect(supabase.rpc).toHaveBeenCalledWith('add_manual_queue_entry', expect.objectContaining({
+      p_client_name: 'Maria',
+      p_client_phone: '11988888888',
     }));
+    expect(insertMock).not.toHaveBeenCalled();
   });
 
-  it('marca called_at ao chamar e limpa quando sai de calling', async () => {
+  it('atualiza status somente pela RPC', async () => {
     await updateQueueStatus({
       entryId: 'queue-001',
       businessId: 'business-001',
       status: 'calling',
     });
 
-    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
-      status: 'calling',
-      called_at: expect.any(String),
-    }));
-
-    await updateQueueStatus({
-      entryId: 'queue-001',
-      businessId: 'business-001',
-      status: 'serving',
+    expect(supabase.rpc).toHaveBeenCalledWith('update_queue_status', {
+      p_entry_id: 'queue-001',
+      p_status: 'calling',
     });
-
-    expect(updateMock).toHaveBeenLastCalledWith({
-      status: 'serving',
-      called_at: null,
-    });
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
-  it('reseta calling expirado para waiting sem no_show automatico', async () => {
+  it('nao marca no_show nem reescreve calling por timeout', async () => {
     await resetExpiredCallingEntries('business-001');
 
-    expect(updateMock).toHaveBeenCalledWith({ status: 'waiting' });
-    expect(updateMock).not.toHaveBeenCalledWith({ status: 'no_show' });
-    expect(notMock).toHaveBeenCalledWith('called_at', 'is', null);
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it('finaliza fila somente pela RPC atomica', async () => {
@@ -222,5 +286,12 @@ describe('queue service', () => {
       p_professional_id: 'pro-001',
     });
     expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it('confirma pagamento da fila pela RPC', async () => {
+    await confirmQueuePayment('queue-001');
+    expect(supabase.rpc).toHaveBeenCalledWith('confirm_queue_payment', {
+      p_entry_id: 'queue-001',
+    });
   });
 });

@@ -1,7 +1,7 @@
 # Fila Digital v2 — Tasks
 
 **Spec:** `spec.md` · **Design:** `design.md` · **Context:** `context.md`  
-**Status:** In Progress — T1–T15 no código; DevOps aplica migration antes do deploy  
+**Status:** Done — T1–T15 em produção (migration `queue_v2` aplicada 6 Set 2026)  
 **Gates do repo:** `npm run typecheck` · `npm run lint` · `npm run build` · `npm test`  
 **Testes:** Vitest (unit) nas camadas types/services/hooks; E2E Playwright na fatia de UI (T15). Sem `TESTING.md` no repo — matriz abaixo.
 

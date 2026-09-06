@@ -2,7 +2,7 @@
 
 **Gathered:** 2026-09-06
 **Spec:** `specs/active/fila-digital-v2/spec.md`
-**Status:** Quase pronto para design — 4 pontos de confirmação abaixo
+**Status:** Ready for design
 
 ---
 
@@ -20,70 +20,82 @@ Walk-in profissional: QR (geral ou por colaborador) abre o mesmo fluxo de servi�
 - Depois do serviço: cadastro/login **igual ao booking público** (telefone + nome se for novo).
 - Se já está logado na sessão pública da casa: reconhece e **pula o cadastro**.
 - Se tem assinatura ativa: oferece **Usar assinatura** / **Pagar ao balcão** / **Pagar agora no Pix** (Brasil) ou **MB WAY** (Portugal).
-- Pix/MB WAY exige **confirmação do recebedor** (recepção ou profissional) — não basta o cliente dizer que pagou.
 - QR por colaborador pré-associa o profissional; cliente não troca de barbeiro nesse scan.
 - Minha Área continua com sessão Fila **visível e bloqueada** até o scan (copy clara: vá até o QR na casa).
 
-### 2. Política de sair da casa (gestor)
+### 2. Pix / MB WAY (igual ao fluxo público, com um recado)
 
-- Gestor liga uma de duas políticas:
-  - **Pode sair:** cliente pode ir embora e voltar; tem **até N minutos de atraso** (N configurável) depois de ser chamado. O prazo aparece de forma profissional na tela do cliente.
-  - **Não pode sair:** sem minutos de atraso; o cliente vê a regra com clareza (permanecer na casa).
-- Staff **não** edita essa política — só o dono.
+- Cliente **entra na fila na hora**. Não espera o dinheiro cair para ganhar posição.
+- Depois de gerar o Pix/MB WAY (mesmo padrão do clube / pagamento público da região):
+  - **Cliente** vê: “Aguarde a confirmação do pagamento.” (não usamos “recepcionista” — a casa pode não ter.)
+  - **Staff/dono** vê no card: **Aguardando confirmação e pagamento.**
+- Recebedor (dono, staff ou quem estiver no caixa) confirma quando o valor cair — igual ao Pix do produto hoje.
+- Ao terminar o corte, o profissional **só confere** se o pagamento caiu. Não cobra de novo o cliente.
+- Se ainda estiver pendente no fechamento: o card continua “aguardando”; a comanda não some.
 
-### 3. Quem opera o quê
+### 3. Política de sair da casa (gestor)
+
+- Configuração **antes da operação**, na tela de ajustes da fila — só o dono.
+- Duas políticas:
+  - **Pode sair:** cliente pode ir embora e voltar. O prazo de **N minutos de atraso** só começa quando o profissional toca **Chamar cliente** (pessoa fora do contato visual). O prazo aparece na tela do cliente.
+  - **Não pode sair:** sem minutos de atraso; o cliente vê que precisa permanecer na casa.
+- **Em atendimento** só é usado quando o profissional **já chamou no grito** quem está à vista. Nesse caso não há timer de atraso.
+- Estourar o atraso: o staff trata (não-show / voltar a waiting). Sem no-show automático neste MVP — o timer é informativo e operacional.
+
+### 4. Quem opera o quê
 
 - Staff tem **acesso total à fila** (ver, adicionar à mão sempre, chamar, atender, fechar, comandas).
 - Staff **não** mexe nas opções extras do dono (modo QR, política de saída/atraso, e o que mais for ajuste da feature).
 - Troca **QR geral ↔ QR por colaborador** fica **bloqueada** enquanto existir qualquer cliente ativo na fila (`waiting`, `calling`, `serving`). Só habilita com fila vazia.
 
-### 4. Tempo de espera
+### 5. Tempo de espera
 
 - Duração vem do cadastro de **Serviços** (`duration_minutes`).
 - ETA do cliente = soma dos tempos de quem está **na frente** naquela fila.
 - Modo QR geral: a soma é **distribuída entre os colaboradores** (várias cadeiras em paralelo).
 - Modo por colaborador: a soma é só a fila daquela bancada.
 
-### 5. Ritmo do colaborador
+### 6. Ritmo do colaborador
 
-- **Chamar** é opcional: só se o cliente não está à vista (foi embora, está fora).
-- Se está à vista: o profissional chama no grito e no app vai **direto para Em atendimento** (waiting → serving, sem obrigar calling).
-- Depois de finalizar, o caminho depende do pagamento escolhido na entrada:
-  - **Pix/MB WAY já confirmado** ou **assinatura**: o card já mostra pago / clube — não precisa cobrar.
-  - **Balcão:** fica não pago; cobra na cadeira **ou** manda para recepção.
-- Ao terminar, o colaborador escolhe:
+- **Chamar cliente:** cliente não está à vista → status `calling` → se a casa “pode sair”, começa o relógio de N minutos.
+- **Em atendimento:** cliente à vista, já chamado na voz → `waiting` → `serving` direto.
+- Ao terminar:
   1. Fechar comanda **e** finalizar (só o serviço, ou editando itens) e seguir o próximo, ou
-  2. Só fechar a comanda → ela vai para a lista **Comandas**.
-- Comanda **sempre** grava: cliente, colaborador/gestor logado, serviço(s), produtos, valores, status de pagamento. Nada some.
+  2. Só fechar a comanda → lista **Comandas**.
+- Comanda **sempre** grava: cliente, colaborador/gestor logado, serviço(s), produtos, valores, método e status de pagamento.
 
-### 6. Pix e assinatura no card
+### 7. Entrada manual e método de pagamento
 
-- Se o cliente pagou Pix (confirmado pelo recebedor) **antes** de ir para atendimento, o card já leva o alerta/marca de pago.
-- Assinatura reconhecida no mesmo espírito: marca no card para o profissional não cobrar.
+- Staff/dono adicionam à mão quando quiserem.
+- Método de pagamento **igual ao finalizar agendamento** (`CheckoutModal`): dinheiro, Pix/MB WAY, débito, crédito, outro, e clube se couber. Não fica preso em “só balcão”.
 
-### 7. O que o cliente vê da fila
+### 8. O que o cliente vê da fila
 
 - A própria posição (ex.: 3º).
 - As outras pessoas: **só primeiro nome** + posição. Sem telefone, sem serviço na lista pública.
 
----
+### 9. Sessão que cai
 
-## Proposta do agente (sessão que cai) — confirmar
-
-A senha **vive no servidor**, amarrada ao telefone + id da entrada — não ao token do celular.
-
-- Se o app “desloga” ou o Chrome mata o storage: o cliente abre de novo o link da casa (QR ou Minha Área), informa o **mesmo telefone**, e **recupera a posição** se ainda estiver `waiting`/`calling`/`serving`.
+- A senha **vive no servidor** (telefone + id da entrada).
+- Se o celular desloga: mesmo telefone na Minha Área ou no fluxo da casa **recupera a posição** se ainda estiver `waiting`/`calling`/`serving`.
 - Estar na fila **não exige** ficar logado o tempo todo.
-- Check-in do QR só é obrigatório para **entrar**; quem já está na fila recupera por telefone.
+- Check-in do QR só para **entrar**; quem já está na fila volta pelo telefone.
+
+### Agent's Discretion
+
+- Copy do cliente no Pix: “Aguarde a confirmação do pagamento.” (em vez de “recepcionista”).
+- Sem no-show automático ao estourar o atraso (staff marca).
+- QR de profissional inativo: recusa com caminho para o estabelecimento.
 
 ---
 
 ## Specific References
 
-- “Igual é no agendamento público” — seleção de serviço e cadastro/login.
-- “Chamar no grito, no app já colocar em atendimento.”
+- “Igual é no agendamento público” — serviço, cadastro/login e Pix.
+- “Aguarde confirmação” no cliente; “Aguardando confirmação e pagamento” no card do gestor.
+- “Em atendimento só se ele mesmo chamar quem está no contato visual; Chamar cliente dispara o atraso.”
+- “Método de pagamento como no finalizar agendamento.”
 - “Fechar a comanda e já finalizar editando, ou só finalizar, ou só fechar e ir para Comandas.”
-- Marca de pago/assinatura no card **antes** do atendimento quando já estiver resolvido.
 
 ---
 
@@ -94,12 +106,4 @@ A senha **vive no servidor**, amarrada ao telefone + id da entrada — não ao t
 - Papel formal “recepcionista”
 - Fila + encaixe na agenda (casa híbrida)
 - Geofence
-
----
-
-## Ainda aberto (confirmar antes do design)
-
-1. Recuperação de sessão: aceita a proposta acima?
-2. Cliente escolhe Pix agora: **entra na fila na hora** e o Pix pode ser confirmado depois (card atualiza), ou **só entra depois** do recebedor confirmar?
-3. Política “pode sair”: os N minutos de atraso contam **depois do Chamar** (ou do Em atendimento)? Se estourar: **no-show automático** ou o staff marca?
-4. Entrada manual (Dona Maria): pagamento padrão é **pagar ao balcão**, e o staff pode trocar para clube/Pix se fizer sentido?
+- No-show automático ao estourar o atraso

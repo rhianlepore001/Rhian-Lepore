@@ -1,6 +1,6 @@
 # Fila Digital v2 — Specification
 
-**Status:** draft (4 confirmações em `context.md`)
+**Status:** ready (context aprovado — próximo: design)
 **Criado:** 2026-09-06
 **Prioridade:** alta
 **Branch:** `cursor/fila-digital-v2-2dde`
@@ -49,10 +49,12 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 4. WHEN o telefone já é cliente da casa THEN o sistema SHALL reutilizar esse cadastro (CRM + clube)
 5. WHEN o cliente tem assinatura ativa THEN o sistema SHALL oferecer **Usar assinatura**, **Pagar ao balcão** e **Pagar agora** (Pix no BR, MB WAY em PT)
 6. WHEN não tem assinatura ativa (ou o plano não cabe) THEN o sistema SHALL oferecer balcão e Pix/MB WAY — sem fingir clube
-7. WHEN escolhe Pix/MB WAY THEN o sistema SHALL gerar o pagamento da região e SHALL exigir confirmação do recebedor (staff ou dono) antes de marcar como pago
-8. WHEN o QR é por colaborador THEN a entrada SHALL ficar na fila daquele profissional; o cliente não escolhe outro
-9. WHEN o QR é geral THEN a entrada SHALL ir para a fila compartilhada
-10. WHEN abre Minha Área **sem** ter vindo do QR THEN a sessão Fila SHALL aparecer bloqueada, com texto para ir até o QR na casa
+7. WHEN escolhe Pix/MB WAY THEN o sistema SHALL entrar na fila na hora, gerar o pagamento da região (mesmo padrão público) e SHALL mostrar ao cliente “Aguarde a confirmação do pagamento.”
+8. WHEN o Pix/MB WAY está pendente THEN o card no `/#/fila` SHALL mostrar **Aguardando confirmação e pagamento**
+9. WHEN o recebedor confirma THEN o card SHALL passar a pago; ao finalizar o corte o profissional SHALL só conferir — não cobrar de novo
+10. WHEN o QR é por colaborador THEN a entrada SHALL ficar na fila daquele profissional; o cliente não escolhe outro
+11. WHEN o QR é geral THEN a entrada SHALL ir para a fila compartilhada
+12. WHEN abre Minha Área **sem** ter vindo do QR THEN a sessão Fila SHALL aparecer bloqueada, com texto para ir até o QR na casa
 
 **Independent Test**: QR do João → Corte → telefone conhecido assinante → “Usar assinatura” → entra na fila do João.
 
@@ -68,10 +70,11 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 
 1. WHEN está `waiting`/`calling` THEN o sistema SHALL mostrar a posição (ex.: 3º) em tempo real
 2. WHEN lista as outras pessoas THEN o sistema SHALL mostrar só **primeiro nome** + posição — sem telefone, sem serviço
-3. WHEN o gestor ativou **pode sair** THEN o cliente SHALL ver o prazo de atraso (N minutos) de forma profissional
+3. WHEN o gestor ativou **pode sair** THEN o cliente SHALL ver o prazo de atraso (N minutos) de forma profissional; o relógio só ANDA depois de **Chamar cliente**
 4. WHEN o gestor ativou **não pode sair** THEN o cliente SHALL ver que precisa permanecer na casa — sem relógio de atraso
-5. WHEN o status muda (chamando / em atendimento) THEN a tela do cliente SHALL refletir na hora
-6. WHEN o cliente cancela a própria senha THEN sai da fila e pode entrar de novo só com novo scan (ou enquanto a política de check-in permitir)
+5. WHEN o profissional vai para **Em atendimento** (contato visual) THEN o sistema SHALL **não** iniciar minutos de atraso
+6. WHEN o status muda (chamando / em atendimento) THEN a tela do cliente SHALL refletir na hora
+7. WHEN o cliente cancela a própria senha THEN sai da fila e pode entrar de novo só com novo scan (ou enquanto a política de check-in permitir)
 
 **Independent Test**: Dois clientes no QR geral; o segundo vê “você é o 2º” e o primeiro nome à frente; vê o texto da política.
 
@@ -106,6 +109,7 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 2. WHEN o telefone já existe THEN vincula o cliente e a assinatura, se houver
 3. WHEN o telefone é novo THEN cria o cliente da casa
 4. WHEN a entrada é manual THEN cai na mesma fila que um QR (geral ou do profissional escolhido)
+5. WHEN informa o pagamento na entrada manual THEN o sistema SHALL oferecer os mesmos métodos do finalizar agendamento (dinheiro, Pix/MB WAY, débito, crédito, outro, clube se couber)
 
 **Independent Test**: Staff adiciona Dona Maria no telefone conhecido → aparece na fila; se for assinante, o card pode oferecer clube.
 
@@ -121,8 +125,8 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 
 1. WHEN o modo é geral THEN staff e dono SHALL ver a fila única e qualquer um atende o próximo
 2. WHEN o modo é por colaborador THEN staff SHALL operar a própria fila com destaque; dono vê todas
-3. WHEN o profissional toca **Em atendimento** a partir de `waiting` THEN o sistema SHALL aceitar (não exige `calling`)
-4. WHEN toca **Chamar** THEN o status vira `calling` (cliente não está à vista)
+3. WHEN o profissional toca **Em atendimento** a partir de `waiting` THEN o sistema SHALL aceitar (contato visual; não exige `calling`; sem timer de atraso)
+4. WHEN toca **Chamar cliente** THEN o status vira `calling` e, se a política for “pode sair”, SHALL iniciar os N minutos configurados pelo dono
 5. WHEN o cliente já pagou Pix/MB WAY (confirmado) ou usou assinatura THEN o card SHALL mostrar pago / clube **antes** do atendimento
 6. WHEN o pagamento é balcão THEN o card SHALL mostrar não pago
 7. WHEN fecha a comanda THEN o sistema SHALL persistir cliente, profissional logado (staff ou dono), serviço(s), produtos, valores e status de pagamento
@@ -153,11 +157,11 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 
 ---
 
-### P2: Recuperar a senha se o celular deslogar
+### P1: Recuperar a senha se o celular deslogar ⭐ MVP
 
 **User Story**: Como cliente, se o celular perder a sessão, quero recuperar minha posição com o mesmo telefone.
 
-**Why P2**: Não pode perder a vez por storage do browser. Proposta em `context.md` — confirmar.
+**Why P1**: A senha é do servidor; perder o storage do Chrome não pode queimar a vez.
 
 **Acceptance Criteria**:
 
@@ -184,15 +188,15 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 
 | ID | Story | Phase | Status |
 |----|--------|-------|--------|
-| FILA-01 | P1: QR → serviço → identidade → pagamento | Specify | Draft |
-| FILA-02 | P1: Posição + primeiro nome + política | Specify | Draft |
-| FILA-03 | P1: ETA por duração / cadeiras | Specify | Draft |
-| FILA-04 | P1: Entrada manual | Specify | Draft |
-| FILA-05 | P1: Chamar opcional, atender, comanda | Specify | Draft |
-| FILA-06 | P1: Ajustes do dono + lock com fila | Specify | Draft |
-| FILA-07 | P1: Pix/MB WAY + confirmação recebedor | Specify | Draft |
-| FILA-08 | P1: Assinatura no card | Specify | Draft |
-| FILA-09 | P2: Recuperar senha por telefone | Specify | Draft |
+| FILA-01 | P1: QR → serviço → identidade → pagamento | Specify | Ready |
+| FILA-02 | P1: Posição + primeiro nome + política | Specify | Ready |
+| FILA-03 | P1: ETA por duração / cadeiras | Specify | Ready |
+| FILA-04 | P1: Entrada manual | Specify | Ready |
+| FILA-05 | P1: Chamar opcional, atender, comanda | Specify | Ready |
+| FILA-06 | P1: Ajustes do dono + lock com fila | Specify | Ready |
+| FILA-07 | P1: Pix/MB WAY + confirmação recebedor | Specify | Ready |
+| FILA-08 | P1: Assinatura no card | Specify | Ready |
+| FILA-09 | P1: Recuperar senha por telefone | Specify | Ready |
 
 **Coverage:** 9 total, 0 mapped to tasks
 
@@ -225,4 +229,4 @@ A fila digital atual é um fluxo paralelo (`/#/queue/:slug` + `/#/queue-status/:
 
 ## Decisões de produto
 
-Ver `context.md`. Quatro confirmações ainda abertas no final desse arquivo.
+Ver `context.md` — aprovado em 2026-09-06. Pronto para design.

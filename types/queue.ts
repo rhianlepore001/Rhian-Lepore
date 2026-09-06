@@ -73,7 +73,10 @@ export const joinQueueInputSchema = z.object({
   clientName: z.string().trim().min(1),
   clientPhone: z.string().trim().min(1),
   serviceId: z.string().min(1),
-  professionalId: z.string().min(1).nullable().optional(),
+  professionalId: z.preprocess(
+    (value) => (value === '' || value === undefined ? null : value),
+    z.string().min(1).nullable().optional(),
+  ),
   paymentMethod: checkoutPaymentMethodSchema.optional(),
   brCode: z.string().min(1).optional(),
   txid: z.string().min(1).optional(),

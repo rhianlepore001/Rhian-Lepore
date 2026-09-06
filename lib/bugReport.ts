@@ -117,7 +117,8 @@ export function __setScreenshotRendererForTests(fn: ScreenshotRenderer | null): 
 
 async function loadScreenshotRenderer(): Promise<ScreenshotRenderer> {
   if (screenshotRendererOverride) return screenshotRendererOverride;
-  const mod = await import('html2canvas-pro');
+  // @vite-ignore: import dinâmico — overlay do Vite não deve derrubar o app
+  const mod = await import(/* @vite-ignore */ 'html2canvas-pro');
   return mod.default;
 }
 

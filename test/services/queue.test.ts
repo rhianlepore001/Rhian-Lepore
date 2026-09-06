@@ -9,8 +9,11 @@ import {
   isCallingExpired,
   joinQueue,
   QUEUE_LAST_SLUG_KEY,
+  QUEUE_TICKET_KEY,
   resetExpiredCallingEntries,
+  resolveClientQueueEntry,
   sanitizeQueuePhone,
+  storeQueueTicket,
   updateQueueStatus,
 } from '@/services/queue';
 import { supabase } from '@/lib/supabase';
@@ -47,6 +50,7 @@ describe('queue service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    localStorage.clear();
     activeQueueData = [];
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
     singleMock.mockResolvedValue({
@@ -104,7 +108,7 @@ describe('queue service', () => {
     });
   });
 
-  it('bloqueia entrada duplicada por telefone', async () => {
+  it('reabre a senha quando o telefone ja esta na fila', async () => {
     (supabase.rpc as any).mockResolvedValue({
       data: [{
         id: 'queue-001',
@@ -117,15 +121,18 @@ describe('queue service', () => {
       error: null,
     });
 
-    await expect(joinQueue({
+    const result = await joinQueue({
       businessId: 'business-001',
       slug: 'loja',
       clientName: 'Joao',
       clientPhone: '11999999999',
       serviceId: 'service-001',
       professionalId: null,
-    })).rejects.toThrow('Este telefone já está na fila.');
+    });
 
+    expect(result.id).toBe('queue-001');
+    expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
+    expect(JSON.parse(localStorage.getItem(QUEUE_TICKET_KEY('business-001'))!).entryId).toBe('queue-001');
     expect(insertMock).not.toHaveBeenCalled();
   });
 
@@ -185,6 +192,44 @@ describe('queue service', () => {
 
     expect(result.id).toBe('queue-009');
     expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
+    expect(JSON.parse(localStorage.getItem(QUEUE_TICKET_KEY('business-001'))!).entryId).toBe('queue-009');
+  });
+
+  it('recupera a senha persistida quando find_active falha', async () => {
+    storeQueueTicket({
+      businessId: 'business-001',
+      entryId: 'queue-001',
+      phone: '11999999999',
+      slug: 'loja',
+    });
+
+    (supabase.rpc as any).mockImplementation((name: string) => {
+      if (name === 'get_queue_entry_public') {
+        return Promise.resolve({
+          data: [{
+            id: 'queue-001',
+            business_id: 'business-001',
+            client_name: 'Joao',
+            client_phone: '11999999999',
+            status: 'waiting',
+            joined_at: '2026-05-30T10:00:00.000Z',
+          }],
+          error: null,
+        });
+      }
+      return Promise.resolve({ data: null, error: { message: 'operator does not exist: text = uuid' } });
+    });
+
+    const result = await resolveClientQueueEntry({
+      businessId: 'business-001',
+      phone: '11999999999',
+      slug: 'loja',
+    });
+
+    expect(result?.id).toBe('queue-001');
+    expect(supabase.rpc).toHaveBeenCalledWith('get_queue_entry_public', expect.objectContaining({
+      p_entry_id: 'queue-001',
+    }));
   });
 
   it('calcula ETA do board com cadeiras e descarta campos internos', () => {

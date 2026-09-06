@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Play, QrCode, Settings, User } from 'lucide-react';
+import { Clock, Play, QrCode, Settings, User, Users, Receipt } from 'lucide-react';
 import { Button, Card, PageHeader, SkeletonCard, useToast } from '@/components/ui';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { QueueCheckoutSheet } from '@/components/queue/QueueCheckoutSheet';
@@ -161,7 +161,7 @@ export const QueueManagement: React.FC = () => {
     );
   }
 
-  const renderCard = (entry: QueueRecord, highlighted = false) => (
+  const renderCard = (entry: QueueRecord, highlighted = false, position?: number) => (
     <QueueStaffCard
       key={entry.id}
       entry={entry}
@@ -169,6 +169,7 @@ export const QueueManagement: React.FC = () => {
       highlighted={highlighted}
       lateMinutes={lateMinutes}
       busy={updateStatus.isPending || confirmPay.isPending || cancelPay.isPending}
+      position={position}
       onStart={(id) => void mutateStatus(id, 'serving')}
       onCall={(id) => void mutateStatus(id, 'calling')}
       onCloseTicket={setCheckoutEntry}
@@ -199,63 +200,92 @@ export const QueueManagement: React.FC = () => {
         }
       />
 
+      {/* Métricas — hierarquia: ativos primeiro, depois cadeiras */}
       <section className="grid grid-cols-2 gap-3">
         <Card variant="outlined" className="p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Na fila</p>
-          <p className="mt-1 font-mono text-xl font-black tabular-nums text-theme-text md:text-2xl">{waiting.length}</p>
-          <p className="mt-0.5 text-xs text-theme-textSecondary">
-            {waiting.length === 0 ? 'Fila vazia' : 'Aguardando'}
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-theme-accent" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Na fila</p>
+          </div>
+          <p className="mt-2 font-mono text-3xl font-black tabular-nums text-theme-text">{waiting.length}</p>
+          <p className="mt-1 text-xs text-theme-textSecondary">
+            {waiting.length === 0 ? 'Fila vazia' : waiting.length === 1 ? '1 cliente aguardando' : `${waiting.length} clientes aguardando`}
           </p>
         </Card>
         <Card variant="outlined" className="p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Atendendo</p>
-          <p className="mt-1 font-mono text-xl font-black tabular-nums text-theme-text md:text-2xl">{serving.length}</p>
-          <p className="mt-0.5 text-xs text-theme-textSecondary">
-            {serving.length === 0 ? 'Nenhuma cadeira' : 'Em andamento'}
+          <div className="flex items-center gap-2">
+            <Play className="w-4 h-4 text-[var(--color-info)]" />
+            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Atendendo</p>
+          </div>
+          <p className="mt-2 font-mono text-3xl font-black tabular-nums text-theme-text">{serving.length}</p>
+          <p className="mt-1 text-xs text-theme-textSecondary">
+            {serving.length === 0 ? 'Nenhuma cadeira' : serving.length === 1 ? '1 cadeira ocupada' : `${serving.length} cadeiras ocupadas`}
           </p>
         </Card>
       </section>
 
+      {/* Próximos — seção principal */}
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
-          <Clock className="w-5 h-5" />
-          Próximos
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
+            <Clock className="w-5 h-5 text-theme-accent" />
+            Próximos
+          </h2>
+          {waiting.length > 0 && (
+            <span className="text-xs font-semibold text-theme-textMuted uppercase tracking-wide">
+              {waiting.length} {waiting.length === 1 ? 'pessoa' : 'pessoas'}
+            </span>
+          )}
+        </div>
         {waiting.length === 0 ? (
           <EmptyState
+            bordered
             icon={Clock}
             title="A fila está vazia"
-            description="Adicione um cliente ou peça o scan do QR na casa."
+            description={isStaff ? "Aguardando o próximo cliente entrar via QR Code." : "Compartilhe o QR Code ou adicione um cliente manualmente."}
+            action={
+              !isStaff ? (
+                <Button variant="secondary" size="sm" onClick={() => setShowAdd(true)}>
+                  Adicionar cliente
+                </Button>
+              ) : undefined
+            }
           />
         ) : mode === 'per_professional' && isStaff ? (
           <div className="space-y-4">
             {myQueue.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-theme-textSecondary">Sua fila</p>
-                {myQueue.map((entry) => renderCard(entry, true))}
+                <p className="text-xs font-semibold uppercase text-theme-accent tracking-wide">Sua fila</p>
+                {myQueue.map((entry, index) => renderCard(entry, true, index + 1))}
               </div>
             )}
             {otherQueue.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-theme-textSecondary">Outras cadeiras</p>
+                <p className="text-xs font-semibold uppercase text-theme-textMuted tracking-wide">Outras cadeiras</p>
                 {otherQueue.map((entry) => renderCard(entry))}
               </div>
             )}
           </div>
         ) : (
           <div className="space-y-3">
-            {waiting.map((entry) => renderCard(entry))}
+            {waiting.map((entry, index) => renderCard(entry, false, entry.status === 'waiting' ? index + 1 : undefined))}
           </div>
         )}
       </section>
 
+      {/* Em atendimento */}
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
-          <Play className="w-5 h-5" />
+          <Play className="w-5 h-5 text-[var(--color-info)]" />
           Em atendimento
         </h2>
         {serving.length === 0 ? (
-          <p className="text-sm text-theme-textSecondary">Nenhuma cadeira em atendimento.</p>
+          <EmptyState
+            bordered
+            icon={Play}
+            title="Nenhum atendimento em andamento"
+            description="Chame o próximo da fila para começar."
+          />
         ) : (
           <div className="space-y-3">
             {serving.map((entry) => renderCard(entry))}
@@ -263,8 +293,12 @@ export const QueueManagement: React.FC = () => {
         )}
       </section>
 
+      {/* Comandas */}
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-theme-text">Comandas</h2>
+        <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
+          <Receipt className="w-5 h-5 text-theme-textMuted" />
+          Comandas
+        </h2>
         <QueueComandasList entries={comandas} onOpen={setCheckoutEntry} />
       </section>
 

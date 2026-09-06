@@ -12,6 +12,7 @@ import {
     formatDateTime,
     formatRelativeDate,
     normalizeRegion,
+    formatFirstName,
 } from '@/utils/formatters';
 
 describe('normalizeRegion', () => {
@@ -158,3 +159,11 @@ describe('normalizeRegion', () => {
             expect(formatRelativeDate(otherDay, 'BR')).toBe('01/01/2023');
         });
     });
+
+describe('formatFirstName', () => {
+    it('capitaliza o primeiro nome', () => {
+        expect(formatFirstName('augusto cury')).toBe('Augusto');
+        expect(formatFirstName('ANA')).toBe('Ana');
+        expect(formatFirstName('')).toBe('');
+    });
+});

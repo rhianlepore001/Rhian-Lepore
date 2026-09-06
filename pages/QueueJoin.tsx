@@ -10,8 +10,9 @@ import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { usePublicClientMembership, usePublicPixConfig } from '../hooks/useMemberships';
 import { detectPixKeyType, generatePixPayload, validatePixKey } from '../lib/pix-generator';
 import { generatePixTxid } from '../lib/pix-txid';
-import { joinQueue } from '../services/queue';
+import { joinQueue, queueJoinUserMessage } from '../services/queue';
 import { isQueueIdentityPhoneValid } from '../utils/queueIdentity';
+import { logger } from '../utils/Logger';
 import {
   fetchBusinessProfileBySlug,
   fetchPublicCategories,
@@ -25,6 +26,12 @@ import type { CheckoutPaymentMethod } from '@/types/scheduling';
 import type { Region } from '../utils/formatters';
 
 type Step = 'service' | 'identity' | 'pay';
+
+const STEPS: Array<{ id: Step; label: string }> = [
+  { id: 'service', label: 'Serviço' },
+  { id: 'identity', label: 'Dados' },
+  { id: 'pay', label: 'Pagamento' },
+];
 
 export const QueueJoin: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -65,7 +72,7 @@ export const QueueJoin: React.FC = () => {
 
   const isBeauty = business?.user_type === 'beauty';
   const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
-  const { colors, font, shadow } = useBrutalTheme({ override: themeOverride });
+  const { colors, font, radius, accent } = useBrutalTheme({ override: themeOverride });
   const region: Region = business?.region === 'PT' ? 'PT' : 'BR';
 
   const sessionClient = client && business && client.business_id === business.id ? client : null;
@@ -180,7 +187,8 @@ export const QueueJoin: React.FC = () => {
       });
       setStep('pay');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível salvar seus dados.';
+      const message = queueJoinUserMessage(error, 'Não foi possível salvar seus dados. Tente de novo.');
+      logger.error('QueueJoin identity failed', error);
       setIdentityError(message);
       showToast(message, 'error');
     } finally {
@@ -212,7 +220,7 @@ export const QueueJoin: React.FC = () => {
         clientName,
         clientPhone,
         serviceId: selectedService.id,
-        professionalId: preSelectedPro,
+        professionalId: preSelectedPro || null,
         paymentMethod: payMethod as CheckoutPaymentMethod,
         brCode: payMethod === 'pix' ? pixBrCode : undefined,
         txid: payMethod === 'pix' ? pixTxid : undefined,
@@ -220,8 +228,10 @@ export const QueueJoin: React.FC = () => {
       });
       navigate(`/minha-area/${slug}?tab=fila`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível entrar na fila.';
+      logger.error('QueueJoin join failed', error);
+      const message = queueJoinUserMessage(error);
       setJoinError(message);
+      showToast(message, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -230,7 +240,7 @@ export const QueueJoin: React.FC = () => {
   if (loading) {
     return (
       <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center`}>
-        <Loader2 className="animate-spin" />
+        <Loader2 className="animate-spin" aria-label="Carregando" />
       </div>
     );
   }
@@ -251,19 +261,38 @@ export const QueueJoin: React.FC = () => {
     );
   }
 
+  const stepIndex = STEPS.findIndex((item) => item.id === step);
+
   return (
-    <div className={`min-h-screen ${colors.bg} ${colors.text} px-4 py-6 pb-10`}>
-      <div className="max-w-md mx-auto space-y-6">
-        <header className="space-y-1">
-          <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${colors.textMuted}`}>
+    <div className={`min-h-screen ${colors.bg} ${colors.text}`}>
+      <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 py-8 md:py-14 pb-12">
+        <header className="space-y-3 mb-8">
+          <h1 className={`text-[1.75rem] md:text-4xl font-bold tracking-tight leading-[1.15] ${font.heading}`}>
             {business.business_name}
-          </p>
-          <h1 className={`text-2xl md:text-3xl font-bold tracking-tight ${font.heading}`}>Fila digital</h1>
-          <p className={`text-sm ${colors.textSecondary}`}>
+          </h1>
+          <p className={`text-sm md:text-base leading-relaxed ${colors.textSecondary}`}>
             {preSelectedPro && lockedProName
-              ? `Fila de ${lockedProName}. Acompanhe sua vez pelo celular.`
-              : 'Escolha o serviço e acompanhe sua vez pelo celular.'}
+              ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe no celular.`
+              : 'Fila digital. Escolha o serviço e acompanhe sua vez no celular.'}
           </p>
+          <ol className="flex items-center gap-2 pt-1" aria-label="Passos para entrar na fila">
+            {STEPS.map((item, index) => {
+              const current = index === stepIndex;
+              const done = index < stepIndex;
+              return (
+                <li key={item.id} className="flex-1 min-w-0">
+                  <span
+                    className={`block h-1 rounded-full ${
+                      current || done ? accent.bg : 'bg-[var(--color-divider)]'
+                    }`}
+                  />
+                  <span className={`mt-2 block text-xs font-medium ${current ? colors.text : colors.textMuted}`}>
+                    {item.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
         </header>
 
         {step === 'service' && (
@@ -280,28 +309,32 @@ export const QueueJoin: React.FC = () => {
 
         {step === 'identity' && (
           <form
-            className="space-y-5"
+            className="space-y-6"
             onSubmit={(event) => {
               event.preventDefault();
               void handleIdentityContinue();
             }}
           >
             <div>
-              <h2 className={`text-xl md:text-2xl font-bold tracking-tight ${font.heading}`}>Seus dados</h2>
-              <p className={`text-sm mt-1 ${colors.textMuted}`}>Usamos o WhatsApp para guardar sua senha nesta casa.</p>
+              <h2 className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading}`}>
+                Como te chamamos?
+              </h2>
+              <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
+                O WhatsApp guarda sua senha nesta casa.
+              </p>
             </div>
-            <div className={`p-4 space-y-4 rounded-2xl border ${colors.card} ${colors.border} ${shadow.card}`}>
+            <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
               <div className="space-y-1.5">
-                <label className={`text-xs font-semibold uppercase tracking-wide ${colors.textMuted}`}>
+                <label className={`text-sm font-medium ${colors.textSecondary}`}>
                   WhatsApp
                 </label>
                 <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
               </div>
               <Input
-                label="Nome completo"
+                label="Nome"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Nome completo"
+                placeholder="Seu nome"
                 autoComplete="name"
                 forceTheme={themeOverride}
               />
@@ -309,14 +342,23 @@ export const QueueJoin: React.FC = () => {
                 <p role="alert" className="text-sm text-[var(--color-danger)]">{identityError}</p>
               )}
             </div>
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full min-h-[44px]"
-              loading={identitySubmitting}
-            >
-              Continuar
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full min-h-[48px]"
+                loading={identitySubmitting}
+              >
+                Continuar
+              </Button>
+              <button
+                type="button"
+                onClick={() => setStep('service')}
+                className={`w-full min-h-[44px] text-sm font-medium ${colors.textMuted}`}
+              >
+                Voltar
+              </button>
+            </div>
           </form>
         )}
 
@@ -328,14 +370,15 @@ export const QueueJoin: React.FC = () => {
             selected={payMethod}
             onSelect={setPayMethod}
             onConfirm={handleJoin}
+            onBack={() => setStep(sessionClient ? 'service' : 'identity')}
             submitting={submitting}
             amountCents={Math.round(selectedService.price * 100)}
+            serviceName={selectedService.name}
+            joinError={joinError}
             pixConfig={pixConfig}
             pixTxid={pixTxid}
           />
         )}
-
-        {joinError && <p className="text-sm text-[var(--color-danger)]">{joinError}</p>}
       </div>
     </div>
   );

@@ -249,3 +249,10 @@ export const formatRelativeDate = (date: Date | string, region: Region = 'BR'): 
 
     return formatDate(date, region);
 };
+
+/** Primeiro nome para saudação (Augusto, não augusto). */
+export function formatFirstName(name: string): string {
+    const first = name.trim().split(/\s+/)[0] ?? '';
+    if (!first) return '';
+    return first.charAt(0).toLocaleUpperCase('pt-BR') + first.slice(1).toLocaleLowerCase('pt-BR');
+}

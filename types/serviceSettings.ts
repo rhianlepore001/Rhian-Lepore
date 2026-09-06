@@ -13,7 +13,7 @@ export const serviceItemSchema = z.object({
   description: z.string().nullable().optional().transform(v => v ?? ''),
   price: z.number(),
   duration_minutes: z.number(),
-  category_id: z.string().min(1),
+  category_id: z.string().min(1).nullable(),
   image_url: z.string().nullable().optional().transform(v => v ?? null),
   active: z.boolean(),
   user_id: z.string().min(1),

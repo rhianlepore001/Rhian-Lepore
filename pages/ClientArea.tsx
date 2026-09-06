@@ -17,6 +17,7 @@ import { PublicClubFlow } from '../components/membership/PublicClubFlow';
 import { useCancelPublicClientMembership, usePublicClientMembership } from '../hooks/useMemberships';
 import { useToast } from '../components/ui/Toast';
 import { validityHeadline } from '../utils/membershipValidity';
+import { formatFirstName } from '../utils/formatters';
 
 interface BusinessProfile {
     id: string;
@@ -453,7 +454,7 @@ export const ClientArea: React.FC = () => {
                     </span>
                     <div className="flex items-center gap-3">
                         <span className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                            {sessionClient.name.split(' ')[0]}
+                            {formatFirstName(sessionClient.name)}
                         </span>
                         <button
                             onClick={() => logout(business.id)}
@@ -474,7 +475,7 @@ export const ClientArea: React.FC = () => {
                                 {business.business_name}
                             </p>
                             <h1 className="text-xl font-bold text-theme-text leading-tight break-words">
-                                Olá, {sessionClient.name.split(' ')[0]}!
+                                Olá, {formatFirstName(sessionClient.name)}!
                             </h1>
                             <p className="text-xs mt-1 text-theme-textSecondary leading-snug">
                                 {upcomingBookings.length > 0
@@ -624,6 +625,8 @@ export const ClientArea: React.FC = () => {
                             <ClientQueuePanel
                                 businessId={business.id}
                                 phone={sessionClient.phone}
+                                slug={slug}
+                                clientName={sessionClient.name}
                                 cameFromQr={readQueueBusinessSlug() === slug}
                             />
                         )}

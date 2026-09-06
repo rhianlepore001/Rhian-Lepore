@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Fila do cliente vazia com gestor vendo a senha (6 Set 2026):**
+  - Causa: RPC `find_active_queue_entry_by_phone` comparava `business_id` TEXT com UUID e falhava só no painel público.
+  - Correção aplicada no banco + senha persistida no dispositivo para permanecer na fila sem reentrar.
+  - Board público agora conta só senhas de hoje (igual ao gestor). Senha do cliente alinhada aos cards da Minha Área.
+
 - **Fila Digital v2 — MERGED → produção (6 Set 2026):**
   - PR #57 → `main`. Migration `queue_v2` aplicada no BARBER/Beauty OS **antes** do merge.
   - Validação remota: `queue_payments` criada, RPC `join_queue_entry` ativa, policy `Public can join queue` removida, **13** entries históricas intactas (`payment_status=unpaid`, `ticket_status=none`).

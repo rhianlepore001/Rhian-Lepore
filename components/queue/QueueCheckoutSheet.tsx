@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { Button, Modal, Select, useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
 import { sellProduct } from '@/services/catalog';
@@ -15,9 +16,17 @@ interface QueueCheckoutSheetProps {
   companyId: string;
   region: Region;
   services: ServiceItem[];
+  baseServiceName?: string | null;
   loggedProfessionalId: string | null;
   onClose: () => void;
   onDone: () => void;
+}
+
+interface TicketLine {
+  key: string;
+  id: string;
+  name: string;
+  price: number;
 }
 
 export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
@@ -26,21 +35,28 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   companyId,
   region,
   services,
+  baseServiceName = null,
   loggedProfessionalId,
   onClose,
   onDone,
 }) => {
   const { showToast } = useToast();
   const alreadyPaid = entry?.payment_status === 'paid' || entry?.payment_status === 'membership';
-  const [extraId, setExtraId] = useState('');
-  const [productId, setProductId] = useState('');
-  const [extras, setExtras] = useState<Array<{ id: string; name: string; price: number }>>([]);
-  const [products, setProducts] = useState<Array<{ id: string; name: string; price: number }>>([]);
+  const [extras, setExtras] = useState<TicketLine[]>([]);
+  const [products, setProducts] = useState<TicketLine[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<'settle' | 'close' | null>(null);
   const { data: catalog = [] } = useProducts({ companyId, includeInactive: false });
 
+  useEffect(() => {
+    if (!open) return;
+    setExtras([]);
+    setProducts([]);
+    setPaymentMethod('');
+  }, [open, entry?.id]);
+
   const basePrice = (entry?.service_price_cents ?? 0) / 100;
+  const serviceLabel = baseServiceName ?? 'Serviço';
   const extraLines = extras.map((line) => ({ name: line.name, price: line.price }));
   const productLines = products.map((line) => ({ name: line.name, price: line.price }));
   const total = extraLines.reduce((sum, line) => sum + line.price, 0)
@@ -61,39 +77,33 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       { value: 'credit', label: 'Crédito' },
     ];
 
-  const reset = () => {
-    setExtras([]);
-    setProducts([]);
-    setExtraId('');
-    setProductId('');
-    setPaymentMethod('');
-  };
+  const isOpenTicket = entry?.ticket_status === 'open';
 
   const handleCloseOnly = async () => {
     if (!entry) return;
-    setSaving(true);
+    setSaving('close');
     try {
       await closeQueueTicket(buildQueueClosePayload(entry.id).entryId);
-      reset();
+      showToast('Comanda salva. Finalize quando o cliente for pagar.', 'success');
       onDone();
     } catch {
-      showToast('Não foi possível fechar a comanda.', 'error');
+      showToast('Não foi possível salvar a comanda. Tente de novo.', 'error');
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   };
 
   const handleSettle = async () => {
     if (!entry) return;
     if (!alreadyPaid && !paymentMethod) {
-      showToast('Selecione a forma de pagamento.', 'error');
+      showToast('Escolha como o cliente pagou.', 'error');
       return;
     }
-    setSaving(true);
+    setSaving('settle');
     try {
       const payload = buildQueueSettlePayload({
         entryId: entry.id,
-        baseServiceName: 'Serviço',
+        baseServiceName: serviceLabel,
         basePrice,
         extraServices: extraLines,
         productLines,
@@ -108,84 +118,114 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         professionalId: loggedProfessionalId ?? entry.professional_id,
         paymentMethod: alreadyPaid ? entry.payment_method : paymentMethod,
       })));
-      reset();
+      showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
       onDone();
     } catch {
-      showToast('Não foi possível finalizar a comanda.', 'error');
+      showToast('Não foi possível finalizar a comanda. Tente de novo.', 'error');
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   };
+
+  const removeLine = (kind: 'extra' | 'product', key: string) => {
+    if (kind === 'extra') setExtras((current) => current.filter((line) => line.key !== key));
+    else setProducts((current) => current.filter((line) => line.key !== key));
+  };
+
+  const renderLine = (line: { key?: string; name: string; price: number }, onRemove?: () => void) => (
+    <li key={line.key ?? line.name} className="flex items-center justify-between gap-3 py-2">
+      <span className="text-sm text-theme-text min-w-0 truncate">{line.name}</span>
+      <span className="flex items-center gap-1 shrink-0">
+        <span className="text-sm tabular-nums text-theme-textSecondary">{formatCurrency(line.price, region)}</span>
+        {onRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Remover ${line.name}`}
+            className="inline-flex items-center justify-center w-9 h-9 -mr-2 rounded-lg text-theme-textMuted hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </span>
+    </li>
+  );
 
   return (
     <Modal
       open={open && !!entry}
       onClose={onClose}
-      title="Fechar comanda"
+      title={isOpenTicket ? 'Finalizar comanda' : 'Fechar comanda'}
       size="md"
     >
       {entry && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
             <p className="font-bold text-theme-text">{entry.client_name}</p>
-            <p className="text-sm text-theme-textSecondary">
-              Total {formatCurrency(total, region)}
-            </p>
+            {alreadyPaid ? (
+              <p className="text-sm mt-1 text-[var(--color-success)]">
+                {entry.payment_status === 'membership'
+                  ? 'Serviço incluído na assinatura. Confira os itens e finalize.'
+                  : 'Pagamento já confirmado. Confira os itens e finalize.'}
+              </p>
+            ) : (
+              <p className="text-sm mt-1 text-theme-textSecondary">
+                Confira os itens, informe como o cliente pagou e finalize.
+              </p>
+            )}
           </div>
 
-          {alreadyPaid && (
-            <p className="text-sm rounded-xl border border-[var(--color-success-border)] bg-[var(--color-success-bg)] text-[var(--color-success)] p-3">
-              Pagamento já registrado. Confira e finalize.
-            </p>
-          )}
+          <ul className="divide-y divide-theme-border rounded-xl border border-theme-border px-4">
+            {renderLine({ key: 'base', name: serviceLabel, price: basePrice })}
+            {extras.map((line) => renderLine(line, () => removeLine('extra', line.key)))}
+            {products.map((line) => renderLine(line, () => removeLine('product', line.key)))}
+            <li className="flex items-center justify-between gap-3 py-3">
+              <span className="text-sm font-semibold text-theme-text">Total</span>
+              <span className="text-base font-bold tabular-nums text-theme-text">{formatCurrency(total, region)}</span>
+            </li>
+          </ul>
 
-          <Select
-            label="Serviço extra"
-            placeholder="Adicionar serviço"
-            value={extraId}
-            options={services.filter((service) => service.active).map((service) => ({
-              value: service.id,
-              label: `${service.name} · ${formatCurrency(service.price, region)}`,
-            }))}
-            onChange={(event) => {
-              const next = services.find((service) => service.id === event.target.value);
-              setExtraId('');
-              if (!next) return;
-              setExtras((current) => [...current, { id: next.id, name: next.name, price: next.price }]);
-            }}
-          />
-
-          <Select
-            label="Produto"
-            placeholder="Adicionar produto"
-            value={productId}
-            options={catalog.filter((product) => product.is_active && product.stock_quantity > 0).map((product) => ({
-              value: product.id,
-              label: `${product.name} · ${formatCurrency(product.sale_price, region)}`,
-            }))}
-            onChange={(event) => {
-              const next = catalog.find((product) => product.id === event.target.value);
-              setProductId('');
-              if (!next) return;
-              setProducts((current) => [...current, { id: next.id, name: next.name, price: next.sale_price }]);
-            }}
-          />
-
-          {(extras.length > 0 || products.length > 0) && (
-            <ul className="text-sm text-theme-textSecondary space-y-1">
-              {extras.map((line, index) => (
-                <li key={`s-${line.id}-${index}`}>{line.name}</li>
-              ))}
-              {products.map((line, index) => (
-                <li key={`p-${line.id}-${index}`}>{line.name}</li>
-              ))}
-            </ul>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Select
+              label="Adicionar serviço"
+              placeholder="Escolher serviço"
+              value=""
+              options={services.filter((service) => service.active).map((service) => ({
+                value: service.id,
+                label: `${service.name} · ${formatCurrency(service.price, region)}`,
+              }))}
+              onChange={(event) => {
+                const next = services.find((service) => service.id === event.target.value);
+                if (!next) return;
+                setExtras((current) => [
+                  ...current,
+                  { key: `${next.id}-${Date.now()}`, id: next.id, name: next.name, price: next.price },
+                ]);
+              }}
+            />
+            <Select
+              label="Adicionar produto"
+              placeholder="Escolher produto"
+              value=""
+              options={catalog.filter((product) => product.is_active && product.stock_quantity > 0).map((product) => ({
+                value: product.id,
+                label: `${product.name} · ${formatCurrency(product.sale_price, region)}`,
+              }))}
+              onChange={(event) => {
+                const next = catalog.find((product) => product.id === event.target.value);
+                if (!next) return;
+                setProducts((current) => [
+                  ...current,
+                  { key: `${next.id}-${Date.now()}`, id: next.id, name: next.name, price: next.sale_price },
+                ]);
+              }}
+            />
+          </div>
 
           {!alreadyPaid && (
             <Select
-              label="Pagamento"
-              placeholder="Como recebeu"
+              label="Forma de pagamento"
+              placeholder="Como o cliente pagou"
               value={paymentMethod}
               options={paymentOptions}
               onChange={(event) => setPaymentMethod(event.target.value as CheckoutPaymentMethod)}
@@ -193,12 +233,26 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
           )}
 
           <div className="flex flex-col gap-2">
-            <Button variant="primary" fullWidth loading={saving} onClick={() => void handleSettle()}>
-              Finalizar agora
+            <Button
+              variant="primary"
+              fullWidth
+              loading={saving === 'settle'}
+              disabled={saving === 'close'}
+              onClick={() => void handleSettle()}
+            >
+              {alreadyPaid ? 'Finalizar atendimento' : `Receber ${formatCurrency(total, region)} e finalizar`}
             </Button>
-            <Button variant="secondary" fullWidth disabled={saving} onClick={() => void handleCloseOnly()}>
-              Só salvar em Comandas
-            </Button>
+            {!isOpenTicket && (
+              <Button
+                variant="secondary"
+                fullWidth
+                loading={saving === 'close'}
+                disabled={saving === 'settle'}
+                onClick={() => void handleCloseOnly()}
+              >
+                Deixar em aberto para pagar depois
+              </Button>
+            )}
           </div>
         </div>
       )}

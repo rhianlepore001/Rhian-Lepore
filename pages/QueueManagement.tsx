@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Play, QrCode, Settings, User, Users, Receipt } from 'lucide-react';
+import { Clock, Play, QrCode, Settings, UserPlus, Users, Receipt } from 'lucide-react';
 import { Button, Card, PageHeader, SkeletonCard, useToast } from '@/components/ui';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { QueueCheckoutSheet } from '@/components/queue/QueueCheckoutSheet';
 import { QueueComandasList } from '@/components/queue/QueueComandasList';
@@ -47,10 +48,21 @@ export const QueueManagement: React.FC = () => {
   const [showQr, setShowQr] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [checkoutEntry, setCheckoutEntry] = useState<QueueRecord | null>(null);
+  const [noShowEntry, setNoShowEntry] = useState<QueueRecord | null>(null);
 
   const entries = rawEntries as QueueRecord[];
   const mode = settings?.queueMode ?? 'shared';
   const lateMinutes = settings?.lateMinutes ?? 10;
+  const allowLeave = settings?.allowLeave ?? true;
+
+  const serviceNames = useMemo(
+    () => new Map(services.map((service) => [service.id, service.name])),
+    [services],
+  );
+  const professionalNames = useMemo(
+    () => new Map(teamMembers.map((member) => [member.id, member.name])),
+    [teamMembers],
+  );
 
   const waiting = useMemo(
     () => entries.filter((entry) => entry.status === 'waiting' || entry.status === 'calling'),
@@ -114,14 +126,25 @@ export const QueueManagement: React.FC = () => {
 
   const mutateStatus = async (entryId: string, status: QueueRecord['status']) => {
     if (!tenantId) {
-      showToast('Sessão sem estabelecimento.', 'error');
-      return;
+      showToast('Não identificamos o estabelecimento. Entre de novo.', 'error');
+      return false;
     }
     try {
       await updateStatus.mutateAsync({ entryId, businessId: tenantId, status });
       if (status === 'calling') playCallSound();
+      return true;
     } catch {
-      showToast('Não foi possível atualizar a fila.', 'error');
+      showToast('Não foi possível atualizar a fila. Tente de novo.', 'error');
+      return false;
+    }
+  };
+
+  const handleNoShow = async () => {
+    if (!noShowEntry) return;
+    const ok = await mutateStatus(noShowEntry.id, 'no_show');
+    if (ok) {
+      showToast(`${noShowEntry.client_name} foi removido da fila.`, 'success');
+      setNoShowEntry(null);
     }
   };
 
@@ -146,8 +169,8 @@ export const QueueManagement: React.FC = () => {
       <EmptyState
         bordered
         icon={Clock}
-        title="Estabelecimento não identificado"
-        description="Recarregue a página e entre de novo."
+        title="Não foi possível carregar a fila"
+        description="Recarregue a página. Se continuar, saia e entre de novo na sua conta."
       />
     );
   }
@@ -161,32 +184,41 @@ export const QueueManagement: React.FC = () => {
     );
   }
 
+  const busy = updateStatus.isPending || confirmPay.isPending || cancelPay.isPending;
+
   const renderCard = (entry: QueueRecord, highlighted = false, position?: number) => (
     <QueueStaffCard
       key={entry.id}
       entry={entry}
       region={region === 'PT' ? 'PT' : 'BR'}
+      serviceName={entry.service_id ? serviceNames.get(entry.service_id) ?? null : null}
+      professionalName={entry.professional_id ? professionalNames.get(entry.professional_id) ?? null : null}
       highlighted={highlighted}
       lateMinutes={lateMinutes}
-      busy={updateStatus.isPending || confirmPay.isPending || cancelPay.isPending}
+      allowLeave={allowLeave}
+      busy={busy}
       position={position}
       onStart={(id) => void mutateStatus(id, 'serving')}
       onCall={(id) => void mutateStatus(id, 'calling')}
       onCloseTicket={setCheckoutEntry}
       onConfirmPay={(id) => void handleConfirmPay(id)}
       onCancelPay={(id) => void handleCancelPay(id)}
+      onNoShow={setNoShowEntry}
+      onRequeue={(id) => void mutateStatus(id, 'waiting')}
     />
   );
+
+  const callingCount = waiting.filter((entry) => entry.status === 'calling').length;
 
   return (
     <div className="space-y-6 pb-28">
       <PageHeader
         title="Fila Digital"
-        subtitle="Cliente à vista: iniciar. Fora da cadeira: chamar."
+        subtitle="Acompanhe quem está esperando, chame e feche as comandas."
         meta={!isStaff ? (
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" icon={<QrCode className="w-4 h-4" />} onClick={() => setShowQr(true)}>
-              QR da fila
+              QR Code
             </Button>
             <Button variant="ghost" size="sm" icon={<Settings className="w-4 h-4" />} onClick={() => setShowSettings(true)}>
               Ajustes
@@ -194,13 +226,12 @@ export const QueueManagement: React.FC = () => {
           </div>
         ) : undefined}
         action={
-          <Button variant="primary" size="sm" icon={<User className="w-4 h-4" />} onClick={() => setShowAdd(true)}>
-            Adicionar
+          <Button variant="primary" size="sm" icon={<UserPlus className="w-4 h-4" />} onClick={() => setShowAdd(true)}>
+            Adicionar cliente
           </Button>
         }
       />
 
-      {/* Métricas — hierarquia: ativos primeiro, depois cadeiras */}
       <section className="grid grid-cols-2 gap-3">
         <Card variant="outlined" className="p-4">
           <div className="flex items-center gap-2">
@@ -209,31 +240,34 @@ export const QueueManagement: React.FC = () => {
           </div>
           <p className="mt-2 font-mono text-3xl font-black tabular-nums text-theme-text">{waiting.length}</p>
           <p className="mt-1 text-xs text-theme-textSecondary">
-            {waiting.length === 0 ? 'Fila vazia' : waiting.length === 1 ? '1 cliente aguardando' : `${waiting.length} clientes aguardando`}
+            {waiting.length === 0
+              ? 'Ninguém aguardando'
+              : callingCount > 0
+                ? `${callingCount} ${callingCount === 1 ? 'chamado' : 'chamados'}`
+                : waiting.length === 1 ? '1 cliente aguardando' : `${waiting.length} clientes aguardando`}
           </p>
         </Card>
         <Card variant="outlined" className="p-4">
           <div className="flex items-center gap-2">
             <Play className="w-4 h-4 text-[var(--color-info)]" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Atendendo</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Em atendimento</p>
           </div>
           <p className="mt-2 font-mono text-3xl font-black tabular-nums text-theme-text">{serving.length}</p>
           <p className="mt-1 text-xs text-theme-textSecondary">
-            {serving.length === 0 ? 'Nenhuma cadeira' : serving.length === 1 ? '1 cadeira ocupada' : `${serving.length} cadeiras ocupadas`}
+            {serving.length === 0 ? 'Nenhum atendimento agora' : serving.length === 1 ? '1 cliente sendo atendido' : `${serving.length} clientes sendo atendidos`}
           </p>
         </Card>
       </section>
 
-      {/* Próximos — seção principal */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
             <Clock className="w-5 h-5 text-theme-accent" />
-            Próximos
+            Aguardando
           </h2>
           {waiting.length > 0 && (
             <span className="text-xs font-semibold text-theme-textMuted uppercase tracking-wide">
-              {waiting.length} {waiting.length === 1 ? 'pessoa' : 'pessoas'}
+              {waiting.length} {waiting.length === 1 ? 'cliente' : 'clientes'}
             </span>
           )}
         </div>
@@ -241,14 +275,14 @@ export const QueueManagement: React.FC = () => {
           <EmptyState
             bordered
             icon={Clock}
-            title="A fila está vazia"
-            description={isStaff ? "Aguardando o próximo cliente entrar via QR Code." : "Compartilhe o QR Code ou adicione um cliente manualmente."}
+            title="Ninguém na fila"
+            description={isStaff
+              ? 'Quando um cliente escanear o QR Code, ele aparece aqui.'
+              : 'Deixe o QR Code visível no balcão ou adicione um cliente manualmente.'}
             action={
-              !isStaff ? (
-                <Button variant="secondary" size="sm" onClick={() => setShowAdd(true)}>
-                  Adicionar cliente
-                </Button>
-              ) : undefined
+              <Button variant="secondary" size="sm" onClick={() => setShowAdd(true)}>
+                Adicionar cliente
+              </Button>
             }
           />
         ) : mode === 'per_professional' && isStaff ? (
@@ -261,7 +295,7 @@ export const QueueManagement: React.FC = () => {
             )}
             {otherQueue.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-theme-textMuted tracking-wide">Outras cadeiras</p>
+                <p className="text-xs font-semibold uppercase text-theme-textMuted tracking-wide">Outros profissionais</p>
                 {otherQueue.map((entry) => renderCard(entry))}
               </div>
             )}
@@ -273,7 +307,6 @@ export const QueueManagement: React.FC = () => {
         )}
       </section>
 
-      {/* Em atendimento */}
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
           <Play className="w-5 h-5 text-[var(--color-info)]" />
@@ -284,7 +317,7 @@ export const QueueManagement: React.FC = () => {
             bordered
             icon={Play}
             title="Nenhum atendimento em andamento"
-            description="Chame o próximo da fila para começar."
+            description="Toque em Iniciar atendimento no próximo cliente da fila."
           />
         ) : (
           <div className="space-y-3">
@@ -293,14 +326,32 @@ export const QueueManagement: React.FC = () => {
         )}
       </section>
 
-      {/* Comandas */}
       <section className="space-y-3">
         <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
           <Receipt className="w-5 h-5 text-theme-textMuted" />
-          Comandas
+          Comandas abertas
         </h2>
-        <QueueComandasList entries={comandas} onOpen={setCheckoutEntry} />
+        <QueueComandasList
+          entries={comandas}
+          region={region === 'PT' ? 'PT' : 'BR'}
+          serviceNames={serviceNames}
+          onOpen={setCheckoutEntry}
+        />
       </section>
+
+      <ConfirmModal
+        open={!!noShowEntry}
+        title="Remover da fila?"
+        message={noShowEntry
+          ? `${noShowEntry.client_name} será marcado como não compareceu e sai da fila. Para voltar, ele precisa pegar uma nova senha.`
+          : ''}
+        confirmLabel="Remover da fila"
+        cancelLabel="Manter"
+        variant="danger"
+        loading={updateStatus.isPending}
+        onCancel={() => setNoShowEntry(null)}
+        onConfirm={() => void handleNoShow()}
+      />
 
       <QueueManualAddSheet
         open={showAdd}
@@ -344,6 +395,7 @@ export const QueueManagement: React.FC = () => {
         companyId={tenantId}
         region={region === 'PT' ? 'PT' : 'BR'}
         services={services}
+        baseServiceName={checkoutEntry?.service_id ? serviceNames.get(checkoutEntry.service_id) ?? null : null}
         loggedProfessionalId={teamMemberId}
         onClose={() => setCheckoutEntry(null)}
         onDone={() => {

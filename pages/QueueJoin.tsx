@@ -127,11 +127,18 @@ export const QueueJoin: React.FC = () => {
     }
   }, [business, openExistingTicket]);
 
+  // Uma checagem por telefone/negócio; depois que a pessoa entra pela própria tela, não há o que redirecionar.
   const sessionPhone = sessionClient?.phone ?? null;
+  const businessId = business?.id ?? null;
+  const activeCheckRef = React.useRef<string | null>(null);
+  const joinedRef = React.useRef(false);
   useEffect(() => {
-    if (!sessionPhone) return;
+    if (!sessionPhone || !businessId || joinedRef.current) return;
+    const key = `${businessId}:${sessionPhone}`;
+    if (activeCheckRef.current === key) return;
+    activeCheckRef.current = key;
     void redirectIfAlreadyInQueue(sessionPhone);
-  }, [redirectIfAlreadyInQueue, sessionPhone]);
+  }, [businessId, redirectIfAlreadyInQueue, sessionPhone]);
 
   useEffect(() => {
     const load = async () => {
@@ -251,6 +258,7 @@ export const QueueJoin: React.FC = () => {
 
     setSubmitting(true);
     setJoinError('');
+    joinedRef.current = true;
     try {
       await joinQueue({
         businessId: business.id,
@@ -270,6 +278,7 @@ export const QueueJoin: React.FC = () => {
         openExistingTicket(error.entry.id, clientPhone);
         return;
       }
+      joinedRef.current = false;
       logger.error('QueueJoin join failed', error);
       const message = queueJoinUserMessage(error);
       setJoinError(message);

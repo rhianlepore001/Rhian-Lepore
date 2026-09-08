@@ -47,12 +47,17 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
     : Boolean(pixConfig?.pix_key_value && pixConfig?.pix_key_type);
   const options = queuePayOptions({ canUseMembership, region, digitalAvailable });
 
-  // Se a opção escolhida deixou de existir (ex.: Pix sem chave), volta para o balcão.
+  // Sem escolha ainda: assinatura quando disponível, senão balcão. Evita CTA travado
+  // quando só existe uma opção. Se a escolhida deixou de existir (ex.: Pix sem chave), volta ao balcão.
   useEffect(() => {
-    if (selected && !options.some((option) => option.id === selected)) {
+    if (!selected) {
+      onSelect(canUseMembership ? 'membership' : 'cash');
+      return;
+    }
+    if (!options.some((option) => option.id === selected)) {
       onSelect('cash');
     }
-  }, [onSelect, options, selected]);
+  }, [canUseMembership, onSelect, options, selected]);
 
   return (
     <div className="space-y-6">

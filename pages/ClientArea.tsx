@@ -482,7 +482,7 @@ export const ClientArea: React.FC = () => {
                             </h1>
                             <p className="text-xs mt-1 text-theme-textSecondary leading-snug">
                                 {activeTab === 'queue'
-                                    ? 'Acompanhe sua vez na fila abaixo.'
+                                    ? 'Acompanhe sua senha por aqui.'
                                     : upcomingBookings.length > 0
                                         ? `Você tem ${upcomingBookings.length} agendamento${upcomingBookings.length > 1 ? 's' : ''} próximo${upcomingBookings.length > 1 ? 's' : ''}`
                                         : 'Nenhum agendamento futuro'}

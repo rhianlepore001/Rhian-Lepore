@@ -47,7 +47,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       if (status === 'calling' || status === 'serving') return 4000;
-      if (status === 'waiting') return 8000;
+      if (status === 'waiting') return 6000;
       return 15_000;
     },
     staleTime: 0,
@@ -213,7 +213,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
           {!isClosed && (
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">
-                {isCalling ? 'Sua senha foi chamada' : isServing ? 'Atendimento em andamento' : 'Sua senha'}
+                Sua senha
               </p>
               <Badge variant={payBadge.variant} className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold">
                 {payBadge.label}
@@ -258,6 +258,16 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
               )}
             </ol>
           </div>
+        )}
+
+        {(status === 'no_show' || status === 'cancelled') && cameFromQr && joinHref && (
+          <Link
+            to={joinHref}
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
+          >
+            <QrCode className="w-4 h-4" />
+            Entrar na fila de novo
+          </Link>
         )}
 
         {status === 'completed' && bookHref && (

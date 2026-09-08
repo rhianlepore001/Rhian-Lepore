@@ -30,7 +30,9 @@ export function queuePayOptions(input: {
   options.push({
     id: 'cash',
     label: 'Pagar no balcão',
-    description: 'Dinheiro, cartão ou Pix na hora, ao final do atendimento.',
+    description: digital === 'pix'
+      ? 'Dinheiro, cartão ou Pix na hora, ao final do atendimento.'
+      : 'Dinheiro, cartão ou MB WAY na hora, ao final do atendimento.',
   });
 
   if (!digitalAvailable) return options;

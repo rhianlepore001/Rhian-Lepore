@@ -39,7 +39,7 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
       title: name ? `${name}, é a sua vez!` : 'É a sua vez!',
       subtitle: input.professionalName
         ? `${input.professionalName} está esperando por você.`
-        : 'Dirija-se ao atendimento.',
+        : 'Pode vir. A equipe está esperando por você.',
     };
   }
 

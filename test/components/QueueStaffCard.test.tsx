@@ -42,7 +42,7 @@ describe('QueueStaffCard', () => {
     expect(screen.getByText('Aguardando pagamento')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Iniciar atendimento' }));
     await user.click(screen.getByRole('button', { name: 'Chamar cliente' }));
-    await user.click(screen.getByRole('button', { name: 'Confirmar pagamento' }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar pagamento recebido' }));
     expect(onStart).toHaveBeenCalledWith('q-1');
     expect(onCall).toHaveBeenCalledWith('q-1');
     expect(onConfirmPay).toHaveBeenCalledWith('q-1');

@@ -59,9 +59,12 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   const serviceLabel = baseServiceName ?? 'Serviço';
   const extraLines = extras.map((line) => ({ name: line.name, price: line.price }));
   const productLines = products.map((line) => ({ name: line.name, price: line.price }));
-  const total = extraLines.reduce((sum, line) => sum + line.price, 0)
-    + productLines.reduce((sum, line) => sum + line.price, 0)
-    + basePrice;
+  const extrasTotal = extraLines.reduce((sum, line) => sum + line.price, 0)
+    + productLines.reduce((sum, line) => sum + line.price, 0);
+  const total = extrasTotal + basePrice;
+  // Serviço já pago (Pix/MB WAY confirmado ou assinatura): só o que foi adicionado é cobrado agora.
+  const dueNow = alreadyPaid ? extrasTotal : total;
+  const needsPaymentMethod = dueNow > 0;
 
   const paymentOptions = region === 'PT'
     ? [
@@ -95,8 +98,8 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
 
   const handleSettle = async () => {
     if (!entry) return;
-    if (!alreadyPaid && !paymentMethod) {
-      showToast('Escolha como o cliente pagou.', 'error');
+    if (needsPaymentMethod && !paymentMethod) {
+      showToast(alreadyPaid ? 'Informe como o cliente pagou os itens adicionados.' : 'Escolha como o cliente pagou.', 'error');
       return;
     }
     setSaving('settle');
@@ -108,15 +111,15 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         extraServices: extraLines,
         productLines,
         professionalId: loggedProfessionalId ?? entry.professional_id,
-        paymentMethod: paymentMethod || null,
-        alreadyPaid,
+        paymentMethod: needsPaymentMethod ? paymentMethod || null : null,
+        alreadyPaid: alreadyPaid && !needsPaymentMethod,
       });
       await settleQueueTicket(payload);
       await Promise.all(products.map((line) => sellProduct({
         productId: line.id,
         quantity: 1,
         professionalId: loggedProfessionalId ?? entry.professional_id,
-        paymentMethod: alreadyPaid ? entry.payment_method : paymentMethod,
+        paymentMethod: needsPaymentMethod ? paymentMethod || null : entry.payment_method,
       })));
       showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
       onDone();
@@ -163,10 +166,10 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
           <div>
             <p className="font-bold text-theme-text">{entry.client_name}</p>
             {alreadyPaid ? (
-              <p className="text-sm mt-1 text-[var(--color-success)]">
+              <p className="text-sm mt-1 text-theme-textSecondary">
                 {entry.payment_status === 'membership'
-                  ? 'Serviço incluído na assinatura. Confira os itens e finalize.'
-                  : 'Pagamento já confirmado. Confira os itens e finalize.'}
+                  ? 'Serviço coberto pela assinatura. Adicione extras se houver e finalize.'
+                  : 'Serviço já pago. Adicione extras se houver e finalize.'}
               </p>
             ) : (
               <p className="text-sm mt-1 text-theme-textSecondary">
@@ -176,13 +179,29 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
           </div>
 
           <ul className="divide-y divide-theme-border rounded-xl border border-theme-border px-4">
-            {renderLine({ key: 'base', name: serviceLabel, price: basePrice })}
+            <li className="flex items-center justify-between gap-3 py-2">
+              <span className="min-w-0">
+                <span className="block text-sm text-theme-text truncate">{serviceLabel}</span>
+                {alreadyPaid && (
+                  <span className="block text-xs text-[var(--color-success)]">
+                    {entry.payment_status === 'membership' ? 'Incluído na assinatura' : 'Pago antecipadamente'}
+                  </span>
+                )}
+              </span>
+              <span className="text-sm tabular-nums text-theme-textSecondary shrink-0">{formatCurrency(basePrice, region)}</span>
+            </li>
             {extras.map((line) => renderLine(line, () => removeLine('extra', line.key)))}
             {products.map((line) => renderLine(line, () => removeLine('product', line.key)))}
             <li className="flex items-center justify-between gap-3 py-3">
               <span className="text-sm font-semibold text-theme-text">Total</span>
               <span className="text-base font-bold tabular-nums text-theme-text">{formatCurrency(total, region)}</span>
             </li>
+            {alreadyPaid && extrasTotal > 0 && (
+              <li className="flex items-center justify-between gap-3 py-2">
+                <span className="text-sm font-semibold text-theme-text">A receber agora</span>
+                <span className="text-sm font-bold tabular-nums text-theme-accent">{formatCurrency(dueNow, region)}</span>
+              </li>
+            )}
           </ul>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -222,9 +241,9 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
             />
           </div>
 
-          {!alreadyPaid && (
+          {needsPaymentMethod && (
             <Select
-              label="Forma de pagamento"
+              label={alreadyPaid ? 'Pagamento dos itens adicionados' : 'Forma de pagamento'}
               placeholder="Como o cliente pagou"
               value={paymentMethod}
               options={paymentOptions}
@@ -240,7 +259,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
               disabled={saving === 'close'}
               onClick={() => void handleSettle()}
             >
-              {alreadyPaid ? 'Finalizar atendimento' : `Receber ${formatCurrency(total, region)} e finalizar`}
+              {needsPaymentMethod ? `Receber ${formatCurrency(dueNow, region)} e finalizar` : 'Finalizar atendimento'}
             </Button>
             {!isOpenTicket && (
               <Button

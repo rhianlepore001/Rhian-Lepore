@@ -104,57 +104,57 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
               : 'border-theme-border bg-theme-card shadow-[var(--shadow-card)]'
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
-          {position != null && isWaiting && (
-            <span
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-accent-dim)] text-theme-accent font-mono font-black text-sm shrink-0"
-              aria-label={`Posição ${position}`}
-            >
-              {position}
-            </span>
-          )}
-          <div className="min-w-0">
-            <h3 className="font-bold text-theme-text truncate text-base">{entry.client_name}</h3>
-            <p className="text-sm text-theme-textSecondary font-mono mt-0.5">
-              {formatPhone(entry.client_phone, region)}
-            </p>
-          </div>
+      <div className="flex items-start gap-3 min-w-0">
+        {position != null && isWaiting && (
+          <span
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-accent-dim)] text-theme-accent font-mono font-black text-sm shrink-0"
+            aria-label={`Posição ${position}`}
+          >
+            {position}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-theme-text truncate text-base">{entry.client_name}</h3>
+          <p className="text-sm text-theme-textSecondary font-mono mt-0.5 whitespace-nowrap">
+            {formatPhone(entry.client_phone, region)}
+          </p>
         </div>
-        <Badge variant={badge.variant}>{badge.label}</Badge>
       </div>
 
-      <div className="text-sm space-y-0.5">
+      <div className="text-sm space-y-1">
         {detailParts.length > 0 && (
           <p className="text-theme-text truncate">{detailParts.join(' · ')}</p>
         )}
-        {statusLine && (
-          <p className={`text-xs ${toneClass[statusLine.tone]}`}>{statusLine.text}</p>
-        )}
+        <div className="flex items-center justify-between gap-3">
+          {statusLine ? (
+            <p className={`text-xs ${toneClass[statusLine.tone]}`}>{statusLine.text}</p>
+          ) : <span />}
+          <Badge variant={badge.variant} className="shrink-0 whitespace-nowrap">{badge.label}</Badge>
+        </div>
       </div>
 
       {actions.showConfirmPay && (
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className="space-y-1 pt-1">
           <Button
             variant="success"
             size="sm"
+            fullWidth
             className="min-h-[44px]"
             disabled={busy}
             onClick={() => onConfirmPay(entry.id)}
             icon={<Check className="w-4 h-4" />}
           >
-            Confirmar pagamento
+            Confirmar pagamento recebido
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="min-h-[44px]"
+          <button
+            type="button"
             disabled={busy}
             onClick={() => onCancelPay(entry.id)}
-            icon={<X className="w-4 h-4" />}
+            className="w-full inline-flex items-center justify-center gap-1.5 min-h-[40px] text-xs font-semibold text-theme-textSecondary hover:text-theme-text disabled:opacity-50"
           >
-            Pagar no balcão
-          </Button>
+            <X className="w-3.5 h-3.5" />
+            Não recebi — cliente paga no balcão
+          </button>
         </div>
       )}
 

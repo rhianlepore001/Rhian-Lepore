@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PixDisplay } from '@/components/membership/PixDisplay';
@@ -42,7 +42,17 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
   pixTxid,
 }) => {
   const { colors, accent, font, radius } = useBrutalTheme({ override: themeOverride });
-  const options = queuePayOptions({ canUseMembership, region });
+  const digitalAvailable = region === 'PT'
+    ? Boolean(pixConfig?.mbway_phone)
+    : Boolean(pixConfig?.pix_key_value && pixConfig?.pix_key_type);
+  const options = queuePayOptions({ canUseMembership, region, digitalAvailable });
+
+  // Se a opção escolhida deixou de existir (ex.: Pix sem chave), volta para o balcão.
+  useEffect(() => {
+    if (selected && !options.some((option) => option.id === selected)) {
+      onSelect('cash');
+    }
+  }, [onSelect, options, selected]);
 
   return (
     <div className="space-y-6">

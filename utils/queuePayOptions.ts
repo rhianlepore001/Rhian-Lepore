@@ -12,8 +12,11 @@ export interface QueuePayOption {
 export function queuePayOptions(input: {
   canUseMembership: boolean;
   region: Region;
+  /** Chave Pix / número MB WAY configurados pelo estabelecimento. Sem isso a opção digital não aparece. */
+  digitalAvailable?: boolean;
 }): QueuePayOption[] {
   const digital = clubDigitalMethod(input.region);
+  const digitalAvailable = input.digitalAvailable ?? true;
   const options: QueuePayOption[] = [];
 
   if (input.canUseMembership) {
@@ -29,6 +32,8 @@ export function queuePayOptions(input: {
     label: 'Pagar no balcão',
     description: 'Dinheiro, cartão ou Pix na hora, ao final do atendimento.',
   });
+
+  if (!digitalAvailable) return options;
 
   if (digital === 'pix') {
     options.push({

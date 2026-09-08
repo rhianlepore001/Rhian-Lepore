@@ -11,4 +11,11 @@ describe('queuePayOptions', () => {
     const options = queuePayOptions({ canUseMembership: false, region: 'PT' });
     expect(options.map((option) => option.id)).toEqual(['cash', 'mbway']);
   });
+
+  it('sem chave Pix / MB WAY configurados só oferece o balcão', () => {
+    expect(queuePayOptions({ canUseMembership: false, region: 'BR', digitalAvailable: false }).map((o) => o.id))
+      .toEqual(['cash']);
+    expect(queuePayOptions({ canUseMembership: true, region: 'PT', digitalAvailable: false }).map((o) => o.id))
+      .toEqual(['membership', 'cash']);
+  });
 });

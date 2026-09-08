@@ -7,7 +7,7 @@ export function useQueueBoard(
   phone: string | null | undefined,
   status?: QueueStatus | null,
 ) {
-  const intervalMs = status === 'calling' || status === 'serving' ? 5000 : 10000;
+  const intervalMs = status === 'calling' || status === 'serving' ? 4000 : 6000;
 
   return useQuery({
     queryKey: ['queue', 'board', entryId, phone],

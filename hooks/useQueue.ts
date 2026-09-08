@@ -89,6 +89,11 @@ export function useQueueEntries(businessId: string) {
     queryFn: () => fetchQueueEntries(businessId),
     enabled: !!businessId,
     staleTime: 0,
+    // Fallback ao realtime: garante que entradas pelo QR apareçam mesmo se a
+    // assinatura cair ou a publication não estiver configurada.
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 

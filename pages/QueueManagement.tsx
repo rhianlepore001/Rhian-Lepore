@@ -397,6 +397,7 @@ export const QueueManagement: React.FC = () => {
         services={services}
         baseServiceName={checkoutEntry?.service_id ? serviceNames.get(checkoutEntry.service_id) ?? null : null}
         loggedProfessionalId={teamMemberId}
+        teamMembers={teamMembers}
         onClose={() => setCheckoutEntry(null)}
         onDone={() => {
           setCheckoutEntry(null);

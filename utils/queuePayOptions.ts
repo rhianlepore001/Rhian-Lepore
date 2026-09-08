@@ -19,28 +19,28 @@ export function queuePayOptions(input: {
   if (input.canUseMembership) {
     options.push({
       id: 'membership',
-      label: 'Usar assinatura',
-      description: 'Este serviço está incluído no seu plano.',
+      label: 'Usar minha assinatura',
+      description: 'Este serviço está incluído no seu plano. Sem cobrança adicional.',
     });
   }
 
   options.push({
     id: 'cash',
     label: 'Pagar no balcão',
-    description: 'Você paga ao finalizar o atendimento.',
+    description: 'Dinheiro, cartão ou Pix na hora, ao final do atendimento.',
   });
 
   if (digital === 'pix') {
     options.push({
       id: 'pix',
-      label: 'Pagar com Pix',
-      description: 'Você entra na fila agora. O pagamento será confirmado pela equipe.',
+      label: 'Pagar agora com Pix',
+      description: 'Copie o código e pague pelo app do banco. A equipe confirma o recebimento.',
     });
   } else {
     options.push({
       id: 'mbway',
-      label: 'Pagar com MB WAY',
-      description: 'Você entra na fila agora. O pagamento será confirmado pela equipe.',
+      label: 'Pagar agora com MB WAY',
+      description: 'Envie pelo MB WAY para o número indicado. A equipe confirma o recebimento.',
     });
   }
 

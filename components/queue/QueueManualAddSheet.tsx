@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Button, Modal, Select, useToast } from '@/components/ui';
+import { Button, Input, Modal, Select, useToast } from '@/components/ui';
 import { PhoneInput } from '@/components/PhoneInput';
 import { addManualQueueEntry } from '@/services/queue';
 import type { QueueMode } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
-import type { Region } from '@/utils/formatters';
+import { formatCurrency, type Region } from '@/utils/formatters';
 
 interface TeamOption {
   id: string;
@@ -65,15 +65,15 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
 
   const handleSubmit = async () => {
     if (!name.trim() || !phone.trim() || !serviceId) {
-      showToast('Nome, telefone e serviço são obrigatórios.', 'error');
+      showToast('Preencha nome, telefone e serviço.', 'error');
       return;
     }
     if (mode === 'per_professional' && !professionalId) {
-      showToast('Escolha o profissional da fila.', 'error');
+      showToast('Escolha em qual fila o cliente vai entrar.', 'error');
       return;
     }
     if (!paymentMethod) {
-      showToast('Selecione a forma de pagamento.', 'error');
+      showToast('Informe como o cliente vai pagar.', 'error');
       return;
     }
     setSaving(true);
@@ -86,10 +86,11 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
         professionalId: professionalId || null,
         paymentMethod,
       });
+      showToast(`${name.trim()} entrou na fila.`, 'success');
       reset();
       onAdded();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível adicionar à fila.';
+      const message = error instanceof Error ? error.message : 'Não foi possível adicionar o cliente à fila.';
       showToast(message, 'error');
     } finally {
       setSaving(false);
@@ -97,43 +98,50 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Adicionar na fila" size="sm">
+    <Modal open={open} onClose={onClose} title="Adicionar cliente à fila" size="sm">
       <div className="space-y-4">
-        <input
+        <p className="text-sm text-theme-textSecondary">
+          Para quem chegou sem escanear o QR Code. Se o telefone já for cliente, o cadastro é reaproveitado.
+        </p>
+        <Input
+          label="Nome"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Nome completo"
-          className="w-full min-h-[44px] px-4 rounded-xl border border-theme-border bg-theme-surface text-theme-text"
+          placeholder="Nome do cliente"
+          autoComplete="off"
         />
-        <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} />
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-theme-textSecondary">Telefone</label>
+          <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} />
+        </div>
         <Select
           label="Serviço"
           placeholder="Escolha o serviço"
           value={serviceId}
           options={services.filter((service) => service.active).map((service) => ({
             value: service.id,
-            label: service.name,
+            label: `${service.name} · ${formatCurrency(service.price, region)}`,
           }))}
           onChange={(event) => setServiceId(event.target.value)}
         />
         {mode === 'per_professional' && (
           <Select
             label="Profissional"
-            placeholder="Fila do profissional"
+            placeholder="Escolha a fila"
             value={professionalId}
             options={teamMembers.map((member) => ({ value: member.id, label: member.name }))}
             onChange={(event) => setProfessionalId(event.target.value)}
           />
         )}
         <Select
-          label="Pagamento"
-          placeholder="Como vai pagar"
+          label="Forma de pagamento"
+          placeholder="Como o cliente vai pagar"
           value={paymentMethod}
           options={paymentOptions}
           onChange={(event) => setPaymentMethod(event.target.value as CheckoutPaymentMethod)}
         />
         <Button variant="primary" fullWidth loading={saving} onClick={() => void handleSubmit()}>
-          Adicionar na fila
+          Adicionar à fila
         </Button>
       </div>
     </Modal>

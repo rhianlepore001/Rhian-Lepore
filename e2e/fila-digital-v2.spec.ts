@@ -119,27 +119,29 @@ test.describe('Fila digital v2 — smoke mobile', () => {
     await mockQueuePublicApis(page);
 
     await page.goto(`${BASE}/#/queue/barbearia-qa`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: 'Fila digital' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('heading', { name: PROFILE.business_name })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('heading', { name: 'Qual serviço você quer hoje?' })).toBeVisible();
     await expect(page.getByText('recepção', { exact: false })).toHaveCount(0);
 
     await page.getByRole('button', { name: /Corte/i }).click();
     await page.getByRole('button', { name: 'Continuar' }).click();
 
     await expect(page.getByRole('heading', { name: 'Seus dados' })).toBeVisible();
-    await page.getByPlaceholder('Nome completo').fill('Joao QA');
+    await page.getByPlaceholder('Como quer ser chamado').fill('Joao QA');
     const phone = page.locator('input[type="tel"], input[inputmode="numeric"]').first();
     if (await phone.count()) {
       await phone.fill('11988887777');
     }
     await page.getByRole('button', { name: 'Continuar' }).click();
 
-    await expect(page.getByRole('heading', { name: /Como você prefere pagar/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Como prefere pagar?' })).toBeVisible();
     await page.getByRole('button', { name: /Pagar no balcão/i }).click();
-    await page.getByRole('button', { name: 'Entrar na fila' }).click();
+    await page.getByRole('button', { name: 'Confirmar e entrar na fila' }).click();
 
     await expect(page).toHaveURL(/minha-area\/barbearia-qa.*tab=fila/);
     await expect(page.getByRole('button', { name: 'Fila', exact: true })).toBeVisible();
-    await expect(page.getByText('Você é o 1º da fila')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Você é o próximo' })).toBeVisible();
+    await expect(page.getByText('Você pode sair e voltar. Ao ser chamado, terá 10 min para chegar.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sair da fila' })).toBeVisible();
 
     const artifactsDir = process.env.E2E_ARTIFACTS_DIR;

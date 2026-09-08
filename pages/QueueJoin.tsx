@@ -162,7 +162,7 @@ export const QueueJoin: React.FC = () => {
       return;
     }
     if (!isQueueIdentityPhoneValid(phone, region)) {
-      const message = 'Informe um WhatsApp válido.';
+      const message = 'Informe um número de WhatsApp válido.';
       setIdentityError(message);
       showToast(message, 'error');
       return;
@@ -175,7 +175,7 @@ export const QueueJoin: React.FC = () => {
         return;
       }
       if (!name.trim()) {
-        const message = 'Informe seu nome.';
+        const message = 'Primeira visita? Informe seu nome para continuar.';
         setIdentityError(message);
         showToast(message, 'error');
         return;
@@ -207,7 +207,7 @@ export const QueueJoin: React.FC = () => {
     }
 
     if (payMethod === 'pix' && (!pixBrCode || !pixTxid)) {
-      showToast('Não foi possível gerar o Pix. Tente pagar no balcão.', 'error');
+      showToast('Não foi possível gerar o Pix agora. Escolha pagar no balcão.', 'error');
       return;
     }
 
@@ -247,16 +247,27 @@ export const QueueJoin: React.FC = () => {
 
   if (!business) {
     return (
-      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center p-6 text-center`}>
-        Estabelecimento não encontrado.
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex flex-col items-center justify-center p-6 text-center gap-2`}>
+        <p className={`text-lg font-semibold ${font.heading}`}>Não encontramos este estabelecimento</p>
+        <p className={`text-sm ${colors.textSecondary}`}>Confira o link ou peça um novo QR Code no balcão.</p>
       </div>
     );
   }
 
   if (preSelectedPro && proActive === false) {
     return (
-      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center p-6 text-center`}>
-        Este QR não está ativo. Peça o QR da casa.
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex flex-col items-center justify-center p-6 text-center gap-4`}>
+        <div className="space-y-2">
+          <p className={`text-lg font-semibold ${font.heading}`}>Este QR Code não está mais ativo</p>
+          <p className={`text-sm ${colors.textSecondary}`}>
+            O profissional deste QR não está atendendo hoje. Use o QR Code geral do estabelecimento.
+          </p>
+        </div>
+        {slug && (
+          <Button variant="primary" className="min-h-[48px]" onClick={() => navigate(`/queue/${slug}`)}>
+            Entrar na fila geral
+          </Button>
+        )}
       </div>
     );
   }
@@ -272,8 +283,8 @@ export const QueueJoin: React.FC = () => {
           </h1>
           <p className={`text-sm md:text-base leading-relaxed ${colors.textSecondary}`}>
             {preSelectedPro && lockedProName
-              ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe no celular.`
-              : 'Fila digital. Escolha o serviço e acompanhe sua vez no celular.'}
+              ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe sua vez pelo celular.`
+              : 'Escolha o serviço, entre na fila e acompanhe sua vez pelo celular.'}
           </p>
           <ol className="flex items-center gap-2 pt-1" aria-label="Passos para entrar na fila">
             {STEPS.map((item, index) => {
@@ -317,10 +328,10 @@ export const QueueJoin: React.FC = () => {
           >
             <div>
               <h2 className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading}`}>
-                Como te chamamos?
+                Seus dados
               </h2>
               <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-                O WhatsApp guarda sua senha nesta casa.
+                Usamos seu WhatsApp para identificar sua senha. Se já for cliente, basta o número.
               </p>
             </div>
             <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
@@ -334,8 +345,9 @@ export const QueueJoin: React.FC = () => {
                 label="Nome"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Seu nome"
+                placeholder="Como quer ser chamado"
                 autoComplete="name"
+                hint="Obrigatório apenas na primeira visita."
                 forceTheme={themeOverride}
               />
               {identityError && (

@@ -51,7 +51,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
           Como prefere pagar?
         </h2>
         <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-          Sua senha na fila fica reservada em seguida.
+          Escolha a forma de pagamento para confirmar sua entrada na fila.
         </p>
       </div>
 
@@ -110,7 +110,9 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
             amountCents={amountCents}
             txid={pixTxid}
           />
-          <p className={`text-sm ${colors.textSecondary}`}>Pague e aguarde a confirmação da equipe.</p>
+          <p className={`text-sm ${colors.textSecondary}`}>
+            Você entra na fila agora. A equipe confirma o pagamento assim que receber.
+          </p>
         </div>
       )}
 
@@ -121,7 +123,9 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
             holderName={pixConfig.mbway_holder_name}
             amountCents={amountCents}
           />
-          <p className={`text-sm ${colors.textSecondary}`}>Pague e aguarde a confirmação da equipe.</p>
+          <p className={`text-sm ${colors.textSecondary}`}>
+            Você entra na fila agora. A equipe confirma o pagamento assim que receber.
+          </p>
         </div>
       )}
 
@@ -139,7 +143,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
           loading={submitting}
           onClick={onConfirm}
         >
-          {submitting ? 'Entrando na fila…' : 'Entrar na fila'}
+          {submitting ? 'Confirmando…' : 'Confirmar e entrar na fila'}
         </Button>
         {onBack && (
           <button

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Input, Modal, Select, useToast } from '@/components/ui';
 import { PhoneInput } from '@/components/PhoneInput';
 import { useBrutalTheme } from '@/hooks/useBrutalTheme';
-import { addManualQueueEntry } from '@/services/queue';
+import { addManualQueueEntry, queueJoinUserMessage } from '@/services/queue';
 import type { QueueMode } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
@@ -92,8 +92,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
       reset();
       onAdded();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível adicionar o cliente à fila.';
-      showToast(message, 'error');
+      showToast(queueJoinUserMessage(error, 'Não foi possível adicionar o cliente à fila. Tente de novo.'), 'error');
     } finally {
       setSaving(false);
     }

@@ -71,7 +71,8 @@ export const QueueSettingsSheet: React.FC<QueueSettingsSheetProps> = ({
       showToast('Ajustes da fila salvos.', 'success');
       onSaved();
     } catch (error) {
-      const text = error instanceof Error ? error.message.toLowerCase() : '';
+      // PostgrestError não é instância de Error: lê `message` de qualquer objeto.
+      const text = String((error as { message?: unknown } | null)?.message ?? '').toLowerCase();
       const message = text.includes('esvazie a fila')
         ? 'Só é possível trocar o tipo de fila com a fila vazia.'
         : 'Não foi possível salvar os ajustes. Tente de novo.';

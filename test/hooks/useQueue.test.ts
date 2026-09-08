@@ -125,7 +125,34 @@ describe('useQueue', () => {
         businessId: 'business-001',
         status: 'calling',
       });
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['queue', 'entries'] });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['queue', 'entries', 'business-001'] });
+    });
+
+    it('atualiza o cache de forma otimista e reverte em erro', async () => {
+      let reject: (error: Error) => void = () => undefined;
+      (queueService.updateQueueStatus as ReturnType<typeof vi.fn>).mockImplementation(
+        () => new Promise((_resolve, rej) => { reject = rej; }),
+      );
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      });
+      const key = ['queue', 'entries', 'business-001'];
+      queryClient.setQueryData(key, [mockEntry]);
+      const { Wrapper } = createWrapper(queryClient);
+      const statusInCache = () => (queryClient.getQueryData(key) as Array<{ status: string }>)[0].status;
+
+      const { result } = renderHook(() => useUpdateQueueStatus(), { wrapper: Wrapper });
+
+      act(() => {
+        result.current.mutate({ entryId: 'queue-001', businessId: 'business-001', status: 'calling' });
+      });
+      await vi.waitFor(() => expect(statusInCache()).toBe('calling'));
+
+      await act(async () => {
+        reject(new Error('falhou'));
+        await Promise.resolve();
+      });
+      await vi.waitFor(() => expect(statusInCache()).toBe(mockEntry.status));
     });
   });
 

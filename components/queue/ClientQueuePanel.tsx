@@ -70,11 +70,12 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
     : null;
 
   // Relógio local para "há X min" e contagem do prazo sem esperar o próximo poll.
+  const isCallingNow = entry?.status === 'calling';
   useEffect(() => {
     if (!isActive) return;
-    const id = window.setInterval(() => setTick((value) => value + 1), 30_000);
+    const id = window.setInterval(() => setTick((value) => value + 1), isCallingNow ? 5_000 : 30_000);
     return () => window.clearInterval(id);
-  }, [isActive]);
+  }, [isActive, isCallingNow]);
 
   const joinHref = slug ? `/queue/${slug}` : null;
   const bookHref = slug ? `/book/${slug}?agendar=1` : null;
@@ -138,7 +139,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const isServing = status === 'serving';
   const isClosed = !isActive;
 
-  const position = board.data?.position ?? null;
+  const position = board.data ? board.data.position ?? null : undefined;
   const settings = board.data?.settings;
   const etaMinutes = board.data?.etaMinutes ?? null;
   const serviceName = board.data?.serviceName ?? null;

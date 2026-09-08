@@ -10,7 +10,14 @@ import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { usePublicClientMembership, usePublicPixConfig } from '../hooks/useMemberships';
 import { detectPixKeyType, generatePixPayload, validatePixKey } from '../lib/pix-generator';
 import { generatePixTxid } from '../lib/pix-txid';
-import { joinQueue, queueJoinUserMessage } from '../services/queue';
+import {
+  findActiveQueueEntryByPhone,
+  joinQueue,
+  markQueueQrVisit,
+  QueueAlreadyActiveError,
+  queueJoinUserMessage,
+  storeQueueTicket,
+} from '../services/queue';
 import { isQueueIdentityPhoneValid } from '../utils/queueIdentity';
 import { logger } from '../utils/Logger';
 import {
@@ -90,11 +97,41 @@ export const QueueJoin: React.FC = () => {
   });
 
   useEffect(() => {
+    if (slug) markQueueQrVisit(slug);
+  }, [slug]);
+
+  useEffect(() => {
     if (!business) return;
     document.documentElement.setAttribute('data-theme', isBeauty ? 'beauty' : 'barber');
     document.documentElement.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
     hydrateFromStorage(business.id);
   }, [business, hydrateFromStorage, isBeauty]);
+
+  const openExistingTicket = React.useCallback((entryId: string, entryPhone: string) => {
+    if (!business || !slug) return;
+    storeQueueTicket({ businessId: business.id, entryId, phone: entryPhone, slug });
+    showToast('Você já está nesta fila. Abrindo sua senha.', 'info');
+    navigate(`/minha-area/${slug}?tab=fila`, { replace: true });
+  }, [business, navigate, showToast, slug]);
+
+  // Quem já tem senha ativa não escolhe serviço/pagamento de novo: vai direto acompanhar.
+  const redirectIfAlreadyInQueue = React.useCallback(async (lookupPhone: string): Promise<boolean> => {
+    if (!business || !lookupPhone) return false;
+    try {
+      const active = await findActiveQueueEntryByPhone(business.id, lookupPhone);
+      if (!active) return false;
+      openExistingTicket(active.id, lookupPhone);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [business, openExistingTicket]);
+
+  const sessionPhone = sessionClient?.phone ?? null;
+  useEffect(() => {
+    if (!sessionPhone) return;
+    void redirectIfAlreadyInQueue(sessionPhone);
+  }, [redirectIfAlreadyInQueue, sessionPhone]);
 
   useEffect(() => {
     const load = async () => {
@@ -169,6 +206,7 @@ export const QueueJoin: React.FC = () => {
     }
     setIdentitySubmitting(true);
     try {
+      if (await redirectIfAlreadyInQueue(phone)) return;
       const existing = await login(phone, business.id);
       if (existing) {
         setStep('pay');
@@ -228,6 +266,10 @@ export const QueueJoin: React.FC = () => {
       });
       navigate(`/minha-area/${slug}?tab=fila`);
     } catch (error) {
+      if (error instanceof QueueAlreadyActiveError) {
+        openExistingTicket(error.entry.id, clientPhone);
+        return;
+      }
       logger.error('QueueJoin join failed', error);
       const message = queueJoinUserMessage(error);
       setJoinError(message);

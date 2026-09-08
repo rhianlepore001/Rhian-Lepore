@@ -136,13 +136,49 @@ export function isActiveQueueStatus(status: QueueStatus): boolean {
   return status === 'waiting' || status === 'calling' || status === 'serving';
 }
 
+const QUEUE_QR_VISIT_KEY = (slug: string) => `queue_qr_visit_${slug}`;
+
+/** Marca, só para esta sessão do navegador, que o cliente chegou pelo QR desta casa. */
+export function markQueueQrVisit(slug: string): void {
+  writeStorage(typeof sessionStorage === 'undefined' ? undefined : sessionStorage, QUEUE_QR_VISIT_KEY(slug), '1');
+}
+
+export function hasQueueQrVisit(slug: string | null | undefined): boolean {
+  if (!slug) return false;
+  return readStorage(typeof sessionStorage === 'undefined' ? undefined : sessionStorage, QUEUE_QR_VISIT_KEY(slug)) === '1';
+}
+
+const RECENT_CLOSED_WINDOW_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * Senha encerrada recentemente (concluída / não compareceu). Usa janela fixa de 12h
+ * em vez de "hoje" para não depender do fuso do aparelho vs. do servidor.
+ */
 export function isRecentClosedQueueEntry(entry: QueueRecord, now = new Date()): boolean {
   if (entry.status !== 'completed' && entry.status !== 'no_show') return false;
-  const joined = new Date(entry.joined_at);
-  if (Number.isNaN(joined.getTime())) return false;
-  return joined.getFullYear() === now.getFullYear()
-    && joined.getMonth() === now.getMonth()
-    && joined.getDate() === now.getDate();
+  const joined = Date.parse(entry.joined_at);
+  if (Number.isNaN(joined)) return false;
+  const elapsed = now.getTime() - joined;
+  return elapsed >= 0 && elapsed <= RECENT_CLOSED_WINDOW_MS;
+}
+
+/** O telefone já tem uma senha ativa nesta casa; `entry` é a senha existente (já guardada localmente). */
+export class QueueAlreadyActiveError extends Error {
+  constructor(readonly entry: QueueRecord) {
+    super('Você já está nesta fila.');
+    this.name = 'QueueAlreadyActiveError';
+  }
+}
+
+export class QueueLookupError extends Error {
+  constructor(message: string, readonly cause?: unknown) {
+    super(message);
+    this.name = 'QueueLookupError';
+  }
+}
+
+function isQueueEntryNotFound(error: unknown): boolean {
+  return error instanceof Error && error.message === 'Queue entry not found';
 }
 
 function parseQueueRecord(entry: unknown): QueueRecord | null {
@@ -231,6 +267,8 @@ export async function resolveClientQueueEntry(input: {
   // Senha de hoje já encerrada (concluída / não compareceu): só é devolvida se
   // não houver nenhuma senha ativa, para o cliente ver o desfecho em vez de "fora da fila".
   let recentClosed: QueueRecord | null = null;
+  // Falha de rede/RPC não pode virar "você não está na fila": propagamos se nada respondeu.
+  let lastFailure: unknown = null;
 
   for (const candidate of candidates) {
     try {
@@ -253,8 +291,8 @@ export async function resolveClientQueueEntry(input: {
         slug,
       });
       return byId;
-    } catch {
-      // tenta o próximo candidato
+    } catch (error) {
+      if (!isQueueEntryNotFound(error)) lastFailure = error;
     }
   }
 
@@ -270,12 +308,17 @@ export async function resolveClientQueueEntry(input: {
         });
         return active;
       }
-    } catch {
-      // sem senha ativa pelo telefone; cai no desfecho recente, se houver
+      lastFailure = null;
+    } catch (error) {
+      lastFailure = error;
     }
   }
 
-  return recentClosed;
+  if (recentClosed) return recentClosed;
+  if (lastFailure) {
+    throw new QueueLookupError('Não foi possível consultar sua senha.', lastFailure);
+  }
+  return null;
 }
 
 function rememberJoinedEntry(slug: string, entry: QueueRecord, phone: string): QueueRecord {
@@ -319,9 +362,12 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
   try {
     const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
     if (duplicate) {
-      return rememberJoinedEntry(slug, duplicate, parsed.clientPhone);
+      // Não fingimos que a nova escolha (serviço / Pix) foi registrada: quem chama decide
+      // como avisar e abre a senha existente.
+      throw new QueueAlreadyActiveError(rememberJoinedEntry(slug, duplicate, parsed.clientPhone));
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof QueueAlreadyActiveError) throw error;
     // Dedup é best-effort: a RPC de join ainda valida unicidade.
   }
 
@@ -341,8 +387,9 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     if (isAlreadyInQueueError(error)) {
       try {
         const existing = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-        if (existing) return rememberJoinedEntry(slug, existing, parsed.clientPhone);
-      } catch {
+        if (existing) throw new QueueAlreadyActiveError(rememberJoinedEntry(slug, existing, parsed.clientPhone));
+      } catch (lookupError) {
+        if (lookupError instanceof QueueAlreadyActiveError) throw lookupError;
         // segue o erro original abaixo
       }
     }

@@ -10,6 +10,9 @@ import {
   joinQueue,
   QUEUE_LAST_SLUG_KEY,
   QUEUE_TICKET_KEY,
+  QueueAlreadyActiveError,
+  QueueLookupError,
+  isRecentClosedQueueEntry,
   resetExpiredCallingEntries,
   resolveClientQueueEntry,
   sanitizeQueuePhone,
@@ -121,7 +124,7 @@ describe('queue service', () => {
       error: null,
     });
 
-    const result = await joinQueue({
+    const attempt = joinQueue({
       businessId: 'business-001',
       slug: 'loja',
       clientName: 'Joao',
@@ -130,10 +133,14 @@ describe('queue service', () => {
       professionalId: null,
     });
 
-    expect(result.id).toBe('queue-001');
+    await expect(attempt).rejects.toBeInstanceOf(QueueAlreadyActiveError);
+    await attempt.catch((error: QueueAlreadyActiveError) => {
+      expect(error.entry.id).toBe('queue-001');
+    });
     expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
     expect(JSON.parse(localStorage.getItem(QUEUE_TICKET_KEY('business-001'))!).entryId).toBe('queue-001');
     expect(insertMock).not.toHaveBeenCalled();
+    expect(supabase.rpc).not.toHaveBeenCalledWith('join_queue_entry', expect.anything());
   });
 
   it('cria entrada publica via RPC quando nao ha duplicata', async () => {
@@ -230,6 +237,71 @@ describe('queue service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('get_queue_entry_public', expect.objectContaining({
       p_entry_id: 'queue-001',
     }));
+  });
+
+  it('propaga falha de RPC em vez de dizer que o cliente está fora da fila', async () => {
+    storeQueueTicket({
+      businessId: 'business-001',
+      entryId: 'queue-001',
+      phone: '11999999999',
+      slug: 'loja',
+    });
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: { message: 'FetchError: network' } });
+
+    await expect(resolveClientQueueEntry({
+      businessId: 'business-001',
+      phone: '11999999999',
+      slug: 'loja',
+    })).rejects.toBeInstanceOf(QueueLookupError);
+  });
+
+  it('senha inexistente e telefone sem senha ativa resolve para null', async () => {
+    storeQueueTicket({
+      businessId: 'business-001',
+      entryId: 'queue-old',
+      phone: '11999999999',
+      slug: 'loja',
+    });
+    (supabase.rpc as any).mockResolvedValue({ data: [], error: null });
+
+    await expect(resolveClientQueueEntry({
+      businessId: 'business-001',
+      phone: '11999999999',
+      slug: 'loja',
+    })).resolves.toBeNull();
+  });
+
+  it('devolve a senha encerrada nas últimas 12h quando não há senha ativa', async () => {
+    const joinedAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    storeQueueTicket({
+      businessId: 'business-001',
+      entryId: 'queue-done',
+      phone: '11999999999',
+      slug: 'loja',
+    });
+    (supabase.rpc as any).mockImplementation((name: string) => {
+      if (name === 'get_queue_entry_public') {
+        return Promise.resolve({
+          data: [{
+            id: 'queue-done',
+            business_id: 'business-001',
+            client_name: 'Joao',
+            client_phone: '11999999999',
+            status: 'completed',
+            joined_at: joinedAt,
+          }],
+          error: null,
+        });
+      }
+      return Promise.resolve({ data: [], error: null });
+    });
+
+    const result = await resolveClientQueueEntry({ businessId: 'business-001', phone: '11999999999', slug: 'loja' });
+    expect(result?.status).toBe('completed');
+    expect(isRecentClosedQueueEntry({
+      id: 'x', business_id: 'b', client_name: 'a', client_phone: '1', status: 'completed',
+      joined_at: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(),
+    })).toBe(false);
   });
 
   it('calcula ETA do board com cadeiras e descarta campos internos', () => {

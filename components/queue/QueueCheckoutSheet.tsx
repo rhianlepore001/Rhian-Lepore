@@ -145,7 +145,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
             type="button"
             onClick={onRemove}
             aria-label={`Remover ${line.name}`}
-            className="inline-flex items-center justify-center w-9 h-9 -mr-2 rounded-lg text-theme-textMuted hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] -mr-3 rounded-lg text-theme-textMuted hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
           >
             <X className="w-4 h-4" />
           </button>

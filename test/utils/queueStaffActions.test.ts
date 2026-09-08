@@ -33,6 +33,6 @@ describe('queueStaffActions', () => {
     expect(actions.tertiary).toEqual([]);
     expect(queuePaymentBadge('paid').label).toBe('Pago');
     expect(queuePaymentBadge('membership').label).toBe('Clube');
-    expect(queuePaymentBadge('unpaid').label).toBe('Paga no balcão');
+    expect(queuePaymentBadge('unpaid').label).toBe('Pagamento no balcão');
   });
 });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ClientQueuePanel } from '../components/queue/ClientQueuePanel';
-import { readQueueBusinessSlug } from '../services/queue';
+import { hasQueueQrVisit } from '../services/queue';
 import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
@@ -642,7 +642,7 @@ export const ClientArea: React.FC = () => {
                                 phone={sessionClient.phone}
                                 slug={slug}
                                 clientName={sessionClient.name}
-                                cameFromQr={readQueueBusinessSlug() === slug}
+                                cameFromQr={hasQueueQrVisit(slug)}
                             />
                         )}
                         {activeTab === 'club' && (

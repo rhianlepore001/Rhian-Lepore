@@ -73,7 +73,12 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
     };
   }
 
-  const position = input.position ?? null;
+  // `undefined` = quadro ainda não carregou; `null` = a RPC não devolveu posição.
+  if (input.position === undefined) {
+    return { title: 'Você está na fila', subtitle: 'Atualizando sua posição…' };
+  }
+
+  const position = input.position;
   if (position == null || position <= 1) {
     return {
       title: 'Você é o próximo',

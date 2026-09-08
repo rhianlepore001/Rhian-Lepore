@@ -68,7 +68,7 @@ describe('QueueStaffCard', () => {
     );
 
     expect(screen.getByText('Corte masculino · 30 min · com João')).toBeInTheDocument();
-    expect(screen.getByText('Paga no balcão')).toBeInTheDocument();
+    expect(screen.getByText('Pagamento no balcão')).toBeInTheDocument();
     expect(screen.getByLabelText('Posição 2')).toHaveTextContent('2');
     await user.click(screen.getByRole('button', { name: 'Não compareceu' }));
     expect(onNoShow).toHaveBeenCalledWith(expect.objectContaining({ id: 'q-1' }));

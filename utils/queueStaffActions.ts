@@ -20,7 +20,7 @@ export function queuePaymentBadge(status?: QueuePaymentStatus | null): QueuePaym
   if (status === 'awaiting_confirmation') {
     return { label: 'Aguardando pagamento', variant: 'warning' };
   }
-  return { label: 'Paga no balcão', variant: 'neutral' };
+  return { label: 'Pagamento no balcão', variant: 'neutral' };
 }
 
 export function queueStaffActions(input: {

@@ -150,7 +150,7 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
             type="button"
             disabled={busy}
             onClick={() => onCancelPay(entry.id)}
-            className="w-full inline-flex items-center justify-center gap-1.5 min-h-[40px] text-xs font-semibold text-theme-textSecondary hover:text-theme-text disabled:opacity-50"
+            className="w-full inline-flex items-center justify-center gap-1.5 min-h-[44px] text-xs font-semibold text-theme-textSecondary hover:text-theme-text disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" />
             Não recebi — cliente paga no balcão

@@ -143,6 +143,29 @@ describe('queue service', () => {
     expect(supabase.rpc).not.toHaveBeenCalledWith('join_queue_entry', expect.anything());
   });
 
+  it('unique violation sem senha localizavel nao promete abrir a senha', async () => {
+    (supabase.rpc as any).mockImplementation((fn: string) => {
+      if (fn === 'find_active_queue_entry_by_phone') return Promise.resolve({ data: [], error: null });
+      if (fn === 'join_queue_entry') return Promise.resolve({ data: null, error: { message: 'Este telefone ja esta na fila.' } });
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    const attempt = joinQueue({
+      businessId: 'business-001',
+      slug: 'loja',
+      clientName: 'Joao',
+      clientPhone: '11999999999',
+      serviceId: 'service-001',
+      professionalId: null,
+    });
+
+    await expect(attempt).rejects.not.toBeInstanceOf(QueueAlreadyActiveError);
+    await attempt.catch((error: Error) => {
+      expect(error.message).not.toMatch(/abrindo/i);
+      expect(error.message).toMatch(/senha ativa/i);
+    });
+  });
+
   it('cria entrada publica via RPC quando nao ha duplicata', async () => {
     (supabase.rpc as any)
       .mockResolvedValueOnce({ data: [], error: null })
@@ -247,6 +270,25 @@ describe('queue service', () => {
       slug: 'loja',
     });
     (supabase.rpc as any).mockResolvedValue({ data: null, error: { message: 'FetchError: network' } });
+
+    await expect(resolveClientQueueEntry({
+      businessId: 'business-001',
+      phone: '11999999999',
+      slug: 'loja',
+    })).rejects.toBeInstanceOf(QueueLookupError);
+  });
+
+  it('falha de rede no ticket local continua erro mesmo com telefone sem senha ativa', async () => {
+    storeQueueTicket({
+      businessId: 'business-001',
+      entryId: 'queue-001',
+      phone: '11999999999',
+      slug: 'loja',
+    });
+    (supabase.rpc as any).mockImplementation((fn: string) => {
+      if (fn === 'get_queue_entry_public') return Promise.resolve({ data: null, error: { message: 'FetchError: network' } });
+      return Promise.resolve({ data: [], error: null });
+    });
 
     await expect(resolveClientQueueEntry({
       businessId: 'business-001',

@@ -203,7 +203,7 @@ export function isAlreadyInQueueError(error: unknown): boolean {
 export function queueJoinUserMessage(error: unknown, fallback = 'Não foi possível entrar na fila. Tente de novo ou fale com a equipe no balcão.'): string {
   const text = rpcErrorText(error);
   const lower = text.toLowerCase();
-  if (isAlreadyInQueueError(error)) return 'Este número já está na fila. Abrindo a senha existente.';
+  if (isAlreadyInQueueError(error)) return 'Este número já tem uma senha ativa nesta fila. Fale com a equipe no balcão para localizá-la.';
   if (lower.includes('servico obrigatorio') || lower.includes('serviço obrigatório')) {
     return 'Escolha um serviço para continuar.';
   }
@@ -309,7 +309,6 @@ export async function resolveClientQueueEntry(input: {
         });
         return active;
       }
-      lastFailure = null;
     } catch (error) {
       lastFailure = error;
     }

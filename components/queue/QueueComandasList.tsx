@@ -34,11 +34,14 @@ export const QueueComandasList: React.FC<QueueComandasListProps> = ({ entries, r
     <div className="space-y-3">
       {entries.map((entry) => {
         const serviceName = entry.service_id ? serviceNames?.get(entry.service_id) : null;
-        const price = (entry.service_price_cents ?? 0) / 100;
+        const items = entry.ticket_items ?? [];
+        const total = (entry.service_price_cents ?? 0) / 100 + items.reduce((sum, item) => sum + item.price, 0);
         const closedAt = closedAtLabel(entry.closed_at);
         const detail = [
-          serviceName ?? 'Serviço',
-          formatCurrency(price, region),
+          items.length > 0
+            ? `${serviceName ?? 'Serviço'} + ${items.length} ${items.length === 1 ? 'item' : 'itens'}`
+            : serviceName ?? 'Serviço',
+          formatCurrency(total, region),
           closedAt ? `fechada às ${closedAt}` : null,
         ].filter(Boolean).join(' · ');
         return (

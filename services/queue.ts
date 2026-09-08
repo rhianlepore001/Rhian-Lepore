@@ -16,6 +16,7 @@ import {
   type QueuePublicBoard,
   type QueueRecord,
   type QueueStatus,
+  type QueueTicketItem,
   type UpdateQueueStatusInput,
 } from '@/types/queue';
 
@@ -540,8 +541,11 @@ export async function cancelQueuePayment(entryId: string) {
   if (error) throw error;
 }
 
-export async function closeQueueTicket(entryId: string) {
-  const { error } = await supabase.rpc('close_queue_ticket', { p_entry_id: entryId });
+export async function closeQueueTicket(entryId: string, items: QueueTicketItem[] = []) {
+  const { error } = await supabase.rpc('close_queue_ticket', {
+    p_entry_id: entryId,
+    p_items: items.length > 0 ? items : null,
+  });
   if (error) throw error;
 }
 

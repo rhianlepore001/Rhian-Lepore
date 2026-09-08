@@ -39,6 +39,16 @@ describe('queueTicketPayload', () => {
       paymentMethod: 'pix',
     });
     expect(settle.paymentMethod).toBeNull();
-    expect(buildQueueClosePayload('q-2')).toEqual({ entryId: 'q-2' });
+    expect(buildQueueClosePayload('q-2')).toEqual({ entryId: 'q-2', items: [] });
+    expect(buildQueueClosePayload('q-3', {
+      extraServices: [{ id: 's-1', name: 'Barba', price: 35 }],
+      productLines: [{ id: 'p-1', name: 'Pomada', price: 20 }],
+    })).toEqual({
+      entryId: 'q-3',
+      items: [
+        { kind: 'service', id: 's-1', name: 'Barba', price: 35 },
+        { kind: 'product', id: 'p-1', name: 'Pomada', price: 20 },
+      ],
+    });
   });
 });

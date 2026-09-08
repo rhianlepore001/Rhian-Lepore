@@ -19,6 +19,14 @@ export const queuePaymentStatusSchema = z.enum([
 ]);
 export const queueTicketStatusSchema = z.enum(['none', 'open', 'settled']);
 
+/** Item adicionado à comanda (serviço extra ou produto) guardado quando ela fica em aberto. */
+export const queueTicketItemSchema = z.object({
+  kind: z.enum(['service', 'product']),
+  id: z.string().min(1),
+  name: z.string().min(1),
+  price: z.number().nonnegative(),
+});
+
 export const queueSettingsSchema = z.object({
   queueMode: queueModeSchema,
   allowLeave: z.boolean(),
@@ -61,6 +69,7 @@ export const queueEntrySchema = z.object({
   payment_method: checkoutPaymentMethodSchema.nullable().optional(),
   payment_status: queuePaymentStatusSchema.optional(),
   ticket_status: queueTicketStatusSchema.optional(),
+  ticket_items: z.array(queueTicketItemSchema).nullable().optional(),
   serving_at: z.string().nullable().optional(),
   closed_at: z.string().nullable().optional(),
   closed_by: z.string().nullable().optional(),
@@ -109,6 +118,7 @@ export type QueueStatus = z.infer<typeof queueStatusSchema>;
 export type QueueMode = z.infer<typeof queueModeSchema>;
 export type QueuePaymentStatus = z.infer<typeof queuePaymentStatusSchema>;
 export type QueueTicketStatus = z.infer<typeof queueTicketStatusSchema>;
+export type QueueTicketItem = z.infer<typeof queueTicketItemSchema>;
 export type QueueSettings = z.infer<typeof queueSettingsSchema>;
 export type QueuePublicBoardPerson = z.infer<typeof queuePublicBoardPersonSchema>;
 export type QueuePublicBoard = z.infer<typeof queuePublicBoardSchema>;

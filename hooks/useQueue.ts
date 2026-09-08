@@ -16,7 +16,7 @@ import {
   updateQueueSettings,
   updateQueueStatus,
 } from '@/services/queue';
-import type { QueueRecord } from '@/types/queue';
+import type { QueueRecord, QueueTicketItem } from '@/types/queue';
 
 export function useJoinQueue() {
   return useMutation({
@@ -141,7 +141,7 @@ export function useCloseQueueTicket() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['queue', 'close'],
-    mutationFn: closeQueueTicket,
+    mutationFn: (input: { entryId: string; items?: QueueTicketItem[] }) => closeQueueTicket(input.entryId, input.items),
     onSuccess: () => invalidateQueue(queryClient),
   });
 }

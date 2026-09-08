@@ -1,3 +1,4 @@
+import type { QueueTicketItem } from '@/types/queue';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
 
 export interface QueueTicketLine {
@@ -34,6 +35,18 @@ export function buildQueueSettlePayload(input: BuildQueueTicketInput) {
   };
 }
 
-export function buildQueueClosePayload(entryId: string) {
-  return { entryId };
+export interface QueueTicketSavedLine extends QueueTicketLine {
+  id: string;
+}
+
+/** Itens adicionados antes de "Deixar em aberto" viajam com a comanda para reaparecerem na finalização. */
+export function buildQueueClosePayload(
+  entryId: string,
+  lines: { extraServices?: QueueTicketSavedLine[]; productLines?: QueueTicketSavedLine[] } = {},
+) {
+  const items: QueueTicketItem[] = [
+    ...(lines.extraServices ?? []).map((line) => ({ kind: 'service' as const, id: line.id, name: line.name, price: line.price })),
+    ...(lines.productLines ?? []).map((line) => ({ kind: 'product' as const, id: line.id, name: line.name, price: line.price })),
+  ];
+  return { entryId, items };
 }

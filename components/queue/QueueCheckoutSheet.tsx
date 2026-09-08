@@ -18,6 +18,8 @@ interface QueueCheckoutSheetProps {
   services: ServiceItem[];
   baseServiceName?: string | null;
   loggedProfessionalId: string | null;
+  /** Equipe ativa; usado para atribuir o atendimento quando a senha não tem profissional (fila única). */
+  teamMembers?: Array<{ id: string; name: string }>;
   onClose: () => void;
   onDone: () => void;
 }
@@ -37,6 +39,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   services,
   baseServiceName = null,
   loggedProfessionalId,
+  teamMembers = [],
   onClose,
   onDone,
 }) => {
@@ -45,15 +48,28 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   const [extras, setExtras] = useState<TicketLine[]>([]);
   const [products, setProducts] = useState<TicketLine[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
+  const [professionalId, setProfessionalId] = useState<string>('');
+  const knownProfessionalId = loggedProfessionalId ?? entry?.professional_id ?? null;
+  const askProfessional = !knownProfessionalId && teamMembers.length > 0;
+  const resolvedProfessionalId = knownProfessionalId ?? (professionalId || null);
   const [saving, setSaving] = useState<'settle' | 'close' | null>(null);
   const { data: catalog = [] } = useProducts({ companyId, includeInactive: false });
 
+  // Comanda reaberta volta com os itens guardados em "Deixar em aberto".
+  // Chave serializada: o polling recria o array e não pode apagar o que o gestor está editando.
+  const savedItemsKey = JSON.stringify(entry?.ticket_items ?? []);
   useEffect(() => {
     if (!open) return;
-    setExtras([]);
-    setProducts([]);
+    const saved = JSON.parse(savedItemsKey) as NonNullable<QueueRecord['ticket_items']>;
+    setExtras(saved
+      .filter((item) => item.kind === 'service')
+      .map((item, index) => ({ key: `saved-service-${index}`, id: item.id, name: item.name, price: item.price })));
+    setProducts(saved
+      .filter((item) => item.kind === 'product')
+      .map((item, index) => ({ key: `saved-product-${index}`, id: item.id, name: item.name, price: item.price })));
     setPaymentMethod('');
-  }, [open, entry?.id]);
+    setProfessionalId(teamMembers.length === 1 ? teamMembers[0].id : '');
+  }, [open, entry?.id, savedItemsKey, teamMembers]);
 
   const basePrice = (entry?.service_price_cents ?? 0) / 100;
   const serviceLabel = baseServiceName ?? 'Serviço';
@@ -86,7 +102,8 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
     if (!entry) return;
     setSaving('close');
     try {
-      await closeQueueTicket(buildQueueClosePayload(entry.id).entryId);
+      const payload = buildQueueClosePayload(entry.id, { extraServices: extras, productLines: products });
+      await closeQueueTicket(payload.entryId, payload.items);
       showToast('Comanda salva. Finalize quando o cliente for pagar.', 'success');
       onDone();
     } catch {
@@ -110,7 +127,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         basePrice,
         extraServices: extraLines,
         productLines,
-        professionalId: loggedProfessionalId ?? entry.professional_id,
+        professionalId: resolvedProfessionalId,
         paymentMethod: needsPaymentMethod ? paymentMethod || null : null,
         alreadyPaid: alreadyPaid && !needsPaymentMethod,
       });
@@ -118,7 +135,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       await Promise.all(products.map((line) => sellProduct({
         productId: line.id,
         quantity: 1,
-        professionalId: loggedProfessionalId ?? entry.professional_id,
+        professionalId: resolvedProfessionalId,
         paymentMethod: needsPaymentMethod ? paymentMethod || null : entry.payment_method,
       })));
       showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
@@ -240,6 +257,17 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
               }}
             />
           </div>
+
+          {askProfessional && (
+            <Select
+              label="Quem atendeu"
+              placeholder="Escolher profissional (opcional)"
+              value={professionalId}
+              options={teamMembers.map((member) => ({ value: member.id, label: member.name }))}
+              onChange={(event) => setProfessionalId(event.target.value)}
+              hint="Define a comissão e o relatório por profissional."
+            />
+          )}
 
           {needsPaymentMethod && (
             <Select

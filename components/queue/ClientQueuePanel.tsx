@@ -207,9 +207,9 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   };
 
   return (
-    <article className={`rounded-2xl border overflow-hidden ${surfaceClass}`} aria-live="polite">
+    <article className={`rounded-2xl border overflow-hidden ${surfaceClass}`}>
       <div className="p-5 space-y-4">
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-atomic="true">
           {!isClosed && (
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">
@@ -270,14 +270,27 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
           </Link>
         )}
 
-        {status === 'completed' && bookHref && (
-          <Link
-            to={bookHref}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
-          >
-            <CalendarPlus className="w-4 h-4" />
-            Agendar a próxima visita
-          </Link>
+        {status === 'completed' && (bookHref || (cameFromQr && joinHref)) && (
+          <div className="flex flex-col gap-2">
+            {cameFromQr && joinHref && (
+              <Link
+                to={joinHref}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
+              >
+                <QrCode className="w-4 h-4" />
+                Pegar outra senha
+              </Link>
+            )}
+            {bookHref && (
+              <Link
+                to={bookHref}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
+              >
+                <CalendarPlus className="w-4 h-4" />
+                Agendar a próxima visita
+              </Link>
+            )}
+          </div>
         )}
       </div>
 

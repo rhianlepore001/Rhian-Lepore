@@ -103,7 +103,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
                   }`}
                   aria-hidden="true"
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  {active && <Check className="w-3.5 h-3.5" />}
                 </span>
                 <span className="min-w-0">
                   <p className={`font-semibold ${colors.text}`}>{option.label}</p>

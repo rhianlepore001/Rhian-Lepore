@@ -160,7 +160,7 @@ export const QueueManagement: React.FC = () => {
     try {
       await cancelPay.mutateAsync(entryId);
     } catch {
-      showToast('Não foi possível cancelar o Pix.', 'error');
+      showToast('Não foi possível cancelar o pagamento. Tente de novo.', 'error');
     }
   };
 

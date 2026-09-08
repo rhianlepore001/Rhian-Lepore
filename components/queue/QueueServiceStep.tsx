@@ -127,7 +127,7 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
                     }`}
                     aria-hidden="true"
                   >
-                    <Check className="w-3.5 h-3.5" />
+                    {selected && <Check className="w-3.5 h-3.5" />}
                   </span>
                 </div>
               </button>

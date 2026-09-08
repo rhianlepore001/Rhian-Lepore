@@ -54,6 +54,13 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
   const isCalling = entry.status === 'calling';
   const isServing = entry.status === 'serving';
 
+  // Tempos de espera/prazo mudam sem nenhum evento do servidor; um tick local mantém o card honesto.
+  const [, setTick] = React.useState(0);
+  React.useEffect(() => {
+    const interval = window.setInterval(() => setTick((value) => value + 1), 30_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const lateLeft = isCalling && allowLeave ? remainingLateMinutes(entry.called_at, lateMinutes) : null;
   const waitedMin = isWaiting || isCalling ? minutesSince(entry.joined_at) : null;
   const servingMin = isServing ? minutesSince(entry.serving_at ?? entry.called_at) : null;

@@ -123,9 +123,11 @@ export const QueueJoin: React.FC = () => {
       openExistingTicket(active.id, lookupPhone);
       return true;
     } catch {
+      // O join no servidor continua barrando duplicidade; aqui só avisamos que a checagem falhou.
+      showToast('Não foi possível verificar se você já tem uma senha. Se tiver, a equipe pode localizá-la no balcão.', 'info');
       return false;
     }
-  }, [business, openExistingTicket]);
+  }, [business, openExistingTicket, showToast]);
 
   // Uma checagem por telefone/negócio; depois que a pessoa entra pela própria tela, não há o que redirecionar.
   const sessionPhone = sessionClient?.phone ?? null;
@@ -272,7 +274,7 @@ export const QueueJoin: React.FC = () => {
         txid: payMethod === 'pix' ? pixTxid : undefined,
         mbwayPhone: payMethod === 'mbway' ? pixConfig?.mbway_phone ?? undefined : undefined,
       });
-      navigate(`/minha-area/${slug}?tab=fila`);
+      navigate(`/minha-area/${slug}?tab=fila`, { replace: true });
     } catch (error) {
       if (error instanceof QueueAlreadyActiveError) {
         openExistingTicket(error.entry.id, clientPhone);
